@@ -7,6 +7,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
 import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
 import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
@@ -28,11 +29,12 @@ public class TestSOSVaultHandler {
     public void testVaultGetStatus() throws Exception {
         KeyStore keyStore = null;
         KeyStore trustStore = null;
+        SOSIdentityService sosIdentityService = new SOSIdentityService(null, null, null);
 
         SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-        webserviceCredentials.setValuesFromProfile();
-        keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeyStorePath(), webserviceCredentials.getKeyStoreType());
-        trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTrustStorePath(), webserviceCredentials.getTrustStoreType());
+        webserviceCredentials.setValuesFromProfile(sosIdentityService);
+        keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeystorePath(), webserviceCredentials.getKeystoreType());
+        trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType());
 
         SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
 
@@ -49,17 +51,16 @@ public class TestSOSVaultHandler {
         KeyStore trustStore = null;
 
         SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-        webserviceCredentials.setValuesFromProfile();
-        keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeyStorePath(), webserviceCredentials.getKeyStoreType());
-        trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTrustStorePath(), webserviceCredentials.getTrustStoreType());
+        SOSIdentityService sosIdentityService = new SOSIdentityService(null, null, null);
+        webserviceCredentials.setValuesFromProfile(sosIdentityService);
+        keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeystorePath(), webserviceCredentials.getKeystoreType());
+        trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType());
 
         SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
 
-        SOSVaultAccountCredentials sosVaultUserCredentials = new SOSVaultAccountCredentials();
-        sosVaultUserCredentials.setAccount(webserviceCredentials.getVaultAccount());
-        sosVaultUserCredentials.setPolicy(webserviceCredentials.getVaultPolicy());
-        sosVaultUserCredentials.setPassword(webserviceCredentials.getVaultPassword());
-        String response = sosVaultHandler.storeAccountPassword(sosVaultUserCredentials);
+        SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
+        sosVaultAccountCredentials.setAccount(webserviceCredentials.getVaultAccount());
+        String response = sosVaultHandler.storeAccountPassword(sosVaultAccountCredentials,"test");
 
         System.out.println(response);
 
@@ -72,15 +73,15 @@ public class TestSOSVaultHandler {
         KeyStore trustStore = null;
 
         SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-        webserviceCredentials.setValuesFromProfile();
-        keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeyStorePath(), webserviceCredentials.getKeyStoreType());
-        trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTrustStorePath(), webserviceCredentials.getTrustStoreType());
+        SOSIdentityService sosIdentityService = new SOSIdentityService(null, null, null);
+        webserviceCredentials.setValuesFromProfile(sosIdentityService);
+        keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeystorePath(), webserviceCredentials.getKeystoreType());
+        trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType());
         webserviceCredentials.setAccount("ur");
-        webserviceCredentials.setPassword("urpass");
         SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
  
 
-        SOSVaultAccountAccessToken sosVaultUserAccessToken = sosVaultHandler.login();
+        SOSVaultAccountAccessToken sosVaultUserAccessToken = sosVaultHandler.login("urpass");
 
         System.out.println(sosVaultUserAccessToken.getAuth().getClient_token());
         sosVaultHandler.accountAccessTokenIsValid(sosVaultUserAccessToken);
@@ -92,10 +93,12 @@ public class TestSOSVaultHandler {
         KeyStore keyStore = null;
         KeyStore trustStore = null;
 
+        SOSIdentityService sosIdentityService = new SOSIdentityService(null, null, null);
+
         SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-        webserviceCredentials.setValuesFromProfile();
-        keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeyStorePath(), webserviceCredentials.getKeyStoreType());
-        trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTrustStorePath(), webserviceCredentials.getTrustStoreType());
+        webserviceCredentials.setValuesFromProfile(sosIdentityService);
+        keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeystorePath(), webserviceCredentials.getKeystoreType());
+        trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType());
 
         SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
 

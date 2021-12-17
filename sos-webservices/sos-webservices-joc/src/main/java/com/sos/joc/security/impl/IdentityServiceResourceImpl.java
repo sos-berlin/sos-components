@@ -111,6 +111,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             dbItemIamIdentityService.setIdentityServiceType(identityService.getIdentityServiceType().value());
             dbItemIamIdentityService.setOrdering(identityService.getOrdering());
             dbItemIamIdentityService.setRequired(identityService.getRequired());
+            dbItemIamIdentityService.setAuthenticationScheme("SINGLE");
+            dbItemIamIdentityService.setSingleFactorCert(false);
+            dbItemIamIdentityService.setSingleFactorPwd(true);
+            
 
             if (dbItemIamIdentityService.getId() == null) {
                 sosHibernateSession.save(dbItemIamIdentityService);

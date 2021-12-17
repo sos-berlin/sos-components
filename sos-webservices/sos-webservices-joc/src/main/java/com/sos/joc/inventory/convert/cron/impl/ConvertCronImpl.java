@@ -261,7 +261,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         String timezone = null;
         JsonReader jsonReader = null;
         try {
-            List<DBItemJocConfiguration> confs = confDbLayer.getJocConfigurations(confFilter, 1);
+            List<DBItemJocConfiguration> confs = confDbLayer.getJocConfigurationList(confFilter, 1);
             jsonReader = Json.createReader(new StringReader(confs.get(0).getConfigurationItem()));
             JsonObject json = jsonReader.readObject();
             timezone = json.getString("zone", "Etc/UTC");

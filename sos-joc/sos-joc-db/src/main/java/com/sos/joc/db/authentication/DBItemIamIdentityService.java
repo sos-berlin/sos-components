@@ -27,6 +27,15 @@ public class DBItemIamIdentityService {
     @Column(name = "[IDENTITY_SERVICE_NAME`", nullable = false)
     private String identityServiceName;
 
+    @Column(name = "[AUTHENTICATION_SCHEME`", nullable = false)
+    private String authenticationScheme;
+
+    @Column(name = "[SINGLE_FACTOR_PWD`", nullable = false)
+    private Boolean singleFactorPwd;
+
+    @Column(name = "[SINGLE_FACTOR_CERT`", nullable = false)
+    private Boolean singleFactorCert;
+
     @Column(name = "[ORDERING`", nullable = false)
     private Integer ordering;
 
@@ -65,14 +74,13 @@ public class DBItemIamIdentityService {
     }
 
     public Boolean getRequired() {
-        
+
         return required;
     }
 
     public void setRequired(Boolean required) {
         this.required = required;
     }
-
 
     public String getIdentityServiceType() {
         return identityServiceType;
@@ -88,6 +96,36 @@ public class DBItemIamIdentityService {
 
     public void setIdentityServiceName(String identityServiceName) {
         this.identityServiceName = identityServiceName;
+    }
+
+    
+    public String getAuthenticationScheme() {
+        return authenticationScheme;
+    }
+
+    
+    public void setAuthenticationScheme(String authenticationScheme) {
+        this.authenticationScheme = authenticationScheme;
+    }
+
+    
+    public Boolean getSingleFactorPwd() {
+        return singleFactorPwd;
+    }
+
+    
+    public void setSingleFactorPwd(Boolean singleFactorPwd) {
+        this.singleFactorPwd = singleFactorPwd;
+    }
+
+    
+    public Boolean getSingleFactorCert() {
+        return singleFactorCert;
+    }
+
+    
+    public void setSingleFactorCert(Boolean singleFactorCert) {
+        this.singleFactorCert = singleFactorCert;
     }
 
 }

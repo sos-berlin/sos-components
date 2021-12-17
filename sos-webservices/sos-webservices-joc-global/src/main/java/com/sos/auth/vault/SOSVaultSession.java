@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSSession;
 import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
 import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
@@ -24,9 +25,9 @@ public class SOSVaultSession implements ISOSSession {
 
     Map<String, Object> attributes;
 
-    public SOSVaultSession() {
+    public SOSVaultSession(SOSIdentityService identityService) {
         super();
-        initSession();
+        initSession(identityService);
     }
 
     private Map<String, Object> getAttributes() {
@@ -36,22 +37,21 @@ public class SOSVaultSession implements ISOSSession {
         return attributes;
     }
 
-    private void initSession() {
+    private void initSession(SOSIdentityService identityService) {
         if (sosVaultHandler == null) {
             KeyStore keyStore = null;
             KeyStore trustStore = null;
             SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
             try {
-                webserviceCredentials.setValuesFromProfile();
+                webserviceCredentials.setValuesFromProfile(identityService);
 
-                keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeyStorePath(), webserviceCredentials.getKeyStoreType(),
-                        webserviceCredentials.getKeyStorePassword());
+                keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeystorePath(), webserviceCredentials.getKeystoreType(),
+                        webserviceCredentials.getKeystorePassword());
 
-                trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTrustStorePath(), webserviceCredentials.getTrustStoreType(),
-                        webserviceCredentials.getTrustStorePassword());
+                trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                        webserviceCredentials.getTruststorePassword());
 
                 webserviceCredentials.setAccount("");
-                webserviceCredentials.setPassword("");
                 sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
                 Date now = new Date();
                 startSession = now.getTime();
@@ -113,7 +113,7 @@ public class SOSVaultSession implements ISOSSession {
                 initSessionTimeout = Long.valueOf(Globals.sosCockpitProperties.getProperty("iam_session_timeout"));
             }
         } catch (NumberFormatException e) {
-            initSessionTimeout = 90000L;
+            initSessionTimeout = 300000L;
 
         }
     }

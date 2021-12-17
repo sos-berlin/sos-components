@@ -223,6 +223,7 @@ public class SOSHibernateJsonTest {
         SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
         factory.addClassMapping(DBLayer.getJocClassMapping());
         factory.build();
+        LOGGER.info("DBMS: " + factory.getDbms());
         return factory;
     }
 

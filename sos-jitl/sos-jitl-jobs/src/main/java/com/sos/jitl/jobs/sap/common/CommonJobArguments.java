@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.sos.commons.sign.keys.keyStore.KeyStoreType;
+import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArguments;
@@ -37,7 +37,7 @@ public class CommonJobArguments extends JobArguments {
     private JobArgument<Boolean> hostnameVerification = new JobArgument<Boolean>(hanaPrefix + "_hostname_verification", false, true);
     private JobArgument<Path> truststorePath = new JobArgument<Path>(hanaPrefix + "_truststore_path", false);
     private JobArgument<String> truststorePwd = new JobArgument<String>(hanaPrefix + "_truststore_password", false, "", DisplayMode.MASKED, null);
-    private JobArgument<KeyStoreType> truststoreType = new JobArgument<KeyStoreType>(hanaPrefix + "_truststore_type", false, KeyStoreType.PKCS12);
+    private JobArgument<KeystoreType> truststoreType = new JobArgument<KeystoreType>(hanaPrefix + "_truststore_type", false, KeystoreType.PKCS12);
     private JobArgument<String> user = new JobArgument<String>(hanaPrefix + "_user", true);
     private JobArgument<String> pwd = new JobArgument<String>(hanaPrefix + "_password", true, DisplayMode.MASKED);
     private JobArgument<String> mandant = new JobArgument<String>(hanaPrefix + "_mandant", false);
@@ -101,7 +101,7 @@ public class CommonJobArguments extends JobArguments {
         return truststorePwd;
     }
     
-    public JobArgument<KeyStoreType> getTruststoreType() {
+    public JobArgument<KeystoreType> getTruststoreType() {
         return truststoreType;
     }
     

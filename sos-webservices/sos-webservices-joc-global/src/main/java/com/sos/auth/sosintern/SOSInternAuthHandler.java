@@ -1,5 +1,6 @@
 package com.sos.auth.sosintern;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -31,10 +32,10 @@ public class SOSInternAuthHandler {
 
     public void storeUserPassword(SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials) throws SOSException, JsonParseException,
             JsonMappingException, IOException {
-
     }
 
-    public SOSInternAuthAccessToken login(SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials) throws SOSHibernateException {
+    public SOSInternAuthAccessToken login(SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials, String password)
+            throws SOSHibernateException {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -43,13 +44,13 @@ public class SOSInternAuthHandler {
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             String accountPwd;
             try {
-                accountPwd = SOSAuthHelper.getSHA512(sosInternAuthWebserviceCredentials.getPassword());
+                accountPwd = SOSAuthHelper.getSHA512(password);
                 IamAccountFilter filter = new IamAccountFilter();
                 filter.setAccountName(sosInternAuthWebserviceCredentials.getAccount());
                 filter.setIdentityServiceId(sosInternAuthWebserviceCredentials.getIdentityServiceId());
-                
+
                 DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(filter);
-                if (dbItemIamAccount != null && dbItemIamAccount.getAccountPassword().equals(accountPwd)) {
+                if (SOSAuthHelper.emergencyKeyExist() || dbItemIamAccount != null && dbItemIamAccount.getAccountPassword().equals(accountPwd)) {
                     sosInternAuthAccessToken = new SOSInternAuthAccessToken();
                     sosInternAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
                 }

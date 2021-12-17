@@ -19,7 +19,7 @@ import org.junit.Test;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.SOSRestApiClient;
-import com.sos.commons.sign.keys.keyStore.KeyStoreType;
+import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 
 public class TLSTest {
@@ -58,12 +58,12 @@ public class TLSTest {
         sslContextBuilder.setKeyManagerFactoryAlgorithm("PKIX");
         sslContextBuilder.setTrustManagerFactoryAlgorithm("PKIX");
         KeyStore keystore = KeyStoreUtil.readKeyStore(
-                Paths.get("C:/Program Files/sos-berlin.com/js7/joc/jetty_base/resources/joc/https-keystore.p12"), KeyStoreType.PKCS12, "jobscheduler");
+                Paths.get("C:/Program Files/sos-berlin.com/js7/joc/jetty_base/resources/joc/https-keystore.p12"), KeystoreType.PKCS12, "jobscheduler");
         if (keystore != null) {
             sslContextBuilder.loadKeyMaterial(keystore, "jobscheduler".toCharArray());
         }
         KeyStore truststore = KeyStoreUtil.readTrustStore(
-                Paths.get("C:/Program Files/sos-berlin.com/js7/joc/jetty_base/resources/joc/https-truststore.p12"), KeyStoreType.PKCS12, "jobscheduler");
+                Paths.get("C:/Program Files/sos-berlin.com/js7/joc/jetty_base/resources/joc/https-truststore.p12"), KeystoreType.PKCS12, "jobscheduler");
         if (truststore != null) {
             sslContextBuilder.loadTrustMaterial(truststore, null);
         }

@@ -62,7 +62,7 @@ public class SOSVaultHandler {
         return sosVaultRoot;
     }
 
-    public String storeAccountPassword(SOSVaultAccountCredentials sosVaultUserCredentials) throws SOSException, JsonParseException,
+    public String storeAccountPassword(SOSVaultAccountCredentials sosVaultUserCredentials, String password) throws SOSException, JsonParseException,
             JsonMappingException, IOException {
 
         SOSRestApiClient restApiClient = new SOSRestApiClient();
@@ -71,7 +71,9 @@ public class SOSVaultHandler {
             restApiClient.setSSLContext(keyStore, webserviceCredentials.getKeyPassword().toCharArray(), truststore);
         }
         URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + "/v1/auth/userpass/users/" + sosVaultUserCredentials.getAccount());
+        sosVaultUserCredentials.setPassword(password);
         String body = Globals.objectMapper.writeValueAsString(sosVaultUserCredentials);
+        sosVaultUserCredentials.setPassword("");
         String response = restApiClient.postRestService(requestUri, body);
         LOGGER.debug(response);
 
@@ -79,7 +81,7 @@ public class SOSVaultHandler {
         return response;
     }
 
-    public SOSVaultAccountAccessToken login() throws SOSException, JsonParseException, JsonMappingException, IOException {
+    public SOSVaultAccountAccessToken login(String password) throws SOSException, JsonParseException, JsonMappingException, IOException {
 
         SOSRestApiClient restApiClient = new SOSRestApiClient();
         restApiClient.addHeader("X-Vault-Token", webserviceCredentials.getApplicationToken());
@@ -89,9 +91,10 @@ public class SOSVaultHandler {
 
         SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
         sosVaultAccountCredentials.setAccount(webserviceCredentials.getAccount());
-        sosVaultAccountCredentials.setPassword(webserviceCredentials.getPassword());
+        sosVaultAccountCredentials.setPassword(password);
         URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + "/v1/auth/userpass/login/" + sosVaultAccountCredentials.getAccount());
         String body = Globals.objectMapper.writeValueAsString(sosVaultAccountCredentials);
+        sosVaultAccountCredentials.setPassword(null);
         String response = restApiClient.postRestService(requestUri, body);
         LOGGER.debug(response);
 

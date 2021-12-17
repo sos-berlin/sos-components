@@ -1,6 +1,8 @@
 package com.sos.auth.classes;
 
+import java.io.File;
 import java.math.BigInteger;
+import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -13,7 +15,12 @@ import javax.crypto.spec.PBEKeySpec;
 import com.sos.joc.Globals;
 
 public class SOSAuthHelper {
-
+    
+    public static final String EMERGENCY_ROLE = "all";
+    public static final String EMERGENCY_PERMISSION = "sos:products";
+    public static final String EMERGENY_KEY = "sos_emergency_key";
+    public static final String CONFIGURATION_TYPE_IAM = "IAM";
+    
     public static String getSHA512(String pwd) throws NoSuchAlgorithmException, InvalidKeySpecException {
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[16];
@@ -45,6 +52,25 @@ public class SOSAuthHelper {
             }
         }
         return null;
+    }
+
+    public static boolean emergencyKeyExist() {
+        if (Globals.sosCockpitProperties != null) {
+            Path p = Globals.sosCockpitProperties.resolvePath(EMERGENY_KEY);
+            File f = new File(p.toString().replace('\\', '/'));
+            return f.exists();
+        }
+        return false;
+    }
+    
+    public static void removeEmergencyKey(){
+        if (Globals.sosCockpitProperties != null) {
+            Path p = Globals.sosCockpitProperties.resolvePath(EMERGENY_KEY);
+            File f = new File(p.toString().replace('\\', '/'));
+            if (f.exists()){
+                f.delete();
+            }
+        }
     }
 
 }

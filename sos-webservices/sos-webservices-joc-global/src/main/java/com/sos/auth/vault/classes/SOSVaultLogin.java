@@ -38,19 +38,20 @@ public class SOSVaultLogin implements ISOSLogin {
 
         try {
             SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-            webserviceCredentials.setValuesFromProfile();
-            keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeyStorePath(), webserviceCredentials.getKeyStoreType(),
-                    webserviceCredentials.getKeyStorePassword());
+            webserviceCredentials.setValuesFromProfile(identityService);
+            keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeystorePath(), webserviceCredentials.getKeystoreType(),
+                    webserviceCredentials.getKeystorePassword());
 
-            trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTrustStorePath(), webserviceCredentials.getTrustStoreType(),
-                    webserviceCredentials.getTrustStorePassword());
+            trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                    webserviceCredentials.getTruststorePassword());
 
             webserviceCredentials.setAccount(account);
-            webserviceCredentials.setPassword(pwd);
+           // webserviceCredentials.setPassword(pwd);
             SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
 
-            SOSVaultAccountAccessToken sosVaultAccountAccessToken = sosVaultHandler.login();
-            sosVaultSubject = new SOSVaultSubject();
+            SOSVaultAccountAccessToken sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
+            sosVaultSubject = new SOSVaultSubject(identityService);
+             
             if (sosVaultAccountAccessToken.getAuth() == null) {
                 sosVaultSubject.setAuthenticated(false);
                 setMsg("There is no user with the given account/password combination");
@@ -88,7 +89,7 @@ public class SOSVaultLogin implements ISOSLogin {
     }
 
     @Override
-    public void setIdentityServiceId(SOSIdentityService sosIdentityService) {
+    public void setIdentityService(SOSIdentityService sosIdentityService) {
         identityService = sosIdentityService;
     }
 
