@@ -13,7 +13,9 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.job.notification.JobNotification;
+import com.sos.inventory.model.job.notification.JobNotificationType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.history.HistoryNotification;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
@@ -233,51 +235,58 @@ public class NotifierMail extends ANotifier {
 
     private NotifyResult checkJobNotification(NotificationType type, DBItemMonitoringOrderStep mos) {
         if (mos != null && !SOSString.isEmpty(mos.getJobNotification())) {
+            JobNotification jn = null;
             try {
-                JobNotification jn = Globals.objectMapper.readValue(mos.getJobNotification(), JobNotification.class);
-                if (jn != null && jn.getMail() != null) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(String.format("[%s][job=%s][use job notification]%s", ANotifier.getTypeAsString(type), mos.getJobName(), mos
-                                .getJobNotification()));
-                    }
-
-                    // check job notification
-                    NotifyResult r = checkJobNotificationTypes(type, jn, mos.getJobName());
-                    if (r == null) {
-                        r = checkJobMailTo(type, jn, mos.getJobName());
-                    }
-                    if (r != null) {
-                        return r;
-                    }
-
-                    // suppress merge of the configured mail recipients (use job notification and ignore xml configuration)
-                    mail.clearRecipients();
-
-                    // add To - required
-                    mail.addRecipient(jn.getMail().getTo());
-
-                    // add CC - optional
-                    String cc = getValue(jn.getMail().getCc());
-                    if (cc.length() > 0) {
-                        mail.addCC(cc);
-                    }
-
-                    // add BCC- optional
-                    String bcc = getValue(jn.getMail().getBcc());
-                    if (bcc.length() > 0) {
-                        mail.addBCC(bcc);
-                    }
-
-                } else {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(String.format("[%s][job=%s][job notification][%s]missing settings", ANotifier.getTypeAsString(type), mos
-                                .getJobName(), mos.getJobNotification()));
-                    }
-                }
+                jn = Globals.objectMapper.readValue(mos.getJobNotification(), JobNotification.class);
             } catch (Throwable e) {
-                LOGGER.error(String.format("[type][job=%s][error on read job notification][%s]%s", ANotifier.getTypeAsString(type), mos.getJobName(),
+                LOGGER.error(String.format("[%s][job=%s][error on read job notification][%s]%s", ANotifier.getTypeAsString(type), mos.getJobName(),
                         mos.getJobNotification(), e.toString()), e);
             }
+            if (HistoryNotification.isJobMailNotificationEmpty(jn)) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format("[%s][skip][job=%s][job notification][%s]missing settings", ANotifier.getTypeAsString(type), mos
+                            .getJobName(), mos.getJobNotification()));
+                }
+                return null;
+            }
+
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[%s][job=%s][use job notification]%s", ANotifier.getTypeAsString(type), mos.getJobName(), mos
+                        .getJobNotification()));
+            }
+
+            // check job notification
+            NotifyResult r = checkJobNotificationTypes(type, jn, mos.getJobName());
+            if (r == null) {
+                r = checkJobMailTo(type, jn, mos.getJobName());
+            }
+            if (r != null) {
+                return r;
+            }
+
+            try {
+                // suppress merge of the configured mail recipients (use job notification and ignore xml configuration)
+                mail.clearRecipients();
+
+                // add To - required
+                mail.addRecipient(jn.getMail().getTo());
+
+                // add CC - optional
+                String cc = getValue(jn.getMail().getCc());
+                if (cc.length() > 0) {
+                    mail.addCC(cc);
+                }
+
+                // add BCC- optional
+                String bcc = getValue(jn.getMail().getBcc());
+                if (bcc.length() > 0) {
+                    mail.addBCC(bcc);
+                }
+            } catch (Throwable e) {
+                LOGGER.error(String.format("[%s][job=%s][error on set mail recipients][%s]%s", ANotifier.getTypeAsString(type), mos.getJobName(), mos
+                        .getJobNotification(), e.toString()), e);
+            }
+
         }
         return null;
     }
@@ -285,33 +294,31 @@ public class NotifierMail extends ANotifier {
     /** check job notification types - compare with the current notification type(configured in the xml configuration) */
     private NotifyResult checkJobNotificationTypes(NotificationType type, JobNotification jn, String jobName) {
         // check if empty
-        if (jn.getTypes() == null || jn.getTypes().size() == 0) {
+        if (HistoryNotification.isJobNotificationTypesEmpty(jn.getTypes())) {
             return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, getNotConfiguredMsg(type, null), jobName, jn.getMail().getTo(),
-                    jn.getMail().getCc(), jn.getMail().getBcc()));
+                    jn.getMail().getCc(), jn.getMail().getBcc(), null));
         }
 
         // check if the job notification "mail on" types not configured in the global notification
-        Set<String> types = jn.getTypes().stream().map(e -> {
-            return e.name().toUpperCase();
-        }).collect(Collectors.toSet());
+        Set<String> types = getTypes(jn.getTypes());
         switch (type) {
         case ERROR:
         case SUCCESS:
         case WARNING:
             if (!types.contains(type.name().toUpperCase())) {
                 return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, getNotConfiguredMsg(type, types), jobName, jn.getMail()
-                        .getTo(), jn.getMail().getCc(), jn.getMail().getBcc()));
+                        .getTo(), jn.getMail().getCc(), jn.getMail().getBcc(), null));
             }
             break;
         case RECOVERED:
             if (!types.contains(NotificationType.ERROR.name().toUpperCase())) {
                 return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, getNotConfiguredMsg(NotificationType.ERROR, types), jobName,
-                        jn.getMail().getTo(), jn.getMail().getCc(), jn.getMail().getBcc()));
+                        jn.getMail().getTo(), jn.getMail().getCc(), jn.getMail().getBcc(), null));
             }
             break;
         case ACKNOWLEDGED:
             return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, "not supported", jobName, jn.getMail().getTo(), jn.getMail()
-                    .getCc(), jn.getMail().getBcc()));
+                    .getCc(), jn.getMail().getBcc(), null));
         }
 
         return null;
@@ -319,25 +326,42 @@ public class NotifierMail extends ANotifier {
 
     /** check required to */
     private NotifyResult checkJobMailTo(NotificationType type, JobNotification jn, String jobName) {
+        if (jn.getMail() == null) {
+            return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, "missing to", jobName, null, null, null, jn.getTypes()));
+        }
+
         String to = getValue(jn.getMail().getTo());
         if (to.length() == 0) {
             return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, "missing to", jobName, to, jn.getMail().getCc(), jn.getMail()
-                    .getBcc()));
+                    .getBcc(), jn.getTypes()));
         }
         return null;
     }
 
-    private StringBuilder getSkipCause(NotificationType type, String msg, String jobName, String to, String cc, String bcc) {
+    private StringBuilder getSkipCause(NotificationType type, String msg, String jobName, String to, String cc, String bcc,
+            List<JobNotificationType> types) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(ANotifier.getTypeAsString(type)).append("]");
         sb.append("[").append(msg).append("]");
         sb.append("[job=").append(jobName).append("]");
+        if (types != null) {
+            sb.append("[mail on=").append(String.join(",", getTypes(types))).append("]");
+        }
         sb.append("[");
         sb.append("to=").append(getValue(to));
         sb.append(",cc=").append(getValue(cc));
         sb.append(",bcc=").append(getValue(bcc));
         sb.append("]");
         return sb;
+    }
+
+    private Set<String> getTypes(List<JobNotificationType> types) {
+        if (types == null) {
+            return null;
+        }
+        return types.stream().map(e -> {
+            return e.name().toUpperCase();
+        }).collect(Collectors.toSet());
     }
 
     private String getNotConfiguredMsg(NotificationType type, Set<String> types) {
