@@ -287,7 +287,7 @@ public class DeployedConfigurationDBLayer {
             Query<WorkflowId> query = session.createQuery(hql.toString());
             query.setParameter("type", DeployType.WORKFLOW.intValue());
             query.setParameter("controllerId", controllerId);
-            query.setParameter("boardName", getRegexpParameter(boardName,"\""));
+            query.setParameter("boardName", getRegexpParameter(boardName, "\""));
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -295,7 +295,7 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<WorkflowId> getUsedWorkflowsByExpectedNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
@@ -322,7 +322,7 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<String> getExpectedNoticeBoardWorkflows(String controllerId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select dc.name from ");
@@ -348,7 +348,7 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<WorkflowId> getAddOrderWorkflowsByWorkflow(String workflowName, String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
@@ -375,9 +375,8 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
-    public Set<String> getAddOrderWorkflows(String controllerId) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+
+    public Set<String> getAddOrderWorkflows(String controllerId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select ");
             hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.addOrders")).append(" as addOrders from ");
@@ -388,7 +387,7 @@ public class DeployedConfigurationDBLayer {
             hql.append("and sw.deployed=1 ");
             hql.append("and ");
             hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.addOrders")).append(" is not null");
-            
+
             Query<String> query = session.createQuery(hql.toString());
             query.setParameter("type", DeployType.WORKFLOW.intValue());
             query.setParameter("controllerId", controllerId);
@@ -409,7 +408,7 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<WorkflowId> getWorkflowsIds(List<String> workflowNames, String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
         if (workflowNames.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
@@ -525,7 +524,7 @@ public class DeployedConfigurationDBLayer {
                 clauses.add("name in (:names)");
             }
         }
-        
+
         // TODO consider max in
         if (filter.getWorkflowIds() != null && !filter.getWorkflowIds().isEmpty()) {
             if (filter.getWorkflowIds().size() == 1) {
@@ -609,10 +608,10 @@ public class DeployedConfigurationDBLayer {
     private String getRegexpParameter(String param, String prefixSuffix) {
         return regexpParamPrefixSuffix + prefixSuffix + param + prefixSuffix + regexpParamPrefixSuffix;
     }
-    
+
     private void setRegexpParamPrefixSuffix() {
         try {
-            if (session.getFactory().getDbms().equals(Dbms.MSSQL)) {
+            if (Dbms.MSSQL.equals(session.getFactory().getDbms())) {
                 regexpParamPrefixSuffix = "%";
             }
         } catch (Throwable e) {

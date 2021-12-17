@@ -70,7 +70,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
             batchSize = cleanupSchedule.getService().getConfig().getBatchSize();
             try {
-                if (batchSize > ORACLE_MAX_BATCH_SIZE && cleanupSchedule.getFactory().getDbms().equals(Dbms.ORACLE)) {
+                if (batchSize > ORACLE_MAX_BATCH_SIZE && Dbms.ORACLE.equals(cleanupSchedule.getFactory().getDbms())) {
                     LOGGER.info(String.format("[%s][run][configured batch_size=%s][skip]use max batch_size=%s for oracle", logIdentifier, batchSize,
                             ORACLE_MAX_BATCH_SIZE));
 

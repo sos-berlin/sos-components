@@ -1,6 +1,7 @@
 package com.sos.joc.db.cleanup;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.SOSHibernateSession;
 
 public class AuditLogCleanup {
@@ -46,16 +47,23 @@ public class AuditLogCleanup {
             connection = factory.openStatelessSession("AuditLogCleanup");
             connection.beginTransaction();
 
-            Enum<SOSHibernateFactory.Dbms> dbms = factory.getDbms();
+            Dbms dbms = factory.getDbms();
             String stmt = null;
-            if (dbms.equals(SOSHibernateFactory.Dbms.MSSQL)) {
+            switch (dbms) {
+            case MSSQL:
                 stmt = "EXEC JOC_AUDIT_LOG_CLEANUP " + age;
-            } else if (dbms.equals(SOSHibernateFactory.Dbms.MYSQL)) {
+                break;
+            case MYSQL:
                 stmt = "CALL JOC_AUDIT_LOG_CLEANUP(" + age + ")";
-            } else if (dbms.equals(SOSHibernateFactory.Dbms.ORACLE)) {
+                break;
+            case ORACLE:
                 stmt = "CALL JOC_AUDIT_LOG_CLEANUP(" + age + ")";
-            } else if (dbms.equals(SOSHibernateFactory.Dbms.PGSQL)) {
+                break;
+            case PGSQL:
                 stmt = "SELECT JOC_AUDIT_LOG_CLEANUP(" + age + ")";
+                break;
+            default:
+                break;
             }
 
             System.out.println("Execute " + dbms + ": " + stmt);

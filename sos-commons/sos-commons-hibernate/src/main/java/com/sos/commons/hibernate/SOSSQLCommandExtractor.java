@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateSQLCommandExtractorException;
 import com.sos.commons.util.SOSString;
 
@@ -24,11 +25,11 @@ public class SOSSQLCommandExtractor {
     private static final String REPLACEMENT_DOUBLE_APOSTROPHE = "YyyyY";
 
     private String beginProcedure = "";
-    private final Enum<SOSHibernateFactory.Dbms> dbms;
+    private final Dbms dbms;
     private int majorVersion = -1;
     private int minorVersion = -1;
 
-    public SOSSQLCommandExtractor(Enum<SOSHibernateFactory.Dbms> dbms) {
+    public SOSSQLCommandExtractor(Dbms dbms) {
         this.dbms = dbms;
     }
 
@@ -40,7 +41,7 @@ public class SOSSQLCommandExtractor {
         if (isTraceEnabled) {
             LOGGER.trace(String.format("[%s][content]%s", method, content));
         }
-        if (SOSHibernateFactory.Dbms.H2.equals(dbms) && content.startsWith("DROP ALIAS")) {// TODO
+        if (Dbms.H2.equals(dbms) && content.startsWith("DROP ALIAS")) {// TODO
             return extractH2Aliases(content);
         }
 
@@ -241,11 +242,11 @@ public class SOSSQLCommandExtractor {
         private String commandSpltter;
 
         private final String content;
-        private final Enum<SOSHibernateFactory.Dbms> dbms;
+        private final Dbms dbms;
         private final int majorVersion;
         private final int minorVersion;
 
-        public Preparer(Enum<SOSHibernateFactory.Dbms> dbms, int majorVersion, int minorVersion, String content) {
+        public Preparer(Dbms dbms, int majorVersion, int minorVersion, String content) {
             this.dbms = dbms;
             this.majorVersion = majorVersion;
             this.minorVersion = minorVersion;
@@ -284,23 +285,31 @@ public class SOSSQLCommandExtractor {
             // "Space is not allowed after parameter prefix ':'" Exception
             // e.g. Oracle: myVar := SYSDATE;
             StringBuilder sb = new StringBuilder(content.replaceAll("\r\n", "\n").replaceAll("\\;[ \\t]", ";"));
-            if (dbms.equals(SOSHibernateFactory.Dbms.MSSQL)) {
+            switch (dbms) {
+            case MSSQL:
                 commandSpltter = "(?i)\nGO\\s*\n|\n/\n";
-            } else if (dbms.equals(SOSHibernateFactory.Dbms.MYSQL)) {
+                break;
+            case MYSQL:
                 commandSpltter = "\n\\\\g\n";
-            } else if (dbms.equals(SOSHibernateFactory.Dbms.H2)) {
+                break;
+            case H2:
                 commandSpltter = "\n\\\\g\n";
-            } else if (dbms.equals(SOSHibernateFactory.Dbms.ORACLE)) {
+                break;
+            case ORACLE:
                 commandSpltter = "\n/\n";
-            } else if (dbms.equals(SOSHibernateFactory.Dbms.PGSQL)) {
+                break;
+            case PGSQL:
                 commandSpltter = "\\$\\${1}[\\s]+(LANGUAGE|language){1}[\\s]+(plpgsql|PLPGSQL){1}[\\s]*;";
                 commandCloser = "$$ LANGUAGE plpgsql;";
                 addCommandCloser = false;
-            } else if (dbms.equals(SOSHibernateFactory.Dbms.DB2)) {
+                break;
+            case DB2:
                 commandSpltter = "\n@\n";
-            } else if (dbms.equals(SOSHibernateFactory.Dbms.SYBASE)) {
+                break;
+            case SYBASE:
                 commandSpltter = "\ngo\n";
-            } else if (dbms.equals(SOSHibernateFactory.Dbms.FBSQL)) {
+                break;
+            case FBSQL:
                 StringBuilder patterns = new StringBuilder("set+[\\s]*term[inator]*[\\s]*(.*);");
                 Pattern p = Pattern.compile(patterns.toString());
                 Matcher matcher = p.matcher(content.toString().toLowerCase().trim());
@@ -312,14 +321,13 @@ public class SOSSQLCommandExtractor {
                 } else {
                     commandSpltter = "\n/\n";
                 }
-            } else {
+                break;
+            default:
                 throw new SOSHibernateSQLCommandExtractorException(String.format("unsupported dbms=%s", dbms));
             }
-
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("[%s]commandCloser=%s, commandSpltter=; or %s", method, commandCloser, commandSpltter));
             }
-
             return sb.toString();
         }
 
@@ -329,7 +337,7 @@ public class SOSSQLCommandExtractor {
             StringTokenizer st = new StringTokenizer(content, "\n");
             boolean addRow = true;
             boolean isVersionComment = false;
-            boolean isMySQL = dbms.equals(SOSHibernateFactory.Dbms.MYSQL);
+            boolean isMySQL = Dbms.MYSQL.equals(dbms);
             while (st.hasMoreTokens()) {
                 String row = st.nextToken().trim();
                 if (row == null || row.isEmpty()) {

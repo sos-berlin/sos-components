@@ -18,7 +18,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
-import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -57,8 +56,10 @@ import com.sos.schema.JsonValidator;
 public class ControllersResourceComponentsImpl extends JOCResourceImpl implements IControllersResourceComponents {
 
     private static final String API_CALL = "./controller/components";
-    
-    @Context UriInfo uriInfo;
+
+    @Context
+    UriInfo uriInfo;
+
     @Override
     public JOCDefaultResponse postComponents(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
@@ -80,7 +81,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
 
             List<ControllerAnswer> controllers = ControllersResourceImpl.getControllerAnswers(controllerIdObj.getControllerId(), accessToken,
                     connection);
-            //TODO controllerConnectionState from database, here a fake
+            // TODO controllerConnectionState from database, here a fake
             List<ControllerConnectionState> fakeControllerConnections = controllers.stream().map(c -> {
                 ControllerConnectionState s = new ControllerConnectionState();
                 s.setRole(c.getRole());
@@ -93,7 +94,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                 s.setState(States.getConnectionState(ConnectionStateText.unknown));
                 return s;
             }).collect(Collectors.toList());
-            
+
             ClusterType clusterType = getClusterType(controllers);
             entity.setClusterState(States.getClusterState(clusterType));
             entity.setControllers(controllers.stream().map(Controller.class::cast).collect(Collectors.toList()));
@@ -111,7 +112,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             Globals.disconnect(connection);
         }
     }
-    
+
     private String getUri(String hostname) {
         String baseUri = uriInfo.getBaseUri().normalize().toString().replaceFirst("/joc/api(/.*)?$", "");
         if (baseUri.matches("https?://localhost:.*") && hostname != null && !hostname.equals("unknown")) {
@@ -119,7 +120,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         }
         return baseUri;
     }
-    
+
     private String getHostname() {
         String hostname = "unknown";
         try {
@@ -129,9 +130,9 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         }
         return hostname;
     }
-    
-    private List<Cockpit> setCockpits(SOSHibernateSession connection, List<ControllerConnectionState> fakeControllerConnections, List<ControllerConnectionState> unknownControllerConnections)
-            throws DBConnectionRefusedException, DBInvalidDataException {
+
+    private List<Cockpit> setCockpits(SOSHibernateSession connection, List<ControllerConnectionState> fakeControllerConnections,
+            List<ControllerConnectionState> unknownControllerConnections) throws DBConnectionRefusedException, DBInvalidDataException {
         JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(connection);
         List<DBItemJocInstance> instances = dbLayer.getInstances();
         DBItemJocCluster activeInstance = dbLayer.getCluster();
@@ -141,10 +142,11 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         if (instances != null) {
             Boolean isCluster = instances.size() > 1;
             InventoryOperatingSystemsDBLayer dbOsLayer = new InventoryOperatingSystemsDBLayer(connection);
-            List<DBItemInventoryOperatingSystem> operatingSystems =  dbOsLayer.getOSItems(instances.stream().map(DBItemJocInstance::getOsId).filter(Objects::nonNull).collect(Collectors.toSet()));
+            List<DBItemInventoryOperatingSystem> operatingSystems = dbOsLayer.getOSItems(instances.stream().map(DBItemJocInstance::getOsId).filter(
+                    Objects::nonNull).collect(Collectors.toSet()));
             Map<Long, DBItemInventoryOperatingSystem> osMap = null;
             if (operatingSystems != null) {
-                osMap = operatingSystems.stream().collect(Collectors.toMap(DBItemInventoryOperatingSystem::getId, Function.identity())); 
+                osMap = operatingSystems.stream().collect(Collectors.toMap(DBItemInventoryOperatingSystem::getId, Function.identity()));
             }
             String version = readVersion();
             long nowSeconds = Instant.now().getEpochSecond();
@@ -167,26 +169,26 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                 }
                 try {
                     cockpit.setSecurityLevel(JocSecurityLevel.fromValue(instance.getSecurityLevel().toUpperCase()));
-                } catch (Exception e ){
+                } catch (Exception e) {
                     cockpit.setSecurityLevel(JocSecurityLevel.LOW);
                 }
                 cockpit.setStartedAt(instance.getStartedAt());
                 cockpit.setTitle(instance.getTitle());
                 cockpit.setVersion(version);
                 cockpit.setLastHeartbeat(instance.getHeartBeat());
-                
+
                 // determine ClusterNodeState
                 Boolean isActive = null;
                 if (activeInstance != null) {
                     isActive = instance.getMemberId().equals(activeInstance.getMemberId());
                 }
                 cockpit.setClusterNodeState(States.getClusterNodeState(isActive, isCluster));
-                
+
                 // determine ComponentState/ConnectionState depends on last heart beat
                 cockpit.setComponentState(States.getComponentState(ComponentStateText.operational));
                 cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.established));
                 cockpit.setControllerConnectionStates(fakeControllerConnections);
-                
+
                 if (cockpit.getLastHeartbeat() == null) {
                     if (!cockpit.getCurrent()) {
                         cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.unknown));
@@ -196,7 +198,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                 } else {
                     long heartBeatSeconds = cockpit.getLastHeartbeat().toInstant().getEpochSecond();
                     if (nowSeconds - heartBeatSeconds <= 31) {
-                        //retain unchanged established
+                        // retain unchanged established
                     } else if (nowSeconds - heartBeatSeconds <= 61) {
                         cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.unstable));
                     } else {
@@ -209,7 +211,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                         }
                     }
                 }
-                
+
                 if (cockpit.getCurrent()) {
                     String uri = getUri(hostname);
                     if (!uri.equals(instance.getUri())) {
@@ -218,7 +220,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                     }
                 }
                 cockpit.setUrl(instance.getUri());
-                
+
                 cockpits.add(cockpit);
             }
         }
@@ -239,26 +241,33 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
     }
 
     private static DB getDB(SOSHibernateSession connection) throws SOSHibernateException {
-        Enum<Dbms> dbms = connection.getFactory().getDbms();
+        Dbms dbms = connection.getFactory().getDbms();
         String stmt = null;
         String version = null;
         DB db = new DB();
-
-        if (dbms == SOSHibernateFactory.Dbms.MSSQL) {
+        switch (dbms) {
+        case MSSQL:
             db.setDbms("SQL Server");
             stmt = "select CONVERT(varchar(255), @@version)";
-        } else if (dbms == SOSHibernateFactory.Dbms.MYSQL) {
+            break;
+        case MYSQL:
             db.setDbms("MySQL");
             stmt = "select version()";
-        } else if (dbms == SOSHibernateFactory.Dbms.ORACLE) {
+            break;
+        case ORACLE:
             db.setDbms("Oracle");
             stmt = "select BANNER from v$version";
-        } else if (dbms == SOSHibernateFactory.Dbms.PGSQL) {
+            break;
+        case PGSQL:
             db.setDbms("PostgreSQL");
             stmt = "show server_version";
-        } else if (dbms == SOSHibernateFactory.Dbms.H2) {
+            break;
+        case H2:
             db.setDbms("H2");
             stmt = "select h2version()";
+            break;
+        default:
+            break;
         }
 
         if (stmt != null) {
@@ -270,7 +279,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                 }
             }
             if (version != null) {
-                if (dbms == SOSHibernateFactory.Dbms.MSSQL) {
+                if (Dbms.MSSQL.equals(dbms)) {
                     // only first line
                     version = version.trim().split("\r?\n", 2)[0];
                 }
@@ -293,14 +302,16 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             if (unreachables == masters.size()) {
                 //
             } else if (unreachables == 0) {
-                Optional<ControllerAnswer> j = masters.stream().filter(m -> m.getClusterNodeState().get_text() == ClusterNodeStateText.active).findAny();
+                Optional<ControllerAnswer> j = masters.stream().filter(m -> m.getClusterNodeState().get_text() == ClusterNodeStateText.active)
+                        .findAny();
                 if (j.isPresent()) {
                     clusterType = j.get().getClusterState();
                 } else {
                     clusterType = masters.get(0).getClusterState();
                 }
             } else {
-                ControllerAnswer j = masters.stream().filter(m -> m.getConnectionState().get_text() != ConnectionStateText.unreachable).findAny().get();
+                ControllerAnswer j = masters.stream().filter(m -> m.getConnectionState().get_text() != ConnectionStateText.unreachable).findAny()
+                        .get();
                 clusterType = j.getClusterState();
                 if (j.isCoupledOrPreparedTobeCoupled()) {
                     int index = masters.indexOf(j);
@@ -311,7 +322,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                         masters.get(otherIndex).setClusterNodeState(States.getClusterNodeState(true, true));
                     }
                     if (j.getClusterState() == ClusterType.PREPARED_TO_BE_COUPLED) {
-                        //masters.get(otherIndex).setComponentState(States.getComponentState(ComponentStateText.inoperable));
+                        // masters.get(otherIndex).setComponentState(States.getComponentState(ComponentStateText.inoperable));
                     }
                     if (j.getClusterState() == ClusterType.COUPLED) {
                         masters.get(otherIndex).setIsCoupled(true);

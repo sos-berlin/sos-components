@@ -11,7 +11,6 @@ import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
-import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 
 public class SOSHibernateJsonValue extends StandardSQLFunction {
 
@@ -41,10 +40,11 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
         }
         String property = arguments.get(1).toString();
         String path = arguments.get(2).toString();
-
-        Enum<SOSHibernateFactory.Dbms> dbms = this.factory.getDbms();
-        if (Dbms.MYSQL.equals(dbms)) {
-            ReturnType returnType = argument2ReturnType(arguments.get(0).toString());
+        ReturnType returnType;
+        
+        switch (this.factory.getDbms()) {
+        case MYSQL:
+            returnType = argument2ReturnType(arguments.get(0).toString());
             // path = '$.ports.usb' -> '$.ports.usb'
             String extract = "JSON_EXTRACT(" + property + "," + path + ")";
             if (returnType.equals(ReturnType.SCALAR)) {
@@ -52,14 +52,15 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
             } else {
                 return extract;
             }
-        } else if (Dbms.MSSQL.equals(dbms) || Dbms.ORACLE.equals(dbms)) {
-            ReturnType returnType = argument2ReturnType(arguments.get(0).toString());
+        case MSSQL:
+        case ORACLE:
+            returnType = argument2ReturnType(arguments.get(0).toString());
             if (returnType.equals(ReturnType.SCALAR)) {
                 return "JSON_VALUE(" + property + "," + path + ")";
             } else {
                 return "JSON_QUERY(" + property + "," + path + ")";
             }
-        } else if (Dbms.PGSQL.equals(dbms)) {
+        case PGSQL:
             // path = '$.ports.usb' -> 'ports'->>'usb'
             // '<column>->'ports'->>'usb'
             // path = '$.arg' -> 'arg'
@@ -76,11 +77,12 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
                 r.append("'->>'").append(arr[arr.length - 1]).append("'");
             }
             return r.toString();
-        } else if (Dbms.H2.equals(dbms)) {
+        case H2:
             // path = '$.ports.usb' -> '$.ports.usb'
             return com.sos.commons.hibernate.function.json.h2.Function.NAME + "(" + property + "," + path + ")";
+        default:
+            return NAME;
         }
-        return NAME;
     }
 
     private ReturnType argument2ReturnType(String arg) throws QueryException {

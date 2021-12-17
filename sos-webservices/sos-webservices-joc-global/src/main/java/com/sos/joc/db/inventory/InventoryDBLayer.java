@@ -130,10 +130,9 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
     }
-    
-    public Map<Long, List<DBItemInventoryReleasedConfiguration>> getReleasedItemsByConfigurationIds(Collection<Integer> types,
-            String folder, boolean recursive, Collection<String> deletedFolders)
-            throws SOSHibernateException {
+
+    public Map<Long, List<DBItemInventoryReleasedConfiguration>> getReleasedItemsByConfigurationIds(Collection<Integer> types, String folder,
+            boolean recursive, Collection<String> deletedFolders) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
         hql.append("where irc.id in (").append(getNotDeletedConfigurationsHQL(types, folder, recursive, deletedFolders)).append(")");
         Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
@@ -273,8 +272,8 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<DBItemInventoryConfiguration> getNotDeletedConfigurations(Collection<Integer> types, String folder, boolean recursive, Collection<String> deletedFolders)
-            throws SOSHibernateException {
+    public List<DBItemInventoryConfiguration> getNotDeletedConfigurations(Collection<Integer> types, String folder, boolean recursive,
+            Collection<String> deletedFolders) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where deleted = 0");
         if (types != null && !types.isEmpty()) {
@@ -310,7 +309,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return Collections.emptyList();
     }
-    
+
     private String getNotDeletedConfigurationsHQL(Collection<Integer> types, String folder, boolean recursive, Collection<String> deletedFolders)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select id from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -431,10 +430,10 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getSingleResult(query);
     }
-    
+
     public Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> getConfigurationsWithAllDeployments(Collection<Integer> types,
             String folder, boolean recursive, Collection<String> deletedFolders) throws SOSHibernateException {
-        
+
         StringBuilder hql = new StringBuilder("select ");
         hql.append("ic.id as icId");
         hql.append(",ic.type as icType");
@@ -473,15 +472,16 @@ public class InventoryDBLayer extends DBLayer {
             }
         }
         query.setParameter("state", DeploymentState.DEPLOYED.value());
-        
+
         List<InventoryDeployablesTreeFolderItem> result = getSession().getResultList(query);
         if (result != null) {
-            Comparator<InventoryDeploymentItem> comp = Comparator.nullsFirst(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate).reversed());
+            Comparator<InventoryDeploymentItem> comp = Comparator.nullsFirst(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate)
+                    .reversed());
             return result.stream().map(InventoryDeployablesTreeFolderItem::map).collect(Collectors.groupingBy(
-                    InventoryDeployablesTreeFolderItem::getConfiguration, Collectors.mapping(InventoryDeployablesTreeFolderItem::getDeployment, Collectors
-                            .toCollection(() -> new TreeSet<>(comp)))));
+                    InventoryDeployablesTreeFolderItem::getConfiguration, Collectors.mapping(InventoryDeployablesTreeFolderItem::getDeployment,
+                            Collectors.toCollection(() -> new TreeSet<>(comp)))));
         }
-        
+
         return Collections.emptyMap();
     }
 
@@ -581,7 +581,7 @@ public class InventoryDBLayer extends DBLayer {
     public List<DBItemInventoryConfiguration> getConfigurationByNames(List<String> names, Integer type) throws SOSHibernateException {
         boolean isCalendar = JocInventory.isCalendar(type);
         if (names == null) {
-            names = Collections.emptyList(); 
+            names = Collections.emptyList();
         }
         if (names.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             List<DBItemInventoryConfiguration> result = new ArrayList<>();
@@ -740,7 +740,7 @@ public class InventoryDBLayer extends DBLayer {
                 query.setParameterList("names", names.stream().map(String::toLowerCase).collect(Collectors.toSet()));
             }
             query.setParameterList("types", JocInventory.getCalendarTypes());
-            List<DBItemInventoryConfiguration> result =  getSession().getResultList(query);
+            List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
             }
@@ -777,8 +777,7 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    public List<DBItemInventoryReleasedConfiguration> getConfigurationsByType(Collection<Integer> types)
-            throws SOSHibernateException {
+    public List<DBItemInventoryReleasedConfiguration> getConfigurationsByType(Collection<Integer> types) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         if (types != null && !types.isEmpty()) {
             hql.append(" where type in (:types)");
@@ -862,7 +861,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return result;
     }
-    
+
     public Set<String> getScriptNames() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" where type=:type");
         Query<String> query = getSession().createQuery(hql.toString());
@@ -1192,7 +1191,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return new HashSet<>();
     }
-    
+
     private List<Object[]> _getFoldersByFolder(List<String> folders) throws SOSHibernateException {
         if (folders == null) {
             folders = Collections.emptyList();
@@ -1239,7 +1238,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("where ic.type=:type ");
         hql.append("and ic.deployed=sw.deployed ");
         hql.append("and ");
-        
+
         String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.addOrders");
         hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":workflowName"));
 
@@ -1248,7 +1247,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("workflowName", getRegexpParameter(workflowName, "\""));
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getUsedWorkflowsByBoardName(String boardName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
         hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
@@ -1285,7 +1284,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getWorkflowsWithIncludedScripts() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where type=:type and content like :include");
@@ -1491,7 +1490,7 @@ public class InventoryDBLayer extends DBLayer {
 
     private void setRegexpParamPrefixSuffix() {
         try {
-            if (getSession().getFactory().getDbms().equals(Dbms.MSSQL)) {
+            if (Dbms.MSSQL.equals(getSession().getFactory().getDbms())) {
                 regexpParamPrefixSuffix = "%";
             }
         } catch (Throwable e) {

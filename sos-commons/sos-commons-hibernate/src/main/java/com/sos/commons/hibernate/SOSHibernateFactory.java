@@ -53,17 +53,19 @@ public class SOSHibernateFactory implements Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateFactory.class);
     private static final Logger CONNECTION_POOL_LOGGER = LoggerFactory.getLogger("ConnectionPool");
     private static final long serialVersionUID = 1L;
+
     private SOSClassList classMapping;
-    private Optional<Path> configFile = Optional.empty();
     private Configuration configuration;
-    private Properties configurationProperties;
-    private Enum<SOSHibernateFactory.Dbms> dbms = Dbms.UNKNOWN;
-    private Properties defaultConfigurationProperties;
+    private SessionFactory sessionFactory;
     private Dialect dialect;
+    private Properties configurationProperties;
+    private Properties defaultConfigurationProperties;
+    private Dbms dbms = Dbms.UNKNOWN;
+    private Optional<Path> configFile = Optional.empty();
+    private Optional<Integer> jdbcFetchSize = Optional.empty();
+
     private String identifier;
     private String logIdentifier;
-    private Optional<Integer> jdbcFetchSize = Optional.empty();
-    private SessionFactory sessionFactory;
     private boolean useDefaultConfigurationProperties = true;
 
     public SOSHibernateFactory() throws SOSHibernateConfigurationException {
@@ -149,11 +151,11 @@ public class SOSHibernateFactory implements Serializable {
     }
 
     public boolean dbmsIsPostgres() {
-        return dbms == SOSHibernateFactory.Dbms.PGSQL;
+        return Dbms.PGSQL.equals(dbms);
     }
 
     public boolean dbmsIsH2() {
-        return dbms == SOSHibernateFactory.Dbms.H2;
+        return Dbms.H2.equals(dbms);
     }
 
     public boolean getAutoCommit() throws SOSHibernateConfigurationException {
@@ -196,7 +198,7 @@ public class SOSHibernateFactory implements Serializable {
         return session;
     }
 
-    public Enum<SOSHibernateFactory.Dbms> getDbms() {
+    public Dbms getDbms() {
         return dbms;
     }
 
@@ -224,18 +226,24 @@ public class SOSHibernateFactory implements Serializable {
      * 
      * dialect.getSequenceNextValString(sequenceName) */
     public String getSequenceLastValString(String sequenceName) {
-        if (dbms.equals(SOSHibernateFactory.Dbms.MSSQL)) {
+        switch (dbms) {
+        case MSSQL:
             return "SELECT @@IDENTITY";
-        } else if (dbms.equals(SOSHibernateFactory.Dbms.MYSQL)) {
+        case MYSQL:
             return "SELECT LAST_INSERT_ID();";
-        } else if (dbms.equals(SOSHibernateFactory.Dbms.ORACLE)) {
+        case ORACLE:
             return "SELECT " + sequenceName + ".currval FROM DUAL";
-        } else if (dbms.equals(SOSHibernateFactory.Dbms.PGSQL)) {
+        case PGSQL:
             return "SELECT currval('" + sequenceName + "');";
-        } else if (dbms.equals(SOSHibernateFactory.Dbms.DB2)) {
+        case H2:
+            return "SELECT LAST_INSERT_ID();";
+        case DB2:
             return "SELECT IDENTITY_VAL_LOCAL() AS INSERT_ID FROM SYSIBM.SYSDUMMY1";
-        } else if (dbms.equals(SOSHibernateFactory.Dbms.SYBASE)) {
+        case SYBASE:
             return "SELECT @@IDENTITY";
+        case FBSQL:
+        case UNKNOWN:
+            break;
         }
         return null;
     }
@@ -296,13 +304,15 @@ public class SOSHibernateFactory implements Serializable {
             } else if (type instanceof org.hibernate.type.StringType) {
                 return "'" + value.toString().replaceAll("'", "''") + "'";
             } else if (type instanceof org.hibernate.type.TimestampType) {
-                if (dbms.equals(Dbms.ORACLE)) {
-                    String val = SOSDate.format((Date) value, "yyyy-MM-dd HH:mm:ss");
+                String val;
+                switch (dbms) {
+                case ORACLE:
+                    val = SOSDate.format((Date) value, "yyyy-MM-dd HH:mm:ss");
                     return "to_date('" + val + "','yyyy-mm-dd HH24:MI:SS')";
-                } else if (dbms.equals(Dbms.MSSQL)) {
-                    String val = SOSDate.format((Date) value, "yyyy-MM-dd HH:mm:ss.SSS");
+                case MSSQL:
+                    val = SOSDate.format((Date) value, "yyyy-MM-dd HH:mm:ss.SSS");
                     return "'" + val.replace(" ", "T") + "'";
-                } else {
+                default:
                     return TimestampType.INSTANCE.objectToSQLString((Date) value, dialect);
                 }
             }
@@ -394,7 +404,7 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
 
-    public static Enum<SOSHibernateFactory.Dbms> getDbms(Path configFile) throws SOSHibernateConfigurationException {
+    public static Dbms getDbms(Path configFile) throws SOSHibernateConfigurationException {
         String dialect = null;
         try {
             Configuration conf = new Configuration();
@@ -408,33 +418,33 @@ public class SOSHibernateFactory implements Serializable {
         return getDbms(dialect);
     }
 
-    public static Enum<SOSHibernateFactory.Dbms> getDbms(Dialect dialect) {
+    public static Dbms getDbms(Dialect dialect) {
         return getDbms(dialect == null ? null : dialect.getClass().getSimpleName());
     }
 
-    public static Enum<SOSHibernateFactory.Dbms> getDbms(String dialect) {
-        SOSHibernateFactory.Dbms db = SOSHibernateFactory.Dbms.UNKNOWN;
+    public static Dbms getDbms(String dialect) {
+        Dbms dbms = Dbms.UNKNOWN;
         if (dialect != null) {
             String dialectClassName = dialect.toLowerCase();
             if (dialectClassName.contains("db2")) {
-                db = Dbms.DB2;
+                dbms = Dbms.DB2;
             } else if (dialectClassName.contains("h2")) {
-                db = Dbms.H2;
+                dbms = Dbms.H2;
             } else if (dialectClassName.contains("firebird")) {
-                db = Dbms.FBSQL;
+                dbms = Dbms.FBSQL;
             } else if (dialectClassName.contains("sqlserver")) {
-                db = Dbms.MSSQL;
+                dbms = Dbms.MSSQL;
             } else if (dialectClassName.contains("mysql")) {
-                db = Dbms.MYSQL;
+                dbms = Dbms.MYSQL;
             } else if (dialectClassName.contains("oracle")) {
-                db = Dbms.ORACLE;
+                dbms = Dbms.ORACLE;
             } else if (dialectClassName.contains("postgre")) {
-                db = Dbms.PGSQL;
+                dbms = Dbms.PGSQL;
             } else if (dialectClassName.contains("sybase")) {
-                db = Dbms.SYBASE;
+                dbms = Dbms.SYBASE;
             }
         }
-        return db;
+        return dbms;
     }
 
     private void initClassMapping() {
@@ -575,7 +585,7 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
 
-    private void adjustAnnotations(Enum<SOSHibernateFactory.Dbms> dbms) {
+    private void adjustAnnotations(Dbms dbms) {
         if (classMapping != null) {
             if (Dbms.H2.equals(dbms)) {
                 changeJsonAnnotations4H2();

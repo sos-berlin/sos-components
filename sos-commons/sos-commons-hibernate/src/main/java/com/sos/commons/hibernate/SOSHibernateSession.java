@@ -36,6 +36,7 @@ import org.hibernate.transform.Transformers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateConnectionException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -1199,7 +1200,7 @@ public class SOSHibernateSession implements Serializable {
     private void onOpenSession() throws SOSHibernateOpenSessionException {
         String method = SOSHibernate.getMethodName(logIdentifier, "onOpenSession");
         try {
-            if (getFactory().getDbms().equals(SOSHibernateFactory.Dbms.MSSQL)) {
+            if (Dbms.MSSQL.equals(getFactory().getDbms())) {
                 String value = getFactory().getConfiguration().getProperties().getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_MSSQL_LOCK_TIMEOUT);
                 if (value != null && !value.equals("-1")) {
                     getSQLExecutor().execute("set LOCK_TIMEOUT " + value);
@@ -1231,7 +1232,7 @@ public class SOSHibernateSession implements Serializable {
             } else if (e instanceof StaleStateException) {
                 throw new SOSHibernateObjectOperationStaleStateException((StaleStateException) e, ex.getDbItem());
             } else if (e instanceof SQLException) {
-                if (getFactory().getDbms().equals(SOSHibernateFactory.Dbms.MYSQL)) {
+                if (Dbms.MYSQL.equals(getFactory().getDbms())) {
                     // MySQL with the mariadb driver not throws a specific exception - check error code
                     SQLException se = (SQLException) e;
                     if (se.getErrorCode() == 1205 || se.getErrorCode() == 1213) {// Lock wait timeout, Deadlock

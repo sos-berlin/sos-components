@@ -11,6 +11,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
+
 public class SOSSQLCommandExtractorTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSSQLCommandExtractorTest.class);
@@ -18,7 +20,7 @@ public class SOSSQLCommandExtractorTest {
     @Ignore
     @Test
     public void test() throws Exception {
-        SOSHibernateFactory.Dbms dbms = SOSHibernateFactory.Dbms.MSSQL;
+        Dbms dbms = Dbms.MSSQL;
 
         SOSSQLCommandExtractor ex = new SOSSQLCommandExtractor(dbms);
         Path file = Paths.get("src/test/resources/" + dbms.name().toLowerCase() + ".txt");

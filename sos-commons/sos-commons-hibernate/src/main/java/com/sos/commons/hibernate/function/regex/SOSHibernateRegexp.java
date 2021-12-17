@@ -11,7 +11,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
-import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.util.SOSString;
 
 public class SOSHibernateRegexp extends StandardSQLFunction {
@@ -44,11 +43,11 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
         String regexp = arguments.get(1).toString();
         String mssqlRegexp = arguments.size() == 3 ? arguments.get(2).toString() : null;
 
-        Enum<SOSHibernateFactory.Dbms> dbms = this.factory.getDbms();
-        if (Dbms.MYSQL.equals(dbms)) {
+        switch (this.factory.getDbms()) {
+        case MYSQL:
             // REGEXP_LIKE from MySQL 8.0
             return property + " REGEXP " + regexp;
-        } else if (Dbms.MSSQL.equals(dbms)) {
+        case MSSQL:
             // TODO
             String innRegexp = null;
             String quote = "'";
@@ -70,15 +69,15 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
                 innRegexp = mssqlRegexp.substring(1, mssqlRegexp.length() - 1);
             }
             return "(case when (" + property + " like " + quote + innRegexp + quote + ") then 1 else 0 end)";
-        } else if (Dbms.ORACLE.equals(dbms)) {
+        case ORACLE:
             return "(case when (REGEXP_LIKE(" + property + "," + regexp + ")) then 1 else 0 end)";
-        } else if (Dbms.PGSQL.equals(dbms)) {
+        case PGSQL:
             return "(case when (" + property + " ~ " + regexp + ") then 1 else 0 end)";
-        } else if (Dbms.H2.equals(dbms)) {
+        case H2:
             return "REGEXP_LIKE(" + property + "," + regexp + ")";
+        default:
+            return NAME;
         }
-
-        return NAME;
     }
 
     @Override

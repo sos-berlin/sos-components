@@ -10,7 +10,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
-import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 
 public class SOSHibernateSecondsDiff extends StandardSQLFunction {
 
@@ -36,20 +35,20 @@ public class SOSHibernateSecondsDiff extends StandardSQLFunction {
         String endTimeProperty = arguments.get(0).toString();
         String startTimeProperty = arguments.get(1).toString();
 
-        Enum<SOSHibernateFactory.Dbms> dbms = this.factory.getDbms();
-        if (Dbms.MYSQL.equals(dbms)) {
+        switch (this.factory.getDbms()) {
+        case MYSQL:
             return "(" + endTimeProperty + "-" + startTimeProperty + ")";
-        } else if (Dbms.MSSQL.equals(dbms)) {
+        case MSSQL:
             return "DATEDIFF(SECOND," + startTimeProperty + "," + endTimeProperty + ")";
-        } else if (Dbms.ORACLE.equals(dbms)) {
+        case ORACLE:
             return "ROUND(24*60*60*(" + endTimeProperty + "-" + startTimeProperty + "))";
-        } else if (Dbms.PGSQL.equals(dbms)) {
+        case PGSQL:
             return "CAST(EXTRACT(EPOCH FROM(" + endTimeProperty + "-" + startTimeProperty + ")) AS INTEGER)";
-        } else if (Dbms.H2.equals(dbms)) {
+        case H2:
             return "DATEDIFF(ss," + startTimeProperty + "," + endTimeProperty + ")";
-        } else if (Dbms.SYBASE.equals(dbms)) {
+        case SYBASE:
             return "DATEDIFF(ss," + endTimeProperty + "," + startTimeProperty + ")";
-        } else {
+        default:
             return "(" + endTimeProperty + "-" + startTimeProperty + ")";
         }
     }

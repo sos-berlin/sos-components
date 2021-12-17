@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 
 /** Column type:<br />
  * H2 (MySQL Mode) - JSON<br />
@@ -26,7 +27,7 @@ public class SOSHibernateJsonType implements UserType {
     public static final String TYPE_NAME = "sos_json";
 
     private final int[] sqlTypes = new int[] { Types.JAVA_OBJECT };
-    private Enum<SOSHibernateFactory.Dbms> dbms;
+    private Dbms dbms;
 
     @Override
     public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException,
@@ -35,14 +36,14 @@ public class SOSHibernateJsonType implements UserType {
             dbms = SOSHibernateFactory.getDbms(session.getFactory().getJdbcServices().getDialect());
         }
         if (value == null) {
-            if (dbms.equals(SOSHibernateFactory.Dbms.ORACLE)) {
+            if (Dbms.ORACLE.equals(dbms)) {
                 st.setNull(index, Types.CLOB);
             } else {
                 st.setNull(index, Types.OTHER);
             }
             return;
         }
-        if (dbms.equals(SOSHibernateFactory.Dbms.PGSQL)) {
+        if (Dbms.PGSQL.equals(dbms)) {
             st.setObject(index, value, Types.OTHER);
         } else {
             st.setObject(index, value);

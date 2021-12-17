@@ -69,7 +69,7 @@ public class DbInstaller {
                     factory.setAutoCommit(false);
                     factory.build();
 
-                    Enum<Dbms> dbms = factory.getDbms();
+                    Dbms dbms = factory.getDbms();
                     if (!supportedDbms.contains(dbms)) {
                         throw new SOSHibernateConfigurationException("Unsupported dbms: " + dbms.name());
                     }

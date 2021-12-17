@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.common.SOSBatchObject;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateSQLCommandExtractorException;
@@ -697,39 +698,52 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public void setDefaults() throws SOSHibernateException {
-        Enum<SOSHibernateFactory.Dbms> dbms = session.getFactory().getDbms();
+        Dbms dbms = session.getFactory().getDbms();
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s dbms=%s", SOSHibernate.getMethodName(logIdentifier, "setDefaults"), dbms));
         }
-        if (dbms.equals(SOSHibernateFactory.Dbms.MSSQL)) {
+        String dateFormat;
+        String language;
+        switch (dbms) {
+        case MSSQL:
             // default set LOCK_TIMEOUT xxx was set by the SOSHibernateFactory
-            String dateFormat = "set DATEFORMAT ymd";
-            String language = "set LANGUAGE British";
+            dateFormat = "set DATEFORMAT ymd";
+            language = "set LANGUAGE British";
             execute(dateFormat, language);
-        } else if (dbms.equals(SOSHibernateFactory.Dbms.MYSQL)) {
+            break;
+        case MYSQL:
             execute("SET SESSION SQL_MODE='ANSI_QUOTES'");
-        } else if (dbms.equals(SOSHibernateFactory.Dbms.ORACLE)) {
+            break;
+        case ORACLE:
             String nlsNumericCharacters = "ALTER SESSION SET NLS_NUMERIC_CHARACTERS='.,'";
             String nlsDateFormat = "ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS'";
             String nlsSort = "ALTER SESSION SET NLS_SORT='BINARY'";
             executeBatch(nlsNumericCharacters, nlsDateFormat, nlsSort);
             executeUpdateCallableStatement("begin dbms_output.enable(10000); end;");
-        } else if (dbms.equals(SOSHibernateFactory.Dbms.PGSQL)) {
+            break;
+        case PGSQL:
             String lcNumeric = "SELECT set_config('lc_numeric', '', true)";
             String dateStyle = "SELECT set_config('datestyle', 'ISO, YMD', true)";
             String defaultTransactionIsolation = "SELECT set_config('default_transaction_isolation', 'repeatable read', true)";
             execute(lcNumeric, dateStyle, defaultTransactionIsolation);
-        } else if (dbms.equals(SOSHibernateFactory.Dbms.SYBASE)) {
+            break;
+        case SYBASE:
+            dateFormat = "set DATEFORMAT 'ymd'";
+            language = "set LANGUAGE us_english";
             String isolationLevel = "set TRANSACTION ISOLATION LEVEL READ COMMITTED";
             String chainedOn = "set CHAINED ON";
             String quotedIdentifier = "set QUOTED_IDENTIFIER ON";
             String lockTimeout = "set LOCK WAIT 3";
             String closeOnEndtran = "set CLOSE ON ENDTRAN ON";
             String datefirst = "set DATEFIRST 1";
-            String dateFormat = "set DATEFORMAT 'ymd'";
-            String language = "set LANGUAGE us_english";
             String textsize = "set TEXTSIZE 2048000";
             execute(isolationLevel, chainedOn, quotedIdentifier, lockTimeout, closeOnEndtran, datefirst, dateFormat, language, textsize);
+            break;
+        case DB2:
+        case H2:
+        case FBSQL:
+        case UNKNOWN:
+            break;
         }
     }
 
