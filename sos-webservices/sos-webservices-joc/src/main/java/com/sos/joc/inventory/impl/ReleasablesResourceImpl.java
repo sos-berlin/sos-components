@@ -48,7 +48,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
     public JOCDefaultResponse releasables(final String accessToken, final byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            initLogging(IMPL_PATH_OLD, inBytes, accessToken);
             JsonValidator.validate(inBytes, ReleasablesFilter.class);
             ReleasablesFilter in = Globals.objectMapper.readValue(inBytes, ReleasablesFilter.class);
 
@@ -76,7 +76,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
     public JOCDefaultResponse releasablesTree(final String accessToken, final byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH_TREE, inBytes, accessToken);
+            initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, ReleasablesFilter.class);
             ReleasablesFilter in = Globals.objectMapper.readValue(inBytes, ReleasablesFilter.class);
 

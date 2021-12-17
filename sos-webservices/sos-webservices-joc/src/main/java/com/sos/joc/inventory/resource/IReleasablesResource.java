@@ -14,17 +14,17 @@ public interface IReleasablesResource {
 
     public static final String PATH = "releasables";
     public static final String IMPL_PATH = JocInventory.getResourceImplPath(PATH);
-    public static final String PATH_TREE = "releasables/tree";
-    public static final String IMPL_PATH_TREE = JocInventory.getResourceImplPath(PATH_TREE);
+    public static final String PATH_OLD = "releasables/old";
+    public static final String IMPL_PATH_OLD = JocInventory.getResourceImplPath(PATH_OLD);
 
     @POST
-    @Path(PATH)
+    @Path(PATH_OLD)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse releasables(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
     
     @POST
-    @Path(PATH_TREE)
+    @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse releasablesTree(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);

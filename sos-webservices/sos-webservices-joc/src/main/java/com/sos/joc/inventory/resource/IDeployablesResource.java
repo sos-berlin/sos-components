@@ -14,17 +14,17 @@ public interface IDeployablesResource {
 
     public static final String PATH = "deployables";
     public static final String IMPL_PATH = JocInventory.getResourceImplPath(PATH);
-    public static final String PATH_TREE = "deployables/tree";
-    public static final String IMPL_PATH_TREE = JocInventory.getResourceImplPath(PATH_TREE);
+    public static final String PATH_OLD = "deployables/old";
+    public static final String IMPL_PATH_OLD = JocInventory.getResourceImplPath(PATH_OLD);
 
     @POST
-    @Path(PATH)
+    @Path(PATH_OLD)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse deployables(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
     
     @POST
-    @Path(PATH_TREE)
+    @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse deployablesTree(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);

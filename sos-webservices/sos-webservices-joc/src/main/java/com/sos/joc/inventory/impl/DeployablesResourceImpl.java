@@ -56,7 +56,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     public JOCDefaultResponse deployables(final String accessToken, final byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            initLogging(IMPL_PATH_OLD, inBytes, accessToken);
             JsonValidator.validate(inBytes, DeployablesFilter.class);
             DeployablesFilter in = Globals.objectMapper.readValue(inBytes, DeployablesFilter.class);
 
@@ -84,7 +84,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     public JOCDefaultResponse deployablesTree(final String accessToken, final byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH_TREE, inBytes, accessToken);
+            initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, DeployablesFilter.class);
             DeployablesFilter in = Globals.objectMapper.readValue(inBytes, DeployablesFilter.class);
 
