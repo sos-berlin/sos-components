@@ -879,11 +879,17 @@ public class SOSMail {
         return s.substring(0, s.length() - 1).trim();
     }
 
-    public void clearRecipients() throws Exception {
+    public void clearRecipients() {
         LOGGER.debug("clearRecipients");
-        toList.clear();
-        ccList.clear();
-        bccList.clear();
+        if (toList != null) {
+            toList.clear();
+        }
+        if (ccList != null) {
+            ccList.clear();
+        }
+        if (bccList != null) {
+            bccList.clear();
+        }
         changed = true;
     }
 

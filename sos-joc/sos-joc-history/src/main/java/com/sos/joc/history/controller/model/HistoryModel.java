@@ -31,6 +31,7 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
 import com.sos.inventory.model.workflow.Workflow;
+import com.sos.joc.classes.history.HistoryNotification;
 import com.sos.joc.classes.history.HistoryPosition;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowJob;
@@ -1743,10 +1744,12 @@ public class HistoryModel {
         Map<String, CachedWorkflowJob> map = new HashMap<>();
         for (WorkflowJob job : s.getJobs()) {
             String notification = null;
-            try {
-                notification = HistoryUtil.json2String(job.getJob().getNotification());
-            } catch (JsonProcessingException e) {
-                LOGGER.error(String.format("[workflow=%s][job=%s][error on read notification]%s", workflowName, job.getName(), e.toString()), e);
+            if (!HistoryNotification.isJobMailNotificationEmpty(job.getJob().getNotification())) {
+                try {
+                    notification = HistoryUtil.json2String(job.getJob().getNotification());
+                } catch (JsonProcessingException e) {
+                    LOGGER.error(String.format("[workflow=%s][job=%s][error on read notification]%s", workflowName, job.getName(), e.toString()), e);
+                }
             }
             map.put(job.getName(), new CachedWorkflowJob(job.getJob().getCriticality(), job.getJob().getTitle(), job.getJob().getWarnIfLonger(), job
                     .getJob().getWarnIfShorter(), notification));
