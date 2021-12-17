@@ -506,8 +506,8 @@ public class HistoryMonitoringModel implements Serializable {
 
     private HistoryOrderStepResultWarn analyzeLongerThan(HistoryOrderStepBean hosb, String definition, Date startTime, Date endDate, Long historyId,
             boolean remove) {
-        Long expected = getExpectedSeconds(JobWarning.LONGER_THAN, hosb, definition);
-        if (expected == null) {
+        ExpectedSeconds expected = getExpectedSeconds(JobWarning.LONGER_THAN, hosb, definition);
+        if (expected == null || expected.getSeconds() == null) {
             return null;
         }
 
@@ -516,7 +516,7 @@ public class HistoryMonitoringModel implements Serializable {
         }
 
         Long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
-        if (diff > expected) {
+        if (diff > expected.getSeconds()) {
             return new HistoryOrderStepResultWarn(JobWarning.LONGER_THAN, String.format("Job runs longer than the expected %s",
                     getExpectedDurationMessage(definition, expected)));
         } else {
@@ -530,38 +530,39 @@ public class HistoryMonitoringModel implements Serializable {
     }
 
     private HistoryOrderStepResultWarn analyzeShorterThan(HistoryOrderStepBean hosb, String definition, Date startTime, Date endDate) {
-        Long expected = getExpectedSeconds(JobWarning.SHORTER_THAN, hosb, definition);
-        if (expected == null) {
+        ExpectedSeconds expected = getExpectedSeconds(JobWarning.SHORTER_THAN, hosb, definition);
+        if (expected == null || expected.getSeconds() == null) {
             return null;
         }
         Long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
-        if (diff < expected) {
+        if (diff < expected.getSeconds()) {
             return new HistoryOrderStepResultWarn(JobWarning.SHORTER_THAN, String.format("Job runs shorter than the expected %s",
                     getExpectedDurationMessage(definition, expected)));
         }
         return null;
     }
 
-    private String getExpectedDurationMessage(String definition, Long expected) {
+    private String getExpectedDurationMessage(String definition, ExpectedSeconds expected) {
         if (isPercentage(definition)) {
-            return String.format("avg duration(%s) of %s", definition, SOSDate.getDuration(expected));
+            String avg = expected.getAvg() == null ? "" : SOSDate.getDuration(expected.getAvg());
+            return String.format("duration of %s (avg=%s, configured=%s)", SOSDate.getDuration(expected.getSeconds()), avg, definition);
         } else if (isTime(definition)) {
-            return String.format("duration(%s) of %s", definition, SOSDate.getDuration(expected));
+            return String.format("duration of %s (configured=%s)", SOSDate.getDuration(expected.getSeconds()), definition);
         }
-        return String.format("duration of %s", SOSDate.getDuration(expected));
+        return String.format("duration of %s", SOSDate.getDuration(expected.getSeconds()));
     }
 
-    private Long getExpectedSeconds(JobWarning type, HistoryOrderStepBean hosb, String definition) {
+    private ExpectedSeconds getExpectedSeconds(JobWarning type, HistoryOrderStepBean hosb, String definition) {
         if (SOSString.isEmpty(definition)) {
-            return null;
+            return new ExpectedSeconds(null, null);
         }
-        String method = "getExpectedSeconds";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         Long seconds = null;
+        Long avg = null;
         if (isPercentage(definition)) {
             int percentage = Integer.parseInt(definition.substring(0, definition.length() - 1));
             try {
-                Long avg = dbLayer.getJobAvg(hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName());
+                avg = dbLayer.getJobAvg(hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName());
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][%s][%s][workflowPath=%s,job=%s][%s definition=%s]avg=%s", serviceIdentifier, IDENTIFIER, hosb
                             .getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), type, definition, avg));
@@ -585,7 +586,7 @@ public class HistoryMonitoringModel implements Serializable {
             LOGGER.debug(String.format("[%s][%s][%s][workflowPath=%s,job=%s][%s definition=%s]seconds=%s", serviceIdentifier, IDENTIFIER, hosb
                     .getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), type, definition, seconds));
         }
-        return seconds;
+        return new ExpectedSeconds(seconds, avg);
     }
 
     private boolean isPercentage(String definition) {
@@ -883,6 +884,25 @@ public class HistoryMonitoringModel implements Serializable {
 
         public String getText() {
             return text;
+        }
+    }
+
+    private class ExpectedSeconds {
+
+        final Long seconds;
+        final Long avg;
+
+        private ExpectedSeconds(Long seconds, Long avg) {
+            this.seconds = seconds;
+            this.avg = avg;
+        }
+
+        private Long getSeconds() {
+            return seconds;
+        }
+
+        private Long getAvg() {
+            return avg;
         }
     }
 }
