@@ -36,7 +36,7 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
-import com.sos.commons.sign.keys.keyStore.KeyStoreType;
+import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.model.publish.CreateCSRFilter;
@@ -269,7 +269,7 @@ public class ExecuteRollOut {
             X509Certificate rootCaCertificate = KeyUtil.getX509Certificate(rolloutResponse.getCaCert());
             Certificate[] chain = new Certificate[] {certificate, rootCaCertificate}; 
             if (targetKeystore != null && !targetKeystore.isEmpty()) {
-                targetKeyStore = KeyStoreUtil.readKeyStore(targetKeystore, KeyStoreType.fromValue(targetKeystoreType), targetKeystorePasswd);
+                targetKeyStore = KeyStoreUtil.readKeyStore(targetKeystore, KeystoreType.fromValue(targetKeystoreType), targetKeystorePasswd);
                 if (keyAlias != null && !keyAlias.isEmpty()) {
                     targetKeyStore.setKeyEntry(keyAlias, privKey, targetKeystoreEntryPasswd.toCharArray(), chain);
                 } else {
@@ -277,7 +277,7 @@ public class ExecuteRollOut {
                 }
             } else if (resolved != null) {
                 KeyStoreCredentials credentials = readKeystoreCredentials(resolved);
-                targetKeyStore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeyStoreType.PKCS12, credentials.getStorePwd());
+                targetKeyStore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
                 String defaultAlias = CertificateUtils.extractDistinguishedNameQualifier(certificate);
                 if (defaultAlias != null) {
                     targetKeyStore.setKeyEntry(defaultAlias, privKey, resolved.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD).toCharArray(), chain);
@@ -290,7 +290,7 @@ public class ExecuteRollOut {
                 System.err.println(String.format("no keystore found. Parameter <%1$s> is required.", TRG_KEYSTORE));
             }
             if (targetTruststore != null && !targetTruststore.isEmpty()) {
-                targetTrustStore = KeyStoreUtil.readTrustStore(targetTruststore, KeyStoreType.fromValue(targetTruststoreType), targetTruststorePasswd);
+                targetTrustStore = KeyStoreUtil.readTrustStore(targetTruststore, KeystoreType.fromValue(targetTruststoreType), targetTruststorePasswd);
                 if (caAlias != null && !caAlias.isEmpty()) {
                     targetTrustStore.setCertificateEntry(caAlias, rootCaCertificate);
                 } else {
@@ -303,7 +303,7 @@ public class ExecuteRollOut {
                         .filter(item -> item.getPath().endsWith(DEFAULT_TRUSTSTORE_FILENAME)).filter(Objects::nonNull).findFirst();
                 if (defaultTruststoreCredentials.isPresent()) {
                     KeyStoreCredentials credentials = defaultTruststoreCredentials.get();
-                    targetTrustStore = KeyStoreUtil.readTrustStore(credentials.getPath(), KeyStoreType.PKCS12, credentials.getStorePwd());
+                    targetTrustStore = KeyStoreUtil.readTrustStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
                     String defaultAlias = CertificateUtils.extractDistinguishedNameQualifier(rootCaCertificate);
                     if (defaultAlias == null) {
                         defaultAlias = CertificateUtils.extractFirstCommonName(rootCaCertificate);
@@ -366,7 +366,7 @@ public class ExecuteRollOut {
             System.out.println("read Trustore from: " + resolved.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
             KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(DEFAULT_TRUSTSTORE_FILENAME)).map(item -> {
                 try {
-                    return KeyStoreUtil.readTrustStore(item.getPath(), KeyStoreType.PKCS12, item.getStorePwd());
+                    return KeyStoreUtil.readTrustStore(item.getPath(), KeystoreType.PKCS12, item.getStorePwd());
                 } catch (Exception e) {
                     return null;
                 }
@@ -374,14 +374,14 @@ public class ExecuteRollOut {
             KeyStoreCredentials credentials = readKeystoreCredentials(resolved);
 //            KeyStoreCredentials credentials = readKeystoreCredentials(toUpdate);
             System.out.println("read Keystore from: " + resolved.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
-            KeyStore keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeyStoreType.PKCS12, credentials.getStorePwd());
+            KeyStore keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
             client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), truststore);
         } else {
             KeyStore srcKeyStore = null;
             KeyStore srcTrustStore = null;
             if (srcKeystore != null && !srcKeystore.isEmpty() && srcTruststore != null && !srcTruststore.isEmpty()) {
-                srcKeyStore = KeyStoreUtil.readKeyStore(srcKeystore, KeyStoreType.fromValue(srcKeystoreType), srcKeystorePasswd);
-                srcTrustStore = KeyStoreUtil.readTrustStore(srcTruststore, KeyStoreType.fromValue(srcTruststoreType), srcTruststorePasswd);
+                srcKeyStore = KeyStoreUtil.readKeyStore(srcKeystore, KeystoreType.fromValue(srcKeystoreType), srcKeystorePasswd);
+                srcTrustStore = KeyStoreUtil.readTrustStore(srcTruststore, KeystoreType.fromValue(srcTruststoreType), srcTruststorePasswd);
             } else if (srcPrivateKeyPath != null && !srcPrivateKeyPath.isEmpty()
                     && srcCertPath != null && !srcCertPath.isEmpty()
                     && srcCaCertPath != null && !srcCaCertPath.isEmpty()) {
