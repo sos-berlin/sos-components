@@ -166,6 +166,7 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.CreateCSRFilter", "publish/createCSRFilter-schema.json");
             put("com.sos.joc.model.auth.CreateOnetimeTokenFilter", "auth/createOnetimeTokenFilter-schema.json");
             put("com.sos.joc.model.auth.ShowOnetimeTokenFilter", "auth/showOnetimeTokenFilter-schema.json");
+            put("com.sos.joc.model.publish.RevokeFilter", "publish/revoke-schema.json");
 
             // schedules
             put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/schedulesSelector-schema.json");
