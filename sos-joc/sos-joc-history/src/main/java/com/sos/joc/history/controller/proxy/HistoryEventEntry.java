@@ -772,8 +772,8 @@ public class HistoryEventEntry {
 
             Either<Problem, JAgentRef> pa = eventAndState.state().pathToAgentRef(arp);
             JAgentRef ar = getFromEither(pa);
-            if (ar != null) {
-                uri = ar.uri().toString();
+            if (ar != null && ar.uri().isPresent()) {
+                uri = ar.uri().get().toString();
             }
         }
 

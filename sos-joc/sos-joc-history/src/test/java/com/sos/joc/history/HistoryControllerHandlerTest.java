@@ -88,8 +88,8 @@ public class HistoryControllerHandlerTest {
     private static final String CONTROLLER_URI_PRIMARY = "http://localhost:5444";
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 10; // seconds
-    private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 1; // seconds
-    private static final Long START_EVENT_ID = 1636022600405003L;
+    private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
+    private static final Long START_EVENT_ID = 1639747737263002L;
 
     private EventFluxStopper stopper;
     private AtomicBoolean closed;
@@ -139,8 +139,8 @@ public class HistoryControllerHandlerTest {
             flux = flux.doOnCancel(this::fluxDoOnCancel);
             flux = flux.doFinally(this::fluxDoFinally);
             flux = flux.onErrorStop();
-            flux.takeUntilOther(stopper.stopped()).map(this::map2fat).bufferTimeout(5, Duration.ofSeconds(1)).toIterable().forEach(list -> {
-                LOGGER.info("[HANDLE BLOCK][START]["+closed.get()+"]" + list.size());
+            flux.takeUntilOther(stopper.stopped()).map(this::map2fat).bufferTimeout(1000, Duration.ofSeconds(1)).toIterable().forEach(list -> {
+                LOGGER.info("[HANDLE BLOCK][START][" + closed.get() + "]" + list.size());
 
                 // while (!closed.get()) {
                 if (!closed.get()) {
@@ -150,7 +150,6 @@ public class HistoryControllerHandlerTest {
                         LOGGER.error(e.toString(), e);
                     }
                 }
-                
 
                 LOGGER.info("[HANDLE BLOCK][END]");
             });
