@@ -16,6 +16,7 @@ import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
+import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
@@ -420,12 +421,14 @@ public class DBLayerMonitoring extends DBLayer {
         hql.append("where controllerId=:controllerId ");
         hql.append("and workflowPath=:workflowPath ");
         hql.append("and jobName=:jobName ");
+        hql.append("and severity=:severity ");
 
         // hibernate returns Long and not Double ...
         Query<Long> query = getSession().createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
         query.setParameter("workflowPath", workflowPath);
         query.setParameter("jobName", jobName);
+        query.setParameter("severity", HistorySeverity.SUCCESSFUL);
         return getSession().getSingleValue(query);
     }
 
