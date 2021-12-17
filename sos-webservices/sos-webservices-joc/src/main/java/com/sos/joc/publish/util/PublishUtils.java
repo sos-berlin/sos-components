@@ -2607,6 +2607,18 @@ public abstract class PublishUtils {
         }).collect(Collectors.toList());
     }
 
+    public static List<Configuration> handleFoldersRevoke(List<Configuration> foldersIn, DBLayerDeploy dbLayer) {
+        return foldersIn.stream().flatMap(item -> {
+            List<DBItemInventoryConfiguration> dbItems = dbLayer.getInvConfigurationFolders(item.getPath(), true);
+            return dbItems.stream().map(dbItem -> {
+                Configuration configuration = new Configuration();
+                configuration.setPath(dbItem.getPath());
+                configuration.setObjectType(ConfigurationType.FOLDER);
+                return configuration;
+            }).filter(Objects::nonNull);
+        }).collect(Collectors.toList());
+    }
+
     public static boolean verifyCertificateAgainstCAs(X509Certificate cert, List<DBItemInventoryCertificate> caCertDBItems) {
         Set<X509Certificate> caCerts = caCertDBItems.stream().map(item -> {
             try {
