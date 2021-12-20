@@ -295,8 +295,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 List<DBItemJocConfiguration> listOfdbItemJocConfiguration = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
                 if (listOfdbItemJocConfiguration.size() == 1) {
                     dbItem = listOfdbItemJocConfiguration.get(0);
-                }else {
-                    dbItem = new DBItemJocConfiguration();  
+                } else {
+                    dbItem = new DBItemJocConfiguration();
                     dbItem.setConfigurationType(configuration.getConfigurationType().value());
                     dbItem.setName(configuration.getName());
                     dbItem.setObjectType(configuration.getObjectType());
@@ -305,9 +305,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 }
             } else {
                 dbItem = jocConfigurationDBLayer.getJocConfiguration(configuration.getId());
-            }
-            if (dbItem == null) {
-                throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
+                if (dbItem == null) {
+                    throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
+                }
             }
 
             ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
@@ -380,7 +380,27 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
 
             /** get item from DB with the given id */
-            DBItemJocConfiguration dbItem = jocConfigurationDBLayer.getJocConfiguration(configuration.getId());
+            DBItemJocConfiguration dbItem = null;
+            if (configuration.getId() == 0) {
+                JocConfigurationFilter filter = new JocConfigurationFilter();
+                filter.setConfigurationType(configuration.getConfigurationType().value());
+                filter.setName(configuration.getName());
+                filter.setObjectType(configuration.getObjectType());
+                List<DBItemJocConfiguration> listOfdbItemJocConfiguration = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
+                if (listOfdbItemJocConfiguration.size() == 1) {
+                    dbItem = listOfdbItemJocConfiguration.get(0);
+                } else {
+                    throw new DBMissingDataException(String.format("no entry found for configurationType: %s , objectType: %s, name: %s",
+                            configuration.getConfigurationType(), configuration.getObjectType(), configuration.getName()));
+                }
+            } else {
+                dbItem = jocConfigurationDBLayer.getJocConfiguration(configuration.getId());
+                if (dbItem == null) {
+                    throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
+                }
+            }
+
+            dbItem = jocConfigurationDBLayer.getJocConfiguration(configuration.getId());
             if (dbItem == null) {
                 throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
             }
