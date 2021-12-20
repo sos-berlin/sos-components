@@ -10,6 +10,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -112,7 +113,7 @@ public class JocConfigurationDbLayer {
             query.setParameter("shared", filter.isShared());
         }
     }
-    
+
     public List<DBItemJocConfiguration> getJocConfigurationList(JocConfigurationFilter filter, final int limit) throws SOSHibernateException {
 
         String sql = "from " + DBLayer.DBITEM_JOC_CONFIGURATIONS + " " + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
@@ -123,7 +124,7 @@ public class JocConfigurationDbLayer {
         }
         return this.session.getResultList(query);
     }
-    
+
     public boolean jocConfigurationExists(JocConfigurationFilter filter) throws SOSHibernateException {
 
         String sql = "select count(id) from " + DBLayer.DBITEM_JOC_CONFIGURATIONS + " " + getWhere(filter);
@@ -203,6 +204,15 @@ public class JocConfigurationDbLayer {
 
     public void deleteConfiguration(DBItemJocConfiguration dbItem) throws SOSHibernateException {
         this.session.delete(dbItem);
+    }
+
+    public void rename(JocConfigurationFilter jocConfigurationFilter, String newName) throws SOSHibernateException {
+        String hql = "update " + DBLayer.DBITEM_JOC_CONFIGURATIONS + " set name=:newName " + getWhere(jocConfigurationFilter);
+        Query<DBItemIamIdentityService> query = session.createQuery(hql);
+        bindParameters(jocConfigurationFilter, query);
+        query.setParameter("newName", newName);
+
+        session.executeUpdate(query);
     }
 
 }

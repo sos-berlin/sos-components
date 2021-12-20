@@ -10,14 +10,21 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
+import com.sos.joc.db.configuration.JocConfigurationDbLayer;
+import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.configuration.Configuration;
+import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.security.IdentityService;
 import com.sos.joc.model.security.IdentityServiceFilter;
 import com.sos.joc.model.security.IdentityServiceRename;
@@ -114,14 +121,13 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             dbItemIamIdentityService.setAuthenticationScheme("SINGLE");
             dbItemIamIdentityService.setSingleFactorCert(false);
             dbItemIamIdentityService.setSingleFactorPwd(true);
-            
 
             if (dbItemIamIdentityService.getId() == null) {
                 sosHibernateSession.save(dbItemIamIdentityService);
             } else {
                 sosHibernateSession.update(dbItemIamIdentityService);
             }
- 
+
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -134,7 +140,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         }
 
     }
-    
+
     @Override
     public JOCDefaultResponse postIdentityServiceRename(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
@@ -156,8 +162,19 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-            iamIdentityServiceDBLayer.rename(identityService.getIdentityServiceOldName(),identityService.getIdentityServiceNewName());
- 
+            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+            filter.setIdentityServiceName(identityService.getIdentityServiceOldName());
+            DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
+            iamIdentityServiceDBLayer.rename(identityService.getIdentityServiceOldName(), identityService.getIdentityServiceNewName());
+            
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+
+            JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
+            jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
+            jocConfigurationFilter.setName(identityService.getIdentityServiceOldName());
+            jocConfigurationFilter.setObjectType(dbItemIamIdentityService.getIdentityServiceType());
+            jocConfigurationDBLayer.rename(jocConfigurationFilter, identityService.getIdentityServiceNewName());
+
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -186,7 +203,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
 
             this.checkRequiredParameter("identityServiceName", identityServiceFilter.getIdentityServiceName());
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_READ);
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_DELETE);
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
 
@@ -194,6 +211,19 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
             filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
             iamIdentityServiceDBLayer.delete(filter);
+
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+
+            JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
+            jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
+            jocConfigurationFilter.setName(identityServiceFilter.getIdentityServiceName());
+            jocConfigurationFilter.setObjectType(SOSAuthHelper.OBJECT_TYPE_IAM_GENERAL);
+
+            List<DBItemJocConfiguration> listOfdbItemJocConfiguration = jocConfigurationDBLayer.getJocConfigurations(jocConfigurationFilter, 0);
+            if (listOfdbItemJocConfiguration.size() == 1) {
+                sosHibernateSession.delete(listOfdbItemJocConfiguration.get(0));
+            }
+
             filter.setIdentityServiceName(null);
             if (iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0).size() == 0) {
                 LOGGER.info("It is not possible to delete the last Identity Service");
@@ -230,10 +260,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             IdentityServices identityServices = new IdentityServices();
             identityServices.setIdentityServiceItems(new ArrayList<IdentityService>());
             identityServices.setIdentityServiceTypes(new ArrayList<IdentityServiceTypes>());
-            
+
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.JOC);
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.LDAP);
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.LDAP_JOC);
+            // identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.LDAP);
+            // identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.LDAP_JOC);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.SHIRO);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.VAULT);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.VAULT_JOC);

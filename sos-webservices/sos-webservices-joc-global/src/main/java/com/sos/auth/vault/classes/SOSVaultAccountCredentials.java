@@ -1,17 +1,19 @@
 package com.sos.auth.vault.classes;
 
+import java.util.List;
+
 public class SOSVaultAccountCredentials {
 
-    private String account;
+    private String accountName;
     private String password;
-    private String policy;
+    private List<String> tokenPolicies;
 
-    public String getAccount() {
-        return account;
+    public String getUsername() {
+        return accountName;
     }
 
-    public void setAccount(String account) {
-        this.account = account;
+    public void setUsername(String username) {
+        this.accountName = username;
     }
 
     public void setPassword(String password) {
@@ -22,12 +24,12 @@ public class SOSVaultAccountCredentials {
       return this.password;
     }
 
-    public String getPolicy() {
-        return policy;
+    public List<String> getTokenPolicies() {
+        return tokenPolicies;
     }
 
-    public void setPolicy(String policy) {
-        this.policy = policy;
+    public void setTokenPolicies(List tokenPolicies) {
+        this.tokenPolicies = tokenPolicies;
     }
 
 }

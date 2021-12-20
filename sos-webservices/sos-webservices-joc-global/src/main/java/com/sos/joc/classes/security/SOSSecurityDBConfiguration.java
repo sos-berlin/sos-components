@@ -2,14 +2,17 @@ package com.sos.joc.classes.security;
 
 import java.security.KeyStore;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSSecurityConfiguration;
 import com.sos.auth.vault.SOSVaultHandler;
 import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
+import com.sos.auth.vault.classes.SOSVaultUpdatePolicies;
 import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -40,7 +43,8 @@ import com.sos.joc.model.security.permissions.SecurityConfigurationRoles;
 
 public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
-    private void storeInVault(SOSVaultWebserviceCredentials webserviceCredentials,SecurityConfigurationAccount securityConfigurationAccount, String password) throws Exception {
+    private void storeInVault(SOSVaultWebserviceCredentials webserviceCredentials, SecurityConfigurationAccount securityConfigurationAccount,
+            String password, IdentityServiceTypes identityServiceTypes) throws Exception {
         KeyStore keyStore = null;
         KeyStore trustStore = null;
 
@@ -52,27 +56,66 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
         SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
         SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
-        sosVaultAccountCredentials.setAccount(securityConfigurationAccount.getAccount());
-        sosVaultHandler.storeAccountPassword(sosVaultAccountCredentials, password);
+        sosVaultAccountCredentials.setUsername(securityConfigurationAccount.getAccount());
 
+        List<String> tokenPolicies = new ArrayList<String>();
+        for (String role : securityConfigurationAccount.getRoles()) {
+            tokenPolicies.add(role);
+        }
+
+        sosVaultAccountCredentials.setTokenPolicies(tokenPolicies);
+
+        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.equals(identityServiceTypes)) {
+            sosVaultHandler.storeAccountPassword(sosVaultAccountCredentials, password);
+        }
+
+        sosVaultHandler.updateTokenPolicies(sosVaultAccountCredentials);
+
+    }
+
+    private void deleteInVault(SOSVaultWebserviceCredentials webserviceCredentials, Set<String> setOfAccounts) throws Exception {
+        KeyStore keyStore = null;
+        KeyStore trustStore = null;
+
+        keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeystorePath(), webserviceCredentials.getKeystoreType(), webserviceCredentials
+                .getKeystorePassword());
+
+        trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                webserviceCredentials.getTruststorePassword());
+
+        SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
+
+        for (String account : setOfAccounts) {
+            sosVaultHandler.deleteAccount(account);
+        }
     }
 
     private void storeAccounts(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
-        
-        SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService.getId(), dbItemIamIdentityService.getIdentityServiceName(), IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
+
+        SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService.getId(), dbItemIamIdentityService
+                .getIdentityServiceName(), IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
         iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
+        List<DBItemIamAccount> listOfAccounts = null;
+        Set<String> setOfAccounts = new HashSet<String>();
+        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
+            for (DBItemIamAccount dbItemIamAccount : listOfAccounts) {
+                setOfAccounts.add(dbItemIamAccount.getAccountName());
+            }
+        }
         iamAccountDBLayer.deleteCascading(iamAccountFilter);
 
-        
-        
         SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
         webserviceCredentials.setValuesFromProfile(sosIdentityService);
 
-            for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-            String password = securityConfigurationAccount.getPassword();
+        for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
+            String password = null;
+            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                password = securityConfigurationAccount.getPassword();
+            }
             securityConfigurationAccount.setPassword("");
             iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             DBItemIamAccount dbItemIamAcount = new DBItemIamAccount();
@@ -85,9 +128,16 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             dbItemIamAcount.setIdentityServiceId(dbItemIamIdentityService.getId());
 
             sosHibernateSession.save(dbItemIamAcount);
-            if (IdentityServiceTypes.VAULT_JOC.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                storeInVault(webserviceCredentials,securityConfigurationAccount, password);
+            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())
+                    || IdentityServiceTypes.VAULT_JOC.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                setOfAccounts.remove(securityConfigurationAccount.getAccount());
+                storeInVault(webserviceCredentials, securityConfigurationAccount, password, IdentityServiceTypes.fromValue(dbItemIamIdentityService
+                        .getIdentityServiceType()));
             }
+        }
+        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            deleteInVault(webserviceCredentials, setOfAccounts);
+
         }
     }
 

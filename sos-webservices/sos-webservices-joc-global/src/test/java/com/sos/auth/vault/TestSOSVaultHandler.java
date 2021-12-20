@@ -59,7 +59,7 @@ public class TestSOSVaultHandler {
         SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
 
         SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
-        sosVaultAccountCredentials.setAccount(webserviceCredentials.getVaultAccount());
+        sosVaultAccountCredentials.setUsername(webserviceCredentials.getVaultAccount());
         String response = sosVaultHandler.storeAccountPassword(sosVaultAccountCredentials,"test");
 
         System.out.println(response);

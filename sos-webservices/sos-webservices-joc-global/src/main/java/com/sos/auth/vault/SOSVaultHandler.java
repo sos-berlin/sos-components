@@ -4,19 +4,24 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.net.URI;
 import java.security.KeyStore;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
 import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
+import com.sos.auth.vault.classes.SOSVaultStoreUser;
+import com.sos.auth.vault.classes.SOSVaultUpdatePolicies;
 import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
 import com.sos.auth.vault.pojo.sys.auth.SOSVaultAuthenticationMethods;
 import com.sos.auth.vault.pojo.sys.auth.SOSVaultCheckAccessTokenResponse;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.joc.Globals;
 
 public class SOSVaultHandler {
@@ -62,19 +67,22 @@ public class SOSVaultHandler {
         return sosVaultRoot;
     }
 
-    public String storeAccountPassword(SOSVaultAccountCredentials sosVaultUserCredentials, String password) throws SOSException, JsonParseException,
-            JsonMappingException, IOException {
+    public String storeAccountPassword(SOSVaultAccountCredentials sosVaultAccountCredentials, String password) throws SOSException,
+            JsonParseException, JsonMappingException, IOException {
 
         SOSRestApiClient restApiClient = new SOSRestApiClient();
         restApiClient.addHeader("X-Vault-Token", webserviceCredentials.getApplicationToken());
         if ((keyStore != null) || (truststore != null)) {
             restApiClient.setSSLContext(keyStore, webserviceCredentials.getKeyPassword().toCharArray(), truststore);
         }
-        URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + "/v1/auth/userpass/users/" + sosVaultUserCredentials.getAccount());
-        sosVaultUserCredentials.setPassword(password);
-        String body = Globals.objectMapper.writeValueAsString(sosVaultUserCredentials);
-        sosVaultUserCredentials.setPassword("");
+        URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + "/v1/auth/userpass/users/" + sosVaultAccountCredentials.getUsername());
+        SOSVaultStoreUser sosVaultStoreUser = new SOSVaultStoreUser();
+        sosVaultStoreUser.setUsername(sosVaultAccountCredentials.getUsername());
+        sosVaultStoreUser.setPassword(password);
+        String body = Globals.objectMapper.writeValueAsString(sosVaultAccountCredentials);
+        sosVaultAccountCredentials.setPassword("");
         String response = restApiClient.postRestService(requestUri, body);
+
         LOGGER.debug(response);
 
         restApiClient.closeHttpClient();
@@ -90,9 +98,9 @@ public class SOSVaultHandler {
         }
 
         SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
-        sosVaultAccountCredentials.setAccount(webserviceCredentials.getAccount());
+        sosVaultAccountCredentials.setUsername(webserviceCredentials.getAccount());
         sosVaultAccountCredentials.setPassword(password);
-        URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + "/v1/auth/userpass/login/" + sosVaultAccountCredentials.getAccount());
+        URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + "/v1/auth/userpass/login/" + sosVaultAccountCredentials.getUsername());
         String body = Globals.objectMapper.writeValueAsString(sosVaultAccountCredentials);
         sosVaultAccountCredentials.setPassword(null);
         String response = restApiClient.postRestService(requestUri, body);
@@ -138,6 +146,39 @@ public class SOSVaultHandler {
             LOGGER.debug(response);
             restApiClient.closeHttpClient();
         }
+    }
+
+    public String updateTokenPolicies(SOSVaultAccountCredentials sosVaultAccountCredentials) throws JsonProcessingException, SOSException {
+        SOSRestApiClient restApiClient = new SOSRestApiClient();
+        restApiClient.addHeader("X-Vault-Token", webserviceCredentials.getApplicationToken());
+        if ((keyStore != null) || (truststore != null)) {
+            restApiClient.setSSLContext(keyStore, webserviceCredentials.getKeyPassword().toCharArray(), truststore);
+        }
+        URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + "/v1/auth/userpass/users/" + sosVaultAccountCredentials.getUsername());
+        SOSVaultUpdatePolicies sosVaultUpdatePolicies = new SOSVaultUpdatePolicies();
+        sosVaultUpdatePolicies.setToken_policies(sosVaultAccountCredentials.getTokenPolicies());
+        String body = Globals.objectMapper.writeValueAsString(sosVaultUpdatePolicies);
+        String response = restApiClient.postRestService(requestUri, body);
+
+        LOGGER.debug(response);
+
+        restApiClient.closeHttpClient();
+        return response;
+    }
+
+    public String deleteAccount(String account) throws JsonProcessingException, SOSException, SocketException {
+        SOSRestApiClient restApiClient = new SOSRestApiClient();
+        restApiClient.addHeader("X-Vault-Token", webserviceCredentials.getApplicationToken());
+        if ((keyStore != null) || (truststore != null)) {
+            restApiClient.setSSLContext(keyStore, webserviceCredentials.getKeyPassword().toCharArray(), truststore);
+        }
+        URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + "/v1/auth/userpass/users/" + account);
+        String response = restApiClient.deleteRestService(requestUri);
+
+        LOGGER.debug(response);
+
+        restApiClient.closeHttpClient();
+        return response;
     }
 
 }

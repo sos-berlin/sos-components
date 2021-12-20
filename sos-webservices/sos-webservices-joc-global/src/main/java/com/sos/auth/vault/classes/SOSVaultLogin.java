@@ -46,7 +46,6 @@ public class SOSVaultLogin implements ISOSLogin {
                     webserviceCredentials.getTruststorePassword());
 
             webserviceCredentials.setAccount(account);
-           // webserviceCredentials.setPassword(pwd);
             SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
 
             SOSVaultAccountAccessToken sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
