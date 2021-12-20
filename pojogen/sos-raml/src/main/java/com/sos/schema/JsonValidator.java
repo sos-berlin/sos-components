@@ -167,6 +167,9 @@ public class JsonValidator {
             put("com.sos.joc.model.auth.CreateOnetimeTokenFilter", "auth/createOnetimeTokenFilter-schema.json");
             put("com.sos.joc.model.auth.ShowOnetimeTokenFilter", "auth/showOnetimeTokenFilter-schema.json");
             put("com.sos.joc.model.publish.RevokeFilter", "publish/revoke-schema.json");
+            put("com.sos.joc.model.publish.repository.CopyToFilter", "publish/repository/copyToRepositoryFilter-schema.json");
+            put("com.sos.joc.model.publish.repository.DeleteFromFilter", "publish/repository/deleteFromRepositoryFilter-schema.json");
+            put("com.sos.joc.model.publish.repository.GetFromFilter", "publish/repository/getFromRepositoryFilter-schema.json");
 
             // schedules
             put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/schedulesSelector-schema.json");
