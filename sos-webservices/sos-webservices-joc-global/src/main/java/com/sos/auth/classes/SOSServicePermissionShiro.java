@@ -787,7 +787,7 @@ public class SOSServicePermissionShiro {
                 dbItem = listOfDbItemJocConfiguration.get(0);
                 com.sos.joc.model.security.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
                         com.sos.joc.model.security.Properties.class);
-                Globals.iamSessionTimeout = Long.valueOf(properties.getSessionTimeout());
+                Globals.iamSessionTimeout = properties.getSessionTimeout();
             }
         } finally {
             Globals.disconnect(sosHibernateSession);

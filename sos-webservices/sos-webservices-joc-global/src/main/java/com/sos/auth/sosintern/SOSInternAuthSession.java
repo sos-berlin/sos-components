@@ -75,7 +75,11 @@ public class SOSInternAuthSession implements ISOSSession {
         Date now = new Date();
         lastTouch = now.getTime();
         if (initSessionTimeout == null) {
-            initSessionTimeout = Globals.iamSessionTimeout;
+            if (Globals.iamSessionTimeout != null) {
+                initSessionTimeout = Globals.iamSessionTimeout * 1000L;
+            } else {
+                initSessionTimeout = 30 * 60 * 1000L;
+            }
         }
     }
 

@@ -92,6 +92,10 @@ public class SOSShiroLogin implements ISOSLogin {
                     if (s.equals(SOSX509AuthorizingRealm.getRealmIdentifier())) {
                         LOGGER.debug("SessionTimeout for user " + token.getUsername() + " set to endless");
                         currentSubject.getSession().setTimeout(-1);
+                    } else {
+                        if (Globals.iamSessionTimeout != null) {
+                            currentSubject.getSession().setTimeout(Globals.iamSessionTimeout*1000);
+                        }
                     }
 
                 }
@@ -150,9 +154,9 @@ public class SOSShiroLogin implements ISOSLogin {
 
             LOGGER.debug("sosLogin.init(): buildSubject");
             currentSubject = new Subject.Builder().buildSubject();
-        } catch (JocException  e) {
+        } catch (JocException e) {
             LOGGER.info(String.format("Shiro init: %1$s: %2$s", e.getClass().getSimpleName(), e.getMessage()));
-        } 
+        }
         try {
             logout();
         } catch (InvalidSessionException e) {
