@@ -1,10 +1,12 @@
 package com.sos.joc.publish.util;
 
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +30,7 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocError;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeploymentState;
@@ -298,6 +301,34 @@ public class DeleteDeployments {
 
     public static Set<DBItemDeploymentHistory> storeNewDepHistoryEntries(DBLayerDeploy dbLayer, List<DBItemDeploymentHistory> itemsToDelete, String commitId) {
         return PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer, commitId, false);
+    }
+
+    public static Set<DBItemDeploymentHistory> storeNewDepHistoryEntriesForRevoke(DBLayerDeploy dbLayer, List<DBItemDeploymentHistory> deletedItems,
+            String commitId, Long auditLogId) {
+        Set<DBItemDeploymentHistory> deletedObjects = Collections.emptySet();
+        try {
+            if (deletedItems != null && !deletedItems.isEmpty()) {
+                deletedObjects = new HashSet<DBItemDeploymentHistory>();
+                for (DBItemDeploymentHistory item : deletedItems) {
+                    item.setId(null);
+                    item.setCommitId(commitId);
+                    item.setOperation(OperationType.DELETE.value());
+                    item.setState(DeploymentState.DEPLOYED.value());
+                    item.setDeleteDate(Date.from(Instant.now()));
+                    item.setDeploymentDate(Date.from(Instant.now()));
+                    item.setAuditlogId(auditLogId);
+                    if (item.getSignedContent() == null || item.getSignedContent().isEmpty()) {
+                        item.setSignedContent(".");
+                    }
+                    dbLayer.getSession().save(item);
+                    deletedObjects.add(item);
+                }
+            }
+
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+        return deletedObjects;
     }
 
     public static List<DBItemInventoryConfiguration> getInvConfigurationsForTrash (DBLayerDeploy dbLayer, Set<DBItemDeploymentHistory> deletedDeployItems ) {

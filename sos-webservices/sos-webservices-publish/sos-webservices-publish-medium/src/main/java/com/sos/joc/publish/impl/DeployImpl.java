@@ -392,8 +392,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
 
             LOGGER.trace("complete WS time : " + (deployWSFinished.getTime() - started.getTime()) + " ms");
             LOGGER.trace("collecting items took: " + (collectingItemsFinished.getTime() - started.getTime()) + " ms");
-            LOGGER.trace("resolve agent names took: " + (updateAgentNamesFinished.getTime() - updateAgentNamesStarted.getTime()) + " ms");
-            LOGGER.trace("transfer to controller took: " + (deployWSFinished.getTime() - transferToControllerStarted.getTime()) + " ms");
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
