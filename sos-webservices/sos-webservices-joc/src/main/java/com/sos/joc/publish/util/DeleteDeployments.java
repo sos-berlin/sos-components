@@ -322,6 +322,11 @@ public class DeleteDeployments {
                     }
                     dbLayer.getSession().save(item);
                     deletedObjects.add(item);
+                    DBItemInventoryConfiguration orig = dbLayer.getInventoryConfigurationByNameAndType(item.getName(), item.getType());
+                    if (orig != null) {
+                        orig.setDeployed(false);
+                        dbLayer.getSession().update(orig);
+                    }
                 }
             }
 
