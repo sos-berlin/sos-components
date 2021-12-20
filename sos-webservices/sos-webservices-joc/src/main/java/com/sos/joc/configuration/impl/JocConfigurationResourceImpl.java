@@ -295,6 +295,13 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 List<DBItemJocConfiguration> listOfdbItemJocConfiguration = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
                 if (listOfdbItemJocConfiguration.size() == 1) {
                     dbItem = listOfdbItemJocConfiguration.get(0);
+                }else {
+                    dbItem = new DBItemJocConfiguration();  
+                    dbItem.setConfigurationType(configuration.getConfigurationType().value());
+                    dbItem.setName(configuration.getName());
+                    dbItem.setObjectType(configuration.getObjectType());
+                    dbItem.setConfigurationItem("{}");
+                    dbItem.setAccount(configuration.getAccount());
                 }
             } else {
                 dbItem = jocConfigurationDBLayer.getJocConfiguration(configuration.getId());
