@@ -40,6 +40,7 @@ import js7.data.order.Outcome.Disrupted;
 import js7.data.order.Outcome.Failed;
 import js7.data.order.Outcome.Killed;
 import js7.data.order.Outcome.TimedOut;
+import js7.data.subagent.SubagentId;
 import js7.data.value.Value;
 import js7.data.workflow.instructions.executable.WorkflowJob.Name;
 import js7.data_for_java.agent.JAgentRef;
@@ -50,6 +51,7 @@ import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrder.Forked;
 import js7.data_for_java.order.JOrderEvent;
 import js7.data_for_java.order.JOrderEvent.JOrderForked;
+import js7.data_for_java.subagent.JSubagentRef;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
@@ -566,10 +568,9 @@ public class HistoryEventEntry {
                     if (order == null) {
                         throw new Exception(String.format("[%s][%s]missing JOrder", eventId, orderId));
                     }
-
-                    Either<Problem, AgentPath> pa = order.attached();
-                    AgentPath arp = getFromEither(pa);
-                    agentId = arp.string();
+                    Either<Problem, AgentPath> pap = order.attached();
+                    AgentPath ap = getFromEither(pap);
+                    agentId = ap.string();
                 }
                 return agentId;
             }
@@ -762,6 +763,7 @@ public class HistoryEventEntry {
         private final String id;
         private final String timezone;
         private String uri;
+        // private Map<String, String> subAgents;
 
         public HistoryAgentReady() throws FatEventProblemException {
             AgentReady ev = (AgentReady) event;
@@ -770,12 +772,28 @@ public class HistoryEventEntry {
             AgentPath arp = (AgentPath) keyedEvent.key();
             id = arp.string();
 
+            // subAgents = new HashMap<>();
             Either<Problem, JAgentRef> pa = eventAndState.state().pathToAgentRef(arp);
             JAgentRef ar = getFromEither(pa);
-            if (ar != null && ar.uri().isPresent()) {
-                uri = ar.uri().get().toString();
+            if (ar != null) {
+                if (ar.uri().isPresent()) {// single agent
+                    uri = ar.uri().get().toString();
+                } else {// agent cluster
+                    Optional<SubagentId> director = ar.director();// ar.directors();
+                    if (director.isPresent()) {
+                        SubagentId directorId = director.get();
+                        Map<SubagentId, JSubagentRef> map = eventAndState.state().idToSubagentRef();
+                        if (map != null) {
+                            map.entrySet().stream().forEach(e -> {
+                                // subAgents.put(e.getKey().string(), e.getValue().uri().toString());
+                                if (e.getKey().equals(directorId)) {
+                                    uri = e.getValue().uri().toString();
+                                }
+                            });
+                        }
+                    }
+                }
             }
-            // TMP solution
             if (uri == null) {
                 uri = "unknown";
             }

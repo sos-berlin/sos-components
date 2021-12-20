@@ -89,7 +89,7 @@ public class HistoryControllerHandlerTest {
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 10; // seconds
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
-    private static final Long START_EVENT_ID = 1639747737263002L;
+    private static final Long START_EVENT_ID = 1639996632849003L;
 
     private EventFluxStopper stopper;
     private AtomicBoolean closed;
@@ -158,6 +158,7 @@ public class HistoryControllerHandlerTest {
         }
     }
 
+    @SuppressWarnings("unused")
     private void handleBlock(List<AFatEvent> list) throws Exception {
         for (AFatEvent event : list) {
             if (event instanceof FatEventOrderStepStdWritten) {
