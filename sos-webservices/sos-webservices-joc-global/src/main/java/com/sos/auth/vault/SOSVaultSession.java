@@ -105,17 +105,13 @@ public class SOSVaultSession implements ISOSSession {
 
     @Override
     public void touch() {
-  
-        try {
-            Date now = new Date();
-            lastTouch = now.getTime();
-            if (initSessionTimeout == null) {
-                initSessionTimeout = Long.valueOf(Globals.sosCockpitProperties.getProperty("iam_session_timeout"));
-            }
-        } catch (NumberFormatException e) {
-            initSessionTimeout = 300000L;
 
+        Date now = new Date();
+        lastTouch = now.getTime();
+        if (initSessionTimeout == null) {
+            initSessionTimeout = Globals.iamSessionTimeout;
         }
+
     }
 
     @Override

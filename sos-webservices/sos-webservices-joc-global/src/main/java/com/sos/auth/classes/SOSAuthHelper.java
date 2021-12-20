@@ -20,7 +20,8 @@ public class SOSAuthHelper {
     public static final String EMERGENCY_PERMISSION = "sos:products";
     public static final String EMERGENY_KEY = "sos_emergency_key";
     public static final String CONFIGURATION_TYPE_IAM = "IAM";
-    
+    public static final String OBJECT_TYPE_IAM_GENERAL = "GENERAL";
+
     public static String getSHA512(String pwd) throws NoSuchAlgorithmException, InvalidKeySpecException {
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[16];

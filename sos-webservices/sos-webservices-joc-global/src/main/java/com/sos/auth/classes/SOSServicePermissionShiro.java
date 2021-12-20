@@ -1,14 +1,11 @@
 package com.sos.auth.classes;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TimeZone;
 
 import javax.servlet.http.HttpServletRequest;
@@ -41,7 +38,6 @@ import com.sos.auth.interfaces.ISOSSecurityConfiguration;
 import com.sos.auth.shiro.classes.SOSShiroIniShare;
 import com.sos.auth.shiro.classes.SOSShiroLogin;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
-import com.sos.auth.sosintern.classes.SOSInternAuthSubject;
 import com.sos.auth.vault.classes.SOSVaultLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -222,13 +218,13 @@ public class SOSServicePermissionShiro {
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
             @HeaderParam("X-CLIENT-ID") String loginClientId, @QueryParam("user") String account, @QueryParam("pwd") String pwd) {
-        
+
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
         } else {
             Globals.sosCockpitProperties.touchLog4JConfiguration();
         }
-        
+
         MDC.put("context", ThreadCtx);
         Globals.loginClientId = loginClientId;
         String clientCertCN = null;
@@ -777,6 +773,25 @@ public class SOSServicePermissionShiro {
         }
         Globals.jocTimeZone = TimeZone.getDefault();
         Globals.setProperties();
+
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("login");
+            DBItemJocConfiguration dbItem = null;
+            JocConfigurationFilter filter = new JocConfigurationFilter();
+            filter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
+            filter.setObjectType(SOSAuthHelper.OBJECT_TYPE_IAM_GENERAL);
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+            List<DBItemJocConfiguration> listOfDbItemJocConfiguration = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
+            if (listOfDbItemJocConfiguration.size() == 1) {
+                dbItem = listOfDbItemJocConfiguration.get(0);
+                com.sos.joc.model.security.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
+                        com.sos.joc.model.security.Properties.class);
+                Globals.iamSessionTimeout = Long.valueOf(properties.getSessionTimeout());
+            }
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
 
         if (basicAuthorization == null || basicAuthorization.isEmpty()) {
             if (user == null) {

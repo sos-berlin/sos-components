@@ -83,6 +83,7 @@ public class Globals {
     private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
     private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
     private static JocSecurityLevel jocSecurityLevel = null;
+    public static Long iamSessionTimeout=300000L;
     
 
     public static synchronized SOSHibernateFactory getHibernateFactory() throws JocConfigurationException {
