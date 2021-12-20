@@ -131,7 +131,7 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                 return jocDefaultResponse;
             }
             
-            boolean withClusterLicense = JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster()
+            boolean withClusterLicense = JocClusterService.getInstance().getCluster() != null && JocClusterService.getInstance().getCluster()
                     .getConfig().getClusterMode();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_NAMES);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
