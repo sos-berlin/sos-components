@@ -27,10 +27,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -48,7 +46,6 @@ import com.sos.joc.model.inventory.deploy.ResponseDeployables;
 import com.sos.joc.model.tree.Tree;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
 import js7.data_for_java.controller.JControllerState;
 
 @javax.ws.rs.Path(JocInventory.APPLICATION_PATH)
@@ -145,7 +142,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             }
             
             final boolean withSync = in.getControllerId() != null && !in.getControllerId().isEmpty();
-            final JControllerState currentstate = getControllerState(in.getControllerId());
+            final JControllerState currentstate = SyncStateHelper.getControllerState(in.getControllerId(), null, getJocError());
             
             Map<Integer, Set<String>> deployedPaths = getDeployedInventoryPaths(in.getControllerId(), in.getFolder(), in.getRecursive(),
                     deployableTypes, session);
@@ -372,17 +369,6 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             }
             fillTreeMap(treeMap, parent, parentTree);
         }
-    }
-    
-    private JControllerState getControllerState(String controllerId) {
-        if (controllerId != null && !controllerId.isEmpty()) {
-            try {
-                return Proxy.of(controllerId).currentState();
-            } catch (Exception e) {
-                ProblemHelper.postExceptionEventIfExist(Either.left(e), null, getJocError(), null);
-            }
-        }
-        return null;
     }
     
     private Map<Integer, Set<String>> getDeployedInventoryPaths(String controllerId, String folder, Boolean recursive, Set<Integer> types, SOSHibernateSession session) {

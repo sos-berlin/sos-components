@@ -31,8 +31,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.agent.SubagentDirectorType;
 
-import shapeless.newtype;
-
 public class InventoryAgentInstancesDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;

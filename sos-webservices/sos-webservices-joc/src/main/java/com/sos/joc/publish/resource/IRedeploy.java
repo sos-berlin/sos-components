@@ -13,5 +13,10 @@ public interface IRedeploy {
     @POST
     @Path("redeploy")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postRedeploy(@HeaderParam("X-Access-Token") String xAccessToken, byte[] redeployFilter) throws Exception;
+    public JOCDefaultResponse postRedeploy(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter);
+    
+    @POST
+    @Path("synchronize")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postSync(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter);
 }

@@ -7,6 +7,9 @@ import java.util.Set;
 
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 import io.vavr.control.Either;
@@ -38,46 +41,6 @@ public class SyncStateHelper {
         state.setSeverity(severityByStates.get(stateText));
         return state;
     }
-    
-//    public static SyncState getState(JControllerState currentstate, WorkflowPath name) {
-//        SyncStateText stateText = SyncStateText.UNKNOWN;
-//        if (currentstate != null) {
-//            stateText = getState(currentstate.repo().pathToWorkflow(name));
-//        }
-//        return SyncStateHelper.getState(stateText);
-//    }
-//    
-//    public static SyncState getState(JControllerState currentstate, BoardPath name) {
-//        SyncStateText stateText = SyncStateText.UNKNOWN;
-//        if (currentstate != null) {
-//            stateText = getState(currentstate.pathToBoard(name));
-//        }
-//        return SyncStateHelper.getState(stateText);
-//    }
-//    
-//    public static SyncState getState(JControllerState currentstate, LockPath name) {
-//        SyncStateText stateText = SyncStateText.UNKNOWN;
-//        if (currentstate != null) {
-//            stateText = getState(currentstate.pathToLock(name));
-//        }
-//        return SyncStateHelper.getState(stateText);
-//    }
-//    
-//    public static SyncState getState(JControllerState currentstate, JobResourcePath name) {
-//        SyncStateText stateText = SyncStateText.UNKNOWN;
-//        if (currentstate != null) {
-//            stateText = getState(currentstate.pathToJobResource(name));
-//        }
-//        return SyncStateHelper.getState(stateText);
-//    }
-//    
-//    public static SyncState getState(JControllerState currentstate, OrderWatchPath name) {
-//        SyncStateText stateText = SyncStateText.UNKNOWN;
-//        if (currentstate != null) {
-//            stateText = getState(currentstate.pathToFileWatch(name));
-//        }
-//        return SyncStateHelper.getState(stateText);
-//    }
     
     public static SyncState getState(JControllerState currentstate, String name, Integer type, Set<String> deployedNames) {
         return getState(currentstate, name, ConfigurationType.fromValue(type), deployedNames);
@@ -137,11 +100,55 @@ public class SyncStateHelper {
         return SyncStateHelper.getState(stateText);
     }
     
+    public static boolean isNotInSync(JControllerState currentstate, String name, Integer intType) {
+        ConfigurationType type = ConfigurationType.fromValue(intType);
+        return isNotInSync(currentstate, name, type);
+    }
+    
+    public static boolean isNotInSync(JControllerState currentstate, String name, ConfigurationType type) {
+        if (currentstate == null) {
+            return false;
+        }
+        switch (type) {
+        case WORKFLOW:
+            return isNotInSync(currentstate.repo().pathToWorkflow(WorkflowPath.of(name)));
+        case JOBRESOURCE:
+            return isNotInSync(currentstate.pathToJobResource(JobResourcePath.of(name)));
+        case LOCK:
+            return isNotInSync(currentstate.pathToLock(LockPath.of(name)));
+        case FILEORDERSOURCE:
+            return isNotInSync(currentstate.pathToFileWatch(OrderWatchPath.of(name)));
+        case NOTICEBOARD:
+            return isNotInSync(currentstate.pathToBoard(BoardPath.of(name)));
+        default:
+            return true;
+        }
+    }
+    
     private static SyncStateText getState(Either<Problem, ?> either) {
         SyncStateText stateText = SyncStateText.NOT_IN_SYNC;
         if (either != null && either.isRight()) {
             stateText = SyncStateText.IN_SYNC;
         }
         return stateText;
+    }
+    
+    private static boolean isNotInSync(Either<Problem, ?> either) {
+        boolean inSync = true;
+        if (either != null && either.isRight()) {
+            inSync = false;
+        }
+        return inSync;
+    }
+    
+    public static JControllerState getControllerState(String controllerId, String accessToken, JocError jocError) {
+        if (controllerId != null && !controllerId.isEmpty()) {
+            try {
+                return Proxy.of(controllerId).currentState();
+            } catch (Exception e) {
+                ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
+            }
+        }
+        return null;
     }
 }

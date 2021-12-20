@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -17,6 +18,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -39,17 +41,28 @@ import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 
+import js7.data_for_java.controller.JControllerState;
+
 @Path("inventory/deployment")
 public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
 
-    private static final String API_CALL = "./inventory/deployment/redeploy";
-    private DBLayerDeploy dbLayer = null;
-
+    private static final String API_CALL_REDEPLOY = "./inventory/deployment/redeploy";
+    private static final String API_CALL_SYNC = "./inventory/deployment/synchronize";
+    
     @Override
-    public JOCDefaultResponse postRedeploy(String xAccessToken, byte[] filter) throws Exception {
+    public JOCDefaultResponse postRedeploy(String xAccessToken, byte[] filter) {
+        return deploy(xAccessToken, filter, API_CALL_REDEPLOY);
+    }
+    
+    @Override
+    public JOCDefaultResponse postSync(String xAccessToken, byte[] filter) {
+        return deploy(xAccessToken, filter, API_CALL_SYNC);
+    }
+
+    public JOCDefaultResponse deploy(String xAccessToken, byte[] filter, String action) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, filter, xAccessToken);
+            initLogging(action, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, RedeployFilter.class);
             RedeployFilter redeployFilter = Globals.objectMapper.readValue(filter, RedeployFilter.class);
 
@@ -60,12 +73,13 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             DBItemJocAuditLog dbAuditlog = storeAuditLog(redeployFilter.getAuditLog(), CategoryType.DEPLOYMENT);
 
             String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            dbLayer = new DBLayerDeploy(hibernateSession);
+            hibernateSession = Globals.createSosHibernateStatelessConnection(action);
+            DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             String controllerId = redeployFilter.getControllerId();
             // get all latest active history objects from the database for the provided controllerId and folder from the filter
             List<DBItemDeploymentHistory> latest = dbLayer.getLatestDepHistoryItemsFromFolder(redeployFilter.getFolder(), controllerId, 
                     redeployFilter.getRecursive());
+            
             // all items will be resigned with a new commitId
             final String commitId = UUID.randomUUID().toString();
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
@@ -73,8 +87,14 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
 
             List<DBItemDeploymentHistory> unsignedRedeployables = null;
             if (latest != null) {
+                Stream<DBItemDeploymentHistory> latestStream = latest.stream();
+                if (API_CALL_SYNC.equals(action)) {
+                    // filter latest with only "not in sync" objects
+                    final JControllerState currentstate = SyncStateHelper.getControllerState(controllerId, xAccessToken, getJocError());
+                    latestStream = latestStream.filter(item -> SyncStateHelper.isNotInSync(currentstate, item.getName(), item.getType()));
+                }
                 final Map<String, String> releasedScripts = dbLayer.getReleasedScripts();
-                unsignedRedeployables = latest.stream().peek(item -> {
+                unsignedRedeployables = latestStream.peek(item -> {
     				try {
                         item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(item.getPath(), item.getInvContent(),
                                 StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId, releasedScripts));
@@ -111,7 +131,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 		dbAuditlog.getId());
                 StoreDeployments.storeNewDepHistoryEntriesForRedeploy(signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), dbLayer);
                 // call updateItems command via ControllerApi for given controllers
-                StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
+                StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), action);
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
