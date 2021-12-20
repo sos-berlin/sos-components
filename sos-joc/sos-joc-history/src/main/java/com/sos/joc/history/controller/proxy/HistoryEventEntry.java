@@ -775,6 +775,10 @@ public class HistoryEventEntry {
             if (ar != null && ar.uri().isPresent()) {
                 uri = ar.uri().get().toString();
             }
+            // TMP solution
+            if (uri == null) {
+                uri = "unknown";
+            }
         }
 
         public String getTimezone() {
