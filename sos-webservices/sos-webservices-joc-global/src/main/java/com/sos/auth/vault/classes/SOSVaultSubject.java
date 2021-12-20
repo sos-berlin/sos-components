@@ -85,7 +85,7 @@ public class SOSVaultSubject implements ISOSAuthSubject {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE == identityService.getIdentyServiceType()) {
+            if (IdentityServiceTypes.VAULT_JOC == identityService.getIdentyServiceType() || IdentityServiceTypes.VAULT_JOC_ACTIVE == identityService.getIdentyServiceType()) {
                 List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(accountName, identityService
                         .getIdentityServiceId());
                 for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
