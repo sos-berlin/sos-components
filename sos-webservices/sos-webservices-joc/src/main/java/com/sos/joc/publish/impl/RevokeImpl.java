@@ -54,7 +54,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
         SOSHibernateSession hibernateSession = null;
         try {
             Date started = Date.from(Instant.now());
-            LOGGER.trace("*** deploy started ***" + started);
+            LOGGER.trace("*** revoke started ***" + started);
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validate(filter, RevokeFilter.class);
             RevokeFilter revokeFilter = Globals.objectMapper.readValue(filter, RevokeFilter.class);
@@ -96,7 +96,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                     itemsFromFolderToRevoke.stream().collect(Collectors.groupingBy(DBItemDeploymentHistory::getControllerId));
             Date collectingItemsFinished = Date.from(Instant.now());
             LOGGER.trace("*** collecting items finished ***" + collectingItemsFinished);
-            // Delete from all known controllers
+            // Delete from all allowed controllers from filter
             final String commitIdForRevoke = UUID.randomUUID().toString();
             final String commitIdForRevokeFromFolder = UUID.randomUUID().toString();
             List<DBItemDeploymentHistory> filteredDepHistoryItemsToRevoke = Collections.emptyList();
@@ -149,7 +149,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                 } 
             }
             Date deployWSFinished = Date.from(Instant.now());
-            LOGGER.trace("*** deploy finished ***" + deployWSFinished);
+            LOGGER.trace("*** revoke finished ***" + deployWSFinished);
             LOGGER.trace("complete WS time : " + (deployWSFinished.getTime() - started.getTime()) + " ms");
             LOGGER.trace("collecting items took: " + (collectingItemsFinished.getTime() - started.getTime()) + " ms");
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
