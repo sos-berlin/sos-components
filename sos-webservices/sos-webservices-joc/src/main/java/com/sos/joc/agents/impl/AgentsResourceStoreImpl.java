@@ -197,7 +197,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
         try {
             initLogging(API_CLUSTER_STORE, filterBytes, accessToken);
 
-            if (JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
+            if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
                 throw new JocMissingLicenseException("missing license for Agent cluster");
             }
 

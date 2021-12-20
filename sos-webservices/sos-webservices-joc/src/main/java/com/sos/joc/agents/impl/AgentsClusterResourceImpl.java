@@ -60,7 +60,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
         try {
             initLogging(API_CALL_P, filterBytes, accessToken);
             
-            if (JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
+            if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
                 ClusterAgents agents = new ClusterAgents();
                 agents.setDeliveryDate(Date.from(Instant.now()));
                 
@@ -137,7 +137,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
         try {
             initLogging(API_CALL_DEPLOY, filterBytes, accessToken);
             
-            if (JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
+            if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
                 throw new JocMissingLicenseException("missing license for Agent cluster");
             }
             
