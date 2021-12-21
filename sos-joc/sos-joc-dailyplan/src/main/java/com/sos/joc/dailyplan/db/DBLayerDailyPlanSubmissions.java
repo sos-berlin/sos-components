@@ -34,6 +34,18 @@ public class DBLayerDailyPlanSubmissions {
         return filter;
     }
 
+    public List<DBItemDailyPlanSubmission> getSubmissions(String controllerId, Date date) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and submissionForDate=:date ");
+        hql.append("order by id");
+
+        Query<DBItemDailyPlanSubmission> query = session.createQuery(hql);
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("date", date);
+        return session.getResultList(query);
+    }
+
     public List<DBItemDailyPlanSubmission> getSubmissions(FilterDailyPlanSubmissions filter, final int limit) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
         hql.append(getWhere(filter));
@@ -101,7 +113,7 @@ public class DBLayerDailyPlanSubmissions {
         hql.append(getWhere(filter));
         hql.append(")");
         hql.append(") ");
-        if(!SOSString.isEmpty(filter.getControllerId())) {
+        if (!SOSString.isEmpty(filter.getControllerId())) {
             hql.append("and controllerId=:controllerId ");
         }
 

@@ -65,8 +65,6 @@ import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.DBLayerOrderVariables;
 import com.sos.joc.dailyplan.db.DBLayerReleasedConfigurations;
 import com.sos.joc.dailyplan.db.DBLayerSchedules;
-import com.sos.joc.dailyplan.db.FilterDailyPlanSubmissions;
-import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
@@ -203,21 +201,21 @@ public class DailyPlanRunner extends TimerTask {
 
                 for (int day = 0; day < settings.getDayAheadPlan(); day++) {
                     String date = SOSDate.getDateWithTimeZoneAsString(dailyPlanCalendar.getTime(), settings.getTimeZone());
-                    List<DBItemDailyPlanSubmission> l = getSubmissionsForDate(dailyPlanCalendar, controllerId);
+                    List<DBItemDailyPlanSubmission> l = getSubmissionsForDate(controllerId, dailyPlanCalendar);
                     if ((l.size() == 0)) {
                         generateDailyPlan(startupMode, controllerId, schedules, date, false, null, "");
                     } else {
                         List<String> copy = l.stream().map(e -> {
                             String d;
                             try {
-                                d = SOSDate.getDateTimeAsString(e.getSubmissionForDate());
+                                d = SOSDate.getDateTimeAsString(e.getCreated());
                             } catch (SOSInvalidDataException e1) {
                                 d = null;
                             }
                             return d == null ? "" : d;
                         }).collect(Collectors.toList());
-                        LOGGER.info(String.format("[%s][creating][%s][%s][skip][submission(s) found]%s", startupMode, controllerId, date, String.join(
-                                ",", copy)));
+                        LOGGER.info(String.format("[%s][creating][%s][%s][skip][submission(s) found][created]%s", startupMode, controllerId, date,
+                                String.join(",", copy)));
                     }
 
                     dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
@@ -263,14 +261,14 @@ public class DailyPlanRunner extends TimerTask {
 
         if (synchronizer.getPlannedOrders().size() > 0) {
             String submissionId = "unknown";
-            String submissionDate = "unknown";
+            String submissionCreated = "unknown";
             if (synchronizer.getSubmission() != null) {
                 submissionId = synchronizer.getSubmission().getId().toString();
-                submissionDate = SOSDate.getDateTimeAsString(synchronizer.getSubmission().getSubmissionForDate());
+                submissionCreated = SOSDate.getDateTimeAsString(synchronizer.getSubmission().getCreated());
             }
 
-            LOGGER.info(String.format("[%s][%s][%s][%s][calculated][%s][submission date=%s, id=%s]", startupMode, operation, controllerId, date, c,
-                    submissionDate, submissionId));
+            LOGGER.info(String.format("[%s][%s][%s][%s][calculated][%s][submission created=%s, id=%s]", startupMode, operation, controllerId, date, c,
+                    submissionCreated, submissionId));
 
             calculateDurations(controllerId, date, schedules);
 
@@ -513,17 +511,12 @@ public class DailyPlanRunner extends TimerTask {
         return result;
     }
 
-    private List<DBItemDailyPlanSubmission> getSubmissionsForDate(java.util.Calendar calendar, String controllerId) throws SOSHibernateException {
+    private List<DBItemDailyPlanSubmission> getSubmissionsForDate(String controllerId, java.util.Calendar calendar) throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IDENTIFIER);
-
             DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
-            FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
-            filter.setControllerId(controllerId);
-            filter.setDateFor(calendar.getTime());
-
-            return dbLayer.getSubmissions(filter, 0);
+            return dbLayer.getSubmissions(controllerId, calendar.getTime());
         } finally {
             Globals.disconnect(session);
         }
@@ -537,7 +530,7 @@ public class DailyPlanRunner extends TimerTask {
 
         String date = SOSDate.getDateAsString(calendar);
 
-        List<DBItemDailyPlanSubmission> submissions = getSubmissionsForDate(calendar, controllerId);
+        List<DBItemDailyPlanSubmission> submissions = getSubmissionsForDate(controllerId, calendar);
         if (submissions == null || submissions.size() == 0) {
             LOGGER.info(String.format("[%s][submitting][%s][%s][skip]no submissions found", startupMode, controllerId, date));
             return;
@@ -548,27 +541,22 @@ public class DailyPlanRunner extends TimerTask {
 
             SOSHibernateSession session = null;
             try {
-                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                filter.setSortMode(null);
-                filter.setOrderCriteria(null);
-                filter.addSubmissionHistoryId(item.getId());
-                filter.setSubmitted(false);
-
                 session = Globals.createSosHibernateStatelessConnection("submitDaysAhead");
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-                plannedOrders = dbLayer.getDailyPlanList(filter, 0);
+                plannedOrders = dbLayer.getDailyPlanOrdersBySubmission(item.getId(), false);
             } finally {
                 Globals.disconnect(session);
             }
 
             String submissionForDate = SOSDate.getDateTimeAsString(item.getSubmissionForDate());
             if (plannedOrders == null || plannedOrders.size() == 0) {
-                LOGGER.info(String.format("[%s][submitting][%s][%s][submission date=%s, id=%s][skip]0 not submitted orders found", startupMode,
-                        controllerId, date, submissionForDate, item.getId()));
+                LOGGER.info(String.format("[%s][submitting][%s][%s][submission created=%s, id=%s][skip]0 not submitted orders found", startupMode,
+                        controllerId, date, SOSDate.getDateTimeAsString(item.getCreated()), item.getId()));
             } else {
                 OrderCounter c = DailyPlanHelper.getOrderCount(plannedOrders);
-                LOGGER.info(String.format("[%s][submitting][%s][%s][submission date=%s, id=%s]submit %s start ...", startupMode, controllerId, date,
-                        submissionForDate, item.getId(), c));
+                LOGGER.info(String.format("[%s][submitting][%s][%s][submission created=%s, id=%s]submit %s start ...", startupMode, controllerId,
+                        date, SOSDate.getDateTimeAsString(item.getCreated()), item.getId(), c));
+
                 submitOrders(startupMode, controllerId, plannedOrders, submissionForDate, null, "");
                 // not log end because asynchronous
                 // LOGGER.info(String.format("[submitting][%s][%s][submission=%s]submit end", controllerId, date, submissionForDate));

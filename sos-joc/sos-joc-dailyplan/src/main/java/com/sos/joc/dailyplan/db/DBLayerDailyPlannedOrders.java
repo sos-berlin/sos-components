@@ -627,6 +627,30 @@ public class DBLayerDailyPlannedOrders {
         }
     }
 
+    public List<DBItemDailyPlanOrder> getDailyPlanOrdersBySubmission(Long submissionHistoryId, boolean submitted) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("where submissionHistoryId=:submissionHistoryId ");
+        hql.append("and submitted=:submitted ");
+
+        Query<DBItemDailyPlanOrder> query = session.createQuery(hql.toString());
+        query.setParameter("submissionHistoryId", submissionHistoryId);
+        query.setParameter("submitted", submitted);
+        return session.getResultList(query);
+    }
+
+    public List<DBItemDailyPlanOrder> getDailyPlanOrders(String controllerId, String workflowName, Date plannedStart) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and workflowName=:workflowName ");
+        hql.append("and plannedStart=:plannedStart ");
+        
+        Query<DBItemDailyPlanOrder> query = session.createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("workflowName", workflowName);
+        query.setParameter("plannedStart", plannedStart);
+        return session.getResultList(query);
+    }
+    
     private List<DBItemDailyPlanOrder> getDailyPlanListExecute(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {
         String q = "from " + DBLayer.DBITEM_DPL_ORDERS + " p " + getWhere(filter, "p.schedulePath", true) + filter.getOrderCriteria() + filter
                 .getSortMode();

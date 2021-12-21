@@ -295,16 +295,10 @@ public class OrderListSynchronizer {
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
 
                 for (PlannedOrder plannedOrder : plannedOrders.values()) {
-                    final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                    filter.setSortMode(null);
-                    filter.setOrderCriteria(null);
-                    filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
-                    filter.setControllerId(controllerId);
-                    // filter.addWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
-                    filter.setWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
-
-                    List<DBItemDailyPlanOrder> l = dbLayer.getDailyPlanList(filter, 0);
-                    orders.addAll(l);
+                    // TODO workflowName read ???
+                    String workflowName = Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString();
+                    Date plannedStart = new Date(plannedOrder.getFreshOrder().getScheduledFor());
+                    orders.addAll(dbLayer.getDailyPlanOrders(controllerId, workflowName, plannedStart));
                 }
             } finally {
                 Globals.disconnect(session);
@@ -329,7 +323,6 @@ public class OrderListSynchronizer {
                             filter.setOrderCriteria(null);
                             filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
                             filter.setControllerId(controllerId);
-                            // filter.addWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
                             filter.setWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
                             if (isTraceEnabled) {
                                 LOGGER.trace(String.format("[%s][%s][%s][%s][remove]workflowName=%s,plannedStart=%s", startupMode, method,
