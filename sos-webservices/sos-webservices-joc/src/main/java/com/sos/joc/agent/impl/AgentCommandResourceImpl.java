@@ -117,7 +117,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                         Globals.beginTransaction(connection);
                         InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
                         List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(Collections.singleton(
-                                controllerId), Collections.singleton(agentCommand.getAgentId()), false, false);
+                                controllerId), Collections.singletonList(agentCommand.getAgentId()), false, false);
                         if (dbAgents != null && !dbAgents.isEmpty()) {
                             dbLayer.deleteInstance(dbAgents.get(0));
                         }
