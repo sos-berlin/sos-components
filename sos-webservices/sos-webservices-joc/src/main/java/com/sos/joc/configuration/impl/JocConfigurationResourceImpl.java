@@ -415,7 +415,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             default:
                 String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
                 // owner doesn't need any permission
-                boolean owner = account.equals(dbItem.getAccount());
+                boolean owner = ".".equals(dbItem.getAccount()) || account.equals(dbItem.getAccount());
 
                 if (!owner) {
                     if (!getJocPermissions(accessToken).getAdministration().getCustomization().getManage()) {
