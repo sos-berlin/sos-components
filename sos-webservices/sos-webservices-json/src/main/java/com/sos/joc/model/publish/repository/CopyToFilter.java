@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * CopyToFilter
+ * Filter To Copy To Repository
  * <p>
  * 
  * 

@@ -170,6 +170,7 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.repository.CopyToFilter", "publish/repository/copyToRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.DeleteFromFilter", "publish/repository/deleteFromRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.ReadFromFilter", "publish/repository/readFromRepositoryFilter-schema.json");
+            put("com.sos.joc.model.publish.repository.UpdateFromFilter", "publish/repository/updateFromRepositoryFilter-schema.json");
 
             // schedules
             put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/schedulesSelector-schema.json");

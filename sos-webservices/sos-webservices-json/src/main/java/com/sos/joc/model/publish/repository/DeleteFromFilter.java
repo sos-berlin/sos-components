@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Delete From Repository Filter
+ * Filter to Delete From Repository
  * <p>
  * 
  * 
