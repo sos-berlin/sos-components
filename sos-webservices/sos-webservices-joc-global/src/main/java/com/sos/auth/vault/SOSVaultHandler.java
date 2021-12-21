@@ -79,7 +79,7 @@ public class SOSVaultHandler {
         SOSVaultStoreUser sosVaultStoreUser = new SOSVaultStoreUser();
         sosVaultStoreUser.setUsername(sosVaultAccountCredentials.getUsername());
         sosVaultStoreUser.setPassword(password);
-        String body = Globals.objectMapper.writeValueAsString(sosVaultAccountCredentials);
+        String body = Globals.objectMapper.writeValueAsString(sosVaultStoreUser);
         sosVaultAccountCredentials.setPassword("");
         String response = restApiClient.postRestService(requestUri, body);
 
