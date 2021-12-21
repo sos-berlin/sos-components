@@ -1,6 +1,8 @@
 package com.sos.joc.dailyplan;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.text.ParseException;
@@ -100,6 +102,7 @@ public class DailyPlanRunner extends TimerTask {
     private DailyPlanSettings settings;
     private java.util.Calendar startCalendar;
     private Map<String, String> nonWorkingDays;
+    private Map<String, Long> durations = null;
     private Set<String> createdPlans;
 
     private boolean firstStart = true;
@@ -177,6 +180,7 @@ public class DailyPlanRunner extends TimerTask {
 
         try {
             lastActivityStart.set(new Date().getTime());
+            durations = null;
 
             LOGGER.info(String.format("[%s][createPlan]creating from %s for %s days ahead, submitting for %s days ahead", startupMode, SOSDate
                     .getDateAsString(calendar), settings.getDayAheadPlan(), settings.getDayAheadSubmit()));
@@ -268,12 +272,74 @@ public class DailyPlanRunner extends TimerTask {
             LOGGER.info(String.format("[%s][%s][%s][%s][calculated][%s][submission date=%s, id=%s]", startupMode, operation, controllerId, date, c,
                     submissionDate, submissionId));
 
-            synchronizer.addPlannedOrderToControllerAndDB(startupMode, operation, controllerId, date, withSubmit);
+            calculateDurations(controllerId, date, schedules);
+
+            synchronizer.addPlannedOrderToControllerAndDB(startupMode, operation, controllerId, date, withSubmit, durations);
             EventBus.getInstance().post(new DailyPlanEvent(date));
         } else {
             LOGGER.info(String.format("[%s][%s][%s][%s][skip]%s", startupMode, operation, controllerId, date, c));
         }
         return synchronizer.getPlannedOrders();
+    }
+
+    private void calculateDurations(String controllerId, String date, Collection<Schedule> schedules) throws SOSHibernateException {
+        Set<String> schedulesWorkflowPaths = schedules.stream().map(e -> {
+            return e.getWorkflowPath();
+        }).distinct().collect(Collectors.toSet());
+
+        Set<String> workflowPaths = null;
+        if (durations == null || durations.size() == 0) {
+            durations = new HashMap<>();
+            workflowPaths = schedulesWorkflowPaths;
+        } else {
+            workflowPaths = schedulesWorkflowPaths.stream().filter(e -> {
+                return !durations.containsKey(e);
+            }).collect(Collectors.toSet());
+        }
+        if (workflowPaths != null && workflowPaths.size() > 0) {
+            calculateDurations(controllerId, date, workflowPaths);
+        } else {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[calculateDurations][%s][%s][skip]already calculated", controllerId, date));
+            }
+        }
+    }
+
+    private void calculateDurations(String controllerId, String date, Set<String> workflowPaths) throws SOSHibernateException {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+
+        SOSHibernateSession session = null;
+        try {
+            // TODO calculate duration in the database (see DBLayerMonitoring avg)
+            session = Globals.createSosHibernateStatelessConnection("calculateDurations");
+            DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+
+            for (String workflowPath : workflowPaths) {
+                List<Object[]> items = dbLayer.getLastHistoryDates(controllerId, workflowPath, 10);
+                long ms = 0;
+                long rows = 0;
+                if (items != null) {
+                    for (Object[] item : items) {
+                        Date startTime = (Date) item[0];
+                        Date endTime = (Date) item[1];
+                        if (startTime == null || endTime == null) {
+                            continue;
+                        }
+                        ms += (endTime.getTime() - startTime.getTime());
+                        rows++;
+                    }
+                }
+                Long duration = rows > 0 ? new BigDecimal(ms / rows).setScale(0, RoundingMode.HALF_UP).longValue() : ms;
+                durations.put(workflowPath, duration);
+
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[calculateDurations][%s][%s][workflow=%s]%s", controllerId, date, workflowPath, SOSDate
+                            .getDurationOfMillis(duration)));
+                }
+            }
+        } finally {
+            Globals.disconnect(session);
+        }
     }
 
     /* service (submitDaysAhead) & DailyPlanModifyOrderImpl, DailyPlanSubmitOrdersImpl **/

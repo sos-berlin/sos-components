@@ -1,14 +1,11 @@
 package com.sos.joc.dailyplan;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -66,8 +63,6 @@ public class OrderListSynchronizer {
     private JocError jocError;
     private DBItemDailyPlanSubmission submission;
     private Map<PlannedOrderKey, PlannedOrder> plannedOrders;
-    private Map<String, Long> durations;
-
     private String accessToken;
 
     public OrderListSynchronizer(DailyPlanSettings settings) {
@@ -99,55 +94,6 @@ public class OrderListSynchronizer {
             LOGGER.error(String.format("[%s][%s]%s[workflow=%s][order %s]%s", startupMode, controllerId, dateLog, workflow, SOSString.toString(o), e
                     .toString()), e);
             return false;
-        }
-    }
-
-    private void calculateDurations(String controllerId, String date) throws SOSHibernateException, JocConfigurationException,
-            DBConnectionRefusedException, DBOpenSessionException {
-        durations = new HashMap<String, Long>();
-        boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        for (PlannedOrder plannedOrder : plannedOrders.values()) {
-            calculateDuration(controllerId, plannedOrder, date, isDebugEnabled);
-        }
-    }
-
-    private void calculateDuration(String controllerId, PlannedOrder plannedOrder, String date, boolean isDebugEnabled) throws SOSHibernateException,
-            JocConfigurationException, DBConnectionRefusedException, DBOpenSessionException {
-
-        if (durations.get(plannedOrder.getSchedule().getWorkflowName()) == null) {
-            SOSHibernateSession session = null;
-            try {
-                // TODO calculate duration in the database (see DBLayerMonitoring avg)
-                // open session in parent method?
-                session = Globals.createSosHibernateStatelessConnection("calculateDurations-" + date);
-                DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-                List<Object[]> items = dbLayer.getLastHistoryDates(plannedOrder.getControllerId(), plannedOrder.getWorkflowPath(), 10);
-                session.close();
-                session = null;
-
-                long ms = 0;
-                long rows = 0;
-                if (items != null) {
-                    for (Object[] item : items) {
-                        Date startTime = (Date) item[0];
-                        Date endTime = (Date) item[1];
-                        if (startTime == null || endTime == null) {
-                            continue;
-                        }
-                        ms += (endTime.getTime() - startTime.getTime());
-                        rows++;
-                    }
-                }
-                Long duration = rows > 0 ? new BigDecimal(ms / rows).setScale(0, RoundingMode.HALF_UP).longValue() : ms;
-                this.durations.put(plannedOrder.getSchedule().getWorkflowName(), duration);
-
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("[calculateDurations][%s][%s][workflow=%s]%s", controllerId, date, plannedOrder.getSchedule()
-                            .getWorkflowName(), SOSDate.getDurationOfMillis(duration)));
-                }
-            } finally {
-                Globals.disconnect(session);
-            }
         }
     }
 
@@ -248,8 +194,8 @@ public class OrderListSynchronizer {
 
     }
 
-    private OrderCounter executeStore(StartupMode startupMode, String operation, String controllerId, String date) throws JocConfigurationException,
-            DBConnectionRefusedException, SOSHibernateException, ParseException, JsonProcessingException {
+    private OrderCounter executeStore(StartupMode startupMode, String operation, String controllerId, String date, Map<String, Long> durations)
+            throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException, JsonProcessingException {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         SOSHibernateSession session = null;
         OrderCounter counter = new OrderCounter();
@@ -265,7 +211,7 @@ public class OrderListSynchronizer {
                     counter.addSingle();
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
-                        plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowName()));
+                        plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowPath()));
                         dbLayer.store(plannedOrder, OrdersHelper.getUniqueOrderId(), 0, 0);
                         plannedOrder.setStoredInDb(true);
                         counter.addStoredSingle();
@@ -304,7 +250,7 @@ public class OrderListSynchronizer {
                 for (PlannedOrder plannedOrder : entry.getValue()) {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
-                        plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowName()));
+                        plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowPath()));
                         dbLayer.store(plannedOrder, id, nr, size);
                         nr = nr + 1;
                         plannedOrder.setStoredInDb(true);
@@ -328,10 +274,10 @@ public class OrderListSynchronizer {
         return counter;
     }
 
-    public void addPlannedOrderToControllerAndDB(StartupMode startupMode, String operation, String controllerId, String date, Boolean withSubmit)
-            throws JocConfigurationException, DBConnectionRefusedException, ControllerConnectionResetException, ControllerConnectionRefusedException,
-            DBMissingDataException, DBOpenSessionException, DBInvalidDataException, SOSHibernateException, JsonProcessingException, ParseException,
-            InterruptedException, ExecutionException, TimeoutException {
+    public void addPlannedOrderToControllerAndDB(StartupMode startupMode, String operation, String controllerId, String date, Boolean withSubmit,
+            Map<String, Long> durations) throws JocConfigurationException, DBConnectionRefusedException, ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, DBOpenSessionException, DBInvalidDataException, SOSHibernateException,
+            JsonProcessingException, ParseException, InterruptedException, ExecutionException, TimeoutException {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         boolean isTraceEnabled = LOGGER.isTraceEnabled();
@@ -341,7 +287,6 @@ public class OrderListSynchronizer {
             LOGGER.debug(String.format("[%s][%s][%s][%s]overwrite orders=%s", startupMode, method, controllerId, date, settings.isOverwrite()));
         }
 
-        calculateDurations(controllerId, date);
         if (settings.isOverwrite()) {
             SOSHibernateSession session = null;
             List<DBItemDailyPlanOrder> orders = new ArrayList<DBItemDailyPlanOrder>();
@@ -394,7 +339,7 @@ public class OrderListSynchronizer {
                         }
                         Globals.commit(session4delete);
 
-                        executeStore(startupMode, operation, controllerId, date);
+                        executeStore(startupMode, operation, controllerId, date, durations);
                         if (withSubmit == null || withSubmit) {
                             submitOrdersToController(startupMode, controllerId, date);
                         } else {
@@ -416,7 +361,7 @@ public class OrderListSynchronizer {
             });
 
         } else {
-            executeStore(startupMode, operation, controllerId, date);
+            executeStore(startupMode, operation, controllerId, date, durations);
             if (withSubmit == null || withSubmit) {
                 submitOrdersToController(startupMode, controllerId, date);
             } else {
