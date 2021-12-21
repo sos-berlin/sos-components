@@ -1,5 +1,7 @@
 package com.sos.joc.dailyplan;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.Instant;
@@ -25,8 +27,6 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
-import com.sos.commons.util.SOSDuration;
-import com.sos.commons.util.SOSDurations;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
@@ -45,7 +45,6 @@ import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
-import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -105,45 +104,47 @@ public class OrderListSynchronizer {
 
     private void calculateDurations(String controllerId, String date) throws SOSHibernateException, JocConfigurationException,
             DBConnectionRefusedException, DBOpenSessionException {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[calculateDurations][%s]%s", controllerId, date));
-        }
         durations = new HashMap<String, Long>();
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         for (PlannedOrder plannedOrder : plannedOrders.values()) {
-            calculateDuration(plannedOrder, date);
+            calculateDuration(controllerId, plannedOrder, date, isDebugEnabled);
         }
     }
 
-    private void calculateDuration(PlannedOrder plannedOrder, String date) throws SOSHibernateException, JocConfigurationException,
-            DBConnectionRefusedException, DBOpenSessionException {
+    private void calculateDuration(String controllerId, PlannedOrder plannedOrder, String date, boolean isDebugEnabled) throws SOSHibernateException,
+            JocConfigurationException, DBConnectionRefusedException, DBOpenSessionException {
 
         if (durations.get(plannedOrder.getSchedule().getWorkflowName()) == null) {
             SOSHibernateSession session = null;
             try {
-                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                filter.setSortMode(null);
-                filter.setOrderCriteria(null);
-                filter.setControllerId(plannedOrder.getControllerId());
-                // filter.addWorkflowName(plannedOrder.getSchedule().getWorkflowName());
-                filter.setWorkflowName(plannedOrder.getSchedule().getWorkflowName());
-
+                // TODO calculate duration in the database (see DBLayerMonitoring avg)
+                // open session in parent method?
                 session = Globals.createSosHibernateStatelessConnection("calculateDurations-" + date);
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-                // Globals.beginTransaction(session);
-                List<DBItemDailyPlanWithHistory> orders = dbLayer.getDailyPlanWithHistoryList(filter, 0);
+                List<Object[]> items = dbLayer.getLastHistoryDates(plannedOrder.getControllerId(), plannedOrder.getWorkflowPath(), 10);
                 session.close();
                 session = null;
 
-                SOSDurations durations = new SOSDurations();
-                for (DBItemDailyPlanWithHistory item : orders) {
-                    if (item.getOrderHistoryId() != null) {
-                        SOSDuration duration = new SOSDuration();
-                        duration.setStartTime(item.getStartTime());
-                        duration.setEndTime(item.getEndTime());
-                        durations.add(duration);
+                long ms = 0;
+                long rows = 0;
+                if (items != null) {
+                    for (Object[] item : items) {
+                        Date startTime = (Date) item[0];
+                        Date endTime = (Date) item[1];
+                        if (startTime == null || endTime == null) {
+                            continue;
+                        }
+                        ms += (endTime.getTime() - startTime.getTime());
+                        rows++;
                     }
                 }
-                this.durations.put(plannedOrder.getSchedule().getWorkflowName(), durations.average());
+                Long duration = rows > 0 ? new BigDecimal(ms / rows).setScale(0, RoundingMode.HALF_UP).longValue() : ms;
+                this.durations.put(plannedOrder.getSchedule().getWorkflowName(), duration);
+
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format("[calculateDurations][%s][%s][workflow=%s]%s", controllerId, date, plannedOrder.getSchedule()
+                            .getWorkflowName(), SOSDate.getDurationOfMillis(duration)));
+                }
             } finally {
                 Globals.disconnect(session);
             }
