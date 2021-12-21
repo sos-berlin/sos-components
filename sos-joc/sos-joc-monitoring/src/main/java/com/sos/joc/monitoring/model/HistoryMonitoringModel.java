@@ -544,12 +544,12 @@ public class HistoryMonitoringModel implements Serializable {
 
     private String getExpectedDurationMessage(String definition, ExpectedSeconds expected) {
         if (isPercentage(definition)) {
-            String avg = expected.getAvg() == null ? "" : SOSDate.getDuration(expected.getAvg());
-            return String.format("duration of %s (avg=%s, configured=%s)", SOSDate.getDuration(expected.getSeconds()), avg, definition);
+            String avg = expected.getAvg() == null ? "" : SOSDate.getDurationOfSeconds(expected.getAvg());
+            return String.format("duration of %s (avg=%s, configured=%s)", SOSDate.getDurationOfSeconds(expected.getSeconds()), avg, definition);
         } else if (isTime(definition)) {
-            return String.format("duration of %s (configured=%s)", SOSDate.getDuration(expected.getSeconds()), definition);
+            return String.format("duration of %s (configured=%s)", SOSDate.getDurationOfSeconds(expected.getSeconds()), definition);
         }
-        return String.format("duration of %s", SOSDate.getDuration(expected.getSeconds()));
+        return String.format("duration of %s", SOSDate.getDurationOfSeconds(expected.getSeconds()));
     }
 
     private ExpectedSeconds getExpectedSeconds(JobWarning type, HistoryOrderStepBean hosb, String definition) {
@@ -560,16 +560,17 @@ public class HistoryMonitoringModel implements Serializable {
         Long seconds = null;
         Long avg = null;
         if (isPercentage(definition)) {
-            int percentage = Integer.parseInt(definition.substring(0, definition.length() - 1));
             try {
-                avg = dbLayer.getJobAvg(hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName());
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s][workflowPath=%s,job=%s][%s definition=%s]avg=%s", serviceIdentifier, IDENTIFIER, hosb
-                            .getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), type, definition, avg));
-                }
-
-                if (avg != null) {// job found
-                    seconds = new BigDecimal(percentage / 100 * avg).setScale(0, RoundingMode.HALF_UP).longValue();
+                int percentage = Integer.parseInt(definition.substring(0, definition.length() - 1));
+                if (percentage != 0) {
+                    avg = dbLayer.getJobAvg(hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName());
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][%s][workflowPath=%s,job=%s][%s definition=%s]avg=%s", serviceIdentifier, IDENTIFIER, hosb
+                                .getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), type, definition, avg));
+                    }
+                    if (avg != null) {// job found
+                        seconds = new BigDecimal(percentage / 100 * avg).setScale(0, RoundingMode.HALF_UP).longValue();
+                    }
                 }
             } catch (SOSHibernateException e) {
                 LOGGER.error(String.format("[%s][%s][%s][workflowPath=%s,job=%s][%s definition=%s][error on get jobAvg]%s", serviceIdentifier,
