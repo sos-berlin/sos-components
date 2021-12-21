@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "folders",
     "auditLog"
 })
-public class GetFromFilter {
+public class ReadFromFilter {
 
     /**
      * 
@@ -98,10 +98,10 @@ public class GetFromFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof GetFromFilter) == false) {
+        if ((other instanceof ReadFromFilter) == false) {
             return false;
         }
-        GetFromFilter rhs = ((GetFromFilter) other);
+        ReadFromFilter rhs = ((ReadFromFilter) other);
         return new EqualsBuilder().append(auditLog, rhs.auditLog).append(folders, rhs.folders).isEquals();
     }
 
