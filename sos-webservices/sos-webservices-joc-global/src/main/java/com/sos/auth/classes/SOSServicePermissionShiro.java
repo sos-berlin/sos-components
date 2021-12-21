@@ -752,7 +752,7 @@ public class SOSServicePermissionShiro {
 
             return sosAuthCurrentUserAnswer;
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
+            LOGGER.error(e.getMessage(),e);
             SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = new SOSAuthCurrentAccountAnswer();
             sosAuthCurrentUserAnswer.setMessage(e.getMessage());
             sosAuthCurrentUserAnswer.setIsAuthenticated(false);

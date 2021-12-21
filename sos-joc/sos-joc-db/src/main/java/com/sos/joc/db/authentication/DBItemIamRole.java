@@ -17,7 +17,7 @@ import com.sos.joc.db.DBLayer;
 public class DBItemIamRole {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_IAM_ROLES_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
     
