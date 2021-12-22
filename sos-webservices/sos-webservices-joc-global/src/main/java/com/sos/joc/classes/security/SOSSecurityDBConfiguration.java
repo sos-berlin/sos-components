@@ -112,15 +112,13 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
             String password = null;
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                password = securityConfigurationAccount.getPassword();
-            }
+            password = securityConfigurationAccount.getPassword();
             securityConfigurationAccount.setPassword("");
             iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             DBItemIamAccount dbItemIamAcount = new DBItemIamAccount();
             dbItemIamAcount.setAccountName(securityConfigurationAccount.getAccount());
             if (!dbItemIamIdentityService.getIdentityServiceType().contains("VAULT")) {
-                dbItemIamAcount.setAccountPassword(SOSAuthHelper.getSHA512(securityConfigurationAccount.getPassword()));
+                dbItemIamAcount.setAccountPassword(SOSAuthHelper.getSHA512(password));
             } else {
                 dbItemIamAcount.setAccountPassword("********");
             }
