@@ -17,7 +17,6 @@ import com.sos.auth.classes.permission.model.SOSPermissionRoles;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
-import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.model.security.Permissions;

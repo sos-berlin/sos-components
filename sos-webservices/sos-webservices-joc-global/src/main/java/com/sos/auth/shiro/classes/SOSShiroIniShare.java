@@ -24,7 +24,7 @@ public class SOSShiroIniShare {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSShiroIniShare.class);
     private String iniFileName;
-    SOSHibernateSession sosHibernateSession;
+    private SOSHibernateSession sosHibernateSession;
 
     public SOSShiroIniShare(SOSHibernateSession sosHibernateSession) throws JocException {
         super();
@@ -65,7 +65,7 @@ public class SOSShiroIniShare {
 
         if (forceFile.exists()) {
             if (fileSize < 1 && fileSize > 0) {
-                LOGGER.debug(forceFile.getAbsoluteFile() + " found. Will be moved to database");
+                LOGGER.debug(forceFile.toString() + " found. Will be moved to database");
                 copyFileToDb(forceFile);
                 forceFile.delete();
                 File iniFile = new File(Globals.getIniFileForShiro(iniFileName));
@@ -73,7 +73,7 @@ public class SOSShiroIniShare {
                 destinationFile.delete();
                 iniFile.renameTo(destinationFile);
             } else {
-                LOGGER.info(forceFile.getAbsoluteFile() + " found. Will be ignored and deleted due to an invalid filesize");
+                LOGGER.info(forceFile.toString() + " found. Will be ignored and deleted due to an invalid filesize");
                 forceFile.delete();
             }
         }
@@ -125,7 +125,7 @@ public class SOSShiroIniShare {
         }
 
         if (!inifileContent.equals(contentIniFileActive)) {
-            LOGGER.debug (iniFileActive.getAbsoluteFile() + " content changed. Will be updated from database");
+            LOGGER.debug (iniFileActive.toString() + " content changed. Will be updated from database");
             byte[] bytes = inifileContent.getBytes(StandardCharsets.UTF_8);
             Files.write(Paths.get(Globals.getIniFileForShiro(iniFileName)), bytes, java.nio.file.StandardOpenOption.WRITE,
                     StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
@@ -152,7 +152,7 @@ public class SOSShiroIniShare {
             } else {
                 return "";
             }
-        } catch (Exception e) {
+        } catch (SOSHibernateException e) {
             Globals.rollback(sosHibernateSession);
             throw e;
         }

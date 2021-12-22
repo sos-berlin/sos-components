@@ -3,9 +3,12 @@ package com.sos.auth.vault;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.KeyStore;
-import java.util.Date;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSSession;
@@ -17,13 +20,15 @@ import com.sos.joc.Globals;
 
 public class SOSVaultSession implements ISOSSession {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSVaultSession.class);
+
     private SOSVaultAccountAccessToken accessToken;
     private Long startSession;
     private Long lastTouch;
     private Long initSessionTimeout;
     private SOSVaultHandler sosVaultHandler;
 
-    Map<String, Object> attributes;
+    private Map<String, Object> attributes;
 
     public SOSVaultSession(SOSIdentityService identityService) {
         super();
@@ -53,11 +58,10 @@ public class SOSVaultSession implements ISOSSession {
 
                 webserviceCredentials.setAccount("");
                 sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
-                Date now = new Date();
-                startSession = now.getTime();
+                startSession = Instant.now().toEpochMilli();
 
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.error("", e);
             }
         }
     }
@@ -88,8 +92,7 @@ public class SOSVaultSession implements ISOSSession {
         if (initSessionTimeout < 0L) {
             return -1L;
         } else {
-            Date now = new Date();
-            Long timeout = initSessionTimeout - now.getTime() + lastTouch;
+            Long timeout = initSessionTimeout - Instant.now().toEpochMilli() + lastTouch;
             if (timeout < 0) {
                 return 0L;
             }
@@ -106,8 +109,7 @@ public class SOSVaultSession implements ISOSSession {
     @Override
     public void touch() {
 
-        Date now = new Date();
-        lastTouch = now.getTime();
+        lastTouch = Instant.now().toEpochMilli();
         if (initSessionTimeout == null) {
             if (Globals.iamSessionTimeout != null) {
                 initSessionTimeout = Globals.iamSessionTimeout * 1000L;
@@ -132,13 +134,13 @@ public class SOSVaultSession implements ISOSSession {
         try {
             if (sosVaultHandler.accountAccessTokenIsValid(accessToken)) {
                 sosVaultHandler.renewAccountAccess(accessToken);
-                startSession = new Date().getTime();
+                startSession = Instant.now().toEpochMilli();
                 return true;
             } else {
                 return false;
             }
         } catch (SOSException | IOException e) {
-            e.printStackTrace();
+            LOGGER.error("", e);
             return false;
         }
     }

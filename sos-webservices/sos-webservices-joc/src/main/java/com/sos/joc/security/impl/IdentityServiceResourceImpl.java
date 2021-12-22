@@ -166,7 +166,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             filter.setIdentityServiceName(identityService.getIdentityServiceOldName());
             DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
             iamIdentityServiceDBLayer.rename(identityService.getIdentityServiceOldName(), identityService.getIdentityServiceNewName());
-            
+
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
 
             JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
@@ -177,9 +177,11 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
         } catch (JocException e) {
+            Globals.rollback(sosHibernateSession);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.commit(sosHibernateSession);
@@ -232,9 +234,11 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
+            Globals.rollback(sosHibernateSession);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.commit(sosHibernateSession);

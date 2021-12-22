@@ -3,7 +3,6 @@ package com.sos.joc.classes.common;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
@@ -42,55 +41,55 @@ public class SyncStateHelper {
         return state;
     }
     
-    public static SyncState getState(JControllerState currentstate, String name, Integer type, Set<String> deployedNames) {
-        return getState(currentstate, name, ConfigurationType.fromValue(type), deployedNames);
+    public static SyncState getState(JControllerState currentstate, Long invCId, Integer type, Map<Long, String> deployedNames) {
+        return getState(currentstate, invCId, ConfigurationType.fromValue(type), deployedNames);
     }
     
-    public static SyncState getState(JControllerState currentstate, String name, ConfigurationType type, Set<String> deployedNames) {
+    public static SyncState getState(JControllerState currentstate, Long invCId, ConfigurationType type, Map<Long, String> deployedNames) {
         SyncStateText stateText = SyncStateText.UNKNOWN;
         switch (type) {
         case WORKFLOW:
-            if (deployedNames == null || !deployedNames.contains(name)) {
+            if (deployedNames == null || !deployedNames.containsKey(invCId)) {
                 stateText = SyncStateText.NOT_DEPLOYED;
             } else {
                 if (currentstate != null) {
-                    stateText = getState(currentstate.repo().pathToWorkflow(WorkflowPath.of(name)));
+                    stateText = getState(currentstate.repo().pathToWorkflow(WorkflowPath.of(deployedNames.get(invCId))));
                 }
             }
             break;
         case JOBRESOURCE:
-            if (deployedNames == null || !deployedNames.contains(name)) {
+            if (deployedNames == null || !deployedNames.containsKey(invCId)) {
                 stateText = SyncStateText.NOT_DEPLOYED;
             } else {
                 if (currentstate != null) {
-                    stateText = getState(currentstate.pathToJobResource(JobResourcePath.of(name)));
+                    stateText = getState(currentstate.pathToJobResource(JobResourcePath.of(deployedNames.get(invCId))));
                 }
             }
             break;
         case LOCK:
-            if (deployedNames == null || !deployedNames.contains(name)) {
+            if (deployedNames == null || !deployedNames.containsKey(invCId)) {
                 stateText = SyncStateText.NOT_DEPLOYED;
             } else {
                 if (currentstate != null) {
-                    stateText = getState(currentstate.pathToLock(LockPath.of(name)));
+                    stateText = getState(currentstate.pathToLock(LockPath.of(deployedNames.get(invCId))));
                 }
             }
             break;
         case FILEORDERSOURCE:
-            if (deployedNames == null || !deployedNames.contains(name)) {
+            if (deployedNames == null || !deployedNames.containsKey(invCId)) {
                 stateText = SyncStateText.NOT_DEPLOYED;
             } else {
                 if (currentstate != null) {
-                    stateText = getState(currentstate.pathToFileWatch(OrderWatchPath.of(name)));
+                    stateText = getState(currentstate.pathToFileWatch(OrderWatchPath.of(deployedNames.get(invCId))));
                 }
             }
             break;
         case NOTICEBOARD:
-            if (deployedNames == null || !deployedNames.contains(name)) {
+            if (deployedNames == null || !deployedNames.containsKey(invCId)) {
                 stateText = SyncStateText.NOT_DEPLOYED;
             } else {
                 if (currentstate != null) {
-                    stateText = getState(currentstate.pathToBoard(BoardPath.of(name)));
+                    stateText = getState(currentstate.pathToBoard(BoardPath.of(deployedNames.get(invCId))));
                 }
             }
             break;

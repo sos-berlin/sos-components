@@ -40,7 +40,7 @@ public class SOSVaultWebserviceCredentials {
     private String applicationToken;
     private String vaultAccount;
     private String vaultPassword;
- 
+
     public String getAccountDecodedAccount() {
         return decodedAccount;
     }
@@ -140,27 +140,24 @@ public class SOSVaultWebserviceCredentials {
     public void setKeyPassword(String keyPassword) {
         this.keyPassword = keyPassword;
     }
-    
-    private String getProperty(String value,String defaultValue) {
+
+    private String getProperty(String value, String defaultValue) {
         if (value == null || value.isEmpty()) {
             return defaultValue;
-        }else {
+        } else {
             return value;
         }
-        
-    }
-    
-    public void setValuesFromProfile() throws SOSMissingDataException, UnsupportedEncodingException {
+
     }
 
-    public void setValuesFromProfile(SOSIdentityService sosIdentityService) throws SOSMissingDataException, UnsupportedEncodingException {
+    public void setValuesFromProfile(SOSIdentityService sosIdentityService) {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSVaultWebserviceCredentials");
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
             JocConfigurationFilter filter = new JocConfigurationFilter();
-            filter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM); 
+            filter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
             filter.setName(sosIdentityService.getIdentityServiceName());
             filter.setObjectType(sosIdentityService.getIdentyServiceType().value());
             List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(filter, 0);
@@ -175,41 +172,41 @@ public class SOSVaultWebserviceCredentials {
                         com.sos.joc.model.security.Properties.class);
 
                 if (serviceUrl == null || serviceUrl.isEmpty()) {
-                    serviceUrl = getProperty(properties.getVault().getIamVaultUrl(),"https://vault:8200"); 
+                    serviceUrl = getProperty(properties.getVault().getIamVaultUrl(), "https://vault:8200");
                 }
 
                 if (keystorePath.isEmpty()) {
-                    keystorePath = getProperty(properties.getVault().getIamVaultKeystorePath(),""); 
+                    keystorePath = getProperty(properties.getVault().getIamVaultKeystorePath(), "");
                 }
 
                 if (keystorePassword.isEmpty()) {
-                    keystorePassword = getProperty(properties.getVault().getIamVaultKeystorePassword(),""); 
+                    keystorePassword = getProperty(properties.getVault().getIamVaultKeystorePassword(), "");
                 }
 
                 if (keyPassword.isEmpty()) {
-                    keyPassword = getProperty(properties.getVault().getIamVaultKeyPassword(),""); 
+                    keyPassword = getProperty(properties.getVault().getIamVaultKeyPassword(), "");
                 }
 
                 if (keystoreType == null) {
-                    keystoreType = KeystoreType.fromValue(getProperty(properties.getVault().getIamVaultKeystoreType(),"PKCS12")); 
+                    keystoreType = KeystoreType.fromValue(getProperty(properties.getVault().getIamVaultKeystoreType(), "PKCS12"));
                 }
 
                 if (truststorePath.isEmpty()) {
-                    truststorePath = getProperty(properties.getVault().getIamVaultTruststorePath(),""); 
+                    truststorePath = getProperty(properties.getVault().getIamVaultTruststorePath(), "");
                 }
 
                 if (truststorePassword.isEmpty()) {
-                    truststorePassword = getProperty(properties.getVault().getIamVaultTruststorePassword(),""); 
+                    truststorePassword = getProperty(properties.getVault().getIamVaultTruststorePassword(), "");
                 }
 
                 if (truststoreType == null) {
-                    truststoreType = KeystoreType.fromValue(getProperty(properties.getVault().getIamVaultTruststoreType(),"PKCS12")); 
+                    truststoreType = KeystoreType.fromValue(getProperty(properties.getVault().getIamVaultTruststoreType(), "PKCS12"));
 
                 }
                 if (applicationToken == null) {
-                    applicationToken = getProperty(properties.getVault().getIamVaultApplicationToken(),""); 
+                    applicationToken = getProperty(properties.getVault().getIamVaultApplicationToken(), "");
                 }
- 
+
             }
         } catch (SOSHibernateException | IOException e) {
             LOGGER.error(e.getMessage(), e);
@@ -242,8 +239,6 @@ public class SOSVaultWebserviceCredentials {
     public void setVaultPassword(String vaultPassword) {
         this.vaultPassword = vaultPassword;
     }
-
-   
 
     @Override
     public String toString() {

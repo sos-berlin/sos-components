@@ -31,8 +31,8 @@ import com.sos.schema.JsonValidator;
 @Path("agents")
 public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResource {
 
-    private static String API_CALL_P = "./agents/p";
-    private static String API_CALL_NAMES = "./agents/names";
+    private static final String API_CALL_P = "./agents/p";
+    private static final String API_CALL_NAMES = "./agents/names";
 
     @Override
     public JOCDefaultResponse post(String accessToken, byte[] filterBytes) {

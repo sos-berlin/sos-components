@@ -1,7 +1,7 @@
 package com.sos.auth.sosintern;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,11 +16,12 @@ public class SOSInternAuthSession implements ISOSSession {
     private Long lastTouch;
     private Long initSessionTimeout;
 
-    Map<String, Object> attributes;
+    private Map<String, Object> attributes;
 
     public SOSInternAuthSession() {
         super();
-        startSession = new Date().getTime();
+        startSession = Instant.now().toEpochMilli();
+;
     }
 
     private Map<String, Object> getAttributes() {
@@ -55,8 +56,7 @@ public class SOSInternAuthSession implements ISOSSession {
         if (initSessionTimeout < 0L) {
             return -1L;
         } else {
-            Date now = new Date();
-            Long timeout = initSessionTimeout - now.getTime() + lastTouch;
+            Long timeout = initSessionTimeout - Instant.now().toEpochMilli() + lastTouch;
             if (timeout < 0) {
                 return 0L;
             }
@@ -72,8 +72,7 @@ public class SOSInternAuthSession implements ISOSSession {
 
     @Override
     public void touch() {
-        Date now = new Date();
-        lastTouch = now.getTime();
+        lastTouch = Instant.now().toEpochMilli();
         if (initSessionTimeout == null) {
             if (Globals.iamSessionTimeout != null) {
                 initSessionTimeout = Globals.iamSessionTimeout * 1000L;

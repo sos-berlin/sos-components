@@ -48,8 +48,8 @@ public class SOSInternAuthLogin implements ISOSLogin {
             }
 
         } catch (SOSHibernateException e) {
-            e.printStackTrace();
-        } finally {
+            LOGGER.error("",e);
+         } finally {
             Globals.disconnect(sosHibernateSession);
         }
 

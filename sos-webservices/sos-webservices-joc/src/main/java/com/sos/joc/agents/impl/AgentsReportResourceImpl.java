@@ -32,7 +32,7 @@ import com.sos.schema.JsonValidator;
 @Path("agents")
 public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgentsReportResource {
 
-    private static String API_CALL = "./agents/report";
+    private static final String API_CALL = "./agents/report";
 
     @Override
     public JOCDefaultResponse post(String accessToken, byte[] filterBytes) {
