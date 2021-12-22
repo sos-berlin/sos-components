@@ -21,10 +21,7 @@ import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
-import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.configuration.Configuration;
-import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.security.IdentityService;
 import com.sos.joc.model.security.IdentityServiceFilter;
 import com.sos.joc.model.security.IdentityServiceRename;
@@ -174,6 +171,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             jocConfigurationFilter.setName(identityService.getIdentityServiceOldName());
             jocConfigurationFilter.setObjectType(dbItemIamIdentityService.getIdentityServiceType());
             jocConfigurationDBLayer.rename(jocConfigurationFilter, identityService.getIdentityServiceNewName());
+            Globals.commit(sosHibernateSession);
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
         } catch (JocException e) {
@@ -184,7 +182,6 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             Globals.rollback(sosHibernateSession);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.commit(sosHibernateSession);
             Globals.disconnect(sosHibernateSession);
         }
 
@@ -230,6 +227,8 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             if (iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0).size() == 0) {
                 LOGGER.info("It is not possible to delete the last Identity Service");
                 Globals.rollback(sosHibernateSession);
+            } else {
+                Globals.commit(sosHibernateSession);
             }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -241,7 +240,6 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             Globals.rollback(sosHibernateSession);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.commit(sosHibernateSession);
             Globals.disconnect(sosHibernateSession);
         }
 

@@ -2,9 +2,6 @@ package com.sos.auth.shiro;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
@@ -13,6 +10,8 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.auth.interfaces.ISOSAuthorizing;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -63,7 +62,7 @@ public class SOSHibernateAuthorizingRealm extends AuthorizingRealm {
     }
 
     @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authcToken) throws AuthenticationException {
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authcToken) {
         authToken = (UsernamePasswordToken) authcToken;
         IamAccountDBLayer sosUserDBLayer;
         SOSHibernateSession sosHibernateSession = null;
@@ -96,12 +95,10 @@ public class SOSHibernateAuthorizingRealm extends AuthorizingRealm {
             }
             return null;
         } catch (Exception e1) {
-            e1.printStackTrace();
+            LOGGER.error("", e1);
             return null;
         } finally {
-            if (sosHibernateSession != null) {
-                sosHibernateSession.close();
-            }
+            Globals.disconnect(sosHibernateSession);
         }
     }
 

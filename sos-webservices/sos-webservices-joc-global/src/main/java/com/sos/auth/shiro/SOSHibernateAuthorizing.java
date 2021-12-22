@@ -56,12 +56,10 @@ public class SOSHibernateAuthorizing implements ISOSAuthorizing {
             return authorizationInfo;
 
         } catch (Exception e1) {
-            e1.printStackTrace();
+            LOGGER.error("", e1);
             return null;
         } finally {
-            if (sosHibernateSession != null) {
-                sosHibernateSession.close();
-            }
+            Globals.disconnect(sosHibernateSession);
         }
     }
 
@@ -112,12 +110,10 @@ public class SOSHibernateAuthorizing implements ISOSAuthorizing {
             }
             return authorizationInfo;
         } catch (Exception e1) {
-            e1.printStackTrace();
+            LOGGER.error("", e1);
             return null;
         } finally {
-            if (sosHibernateSession != null) {
-                sosHibernateSession.close();
-            }
+            Globals.disconnect(sosHibernateSession);
         }
     }
 

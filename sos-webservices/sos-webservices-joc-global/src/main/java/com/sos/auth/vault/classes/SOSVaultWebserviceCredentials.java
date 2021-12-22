@@ -1,7 +1,6 @@
 package com.sos.auth.vault.classes;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
@@ -10,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
-import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
@@ -209,7 +207,7 @@ public class SOSVaultWebserviceCredentials {
 
             }
         } catch (SOSHibernateException | IOException e) {
-            LOGGER.error(e.getMessage(), e);
+            LOGGER.error("", e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

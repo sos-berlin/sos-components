@@ -281,7 +281,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             Globals.commit(sosHibernateSession);
             return securityConfiguration;
         } catch (Exception e) {
-            sosHibernateSession.rollback();
+            Globals.rollback(sosHibernateSession);
             throw e;
         } finally {
             Globals.disconnect(sosHibernateSession);

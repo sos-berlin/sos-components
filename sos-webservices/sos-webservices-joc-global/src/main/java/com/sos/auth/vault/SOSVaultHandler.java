@@ -55,66 +55,61 @@ public class SOSVaultHandler {
         restApiClient.closeHttpClient();
 
         JocError jocError = new JocError();
-        try {
-            switch (httpReplyCode) {
-            case 200:
-                if (contentType.contains("application/json")) {
-                    if (response.isEmpty()) {
-                        jocError.setCode("Unexpected empty response");
-                        throw new JocException(jocError);
-                    }
-                    return response;
-                } else {
-                    jocError.setMessage(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType, response));
+        switch (httpReplyCode) {
+        case 200:
+            if (contentType.contains("application/json")) {
+                if (response.isEmpty()) {
+                    jocError.setMessage("Unexpected empty response");
                     throw new JocException(jocError);
                 }
-            case 201:
-            case 204:
                 return response;
-            case 400:
-                jocError.setMessage("Invalid request, missing or invalid data.");
-                throw new JocException(jocError);
-            case 403:
-                jocError.setMessage(
-                        "Forbidden, your authentication details are either incorrect, you don't have access to this feature, or - if CORS is enabled - you made a cross-origin request from an origin that is not allowed to make such requests.");
-                throw new JocException(jocError);
-            case 404:
-                jocError.setMessage(
-                        "Invalid path. This can both mean that the path truly doesn't exist or that you don't have permission to view a specific path. We use 404 in some cases to avoid state leakage.");
-                throw new JocException(jocError);
-            case 405:
-                jocError.setMessage(
-                        "Unsupported operation. You tried to use a method inappropriate to the request path, e.g. a POST on an endpoint that only accepts GETs.");
-                throw new JocException(jocError);
-            case 412:
-                jocError.setMessage(
-                        "Precondition failed. Returned on Enterprise when a request can't be processed yet due to some missing eventually consistent data. Should be retried, perhaps with a little backoff. See Vault Eventual Consistency.");
-                throw new JocException(jocError);
-            case 429:
-                jocError.setMessage("Default return code for health status of standby nodes. This will likely change in the future.");
-                throw new JocException(jocError);
-            case 473:
-                jocError.setMessage("Default return code for health status of performance standby nodes.");
-                throw new JocException(jocError);
-            case 500:
-                jocError.setMessage("Internal server error. An internal error has occurred, try again later. If the error persists, report a bug.");
-                throw new JocException(jocError);
-            case 502:
-                jocError.setMessage(
-                        "A request to Vault required Vault making a request to a third party; the third party responded with an error of some kind.");
-                throw new JocException(jocError);
-            case 503:
-                jocError.setMessage("Vault is down for maintenance or is currently sealed. Try again later.");
+            } else {
+                jocError.setMessage(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType, response));
                 throw new JocException(jocError);
             }
-
-        } catch (JocException e) {
-            jocError.setCode(String.valueOf(httpReplyCode));
-            e.addErrorMetaInfo(jocError);
-            throw e;
+        case 201:
+        case 204:
+            return response;
+        case 400:
+            jocError.setMessage("Invalid request, missing or invalid data.");
+            throw new JocException(jocError);
+        case 403:
+            jocError.setMessage(
+                    "Forbidden, your authentication details are either incorrect, you don't have access to this feature, or - if CORS is enabled - you made a cross-origin request from an origin that is not allowed to make such requests.");
+            throw new JocException(jocError);
+        case 404:
+            jocError.setMessage(
+                    "Invalid path. This can both mean that the path truly doesn't exist or that you don't have permission to view a specific path. We use 404 in some cases to avoid state leakage.");
+            throw new JocException(jocError);
+        case 405:
+            jocError.setMessage(
+                    "Unsupported operation. You tried to use a method inappropriate to the request path, e.g. a POST on an endpoint that only accepts GETs.");
+            throw new JocException(jocError);
+        case 412:
+            jocError.setMessage(
+                    "Precondition failed. Returned on Enterprise when a request can't be processed yet due to some missing eventually consistent data. Should be retried, perhaps with a little backoff. See Vault Eventual Consistency.");
+            throw new JocException(jocError);
+        case 429:
+            jocError.setMessage("Default return code for health status of standby nodes. This will likely change in the future.");
+            throw new JocException(jocError);
+        case 473:
+            jocError.setMessage("Default return code for health status of performance standby nodes.");
+            throw new JocException(jocError);
+        case 500:
+            jocError.setMessage("Internal server error. An internal error has occurred, try again later. If the error persists, report a bug.");
+            throw new JocException(jocError);
+        case 502:
+            jocError.setMessage(
+                    "A request to Vault required Vault making a request to a third party; the third party responded with an error of some kind.");
+            throw new JocException(jocError);
+        case 503:
+            jocError.setMessage("Vault is down for maintenance or is currently sealed. Try again later.");
+            throw new JocException(jocError);
+        default:
+            jocError.setMessage(httpReplyCode + " " + restApiClient.getHttpResponse().getStatusLine().getReasonPhrase());
+            throw new JocException(jocError);
         }
 
-        return response;
     }
 
     public String storeAccountPassword(SOSVaultAccountCredentials sosVaultAccountCredentials, String password) throws SOSException,
