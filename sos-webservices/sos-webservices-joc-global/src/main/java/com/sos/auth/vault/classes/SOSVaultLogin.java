@@ -17,7 +17,6 @@ import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.vault.SOSVaultHandler;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
-import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSVaultLogin implements ISOSLogin {
 
@@ -61,11 +60,11 @@ public class SOSVaultLogin implements ISOSLogin {
             }
 
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
-            e.printStackTrace();
+            LOGGER.error("",e);
         } catch (SOSException e) {
-            e.printStackTrace();
+            LOGGER.error("",e);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("",e);
         }
     }
 

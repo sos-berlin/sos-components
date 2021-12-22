@@ -28,7 +28,7 @@ public class SOSVaultAccountCredentials {
         return tokenPolicies;
     }
 
-    public void setTokenPolicies(List tokenPolicies) {
+    public void setTokenPolicies(List<String> tokenPolicies) {
         this.tokenPolicies = tokenPolicies;
     }
 

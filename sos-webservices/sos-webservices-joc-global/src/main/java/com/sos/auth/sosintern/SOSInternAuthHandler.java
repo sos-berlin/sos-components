@@ -1,6 +1,5 @@
 package com.sos.auth.sosintern;
 
-import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -61,12 +60,6 @@ public class SOSInternAuthHandler {
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-    }
-
-    public boolean accountAccessTokenIsValid(SOSInternAuthAccessToken sosInternAuthAccessToken) throws SOSException, JsonParseException,
-            JsonMappingException, IOException {
-
-        return true;
     }
 
 }

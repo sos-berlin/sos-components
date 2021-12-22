@@ -10,7 +10,7 @@ public class SOSVaultUpdatePolicies {
         return token_policies;
     }
 
-    public void setToken_policies(List tokenPolicies) {
+    public void setToken_policies(List<String> tokenPolicies) {
         this.token_policies = tokenPolicies;
     }
 

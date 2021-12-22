@@ -1,6 +1,5 @@
 package com.sos.auth.shiro.classes;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
 
@@ -27,8 +26,6 @@ import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.shiro.SOSUsernameRequestToken;
 import com.sos.auth.shiro.SOSX509AuthorizingRealm;
-import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.JocException;
 

@@ -12,7 +12,6 @@ import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSSecurityConfiguration;
 import com.sos.auth.vault.SOSVaultHandler;
 import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
-import com.sos.auth.vault.classes.SOSVaultUpdatePolicies;
 import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -283,6 +282,9 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
             Globals.commit(sosHibernateSession);
             return securityConfiguration;
+        } catch (Exception e) {
+            sosHibernateSession.rollback();
+            throw e;
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
