@@ -178,14 +178,15 @@ public class ProxyContext {
                 Map<JAgentRef, List<JSubagentRef>> agents = Proxies.getAgents(credentials.getControllerId(), dbLayer);
                 if (!agents.isEmpty()) {
                     boolean redeploy = false;
-                    Either<Problem, JAgentRef> agnetE = p.currentState().pathToAgentRef(agents.keySet().iterator().next().path());
-                    if (agnetE.isLeft()) {
+                    Either<Problem, JAgentRef> agentE = p.currentState().pathToAgentRef(agents.keySet().iterator().next().path());
+                    if (agentE.isLeft()) {
                         redeploy = true;
-                    } else if (!agnetE.get().director().isPresent() || agnetE.get().directors().isEmpty()) {
-                        redeploy = true;
+//                    } else if (!agentE.get().director().isPresent() || agentE.get().directors().isEmpty()) {
+//                        redeploy = true;
 //                        versionBefore220beta20211201 = true;
                     }
                     // Agents doesn't exists (e.g. journal is deleted) or before version v2.2.0-beta.20211201
+                    // before version v2.2.0-beta.20211201 doesn't work -> comment out 
                     if (redeploy) {
                         LOGGER.info(toString() + ": Redeploy Agents");
                         
@@ -193,27 +194,11 @@ public class ProxyContext {
                         Stream<JUpdateItemOperation> s = agents.values().stream().flatMap(l -> l.stream().map(
                                 JUpdateItemOperation::addOrChangeSimple));
 
-                        // old agent before version v2.2.0-beta.20211201 have to deleted then update
-//                        if (versionBefore220beta20211201) {
-//                            Stream<JUpdateItemOperation> da = agents.keySet().stream().map(JAgentRef::path).map(JUpdateItemOperation::deleteSimple);
-//                            p.api().updateItems(Flux.fromStream(da)).thenAccept(e1 -> {
-//                                if (e1.isLeft()) {
-//                                    LOGGER.error(ProblemHelper.getErrorMessage(e1.getLeft()));
-//                                } else {
-//                                    p.api().updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s))).thenAccept(e -> {
-//                                        if (e.isLeft()) {
-//                                            LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
-//                                        }
-//                                    });
-//                                }
-//                            });
-//                        } else {
                             p.api().updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s))).thenAccept(e -> {
                                 if (e.isLeft()) {
                                     LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
                                 }
                             });
-//                        }
                     }
                 }
                 DailyPlanCalendar.getInstance().updateDailyPlanCalendar(p, toString());

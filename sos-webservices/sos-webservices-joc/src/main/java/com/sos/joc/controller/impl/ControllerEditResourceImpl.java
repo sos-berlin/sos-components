@@ -3,6 +3,7 @@ package com.sos.joc.controller.impl;
 import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -23,7 +24,6 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.ControllerCallable;
 import com.sos.joc.classes.jobscheduler.States;
-import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxiesEdit;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -54,10 +54,16 @@ import com.sos.joc.model.controller.TestConnect;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
+import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
+import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
+import js7.data_for_java.subagent.JSubagentRef;
+import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
 @Path("controller")
@@ -218,7 +224,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 }
             }
             
-            List<JAgentRef> agentRefs = new ArrayList<>();
+            List<Agent> agentWatchers = new ArrayList<>();
             boolean controllerUpdateRequired = false;
             boolean updateAgentRequired = false;
             
@@ -278,7 +284,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     agentDBLayer.saveAgent(dbAgent);
                 }
                 if (updateAgentRequired) {
-                    agentRefs.add(JAgentRef.of(AgentPath.of(clusterWatcher.getAgentId()), Uri.of(clusterWatcher.getUrl())));
+                    agentWatchers.add(clusterWatcher);
                 }
             }
             
@@ -297,10 +303,22 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 }
             }
             
-            if (!agentRefs.isEmpty()) {
+            if (!agentWatchers.isEmpty()) {
                 final String cId = controllerId;
-                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(agentRefs).map(JUpdateItemOperation::addOrChangeSimple)).thenAccept(
-                        e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), cId));
+
+                // TODO consider old Agent cannot convert to new Agents
+                JControllerProxy proxy = Proxy.of(controllerId);
+                JControllerState currentState = proxy.currentState();
+                
+                proxy.api().updateItems(Flux.fromStream(agentWatchers.stream().map(a -> {
+                    Either<Problem, JAgentRef> agentE = currentState.pathToAgentRef(AgentPath.of(a.getAgentId()));
+                    if (agentE.isRight() && (!agentE.get().director().isPresent() || agentE.get().directors().isEmpty())) {
+                        return Collections.singletonList(JUpdateItemOperation.addOrChangeSimple(createOldAgent(a)));
+                    } else {
+                        return Arrays.asList(JUpdateItemOperation.addOrChangeSimple(createNewAgent(a)), JUpdateItemOperation.addOrChangeSimple(
+                                createSubagentDirector(a)));
+                    }
+                }).flatMap(s -> s.stream()))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), cId));
             }
             
             if (firstController) { // GUI needs permissions directly for the first controller(s)
@@ -317,6 +335,18 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    private static JAgentRef createOldAgent(Agent a) {
+        return JAgentRef.of(AgentPath.of(a.getAgentId()), Uri.of(a.getUrl()));
+    }
+    
+    private static JAgentRef createNewAgent(Agent a) {
+        return JAgentRef.of(AgentPath.of(a.getAgentId()), SubagentId.of((a.getAgentId())));
+    }
+    
+    private static JSubagentRef createSubagentDirector(Agent a) {
+        return JSubagentRef.of(SubagentId.of(a.getAgentId()), AgentPath.of(a.getAgentId()), Uri.of(a.getUrl()));
     }
     
     @Override

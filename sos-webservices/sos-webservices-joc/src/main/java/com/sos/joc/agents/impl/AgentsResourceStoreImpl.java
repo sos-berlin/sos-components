@@ -23,7 +23,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.cluster.JocClusterService;
-import com.sos.joc.classes.proxy.ControllerApi;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
@@ -39,12 +39,16 @@ import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
+import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.subagent.JSubagentRef;
+import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
 @Path("agents")
@@ -99,6 +103,9 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(null);
             Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds.keySet());
             List<JUpdateItemOperation> agentRefs = new ArrayList<>();
+            
+            JControllerProxy proxy = Proxy.of(controllerId);
+            JControllerState currentState = proxy.currentState();
 
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
@@ -132,11 +139,15 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     if (dbUpdateRequired) {
                         agentDBLayer.updateAgent(dbAgent);
                     }
-                    if (controllerUpdateRequired) {  // old to new Agent raises error
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JSubagentRef.of(SubagentId.of(dbAgent.getAgentId()), AgentPath.of(dbAgent
-                                .getAgentId()), Uri.of(dbAgent.getUri()))));
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(AgentPath.of(dbAgent.getAgentId()), SubagentId.of(dbAgent
-                                .getAgentId()))));
+                    if (controllerUpdateRequired) {
+                        // TODO consider old Agents
+                        Either<Problem, JAgentRef> agentE = currentState.pathToAgentRef(AgentPath.of(dbAgent.getAgentId()));
+                        if (agentE.isRight() && (!agentE.get().director().isPresent() || agentE.get().directors().isEmpty())) {
+                            agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createOldAgent(dbAgent)));
+                        } else {
+                            agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createNewAgent(dbAgent)));
+                            agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createSubagentDirector(dbAgent)));
+                        }
                     }
 
                     updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
@@ -162,10 +173,14 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 agentDBLayer.saveAgent(dbAgent);
 
                 if (controllerUpdateRequired) {
-                    agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JSubagentRef.of(SubagentId.of(dbAgent.getAgentId()), AgentPath.of(dbAgent
-                            .getAgentId()), Uri.of(dbAgent.getUri()))));
-                    agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(AgentPath.of(dbAgent.getAgentId()), SubagentId.of(dbAgent
-                            .getAgentId()))));
+                    // TODO consider old Agents
+                    Either<Problem, JAgentRef> agentE = currentState.pathToAgentRef(AgentPath.of(dbAgent.getAgentId()));
+                    if (agentE.isRight() && (!agentE.get().director().isPresent() || agentE.get().directors().isEmpty())) {
+                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createOldAgent(dbAgent)));
+                    } else {
+                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createNewAgent(dbAgent)));
+                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createSubagentDirector(dbAgent)));
+                    }
                 }
 
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
@@ -174,7 +189,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             Globals.commit(connection);
 
             if (!agentRefs.isEmpty()) {
-                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(agentRefs)).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e,
+                proxy.api().updateItems(Flux.fromIterable(agentRefs)).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e,
                         getAccessToken(), getJocError(), controllerId));
             }
 
@@ -189,6 +204,18 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    private static JAgentRef createOldAgent(DBItemInventoryAgentInstance a) {
+        return JAgentRef.of(AgentPath.of(a.getAgentId()), Uri.of(a.getUri()));
+    }
+    
+    private static JAgentRef createNewAgent(DBItemInventoryAgentInstance a) {
+        return JAgentRef.of(AgentPath.of(a.getAgentId()), SubagentId.of((a.getAgentId())));
+    }
+    
+    private static JSubagentRef createSubagentDirector(DBItemInventoryAgentInstance a) {
+        return JSubagentRef.of(SubagentId.of(a.getAgentId()), AgentPath.of(a.getAgentId()), Uri.of(a.getUri()));
     }
 
     @Override

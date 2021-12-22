@@ -30,7 +30,6 @@ import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUpdateItemOperation;
-import js7.data_for_java.subagent.JSubagentRef;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
@@ -62,10 +61,9 @@ public class SubAgentCommandResourceImpl extends JOCResourceImpl implements ISub
             storeAuditLog(subAgentCommand.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
             JControllerProxy proxy = Proxy.of(controllerId);
-            Map<SubagentId, JSubagentRef> subAgentsOnController = proxy.currentState().idToSubagentRef();
 
-            Set<String> subAgentIdsOnController = subAgentsOnController.keySet().stream().map(SubagentId::string).filter(s -> subAgentCommand
-                    .getSubagentIds().contains(s)).collect(Collectors.toSet());
+            Set<String> subAgentIdsOnController = proxy.currentState().idToSubagentRef().keySet().stream().map(SubagentId::string).filter(
+                    s -> subAgentCommand.getSubagentIds().contains(s)).collect(Collectors.toSet());
 
             final Map<Boolean, List<String>> subAgentsMap = subAgentCommand.getSubagentIds().stream().collect(Collectors.groupingBy(
                     s -> subAgentIdsOnController.contains(s)));

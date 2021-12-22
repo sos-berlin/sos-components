@@ -106,7 +106,6 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
 
             // add agent
             subAgentIdsOnController.add(JUpdateItemOperation.deleteSimple(agentOnController.get().path()));
-
             proxy.api().updateItems(Flux.fromIterable(subAgentIdsOnController)).thenAccept(e -> {
                 ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
                 if (e.isRight()) {
