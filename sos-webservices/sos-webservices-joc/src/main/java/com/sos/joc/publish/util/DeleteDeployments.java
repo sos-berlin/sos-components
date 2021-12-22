@@ -306,8 +306,10 @@ public class DeleteDeployments {
     public static Set<DBItemDeploymentHistory> storeNewDepHistoryEntriesForRevoke(DBLayerDeploy dbLayer, List<DBItemDeploymentHistory> deletedItems,
             String commitId, Long auditLogId) {
         Set<DBItemDeploymentHistory> deletedObjects = Collections.emptySet();
+        Set<String> folders = Collections.emptySet();
         try {
             if (deletedItems != null && !deletedItems.isEmpty()) {
+                folders = deletedItems.stream().map(item -> item.getFolder()).collect(Collectors.toSet());
                 deletedObjects = new HashSet<DBItemDeploymentHistory>();
                 for (DBItemDeploymentHistory item : deletedItems) {
                     item.setId(null);
@@ -328,6 +330,7 @@ public class DeleteDeployments {
                         dbLayer.getSession().update(orig);
                     }
                 }
+                folders.stream().forEach(folder -> JocInventory.postEvent(folder));
             }
 
         } catch (SOSHibernateException e) {

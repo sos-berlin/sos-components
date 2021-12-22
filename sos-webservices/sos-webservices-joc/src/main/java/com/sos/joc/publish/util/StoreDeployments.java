@@ -13,13 +13,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.inventory.model.deploy.DeployType;
@@ -32,7 +32,6 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.common.IDeployObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
@@ -83,7 +82,7 @@ public class StoreDeployments {
             if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
                 Date storeToDBStarted = Date.from(Instant.now());
                 LOGGER.trace("*** store to db started ***" + storeToDBStarted);
-                
+                Set<String> folders = signedItemsSpec.getVerifiedDeployables().keySet().stream().map(DBItemDeploymentHistory::getFolder).collect(Collectors.toSet());
                 for (Map.Entry<DBItemDeploymentHistory, DBItemDepSignatures> entry : signedItemsSpec.getVerifiedDeployables().entrySet()) {
                 	DBItemDeploymentHistory item = entry.getKey();
             		if (item.getId() == null) {
@@ -111,7 +110,6 @@ public class StoreDeployments {
                         toUpdate.setDeployed(true);
                         toUpdate.setModified(Date.from(Instant.now()));
                         dbLayer.getSession().update(toUpdate);
-                        JocInventory.postEvent(item.getFolder());
                 	} else {
                     	// second id != null 
                     	DBItemDeploymentHistory cloned = PublishUtils.cloneDepHistoryItemsToNewEntry(item, entry.getValue(), account, dbLayer, commitId,
@@ -119,6 +117,7 @@ public class StoreDeployments {
                         deployedObjects.add(cloned);
                 	}
                 }
+                folders.forEach(folder -> JocInventory.postEvent(folder));
                 Date storeToDBFinished = Date.from(Instant.now());
                 LOGGER.trace("*** store to db finished ***" + storeToDBFinished);
                 LOGGER.trace("store to db took: " + (storeToDBFinished.getTime() - storeToDBStarted.getTime()) + " ms");
