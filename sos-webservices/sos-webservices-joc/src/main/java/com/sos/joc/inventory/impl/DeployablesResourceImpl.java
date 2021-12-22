@@ -144,7 +144,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             final boolean withSync = in.getControllerId() != null && !in.getControllerId().isEmpty();
             final JControllerState currentstate = SyncStateHelper.getControllerState(in.getControllerId(), null, getJocError());
             
-            Map<Integer, Set<String>> deployedPaths = getDeployedInventoryPaths(in.getControllerId(), in.getFolder(), in.getRecursive(),
+            Map<Integer, Map<Long, String>> deployedPaths = getDeployedInventoryPaths(in.getControllerId(), in.getFolder(), in.getRecursive(),
                     deployableTypes, session);
 
             if (withTree) {
@@ -153,7 +153,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 Stream<ResponseDeployableTreeItem> deployablesStream = deployables.stream().filter(item -> !JocInventory.isFolder(item
                         .getObjectType()));
                 if (withSync) {
-                    deployablesStream = deployablesStream.peek(item -> item.setSyncState(SyncStateHelper.getState(currentstate, item.getObjectName(),
+                    deployablesStream = deployablesStream.peek(item -> item.setSyncState(SyncStateHelper.getState(currentstate, item.getId(),
                             item.getObjectType(), deployedPaths.get(item.getObjectType().intValue()))));
                 }
                 final Map<String, TreeSet<ResponseDeployableTreeItem>> groupedDeployables = deployablesStream.collect(Collectors.groupingBy(
@@ -181,8 +181,8 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 ResponseDeployables result = new ResponseDeployables();
                 result.setDeliveryDate(Date.from(Instant.now()));
                 if (withSync) {
-                    result.setDeployables(deployables.stream().peek(item -> item.setSyncState(SyncStateHelper.getState(currentstate, item
-                            .getObjectName(), item.getObjectType(), deployedPaths.get(item.getObjectType().intValue())))).collect(Collectors
+                    result.setDeployables(deployables.stream().peek(item -> item.setSyncState(SyncStateHelper.getState(currentstate, item.getId(),
+                            item.getObjectType(), deployedPaths.get(item.getObjectType().intValue())))).collect(Collectors
                                     .toCollection(() -> new TreeSet<>(comp))));
                 } else {
                     result.setDeployables(deployables);
@@ -371,7 +371,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         }
     }
     
-    private Map<Integer, Set<String>> getDeployedInventoryPaths(String controllerId, String folder, Boolean recursive, Set<Integer> types, SOSHibernateSession session) {
+    private Map<Integer, Map<Long, String>> getDeployedInventoryPaths(String controllerId, String folder, Boolean recursive, Set<Integer> types, SOSHibernateSession session) {
         if (controllerId != null && !controllerId.isEmpty()) {
             DeployedConfigurationDBLayer deployedDbLayer = new DeployedConfigurationDBLayer(session);
             DeployedConfigurationFilter deployedFilter = new DeployedConfigurationFilter();

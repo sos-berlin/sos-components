@@ -50,8 +50,8 @@ import reactor.core.publisher.Flux;
 @Path("agents")
 public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsResourceStore {
 
-    private static String API_STORE = "./agents/store";
-    private static String API_CLUSTER_STORE = "./agents/cluster/store";
+    private static final String API_STORE = "./agents/store";
+    private static final String API_CLUSTER_STORE = "./agents/cluster/store";
 
     @Override
     public JOCDefaultResponse store(String accessToken, byte[] filterBytes) {
@@ -132,7 +132,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     if (dbUpdateRequired) {
                         agentDBLayer.updateAgent(dbAgent);
                     }
-                    if (controllerUpdateRequired) {
+                    if (controllerUpdateRequired) {  // old to new Agent raises error
                         agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JSubagentRef.of(SubagentId.of(dbAgent.getAgentId()), AgentPath.of(dbAgent
                                 .getAgentId()), Uri.of(dbAgent.getUri()))));
                         agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(AgentPath.of(dbAgent.getAgentId()), SubagentId.of(dbAgent

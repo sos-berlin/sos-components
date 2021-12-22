@@ -36,7 +36,7 @@ import js7.data_for_java.order.JOrderPredicates;
 @Path("agents")
 public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsResourceTasks {
 
-    private static String API_CALL = "./agents/tasks";
+    private static final String API_CALL = "./agents/tasks";
     
     // obsolete: the same like ./agents with compact=false
 

@@ -103,7 +103,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             
             boolean withSync = action.equals(IMPL_PATH) && in.getControllerId() != null && !in.getControllerId().isEmpty();
             JControllerState currentstate = null;
-            Map<Integer, Set<String>> deloyedNames = Collections.emptyMap();
+            Map<Integer, Map<Long, String>> deloyedNames = Collections.emptyMap();
             if (withSync) {
                 try {
                     DeployedConfigurationDBLayer deployedDbLayer = new DeployedConfigurationDBLayer(session);
@@ -129,7 +129,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                     }
                     ConfigurationType type = config.getObjectType();
                     if (withSync) {
-                        config.setSyncState(SyncStateHelper.getState(currentstate, config.getName(), type, deloyedNames.get(type.intValue()))); 
+                        config.setSyncState(SyncStateHelper.getState(currentstate, config.getId(), type, deloyedNames.get(type.intValue())));
                     }
                     if (type != null) {
                         switch (type) {

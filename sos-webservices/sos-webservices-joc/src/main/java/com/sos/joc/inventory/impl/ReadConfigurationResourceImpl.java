@@ -122,17 +122,14 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 
                 if (in.getControllerId() != null && !in.getControllerId().isEmpty()) {
                     DeployedConfigurationDBLayer deployedDbLayer = new DeployedConfigurationDBLayer(session);
-                    if (deployedDbLayer.isDeployed(in.getControllerId(), config.getName(), config.getType())) {
-                        JControllerState currentstate = null;
-                        try {
-                            currentstate = Proxy.of(in.getControllerId()).currentState();
-                        } catch (Exception e) {
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e), null, getJocError(), null);
-                        }
-                        item.setSyncState(SyncStateHelper.getState(currentstate, config.getName(), type, Collections.singleton(config.getName())));
-                    } else {
-                        item.setSyncState(SyncStateHelper.getState(SyncStateText.NOT_DEPLOYED));
+                    JControllerState currentstate = null;
+                    try {
+                        currentstate = Proxy.of(in.getControllerId()).currentState();
+                    } catch (Exception e) {
+                        ProblemHelper.postExceptionEventIfExist(Either.left(e), null, getJocError(), null);
                     }
+                    item.setSyncState(SyncStateHelper.getState(currentstate, config.getId(), type, deployedDbLayer.getDeployedName(in
+                            .getControllerId(), config.getId(), config.getType())));
                 }
                 
                 item.setReleased(false);

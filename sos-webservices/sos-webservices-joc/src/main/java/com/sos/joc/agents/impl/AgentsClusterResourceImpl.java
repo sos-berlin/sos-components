@@ -51,8 +51,8 @@ import reactor.core.publisher.Flux;
 @Path("agents")
 public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgentsClusterResource {
 
-    private static String API_CALL_P = "./agents/cluster/p";
-    private static String API_CALL_DEPLOY = "./agents/cluster/deploy";
+    private static final String API_CALL_P = "./agents/cluster/p";
+    private static final String API_CALL_DEPLOY = "./agents/cluster/deploy";
 
     @Override
     public JOCDefaultResponse postCluster(String accessToken, byte[] filterBytes) {

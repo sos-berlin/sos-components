@@ -230,18 +230,19 @@ public class DeployedConfigurationDBLayer {
         }
     }
     
-    public Map<Integer, Set<String>> getDeployedNames(DeployedConfigurationFilter filter) throws DBConnectionRefusedException,
+    public Map<Integer, Map<Long, String>> getDeployedNames(DeployedConfigurationFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(Deployed.class.getName());
-            hql.append("(name, type) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(getWhereForDepConfiguration(filter));
+            hql.append("(inventoryConfigurationId, name, type) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(getWhereForDepConfiguration(
+                    filter));
             Query<Deployed> query = createQuery(hql.toString(), filter);
             List<Deployed> result = session.getResultList(query);
             if (result == null || result.isEmpty()) {
                 return Collections.emptyMap();
             } else {
-                return result.stream().collect(Collectors.groupingBy(Deployed::getObjectType, Collectors.mapping(Deployed::getName, Collectors
-                        .toSet())));
+                return result.stream().collect(Collectors.groupingBy(Deployed::getObjectType, Collectors
+                        .toMap(Deployed::getInvCId, Deployed::getName, (k, v) -> v)));
             }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -250,15 +251,23 @@ public class DeployedConfigurationDBLayer {
         }
     }
 
-    public boolean isDeployed(String controllerId, String name, Integer type) throws DBConnectionRefusedException, DBInvalidDataException {
+    public Map<Long, String> getDeployedName(String controllerId, Long invCId, Integer type) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
-            StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
-            hql.append(" where controllerId = :controllerId and name = :name and type = :type");
-            Query<Long> query = session.createQuery(hql);
+            StringBuilder hql = new StringBuilder("select new ").append(Deployed.class.getName());
+            hql.append("(inventoryConfigurationId, name, type) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+            hql.append(" where controllerId = :controllerId and inventoryConfigurationId = :invCId and type = :type");
+            Query<Deployed> query = session.createQuery(hql);
             query.setParameter("controllerId", controllerId);
-            query.setParameter("name", name);
+            query.setParameter("invCId", invCId);
             query.setParameter("type", type);
-            return session.getSingleResult(query) > 0;
+            query.setMaxResults(1);
+            Deployed result = session.getSingleResult(query);
+            if (result == null) {
+                return Collections.emptyMap();
+            } else {
+                return Collections.singletonMap(result.getInvCId(), result.getName());
+            }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
