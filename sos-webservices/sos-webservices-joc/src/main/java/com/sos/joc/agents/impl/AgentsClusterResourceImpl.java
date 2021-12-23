@@ -60,12 +60,12 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
         try {
             initLogging(API_CALL_P, filterBytes, accessToken);
             
-            if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
-                ClusterAgents agents = new ClusterAgents();
-                agents.setDeliveryDate(Date.from(Instant.now()));
-                
-                return JOCDefaultResponse.responseStatus200(agents);
-            }
+//            if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
+//                ClusterAgents agents = new ClusterAgents();
+//                agents.setDeliveryDate(Date.from(Instant.now()));
+//                
+//                return JOCDefaultResponse.responseStatus200(agents);
+//            }
             
             JsonValidator.validateFailFast(filterBytes, ReadAgents.class);
             ReadAgents agentParameter = Globals.objectMapper.readValue(filterBytes, ReadAgents.class);
