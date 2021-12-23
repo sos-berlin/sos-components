@@ -29,7 +29,7 @@ public class MailJobArguments extends JobArguments {
     protected JobArgument<String> mailSmtpUser = new JobArgument<String>("mail.smtp.user", false);
     protected JobArgument<String> mailSmtpPassword = new JobArgument<String>("mail.smtp.password", false, DisplayMode.MASKED);
     protected JobArgument<String> securityProtocol = new JobArgument<String>("security_protocol", false);
-    protected JobArgument<List<String>> attachments = new JobArgument<List<String>>("attachments", false);
+    protected JobArgument<List<String>> attachment = new JobArgument<List<String>>("attachment", false);
 
     protected JobArgument<String> credentialStoreFile = new JobArgument<String>("credential_store_file", false);
     protected JobArgument<String> credentialStoreKeyFile = new JobArgument<String>("credential_store_key_file", false);
@@ -129,7 +129,7 @@ public class MailJobArguments extends JobArguments {
     }
 
     public List<String> getAttachments() {
-        return attachments.getValue();
+        return attachment.getValue();
     }
 
     public String getCredentialStoreFile() {

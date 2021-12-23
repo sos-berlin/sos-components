@@ -85,10 +85,10 @@ public class MailJobArgumentsTest extends MailJobArguments {
     }
 
     public void setAttachments(String attachments) {
-        this.attachments.setValue(new ArrayList<String>());
+        this.attachment.setValue(new ArrayList<String>());
         String[] s = attachments.split(";");
         for (String attachment : s) {
-            this.attachments.getValue().add(attachment);
+            this.attachment.getValue().add(attachment);
         }
     }
 
