@@ -777,20 +777,24 @@ public class HistoryEventEntry {
             JAgentRef ar = getFromEither(pa);
             if (ar != null) {
                 if (ar.uri().isPresent()) {// single agent
-                    uri = ar.uri().get().toString();
+                    uri = ar.uri().get().string();
                 } else {// agent cluster
                     Optional<SubagentId> director = ar.director();// ar.directors();
                     if (director.isPresent()) {
                         SubagentId directorId = director.get();
                         Map<SubagentId, JSubagentRef> map = eventAndState.state().idToSubagentRef();
-                        if (map != null) {
-                            map.entrySet().stream().forEach(e -> {
-                                // subAgents.put(e.getKey().string(), e.getValue().uri().toString());
-                                if (e.getKey().equals(directorId)) {
-                                    uri = e.getValue().uri().toString();
-                                }
-                            });
+                        JSubagentRef sar = map.get(directorId);
+                        if (sar != null) {
+                            uri = sar.uri().string();
                         }
+//                        if (map != null) {
+//                            map.entrySet().stream().forEach(e -> {
+//                                // subAgents.put(e.getKey().string(), e.getValue().uri().string());
+//                                if (e.getKey().equals(directorId)) {
+//                                    uri = e.getValue().uri().string();
+//                                }
+//                            });
+//                        }
                     }
                 }
             }
