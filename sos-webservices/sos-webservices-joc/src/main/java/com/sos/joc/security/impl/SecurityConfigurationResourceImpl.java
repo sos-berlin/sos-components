@@ -83,7 +83,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(securityConfiguration));
             } finally {
-                securityConfiguration=null;
+                securityConfiguration = null;
                 Globals.disconnect(sosHibernateSession);
             }
 
@@ -138,9 +138,11 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 if (IdentityServiceTypes.SHIRO.name().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                     sosSecurityConfiguration = new SOSSecurityConfiguration();
                     s = sosSecurityConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
+                }else {
+                    
                 }
                 s.setDeliveryDate(Date.from(Instant.now()));
-                for (SecurityConfigurationAccount securityConfigurationAccount:s.getAccounts()) {
+                for (SecurityConfigurationAccount securityConfigurationAccount : s.getAccounts()) {
                     securityConfigurationAccount.setPassword("********");
                 }
 

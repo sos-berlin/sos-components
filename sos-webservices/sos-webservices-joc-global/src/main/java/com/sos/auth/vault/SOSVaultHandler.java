@@ -79,7 +79,7 @@ public class SOSVaultHandler {
             throw new JocException(jocError);
         case 404:
             jocError.setMessage(
-                    "Invalid path. This can both mean that the path truly doesn't exist or that you don't have permission to view a specific path. We use 404 in some cases to avoid state leakage.");
+                    "Invalid path. This can both mean that the path truly doesn't exist or that you don't have permission to view a specific path. Vault uses 404 in some cases to avoid state leakage.");
             throw new JocException(jocError);
         case 405:
             jocError.setMessage(
@@ -96,7 +96,7 @@ public class SOSVaultHandler {
             jocError.setMessage("Default return code for health status of performance standby nodes.");
             throw new JocException(jocError);
         case 500:
-            jocError.setMessage("Internal server error. An internal error has occurred, try again later. If the error persists, report a bug.");
+            jocError.setMessage("Internal server error. An internal error has occurred, try again later");
             throw new JocException(jocError);
         case 502:
             jocError.setMessage(

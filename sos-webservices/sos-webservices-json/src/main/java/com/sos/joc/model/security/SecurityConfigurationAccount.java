@@ -36,11 +36,6 @@ public class SecurityConfigurationAccount {
      */
     @JsonProperty("identityServiceId")
     private Long identityServiceId;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("roles")
     private List<String> roles = new ArrayList<String>();
 
@@ -118,21 +113,11 @@ public class SecurityConfigurationAccount {
         this.identityServiceId = identityServiceId;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("roles")
     public List<String> getRoles() {
         return roles;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("roles")
     public void setRoles(List<String> roles) {
         this.roles = roles;

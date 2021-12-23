@@ -113,7 +113,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
             String password = null;
             password = securityConfigurationAccount.getPassword();
-            securityConfigurationAccount.setPassword("");
             iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             DBItemIamAccount dbItemIamAcount = new DBItemIamAccount();
             dbItemIamAcount.setAccountName(securityConfigurationAccount.getAccount());
