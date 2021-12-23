@@ -6,8 +6,7 @@ import java.util.stream.Collectors;
 
 public class SOSArgumentHelper {
 
-    public static final String LIST_VALUE_DELIMITER_PRIMARY = ",";
-    public static final String LIST_VALUE_DELIMITER_SECONDARY = ";";
+    public static final String LIST_VALUE_DELIMITER = ";";
 
     public enum DisplayMode {
 
@@ -42,7 +41,7 @@ public class SOSArgumentHelper {
                 List<?> l = (List<?>) value;
                 String s = (String) l.stream().filter(Objects::nonNull).map(e -> {
                     return e.toString();
-                }).collect(Collectors.joining(LIST_VALUE_DELIMITER_PRIMARY));
+                }).collect(Collectors.joining(LIST_VALUE_DELIMITER));
                 return truncatingIfNeeded(s);
             }
             return truncatingIfNeeded(value.toString());

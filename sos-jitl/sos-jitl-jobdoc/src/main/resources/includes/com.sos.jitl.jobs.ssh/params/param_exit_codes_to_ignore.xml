@@ -6,7 +6,7 @@
 	<note>
 		<p>
 			This parameter configures one or more exit codes which will not be treated as errors. 
-			Multiple exit codes can be defined as a List of Integers separated by commas or semicolons.
+			Multiple exit codes can be defined as a List of Integers separated by semicolons.
 		</p>
 	</note>
 </param>

@@ -19,7 +19,7 @@
                 <note>
                     <title>E-mail address of mail recipient(s)</title>
                     <p>
-                        List of mail recipient's e-mail address, a number of e-mail addresses are separated by comma.
+                        List of mail recipient's e-mail address, a number of e-mail addresses are separated by comma or semicolon.
                     </p>
                 </note>
             </param>
@@ -57,7 +57,7 @@
                 <note>
                     <title>Cc recipient(s)</title>
                     <p>
-                        E-mail address of carbon copy recipient, multiple e-mail addresses are separated by comma.
+                        E-mail address of carbon copy recipient, multiple e-mail addresses are separated by comma or semicolon.
                     </p>
                 </note>
             </param>
@@ -66,7 +66,7 @@
                 <note>
                     <title>Bcc recipient(s)</title>
                     <p>
-                        E-mail address of blind carbon copy recipient, multiple e-mail addresses are separated by comma.
+                        E-mail address of blind carbon copy recipient, multiple e-mail addresses are separated by comma or semicolon.
                     </p>
                 </note>
             </param>
@@ -120,7 +120,7 @@
                 <note>
                     <title>Path to attachment(s)</title>
                     <p>
-                        The path to a file to be attached, multiple files are separated by commas or semicolons.
+                        The path to a file to be attached, multiple files are separated by semicolons.
                     </p>
                 </note>
             </param>
