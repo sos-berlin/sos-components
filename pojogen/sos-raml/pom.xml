@@ -13,8 +13,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<api.schema.version>2.2.0-SNAPSHOT</api.schema.version>
-		<inventory.schema.version>1.2.0-SNAPSHOT</inventory.schema.version>
+		<api.schema.version>2.2.0</api.schema.version>
+		<inventory.schema.version>1.2.0</inventory.schema.version>
 	</properties>
 
 	<build>
