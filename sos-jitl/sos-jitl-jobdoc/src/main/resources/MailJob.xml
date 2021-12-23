@@ -120,7 +120,7 @@
                 <note>
                     <title>Path to attachment(s)</title>
                     <p>
-                        The path to a file to be attached, multiple files are separated by commas or semicolons.
+                        The path to a file to be attached, multiple files are separated by semicolons.
                     </p>
                 </note>
             </param>

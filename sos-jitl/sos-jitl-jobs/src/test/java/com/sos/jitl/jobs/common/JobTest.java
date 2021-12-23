@@ -205,13 +205,12 @@ public class JobTest {
                 } else if (SOSReflection.isList(type)) {
                     LOGGER.info(arg.getName() + " = " + type);
                     boolean asStringList = true;
-                    String listVal = val.toString().replaceAll(SOSArgumentHelper.LIST_VALUE_DELIMITER_SECONDARY,
-                            SOSArgumentHelper.LIST_VALUE_DELIMITER_PRIMARY);
+                    String listVal = val.toString();
                     try {
                         Type subType = ((ParameterizedType) type).getActualTypeArguments()[0];
                         if (subType.equals(String.class)) {
                         } else if (SOSReflection.isEnum(subType)) {
-                            val = Stream.of(listVal.split(SOSArgumentHelper.LIST_VALUE_DELIMITER_PRIMARY)).map(v -> {
+                            val = Stream.of(listVal.split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(v -> {
                                 Object e = null;
                                 try {
                                     e = SOSReflection.enumIgnoreCaseValueOf(subType.getTypeName(), v.trim());
@@ -225,7 +224,7 @@ public class JobTest {
                     } catch (Throwable e) {
                     }
                     if (asStringList) {
-                        val = Stream.of(listVal.split(SOSArgumentHelper.LIST_VALUE_DELIMITER_PRIMARY)).map(String::trim).collect(Collectors.toList());
+                        val = Stream.of(listVal.split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(String::trim).collect(Collectors.toList());
                     }
 
                 } else if (SOSReflection.isEnum(type)) {
