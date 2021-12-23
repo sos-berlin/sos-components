@@ -180,7 +180,12 @@ public class OrderListSynchronizer {
                 LOGGER.info(String.format("[%s][%s][%s]%s[%s of %s orders]history added=%s(%s)", startupMode, method, controllerId,
                         logSubmissionForDate, orders.size(), plannedOrders.size(), inserted.size(), SOSDate.getDuration(start, end)));
 
-                OrderApi.addOrdersToController(startupMode, controllerId, submissionForDate, orders, inserted, jocError, accessToken);
+                if (orders.size() > 0) {
+                    OrderApi.addOrdersToController(startupMode, controllerId, submissionForDate, orders, inserted, jocError, accessToken);
+                } else {
+                    LOGGER.info(String.format("[%s][%s][%s]%s[%s of %s orders][skip addOrdersToController]", startupMode, method, controllerId,
+                            logSubmissionForDate, orders.size(), plannedOrders.size()));
+                }
 
             } catch (Exception e) {
                 LOGGER.info(String.format("[%s][%s]%s[%s of %s orders]history added=%s", method, controllerId, logSubmissionForDate, orders.size(),
