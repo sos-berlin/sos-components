@@ -23,6 +23,9 @@ public class SOSAuthHelper {
     public static final String OBJECT_TYPE_IAM_GENERAL = "GENERAL";
 
     public static String getSHA512(String pwd) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        if (pwd.length() == 128){
+            return pwd;
+        }
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[16];
         // random.nextBytes(salt);
