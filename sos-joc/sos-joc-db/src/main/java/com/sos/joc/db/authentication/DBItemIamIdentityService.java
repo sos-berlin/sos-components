@@ -8,6 +8,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.joc.db.DBLayer;
 
 @Entity
@@ -21,28 +23,32 @@ public class DBItemIamIdentityService {
     @Column(name = "[ID]")
     private Long id;
 
-    @Column(name = "[IDENTITY_SERVICE_TYPE`", nullable = false)
+    @Column(name = "[IDENTITY_SERVICE_TYPE]", nullable = false)
     private String identityServiceType;
 
-    @Column(name = "[IDENTITY_SERVICE_NAME`", nullable = false)
+    @Column(name = "[IDENTITY_SERVICE_NAME]", nullable = false)
     private String identityServiceName;
 
-    @Column(name = "[AUTHENTICATION_SCHEME`", nullable = false)
+    @Column(name = "[AUTHENTICATION_SCHEME]", nullable = false)
     private String authenticationScheme;
 
-    @Column(name = "[SINGLE_FACTOR_PWD`", nullable = false)
+    @Column(name = "[SINGLE_FACTOR_PWD]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean singleFactorPwd;
 
-    @Column(name = "[SINGLE_FACTOR_CERT`", nullable = false)
+    @Column(name = "[SINGLE_FACTOR_CERT]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean singleFactorCert;
 
-    @Column(name = "[ORDERING`", nullable = false)
+    @Column(name = "[ORDERING]", nullable = false)
     private Integer ordering;
 
-    @Column(name = "[DISABLED`", nullable = false)
+    @Column(name = "[DISABLED]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean disabled;
 
-    @Column(name = "[REQUIRED`", nullable = false)
+    @Column(name = "[REQUIRED]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean required;
 
     public DBItemIamIdentityService() {
@@ -69,8 +75,11 @@ public class DBItemIamIdentityService {
         return disabled;
     }
 
-    public void setDisabled(Boolean disabled) {
-        this.disabled = disabled;
+    public void setDisabled(Boolean val) {
+        if (val == null) {
+            val = false;
+        }
+        this.disabled = val;
     }
 
     public Boolean getRequired() {
@@ -78,8 +87,11 @@ public class DBItemIamIdentityService {
         return required;
     }
 
-    public void setRequired(Boolean required) {
-        this.required = required;
+    public void setRequired(Boolean val) {
+        if (val == null) {
+            val = false;
+        }
+        this.required = val;
     }
 
     public String getIdentityServiceType() {
@@ -98,34 +110,34 @@ public class DBItemIamIdentityService {
         this.identityServiceName = identityServiceName;
     }
 
-    
     public String getAuthenticationScheme() {
         return authenticationScheme;
     }
 
-    
     public void setAuthenticationScheme(String authenticationScheme) {
         this.authenticationScheme = authenticationScheme;
     }
 
-    
     public Boolean getSingleFactorPwd() {
         return singleFactorPwd;
     }
 
-    
-    public void setSingleFactorPwd(Boolean singleFactorPwd) {
-        this.singleFactorPwd = singleFactorPwd;
+    public void setSingleFactorPwd(Boolean val) {
+        if (val == null) {
+            val = false;
+        }
+        this.singleFactorPwd = val;
     }
 
-    
     public Boolean getSingleFactorCert() {
         return singleFactorCert;
     }
 
-    
-    public void setSingleFactorCert(Boolean singleFactorCert) {
-        this.singleFactorCert = singleFactorCert;
+    public void setSingleFactorCert(Boolean val) {
+        if (val == null) {
+            val = false;
+        }
+        this.singleFactorCert = val;
     }
 
 }

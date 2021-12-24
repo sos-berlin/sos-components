@@ -21,13 +21,13 @@ public class DBItemIamAccount {
     @Column(name = "[ID]")
     private Long id;
 
-    @Column(name = "[IDENTITY_SERVICE_ID`", nullable = false)
+    @Column(name = "[IDENTITY_SERVICE_ID]", nullable = false)
     private Long identityServiceId;
 
-    @Column(name = "[ACCOUNT_NAME`", nullable = false)
+    @Column(name = "[ACCOUNT_NAME]", nullable = false)
     private String accountName;
 
-    @Column(name = "[ACCOUNT_PASSWORD`", nullable = false)
+    @Column(name = "[ACCOUNT_PASSWORD]", nullable = false)
     private String accountPassword;
 
     public DBItemIamAccount() {

@@ -2,6 +2,8 @@ package com.sos.joc.db.authentication;
 
 import javax.persistence.*;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.joc.db.DBLayer;
 
 @Entity
@@ -24,19 +26,21 @@ public class DBItemIamPermission {
     @Column(name = "[ACCOUNT_ID]")
     private Long accountId;
 
-    @Column(name = "[ACCOUNT_PERMISSION`", nullable = false)
+    @Column(name = "[ACCOUNT_PERMISSION]", nullable = false)
     private String accountPermission;
 
-    @Column(name = "[CONTROLLER_ID`", nullable = true)
+    @Column(name = "[CONTROLLER_ID]", nullable = true)
     private String controllerId;
 
-    @Column(name = "[FOLDER_PERMISSION`", nullable = true)
+    @Column(name = "[FOLDER_PERMISSION]", nullable = true)
     private String folderPermission;
 
-    @Column(name = "[EXCLUDED`", nullable = false)
+    @Column(name = "[EXCLUDED]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean excluded;
 
-    @Column(name = "[RECURSIVE`", nullable = false)
+    @Column(name = "[RECURSIVE]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean recursive;
 
     public DBItemIamPermission() {
@@ -86,16 +90,22 @@ public class DBItemIamPermission {
         return excluded;
     }
 
-    public void setExcluded(Boolean excluded) {
-        this.excluded = excluded;
+    public void setExcluded(Boolean val) {
+        if (val == null) {
+            val = false;
+        }
+        this.excluded = val;
     }
 
     public Boolean getRecursive() {
         return recursive;
     }
 
-    public void setRecursive(Boolean recursive) {
-        this.recursive = recursive;
+    public void setRecursive(Boolean val) {
+        if (val == null) {
+            val = false;
+        }
+        this.recursive = val;
     }
 
     public String getAccountPermission() {
@@ -106,12 +116,10 @@ public class DBItemIamPermission {
         this.accountPermission = accountPermission;
     }
 
-    
     public Long getIdentityServiceId() {
         return identityServiceId;
     }
 
-    
     public void setIdentityServiceId(Long identityServiceId) {
         this.identityServiceId = identityServiceId;
     }
