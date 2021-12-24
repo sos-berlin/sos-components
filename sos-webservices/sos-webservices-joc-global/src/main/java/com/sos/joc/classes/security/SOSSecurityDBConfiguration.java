@@ -64,7 +64,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
         sosVaultAccountCredentials.setTokenPolicies(tokenPolicies);
 
-        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.equals(identityServiceTypes)) {
+        if (!"********".equals(password) && IdentityServiceTypes.VAULT_JOC_ACTIVE.equals(identityServiceTypes)) {
             sosVaultHandler.storeAccountPassword(sosVaultAccountCredentials, password);
         }
 
