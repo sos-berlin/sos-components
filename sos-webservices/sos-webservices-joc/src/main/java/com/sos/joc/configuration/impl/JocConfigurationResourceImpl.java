@@ -183,15 +183,14 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     }
                 }
                 break;
+            case IAM:
+                dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
+                account = ConfigurationGlobals.ACCOUNT;
             case CUSTOMIZATION:
                 if (isNew) {
                     checkRequiredParameter("objectType", configuration.getObjectType());
                     checkRequiredParameter("name", configuration.getName());
                 }
-            case IAM:
-                dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
-                account = ConfigurationGlobals.ACCOUNT;
-
             case IGNORELIST:
             case PROFILE:
             case SETTING:
