@@ -24,7 +24,7 @@ public class DBItemIamRole {
     @Column(name = "[IDENTITY_SERVICE_ID]")
     private Long identityServiceId;
     
-    @Column(name = "[ROLE_NAME`", nullable = false)
+    @Column(name = "[ROLE_NAME]", nullable = false)
     private String roleName;
 
     public DBItemIamRole() {

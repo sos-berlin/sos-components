@@ -21,28 +21,28 @@ public class DBItemIamIdentityService {
     @Column(name = "[ID]")
     private Long id;
 
-    @Column(name = "[IDENTITY_SERVICE_TYPE`", nullable = false)
+    @Column(name = "[IDENTITY_SERVICE_TYPE]", nullable = false)
     private String identityServiceType;
 
-    @Column(name = "[IDENTITY_SERVICE_NAME`", nullable = false)
+    @Column(name = "[IDENTITY_SERVICE_NAME]", nullable = false)
     private String identityServiceName;
 
-    @Column(name = "[AUTHENTICATION_SCHEME`", nullable = false)
+    @Column(name = "[AUTHENTICATION_SCHEME]", nullable = false)
     private String authenticationScheme;
 
-    @Column(name = "[SINGLE_FACTOR_PWD`", nullable = false)
+    @Column(name = "[SINGLE_FACTOR_PWD]", nullable = false)
     private Boolean singleFactorPwd;
 
-    @Column(name = "[SINGLE_FACTOR_CERT`", nullable = false)
+    @Column(name = "[SINGLE_FACTOR_CERT]", nullable = false)
     private Boolean singleFactorCert;
 
-    @Column(name = "[ORDERING`", nullable = false)
+    @Column(name = "[ORDERING]", nullable = false)
     private Integer ordering;
 
-    @Column(name = "[DISABLED`", nullable = false)
+    @Column(name = "[DISABLED]", nullable = false)
     private Boolean disabled;
 
-    @Column(name = "[REQUIRED`", nullable = false)
+    @Column(name = "[REQUIRED]", nullable = false)
     private Boolean required;
 
     public DBItemIamIdentityService() {

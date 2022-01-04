@@ -24,19 +24,19 @@ public class DBItemIamPermission {
     @Column(name = "[ACCOUNT_ID]")
     private Long accountId;
 
-    @Column(name = "[ACCOUNT_PERMISSION`", nullable = false)
+    @Column(name = "[ACCOUNT_PERMISSION]", nullable = false)
     private String accountPermission;
 
-    @Column(name = "[CONTROLLER_ID`", nullable = true)
+    @Column(name = "[CONTROLLER_ID]", nullable = true)
     private String controllerId;
 
-    @Column(name = "[FOLDER_PERMISSION`", nullable = true)
+    @Column(name = "[FOLDER_PERMISSION]", nullable = true)
     private String folderPermission;
 
-    @Column(name = "[EXCLUDED`", nullable = false)
+    @Column(name = "[EXCLUDED]", nullable = false)
     private Boolean excluded;
 
-    @Column(name = "[RECURSIVE`", nullable = false)
+    @Column(name = "[RECURSIVE]", nullable = false)
     private Boolean recursive;
 
     public DBItemIamPermission() {
