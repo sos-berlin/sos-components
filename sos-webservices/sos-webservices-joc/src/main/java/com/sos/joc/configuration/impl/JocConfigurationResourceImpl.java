@@ -189,7 +189,6 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             case CUSTOMIZATION:
                 if (isNew) {
                     checkRequiredParameter("objectType", configuration.getObjectType());
-                    checkRequiredParameter("name", configuration.getName());
                 }
             case IGNORELIST:
             case PROFILE:
