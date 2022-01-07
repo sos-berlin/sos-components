@@ -8,6 +8,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.joc.db.DBLayer;
 
 @Entity
@@ -31,18 +33,22 @@ public class DBItemIamIdentityService {
     private String authenticationScheme;
 
     @Column(name = "[SINGLE_FACTOR_PWD]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean singleFactorPwd;
 
     @Column(name = "[SINGLE_FACTOR_CERT]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean singleFactorCert;
 
     @Column(name = "[ORDERING]", nullable = false)
     private Integer ordering;
 
     @Column(name = "[DISABLED]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean disabled;
 
     @Column(name = "[REQUIRED]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean required;
 
     public DBItemIamIdentityService() {

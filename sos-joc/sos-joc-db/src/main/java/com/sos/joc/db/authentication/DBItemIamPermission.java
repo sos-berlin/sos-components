@@ -2,6 +2,8 @@ package com.sos.joc.db.authentication;
 
 import javax.persistence.*;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.joc.db.DBLayer;
 
 @Entity
@@ -34,9 +36,11 @@ public class DBItemIamPermission {
     private String folderPermission;
 
     @Column(name = "[EXCLUDED]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean excluded;
 
     @Column(name = "[RECURSIVE]", nullable = false)
+    @Type(type = "numeric_boolean")
     private Boolean recursive;
 
     public DBItemIamPermission() {
