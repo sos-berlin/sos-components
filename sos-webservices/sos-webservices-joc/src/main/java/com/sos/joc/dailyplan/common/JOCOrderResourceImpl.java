@@ -205,14 +205,15 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         if (getCyclicDetails) {
             try {
                 String mainOrderId = OrdersHelper.getCyclicOrderIdMainPart(item.getOrderId());
-                Date dateFrom = plannedStartFrom;
-                if (dateFrom != null && item.getState() != null) {
+                Date dateFrom = null;
+                if (plannedStartFrom != null && item.getState() != null) {
                     Date now = new Date();
-                    if (DailyPlanOrderStateText.SUBMITTED.value().equals(item.getState().get_text().value()) && now.getTime() > dateFrom.getTime()) {
+                    if (DailyPlanOrderStateText.SUBMITTED.value().equals(item.getState().get_text().value()) && now.getTime() > plannedStartFrom.getTime()) {
                         dateFrom = now;
                     }
                 }
-                minIteminfo = dbLayer.getCyclicOrderMinEntryAndCountTotal(item.getControllerId(), mainOrderId, dateFrom, plannedStartTo);
+                // minIteminfo = dbLayer.getCyclicOrderMinEntryAndCountTotal(item.getControllerId(), mainOrderId, dateFrom, plannedStartTo);
+                minIteminfo = dbLayer.getCyclicOrderMinEntryAndCountTotal(item.getControllerId(), mainOrderId, dateFrom, null);
             } catch (SOSHibernateException e) {
                 LOGGER.warn(e.toString(), e);
             }
