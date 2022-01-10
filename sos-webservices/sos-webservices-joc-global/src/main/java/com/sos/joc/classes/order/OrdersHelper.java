@@ -96,12 +96,14 @@ import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderObstacle;
+import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
+import scala.Function1;
 import scala.Option;
 
 public class OrdersHelper {
@@ -379,8 +381,13 @@ public class OrdersHelper {
         if (opt.isRight()) {
             o.setAgentId(opt.get().string());
         }
-        o.setPosition(oItem.getWorkflowPosition().getPosition());
-        o.setPositionString(JPosition.apply(jOrder.asScala().position()).toString());
+        //o.setPosition(oItem.getWorkflowPosition().getPosition());
+        //o.setPositionString(JPosition.apply(jOrder.asScala().position()).toString());
+        JPosition origPos = JPosition.apply(jOrder.asScala().position());
+        String jsonPos = origPos.toJson().replaceAll("\"(try|catch|cycle)\\+?[^\"]*", "\"$1");
+        JPosition pos = JPosition.fromJson(jsonPos).get();
+        o.setPosition(pos.toList());
+        o.setPositionString(pos.toString());
         o.setCycleState(oItem.getState().getCycleState());
         int positionsSize = o.getPosition().size();
         if ("Processing".equals(oItem.getState().getTYPE())) {
@@ -388,7 +395,7 @@ public class OrdersHelper {
             o.setSubagentId(((Order.Processing) jOrder.asScala().state()).subagentId().string());
             if (positionsSize > 2) {
                 try {
-                    String lastPosition = (String) o.getPosition().get(positionsSize - 2);
+                    String lastPosition = (String) origPos.toList().get(positionsSize - 2);
                     if (lastPosition.startsWith("cycle+")) {
                         lastPosition = "{" + lastPosition.substring(6).replaceAll("(i|end|next)=", "\"$1\":").replaceFirst("i", "index").replaceFirst(
                                 "next", "since") + "}";
@@ -720,8 +727,10 @@ public class OrdersHelper {
             return either;
         };
 
-        Map<Boolean, Set<Either<Err419, FreshOrder>>> addOrders = currentState.ordersBy(o -> temporaryOrderIds.contains(o.id().string())).parallel()
-                .map(mapper).collect(Collectors.groupingBy(Either::isRight, Collectors.toSet()));
+        Function1<Order<Order.State>, Object> freshAndExistsFilter = JOrderPredicates.and(o -> temporaryOrderIds.contains(o.id().string()),
+                JOrderPredicates.byOrderState(Order.Fresh$.class));
+        Map<Boolean, Set<Either<Err419, FreshOrder>>> addOrders = currentState.ordersBy(freshAndExistsFilter).parallel().map(mapper).collect(
+                Collectors.groupingBy(Either::isRight, Collectors.toSet()));
 
         ModifyOrders modifyOrders = new ModifyOrders();
         modifyOrders.setControllerId(controllerId);

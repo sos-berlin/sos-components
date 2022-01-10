@@ -70,12 +70,12 @@ public class OrderListSynchronizer {
         this.settings = settings;
     }
 
-    protected boolean add(StartupMode startupMode, PlannedOrder o, String controllerId, String date) {
+    protected boolean add(StartupMode startupMode, PlannedOrder o, String controllerId, String dailyPlanDate) {
         if (o == null) {
             return false;
         }
         String workflow = null;
-        String dateLog = SOSString.isEmpty(date) ? "" : "[" + date + "]";
+        String dateLog = SOSString.isEmpty(dailyPlanDate) ? "" : "[" + dailyPlanDate + "]";
         try {
             workflow = o.getSchedule().getWorkflowName();
             String wpath = WorkflowPaths.getPathOrNull(workflow);
@@ -136,14 +136,14 @@ public class OrderListSynchronizer {
         return result;
     }
 
-    public void submitOrdersToController(StartupMode startupMode, String controllerId, String submissionForDate)
+    public void submitOrdersToController(StartupMode startupMode, String controllerId, String dailyPlanDate)
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException, ExecutionException,
             SOSHibernateException, TimeoutException, ParseException {
 
         String method = "submitOrdersToController";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        String logSubmissionForDate = SOSString.isEmpty(submissionForDate) ? "" : "[" + submissionForDate + "]";
+        String logDailyPlanDate = SOSString.isEmpty(dailyPlanDate) ? "" : "[" + dailyPlanDate + "]";
         Set<PlannedOrder> orders = new HashSet<PlannedOrder>();
         for (PlannedOrder p : plannedOrders.values()) {
             if (p.isStoredInDb() && p.getSchedule().getSubmitOrderToControllerWhenPlanned()) {
@@ -152,7 +152,7 @@ public class OrderListSynchronizer {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format(
                             "[%s][%s][%s]%s[skip because planned order !p.isStoredInDb() or !p.getSchedule().getSubmitOrderToControllerWhenPlanned()]%s",
-                            startupMode, method, controllerId, logSubmissionForDate, SOSString.toString(p)));
+                            startupMode, method, controllerId, logDailyPlanDate, SOSString.toString(p)));
                 }
             }
         }
@@ -160,8 +160,8 @@ public class OrderListSynchronizer {
         SOSHibernateSession session = null;
         try {
             String sessionIdentifier = method;
-            if (!SOSString.isEmpty(submissionForDate)) {
-                sessionIdentifier += "-" + submissionForDate;
+            if (!SOSString.isEmpty(dailyPlanDate)) {
+                sessionIdentifier += "-" + dailyPlanDate;
             }
 
             session = Globals.createSosHibernateStatelessConnection(sessionIdentifier);
@@ -177,18 +177,18 @@ public class OrderListSynchronizer {
                 session = null;
 
                 Instant end = Instant.now();
-                LOGGER.info(String.format("[%s][%s][%s]%s[%s of %s orders]history added=%s(%s)", startupMode, method, controllerId,
-                        logSubmissionForDate, orders.size(), plannedOrders.size(), inserted.size(), SOSDate.getDuration(start, end)));
+                LOGGER.info(String.format("[%s][%s][%s]%s[%s of %s orders]history added=%s(%s)", startupMode, method, controllerId, logDailyPlanDate,
+                        orders.size(), plannedOrders.size(), inserted.size(), SOSDate.getDuration(start, end)));
 
                 if (orders.size() > 0) {
-                    OrderApi.addOrdersToController(startupMode, controllerId, submissionForDate, orders, inserted, jocError, accessToken);
+                    OrderApi.addOrdersToController(startupMode, controllerId, dailyPlanDate, orders, inserted, jocError, accessToken);
                 } else {
                     LOGGER.info(String.format("[%s][%s][%s]%s[%s of %s orders][skip addOrdersToController]", startupMode, method, controllerId,
-                            logSubmissionForDate, orders.size(), plannedOrders.size()));
+                            logDailyPlanDate, orders.size(), plannedOrders.size()));
                 }
 
             } catch (Exception e) {
-                LOGGER.info(String.format("[%s][%s]%s[%s of %s orders]history added=%s", method, controllerId, logSubmissionForDate, orders.size(),
+                LOGGER.info(String.format("[%s][%s]%s[%s of %s orders]history added=%s", method, controllerId, logDailyPlanDate, orders.size(),
                         plannedOrders.size(), inserted.size()));
 
                 LOGGER.warn(e.toString(), e);

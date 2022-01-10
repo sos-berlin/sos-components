@@ -53,12 +53,6 @@ public class DailyPlanHelper {
         return li > -1 ? path.substring(li + 1) : path;
     }
 
-    private static String getDailyPlanDateAsString(Long startTime, String timeZone) throws SOSInvalidDataException {
-        java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
-        calendar.setTime(new Date(startTime));
-        return SOSDate.getDateWithTimeZoneAsString(calendar.getTime(), timeZone);
-    }
-
     public static java.util.Calendar getCalendar(String time, String timeZoneName) {
 
         if (time == null) {
@@ -197,18 +191,7 @@ public class DailyPlanHelper {
         return format.format(startCalendar.getTime());
     }
 
-    private static String buildOrderId(String orderName, Long startTime, Integer startMode, String timeZone) throws SOSInvalidDataException {
-        String orderId = "";
-        String dailyPlanDate = getDailyPlanDateAsString(startTime, timeZone);
-        if (startMode == 0) {
-            orderId = "#" + dailyPlanDate + "#P" + "<id" + startTime + ">-" + orderName;
-        } else {
-            orderId = "#" + dailyPlanDate + "#C" + "<id" + startTime + ">-<nr00000>-<size>-" + orderName;
-        }
-        return orderId;
-    }
-
-    public static String buildOrderId(Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode, String timeZone)
+    public static String buildOrderId(String dailyPlanDate, Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode)
             throws SOSInvalidDataException {
         String orderName = "";
         if ((variableSet.getOrderName() == null) || (variableSet.getOrderName().isEmpty())) {
@@ -220,7 +203,17 @@ public class DailyPlanHelper {
             orderName = orderName.substring(0, 30);
         }
 
-        return buildOrderId(orderName, startTime, startMode, timeZone);
+        return buildOrderId(dailyPlanDate, orderName, startTime, startMode);
+    }
+
+    private static String buildOrderId(String dailyPlanDate, String orderName, Long startTime, Integer startMode) throws SOSInvalidDataException {
+        String orderId = "";
+        if (startMode == 0) {
+            orderId = "#" + dailyPlanDate + "#P" + "<id" + startTime + ">-" + orderName;
+        } else {
+            orderId = "#" + dailyPlanDate + "#C" + "<id" + startTime + ">-<nr00000>-<size>-" + orderName;
+        }
+        return orderId;
     }
 
     public static Date getNextDay(Date date, DailyPlanSettings settings) throws ParseException {

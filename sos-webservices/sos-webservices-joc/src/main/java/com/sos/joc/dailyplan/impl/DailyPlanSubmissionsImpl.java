@@ -12,6 +12,7 @@ import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.WebservicePaths;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlanSubmissions;
 import com.sos.joc.dailyplan.db.FilterDailyPlanSubmissions;
@@ -107,8 +108,10 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             setSettings();
             FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
             filter.setControllerId(in.getControllerId());
+            String dateFor = "";
             if (in.getFilter().getDateFor() != null) {
-                Date date = SOSDate.getDate(in.getFilter().getDateFor());
+                dateFor = in.getFilter().getDateFor();
+                Date date = SOSDate.getDate(dateFor);
                 filter.setDateFor(date);
             } else {
                 if (in.getFilter().getDateFrom() != null) {
@@ -125,7 +128,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
-            int result = dbLayer.delete(filter);
+            int result = dbLayer.delete(StartupMode.manual, filter, dateFor);
             Globals.commit(session);
             session.close();
             session = null;

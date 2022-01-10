@@ -26,7 +26,7 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
     public JOCDefaultResponse postVariables(String accessToken, byte[] filterBytes) {
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, OrderVariablesFilter.class);
+            JsonValidator.validate(filterBytes, OrderVariablesFilter.class);
             OrderVariablesFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderVariablesFilter.class);
             String controllerId = orderFilter.getControllerId();
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getView());

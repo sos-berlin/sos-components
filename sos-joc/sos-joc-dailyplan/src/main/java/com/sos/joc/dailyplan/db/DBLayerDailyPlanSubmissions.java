@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
@@ -74,7 +75,7 @@ public class DBLayerDailyPlanSubmissions {
         session.save(item);
     }
 
-    public int delete(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
+    public int delete(StartupMode mode, FilterDailyPlanSubmissions filter, String submissionForDate) throws SOSHibernateException {
         Long countSubmitted = getCountSubmittedOrders(filter);
         int result = 0;
         if (countSubmitted.equals(0L)) {
@@ -82,10 +83,8 @@ public class DBLayerDailyPlanSubmissions {
             result += deleteOrders(filter);
             result += deleteSubmissions(filter);
         } else {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[delete sumbission][skip]found %s submitted orders for controllerId=%s, dateFor=%s", countSubmitted,
-                        filter.getControllerId(), filter.getDateFor()));
-            }
+            LOGGER.info(String.format("[%s][delete daily plan][%s][%s][skip]found %s submitted orders", mode, filter.getControllerId(),
+                    submissionForDate, countSubmitted));
         }
         return result;
     }
