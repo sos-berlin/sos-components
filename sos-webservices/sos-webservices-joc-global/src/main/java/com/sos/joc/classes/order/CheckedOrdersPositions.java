@@ -310,7 +310,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
             IOException, JocBadRequestException {
         Set<String> allowedPositions = getPositions().stream().map(Positions::getPositionString).collect(Collectors.toCollection(LinkedHashSet::new));
         Variables variables = new Variables();
-        String positionStringWithoutCounter = positionString.replaceAll("/(try|catch|cycle)\\+?[^:]*", "$1");
+        String positionStringWithoutCounter = positionString.replaceAll("/(try|catch|cycle)\\+?[^:]*", "/$1");
 
         if (allowedPositions.contains(positionString) || allowedPositions.contains(positionStringWithoutCounter) || implicitEnds.contains(
                 positionString) || implicitEnds.contains(positionStringWithoutCounter)) {
@@ -319,14 +319,15 @@ public class CheckedOrdersPositions extends OrdersPositions {
             if (historicOutcomes != null) {
                 for (HistoricOutcome outcome : historicOutcomes) {
                     String outcomePositionString = JPosition.fromList(outcome.getPosition()).get().toString();
-                    if (outcomePositionString.equals(positionString)) {
+                    String outcomePositionStringWithoutCounter = outcomePositionString.replaceAll("/(try|catch|cycle)\\+?[^:]*", "/$1");
+                    if (outcomePositionStringWithoutCounter.equals(positionStringWithoutCounter)) {
                         break;
                     }
                     if (outcome.getOutcome() == null || outcome.getOutcome().getNamedValues() == null || outcome.getOutcome().getNamedValues()
                             .getAdditionalProperties() == null) {
                         continue;
                     }
-                    if (!allowedPositions.contains(outcomePositionString)) {
+                    if (!allowedPositions.contains(outcomePositionStringWithoutCounter)) {
                         continue;
                     }
                     variables.setAdditionalProperties(outcome.getOutcome().getNamedValues().getAdditionalProperties());
