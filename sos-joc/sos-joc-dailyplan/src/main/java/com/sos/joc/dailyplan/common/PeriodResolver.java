@@ -198,9 +198,19 @@ public class PeriodResolver {
         sdf.setTimeZone(TimeZone.getTimeZone(timeZone));
         start = sdf.parse(sdfUtc.format(start));
 
-        return (start.after(JobSchedulerDate.nowInUtc()) && start.after(dailyPlanStartPeriod) || start.equals(dailyPlanStartPeriod)) && (start.before(
-                dailyPlanEndPeriod));
+        Date now = JobSchedulerDate.nowInUtc();
+        if (LOGGER.isDebugEnabled()) {
+            try {
+                LOGGER.debug(String.format("   [%s][now=%s]start=%s, dailyPlanStartPeriod=%s, dailyPlanEndPeriod=%s", dailyPlanDate, SOSDate
+                        .getDateTimeAsString(now), SOSDate.getDateTimeAsString(start), SOSDate.getDateTimeAsString(dailyPlanStartPeriod), SOSDate
+                                .getDateTimeAsString(dailyPlanEndPeriod)));
+            } catch (SOSInvalidDataException e) {
 
+            }
+        }
+
+        // return (start.after(now) && start.after(dailyPlanStartPeriod) || start.equals(dailyPlanStartPeriod)) && (start.before(dailyPlanEndPeriod));
+        return start.after(now) && start.before(dailyPlanEndPeriod) && start.getTime() >= dailyPlanStartPeriod.getTime();
     }
 
     public Map<Long, Period> getStartTimes(String d, String dailyPlanDate, String timeZone) throws ParseException {
@@ -208,17 +218,18 @@ public class PeriodResolver {
         startTimes = new HashMap<Long, Period>();
         for (Entry<String, Period> periodEntry : periods.entrySet()) {
             Date start = getDate(d, periodEntry.getKey(), DATE_FORMAT_SIMPLE);
-            if (isDebugEnabled) {
-                try {
-                    LOGGER.debug(String.format("[%s][%s][period=%s][timeZone=%s]start=%s", dailyPlanDate, d, periodEntry.getKey(), timeZone, SOSDate
-                            .format(start, DATE_FORMAT_SIMPLE)));
-                } catch (SOSInvalidDataException e) {
-
-                }
-            }
             if (dayIsInPlan(start, dailyPlanDate, timeZone)) {
                 Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + periodEntry.getKey(), timeZone);
                 startTimes.put(scheduledFor.get().getEpochSecond() * 1000, periodEntry.getValue());
+
+                if (isDebugEnabled) {
+                    try {
+                        LOGGER.debug(String.format("[%s][%s][period=%s][timeZone=%s]start=%s", dailyPlanDate, d, periodEntry.getKey(), timeZone,
+                                SOSDate.format(start, DATE_FORMAT_SIMPLE)));
+                    } catch (SOSInvalidDataException e) {
+
+                    }
+                }
             } else {
                 if (isDebugEnabled) {
                     try {
