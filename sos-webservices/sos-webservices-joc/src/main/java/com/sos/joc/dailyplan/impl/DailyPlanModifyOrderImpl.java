@@ -365,6 +365,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         if (item == null) {
             isNew = true;
             item = new DBItemDailyPlanVariable();
+            item.setControllerId(in.getControllerId());
             item.setOrderId(plannedOrder.getOrderId());
             item.setCreated(new Date());
         }
