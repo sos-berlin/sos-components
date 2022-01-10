@@ -96,12 +96,14 @@ import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderObstacle;
+import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
+import scala.Function1;
 import scala.Option;
 
 public class OrdersHelper {
@@ -720,8 +722,10 @@ public class OrdersHelper {
             return either;
         };
 
-        Map<Boolean, Set<Either<Err419, FreshOrder>>> addOrders = currentState.ordersBy(o -> temporaryOrderIds.contains(o.id().string())).parallel()
-                .map(mapper).collect(Collectors.groupingBy(Either::isRight, Collectors.toSet()));
+        Function1<Order<Order.State>, Object> freshAndExistsFilter = JOrderPredicates.and(o -> temporaryOrderIds.contains(o.id().string()),
+                JOrderPredicates.byOrderState(Order.Fresh$.class));
+        Map<Boolean, Set<Either<Err419, FreshOrder>>> addOrders = currentState.ordersBy(freshAndExistsFilter).parallel().map(mapper).collect(
+                Collectors.groupingBy(Either::isRight, Collectors.toSet()));
 
         ModifyOrders modifyOrders = new ModifyOrders();
         modifyOrders.setControllerId(controllerId);
