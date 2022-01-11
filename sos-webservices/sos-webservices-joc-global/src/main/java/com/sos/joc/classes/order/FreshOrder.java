@@ -48,8 +48,8 @@ public class FreshOrder {
     }
     
     private static OrderId generateNewFromOldOrderId(OrderId orderId) {
-        return orderId;
-        //return OrderId.of(orderId.string().replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10,11}(-.+)$", "$1" + OrdersHelper.getUniqueOrderId() + "$2"));
+        //return orderId;
+        return OrderId.of(orderId.string().replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10,11}(-.+)$", "$1" + OrdersHelper.getUniqueOrderId() + "$2"));
     }
 
 }
