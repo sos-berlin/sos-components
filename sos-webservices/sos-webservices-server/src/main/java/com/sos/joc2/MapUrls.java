@@ -60,7 +60,9 @@ public class MapUrls {
         private static final long serialVersionUID = 1L;
 
         {
-            put("http://sp:5555", "http://sp:5555");
+            put("http://sp:11111", "http://sp:11111");
+            put("http://sp:11112", "http://sp:11112");
+            put("http://sp:1113", "http://sp:1113");
         }
     });
 
@@ -70,7 +72,7 @@ public class MapUrls {
 
         {
             put("oh", centosdev_secondary_urlMapper);
-//            put("sp", centosdev_third_urlMapper);
+            put("sp", sp_local_urlMapper);
         }
     });
     
@@ -80,7 +82,7 @@ public class MapUrls {
 
         {
             put("oh", JocSecurityLevel.LOW);
-            put("sp", JocSecurityLevel.HIGH);
+            put("sp", JocSecurityLevel.MEDIUM);
         }
     });
     
