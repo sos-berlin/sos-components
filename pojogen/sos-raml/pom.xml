@@ -183,6 +183,7 @@
 							<addCompileSourceRoot>false</addCompileSourceRoot>
 							<includes>
 								<include>configuration/globals/*.json</include>
+								<include>order/orderIdMap*.json</include>
 							</includes>
 						</configuration>
 						<goals>

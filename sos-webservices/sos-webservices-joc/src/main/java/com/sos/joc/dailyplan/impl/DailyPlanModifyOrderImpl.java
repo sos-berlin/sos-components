@@ -76,6 +76,8 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
+import com.sos.joc.model.order.OrderIdMap;
+import com.sos.joc.model.order.OrderIdMap200;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
@@ -118,8 +120,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 category = CategoryType.CONTROLLER;
             }
             DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId(), category);
-            List<Err419> errors = OrdersHelper.cancelAndAddFreshOrder(tempOrderIds, in, accessToken, getJocError(), auditlog.getId(),
-                    folderPermissions);
+            Either<List<Err419>, OrderIdMap> result = OrdersHelper.cancelAndAddFreshOrder(tempOrderIds, in, accessToken, getJocError(), auditlog
+                    .getId(), folderPermissions);
 
             if (!orderIds.isEmpty()) {
                 setSettings();
@@ -138,12 +140,16 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 } else {
                     modifyOrder(in, newOrderIds, accessToken, auditlog);
                 }
-
-                if (!errors.isEmpty()) {
-                    return JOCDefaultResponse.responseStatus419(errors);
-                }
             }
-            return JOCDefaultResponse.responseStatusJSOk(new Date());
+            
+            if (result.isLeft()) {
+                return JOCDefaultResponse.responseStatus419(result.getLeft());
+            } else {
+                OrderIdMap200 entity = new OrderIdMap200();
+                entity.setDeliveryDate(Date.from(Instant.now()));
+                entity.setOrderIds(result.get());
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            }
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

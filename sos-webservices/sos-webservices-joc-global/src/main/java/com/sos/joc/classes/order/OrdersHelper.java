@@ -66,6 +66,7 @@ import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.order.AddOrder;
 import com.sos.joc.model.order.ModifyOrders;
+import com.sos.joc.model.order.OrderIdMap;
 import com.sos.joc.model.order.OrderMark;
 import com.sos.joc.model.order.OrderMarkText;
 import com.sos.joc.model.order.OrderState;
@@ -668,13 +669,14 @@ public class OrdersHelper {
         return listVariables;
     }
 
-    public static List<Err419> cancelAndAddFreshOrder(Set<String> temporaryOrderIds, DailyPlanModifyOrder dailyplanModifyOrder, String accessToken,
+    public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Set<String> temporaryOrderIds, DailyPlanModifyOrder dailyplanModifyOrder, String accessToken,
             JocError jocError, Long auditlogId, SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
 
+        Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
         if (temporaryOrderIds.isEmpty()) {
-            return Collections.emptyList();
+            return result;
         }
         String controllerId = dailyplanModifyOrder.getControllerId();
         JControllerProxy proxy = Proxy.of(controllerId);
@@ -735,7 +737,7 @@ public class OrdersHelper {
         ModifyOrders modifyOrders = new ModifyOrders();
         modifyOrders.setControllerId(controllerId);
         modifyOrders.setOrderType(OrderModeType.FRESH_ONLY);
-
+        
         if (addOrders.containsKey(true) && !addOrders.get(true).isEmpty()) {
             final Map<OrderId, JFreshOrder> freshOrders = addOrders.get(true).stream().parallel().map(Either::get).collect(Collectors.toMap(
                     FreshOrder::getOldOrderId, FreshOrder::getJFreshOrderWithDeleteOrderWhenTerminated));
@@ -761,11 +763,15 @@ public class OrdersHelper {
                     });
                 }
             });
+            
+            OrderIdMap orderIdMap = new OrderIdMap();
+            freshOrders.forEach((oldOrder, jFreshOrder) -> orderIdMap.setAdditionalProperty(oldOrder.string(), jFreshOrder.id().string()));
+            
+            result = Either.right(orderIdMap);
+        } else if (addOrders.containsKey(false) && !addOrders.get(false).isEmpty()) {
+            result = Either.left(addOrders.get(false).stream().parallel().map(Either::getLeft).collect(Collectors.toList()));
         }
-        if (addOrders.containsKey(false) && !addOrders.get(false).isEmpty()) {
-            return addOrders.get(false).stream().parallel().map(Either::getLeft).collect(Collectors.toList());
-        }
-        return Collections.emptyList();
+        return result;
     }
 
     public static CompletableFuture<Either<Problem, Void>> cancelOrders(JControllerApi controllerApi, ModifyOrders modifyOrders,
