@@ -8,7 +8,7 @@ public class MailJobArgumentsTest extends MailJobArguments {
         this.mailSmtpHost.setValue(mailSmtpHost);
     }
 
-    public void setMailSmtpPort(Integer mailSmtpPort) {
+    public void setMailSmtpPort(String mailSmtpPort) {
         this.mailSmtpPort.setValue(mailSmtpPort);
     }
 

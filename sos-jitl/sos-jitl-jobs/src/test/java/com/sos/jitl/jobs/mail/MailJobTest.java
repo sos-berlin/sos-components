@@ -23,7 +23,7 @@ public class MailJobTest {
         MailJob sosMailJob = new MailJob(null);
         MailJobArgumentsTest arguments = new MailJobArgumentsTest();
         arguments.setMailSmtpHost("localhost");
-        arguments.setMailSmtpPort(25);
+        arguments.setMailSmtpPort("25");
         arguments.setSubject("My Mail Subject");
         arguments.setBody("My Mail body");
 
