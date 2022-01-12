@@ -9,7 +9,8 @@ import com.sos.jitl.jobs.common.JobArguments;
 public class MailJobArguments extends JobArguments {
 
     protected JobArgument<String> mailSmtpHost = new JobArgument<String>("mail.smtp.host", true);
-    protected JobArgument<Integer> mailSmtpPort = new JobArgument<Integer>("mail.smtp.port", false, 25);
+    // TODO release 2.2.1 changed from Integer to String - check and change back ...
+    protected JobArgument<String> mailSmtpPort = new JobArgument<String>("mail.smtp.port", false);
     protected JobArgument<String> from = new JobArgument<String>("from", false);
     protected JobArgument<String> fromName = new JobArgument<String>("from_name", false);
     protected JobArgument<String> replyTo = new JobArgument<String>("reply_to", false);
@@ -44,7 +45,7 @@ public class MailJobArguments extends JobArguments {
         this.mailSmtpHost.setValue(mailSmtpHost);
     }
 
-    public Integer getMailSmtpPort() {
+    public String getMailSmtpPort() {
         return mailSmtpPort.getValue();
     }
 

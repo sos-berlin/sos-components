@@ -466,17 +466,7 @@ public class SOSMail {
         message = null;
     }
 
-    public boolean send() throws Exception {
-        return sendJavaMail();
-    }
-
     public boolean send(final boolean send) throws Exception {
-        if (SOSString.isEmpty(getHost())) {
-            throw new Exception("host is empty");
-        }
-        if (SOSString.isEmpty(getPort())) {
-            throw new Exception("port is empty");
-        }
         if (send) {
             return send();
         } else {
@@ -484,11 +474,21 @@ public class SOSMail {
         }
     }
 
+    public boolean send() throws Exception {
+        return sendJavaMail();
+    }
+
     private boolean sendJavaMail() throws Exception {
+        String host = getHost();
+        if (SOSString.isEmpty(host)) {
+            throw new Exception("host is empty");
+        }
+        String port = getPort();
         try {
             prepareJavaMail();
 
-            StringBuilder msg = new StringBuilder("sending email: host:port=").append(getHost()).append(":").append(getPort());
+            String portMsg = port == null ? "<java default port>" : port;
+            StringBuilder msg = new StringBuilder("sending email: host:port=").append(host).append(":").append(portMsg);
             msg.append(" to=").append(getRecipientsAsString());
             String cc = getCCsAsString();
             if (!"".equals(cc)) {
@@ -513,16 +513,21 @@ public class SOSMail {
                 }
                 message.setSentDate(new Date());
                 if (smtpProperties == null) {
-                    System.setProperty("mail.smtp.port", getPort());
-                    System.setProperty("mail.smtp.host", getHost());
+                    if (port != null) {
+                        System.setProperty("mail.smtp.port", port);
+                    }
+                    System.setProperty("mail.smtp.host", host);
                 } else {
-                    smtpProperties.setProperty("mail.smtp.port", getPort());
-                    smtpProperties.setProperty("mail.smtp.host", getHost());
+                    // TODO ??? why set smtpProperties ?
+                    if (port != null) {
+                        smtpProperties.setProperty("mail.smtp.port", port);
+                    }
+                    smtpProperties.setProperty("mail.smtp.host", host);
                 }
                 if (SOSString.isEmpty(getUser())) {
                     transport.connect();
                 } else {
-                    transport.connect(getHost(), getUser(), getPassword());
+                    transport.connect(host, getUser(), getPassword());
                 }
                 transport.sendMessage(message, message.getAllRecipients());
                 transport.close();
@@ -533,8 +538,8 @@ public class SOSMail {
             }
             return true;
         } catch (javax.mail.AuthenticationFailedException ee) {
-            lastError = String.format("%s while connecting to %s:%s %s /******** --> %s", ee.getClass().getSimpleName(), getHost(), getPort(),
-                    getUser(), ee.toString());
+            lastError = String.format("%s while connecting to %s:%s %s /******** --> %s", ee.getClass().getSimpleName(), host, port, getUser(), ee
+                    .toString());
 
             if (queueMailOnError) {
                 try {
@@ -551,7 +556,7 @@ public class SOSMail {
                 if (!SOSString.isEmpty(queueDir) && e.getMessage().startsWith("Could not connect to SMTP host") || e.getMessage().startsWith(
                         "Unknown SMTP host") || e.getMessage().startsWith("Read timed out") || e.getMessage().startsWith(
                                 "Exception reading response")) {
-                    lastError = String.format("%s ==> %s:%s %s /********", e.getMessage(), getHost(), getPort(), getUser());
+                    lastError = String.format("%s ==> %s:%s %s /********", e.getMessage(), host, port, getUser());
                     try {
                         dumpMessageToFile(true);
                     } catch (Exception ee) {
@@ -568,7 +573,7 @@ public class SOSMail {
         } catch (SocketTimeoutException e) {
             if (queueMailOnError) {
                 if (!SOSString.isEmpty(queueDir)) {
-                    lastError = String.format("%s ==> %s:%s %s /********", e.getMessage(), getHost(), getPort(), getUser());
+                    lastError = String.format("%s ==> %s:%s %s /********", e.getMessage(), host, port, getUser());
                     try {
                         dumpMessageToFile(true);
                     } catch (Exception ee) {

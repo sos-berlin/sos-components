@@ -41,7 +41,7 @@ public class MailHandler {
             }
 
             putSmtpProperties(smtpProperties, "mail.smtp.host", args.getMailSmtpHost());
-            putSmtpProperties(smtpProperties, "mail.smtp.port", String.valueOf(args.getMailSmtpPort()));
+            putSmtpProperties(smtpProperties, "mail.smtp.port", args.getMailSmtpPort());
             putSmtpProperties(smtpProperties, "mail.smtp.user", args.getMailSmtpUser());
             putSmtpProperties(smtpProperties, "mail.smtp.password", args.getMailSmtpPassword());
             sosMail = new SOSMail(smtpProperties);
@@ -128,7 +128,7 @@ public class MailHandler {
             } else {
                 log(logger, sosMail.getLastError() + ":" + e.getMessage());
             }
-            throw new Exception(e.getMessage());
+            throw new Exception(e.getMessage(), e);
         }
 
     }
@@ -137,20 +137,12 @@ public class MailHandler {
         if (value != null) {
             smtpProperties.put(key, value);
         }
-
     }
 
     private void log(JobLogger logger, String log) {
         LOGGER.info(log);
         if (logger != null) {
             logger.info(log);
-        }
-    }
-
-    private void debug(JobLogger logger, String log) {
-        LOGGER.debug(log);
-        if (logger != null) {
-            logger.debug(log);
         }
     }
 }
