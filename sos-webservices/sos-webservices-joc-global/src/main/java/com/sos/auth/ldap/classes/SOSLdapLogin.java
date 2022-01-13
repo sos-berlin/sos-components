@@ -1,4 +1,4 @@
-package com.sos.auth.sosintern.classes;
+package com.sos.auth.ldap.classes;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -9,20 +9,21 @@ import com.sos.auth.classes.SOSAuthAccessToken;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
+import com.sos.auth.ldap.SOSLdapHandler;
 import com.sos.auth.sosintern.SOSInternAuthHandler;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 
-public class SOSInternAuthLogin implements ISOSLogin {
+public class SOSLdapLogin implements ISOSLogin {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSInternAuthLogin.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapLogin.class);
 
     private String msg="";
     private SOSIdentityService identityService;
-    private SOSInternAuthSubject sosInternAuthSubject;
+    private SOSLdapSubject sosLdapSubject;
 
-    public SOSInternAuthLogin() {
+    public SOSLdapLogin() {
 
     }
 
@@ -31,21 +32,22 @@ public class SOSInternAuthLogin implements ISOSLogin {
 
         try {
 
-            SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials = new SOSInternAuthWebserviceCredentials();
-            sosInternAuthWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
-            sosInternAuthWebserviceCredentials.setAccount(account);
-            SOSInternAuthHandler sosInternAuthHandler = new SOSInternAuthHandler();
+            SOSLdapWebserviceCredentials sosLdapWebserviceCredentials = new SOSLdapWebserviceCredentials();
+            sosLdapWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
+            sosLdapWebserviceCredentials.setAccount(account);
+            sosLdapWebserviceCredentials.setValuesFromProfile(identityService);
 
-            SOSAuthAccessToken sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials,pwd);
-            sosInternAuthSubject = new SOSInternAuthSubject();
-            if (sosInternAuthAccessToken == null) {
-                sosInternAuthSubject.setAuthenticated(false);
-                setMsg("There is no account with the given accountname/password combination");
+            SOSLdapHandler sosLdapHandler = new SOSLdapHandler();
 
+            SOSAuthAccessToken sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials,pwd);
+            sosLdapSubject = new SOSLdapSubject();
+            if (sosAuthAccessToken == null) {
+                sosLdapSubject.setAuthenticated(false);
+                setMsg(sosLdapHandler.getMsg());
             } else {
-                sosInternAuthSubject.setAuthenticated(true);
-                sosInternAuthSubject.setPermissionAndRoles(account,identityService);
-                sosInternAuthSubject.setAccessToken(sosInternAuthAccessToken.getAccessToken());
+                sosLdapSubject.setAuthenticated(true);
+                sosLdapSubject.setPermissionAndRoles(null,account,identityService);
+                sosLdapSubject.setAccessToken(sosAuthAccessToken.getAccessToken());
             }
 
         } catch (SOSHibernateException e) {
@@ -71,7 +73,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
 
     @Override
     public ISOSAuthSubject getCurrentSubject() {
-        return sosInternAuthSubject;
+        return sosLdapSubject;
     }
 
     

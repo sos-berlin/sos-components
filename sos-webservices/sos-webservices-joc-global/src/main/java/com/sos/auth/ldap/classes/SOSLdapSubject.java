@@ -1,4 +1,4 @@
-package com.sos.auth.vault.classes;
+package com.sos.auth.ldap.classes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,10 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSSession;
-import com.sos.auth.vault.SOSVaultSession;
+import com.sos.auth.sosintern.SOSInternAuthSession;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -18,21 +19,15 @@ import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.model.security.IdentityServiceTypes;
 
-public class SOSVaultSubject implements ISOSAuthSubject {
+public class SOSLdapSubject implements ISOSAuthSubject {
 
-
-    private SOSVaultSession session;
+   
+    private SOSInternAuthSession session;
     private Boolean authenticated;
     private Map<String, List<String>> mapOfFolderPermissions;
     private Set<String> setOfAccountPermissions;
-    private Set<String> setOfRoles;
     private Set<DBItemIamPermissionWithName> setOfPermissions;
-    private SOSIdentityService identityService;
-
-    public SOSVaultSubject(SOSIdentityService identityService) {
-        super();
-        this.identityService = identityService;
-    }
+    private Set<String> setOfRoles;
 
     @Override
     public Boolean hasRole(String role) {
@@ -60,20 +55,20 @@ public class SOSVaultSubject implements ISOSAuthSubject {
         this.authenticated = authenticated;
     }
 
-    private SOSVaultSession getVaultSession() {
+    private SOSInternAuthSession getInternAuthSession() {
         if (session == null) {
-            session = new SOSVaultSession(identityService);
+            session = new SOSInternAuthSession();
         }
         return session;
     }
 
     @Override
     public ISOSSession getSession() {
-        return getVaultSession();
+        return getInternAuthSession();
     }
 
-    public void setAccessToken(SOSVaultAccountAccessToken accessToken) {
-        getVaultSession().setAccessToken(accessToken);
+    public void setAccessToken(String accessToken) {
+        getInternAuthSession().setAccessToken(accessToken);
     }
 
     public void setPermissionAndRoles(List<String> listOfTokenRoles, String accountName, SOSIdentityService identityService)
@@ -85,7 +80,7 @@ public class SOSVaultSubject implements ISOSAuthSubject {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
-            if (IdentityServiceTypes.VAULT_JOC == identityService.getIdentyServiceType() || IdentityServiceTypes.VAULT_JOC_ACTIVE == identityService.getIdentyServiceType()) {
+            if (IdentityServiceTypes.LDAP_JOC == identityService.getIdentyServiceType()) {
                 List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(accountName, identityService
                         .getIdentityServiceId());
                 for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
@@ -94,9 +89,9 @@ public class SOSVaultSubject implements ISOSAuthSubject {
             } else {
                 setOfRoles.addAll(listOfTokenRoles);
             }
-
+          
             setOfAccountPermissions = new HashSet<String>();
-             
+            
             List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, accountName,
                     identityService.getIdentityServiceId());
             mapOfFolderPermissions = new HashMap<String, List<String>>();
@@ -121,8 +116,7 @@ public class SOSVaultSubject implements ISOSAuthSubject {
 
     @Override
     public Map<String, List<String>> getMapOfFolderPermissions() {
-        return this.mapOfFolderPermissions;
+        return mapOfFolderPermissions;
     }
-  
 
 }

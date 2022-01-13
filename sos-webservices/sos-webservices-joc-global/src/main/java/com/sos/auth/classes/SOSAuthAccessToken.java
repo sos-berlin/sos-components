@@ -1,7 +1,7 @@
-package com.sos.auth.sosintern.classes;
+package com.sos.auth.classes;
 
 
-public class SOSInternAuthAccessToken {
+public class SOSAuthAccessToken {
     String accessToken;
 
     

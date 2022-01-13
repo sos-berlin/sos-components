@@ -17,7 +17,6 @@ import org.apache.shiro.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ctc.wstx.util.StringUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 

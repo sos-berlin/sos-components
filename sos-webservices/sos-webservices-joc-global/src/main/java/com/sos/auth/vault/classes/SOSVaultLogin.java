@@ -17,6 +17,7 @@ import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.vault.SOSVaultHandler;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
+import com.sos.joc.exceptions.JocException;
 
 public class SOSVaultLogin implements ISOSLogin {
 
@@ -63,6 +64,8 @@ public class SOSVaultLogin implements ISOSLogin {
             LOGGER.error("",e);
         } catch (SOSException e) {
             LOGGER.error("",e);
+        } catch (JocException e) {
+            LOGGER.info("VAULT:" + e.getMessage());
         } catch (Exception e) {
             LOGGER.error("",e);
         }

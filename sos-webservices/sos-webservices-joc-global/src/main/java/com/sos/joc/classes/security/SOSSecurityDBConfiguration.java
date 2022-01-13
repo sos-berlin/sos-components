@@ -108,7 +108,10 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         iamAccountDBLayer.deleteCascading(iamAccountFilter);
 
         SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-        webserviceCredentials.setValuesFromProfile(sosIdentityService);
+        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())
+                || IdentityServiceTypes.VAULT_JOC.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            webserviceCredentials.setValuesFromProfile(sosIdentityService);
+        }
 
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
             String password = null;
@@ -116,7 +119,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             DBItemIamAccount dbItemIamAcount = new DBItemIamAccount();
             dbItemIamAcount.setAccountName(securityConfigurationAccount.getAccount());
-            if (!dbItemIamIdentityService.getIdentityServiceType().contains("VAULT")) {
+            if (!dbItemIamIdentityService.getIdentityServiceType().contains("VAULT") && !dbItemIamIdentityService.getIdentityServiceType().contains("LDAP")) {
                 dbItemIamAcount.setAccountPassword(SOSAuthHelper.getSHA512(password));
             } else {
                 dbItemIamAcount.setAccountPassword("********");

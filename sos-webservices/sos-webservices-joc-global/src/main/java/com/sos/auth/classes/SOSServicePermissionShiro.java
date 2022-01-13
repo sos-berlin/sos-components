@@ -35,6 +35,7 @@ import com.sos.auth.client.ClientCertificateHandler;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.interfaces.ISOSSecurityConfiguration;
+import com.sos.auth.ldap.classes.SOSLdapLogin;
 import com.sos.auth.shiro.classes.SOSShiroIniShare;
 import com.sos.auth.shiro.classes.SOSShiroLogin;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
@@ -511,6 +512,11 @@ public class SOSServicePermissionShiro {
             sosLogin = new SOSShiroLogin(Globals.getShiroIniSecurityManagerFactory());
             LOGGER.debug("Login with idendity service shiro");
             break;
+        case LDAP:
+        case LDAP_JOC:
+            sosLogin = new SOSLdapLogin();
+            LOGGER.debug("Login with idendity service ldap");
+            break;            
         case VAULT:
         case VAULT_JOC:
         case VAULT_JOC_ACTIVE:
