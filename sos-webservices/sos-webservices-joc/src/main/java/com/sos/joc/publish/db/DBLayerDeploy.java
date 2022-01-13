@@ -64,6 +64,7 @@ import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
+import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.util.PublishUtils;
@@ -800,8 +801,8 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(DeployablesFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        List<Configuration> configurations = filter.getDraftConfigurations().stream().map(item -> item.getConfiguration()).collect(Collectors
-                .toList());
+        List<Configuration> configurations = filter.getDraftConfigurations().stream()
+                .map(item -> item.getConfiguration()).collect(Collectors.toList());
         if (!configurations.isEmpty()) {
             return getFilteredInventoryConfiguration(configurations);
         } else {
@@ -809,10 +810,36 @@ public class DBLayerDeploy {
         }
     }
 
+    public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(CopyToFilter filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        List<Configuration> configurations = filter.getEnvIndependent().getDraftConfigurations().stream()
+                .map(item -> item.getConfiguration()).collect(Collectors.toList());
+        configurations.addAll(filter.getEnvRelated().getDraftConfigurations().stream()
+                .filter(item -> ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
+                .map(item -> item.getConfiguration()).collect(Collectors.toList()));
+        if (!configurations.isEmpty()) {
+            return getFilteredInventoryConfiguration(configurations);
+        } else {
+            return new ArrayList<DBItemInventoryConfiguration>();
+        }
+    }
+    
     public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(DeployablesValidFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        List<Configuration> configurations = filter.getDraftConfigurations().stream().map(item -> item.getConfiguration()).collect(Collectors
-                .toList());
+        List<Configuration> configurations = filter.getDraftConfigurations().stream()
+                .map(item -> item.getConfiguration()).collect(Collectors.toList());
+        if (!configurations.isEmpty()) {
+            return getFilteredInventoryConfiguration(configurations);
+        } else {
+            return new ArrayList<DBItemInventoryConfiguration>();
+        }
+    }
+
+    public List<DBItemInventoryConfiguration> getFilteredReleasableConfigurations(CopyToFilter filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        List<Configuration> configurations = filter.getEnvRelated().getDraftConfigurations().stream()
+                .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
+                .map(item -> item.getConfiguration()).collect(Collectors.toList());
         if (!configurations.isEmpty()) {
             return getFilteredInventoryConfiguration(configurations);
         } else {
@@ -822,8 +849,8 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryConfiguration> getFilteredReleasableConfigurations(ReleasablesFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        List<Configuration> configurations = filter.getDraftConfigurations().stream().map(item -> item.getConfiguration()).collect(Collectors
-                .toList());
+        List<Configuration> configurations = filter.getDraftConfigurations().stream()
+                .map(item -> item.getConfiguration()).collect(Collectors.toList());
         if (!configurations.isEmpty()) {
             return getFilteredInventoryConfiguration(configurations);
         } else {
@@ -831,10 +858,22 @@ public class DBLayerDeploy {
         }
     }
 
+    public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfigurations(CopyToFilter filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        List<Configuration> configurations = filter.getEnvRelated().getReleasedConfigurations().stream()
+                .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
+                .map(item -> item.getConfiguration()).collect(Collectors.toList());
+        if (!configurations.isEmpty()) {
+            return getFilteredReleasedConfiguration(configurations);
+        } else {
+            return new ArrayList<DBItemInventoryReleasedConfiguration>();
+        }
+    }
+
     public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfigurations(ReleasablesFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        List<Configuration> configurations = filter.getReleasedConfigurations().stream().map(item -> item.getConfiguration()).collect(Collectors
-                .toList());
+        List<Configuration> configurations = filter.getReleasedConfigurations().stream()
+                .map(item -> item.getConfiguration()).collect(Collectors.toList());
         if (!configurations.isEmpty()) {
             return getFilteredReleasedConfiguration(configurations);
         } else {
@@ -846,6 +885,20 @@ public class DBLayerDeploy {
             DBInvalidDataException {
         List<Configuration> configurations = filter.getDeployConfigurations().stream().filter(item -> !item.getConfiguration().getObjectType().equals(
                 ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
+        if (!configurations.isEmpty()) {
+            return getFilteredDeploymentHistory(configurations);
+        } else {
+            return new ArrayList<DBItemDeploymentHistory>();
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getFilteredDeployments(CopyToFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
+        List<Configuration> configurations = filter.getEnvIndependent().getDeployConfigurations().stream()
+                .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                .map(item -> item.getConfiguration()).collect(Collectors.toList());
+        configurations.addAll(filter.getEnvRelated().getDeployConfigurations().stream()
+                .filter(item -> ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
+                .map(item -> item.getConfiguration()).collect(Collectors.toList()));
         if (!configurations.isEmpty()) {
             return getFilteredDeploymentHistory(configurations);
         } else {
@@ -1395,6 +1448,41 @@ public class DBLayerDeploy {
             Date getDepHistoryItemsFromFolderFinished = Date.from(Instant.now());
             LOGGER.trace("*** call getDepHistoryItemsFromFolder finished ***" + getDepHistoryItemsFromFolderFinished);
             LOGGER.trace("call getDepHistoryItemsFromFolder took: " + (getDepHistoryItemsFromFolderFinished.getTime() - getDepHistoryItemsFromFolderStarted.getTime()) + " ms");
+            return result;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getDepHistoryItemsFromFolderByType(String folder, Set<Integer> types , boolean recursive) {
+        Date getDepHistoryItemsFromFolderStartedByType = Date.from(Instant.now());
+        LOGGER.info("*** call getDepHistoryItemsFromFolderByType started ***" + getDepHistoryItemsFromFolderStartedByType);
+        try {
+            // TODO: improve performance
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where state = 0");
+            if (recursive) {
+                if (!"/".equals(folder)) {
+                    hql.append(" and (folder = :folder or folder like :likefolder)");
+                }
+            } else {
+                hql.append(" and folder = :folder");
+            }
+            hql.append(" type in (:types)");
+            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            if (recursive) {
+                if (!"/".equals(folder)) {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                    query.setParameter("folder", folder);
+                }
+            } else {
+                query.setParameter("folder", folder);
+            }
+            query.setParameterList("tpyes", types);
+            List<DBItemDeploymentHistory> result = session.getResultList(query);
+            Date getDepHistoryItemsFromFolderFinishedByType = Date.from(Instant.now());
+            LOGGER.info("*** call getDepHistoryItemsFromFolderByType finished ***" + getDepHistoryItemsFromFolderFinishedByType);
+            LOGGER.info("call getDepHistoryItemsFromFolderByType took: " + (getDepHistoryItemsFromFolderFinishedByType.getTime() - getDepHistoryItemsFromFolderStartedByType.getTime()) + " ms");
             return result;
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);

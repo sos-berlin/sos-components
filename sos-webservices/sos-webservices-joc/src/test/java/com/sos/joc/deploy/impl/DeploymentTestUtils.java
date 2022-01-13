@@ -1,15 +1,25 @@
 package com.sos.joc.deploy.impl;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.joc.Globals;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.path.PathFilter;
 import com.sos.joc.model.inventory.path.PathResponse;
@@ -38,7 +48,16 @@ import com.sos.joc.model.publish.SetRootCaFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
+import com.sos.joc.model.publish.repository.CopyToFilter;
+import com.sos.joc.model.publish.repository.DeleteFromFilter;
+import com.sos.joc.model.publish.repository.EnvIndependentConfigurations;
+import com.sos.joc.model.publish.repository.EnvRelatedConfigurations;
+import com.sos.joc.model.publish.repository.ReadFromFilter;
+import com.sos.joc.model.publish.repository.ResponseFolder;
+import com.sos.joc.model.publish.repository.ResponseFolderItem;
+import com.sos.joc.model.publish.repository.UpdateFromFilter;
 import com.sos.joc.model.sign.Signature;
+import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.sign.model.instruction.ForkJoin;
 import com.sos.sign.model.instruction.IfElse;
 import com.sos.sign.model.instruction.Instruction;
@@ -684,4 +703,81 @@ public class DeploymentTestUtils {
         return filter;
     }
 
+    public static CopyToFilter createRepositoryCopyToFilter () throws JsonProcessingException {
+        CopyToFilter filter = new CopyToFilter();
+        filter.setControllerId("testsuite");
+        filter.setControllerId(null);
+        filter.setAuditLog(null);
+
+        Config folder = new Config();
+        Configuration cfgFolder = new Configuration();
+        cfgFolder.setObjectType(ConfigurationType.FOLDER);
+        cfgFolder.setPath("/ProductDemo");
+        cfgFolder.setRecursive(true);
+        folder.setConfiguration(cfgFolder);
+        
+        EnvIndependentConfigurations envIndependent = new EnvIndependentConfigurations();
+        envIndependent.getDraftConfigurations().add(folder);
+        envIndependent.getDeployConfigurations().add(folder);
+        
+        EnvRelatedConfigurations envRelated = new EnvRelatedConfigurations();
+        envRelated.getDraftConfigurations().add(folder);
+        envRelated.getDeployConfigurations().add(folder);
+        envRelated.getReleasedConfigurations().add(folder);
+        
+        filter.setEnvIndependent(envIndependent);
+        filter.setEnvRelated(envRelated);
+        return filter;
+    }
+
+    public static DeleteFromFilter createRepositoryDeleteFromFilter () throws JsonProcessingException {
+        DeleteFromFilter filter = new DeleteFromFilter();
+        filter.setAuditLog(null);
+        Config draft = new Config();
+        Configuration cfg = new Configuration();
+        cfg.setObjectType(ConfigurationType.FOLDER);
+        cfg.setPath("/ProductDemo");
+        cfg.setRecursive(true);
+        filter.getDraftConfigurations().add(draft);
+        return filter;
+    }
+
+    public static ReadFromFilter createRepositoryReadFromFilter (boolean recursive) throws JsonProcessingException {
+        ReadFromFilter filter = new ReadFromFilter();
+        filter.setFolder("/ProductDemo");
+        filter.setRecursive(recursive);
+        return filter;
+    }
+    
+    public static ResponseFolder createResponseFolder(Class clazz, boolean recursive) throws Exception {
+        Path repositories = Paths.get(clazz.getResource("/joc/repositories").toURI());
+        Path repository = Paths.get(clazz.getResource("/joc/repositories/apple").toURI());
+        TreeSet<java.nio.file.Path> repoTree = RepositoryUtil.readRepositoryAsTreeSet(repository);
+        Set<ResponseFolderItem> responseFolderItems = repoTree.stream().filter(path -> Files.isRegularFile(path))
+                .map(path -> RepositoryUtil.getResponseFolderItem(repositories, path)).collect(Collectors.toSet());
+        final Map<String, Set<ResponseFolderItem>> groupedFolderItems = responseFolderItems.stream().collect(Collectors.groupingBy(
+                ResponseFolderItem::getFolder, Collectors.toSet()));
+        SortedSet<ResponseFolder> responseFolder = RepositoryUtil.initTreeByFolder(repository, recursive).stream().map(t -> {
+                    ResponseFolder r = new ResponseFolder();
+                    String path = Globals.normalizePath(RepositoryUtil.subPath(repositories, Paths.get(t.getPath())).toString());
+                    r.setPath(path);
+                    if (groupedFolderItems.containsKey(path)) {
+                        r.getItems().addAll(groupedFolderItems.get(path));
+                    }
+                    return r;
+                }).collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(ResponseFolder::getPath).reversed())));
+        return RepositoryUtil.getTree(
+                responseFolder, RepositoryUtil.subPath(repositories, repository), RepositoryUtil.subPath(repositories, repositories), recursive);
+    }
+
+    public static UpdateFromFilter createRepositoryUpdateFromFilter () throws JsonProcessingException {
+        UpdateFromFilter filter = new UpdateFromFilter();
+        filter.setAuditLog(null);
+        Configuration cfg = new Configuration();
+        cfg.setObjectType(ConfigurationType.FOLDER);
+        cfg.setPath("/ProductDemo");
+        cfg.setRecursive(true);        
+        filter.getConfigurationItems().add(cfg);
+        return filter;
+    }
 }

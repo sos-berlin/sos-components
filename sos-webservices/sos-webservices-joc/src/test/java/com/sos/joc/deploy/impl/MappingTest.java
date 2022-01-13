@@ -337,4 +337,35 @@ public class MappingTest {
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createSetRootCaFilter()));
     }
 
+    @Test
+    public void test20RepositoryCopyToFilter () throws JsonProcessingException {
+        LOGGER.trace("Repository - CopyToFilter Example");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryCopyToFilter()));
+    }
+
+    @Test
+    public void test21RepositoryDeleteFromFilter () throws JsonProcessingException {
+        LOGGER.trace("Repository - DeleteFromFilter Example");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilter()));
+    }
+
+    @Test
+    public void test22RepositoryReadFromFilter () throws JsonProcessingException {
+        LOGGER.trace("Repository - ReadFromFilter Example");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryReadFromFilter(true)));
+    }
+
+    @Test
+    public void test23RepositoryResponseFolder () throws Exception {
+        LOGGER.trace("Repository - ResponseFolder Example");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createResponseFolder(getClass() ,true)));
+    }
+
+    
+    @Test
+    public void test24RepositoryUpdateFromFilter () throws JsonProcessingException {
+        LOGGER.trace("Repository - UpdateFromFilter Example");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilter()));
+    }
+
 }
