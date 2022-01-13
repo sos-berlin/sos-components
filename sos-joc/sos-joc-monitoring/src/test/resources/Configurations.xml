@@ -7,54 +7,56 @@
 		</MessageFragments>
 		<MonitorFragments>
 			<CommandFragment name="cmd_nagios">
-				<MessageRef ref="plain_message_on_error"/>
+				<MessageRef ref="plain_message_on_error" />
 				<Command><![CDATA[echo -e ${MESSAGE} | /usr/local/nagios/bin/send_nsca -H monitor_host -c /usr/local/nagios/etc/send_nsca.cfg]]></Command>
 			</CommandFragment>
-			<MailFragment name="mail" content_type="text/html" charset="ISO-8859-1" encoding="7bit" priority="Normal">
-				<MessageRef ref="html_message_on_error"/>
+			<MailFragment name="mail" content_type="text/html"
+				charset="ISO-8859-1" encoding="7bit" priority="Normal">
+				<MessageRef ref="html_message_on_error" />
 				<Subject><![CDATA[Subject ${SOME_VARIABLE}]]></Subject>
 				<To><![CDATA[info@sos-berlin.com]]></To>
 			</MailFragment>
 		</MonitorFragments>
-		<ObjectsFragments>
-			<Workflows name="set_1">
-				<Workflow name="my_workflow">
-					<WorkflowJob name="my_job_name" />
+		<ObjectFragments>
+			<Workflows name="set_1" controller_id="js7.x">
+				<Workflow path="/my_workflow">
+					<WorkflowJob name="my_job_name" label="my_job_label" criticality="NORMAL" return_code_from="0" return_code_to="0"/>
 				</Workflow>
-				<Workflow name="y"/>
+				<Workflow path="/y" />
 			</Workflows>
-			<Workflows name="set_2">
-				<Workflow name="my_workflow_x">
-					<WorkflowJob name="my_job_namex" criticality="CRITICAL" />
+			<Workflows name="set_2" controller_id="^j.*">
+				<Workflow path="/my_w.*">
+					<WorkflowJob name="^my_job_.*" criticality="NORMAL" />
+					<WorkflowJob name="^my_job_.*" criticality="CRITICAL" />
 				</Workflow>
-				<Workflow name="z"/>
+				<Workflow path="/z" />
 			</Workflows>
-		</ObjectsFragments>
+		</ObjectFragments>
 	</Fragments>
 	<Notifications>
-		<Notification type="ON_ERROR">
+		<Notification type="ERROR" notification_id="on_error">
 			<NotificationMonitors>
-				<CommandFragmentRef ref="cmd_nagios"/>
+				<CommandFragmentRef ref="cmd_nagios" />
 				<MailFragmentRef ref="mail">
 					<Subject><![CDATA[Example - Redefined subject]]></Subject>
 					<To><![CDATA[example_redefined_to@sos-berlin.com]]></To>
 				</MailFragmentRef>
 			</NotificationMonitors>
 			<NotificationObjects>
-				<WorkflowsRef ref="set_1"/>
-				<WorkflowsRef ref="set_1"/>
+				<WorkflowsRef ref="set_1" />
+				<WorkflowsRef ref="set_1" />
 			</NotificationObjects>
 		</Notification>
-		<Notification type="ALL">
+		<Notification type="SUCCESS" notification_id="on_success">
 			<NotificationMonitors>
-				<CommandFragmentRef ref="cmd_nagios"/>
+				<CommandFragmentRef ref="cmd_nagios" />
 				<MailFragmentRef ref="mail">
 					<Subject><![CDATA[Example - Redefined subject]]></Subject>
 					<To><![CDATA[example_redefined_to@sos-berlin.com]]></To>
 				</MailFragmentRef>
 			</NotificationMonitors>
 			<NotificationObjects>
-				<WorkflowsRef ref="set_2"/>
+				<WorkflowsRef ref="set_2" />
 			</NotificationObjects>
 		</Notification>
 	</Notifications>

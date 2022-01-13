@@ -3,7 +3,7 @@
 	<Appenders>
 		<!-- Appender for root logger -->
 		<Console name="stdout" target="SYSTEM_OUT">
-			<PatternLayout pattern="%d{ISO8601}{Europe/Berlin} %-5p %-16.16t %-44.70c{1.} - %m%n"/>
+			<PatternLayout pattern="%d{ISO8601}{Europe/Berlin} %-5p %c{1.}:%L - %m%n"/>
 		</Console>
 	</Appenders>
 

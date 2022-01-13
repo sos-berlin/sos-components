@@ -106,11 +106,12 @@ public class Configuration {
         List<Notification> result = new ArrayList<>();
         for (Notification n : source) {
             x: for (Workflow w : n.getWorkflows()) {
-                if (w.getPath().equals(AElement.ASTERISK) || w.getPath().matches(workflowPath)) {
-                    if (w.getControllerId().equals(AElement.ASTERISK) || w.getControllerId().matches(controllerId)) {
+                if (w.getPath().equals(AElement.ASTERISK) || (workflowPath != null && workflowPath.matches(w.getPath()))) {
+                    if (w.getControllerId().equals(AElement.ASTERISK) || (controllerId != null && controllerId.matches(w.getControllerId()))) {
                         if (w.getJobs().size() == 0) {
                             if (debug) {
-                                LOGGER.debug(String.format("[find][found][%s]workflowPath=%s match and 0 jobs", toString(n), w.getPath()));
+                                LOGGER.debug(String.format("[find][found][%s][workflowPath match and 0 jobs]configured path=%s, controller_id=%s",
+                                        toString(n), w.getPath(), w.getControllerId()));
                             }
                             if (includeEmptyWorkflows) {
                                 result.add(n);
@@ -118,14 +119,16 @@ public class Configuration {
                             break x;
                         } else if (analyzeJobs) {
                             for (WorkflowJob j : w.getJobs()) {
-                                if (j.getName().equals(AElement.ASTERISK) || j.getName().matches(jobName)) {
-                                    if (j.getLabel().equals(AElement.ASTERISK) || j.getLabel().matches(jobLabel)) {
+                                if (j.getName().equals(AElement.ASTERISK) || jobName.matches(j.getName())) {
+                                    if (j.getLabel().equals(AElement.ASTERISK) || (jobLabel != null && jobLabel.matches(j.getLabel()))) {
                                         if (j.getCriticality().equals(CriticalityType.ALL) || j.getCriticality().equals(WorkflowJob.getCriticality(
                                                 criticality))) {
-                                            if (j.getReturnCodeFrom() == -1 || returnCode >= j.getReturnCodeFrom()) {
+                                            if (j.getReturnCodeFrom() == -1 || (returnCode != null && returnCode >= j.getReturnCodeFrom())) {
                                                 if (j.getReturnCodeTo() == -1 || returnCode <= j.getReturnCodeTo()) {
-                                                    LOGGER.debug(String.format("[find][found][%s]workflowPath=%s, job match", toString(n), w
-                                                            .getPath()));
+                                                    LOGGER.debug(String.format(
+                                                            "[find][found][%s][job match][configured][workflow path=%s controller_id=%s][job]name=%s, label=%s, criticality=%s, return_code_from=%s, return_code_to=%s",
+                                                            toString(n), w.getPath(), w.getControllerId(), j.getName(), j.getLabel(), j
+                                                                    .getCriticality(), j.getReturnCodeFrom(), j.getReturnCodeTo()));
                                                     result.add(n);
                                                     break x;
                                                 } else if (debug) {
@@ -149,6 +152,9 @@ public class Configuration {
                                             .getName(), toString(n)));
                                 }
                             }
+                        } else if (debug) {
+                            LOGGER.debug(String.format("[find][skip][%s][wrong method usage][workflow current=%s, configured=%s]%s jobs configured",
+                                    toString(n), workflowPath, w.getPath(), w.getJobs().size()));
                         }
                     } else if (debug) {
                         LOGGER.debug(String.format("[find][skip][%s][controllerId not match]current=%s, configured=%s", toString(n), controllerId, w
