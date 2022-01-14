@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSSession;
@@ -21,7 +20,6 @@ import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSLdapSubject implements ISOSAuthSubject {
 
-   
     private SOSInternAuthSession session;
     private Boolean authenticated;
     private Map<String, List<String>> mapOfFolderPermissions;
@@ -71,7 +69,7 @@ public class SOSLdapSubject implements ISOSAuthSubject {
         getInternAuthSession().setAccessToken(accessToken);
     }
 
-    public void setPermissionAndRoles(List<String> listOfTokenRoles, String accountName, SOSIdentityService identityService)
+    public void setPermissionAndRoles(List<String> listOfLdapRoles, String accountName, SOSIdentityService identityService)
             throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -87,11 +85,13 @@ public class SOSLdapSubject implements ISOSAuthSubject {
                     setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
                 }
             } else {
-                setOfRoles.addAll(listOfTokenRoles);
+                if (listOfLdapRoles != null) {
+                    setOfRoles.addAll(listOfLdapRoles);
+                }
             }
-          
+
             setOfAccountPermissions = new HashSet<String>();
-            
+
             List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, accountName,
                     identityService.getIdentityServiceId());
             mapOfFolderPermissions = new HashMap<String, List<String>>();

@@ -1,17 +1,16 @@
 package com.sos.auth.ldap.classes;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
+import com.sos.auth.shiro.SOSLdapLoginUserName;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -29,12 +28,17 @@ public class SOSLdapWebserviceCredentials {
     private Long identityServiceId;
     private String ldapServerUrl;
     private String account;
+    private SOSLdapLoginUserName sosLdapLoginUserName;
+
     private String userDnTemplate;
     private String searchBase;
+    private String groupSearchBase;
+    private String groupSearchFilter;
     private String groupNameAttribute;
     private String userNameAttribute;
     private String userSearchFilter;
-    private String useStartTls;
+    private Boolean useStartTls;
+    private Boolean withHostnameVerification;
     private String securityProtocol;
     private Map<String, List<String>> groupRolesMap;
 
@@ -99,12 +103,20 @@ public class SOSLdapWebserviceCredentials {
         this.userSearchFilter = userSearchFilter;
     }
 
-    public String getUseStartTls() {
-        return useStartTls;
+    public String getGroupSearchBase() {
+        return groupSearchBase;
     }
 
-    public void setUseStartTls(String useStartTls) {
-        this.useStartTls = useStartTls;
+    public void setGroupSearchBase(String groupSearchBase) {
+        this.groupSearchBase = groupSearchBase;
+    }
+
+    public String getGroupSearchFilter() {
+        return groupSearchFilter;
+    }
+
+    public void setGroupSearchFilter(String groupSearchFilter) {
+        this.groupSearchFilter = groupSearchFilter;
     }
 
     public String getSecurityProtocol() {
@@ -113,6 +125,35 @@ public class SOSLdapWebserviceCredentials {
 
     public void setSecurityProtocol(String securityProtocol) {
         this.securityProtocol = securityProtocol;
+    }
+
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
+        sosLdapLoginUserName = new SOSLdapLoginUserName(account);
+    }
+
+    public SOSLdapLoginUserName getSosLdapLoginUserName() {
+        return sosLdapLoginUserName;
+    }
+
+    public Boolean getWithHostnameVerification() {
+        return withHostnameVerification;
+    }
+
+    public void setWithHostnameVerification(Boolean withHostnameVerification) {
+        this.withHostnameVerification = withHostnameVerification;
+    }
+
+    public void setUseStartTls(Boolean useStartTls) {
+        this.useStartTls = useStartTls;
+    }
+
+    public Boolean getUseStartTls() {
+        return useStartTls;
     }
 
     public Map<String, List<String>> getGroupRolesMap() {
@@ -164,6 +205,10 @@ public class SOSLdapWebserviceCredentials {
                     searchBase = getProperty(properties.getLdap().getExpert().getIamLdapSearchBase(), "");
                 }
 
+                if (groupSearchBase == null || groupSearchBase.isEmpty()) {
+                    groupSearchBase = getProperty(properties.getLdap().getExpert().getIamLdapGroupSearchBase(), "");
+                }
+
                 if (groupNameAttribute == null || groupNameAttribute.isEmpty()) {
                     groupNameAttribute = getProperty(properties.getLdap().getExpert().getIamLdapGroupNameAttribute(), "");
                 }
@@ -175,11 +220,16 @@ public class SOSLdapWebserviceCredentials {
                 if (userSearchFilter == null || userSearchFilter.isEmpty()) {
                     userSearchFilter = getProperty(properties.getLdap().getExpert().getIamLdapUserSearchFilter(), "");
                 }
-
-                if (useStartTls == null || useStartTls.isEmpty()) {
-                    useStartTls = getProperty(properties.getLdap().getExpert().getIamLdapUseStartTls(), "");
+                if (groupSearchFilter == null || groupSearchFilter.isEmpty()) {
+                    groupSearchFilter = getProperty(properties.getLdap().getExpert().getIamLdapGroupSearchFilter(), "");
                 }
 
+                if (useStartTls == null) {
+                    useStartTls = properties.getLdap().getExpert().getIamLdapUseStartTls();
+                }
+                if (withHostnameVerification == null) {
+                    withHostnameVerification = properties.getLdap().getExpert().getIamLdapHostNameVerification();
+                }
                 if (securityProtocol == null || securityProtocol.isEmpty()) {
                     securityProtocol = getProperty(properties.getLdap().getExpert().getIamLdapSecurityProtocol(), "");
                 }
@@ -200,12 +250,8 @@ public class SOSLdapWebserviceCredentials {
         }
     }
 
-    public String getAccount() {
-        return account;
-    }
-
-    public void setAccount(String account) {
-        this.account = account;
+    public boolean isSSL() {
+        return securityProtocol != null && "ssl".equalsIgnoreCase(securityProtocol);
     }
 
 }

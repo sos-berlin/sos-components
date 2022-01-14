@@ -1,5 +1,6 @@
 package com.sos.auth.ldap.classes;
 
+import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -10,7 +11,6 @@ import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.ldap.SOSLdapHandler;
-import com.sos.auth.sosintern.SOSInternAuthHandler;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -30,6 +30,7 @@ public class SOSLdapLogin implements ISOSLogin {
     public void login(String account, String pwd, HttpServletRequest httpServletRequest) {
         SOSHibernateSession sosHibernateSession = null;
 
+        SOSLdapHandler sosLdapHandler = new SOSLdapHandler();
         try {
 
             SOSLdapWebserviceCredentials sosLdapWebserviceCredentials = new SOSLdapWebserviceCredentials();
@@ -37,27 +38,32 @@ public class SOSLdapLogin implements ISOSLogin {
             sosLdapWebserviceCredentials.setAccount(account);
             sosLdapWebserviceCredentials.setValuesFromProfile(identityService);
 
-            SOSLdapHandler sosLdapHandler = new SOSLdapHandler();
-
             SOSAuthAccessToken sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials,pwd);
             sosLdapSubject = new SOSLdapSubject();
             if (sosAuthAccessToken == null) {
                 sosLdapSubject.setAuthenticated(false);
                 setMsg(sosLdapHandler.getMsg());
             } else {
+                sosLdapSubject.setPermissionAndRoles(sosLdapHandler.getGroupRolesMapping(sosLdapWebserviceCredentials),account,identityService);
                 sosLdapSubject.setAuthenticated(true);
-                sosLdapSubject.setPermissionAndRoles(null,account,identityService);
                 sosLdapSubject.setAccessToken(sosAuthAccessToken.getAccessToken());
             }
 
         } catch (SOSHibernateException e) {
             LOGGER.error("",e);
-         } finally {
+         } catch (NamingException e) {
+             LOGGER.error("",e);
+        } finally {
+             sosLdapHandler.close();
             Globals.disconnect(sosHibernateSession);
         }
 
     }
+    
+ 
+    
 
+  
     public void logout() {
 
     }

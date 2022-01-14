@@ -99,7 +99,7 @@ public class SOSLdapAuthorizing {
     private String substituteUserName(String source) {
         String s = String.format(source, sosLdapLoginUserName.getUserName());
         s = s.replaceAll("\\^s", "%s");
-        s = String.format(s, sosLdapLoginUserName.getLogin());
+        s = String.format(s, sosLdapLoginUserName.getLoginAccount());
         return s;
     }
 
@@ -133,7 +133,7 @@ public class SOSLdapAuthorizing {
         NamingEnumeration<SearchResult> answer = ldapContext.search(searchBase, searchFilter, searchCtls);
 
         if (!answer.hasMore()) {
-            LOGGER.warn(String.format("Cannot find user: %s with search filter %s and search base: %s ", sosLdapLoginUserName.getLogin(),
+            LOGGER.warn(String.format("Cannot find user: %s with search filter %s and search base: %s ", sosLdapLoginUserName.getLoginAccount(),
                     searchFilter, searchBase));
         } else {
             SearchResult result = answer.nextElement();
@@ -197,22 +197,22 @@ public class SOSLdapAuthorizing {
     }
 
     private void getRoleNamesForUser() throws Exception {
-        LOGGER.debug(String.format("Getting roles for user %s", sosLdapLoginUserName.getLogin()));
+        LOGGER.debug(String.format("Getting roles for user %s", sosLdapLoginUserName.getLoginAccount()));
         Ini ini = Globals.getIniFromSecurityManagerFactory();
         Section s = ini.getSection("users");
         HashMap<String, String> caseInsensitivUser = new HashMap<String, String>();
 
         if (s != null && sosLdapAuthorizingRealm.isRoleAssignmentFromIni_()) {
-            LOGGER.debug("reading roles for " + sosLdapLoginUserName.getLogin() + " from section [users]");
+            LOGGER.debug("reading roles for " + sosLdapLoginUserName.getLoginAccount() + " from section [users]");
             for (Map.Entry<String, String> entry : s.entrySet()) {
                 caseInsensitivUser.put(entry.getKey().toLowerCase(), entry.getValue());
             }
-            LOGGER.debug("reading roles for " + sosLdapLoginUserName.getLogin() + " from section [users]");
-            if (!addRolesFromUserSection(caseInsensitivUser, sosLdapLoginUserName.getLogin())) {
-                LOGGER.debug("... not found: reading roles for " + sosLdapLoginUserName.getLogin() + " from section [users]");
-                if (sosLdapLoginUserName.getAlternateLogin() != null) {
-                    if (!addRolesFromUserSection(caseInsensitivUser, sosLdapLoginUserName.getAlternateLogin()))
-                        LOGGER.debug("... not found: reading roles for " + sosLdapLoginUserName.getAlternateLogin() + " from section [users]");
+            LOGGER.debug("reading roles for " + sosLdapLoginUserName.getLoginAccount() + " from section [users]");
+            if (!addRolesFromUserSection(caseInsensitivUser, sosLdapLoginUserName.getLoginAccount())) {
+                LOGGER.debug("... not found: reading roles for " + sosLdapLoginUserName.getLoginAccount() + " from section [users]");
+                if (sosLdapLoginUserName.getAlternateLoginAccount() != null) {
+                    if (!addRolesFromUserSection(caseInsensitivUser, sosLdapLoginUserName.getAlternateLoginAccount()))
+                        LOGGER.debug("... not found: reading roles for " + sosLdapLoginUserName.getAlternateLoginAccount() + " from section [users]");
                 }
             }
         }
@@ -229,7 +229,7 @@ public class SOSLdapAuthorizing {
                     sosLdapLoginUserName.setUserName(user.get(sosLdapAuthorizingRealm.getUserNameAttribute()).get().toString());
                 }
             } else {
-                LOGGER.info("using the username from login: " + sosLdapLoginUserName.getLogin());
+                LOGGER.info("using the username from login: " + sosLdapLoginUserName.getLoginAccount());
             }
         }
         LOGGER.debug("userPrincipalName: " + sosLdapLoginUserName.getUserName());

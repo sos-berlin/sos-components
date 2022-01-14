@@ -1,7 +1,8 @@
 package com.sos.joc.annotation;
 
-import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 import javax.ws.rs.NameBinding;
 
 /**
