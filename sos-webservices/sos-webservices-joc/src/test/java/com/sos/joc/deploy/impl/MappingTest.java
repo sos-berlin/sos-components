@@ -13,6 +13,7 @@ import javax.persistence.TemporalType;
 import org.hibernate.query.Query;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
@@ -345,8 +346,8 @@ public class MappingTest {
 
     @Test
     public void test21RepositoryDeleteFromFilter () throws JsonProcessingException {
-        LOGGER.trace("Repository - DeleteFromFilter Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilter()));
+        LOGGER.info("Repository - DeleteFromFilter Example");
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilter()));
     }
 
     @Test
@@ -361,7 +362,7 @@ public class MappingTest {
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createResponseFolder(getClass() ,true)));
     }
 
-    
+    @Ignore
     @Test
     public void test24RepositoryUpdateFromFilter () throws JsonProcessingException {
         LOGGER.trace("Repository - UpdateFromFilter Example");

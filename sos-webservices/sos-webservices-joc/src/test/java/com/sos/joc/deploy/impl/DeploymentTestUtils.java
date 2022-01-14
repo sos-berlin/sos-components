@@ -733,12 +733,13 @@ public class DeploymentTestUtils {
     public static DeleteFromFilter createRepositoryDeleteFromFilter () throws JsonProcessingException {
         DeleteFromFilter filter = new DeleteFromFilter();
         filter.setAuditLog(null);
-        Config draft = new Config();
+        Config config = new Config();
         Configuration cfg = new Configuration();
         cfg.setObjectType(ConfigurationType.FOLDER);
         cfg.setPath("/ProductDemo");
         cfg.setRecursive(true);
-        filter.getDraftConfigurations().add(draft);
+        config.setConfiguration(cfg);
+        filter.getConfigurations().add(config);
         return filter;
     }
 
@@ -749,7 +750,7 @@ public class DeploymentTestUtils {
         return filter;
     }
     
-    public static ResponseFolder createResponseFolder(Class clazz, boolean recursive) throws Exception {
+    public static ResponseFolder createResponseFolder(Class<?> clazz, boolean recursive) throws Exception {
         Path repositories = Paths.get(clazz.getResource("/joc/repositories").toURI());
         Path repository = Paths.get(clazz.getResource("/joc/repositories/apple").toURI());
         TreeSet<java.nio.file.Path> repoTree = RepositoryUtil.readRepositoryAsTreeSet(repository);
