@@ -133,13 +133,16 @@ public class RepositoryTest {
         Path repositoriesRelative = Paths.get("/repositories");
         Path pathStartsWithSlash = Paths.get("/ProductDemo");
         Path pathNotStartsWithSlash = Paths.get("ProductDemo");
-        LOGGER.info("absolute Path repositories: " + repositoriesAbsolute.toString());
+        LOGGER.info("absolute Path of repositories: " + repositoriesAbsolute.toString());
+        LOGGER.info("relative Path of repositories: " + repositoriesRelative.toString());
         LOGGER.info("Sub Path starting with slash: " + pathStartsWithSlash.toString());
         LOGGER.info("Sub Path not starting with slash: " + pathNotStartsWithSlash.toString());
         LOGGER.info("resolved path with slash:");
-        LOGGER.info(repositoriesAbsolute.resolve(pathStartsWithSlash).toString());
+        LOGGER.info("absolute: " + repositoriesAbsolute.resolve(pathStartsWithSlash).toString());
+        LOGGER.info("relative: " + repositoriesRelative.resolve(pathStartsWithSlash).toString());
         LOGGER.info("resolved path without slash:");
-        LOGGER.info(repositoriesAbsolute.resolve(pathNotStartsWithSlash).toString());
+        LOGGER.info("absolute: " + repositoriesAbsolute.resolve(pathNotStartsWithSlash).toString());
+        LOGGER.info("relative: " + repositoriesRelative.resolve(pathNotStartsWithSlash).toString());
         LOGGER.info("**************************  Test 05 - resolve finished  *****************************");
    }
     

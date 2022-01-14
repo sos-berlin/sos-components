@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.codec.Charsets;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -46,6 +48,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.repository.CopyToFilter;
+import com.sos.joc.model.publish.repository.DeleteFromFilter;
 import com.sos.joc.model.publish.repository.ResponseFolder;
 import com.sos.joc.model.publish.repository.ResponseFolderItem;
 import com.sos.joc.model.tree.Tree;
@@ -56,9 +59,9 @@ import com.sos.joc.publish.util.PublishUtils;
 
 public abstract class RepositoryUtil {
 
-    // private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryUtil.class);
+     private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryUtil.class);
 //    private static final CopyOption[] COPYOPTIONS = new StandardCopyOption[] { StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING };
-    private static final OpenOption OPENOPTIONS = StandardOpenOption.TRUNCATE_EXISTING;
+    private static final OpenOption[] OPENOPTIONS = new StandardOpenOption[] { StandardOpenOption.TRUNCATE_EXISTING,StandardOpenOption.CREATE};
 
     public static Path getPathWithExtension(Configuration cfg) {
         switch (cfg.getObjectType()) {
@@ -311,9 +314,9 @@ public abstract class RepositoryUtil {
         }
     }
     
-    public static Set<ConfigurationObject> getDeployableEnvIndependentConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, String commitId)
-            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
-            SOSHibernateException {
+    public static Set<ConfigurationObject> getDeployableEnvIndependentConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer,
+            String commitId) throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, 
+        DBMissingDataException, IOException, SOSHibernateException {
         Set<Integer> types = new HashSet<Integer>();
         types.add(ConfigurationType.WORKFLOW.intValue());
         types.add(ConfigurationType.JOBCLASS.intValue());
@@ -323,19 +326,51 @@ public abstract class RepositoryUtil {
         return getDeployableConfigurationsFromDB(filter, dbLayer, commitId, types);
     }
 
-    public static Set<ConfigurationObject> getDeployableEnvRelatedConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, String commitId)
-            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
-            SOSHibernateException {
+    public static Set<ConfigurationObject> getDeployableEnvRelatedConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, 
+            String commitId) throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, 
+        DBMissingDataException, IOException, SOSHibernateException {
         Set<Integer> types = new HashSet<Integer>();
         types.add(ConfigurationType.JOBRESOURCE.intValue());
         return getDeployableConfigurationsFromDB(filter, dbLayer, commitId, types);
     }
 
-    public static Set<ConfigurationObject> getReleasableConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer) throws DBConnectionRefusedException,
+    public static Set<Path> getRelativePathsToDeleteFromDB(DeleteFromFilter filter, DBLayerDeploy dbLayer) throws DBConnectionRefusedException,
             DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException, SOSHibernateException {
+        if (filter != null && !filter.getConfigurations().isEmpty()) {
+            Set<Configuration> folders = filter.getConfigurations().stream()
+                    .filter(cfg -> ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
+                    .map(config -> config.getConfiguration()).collect(Collectors.toSet());
+            Set<Configuration> configurations = filter.getConfigurations().stream()
+                    .filter(cfg -> !ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
+                    .map(config -> config.getConfiguration()).collect(Collectors.toSet());
+            Map<String, ConfigurationType> result = configurations.stream()
+                    .collect(Collectors.toMap(Configuration::getPath, Configuration::getObjectType));
+            if (!folders.isEmpty()) {
+                Set<DBItemInventoryConfiguration> dbItemConfigurations = new HashSet<DBItemInventoryConfiguration>();
+                folders.stream().map(folder -> dbItemConfigurations.addAll(
+                        dbLayer.getAllInventoryConfigurationsByFolder(folder.getPath(), folder.getRecursive())));
+                if (!dbItemConfigurations.isEmpty()) {
+                    result.putAll(dbItemConfigurations.stream().collect(
+                            Collectors.toMap(DBItemInventoryConfiguration::getPath, DBItemInventoryConfiguration::getTypeAsEnum)));
+                }
+            }
+            return result.entrySet().stream().map(entry -> {
+                if (entry.getKey().startsWith("/")) {
+                    return Paths.get(entry.getKey().substring(1) + getExtension(entry.getValue()));
+                } else {
+                    return Paths.get(entry.getKey() + getExtension(entry.getValue()));
+                }
+            }).collect(Collectors.toSet());
+        }
+        return Collections.emptySet();
+    }
+
+    public static Set<ConfigurationObject> getReleasableConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer) 
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
+            IOException, SOSHibernateException {
         Map<String, ConfigurationObject> allObjectsMap = new HashMap<String, ConfigurationObject>();
         // TODO: add missing JobResources
-        if (filter != null) {
+        if (filter != null && filter.getEnvRelated() != null) {
             if (filter.getEnvRelated().getReleasedConfigurations() != null && !filter.getEnvRelated().getReleasedConfigurations().isEmpty()) {
                 List<Configuration> releasedFolders = filter.getEnvRelated().getReleasedConfigurations().stream()
                         .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
@@ -379,7 +414,7 @@ public abstract class RepositoryUtil {
         return withoutDuplicates;
     }
 
-    public static void writeToRepository(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, DBLayerDeploy dbLayer)
+    public static void writeToRepository(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, Path repo)
             throws IOException {
         String content = null;
         if (deployables != null && !deployables.isEmpty()) {
@@ -411,7 +446,7 @@ public abstract class RepositoryUtil {
                     content = Globals.prettyPrintObjectMapper.writeValueAsString(deployable.getConfiguration());
                     String filename = deployable.getPath().substring(1).concat(extension);
                     byte[] contentBytes = content.getBytes();
-                    Files.write(Paths.get(filename), contentBytes, OPENOPTIONS);
+                    Files.write(repo.resolve(Paths.get(filename)), contentBytes, OPENOPTIONS);
                 }
             }
         }
@@ -437,8 +472,69 @@ public abstract class RepositoryUtil {
                     content = Globals.prettyPrintObjectMapper.writeValueAsString(releasable.getConfiguration());
                     String filename = releasable.getPath().substring(1).concat(extension);
                     byte[] contentBytes = content.getBytes();
-                    Files.write(Paths.get(filename), contentBytes, OPENOPTIONS);
+                    Files.write(repo.resolve(Paths.get(filename)), contentBytes, OPENOPTIONS);
                 }
+            }
+        }
+    }
+
+    public static void deleteFromRepository(Set<ConfigurationObject> toDelete, Path repositories)
+            throws IOException {
+        Set<String> foldersToDelete = new HashSet<String>();
+        if (toDelete != null && !toDelete.isEmpty()) {
+            for (ConfigurationObject cfg : toDelete) {
+                String extension = null;
+                switch (cfg.getObjectType()) {
+                case WORKFLOW:
+                    extension = ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                    break;
+                case JOBRESOURCE:
+                    extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
+                    break;
+                case LOCK:
+                    extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
+                    break;
+                case NOTICEBOARD:
+                    extension = ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.toString();
+                    break;
+                case JOBCLASS:
+                    extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
+                    break;
+                case FILEORDERSOURCE:
+                    extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
+                    break;
+                case SCHEDULE:
+                    extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
+                    break;
+                case INCLUDESCRIPT:
+                    extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
+                    break;
+                case WORKINGDAYSCALENDAR:
+                case NONWORKINGDAYSCALENDAR:
+                    extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
+                    break;
+                case FOLDER:
+                    break;
+                default:
+                    break;
+                }
+                if (extension != null) {
+                    String filename = cfg.getPath().substring(1).concat(extension);
+                    Files.deleteIfExists(repositories.resolve(Paths.get(filename)));
+                } else if (ConfigurationType.FOLDER.equals(cfg.getObjectType())){
+                    String filename = cfg.getPath().substring(1);
+                    foldersToDelete.add(filename);
+                }
+            }
+            if (!foldersToDelete.isEmpty()) {
+                foldersToDelete.stream().forEach(folder -> {
+                    try {
+                        Files.deleteIfExists(repositories.resolve(Paths.get(folder)));
+                    } catch (IOException e) {
+                        LOGGER.debug("Could not delete folder : " + folder);
+                    }
+                });
+                
             }
         }
     }
@@ -447,8 +543,8 @@ public abstract class RepositoryUtil {
             Set<Integer> types) throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, 
             DBMissingDataException, IOException, SOSHibernateException {
         Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
-        if (filter != null) {
-            if (filter.getEnvIndependent() != null && !filter.getEnvIndependent().getDeployConfigurations().isEmpty()) {
+        if (filter != null && filter.getEnvIndependent() != null) {
+            if (!filter.getEnvIndependent().getDeployConfigurations().isEmpty()) {
                 Set<Configuration> depFolders = filter.getEnvIndependent().getDeployConfigurations().stream()
                         .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                         .map(item -> item.getConfiguration()).collect(Collectors.toSet());
@@ -478,7 +574,7 @@ public abstract class RepositoryUtil {
                         });
                 }
             }
-            if (filter.getEnvIndependent() != null && !filter.getEnvIndependent().getDraftConfigurations().isEmpty()) {
+            if (!filter.getEnvIndependent().getDraftConfigurations().isEmpty()) {
                 List<Configuration> draftFolders = filter.getEnvIndependent().getDraftConfigurations().stream()
                         .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                         .map(item -> item.getConfiguration()).collect(Collectors.toList());
@@ -515,8 +611,8 @@ public abstract class RepositoryUtil {
         return configurations;
     }
 
-    private static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFoldersByType(Set<Configuration> folders, Set<Integer> types,
-            DBLayerDeploy dbLayer) {
+    private static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFoldersByType(Set<Configuration> folders,
+            Set<Integer> types, DBLayerDeploy dbLayer) {
         ConcurrentMap<String, Optional<DBItemDeploymentHistory>> groupedEntries = 
                 folders.parallelStream().map(item -> dbLayer.getDepHistoryItemsFromFolderByType(item.getPath(), types, item.getRecursive()))
                     .flatMap(List::stream).collect(

@@ -1,5 +1,6 @@
 package com.sos.joc.publish.repository.impl;
 
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
@@ -25,9 +26,10 @@ import com.sos.joc.publish.repository.resource.IRepositoryStore;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.schema.JsonValidator;
 
+@javax.ws.rs.Path("inventory/repository")
 public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryStore {
 
-    private static final String API_CALL = "./inventory/deployment/revoke";
+    private static final String API_CALL = "./inventory/repository/store";
     private static final Logger LOGGER = LoggerFactory.getLogger(RevokeImpl.class);
 
     @Override
@@ -45,19 +47,20 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
             }
             DBItemJocAuditLog dbAudit = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+            Path repositories = Globals.sosCockpitProperties.resolvePath("repositories");
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            Set<ConfigurationObject> deployables = null;
-            Set<ConfigurationObject> releasables = null;
-            deployables = RepositoryUtil.getDeployableEnvIndependentConfigurationsFromDB(filter, dbLayer, null);
+            Set<ConfigurationObject> deployables = RepositoryUtil.getDeployableEnvIndependentConfigurationsFromDB(filter, dbLayer, null);
             deployables.addAll(RepositoryUtil.getDeployableEnvRelatedConfigurationsFromDB(filter, dbLayer, null));
             deployables = deployables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
-            releasables = RepositoryUtil.getReleasableConfigurationsFromDB(filter, dbLayer);
+            Set<ConfigurationObject> releasables = RepositoryUtil.getReleasableConfigurationsFromDB(filter, dbLayer);
             releasables = releasables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
+            // TODO: clarify whether to create auditLog Detail entries
 //            final Stream<ConfigurationObject> stream = Stream.concat(deployables.stream(), releasables.stream());
 //            CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(stream.map(i -> new AuditLogDetail(i.getPath(), i.getObjectType().intValue())),
 //                    dbAudit.getId(), dbAudit.getCreated()));
-            RepositoryUtil.writeToRepository(deployables, releasables, dbLayer);
+            RepositoryUtil.writeToRepository(deployables, releasables, repositories);
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.info("*** store to repository finished ***" + apiCallFinished);
             LOGGER.info("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");

@@ -261,8 +261,19 @@ public class DBLayerDeploy {
             throw new DBInvalidDataException(ex);
         }
     }
-
     public List<DBItemInventoryConfiguration> getInventoryConfigurationsByFolder(String folder, boolean recursive)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        return getInventoryConfigurationsByFolder(folder, JocInventory.getDeployableTypes(), recursive);
+    }
+
+    public List<DBItemInventoryConfiguration> getAllInventoryConfigurationsByFolder(String folder, boolean recursive)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        Set<Integer> types = JocInventory.getDeployableTypes();
+        types.addAll(JocInventory.getReleasableTypes());
+        return getInventoryConfigurationsByFolder(folder, types, recursive);
+    }
+
+    private List<DBItemInventoryConfiguration> getInventoryConfigurationsByFolder(String folder, Set<Integer> types, boolean recursive)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -276,7 +287,7 @@ public class DBLayerDeploy {
                 sql.append(" and folder = :folder");
             }
             Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
-            query.setParameterList("types", JocInventory.getDeployableTypes());
+            query.setParameterList("types", types);
             if (recursive) {
                 if (!"/".equals(folder)) {
                     query.setParameter("folder", folder);
@@ -812,11 +823,16 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(CopyToFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        List<Configuration> configurations = filter.getEnvIndependent().getDraftConfigurations().stream()
-                .map(item -> item.getConfiguration()).collect(Collectors.toList());
-        configurations.addAll(filter.getEnvRelated().getDraftConfigurations().stream()
-                .filter(item -> ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
-                .map(item -> item.getConfiguration()).collect(Collectors.toList()));
+        List<Configuration> configurations = new ArrayList<Configuration>();
+        if (filter.getEnvIndependent() != null) {
+            configurations.addAll(filter.getEnvIndependent().getDraftConfigurations().stream()
+                    .map(item -> item.getConfiguration()).collect(Collectors.toList()));
+        }
+        if (filter.getEnvRelated() != null) {
+            configurations.addAll(filter.getEnvRelated().getDraftConfigurations().stream()
+                    .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
+                    .map(item -> item.getConfiguration()).collect(Collectors.toList()));
+        }
         if (!configurations.isEmpty()) {
             return getFilteredInventoryConfiguration(configurations);
         } else {
@@ -837,9 +853,12 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryConfiguration> getFilteredReleasableConfigurations(CopyToFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        List<Configuration> configurations = filter.getEnvRelated().getDraftConfigurations().stream()
-                .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
-                .map(item -> item.getConfiguration()).collect(Collectors.toList());
+        List<Configuration> configurations = Collections.emptyList();
+        if (filter.getEnvRelated() != null) {
+            configurations = filter.getEnvRelated().getDraftConfigurations().stream()
+                    .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
+                    .map(item -> item.getConfiguration()).collect(Collectors.toList());
+        }
         if (!configurations.isEmpty()) {
             return getFilteredInventoryConfiguration(configurations);
         } else {
@@ -860,9 +879,12 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfigurations(CopyToFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        List<Configuration> configurations = filter.getEnvRelated().getReleasedConfigurations().stream()
-                .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
-                .map(item -> item.getConfiguration()).collect(Collectors.toList());
+        List<Configuration> configurations = Collections.emptyList();
+        if (filter.getEnvRelated() != null) {
+            configurations = filter.getEnvRelated().getReleasedConfigurations().stream()
+                    .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
+                    .map(item -> item.getConfiguration()).collect(Collectors.toList());
+        }
         if (!configurations.isEmpty()) {
             return getFilteredReleasedConfiguration(configurations);
         } else {
@@ -893,12 +915,17 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemDeploymentHistory> getFilteredDeployments(CopyToFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
-        List<Configuration> configurations = filter.getEnvIndependent().getDeployConfigurations().stream()
-                .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                .map(item -> item.getConfiguration()).collect(Collectors.toList());
-        configurations.addAll(filter.getEnvRelated().getDeployConfigurations().stream()
-                .filter(item -> ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
-                .map(item -> item.getConfiguration()).collect(Collectors.toList()));
+        List<Configuration> configurations = new ArrayList<Configuration>();
+        if (filter.getEnvIndependent() != null) {
+            configurations = filter.getEnvIndependent().getDeployConfigurations().stream()
+                    .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                    .map(item -> item.getConfiguration()).collect(Collectors.toList());
+        }
+        if (filter.getEnvRelated() != null) {
+            configurations.addAll(filter.getEnvRelated().getDeployConfigurations().stream()
+                    .filter(item -> ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
+                    .map(item -> item.getConfiguration()).collect(Collectors.toList()));
+        }
         if (!configurations.isEmpty()) {
             return getFilteredDeploymentHistory(configurations);
         } else {
