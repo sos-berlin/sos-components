@@ -356,13 +356,13 @@ public class MappingTest {
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryReadFromFilter(true)));
     }
 
+    @Ignore
     @Test
     public void test23RepositoryResponseFolder () throws Exception {
         LOGGER.trace("Repository - ResponseFolder Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createResponseFolder(getClass() ,true)));
     }
 
-    @Ignore
     @Test
     public void test24RepositoryUpdateFromFilter () throws JsonProcessingException {
         LOGGER.trace("Repository - UpdateFromFilter Example");
