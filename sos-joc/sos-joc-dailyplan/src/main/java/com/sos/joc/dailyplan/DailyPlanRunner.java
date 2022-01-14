@@ -833,12 +833,12 @@ public class DailyPlanRunner extends TimerTask {
             item.setControllerId(controllerId);
             item.setSubmissionForDate(dailyPlanDate);
             item.setUserAccount(settings.getUserAccount());
+            item.setCreated(settings.getSubmissionTime());
 
             session = Globals.createSosHibernateStatelessConnection("addDailyPlanSubmission");
             session.setAutoCommit(false);
-            DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
             Globals.beginTransaction(session);
-            dbLayer.storeSubmission(item, settings.getSubmissionTime());
+            session.save(item);
             Globals.commit(session);
 
             return item;

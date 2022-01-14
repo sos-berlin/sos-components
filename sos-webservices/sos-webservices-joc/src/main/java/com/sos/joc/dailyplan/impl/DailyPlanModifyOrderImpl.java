@@ -29,6 +29,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSException;
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
@@ -123,6 +124,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             Either<List<Err419>, OrderIdMap> result = OrdersHelper.cancelAndAddFreshOrder(tempOrderIds, in, accessToken, getJocError(), auditlog
                     .getId(), folderPermissions);
 
+            boolean isDebugEnabled = LOGGER.isDebugEnabled();
             if (!orderIds.isEmpty()) {
                 setSettings();
                 List<String> newOrderIds = new ArrayList<String>();
@@ -133,15 +135,18 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 DBItemDailyPlanOrder cyclicItem = null;
                 for (String orderId : orderIds) {
                     cyclicItem = addCyclicOrderIds(newOrderIds, orderId, in.getControllerId());
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][cyclicItem]%s", in.getControllerId(), orderId, SOSHibernate.toString(cyclicItem)));
+                    }
                 }
 
-                if (cyclicItem != null && cyclicItem.getStartMode() == 1 && in.getCycle() != null) {
+                if (in.getCycle() != null && cyclicItem != null && cyclicItem.getStartMode() == 1) {
                     recreateCyclicOrder(in, newOrderIds, cyclicItem, auditlog);
                 } else {
                     modifyOrder(in, newOrderIds, accessToken, auditlog);
                 }
             }
-            
+
             if (result.isLeft()) {
                 return JOCDefaultResponse.responseStatus419(result.getLeft());
             } else {
@@ -159,27 +164,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
-    private Calendar getCalendarById(Long id) throws JsonParseException, JsonMappingException, SOSHibernateException, IOException {
-
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[getCalendarById]");
-            DBLayerReleasedConfigurations dbLayer = new DBLayerReleasedConfigurations(session);
-            DBItemInventoryReleasedConfiguration config = dbLayer.getReleasedConfiguration(id);
-            if (config == null) {
-                throw new DBMissingDataException(String.format("calendar '%s' not found", id));
-            }
-
-            Calendar calendar = new ObjectMapper().readValue(config.getContent(), Calendar.class);
-            calendar.setName(config.getName());
-            calendar.setPath(config.getPath());
-            return calendar;
-        } finally {
-            Globals.disconnect(session);
-        }
-
-    }
-
     private void recreateCyclicOrder(DailyPlanModifyOrder in, List<String> orderIds, final DBItemDailyPlanOrder item, DBItemJocAuditLog auditlog)
             throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
@@ -189,7 +173,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             final Long oldSubmissionId = item.getSubmissionHistoryId();
 
             LOGGER.debug("recreateCyclicOrder");
-            
+
             // remove not submitted
             removeCyclicOrder(in, controllerId, oldSubmissionId, orderIds, false);
 
@@ -232,7 +216,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         SOSHibernateSession session = null;
         try {
             LOGGER.debug("removeCyclicOrder");
-            
+
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setOrderIds(orderIds);
             filter.setSubmitted(submitted);
@@ -273,7 +257,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
 
         LOGGER.debug("executeRecreateCyclicOrder");
-        
+
         try {
             setSettings();
 
@@ -339,13 +323,32 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
+    private Calendar getCalendarById(Long id) throws JsonParseException, JsonMappingException, SOSHibernateException, IOException {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[getCalendarById]");
+            DBLayerReleasedConfigurations dbLayer = new DBLayerReleasedConfigurations(session);
+            DBItemInventoryReleasedConfiguration config = dbLayer.getReleasedConfiguration(id);
+            if (config == null) {
+                throw new DBMissingDataException(String.format("calendar '%s' not found", id));
+            }
+
+            Calendar calendar = new ObjectMapper().readValue(config.getContent(), Calendar.class);
+            calendar.setName(config.getName());
+            calendar.setPath(config.getPath());
+            return calendar;
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+
     private void submitOrdersToController(List<DBItemDailyPlanOrder> items) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, IOException, ParseException, SOSException, URISyntaxException,
             InterruptedException, ExecutionException, TimeoutException {
 
         LOGGER.debug("submitOrdersToController");
-        
+
         if (items.size() > 0) {
             DailyPlanSettings settings = new DailyPlanSettings();
             settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
@@ -363,7 +366,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             throws SOSHibernateException, IOException {
 
         LOGGER.debug("updateVariables");
-        
+
         DBLayerOrderVariables dbLayer = new DBLayerOrderVariables(session);
 
         DBItemDailyPlanVariable item = dbLayer.getOrderVariable(plannedOrder.getControllerId(), plannedOrder.getOrderId(), plannedOrder.isCyclic());
@@ -465,7 +468,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             URISyntaxException, InterruptedException, ExecutionException, IOException, ParseException, TimeoutException {
 
         LOGGER.debug("modifyOrder");
-        
+
         SOSHibernateSession session = null;
         try {
             final String dailyPlanDate = in.getDailyPlanDate();
@@ -586,7 +589,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
     private DBItemDailyPlanSubmission newSubmission(String controllerId, Date scheduleForDate) throws ParseException {
         LOGGER.debug("newSubmission");
-        
+
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date dateWithoutTime = sdf.parse(sdf.format(scheduleForDate));
 
