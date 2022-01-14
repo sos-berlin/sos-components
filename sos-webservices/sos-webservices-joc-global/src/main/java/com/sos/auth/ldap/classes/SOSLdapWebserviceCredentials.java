@@ -1,6 +1,7 @@
 package com.sos.auth.ldap.classes;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.model.security.LdapGroupRolesMappingItem;
 
 public class SOSLdapWebserviceCredentials {
 
@@ -34,7 +36,7 @@ public class SOSLdapWebserviceCredentials {
     private String userSearchFilter;
     private String useStartTls;
     private String securityProtocol;
-    private Map<String, String> groupRolesMap;
+    private Map<String, List<String>> groupRolesMap;
 
     public Long getIdentityServiceId() {
         return identityServiceId;
@@ -113,11 +115,11 @@ public class SOSLdapWebserviceCredentials {
         this.securityProtocol = securityProtocol;
     }
 
-    public Map<String, String> getGroupRolesMap() {
+    public Map<String, List<String>> getGroupRolesMap() {
         return groupRolesMap;
     }
 
-    public void setGroupRolesMap(Map<String, String> groupRolesMap) {
+    public void setGroupRolesMap(Map<String, List<String>> groupRolesMap) {
         this.groupRolesMap = groupRolesMap;
     }
 
@@ -151,40 +153,43 @@ public class SOSLdapWebserviceCredentials {
                         com.sos.joc.model.security.Properties.class);
 
                 if (ldapServerUrl == null || ldapServerUrl.isEmpty()) {
-                    ldapServerUrl = getProperty(properties.getLdap().getIamLdapServerUrl(), "http://localhost:389");
+                    ldapServerUrl = getProperty(properties.getLdap().getExpert().getIamLdapServerUrl(), "http://localhost:389");
                 }
 
                 if (userDnTemplate == null || userDnTemplate.isEmpty()) {
-                    userDnTemplate = getProperty(properties.getLdap().getIamLdapUserDnTemplate(), "{0}");
+                    userDnTemplate = getProperty(properties.getLdap().getExpert().getIamLdapUserDnTemplate(), "{0}");
                 }
 
                 if (searchBase == null || searchBase.isEmpty()) {
-                    searchBase = getProperty(properties.getLdap().getIamLdapSearchBase(), "");
+                    searchBase = getProperty(properties.getLdap().getExpert().getIamLdapSearchBase(), "");
                 }
 
                 if (groupNameAttribute == null || groupNameAttribute.isEmpty()) {
-                    groupNameAttribute = getProperty(properties.getLdap().getIamLdapGroupNameAttribute(), "");
+                    groupNameAttribute = getProperty(properties.getLdap().getExpert().getIamLdapGroupNameAttribute(), "");
                 }
 
                 if (userNameAttribute == null || userNameAttribute.isEmpty()) {
-                    userNameAttribute = getProperty(properties.getLdap().getIamLdapUserNameAttribute(), "");
+                    userNameAttribute = getProperty(properties.getLdap().getExpert().getIamLdapUserNameAttribute(), "");
                 }
 
                 if (userSearchFilter == null || userSearchFilter.isEmpty()) {
-                    userSearchFilter = getProperty(properties.getLdap().getIamLdapUserSearchFilter(), "");
+                    userSearchFilter = getProperty(properties.getLdap().getExpert().getIamLdapUserSearchFilter(), "");
                 }
 
                 if (useStartTls == null || useStartTls.isEmpty()) {
-                    useStartTls = getProperty(properties.getLdap().getIamLdapUseStartTls(), "");
+                    useStartTls = getProperty(properties.getLdap().getExpert().getIamLdapUseStartTls(), "");
                 }
 
                 if (securityProtocol == null || securityProtocol.isEmpty()) {
-                    securityProtocol = getProperty(properties.getLdap().getIamLdapSecurityProtocol(), "");
+                    securityProtocol = getProperty(properties.getLdap().getExpert().getIamLdapSecurityProtocol(), "");
                 }
-                if (groupRolesMap == null && false) {
-                    groupRolesMap = new HashMap<String, String>();
-                    for (Entry<String, Object> entry : properties.getLdap().getIamLdapGroupRolesMap().getAdditionalProperties().entrySet()) {
-                        groupRolesMap.put(entry.getKey(), (String) entry.getValue());
+                if (groupRolesMap == null) {
+                    if (properties.getLdap().getExpert().getIamLdapGroupRolesMap() != null && properties.getLdap().getExpert()
+                            .getIamLdapGroupRolesMap().getItems() != null) {
+                        groupRolesMap = new HashMap<String, List<String>>();
+                        for (LdapGroupRolesMappingItem entry : properties.getLdap().getExpert().getIamLdapGroupRolesMap().getItems()) {
+                            groupRolesMap.put(entry.getLdapGroupDn(), entry.getRoles());
+                        }
                     }
                 }
             }
@@ -193,7 +198,6 @@ public class SOSLdapWebserviceCredentials {
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-
     }
 
     public String getAccount() {

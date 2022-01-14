@@ -22,18 +22,27 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "iamLdapUrl"
+    "simple",
+    "expert"
 })
 public class LdapProperties {
 
     /**
-     * string without < and >
+     * Ldap Properties
      * <p>
      * 
      * 
      */
-    @JsonProperty("iamLdapUrl")
-    private String iamLdapUrl;
+    @JsonProperty("simple")
+    private LdapSimpleProperties simple;
+    /**
+     * Ldap Properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("expert")
+    private LdapExpertProperties expert;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -46,33 +55,57 @@ public class LdapProperties {
 
     /**
      * 
-     * @param iamLdapUrl
+     * @param expert
+     * @param simple
      */
-    public LdapProperties(String iamLdapUrl) {
+    public LdapProperties(LdapSimpleProperties simple, LdapExpertProperties expert) {
         super();
-        this.iamLdapUrl = iamLdapUrl;
+        this.simple = simple;
+        this.expert = expert;
     }
 
     /**
-     * string without < and >
+     * Ldap Properties
      * <p>
      * 
      * 
      */
-    @JsonProperty("iamLdapUrl")
-    public String getIamLdapUrl() {
-        return iamLdapUrl;
+    @JsonProperty("simple")
+    public LdapSimpleProperties getSimple() {
+        return simple;
     }
 
     /**
-     * string without < and >
+     * Ldap Properties
      * <p>
      * 
      * 
      */
-    @JsonProperty("iamLdapUrl")
-    public void setIamLdapUrl(String iamLdapUrl) {
-        this.iamLdapUrl = iamLdapUrl;
+    @JsonProperty("simple")
+    public void setSimple(LdapSimpleProperties simple) {
+        this.simple = simple;
+    }
+
+    /**
+     * Ldap Properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("expert")
+    public LdapExpertProperties getExpert() {
+        return expert;
+    }
+
+    /**
+     * Ldap Properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("expert")
+    public void setExpert(LdapExpertProperties expert) {
+        this.expert = expert;
     }
 
     @JsonAnyGetter
@@ -87,12 +120,12 @@ public class LdapProperties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamLdapUrl", iamLdapUrl).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("simple", simple).append("expert", expert).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamLdapUrl).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(simple).append(expert).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -104,7 +137,7 @@ public class LdapProperties {
             return false;
         }
         LdapProperties rhs = ((LdapProperties) other);
-        return new EqualsBuilder().append(iamLdapUrl, rhs.iamLdapUrl).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(simple, rhs.simple).append(expert, rhs.expert).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }
