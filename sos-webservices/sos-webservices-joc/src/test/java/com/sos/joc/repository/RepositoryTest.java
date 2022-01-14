@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
@@ -43,6 +44,7 @@ public class RepositoryTest {
         LOGGER.info("**************************  Deployment Tests finished  ******************************");
     }
 
+    @Ignore
     @Test
     public void test01SubPath() throws IOException, URISyntaxException {
         LOGGER.info("**************************  Test 01 - subpath started  ******************************");
@@ -54,6 +56,7 @@ public class RepositoryTest {
         LOGGER.info("**************************  Test 01 - subpath finished  *****************************");
     }
 
+    @Ignore
     @Test
     public void test02relativize() throws IOException, URISyntaxException {
         LOGGER.info("**************************  Test 02 - relativize started  ***************************");
@@ -79,6 +82,7 @@ public class RepositoryTest {
         LOGGER.info("**************************  Test 02 - relativize finished  **************************");
     }
 
+    @Ignore
     @Test
     public void test03readRepoRecursive() throws Exception {
         LOGGER.info("***************  Test 03 - read repository with recursion started  ******************");
@@ -108,6 +112,7 @@ public class RepositoryTest {
         LOGGER.info("***************  Test 03 - read repository with recursion finished  *****************");
     }
 
+    @Ignore
     @Test
     public void test04GetParent() throws IOException {
         LOGGER.info("**************************  Test 04 - get parent started  ***************************");
@@ -118,6 +123,24 @@ public class RepositoryTest {
             LOGGER.info(String.format("path: %1$s - has no parent", path.toString()));
         }
         LOGGER.info("**************************  Test 04 - get parent finished  **************************");
+   }
+    
+    @Ignore
+    @Test
+    public void test05Resolve() throws IOException, URISyntaxException {
+        LOGGER.info("**************************  Test 05 - resolve started  ******************************");
+        Path repositoriesAbsolute = Paths.get(getClass().getResource("/joc/repositories").toURI());
+        Path repositoriesRelative = Paths.get("/repositories");
+        Path pathStartsWithSlash = Paths.get("/ProductDemo");
+        Path pathNotStartsWithSlash = Paths.get("ProductDemo");
+        LOGGER.info("absolute Path repositories: " + repositoriesAbsolute.toString());
+        LOGGER.info("Sub Path starting with slash: " + pathStartsWithSlash.toString());
+        LOGGER.info("Sub Path not starting with slash: " + pathNotStartsWithSlash.toString());
+        LOGGER.info("resolved path with slash:");
+        LOGGER.info(repositoriesAbsolute.resolve(pathStartsWithSlash).toString());
+        LOGGER.info("resolved path without slash:");
+        LOGGER.info(repositoriesAbsolute.resolve(pathNotStartsWithSlash).toString());
+        LOGGER.info("**************************  Test 05 - resolve finished  *****************************");
    }
     
 }
