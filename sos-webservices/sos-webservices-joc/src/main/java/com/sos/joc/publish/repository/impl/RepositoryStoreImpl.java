@@ -21,7 +21,6 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
-import com.sos.joc.publish.impl.RevokeImpl;
 import com.sos.joc.publish.repository.resource.IRepositoryStore;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.schema.JsonValidator;
@@ -30,14 +29,14 @@ import com.sos.schema.JsonValidator;
 public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryStore {
 
     private static final String API_CALL = "./inventory/repository/store";
-    private static final Logger LOGGER = LoggerFactory.getLogger(RevokeImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryStoreImpl.class);
 
     @Override
     public JOCDefaultResponse postStore(String xAccessToken, byte[] copyToFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
             Date started = Date.from(Instant.now());
-            LOGGER.info("*** store to repository started ***" + started);
+            LOGGER.trace("*** store to repository started ***" + started);
             initLogging(API_CALL, copyToFilter, xAccessToken);
             JsonValidator.validate(copyToFilter, CopyToFilter.class);
             CopyToFilter filter = Globals.objectMapper.readValue(copyToFilter, CopyToFilter.class);
@@ -45,11 +44,11 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBItemJocAuditLog dbAudit = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             Path repositories = Globals.sosCockpitProperties.resolvePath("repositories");
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             Set<ConfigurationObject> deployables = RepositoryUtil.getDeployableEnvIndependentConfigurationsFromDB(filter, dbLayer, null);
             deployables.addAll(RepositoryUtil.getDeployableEnvRelatedConfigurationsFromDB(filter, dbLayer, null));
@@ -62,8 +61,8 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
 //                    dbAudit.getId(), dbAudit.getCreated()));
             RepositoryUtil.writeToRepository(deployables, releasables, repositories);
             Date apiCallFinished = Date.from(Instant.now());
-            LOGGER.info("*** store to repository finished ***" + apiCallFinished);
-            LOGGER.info("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
+            LOGGER.trace("*** store to repository finished ***" + apiCallFinished);
+            LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

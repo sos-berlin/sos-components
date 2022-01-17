@@ -34,7 +34,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.inventory.model.board.Board;
+import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.fileordersource.FileOrderSource;
+import com.sos.inventory.model.job.Job;
+import com.sos.inventory.model.jobclass.JobClass;
+import com.sos.inventory.model.jobresource.JobResource;
+import com.sos.inventory.model.lock.Lock;
+import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.script.Script;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -45,12 +56,14 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.model.publish.repository.DeleteFromFilter;
 import com.sos.joc.model.publish.repository.ResponseFolder;
 import com.sos.joc.model.publish.repository.ResponseFolderItem;
+import com.sos.joc.model.publish.repository.UpdateFromFilter;
 import com.sos.joc.model.tree.Tree;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
@@ -61,7 +74,7 @@ public abstract class RepositoryUtil {
 
      private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryUtil.class);
 //    private static final CopyOption[] COPYOPTIONS = new StandardCopyOption[] { StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING };
-    private static final OpenOption[] OPENOPTIONS = new StandardOpenOption[] { StandardOpenOption.TRUNCATE_EXISTING,StandardOpenOption.CREATE};
+    private static final OpenOption[] OPENOPTIONS = new StandardOpenOption[] { StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE};
 
     public static Path getPathWithExtension(Configuration cfg) {
         switch (cfg.getObjectType()) {
@@ -537,6 +550,103 @@ public abstract class RepositoryUtil {
                 
             }
         }
+    }
+
+    public static Set<DBItemInventoryConfiguration> getUpdatedDbItems(UpdateFromFilter filter, Path repositoryBase, DBLayerDeploy dbLayer) {
+        Set<DBItemInventoryConfiguration> dbItemsToUpdate = new HashSet<DBItemInventoryConfiguration>();
+        Set<Config> folders = filter.getConfigurations().stream()
+                .filter(item -> ConfigurationType.FOLDER.equals(item.getConfiguration().getObjectType())).collect(Collectors.toSet());
+        Set<Config> items = filter.getConfigurations().stream()
+                .filter(item -> !ConfigurationType.FOLDER.equals(item.getConfiguration().getObjectType())).collect(Collectors.toSet());
+        folders.stream().forEach(folder -> dbItemsToUpdate.addAll(dbLayer.getAllInventoryConfigurationsByFolder(
+                folder.getConfiguration().getPath(), folder.getConfiguration().getRecursive())));
+        items.stream().forEach(item -> {
+            DBItemInventoryConfiguration dbItem = dbLayer.getInventoryConfigurationByNameAndType(
+                    Paths.get(item.getConfiguration().getPath()).getFileName().toString(),
+                    item.getConfiguration().getObjectType().intValue());
+            if (dbItem != null) {
+                dbItemsToUpdate.add(dbItem);   
+            }
+        });
+
+        if (!dbItemsToUpdate.isEmpty()) {
+            dbItemsToUpdate.stream().peek(dbItem -> {
+                byte[] content = null;
+                try {
+                    if (dbItem.getPath().startsWith("/")) {
+                        content = Files.readAllBytes(
+                                repositoryBase.resolve(Paths.get(dbItem.getPath().substring(1) + getExtension(dbItem.getTypeAsEnum()))));
+                    } else {
+                        content = Files.readAllBytes(
+                                repositoryBase.resolve(Paths.get(dbItem.getPath() + getExtension(dbItem.getTypeAsEnum()))));
+                        
+                    }
+                    String updatedContent = null;
+                    boolean valid = false;
+                    try {
+                        Validator.validate(dbItem.getTypeAsEnum(), content);
+                    } catch (Exception e) {
+                        valid = false;
+                    }
+                    switch (dbItem.getTypeAsEnum()) {
+                    case WORKFLOW:
+                        updatedContent = Globals.objectMapper.writeValueAsString(
+                                Globals.prettyPrintObjectMapper.readValue(content, Workflow.class));
+                        break;
+                    case LOCK:
+                        updatedContent = Globals.objectMapper.writeValueAsString(
+                                Globals.prettyPrintObjectMapper.readValue(content, Lock.class));
+                        break;
+                    case JOBCLASS:
+                        updatedContent = Globals.objectMapper.writeValueAsString(
+                                Globals.prettyPrintObjectMapper.readValue(content, JobClass.class));
+                        break;
+                    case FILEORDERSOURCE:
+                        updatedContent = Globals.objectMapper.writeValueAsString(
+                                Globals.prettyPrintObjectMapper.readValue(content, FileOrderSource.class));
+                        break;
+                    case NOTICEBOARD:
+                        updatedContent = Globals.objectMapper.writeValueAsString(
+                                Globals.prettyPrintObjectMapper.readValue(content, Board.class));
+                        break;
+                    case JOBRESOURCE:
+                        updatedContent = Globals.objectMapper.writeValueAsString(
+                                Globals.prettyPrintObjectMapper.readValue(content, JobResource.class));
+                        break;
+                    case JOB:
+                        updatedContent = Globals.objectMapper.writeValueAsString(
+                                Globals.prettyPrintObjectMapper.readValue(content, Job.class));
+                        break;
+                    case INCLUDESCRIPT:
+                        updatedContent = Globals.objectMapper.writeValueAsString(
+                                Globals.prettyPrintObjectMapper.readValue(content, Script.class));
+                        break;
+                    case SCHEDULE:
+                        updatedContent = Globals.objectMapper.writeValueAsString(
+                                Globals.prettyPrintObjectMapper.readValue(content, Schedule.class));
+                        break;
+                    case WORKINGDAYSCALENDAR:
+                    case NONWORKINGDAYSCALENDAR:
+                        updatedContent = Globals.objectMapper.writeValueAsString(
+                                Globals.prettyPrintObjectMapper.readValue(content, Calendar.class));
+                        break;
+                    case FOLDER:
+                    default:
+                        break;
+                    }
+                    if (updatedContent != null) {
+                        dbItem.setContent(updatedContent);
+                        dbItem.setDeployed(false);
+                        dbItem.setValid(valid);
+                        dbItem.setModified(Date.from(Instant.now()));
+                    }
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }).collect(Collectors.toSet());
+        }
+        return dbItemsToUpdate;
     }
 
     private static Set<ConfigurationObject> getDeployableConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, String commitId, 

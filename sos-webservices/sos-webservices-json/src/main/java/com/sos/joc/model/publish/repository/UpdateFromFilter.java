@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.publish.Configuration;
+import com.sos.joc.model.publish.Config;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -21,13 +21,18 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "configurationItems",
+    "configurations",
     "auditLog"
 })
 public class UpdateFromFilter {
 
-    @JsonProperty("configurationItems")
-    private List<Configuration> configurationItems = new ArrayList<Configuration>();
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("configurations")
+    private List<Config> configurations = new ArrayList<Config>();
     /**
      * auditParams
      * <p>
@@ -37,14 +42,24 @@ public class UpdateFromFilter {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
-    @JsonProperty("configurationItems")
-    public List<Configuration> getConfigurationItems() {
-        return configurationItems;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("configurations")
+    public List<Config> getConfigurations() {
+        return configurations;
     }
 
-    @JsonProperty("configurationItems")
-    public void setConfigurationItems(List<Configuration> configurationItems) {
-        this.configurationItems = configurationItems;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("configurations")
+    public void setConfigurations(List<Config> configurations) {
+        this.configurations = configurations;
     }
 
     /**
@@ -71,12 +86,12 @@ public class UpdateFromFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("configurationItems", configurationItems).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("configurations", configurations).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(configurationItems).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(configurations).toHashCode();
     }
 
     @Override
@@ -88,7 +103,7 @@ public class UpdateFromFilter {
             return false;
         }
         UpdateFromFilter rhs = ((UpdateFromFilter) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(configurationItems, rhs.configurationItems).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(configurations, rhs.configurations).isEquals();
     }
 
 }

@@ -778,7 +778,9 @@ public class DeploymentTestUtils {
         cfg.setObjectType(ConfigurationType.FOLDER);
         cfg.setPath("/ProductDemo");
         cfg.setRecursive(true);        
-        filter.getConfigurationItems().add(cfg);
+        Config config = new Config();
+        config.setConfiguration(cfg);
+        filter.getConfigurations().add(config);
         return filter;
     }
 }
