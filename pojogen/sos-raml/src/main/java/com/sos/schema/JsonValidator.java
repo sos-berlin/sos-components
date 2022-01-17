@@ -175,15 +175,15 @@ public class JsonValidator {
             // schedules
             put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/schedulesSelector-schema.json");
 
-            put("com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter", "orderManagement/dailyplan/dailyplanSubmissionsFilter-schema.json");
             put("com.sos.joc.model.dailyplan.DailyPlanOrderFilter", "orderManagement/dailyplan/dailyPlanOrdersFilter-schema.json");
             put("com.sos.joc.model.dailyplan.DailyPlanModifyOrder", "orderManagement/dailyplan/dailyPlanModifyOrder-schema.json");
-            put("com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter", "orderManagement/dailyplan/dailyplanSubmissionsFilter-schema.json");
             put("com.sos.joc.model.dailyplan.generate.GenerateRequest", "dailyplan/generate/generate-request-schema.json");
             put("com.sos.joc.model.dailyplan.history.MainRequest", "dailyplan/history/main-request-schema.json");
             put("com.sos.joc.model.dailyplan.history.SubmissionsRequest", "dailyplan/history/submissions-request-schema.json");
             put("com.sos.joc.model.dailyplan.history.SubmissionsOrdersRequest", "dailyplan/history/submissions-orders-request-schema.json");
-
+            put("com.sos.joc.model.dailyplan.submissions.SubmissionsDeleteRequest", "dailyplan/submissions/submissions-delete-request-schema.json");
+            put("com.sos.joc.model.dailyplan.submissions.SubmissionsRequest", "dailyplan/submissions/submissions-request-schema.json");
+            
             put("com.sos.joc.model.yade.TransferFilter", "yade/transferFilter-schema.json");
             put("com.sos.joc.model.yade.FileFilter", "yade/fileFilter-schema.json");
             put("com.sos.joc.model.yade.FilesFilter", "yade/filesFilter-schema.json");

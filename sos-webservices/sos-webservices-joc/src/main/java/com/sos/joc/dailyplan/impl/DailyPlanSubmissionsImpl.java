@@ -1,7 +1,7 @@
 package com.sos.joc.dailyplan.impl;
 
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -22,31 +22,29 @@ import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.dailyplan.DailyPlanSubmissions;
-import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
-import com.sos.joc.model.dailyplan.DailyPlanSubmissionsItem;
+import com.sos.joc.model.dailyplan.submissions.SubmissionsDeleteRequest;
+import com.sos.joc.model.dailyplan.submissions.SubmissionsRequest;
+import com.sos.joc.model.dailyplan.submissions.SubmissionsResponse;
+import com.sos.joc.model.dailyplan.submissions.items.SubmissionItem;
 import com.sos.schema.JsonValidator;
 
 @Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements IDailyPlanSubmissionsResource {
 
     @Override
-    public JOCDefaultResponse postDailyPlanSubmissions(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse postDailyPlanSubmissions(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
+            // TODO redefine raml and remove filter class
 
-            initLogging(IMPL_PATH_MAIN, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
-            DailyPlanSubmissionsFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanSubmissionsFilter.class);
+            initLogging(IMPL_PATH_MAIN, inBytes, accessToken);
+            JsonValidator.validateFailFast(inBytes, SubmissionsRequest.class);
+            SubmissionsRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsRequest.class);
 
             JOCDefaultResponse response = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getDailyPlan().getView());
             if (response != null) {
                 return response;
             }
-
-            // TODO redefine raml and remove filter class
-            this.checkRequiredParameter("filter", in.getFilter());
-            this.checkRequiredParameter("dateTo", in.getFilter().getDateTo());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_MAIN);
             DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
@@ -55,20 +53,17 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             session.close();
             session = null;
 
-            List<DailyPlanSubmissionsItem> result = new ArrayList<>();
-            for (DBItemDailyPlanSubmission item : items) {
-                DailyPlanSubmissionsItem p = new DailyPlanSubmissionsItem();
-                p.setSubmissionHistoryId(item.getId());
-                p.setControllerId(item.getControllerId());
-                p.setDailyPlanDate(item.getSubmissionForDate());
-                p.setSubmissionTime(item.getCreated());
-                result.add(p);
+            List<SubmissionItem> result = null;
+            if (items == null || items.size() == 0) {
+                result = Collections.emptyList();
+            } else {
+                // sort descending by submission time
+                result = items.stream().map(e -> {
+                    return map(e);
+                }).sorted(Comparator.comparing(SubmissionItem::getSubmissionTime).reversed()).collect(Collectors.toList());
             }
-            // sort descending by submission time
-            result = result.stream().sorted(Comparator.comparing(DailyPlanSubmissionsItem::getSubmissionTime).reversed()).collect(Collectors
-                    .toList());
 
-            DailyPlanSubmissions answer = new DailyPlanSubmissions();
+            SubmissionsResponse answer = new SubmissionsResponse();
             answer.setSubmissionHistoryItems(result);
             answer.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(answer);
@@ -83,20 +78,19 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
     }
 
     @Override
-    public JOCDefaultResponse postDeleteDailyPlanSubmissions(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse postDeleteDailyPlanSubmissions(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH_DELETE, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
-            DailyPlanSubmissionsFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanSubmissionsFilter.class);
+            // TODO redefine raml and remove filter class
+            initLogging(IMPL_PATH_DELETE, inBytes, accessToken);
+            // use validate instead of validateFailFast when anyOf/oneOf is defined
+            JsonValidator.validate(inBytes, SubmissionsDeleteRequest.class);
+            SubmissionsDeleteRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsDeleteRequest.class);
 
             JOCDefaultResponse response = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getDailyPlan().getManage());
             if (response != null) {
                 return response;
             }
-
-            // TODO redefine raml and remove filter class
-            this.checkRequiredParameter("filter", in.getFilter());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_DELETE);
             DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
@@ -111,8 +105,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             if (result > 0) {
                 if (in.getFilter().getDateFor() != null) {
                     EventBus.getInstance().post(new DailyPlanEvent(in.getFilter().getDateFor()));
-                }
-                if (in.getFilter().getDateFrom() != null) {
+                } else if (in.getFilter().getDateFrom() != null) {
                     EventBus.getInstance().post(new DailyPlanEvent(in.getFilter().getDateFrom()));
                 }
             }
@@ -125,6 +118,15 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    private SubmissionItem map(DBItemDailyPlanSubmission item) {
+        SubmissionItem p = new SubmissionItem();
+        p.setSubmissionHistoryId(item.getId());
+        p.setControllerId(item.getControllerId());
+        p.setDailyPlanDate(item.getSubmissionForDate());
+        p.setSubmissionTime(item.getCreated());
+        return p;
     }
 
 }
