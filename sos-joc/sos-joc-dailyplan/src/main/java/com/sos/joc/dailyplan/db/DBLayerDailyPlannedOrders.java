@@ -605,6 +605,12 @@ public class DBLayerDailyPlannedOrders {
     public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlannedOrders filter, final int limit)
             throws SOSHibernateException {
 
+        // current - set max SubmissionIds to SOSHibernate.LIMIT_IN_CLAUSE
+        // TODO - use all submissionsIds (when orderIds > SOSHibernate.LIMIT_IN_CLAUSE ???), extra a submissions web service ?
+        if (filter.getSubmissionIds() != null && filter.getSubmissionIds().size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            filter.setSubmissionIds(SOSHibernate.getInClausePartition(0, filter.getSubmissionIds()));
+        }
+
         if (filter.getOrderIds() != null) {
             List<DBItemDailyPlanWithHistory> resultList = new ArrayList<DBItemDailyPlanWithHistory>();
             int size = filter.getOrderIds().size();
@@ -643,14 +649,14 @@ public class DBLayerDailyPlannedOrders {
         hql.append("where controllerId=:controllerId ");
         hql.append("and workflowName=:workflowName ");
         hql.append("and plannedStart=:plannedStart ");
-        
+
         Query<DBItemDailyPlanOrder> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
         query.setParameter("workflowName", workflowName);
         query.setParameter("plannedStart", plannedStart);
         return session.getResultList(query);
     }
-    
+
     private List<DBItemDailyPlanOrder> getDailyPlanListExecute(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {
         String q = "from " + DBLayer.DBITEM_DPL_ORDERS + " p " + getWhere(filter, "p.schedulePath", true) + filter.getOrderCriteria() + filter
                 .getSortMode();
