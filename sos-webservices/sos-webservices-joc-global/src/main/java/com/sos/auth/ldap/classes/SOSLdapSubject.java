@@ -27,6 +27,14 @@ public class SOSLdapSubject implements ISOSAuthSubject {
     private Set<DBItemIamPermissionWithName> setOfPermissions;
     private Set<String> setOfRoles;
 
+    public SOSLdapSubject() {
+        super();
+        authenticated = false;
+        setOfRoles = new HashSet<String>();
+        setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
+        setOfAccountPermissions = new HashSet<String>();
+    }
+
     @Override
     public Boolean hasRole(String role) {
         return setOfRoles.contains(role);
@@ -43,6 +51,7 @@ public class SOSLdapSubject implements ISOSAuthSubject {
         }
         return false;
     }
+
 
     @Override
     public Boolean isAuthenticated() {

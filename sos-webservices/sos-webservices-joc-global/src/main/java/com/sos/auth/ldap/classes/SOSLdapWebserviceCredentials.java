@@ -259,9 +259,9 @@ public class SOSLdapWebserviceCredentials {
                     truststorePassword = getProperty(properties.getLdap().getExpert().getIamLdapTruststorePassword(), "");
                 }
 
-                if (truststoreType == null) {
-                    truststoreType = KeystoreType.fromValue(getProperty(properties.getLdap().getExpert().getIamLdapTruststoreType(), "PKCS12"));
-
+                if (truststoreType == null && properties.getLdap().getExpert().getIamLdapTruststoreType() != null && !properties.getLdap().getExpert()
+                        .getIamLdapTruststoreType().isEmpty()) {
+                    truststoreType = KeystoreType.fromValue(getProperty(properties.getLdap().getExpert().getIamLdapTruststoreType(), ""));
                 }
 
                 if (groupRolesMap == null) {

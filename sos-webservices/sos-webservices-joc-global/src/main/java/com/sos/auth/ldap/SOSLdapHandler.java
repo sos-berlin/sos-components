@@ -1,7 +1,6 @@
 package com.sos.auth.ldap;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
@@ -24,7 +23,6 @@ import com.sos.auth.ldap.classes.SOSLdapGroupRolesMapping;
 import com.sos.auth.ldap.classes.SOSLdapWebserviceCredentials;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JocCockpitProperties;
 
 public class SOSLdapHandler {
 
@@ -56,7 +54,7 @@ public class SOSLdapHandler {
         if (ldapContext == null) {
 
             if (Globals.sosCockpitProperties != null) {
-               
+
                 if (sosLdapWebserviceCredentials.getTruststorePath() != null && !sosLdapWebserviceCredentials.getTruststorePath().isEmpty()) {
                     Globals.sosCockpitProperties.getProperties().put("ldap_truststore_path", sosLdapWebserviceCredentials.getTruststorePath());
                 }
@@ -84,13 +82,31 @@ public class SOSLdapHandler {
         }
     }
 
-    public SOSAuthAccessToken login(SOSLdapWebserviceCredentials sosInternAuthWebserviceCredentials, String password) throws SOSHibernateException {
+    public SOSAuthAccessToken login(SOSLdapWebserviceCredentials sosLdapWebserviceCredentials, String password) throws SOSHibernateException {
 
         SOSAuthAccessToken sosAuthAccessToken = null;
         try {
-            createDirContext(sosInternAuthWebserviceCredentials, password);
-            sosAuthAccessToken = new SOSAuthAccessToken();
-            sosAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
+
+            if (sosLdapWebserviceCredentials.getSearchBase().isEmpty() && !sosLdapWebserviceCredentials.getUserSearchFilter().isEmpty()) {
+                msg = "LDAP configuration is not valid: Missing setting 'searchBase'";
+            }
+            if (sosLdapWebserviceCredentials.getSearchBase().isEmpty() && "memberOf".equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
+                msg = "LDAP configuration is not valid: Missing setting 'searchBase'";
+            }
+            if (sosLdapWebserviceCredentials.getGroupSearchBase().isEmpty() && !sosLdapWebserviceCredentials.getGroupSearchFilter().isEmpty()) {
+                msg = "LDAP configuration is not valid: Missing setting 'groupSearchBase'";
+            }
+            if (sosLdapWebserviceCredentials.getUserDnTemplate().isEmpty()) {
+                msg = "LDAP configuration is not valid: Missing setting 'userDnTemplate'";
+            }
+            if (sosLdapWebserviceCredentials.getLdapServerUrl().isEmpty()) {
+                msg = ("LDAP configuration is not valid: Missing setting ldapUrl");
+            }
+            if (msg.isEmpty()) {
+                createDirContext(sosLdapWebserviceCredentials, password);
+                sosAuthAccessToken = new SOSAuthAccessToken();
+                sosAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
+            }
 
         } catch (AuthenticationNotSupportedException ex) {
             msg = "AuthenticationNotSupportedException: The authentication is not supported by the server";

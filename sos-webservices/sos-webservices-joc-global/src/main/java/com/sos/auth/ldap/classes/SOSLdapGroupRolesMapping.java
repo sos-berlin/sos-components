@@ -3,11 +3,9 @@ package com.sos.auth.ldap.classes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
-import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
@@ -132,7 +130,14 @@ public class SOSLdapGroupRolesMapping {
         searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         Collection<String> groupNames = null;
 
-        String searchFilter = substituteUserName(sosLdapWebserviceCredentials.getUserSearchFilter());
+        String userSearchFilter = "";
+        if (sosLdapWebserviceCredentials.getUserSearchFilter().isEmpty() && "memberOf".equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
+            userSearchFilter = "(sAMAccountName=%s)";
+        } else {
+            userSearchFilter = sosLdapWebserviceCredentials.getUserSearchFilter();
+        }
+
+        String searchFilter = substituteUserName(userSearchFilter);
 
         LOGGER.debug(String.format("getting groups from ldap using user search filter %s with search base %s", searchFilter,
                 sosLdapWebserviceCredentials.getSearchBase()));
@@ -194,49 +199,7 @@ public class SOSLdapGroupRolesMapping {
         return listOfRoles;
     }
 
-    private void getRoleNamesForUserTest(SOSLdapWebserviceCredentials sosLdapWebserviceCredentials, String username) throws Exception {
-
-        // String ldapAdServer = "ldap://ldap.andrew.cmu.edu:389";
-        String ldapAdServer = "ldap://localhost:389";
-        Hashtable<String, Object> env = new Hashtable<String, Object>();
-        env.put(Context.PROVIDER_URL, ldapAdServer);
-        env.put(Context.SECURITY_AUTHENTICATION, "simple");
-
-        env.put(Context.SECURITY_PRINCIPAL, "CN=ur,CN=sos,DC=berlin,DC=com");
-        env.put(Context.SECURITY_CREDENTIALS, "aplsos");
-
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, ldapAdServer);
-        env.put("java.naming.ldap.attributes.binary", "objectSID");
-
-        InitialDirContext ldapContext = new InitialDirContext(env);
-
-        SearchControls searchCtls = new SearchControls();
-        searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-
-        String userPrincipalName = username;
-
-        if (sosLdapWebserviceCredentials.getSearchBase() != null && sosLdapWebserviceCredentials.getUserSearchFilter() != null) {
-            LOGGER.debug("user_search_filter=" + sosLdapWebserviceCredentials.getUserSearchFilter());
-
-            String searchFilter = substituteUserName(sosLdapWebserviceCredentials.getUserSearchFilter());
-            LOGGER.debug(String.format("getting groups from ldap using user search filter %s with search base %s", sosLdapWebserviceCredentials
-                    .getSearchBase(), searchFilter));
-
-            NamingEnumeration<SearchResult> answer = ldapContext.search(sosLdapWebserviceCredentials.getSearchBase(), searchFilter, searchCtls);
-            ArrayList<String> rolesForGroups = new ArrayList<String>();
-            LOGGER.debug("Retrieving group names for user [" + userPrincipalName + "]");
-
-            while (answer.hasMoreElements()) {
-                SearchResult result = answer.next();
-                String groupNameAttribute;
-                groupNameAttribute = sosLdapWebserviceCredentials.getGroupNameAttribute();
-                Attribute g = result.getAttributes().get(groupNameAttribute);
-                rolesForGroups.add(g.get().toString());
-            }
-        }
-    }
-
+   
     private List<String> getRoleNamesForGroups(SOSLdapWebserviceCredentials sosLdapWebserviceCredentials, Collection<String> groupNames) {
         List<String> listOfRoles = new ArrayList<String>();
         if (sosLdapWebserviceCredentials.getGroupRolesMap() != null) {

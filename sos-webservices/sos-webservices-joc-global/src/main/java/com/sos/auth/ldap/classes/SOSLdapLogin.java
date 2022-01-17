@@ -37,21 +37,23 @@ public class SOSLdapLogin implements ISOSLogin {
             sosLdapWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
             sosLdapWebserviceCredentials.setAccount(account);
             sosLdapWebserviceCredentials.setValuesFromProfile(identityService);
-
+          
             SOSAuthAccessToken sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials, pwd);
             sosLdapSubject = new SOSLdapSubject();
             if (sosAuthAccessToken == null) {
                 sosLdapSubject.setAuthenticated(false);
                 setMsg(sosLdapHandler.getMsg());
             } else {
-                sosLdapSubject.setPermissionAndRoles(sosLdapHandler.getGroupRolesMapping(sosLdapWebserviceCredentials), account, identityService);
                 sosLdapSubject.setAuthenticated(true);
                 sosLdapSubject.setAccessToken(sosAuthAccessToken.getAccessToken());
+                sosLdapSubject.setPermissionAndRoles(sosLdapHandler.getGroupRolesMapping(sosLdapWebserviceCredentials), account, identityService);
             }
 
         } catch (SOSHibernateException e) {
+            setMsg(e.getMessage());
             LOGGER.error("", e);
         } catch (NamingException e) {
+            setMsg(e.getMessage());
             LOGGER.error("", e);
         } finally {
             sosLdapHandler.close();

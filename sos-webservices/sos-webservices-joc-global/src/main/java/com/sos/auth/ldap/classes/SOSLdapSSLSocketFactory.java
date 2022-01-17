@@ -49,12 +49,14 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
     }
 
     public static SocketFactory getDefault() {
-        final SOSLdapSSLSocketFactory value = defaultFactory.get();
+        return new SOSLdapSSLSocketFactory();
+      /*  final SOSLdapSSLSocketFactory value = defaultFactory.get();
         if (value == null) {
             defaultFactory.compareAndSet(null, new SOSLdapSSLSocketFactory());
             return defaultFactory.get();
         }
         return value;
+        */
     }
 
     @Override

@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "iamVaultUrl",
+    "iamVaultAuthenticationMethodPath",
     "iamVaultKeystorePath",
     "iamVaultKeystorePassword",
     "iamVaultKeyPassword",
@@ -42,6 +43,14 @@ public class VaultProperties {
      */
     @JsonProperty("iamVaultUrl")
     private String iamVaultUrl;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamVaultAuthenticationMethodPath")
+    private String iamVaultAuthenticationMethodPath;
     /**
      * string without < and >
      * <p>
@@ -118,6 +127,7 @@ public class VaultProperties {
 
     /**
      * 
+     * @param iamVaultAuthenticationMethodPath
      * @param iamVaultKeyPassword
      * @param iamVaultUrl
      * @param iamVaultTruststorePath
@@ -128,9 +138,10 @@ public class VaultProperties {
      * @param iamVaultTruststoreType
      * @param iamVaultApplicationToken
      */
-    public VaultProperties(String iamVaultUrl, String iamVaultKeystorePath, String iamVaultKeystorePassword, String iamVaultKeyPassword, String iamVaultKeystoreType, String iamVaultTruststorePath, String iamVaultTruststorePassword, String iamVaultTruststoreType, String iamVaultApplicationToken) {
+    public VaultProperties(String iamVaultUrl, String iamVaultAuthenticationMethodPath, String iamVaultKeystorePath, String iamVaultKeystorePassword, String iamVaultKeyPassword, String iamVaultKeystoreType, String iamVaultTruststorePath, String iamVaultTruststorePassword, String iamVaultTruststoreType, String iamVaultApplicationToken) {
         super();
         this.iamVaultUrl = iamVaultUrl;
+        this.iamVaultAuthenticationMethodPath = iamVaultAuthenticationMethodPath;
         this.iamVaultKeystorePath = iamVaultKeystorePath;
         this.iamVaultKeystorePassword = iamVaultKeystorePassword;
         this.iamVaultKeyPassword = iamVaultKeyPassword;
@@ -161,6 +172,28 @@ public class VaultProperties {
     @JsonProperty("iamVaultUrl")
     public void setIamVaultUrl(String iamVaultUrl) {
         this.iamVaultUrl = iamVaultUrl;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamVaultAuthenticationMethodPath")
+    public String getIamVaultAuthenticationMethodPath() {
+        return iamVaultAuthenticationMethodPath;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamVaultAuthenticationMethodPath")
+    public void setIamVaultAuthenticationMethodPath(String iamVaultAuthenticationMethodPath) {
+        this.iamVaultAuthenticationMethodPath = iamVaultAuthenticationMethodPath;
     }
 
     /**
@@ -351,12 +384,12 @@ public class VaultProperties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamVaultUrl", iamVaultUrl).append("iamVaultKeystorePath", iamVaultKeystorePath).append("iamVaultKeystorePassword", iamVaultKeystorePassword).append("iamVaultKeyPassword", iamVaultKeyPassword).append("iamVaultKeystoreType", iamVaultKeystoreType).append("iamVaultTruststorePath", iamVaultTruststorePath).append("iamVaultTruststorePassword", iamVaultTruststorePassword).append("iamVaultTruststoreType", iamVaultTruststoreType).append("iamVaultApplicationToken", iamVaultApplicationToken).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("iamVaultUrl", iamVaultUrl).append("iamVaultAuthenticationMethodPath", iamVaultAuthenticationMethodPath).append("iamVaultKeystorePath", iamVaultKeystorePath).append("iamVaultKeystorePassword", iamVaultKeystorePassword).append("iamVaultKeyPassword", iamVaultKeyPassword).append("iamVaultKeystoreType", iamVaultKeystoreType).append("iamVaultTruststorePath", iamVaultTruststorePath).append("iamVaultTruststorePassword", iamVaultTruststorePassword).append("iamVaultTruststoreType", iamVaultTruststoreType).append("iamVaultApplicationToken", iamVaultApplicationToken).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamVaultKeyPassword).append(iamVaultUrl).append(iamVaultTruststorePath).append(iamVaultKeystoreType).append(iamVaultKeystorePath).append(additionalProperties).append(iamVaultTruststorePassword).append(iamVaultKeystorePassword).append(iamVaultTruststoreType).append(iamVaultApplicationToken).toHashCode();
+        return new HashCodeBuilder().append(iamVaultAuthenticationMethodPath).append(iamVaultKeyPassword).append(iamVaultUrl).append(iamVaultTruststorePath).append(iamVaultKeystoreType).append(iamVaultKeystorePath).append(additionalProperties).append(iamVaultTruststorePassword).append(iamVaultKeystorePassword).append(iamVaultTruststoreType).append(iamVaultApplicationToken).toHashCode();
     }
 
     @Override
@@ -368,7 +401,7 @@ public class VaultProperties {
             return false;
         }
         VaultProperties rhs = ((VaultProperties) other);
-        return new EqualsBuilder().append(iamVaultKeyPassword, rhs.iamVaultKeyPassword).append(iamVaultUrl, rhs.iamVaultUrl).append(iamVaultTruststorePath, rhs.iamVaultTruststorePath).append(iamVaultKeystoreType, rhs.iamVaultKeystoreType).append(iamVaultKeystorePath, rhs.iamVaultKeystorePath).append(additionalProperties, rhs.additionalProperties).append(iamVaultTruststorePassword, rhs.iamVaultTruststorePassword).append(iamVaultKeystorePassword, rhs.iamVaultKeystorePassword).append(iamVaultTruststoreType, rhs.iamVaultTruststoreType).append(iamVaultApplicationToken, rhs.iamVaultApplicationToken).isEquals();
+        return new EqualsBuilder().append(iamVaultAuthenticationMethodPath, rhs.iamVaultAuthenticationMethodPath).append(iamVaultKeyPassword, rhs.iamVaultKeyPassword).append(iamVaultUrl, rhs.iamVaultUrl).append(iamVaultTruststorePath, rhs.iamVaultTruststorePath).append(iamVaultKeystoreType, rhs.iamVaultKeystoreType).append(iamVaultKeystorePath, rhs.iamVaultKeystorePath).append(additionalProperties, rhs.additionalProperties).append(iamVaultTruststorePassword, rhs.iamVaultTruststorePassword).append(iamVaultKeystorePassword, rhs.iamVaultKeystorePassword).append(iamVaultTruststoreType, rhs.iamVaultTruststoreType).append(iamVaultApplicationToken, rhs.iamVaultApplicationToken).isEquals();
     }
 
 }
