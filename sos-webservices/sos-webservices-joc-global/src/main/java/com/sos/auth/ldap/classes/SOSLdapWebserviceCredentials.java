@@ -13,6 +13,7 @@ import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.shiro.SOSLdapLoginUserName;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.joc.Globals;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
@@ -38,8 +39,11 @@ public class SOSLdapWebserviceCredentials {
     private String userNameAttribute;
     private String userSearchFilter;
     private Boolean useStartTls;
-    private Boolean withHostnameVerification;
-    private String securityProtocol;
+    private String truststorePath = "";
+    private String truststorePassword = "";
+    private KeystoreType truststoreType = null;
+
+    private String hostnameVerification;
     private Map<String, List<String>> groupRolesMap;
 
     public Long getIdentityServiceId() {
@@ -119,14 +123,6 @@ public class SOSLdapWebserviceCredentials {
         this.groupSearchFilter = groupSearchFilter;
     }
 
-    public String getSecurityProtocol() {
-        return securityProtocol;
-    }
-
-    public void setSecurityProtocol(String securityProtocol) {
-        this.securityProtocol = securityProtocol;
-    }
-
     public String getAccount() {
         return account;
     }
@@ -140,12 +136,12 @@ public class SOSLdapWebserviceCredentials {
         return sosLdapLoginUserName;
     }
 
-    public Boolean getWithHostnameVerification() {
-        return withHostnameVerification;
+    public String getHostnameVerification() {
+        return hostnameVerification;
     }
 
-    public void setWithHostnameVerification(Boolean withHostnameVerification) {
-        this.withHostnameVerification = withHostnameVerification;
+    public void setHostnameVerification(String hostnameVerification) {
+        this.hostnameVerification = hostnameVerification;
     }
 
     public void setUseStartTls(Boolean useStartTls) {
@@ -154,6 +150,30 @@ public class SOSLdapWebserviceCredentials {
 
     public Boolean getUseStartTls() {
         return useStartTls;
+    }
+
+    public String getTruststorePath() {
+        return truststorePath;
+    }
+
+    public void setTruststorePath(String truststorePath) {
+        this.truststorePath = truststorePath;
+    }
+
+    public String getTruststorePassword() {
+        return truststorePassword;
+    }
+
+    public void setTruststorePassword(String truststorePassword) {
+        this.truststorePassword = truststorePassword;
+    }
+
+    public KeystoreType getTruststoreType() {
+        return truststoreType;
+    }
+
+    public void setTruststoreType(KeystoreType truststoreType) {
+        this.truststoreType = truststoreType;
     }
 
     public Map<String, List<String>> getGroupRolesMap() {
@@ -227,12 +247,23 @@ public class SOSLdapWebserviceCredentials {
                 if (useStartTls == null) {
                     useStartTls = properties.getLdap().getExpert().getIamLdapUseStartTls();
                 }
-                if (withHostnameVerification == null) {
-                    withHostnameVerification = properties.getLdap().getExpert().getIamLdapHostNameVerification();
+                if (hostnameVerification == null || groupSearchFilter.isEmpty()) {
+                    hostnameVerification = properties.getLdap().getExpert().getIamLdapHostNameVerification();
                 }
-                if (securityProtocol == null || securityProtocol.isEmpty()) {
-                    securityProtocol = getProperty(properties.getLdap().getExpert().getIamLdapSecurityProtocol(), "");
+
+                if (truststorePath.isEmpty()) {
+                    truststorePath = getProperty(properties.getLdap().getExpert().getIamLdapTruststorePath(), "");
                 }
+
+                if (truststorePassword.isEmpty()) {
+                    truststorePassword = getProperty(properties.getLdap().getExpert().getIamLdapTruststorePassword(), "");
+                }
+
+                if (truststoreType == null) {
+                    truststoreType = KeystoreType.fromValue(getProperty(properties.getLdap().getExpert().getIamLdapTruststoreType(), "PKCS12"));
+
+                }
+
                 if (groupRolesMap == null) {
                     if (properties.getLdap().getExpert().getIamLdapGroupRolesMap() != null && properties.getLdap().getExpert()
                             .getIamLdapGroupRolesMap().getItems() != null) {
@@ -251,7 +282,11 @@ public class SOSLdapWebserviceCredentials {
     }
 
     public boolean isSSL() {
-        return securityProtocol != null && "ssl".equalsIgnoreCase(securityProtocol);
+        return ldapServerUrl.toLowerCase().startsWith("ldaps://");
+    }
+
+    public boolean isHostnameVerification() {
+        return "on".equalsIgnoreCase(hostnameVerification);
     }
 
 }

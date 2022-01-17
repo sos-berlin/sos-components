@@ -19,7 +19,7 @@ public class SOSLdapLogin implements ISOSLogin {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapLogin.class);
 
-    private String msg="";
+    private String msg = "";
     private SOSIdentityService identityService;
     private SOSLdapSubject sosLdapSubject;
 
@@ -38,32 +38,28 @@ public class SOSLdapLogin implements ISOSLogin {
             sosLdapWebserviceCredentials.setAccount(account);
             sosLdapWebserviceCredentials.setValuesFromProfile(identityService);
 
-            SOSAuthAccessToken sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials,pwd);
+            SOSAuthAccessToken sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials, pwd);
             sosLdapSubject = new SOSLdapSubject();
             if (sosAuthAccessToken == null) {
                 sosLdapSubject.setAuthenticated(false);
                 setMsg(sosLdapHandler.getMsg());
             } else {
-                sosLdapSubject.setPermissionAndRoles(sosLdapHandler.getGroupRolesMapping(sosLdapWebserviceCredentials),account,identityService);
+                sosLdapSubject.setPermissionAndRoles(sosLdapHandler.getGroupRolesMapping(sosLdapWebserviceCredentials), account, identityService);
                 sosLdapSubject.setAuthenticated(true);
                 sosLdapSubject.setAccessToken(sosAuthAccessToken.getAccessToken());
             }
 
         } catch (SOSHibernateException e) {
-            LOGGER.error("",e);
-         } catch (NamingException e) {
-             LOGGER.error("",e);
+            LOGGER.error("", e);
+        } catch (NamingException e) {
+            LOGGER.error("", e);
         } finally {
-             sosLdapHandler.close();
+            sosLdapHandler.close();
             Globals.disconnect(sosHibernateSession);
         }
 
     }
-    
- 
-    
 
-  
     public void logout() {
 
     }
@@ -82,7 +78,6 @@ public class SOSLdapLogin implements ISOSLogin {
         return sosLdapSubject;
     }
 
-    
     public void setIdentityService(SOSIdentityService identityService) {
         this.identityService = identityService;
     }

@@ -8,7 +8,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
 import com.sos.joc.exceptions.SessionNotExistException;
 
 public class TestSOSServicePermissionShiro {

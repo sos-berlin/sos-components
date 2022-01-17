@@ -32,6 +32,7 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
 
     public SOSLdapSSLSocketFactory() {
         KeyStore trustStore = null;
+        LOGGER.info("===> SOSLdapSSLSocketFactory");
         try {
             setSSLContext();
             trustStore = KeyStoreUtil.readKeyStore(trustStorePath, trustStoreType, trustStorePass);
@@ -75,6 +76,14 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
     public Socket createSocket(final InetAddress inetAddress, final int i, final InetAddress inetAddress1, final int i1) throws IOException {
         return sf.createSocket(inetAddress, i, inetAddress1, i1);
     }
+    
+    private String getValue(JocCockpitProperties  jocCockpitProperties,String property, String defaultValue) { 
+        String s = jocCockpitProperties.getProperty(property,defaultValue);
+        if (s == null || s.isEmpty()){
+            s = defaultValue;
+        }
+        return s; 
+    }
 
     private void setSSLContext() {
         JocCockpitProperties jocCockpitProperties = Globals.sosCockpitProperties;
@@ -83,14 +92,18 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
             jocCockpitProperties = new JocCockpitProperties();
         }
 
-        trustStorePath = jocCockpitProperties.getProperty("truststore_path", System.getProperty("javax.net.ssl.trustStore"));
-        String tType = jocCockpitProperties.getProperty("truststore_type", System.getProperty("javax.net.ssl.trustStoreType"));
+        String trustStorePathDefault = jocCockpitProperties.getProperty("truststore_path", System.getProperty("javax.net.ssl.trustStore"));
+        String trustStoreTypeDefault = jocCockpitProperties.getProperty("truststore_type", System.getProperty("javax.net.ssl.trustStoreType"));
+        String trustStorePassDefault = jocCockpitProperties.getProperty("truststore_password", System.getProperty("javax.net.ssl.trustStorePassword"));
+       
+        trustStorePath = getValue(jocCockpitProperties,"ldap_truststore_path",trustStorePathDefault);
+        trustStorePass = getValue(jocCockpitProperties,"ldap_truststore_password",trustStorePassDefault);
+        String tType = getValue(jocCockpitProperties,"ldap_truststore_type",trustStoreTypeDefault);
         trustStoreType = KeystoreType.valueOf(tType);
-        trustStorePass = jocCockpitProperties.getProperty("truststore_password", System.getProperty("javax.net.ssl.trustStorePassword"));
+        
         if (trustStorePath != null && !trustStorePath.trim().isEmpty()) {
             Path p = jocCockpitProperties.resolvePath(trustStorePath.trim());
             trustStorePath = p.toString();
-
         }
     }
 }

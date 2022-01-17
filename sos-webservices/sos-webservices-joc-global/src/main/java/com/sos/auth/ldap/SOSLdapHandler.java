@@ -1,6 +1,7 @@
 package com.sos.auth.ldap;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +24,7 @@ import com.sos.auth.ldap.classes.SOSLdapGroupRolesMapping;
 import com.sos.auth.ldap.classes.SOSLdapWebserviceCredentials;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JocCockpitProperties;
 
 public class SOSLdapHandler {
 
@@ -36,7 +38,7 @@ public class SOSLdapHandler {
             LOGGER.debug("using StartTls for authentication");
             startTls = (StartTlsResponse) ldapContext.extendedOperation(new StartTlsRequest());
             if (Globals.withHostnameVerification) {
-                if (sosInternAuthWebserviceCredentials.getWithHostnameVerification()) {
+                if (sosInternAuthWebserviceCredentials.isHostnameVerification()) {
                     LOGGER.debug("HostNameVerification=true");
                 } else {
                     LOGGER.debug("HostNameVerification=false");
@@ -52,6 +54,21 @@ public class SOSLdapHandler {
 
     private void createDirContext(SOSLdapWebserviceCredentials sosLdapWebserviceCredentials, String password) throws NamingException, IOException {
         if (ldapContext == null) {
+
+            if (Globals.sosCockpitProperties != null) {
+               
+                if (sosLdapWebserviceCredentials.getTruststorePath() != null && !sosLdapWebserviceCredentials.getTruststorePath().isEmpty()) {
+                    Globals.sosCockpitProperties.getProperties().put("ldap_truststore_path", sosLdapWebserviceCredentials.getTruststorePath());
+                }
+                if (sosLdapWebserviceCredentials.getTruststorePassword() != null && !sosLdapWebserviceCredentials.getTruststorePassword().isEmpty()) {
+                    Globals.sosCockpitProperties.getProperties().put("ldap_truststore_password", sosLdapWebserviceCredentials
+                            .getTruststorePassword());
+                }
+                if (sosLdapWebserviceCredentials.getTruststoreType() != null) {
+                    Globals.sosCockpitProperties.getProperties().put("ldap_truststore_type", sosLdapWebserviceCredentials.getTruststoreType());
+                }
+            }
+
             Hashtable<String, String> env = new Hashtable<String, String>();
             env.put(Context.INITIAL_CONTEXT_FACTORY, SOSLdapWebserviceCredentials.INITIAL_CONTEXT_FACTORY);
             env.put(Context.PROVIDER_URL, sosLdapWebserviceCredentials.getLdapServerUrl());
@@ -62,7 +79,7 @@ public class SOSLdapHandler {
             if (sosLdapWebserviceCredentials.isSSL()) {
                 env.put("java.naming.ldap.factory.socket", "com.sos.auth.ldap.classes.SOSLdapSSLSocketFactory");
             }
- 
+
             ldapContext = new InitialLdapContext(env, null);
         }
     }

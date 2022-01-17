@@ -1,10 +1,10 @@
 package com.sos.auth.classes;
 
 import static org.junit.Assert.assertEquals;
-import java.net.MalformedURLException;
-import org.junit.Test;
 
-import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
+import java.net.MalformedURLException;
+
+import org.junit.Test;
 
 
 public class TestSOSShiroCurrentUserAnswer {

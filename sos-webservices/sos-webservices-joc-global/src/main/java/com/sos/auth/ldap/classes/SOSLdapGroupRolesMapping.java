@@ -244,7 +244,7 @@ public class SOSLdapGroupRolesMapping {
             for (String groupName : groupNames) {
                 LOGGER.debug(String.format("Looking for group: %s", groupName));
                 List<String> listOfGroupRoles = sosLdapWebserviceCredentials.getGroupRolesMap().get(groupName);
-                if (listOfRoles != null) {
+                if (listOfRoles != null && listOfGroupRoles != null) {
                     for (String role : listOfGroupRoles) {
                         listOfRoles.add(role);
                     }

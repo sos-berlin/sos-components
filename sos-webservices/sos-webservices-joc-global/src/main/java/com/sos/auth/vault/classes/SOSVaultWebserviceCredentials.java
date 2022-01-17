@@ -199,7 +199,6 @@ public class SOSVaultWebserviceCredentials {
 
                 if (truststoreType == null) {
                     truststoreType = KeystoreType.fromValue(getProperty(properties.getVault().getIamVaultTruststoreType(), "PKCS12"));
-
                 }
                 if (applicationToken == null) {
                     applicationToken = getProperty(properties.getVault().getIamVaultApplicationToken(), "");

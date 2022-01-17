@@ -68,7 +68,7 @@ import com.sos.joc.model.security.SecurityConfiguration;
 
 @SuppressWarnings("deprecation")
 @Path("/authentication")
-public class SOSServicePermissionShiro {
+public class SOSServicePermissionIam {
 
     private static final String CREATE_ACCOUNT = "createAccount";
     // private static final String JOC_COCKPIT_CLIENT_ID = "JOC Cockpit";
@@ -78,7 +78,7 @@ public class SOSServicePermissionShiro {
     private static final String EMPTY_STRING = "";
     private static final String ACCESS_TOKEN_EXPECTED = "Access token header expected";
     private static final String AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED = "Authorization header with basic based64part expected";
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSServicePermissionShiro.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSServicePermissionIam.class);
     private static final String SHIRO_SESSION = "SHIRO_SESSION";
     private static final String ThreadCtx = "authentication";
 
@@ -516,7 +516,7 @@ public class SOSServicePermissionShiro {
         case LDAP_JOC:
             sosLogin = new SOSLdapLogin();
             LOGGER.debug("Login with idendity service ldap");
-            break;            
+            break;
         case VAULT:
         case VAULT_JOC:
         case VAULT_JOC_ACTIVE:
@@ -719,6 +719,7 @@ public class SOSServicePermissionShiro {
                             }
 
                         } catch (JocAuthenticationException e) {
+                            msg = e.getMessage();
                             continue;
                         }
                     }
@@ -731,6 +732,12 @@ public class SOSServicePermissionShiro {
             SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
             if (currentAccount.getCurrentSubject() == null || !currentAccount.getCurrentSubject().isAuthenticated()) {
                 sosAuthCurrentUserAnswer.setIsAuthenticated(false);
+                if (currentAccount.getIdentityServices() != null) {
+                    sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityServices().getIdentityServiceName());
+                }else {
+                    sosAuthCurrentUserAnswer.setIdentityService("");
+                }
+                    
                 sosAuthCurrentUserAnswer.setMessage(String.format("%s: Could not login with account: %s password:*******", msg, currentAccount
                         .getAccountname()));
                 throw new JocAuthenticationException(sosAuthCurrentUserAnswer);
@@ -757,8 +764,10 @@ public class SOSServicePermissionShiro {
             sosAuthCurrentUserAnswer.setEnableTouch(enableTouch);
 
             return sosAuthCurrentUserAnswer;
+        } catch (JocAuthenticationException e) {
+            return e.getSosAuthCurrentAccountAnswer();
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(),e);
+            LOGGER.error(e.getMessage(), e);
             SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = new SOSAuthCurrentAccountAnswer();
             sosAuthCurrentUserAnswer.setMessage(e.getMessage());
             sosAuthCurrentUserAnswer.setIsAuthenticated(false);
@@ -767,7 +776,6 @@ public class SOSServicePermissionShiro {
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-
     }
 
     protected JOCDefaultResponse login(HttpServletRequest request, String basicAuthorization, String clientCertCN, String user, String pwd)
@@ -855,7 +863,6 @@ public class SOSServicePermissionShiro {
             jocAuditLog.logAuditMessage(audit);
         }
         if (!sosAuthCurrentUserAnswer.isAuthenticated()) {
-            LOGGER.info(sosAuthCurrentUserAnswer.getMessage());
             return JOCDefaultResponse.responseStatus401(sosAuthCurrentUserAnswer);
         } else {
             SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
