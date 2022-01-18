@@ -354,8 +354,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
             settings.setOverwrite(false);
             settings.setSubmit(true);
-            settings.setTimeZone(settings.getTimeZone());
-            settings.setPeriodBegin(settings.getPeriodBegin());
+            settings.setTimeZone(getSettings().getTimeZone());
+            settings.setPeriodBegin(getSettings().getPeriodBegin());
 
             DailyPlanRunner runner = new DailyPlanRunner(settings);
             runner.submitOrders(StartupMode.manual, items.get(0).getControllerId(), items, null, getJocError(), getAccessToken());
