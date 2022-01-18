@@ -83,12 +83,6 @@ import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
-class CalendarCacheItem {
-
-    Calendar calendar;
-
-}
-
 public class DailyPlanRunner extends TimerTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanRunner.class);
@@ -669,8 +663,7 @@ public class DailyPlanRunner extends TimerTask {
         Date nextDate = DailyPlanHelper.getNextDay(date, settings);
         boolean fromService = isFromService(startupMode);
 
-        Map<String, CalendarCacheItem> calendarCache = new HashMap<String, CalendarCacheItem>();
-
+        Map<String, Calendar> calendars = new HashMap<String, Calendar>();
         OrderListSynchronizer synchronizer = new OrderListSynchronizer(settings);
         for (Schedule schedule : schedules) {
             if (fromService && !schedule.getPlanOrderAutomatically()) {
@@ -689,7 +682,6 @@ public class DailyPlanRunner extends TimerTask {
                         assignedCalendar.setTimeZone(UTC);
                     }
 
-                    CalendarCacheItem calendarCacheItem = calendarCache.get(assignedCalendar.getCalendarName() + "#" + schedule.getPath());
                     String actDateAsString = SOSDate.getDateWithTimeZoneAsString(actDate, settings.getTimeZone());
                     String nextDateAsString = SOSDate.getDateWithTimeZoneAsString(nextDate, settings.getTimeZone());
                     String dailyPlanDateAsString = SOSDate.getDateWithTimeZoneAsString(date, settings.getTimeZone());
@@ -700,9 +692,9 @@ public class DailyPlanRunner extends TimerTask {
                                 actDateAsString, nextDateAsString, dailyPlanDateAsString));
                     }
 
-                    if (calendarCacheItem == null) {
-                        calendarCacheItem = new CalendarCacheItem();
-                        Calendar calendar = null;
+                    String calendarKey = assignedCalendar.getCalendarName() + "#" + schedule.getPath();
+                    Calendar calendar = calendars.get(calendarKey);
+                    if (calendar == null) {
                         try {
                             calendar = getCalendar(controllerId, assignedCalendar.getCalendarName(), ConfigurationType.WORKINGDAYSCALENDAR);
                         } catch (DBMissingDataException e) {
@@ -710,26 +702,22 @@ public class DailyPlanRunner extends TimerTask {
                                     schedule.getPath(), assignedCalendar.getCalendarName()));
                             continue;
                         }
-                        calendarCacheItem.calendar = calendar;
-                        calendarCache.put(assignedCalendar.getCalendarName() + "#" + schedule.getPath(), calendarCacheItem);
+                        calendars.put(calendarKey, calendar);
                     } else {
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format("[%s][%s][%s][%s][WorkingDayCalendar=%s][cache]%s", method, controllerId, dailyPlanDate,
-                                    schedule.getPath(), assignedCalendar.getCalendarName(), SOSString.toString(calendarCacheItem)));
+                                    schedule.getPath(), assignedCalendar.getCalendarName(), SOSString.toString(calendar)));
                         }
                     }
                     PeriodResolver periodResolver = new PeriodResolver(settings);
                     Calendar restrictions = new Calendar();
 
-                    calendarCacheItem.calendar.setFrom(actDateAsString);
-                    calendarCacheItem.calendar.setTo(nextDateAsString);
-                    String calendarJson = Globals.objectMapper.writeValueAsString(calendarCacheItem.calendar);
+                    calendar.setFrom(actDateAsString);
+                    calendar.setTo(nextDateAsString);
                     restrictions.setIncludes(assignedCalendar.getIncludes());
-                    String restrictionJson = Globals.objectMapper.writeValueAsString(restrictions);
 
-                    List<String> dates = new FrequencyResolver().resolveRestrictions(calendarJson, restrictionJson, actDateAsString, nextDateAsString)
+                    List<String> dates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString, nextDateAsString)
                             .getDates();
-
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s][FrequencyResolver]dates=%s", method, controllerId, dailyPlanDate,
                                 schedule.getPath(), assignedCalendar.getCalendarName(), String.join(",", dates)));
@@ -790,8 +778,7 @@ public class DailyPlanRunner extends TimerTask {
                                         synchronizer.setSubmission(addDailyPlanSubmission(controllerId, date));
                                     }
 
-                                    PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, schedule, calendarCacheItem.calendar
-                                            .getId());
+                                    PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, schedule, calendar.getId());
                                     plannedOrder.setWorkflowPath(schedule.getWorkflowPath());
                                     plannedOrder.setPeriod(periodEntry.getValue());
                                     plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
