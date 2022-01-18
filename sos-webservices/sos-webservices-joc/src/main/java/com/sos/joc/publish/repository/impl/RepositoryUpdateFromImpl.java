@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,8 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.AuditLogDetail;
+import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
@@ -59,9 +62,8 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
                 }
             });
             
-            // TODO: clarify whether to create auditLog Detail entries
-//          CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(configurations.stream().map(i -> new AuditLogDetail(i.getPath(), 
-//                i.getObjectType().intValue())), dbAudit.getId(), dbAudit.getCreated()));
+          CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(dbItems.stream().map(item -> new AuditLogDetail(item.getPath(), 
+                item.getType())), dbAuditlog.getId(), dbAuditlog.getCreated()));
 
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** read from repository finished ***" + apiCallFinished);

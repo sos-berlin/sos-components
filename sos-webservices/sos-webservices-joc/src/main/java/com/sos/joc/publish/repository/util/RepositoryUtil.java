@@ -56,6 +56,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.folder.Folder;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.OperationType;
@@ -75,33 +76,6 @@ public abstract class RepositoryUtil {
      private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryUtil.class);
 //    private static final CopyOption[] COPYOPTIONS = new StandardCopyOption[] { StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING };
     private static final OpenOption[] OPENOPTIONS = new StandardOpenOption[] { StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE};
-
-    public static Path getPathWithExtension(Configuration cfg) {
-        switch (cfg.getObjectType()) {
-        case FILEORDERSOURCE:
-            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.FILEORDERSOURCE));
-        case INCLUDESCRIPT:
-            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.INCLUDESCRIPT));
-        case JOBCLASS:
-            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.JOBCLASS));
-        case JOBRESOURCE:
-            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.JOBRESOURCE));
-        case LOCK:
-            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.LOCK));
-        case NOTICEBOARD:
-            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.NOTICEBOARD));
-        case SCHEDULE:
-            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.SCHEDULE));
-        case WORKFLOW:
-            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.WORKFLOW));
-        case NONWORKINGDAYSCALENDAR:
-            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.NONWORKINGDAYSCALENDAR));
-        case WORKINGDAYSCALENDAR:
-            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.WORKINGDAYSCALENDAR));
-        default:
-            return Paths.get(cfg.getPath());
-        }
-    }
 
     public static String getExtension(ConfigurationType type) {
         switch (type) {
@@ -347,37 +321,6 @@ public abstract class RepositoryUtil {
         return getDeployableConfigurationsFromDB(filter, dbLayer, commitId, types);
     }
 
-    public static Set<Path> getRelativePathsToDeleteFromDB(DeleteFromFilter filter, DBLayerDeploy dbLayer) throws DBConnectionRefusedException,
-            DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException, SOSHibernateException {
-        if (filter != null && !filter.getConfigurations().isEmpty()) {
-            Set<Configuration> folders = filter.getConfigurations().stream()
-                    .filter(cfg -> ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
-                    .map(config -> config.getConfiguration()).collect(Collectors.toSet());
-            Set<Configuration> configurations = filter.getConfigurations().stream()
-                    .filter(cfg -> !ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
-                    .map(config -> config.getConfiguration()).collect(Collectors.toSet());
-            Map<String, ConfigurationType> result = configurations.stream()
-                    .collect(Collectors.toMap(Configuration::getPath, Configuration::getObjectType));
-            if (!folders.isEmpty()) {
-                Set<DBItemInventoryConfiguration> dbItemConfigurations = new HashSet<DBItemInventoryConfiguration>();
-                folders.stream().map(folder -> dbItemConfigurations.addAll(
-                        dbLayer.getAllInventoryConfigurationsByFolder(folder.getPath(), folder.getRecursive())));
-                if (!dbItemConfigurations.isEmpty()) {
-                    result.putAll(dbItemConfigurations.stream().collect(
-                            Collectors.toMap(DBItemInventoryConfiguration::getPath, DBItemInventoryConfiguration::getTypeAsEnum)));
-                }
-            }
-            return result.entrySet().stream().map(entry -> {
-                if (entry.getKey().startsWith("/")) {
-                    return Paths.get(entry.getKey().substring(1) + getExtension(entry.getValue()));
-                } else {
-                    return Paths.get(entry.getKey() + getExtension(entry.getValue()));
-                }
-            }).collect(Collectors.toSet());
-        }
-        return Collections.emptySet();
-    }
-
     public static Set<ConfigurationObject> getReleasableConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer) 
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
             IOException, SOSHibernateException {
@@ -425,6 +368,37 @@ public abstract class RepositoryUtil {
         }
         Set<ConfigurationObject> withoutDuplicates = new HashSet<ConfigurationObject>(allObjectsMap.values());
         return withoutDuplicates;
+    }
+
+    public static Set<Path> getRelativePathsToDeleteFromDB(DeleteFromFilter filter, DBLayerDeploy dbLayer) throws DBConnectionRefusedException,
+            DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException, SOSHibernateException {
+        if (filter != null && !filter.getConfigurations().isEmpty()) {
+            Set<Configuration> folders = filter.getConfigurations().stream()
+                    .filter(cfg -> ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
+                    .map(config -> config.getConfiguration()).collect(Collectors.toSet());
+            Set<Configuration> configurations = filter.getConfigurations().stream()
+                    .filter(cfg -> !ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
+                    .map(config -> config.getConfiguration()).collect(Collectors.toSet());
+            Map<String, ConfigurationType> result = configurations.stream().collect(
+                    Collectors.toMap(Configuration::getPath, Configuration::getObjectType));
+            if (!folders.isEmpty()) {
+                Set<DBItemInventoryConfiguration> dbItemConfigurations = new HashSet<DBItemInventoryConfiguration>();
+                folders.stream().map(folder -> dbItemConfigurations.addAll(
+                        dbLayer.getAllInventoryConfigurationsByFolder(folder.getPath(), folder.getRecursive())));
+                if (!dbItemConfigurations.isEmpty()) {
+                    result.putAll(dbItemConfigurations.stream().collect(Collectors.toMap(DBItemInventoryConfiguration::getPath,
+                            DBItemInventoryConfiguration::getTypeAsEnum)));
+                }
+            }
+            return result.entrySet().stream().map(entry -> {
+                if (entry.getKey().startsWith("/")) {
+                    return Paths.get(entry.getKey().substring(1) + getExtension(entry.getValue()));
+                } else {
+                    return Paths.get(entry.getKey() + getExtension(entry.getValue()));
+                }
+            }).collect(Collectors.toSet());
+        }
+        return Collections.emptySet();
     }
 
     public static void writeToRepository(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, Path repo)
@@ -588,51 +562,9 @@ public abstract class RepositoryUtil {
                     } catch (Exception e) {
                         valid = false;
                     }
-                    switch (dbItem.getTypeAsEnum()) {
-                    case WORKFLOW:
+                    if(!ConfigurationType.FOLDER.equals(dbItem.getTypeAsEnum())) {
                         updatedContent = Globals.objectMapper.writeValueAsString(
-                                Globals.prettyPrintObjectMapper.readValue(content, Workflow.class));
-                        break;
-                    case LOCK:
-                        updatedContent = Globals.objectMapper.writeValueAsString(
-                                Globals.prettyPrintObjectMapper.readValue(content, Lock.class));
-                        break;
-                    case JOBCLASS:
-                        updatedContent = Globals.objectMapper.writeValueAsString(
-                                Globals.prettyPrintObjectMapper.readValue(content, JobClass.class));
-                        break;
-                    case FILEORDERSOURCE:
-                        updatedContent = Globals.objectMapper.writeValueAsString(
-                                Globals.prettyPrintObjectMapper.readValue(content, FileOrderSource.class));
-                        break;
-                    case NOTICEBOARD:
-                        updatedContent = Globals.objectMapper.writeValueAsString(
-                                Globals.prettyPrintObjectMapper.readValue(content, Board.class));
-                        break;
-                    case JOBRESOURCE:
-                        updatedContent = Globals.objectMapper.writeValueAsString(
-                                Globals.prettyPrintObjectMapper.readValue(content, JobResource.class));
-                        break;
-                    case JOB:
-                        updatedContent = Globals.objectMapper.writeValueAsString(
-                                Globals.prettyPrintObjectMapper.readValue(content, Job.class));
-                        break;
-                    case INCLUDESCRIPT:
-                        updatedContent = Globals.objectMapper.writeValueAsString(
-                                Globals.prettyPrintObjectMapper.readValue(content, Script.class));
-                        break;
-                    case SCHEDULE:
-                        updatedContent = Globals.objectMapper.writeValueAsString(
-                                Globals.prettyPrintObjectMapper.readValue(content, Schedule.class));
-                        break;
-                    case WORKINGDAYSCALENDAR:
-                    case NONWORKINGDAYSCALENDAR:
-                        updatedContent = Globals.objectMapper.writeValueAsString(
-                                Globals.prettyPrintObjectMapper.readValue(content, Calendar.class));
-                        break;
-                    case FOLDER:
-                    default:
-                        break;
+                                Globals.prettyPrintObjectMapper.readValue(content, getConfigurationClass(dbItem.getTypeAsEnum())));
                     }
                     if (updatedContent != null) {
                         dbItem.setContent(updatedContent);
@@ -649,6 +581,63 @@ public abstract class RepositoryUtil {
         return dbItemsToUpdate;
     }
 
+    public static Path getPathWithExtension(Configuration cfg) {
+        switch (cfg.getObjectType()) {
+        case FILEORDERSOURCE:
+            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.FILEORDERSOURCE));
+        case INCLUDESCRIPT:
+            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.INCLUDESCRIPT));
+        case JOBCLASS:
+            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.JOBCLASS));
+        case JOBRESOURCE:
+            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.JOBRESOURCE));
+        case LOCK:
+            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.LOCK));
+        case NOTICEBOARD:
+            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.NOTICEBOARD));
+        case SCHEDULE:
+            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.SCHEDULE));
+        case WORKFLOW:
+            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.WORKFLOW));
+        case NONWORKINGDAYSCALENDAR:
+            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.NONWORKINGDAYSCALENDAR));
+        case WORKINGDAYSCALENDAR:
+            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.WORKINGDAYSCALENDAR));
+        default:
+            return Paths.get(cfg.getPath());
+        }
+    }
+
+    private static Class<?> getConfigurationClass (ConfigurationType type) {
+        switch (type) {
+        case WORKFLOW:
+            return Workflow.class;
+        case FILEORDERSOURCE:
+            return FileOrderSource.class;
+        case LOCK:
+            return Lock.class;
+        case NOTICEBOARD:
+            return Board.class;
+        case JOBRESOURCE:
+            return JobResource.class;
+        case JOBCLASS:
+            return JobClass.class;
+        case JOB:
+            return Job.class;
+        case INCLUDESCRIPT:
+            return Script.class;
+        case SCHEDULE:
+            return Schedule.class;
+        case WORKINGDAYSCALENDAR:
+        case NONWORKINGDAYSCALENDAR:
+            return Calendar.class;
+        case FOLDER:
+            return Folder.class;
+        default:
+            return null;
+        }
+    }
+    
     private static Set<ConfigurationObject> getDeployableConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, String commitId, 
             Set<Integer> types) throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, 
             DBMissingDataException, IOException, SOSHibernateException {
@@ -677,9 +666,6 @@ public abstract class RepositoryUtil {
                 if (!allItems.isEmpty()) {
                     allItems.stream().filter(Objects::nonNull).filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue()))
                         .forEach(item -> {
-                            if (commitId != null) {
-                                dbLayer.storeCommitIdForLaterUsage(item, commitId);
-                            }
                             configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item, commitId));
                         });
                 }

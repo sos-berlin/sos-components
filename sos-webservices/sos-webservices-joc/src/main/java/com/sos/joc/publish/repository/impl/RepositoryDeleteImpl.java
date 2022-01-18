@@ -65,10 +65,6 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
                 }
             });
             
-            // TODO: clarify whether to create auditLog Detail entries
-//          CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(configurations.stream().map(i -> new AuditLogDetail(i.getPath(), 
-//                i.getObjectType().intValue())), dbAudit.getId(), dbAudit.getCreated()));
-            
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** delete from repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");

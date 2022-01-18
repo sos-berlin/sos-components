@@ -55,10 +55,6 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
             deployables = deployables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
             Set<ConfigurationObject> releasables = RepositoryUtil.getReleasableConfigurationsFromDB(filter, dbLayer);
             releasables = releasables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
-            // TODO: clarify whether to create auditLog Detail entries
-//            final Stream<ConfigurationObject> stream = Stream.concat(deployables.stream(), releasables.stream());
-//            CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(stream.map(i -> new AuditLogDetail(i.getPath(), i.getObjectType().intValue())),
-//                    dbAudit.getId(), dbAudit.getCreated()));
             RepositoryUtil.writeToRepository(deployables, releasables, repositories);
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** store to repository finished ***" + apiCallFinished);
