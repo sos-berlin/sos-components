@@ -340,14 +340,18 @@ public class MappingTest {
 
     @Test
     public void test20RepositoryCopyToFilter () throws JsonProcessingException {
-        LOGGER.trace("Repository - CopyToFilter Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryCopyToFilter()));
+        LOGGER.trace("Repository - CopyToFilter Folder Example");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryCopyToFilterFolderExample()));
+        LOGGER.trace("Repository - CopyToFilter Files Example");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryCopyToFilterFilesExample()));
     }
 
     @Test
     public void test21RepositoryDeleteFromFilter () throws JsonProcessingException {
-        LOGGER.info("Repository - DeleteFromFilter Example");
-        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilter()));
+        LOGGER.trace("Repository - DeleteFromFilter Folder Example");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilterFolderExample()));
+        LOGGER.trace("Repository - DeleteFromFilter Files Example");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilterFilesExample()));
     }
 
     @Test
@@ -365,8 +369,10 @@ public class MappingTest {
 
     @Test
     public void test24RepositoryUpdateFromFilter () throws JsonProcessingException {
-        LOGGER.trace("Repository - UpdateFromFilter Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilter()));
+        LOGGER.trace("Repository - UpdateFromFilter Folder Example");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilterFolderExample()));
+        LOGGER.trace("Repository - UpdateFromFilter Files Example");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilterFilesExample()));
     }
 
 }

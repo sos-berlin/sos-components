@@ -703,7 +703,7 @@ public class DeploymentTestUtils {
         return filter;
     }
 
-    public static CopyToFilter createRepositoryCopyToFilter () throws JsonProcessingException {
+    public static CopyToFilter createRepositoryCopyToFilterFolderExample () throws JsonProcessingException {
         CopyToFilter filter = new CopyToFilter();
         filter.setControllerId("testsuite");
         filter.setControllerId(null);
@@ -730,16 +730,104 @@ public class DeploymentTestUtils {
         return filter;
     }
 
-    public static DeleteFromFilter createRepositoryDeleteFromFilter () throws JsonProcessingException {
+    public static CopyToFilter createRepositoryCopyToFilterFilesExample () throws JsonProcessingException {
+        
+        EnvIndependentConfigurations envIndependent = new EnvIndependentConfigurations();
+        EnvRelatedConfigurations envRelated = new EnvRelatedConfigurations();
+
+        CopyToFilter filter = new CopyToFilter();
+        filter.setControllerId("testsuite");
+        filter.setAuditLog(null);
+        filter.setEnvIndependent(envIndependent);
+        filter.setEnvRelated(envRelated);
+
+        Config file = new Config();
+        Configuration cfg = new Configuration();
+        cfg.setRecursive(null);
+        cfg.setObjectType(ConfigurationType.WORKFLOW);
+        cfg.setPath("/ProductDemo/AdmissionTimes/pdAdmissionTimeJob2");
+        cfg.setCommitId("0a4b2077-6912-4a98-b5f1-799af9c1d90a");
+        file.setConfiguration(cfg);
+        envIndependent.getDeployConfigurations().add(file);
+
+        file = new Config();
+        cfg = new Configuration();
+        cfg.setRecursive(null);
+        cfg.setObjectType(ConfigurationType.WORKFLOW);
+        cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicSerialWorkflow");
+        file.setConfiguration(cfg);
+        envIndependent.getDraftConfigurations().add(file);
+        
+        file = new Config();
+        cfg = new Configuration();
+        cfg.setRecursive(null);
+        cfg.setObjectType(ConfigurationType.SCHEDULE);
+        cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicSerialWorkflow");
+        file.setConfiguration(cfg);
+        envRelated.getDraftConfigurations().add(file);
+
+        envRelated.setDeployConfigurations(null);
+
+        file = new Config();
+        cfg = new Configuration();
+        cfg.setRecursive(null);
+        cfg.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
+        cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicAllDays");
+        file.setConfiguration(cfg);
+        envRelated.getReleasedConfigurations().add(file);
+        
+        return filter;
+    }
+
+    public static DeleteFromFilter createRepositoryDeleteFromFilterFolderExample () throws JsonProcessingException {
         DeleteFromFilter filter = new DeleteFromFilter();
         filter.setAuditLog(null);
         Config config = new Config();
         Configuration cfg = new Configuration();
-        cfg.setObjectType(ConfigurationType.FOLDER);
+        cfg.setObjectType(ConfigurationType.WORKFLOW);
         cfg.setPath("/ProductDemo");
         cfg.setRecursive(true);
         config.setConfiguration(cfg);
         filter.getConfigurations().add(config);
+        
+        return filter;
+    }
+
+    public static DeleteFromFilter createRepositoryDeleteFromFilterFilesExample () throws JsonProcessingException {
+        DeleteFromFilter filter = new DeleteFromFilter();
+        filter.setAuditLog(null);
+        Config config = new Config();
+        Configuration cfg = new Configuration();
+        cfg.setRecursive(null);
+        cfg.setObjectType(ConfigurationType.WORKFLOW);
+        cfg.setPath("/ProductDemo/AdmissionTimes/pdAdmissionTimeJob2");
+        config.setConfiguration(cfg);
+        filter.getConfigurations().add(config);
+
+        config = new Config();
+        cfg = new Configuration();
+        cfg.setRecursive(null);
+        cfg.setObjectType(ConfigurationType.WORKFLOW);
+        cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicSerialWorkflow");
+        config.setConfiguration(cfg);
+        filter.getConfigurations().add(config);
+        
+        config = new Config();
+        cfg = new Configuration();
+        cfg.setRecursive(null);
+        cfg.setObjectType(ConfigurationType.SCHEDULE);
+        cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicSerialWorkflow");
+        config.setConfiguration(cfg);
+        filter.getConfigurations().add(config);
+
+        config = new Config();
+        cfg = new Configuration();
+        cfg.setRecursive(null);
+        cfg.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
+        cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicAllDays");
+        config.setConfiguration(cfg);
+        filter.getConfigurations().add(config);
+
         return filter;
     }
 
@@ -771,16 +859,56 @@ public class DeploymentTestUtils {
                 responseFolder, RepositoryUtil.subPath(repositories, repository), RepositoryUtil.subPath(repositories, repositories), recursive);
     }
 
-    public static UpdateFromFilter createRepositoryUpdateFromFilter () throws JsonProcessingException {
+    public static UpdateFromFilter createRepositoryUpdateFromFilterFolderExample () throws JsonProcessingException {
         UpdateFromFilter filter = new UpdateFromFilter();
         filter.setAuditLog(null);
+        Config config = new Config();
         Configuration cfg = new Configuration();
         cfg.setObjectType(ConfigurationType.FOLDER);
         cfg.setPath("/ProductDemo");
         cfg.setRecursive(true);        
-        Config config = new Config();
         config.setConfiguration(cfg);
         filter.getConfigurations().add(config);
         return filter;
     }
+
+    public static UpdateFromFilter createRepositoryUpdateFromFilterFilesExample () throws JsonProcessingException {
+        UpdateFromFilter filter = new UpdateFromFilter();
+        filter.setAuditLog(null);
+
+        Config config = new Config();
+        Configuration cfg = new Configuration();
+        cfg.setRecursive(null);
+        cfg.setObjectType(ConfigurationType.WORKFLOW);
+        cfg.setPath("/ProductDemo/AdmissionTimes/pdAdmissionTimeJob2");
+        config.setConfiguration(cfg);
+        filter.getConfigurations().add(config);
+
+        config = new Config();
+        cfg = new Configuration();
+        cfg.setRecursive(null);
+        cfg.setObjectType(ConfigurationType.WORKFLOW);
+        cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicSerialWorkflow");
+        config.setConfiguration(cfg);
+        filter.getConfigurations().add(config);
+        
+        config = new Config();
+        cfg = new Configuration();
+        cfg.setRecursive(null);
+        cfg.setObjectType(ConfigurationType.SCHEDULE);
+        cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicSerialWorkflow");
+        config.setConfiguration(cfg);
+        filter.getConfigurations().add(config);
+
+        config = new Config();
+        cfg = new Configuration();
+        cfg.setRecursive(null);
+        cfg.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
+        cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicAllDays");
+        config.setConfiguration(cfg);
+        filter.getConfigurations().add(config);
+
+        return filter;
+    }
+
 }
