@@ -558,6 +558,7 @@ public class SOSServicePermissionIam {
         Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
 
         resetTimeOut(currentAccount);
+        currentAccount.getCurrentSubject().getSession().renew();
 
         ISOSSecurityConfiguration sosSecurityConfiguration;
         switch (identityServiceType) {

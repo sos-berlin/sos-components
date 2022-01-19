@@ -120,8 +120,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             dbItemIamAcount.setIdentityServiceId(dbItemIamIdentityService.getId());
 
             sosHibernateSession.save(dbItemIamAcount);
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())
-                    || IdentityServiceTypes.VAULT_JOC.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 setOfAccounts.remove(securityConfigurationAccount.getAccount());
                 storeInVault(webserviceCredentials, securityConfigurationAccount, password, IdentityServiceTypes.fromValue(dbItemIamIdentityService
                         .getIdentityServiceType()));

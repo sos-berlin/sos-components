@@ -13,6 +13,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
@@ -115,6 +116,16 @@ public class SOSVaultWebserviceCredentials {
 
     public void setValuesFromProfile(SOSIdentityService sosIdentityService) {
 
+        String truststorePasswordDefault="";
+        String truststoreTypeDefault="PKCS12";
+        String truststorePathDefault=""; 
+            
+        if (Globals.sosCockpitProperties != null) {
+            truststorePathDefault  =  Globals.sosCockpitProperties.getProperty("truststore_path","");
+            truststoreTypeDefault  = Globals.sosCockpitProperties.getProperty("truststore_type","PKCS12");
+            truststorePasswordDefault   = Globals.sosCockpitProperties.getProperty("truststore_password","");
+        }
+        
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSVaultWebserviceCredentials");
@@ -143,15 +154,15 @@ public class SOSVaultWebserviceCredentials {
                 }
 
                 if (truststorePath.isEmpty()) {
-                    truststorePath = getProperty(properties.getVault().getIamVaultTruststorePath(), "");
+                    truststorePath = getProperty(properties.getVault().getIamVaultTruststorePath(), truststorePathDefault);
                 }
 
                 if (truststorePassword.isEmpty()) {
-                    truststorePassword = getProperty(properties.getVault().getIamVaultTruststorePassword(), "");
+                    truststorePassword = getProperty(properties.getVault().getIamVaultTruststorePassword(), truststorePasswordDefault);
                 }
 
                 if (truststoreType == null) {
-                    truststoreType = KeystoreType.fromValue(getProperty(properties.getVault().getIamVaultTruststoreType(), "PKCS12"));
+                    truststoreType = KeystoreType.fromValue(getProperty(properties.getVault().getIamVaultTruststoreType(), truststoreTypeDefault));
                 }
                 if (applicationToken == null) {
                     applicationToken = getProperty(properties.getVault().getIamVaultApplicationToken(), "");
