@@ -120,7 +120,7 @@ public class SOSVaultHandler {
         sosVaultStoreUser.setPassword(password);
         String body = Globals.objectMapper.writeValueAsString(sosVaultStoreUser);
         sosVaultAccountCredentials.setPassword("");
-        String response = getResponse("/v1/auth/userpass/users/" + sosVaultAccountCredentials.getUsername(), body);
+        String response = getResponse("/v1/auth/" + webserviceCredentials.getAuthenticationMethodPath() + "/users/" + sosVaultAccountCredentials.getUsername(), body);
 
         LOGGER.debug(response);
 
@@ -135,7 +135,7 @@ public class SOSVaultHandler {
         String body = Globals.objectMapper.writeValueAsString(sosVaultAccountCredentials);
         sosVaultAccountCredentials.setPassword(null);
 
-        String response = getResponse("/v1/auth/userpass/login/" + sosVaultAccountCredentials.getUsername(), body);
+        String response = getResponse("/v1/auth/" + webserviceCredentials.getAuthenticationMethodPath() + "/login/" + sosVaultAccountCredentials.getUsername(), body);
 
         LOGGER.debug(response);
 
@@ -171,7 +171,7 @@ public class SOSVaultHandler {
         String body = Globals.objectMapper.writeValueAsString(sosVaultUpdatePolicies);
         sosVaultAccountCredentials.setPassword(null);
 
-        String response = getResponse("/v1/auth/userpass/users/" + sosVaultAccountCredentials.getUsername(), body);
+        String response = getResponse("/v1/auth/" + webserviceCredentials.getAuthenticationMethodPath() + "/users/" + sosVaultAccountCredentials.getUsername(), body);
 
         LOGGER.debug(response);
 
@@ -184,7 +184,7 @@ public class SOSVaultHandler {
         if ((keyStore != null) || (truststore != null)) {
             restApiClient.setSSLContext(keyStore, webserviceCredentials.getKeyPassword().toCharArray(), truststore);
         }
-        URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + "/v1/auth/userpass/users/" + account);
+        URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + "/v1/auth/" + webserviceCredentials.getAuthenticationMethodPath() + "/users/" + account);
         String response = restApiClient.deleteRestService(requestUri);
 
         LOGGER.debug(response);

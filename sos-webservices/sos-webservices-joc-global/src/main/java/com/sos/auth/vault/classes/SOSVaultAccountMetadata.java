@@ -2,13 +2,13 @@ package com.sos.auth.vault.classes;
 
 public class SOSVaultAccountMetadata {
 
-    private String accountName;
+    private String username;
 
-    public String getAccountname() {
-        return accountName;
+    public String getUsername() {
+        return username;
     }
 
-    public void setAccountname(String accountName) {
-        this.accountName = accountName;
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

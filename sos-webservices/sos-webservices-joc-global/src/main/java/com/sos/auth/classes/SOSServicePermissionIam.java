@@ -734,10 +734,10 @@ public class SOSServicePermissionIam {
                 sosAuthCurrentUserAnswer.setIsAuthenticated(false);
                 if (currentAccount.getIdentityServices() != null) {
                     sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityServices().getIdentityServiceName());
-                }else {
+                } else {
                     sosAuthCurrentUserAnswer.setIdentityService("");
                 }
-                    
+
                 sosAuthCurrentUserAnswer.setMessage(String.format("%s: Could not login with account: %s password:*******", msg, currentAccount
                         .getAccountname()));
                 throw new JocAuthenticationException(sosAuthCurrentUserAnswer);
@@ -787,6 +787,11 @@ public class SOSServicePermissionIam {
         }
         Globals.jocTimeZone = TimeZone.getDefault();
         Globals.setProperties();
+
+        SOSShiroImport sosShiroImport = new SOSShiroImport();
+        if (sosShiroImport.importNeccessary()) {
+            sosShiroImport.executeImport();
+        }
 
         SOSHibernateSession sosHibernateSession = null;
         try {

@@ -20,7 +20,6 @@ import com.sos.joc.db.security.IamAccountDBLayer;
 
 public class SOSInternAuthSubject implements ISOSAuthSubject {
 
-   
     private SOSInternAuthSession session;
     private Boolean authenticated;
     private Map<String, List<String>> mapOfFolderPermissions;
@@ -89,7 +88,7 @@ public class SOSInternAuthSubject implements ISOSAuthSubject {
                 for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
                     setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
                 }
-                List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDbLayer.getListOfPermissionsFromRoleNames(setOfRoles, accountName,
+                List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDbLayer.getListOfPermissionsFromRoleNames(setOfRoles,
                         identityServiceId.getIdentityServiceId());
                 mapOfFolderPermissions = new HashMap<String, List<String>>();
                 setOfAccountPermissions = new HashSet<String>();

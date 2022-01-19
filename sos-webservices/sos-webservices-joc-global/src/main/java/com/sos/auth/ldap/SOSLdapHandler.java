@@ -35,13 +35,15 @@ public class SOSLdapHandler {
         if (sosInternAuthWebserviceCredentials.getUseStartTls()) {
             LOGGER.debug("using StartTls for authentication");
             startTls = (StartTlsResponse) ldapContext.extendedOperation(new StartTlsRequest());
-            if (Globals.withHostnameVerification) {
-                if (sosInternAuthWebserviceCredentials.isHostnameVerification()) {
-                    LOGGER.debug("HostNameVerification=true");
-                } else {
-                    LOGGER.debug("HostNameVerification=false");
-                    startTls.setHostnameVerifier(new DummyVerifier());
-                }
+            boolean isHostNameVerification = false;
+            if (sosInternAuthWebserviceCredentials.getHostnameVerification() == null || sosInternAuthWebserviceCredentials.getHostnameVerification()
+                    .isEmpty()) {
+                isHostNameVerification = Globals.withHostnameVerification;
+            } else {
+                isHostNameVerification = sosInternAuthWebserviceCredentials.isHostnameVerification();
+            }
+            if (isHostNameVerification) {
+                LOGGER.debug("HostNameVerification=true");
             } else {
                 LOGGER.debug("HostNameVerification=false");
                 startTls.setHostnameVerifier(new DummyVerifier());
@@ -87,9 +89,6 @@ public class SOSLdapHandler {
         SOSAuthAccessToken sosAuthAccessToken = null;
         try {
 
-            if (sosLdapWebserviceCredentials.getSearchBase().isEmpty() && !sosLdapWebserviceCredentials.getUserSearchFilter().isEmpty()) {
-                msg = "LDAP configuration is not valid: Missing setting 'searchBase'";
-            }
             if (sosLdapWebserviceCredentials.getSearchBase().isEmpty() && "memberOf".equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
                 msg = "LDAP configuration is not valid: Missing setting 'searchBase'";
             }
@@ -113,9 +112,17 @@ public class SOSLdapHandler {
         } catch (AuthenticationException ex) {
             msg = "There is no account with the given accountname/password combination";
         } catch (NamingException ex) {
-            msg = "NamingException: error when trying to create the ldap context >> " + ex.getCause();
+            String s = ex.getMessage();
+            if (ex.getCause() != null) {
+                s = s + ex.getCause();
+            }
+            msg = "NamingException: error when trying to create the ldap context >> " + s;
         } catch (IOException ex) {
-            msg = "IOException: error when trying to create the ldap context with startTls >> " + ex.getCause();
+            String s = ex.getMessage();
+            if (ex.getCause() != null) {
+                s = s + ex.getCause();
+            }
+            msg = "IOException: error when trying to create the ldap context with startTls >> " + s;
         }
         return sosAuthAccessToken;
     }

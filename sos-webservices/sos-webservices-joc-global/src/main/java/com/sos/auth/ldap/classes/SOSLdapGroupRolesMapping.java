@@ -44,9 +44,14 @@ public class SOSLdapGroupRolesMapping {
             SearchResult result = answer.next();
             String groupNameAttribute = sosLdapWebserviceCredentials.getGroupNameAttribute();
             Attribute g = result.getAttributes().get(groupNameAttribute);
+            if (g != null) {
             String group = g.get().toString();
             rolesForGroups.add(group);
             LOGGER.debug(String.format("Groupname %s found in attribute", group, groupNameAttribute));
+            }else {
+                LOGGER.warn("Could not find attribute " + groupNameAttribute);
+            }
+            
         }
         return rolesForGroups;
     }

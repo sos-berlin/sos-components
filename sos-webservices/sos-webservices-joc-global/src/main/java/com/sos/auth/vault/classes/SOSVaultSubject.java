@@ -96,8 +96,9 @@ public class SOSVaultSubject implements ISOSAuthSubject {
             }
 
             setOfAccountPermissions = new HashSet<String>();
+        
              
-            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, accountName,
+            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles,
                     identityService.getIdentityServiceId());
             mapOfFolderPermissions = new HashMap<String, List<String>>();
             setOfPermissions = new HashSet<DBItemIamPermissionWithName>();

@@ -8,7 +8,9 @@ import java.security.KeyStore;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.SocketFactory;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -43,6 +45,7 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
 
             ctx.init(null, tmf.getTrustManagers(), null);
             sf = ctx.getSocketFactory();
+
         } catch (Exception e) {
             LOGGER.error("", e);
         }
@@ -106,6 +109,14 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
         if (trustStorePath != null && !trustStorePath.trim().isEmpty()) {
             Path p = jocCockpitProperties.resolvePath(trustStorePath.trim());
             trustStorePath = p.toString();
+        }
+    }
+    
+    /** The hostname verifier always return true */
+    final static class DummyVerifier implements HostnameVerifier {
+
+        public boolean verify(String hostname, SSLSession session) {
+            return true;
         }
     }
 }

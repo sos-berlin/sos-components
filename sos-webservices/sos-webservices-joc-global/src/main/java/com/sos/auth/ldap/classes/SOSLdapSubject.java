@@ -52,7 +52,6 @@ public class SOSLdapSubject implements ISOSAuthSubject {
         return false;
     }
 
-
     @Override
     public Boolean isAuthenticated() {
         return authenticated;
@@ -101,8 +100,8 @@ public class SOSLdapSubject implements ISOSAuthSubject {
 
             setOfAccountPermissions = new HashSet<String>();
 
-            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, accountName,
-                    identityService.getIdentityServiceId());
+            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, identityService
+                    .getIdentityServiceId());
             mapOfFolderPermissions = new HashMap<String, List<String>>();
             setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
             for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {

@@ -22,6 +22,8 @@ import com.sos.joc.model.security.LdapGroupRolesMappingItem;
 
 public class SOSLdapWebserviceCredentials {
 
+    private static final String DEFAULT_USER_DN_TEMPLATE = "{0}";
+    private static final String DEFAULT_GROUP_NAME_ATTRIBUTE = "memberOf";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapWebserviceCredentials.class);
     public static final String INITIAL_CONTEXT_FACTORY = "com.sun.jndi.ldap.LdapCtxFactory";
     public static final String SECURITY_AUTHENTICATION = "simple";
@@ -218,7 +220,7 @@ public class SOSLdapWebserviceCredentials {
                 }
 
                 if (userDnTemplate == null || userDnTemplate.isEmpty()) {
-                    userDnTemplate = getProperty(properties.getLdap().getExpert().getIamLdapUserDnTemplate(), "{0}");
+                    userDnTemplate = getProperty(properties.getLdap().getExpert().getIamLdapUserDnTemplate(), DEFAULT_USER_DN_TEMPLATE);
                 }
 
                 if (searchBase == null || searchBase.isEmpty()) {
@@ -230,7 +232,7 @@ public class SOSLdapWebserviceCredentials {
                 }
 
                 if (groupNameAttribute == null || groupNameAttribute.isEmpty()) {
-                    groupNameAttribute = getProperty(properties.getLdap().getExpert().getIamLdapGroupNameAttribute(), "");
+                    groupNameAttribute = getProperty(properties.getLdap().getExpert().getIamLdapGroupNameAttribute(), DEFAULT_GROUP_NAME_ATTRIBUTE);
                 }
 
                 if (userNameAttribute == null || userNameAttribute.isEmpty()) {
@@ -247,7 +249,7 @@ public class SOSLdapWebserviceCredentials {
                 if (useStartTls == null) {
                     useStartTls = properties.getLdap().getExpert().getIamLdapUseStartTls();
                 }
-                if (hostnameVerification == null || groupSearchFilter.isEmpty()) {
+                if (hostnameVerification == null || hostnameVerification.isEmpty()) {
                     hostnameVerification = properties.getLdap().getExpert().getIamLdapHostNameVerification();
                 }
 

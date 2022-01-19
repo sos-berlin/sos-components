@@ -25,6 +25,7 @@ public class SOSVaultWebserviceCredentials {
     private String accessToken = "";
     private String decodedAccount = "";
     private String serviceUrl;
+    private String authenticationMethodPath;
 
     private String keystorePath = "";
     private String keystorePassword = "";
@@ -173,6 +174,10 @@ public class SOSVaultWebserviceCredentials {
                     serviceUrl = getProperty(properties.getVault().getIamVaultUrl(), "https://vault:8200");
                 }
 
+                if (authenticationMethodPath == null || authenticationMethodPath.isEmpty()) {
+                    authenticationMethodPath = getProperty(properties.getVault().getIamVaultAuthenticationMethodPath(), "ldap");
+                }
+
                 if (keystorePath.isEmpty()) {
                     keystorePath = getProperty(properties.getVault().getIamVaultKeystorePath(), "");
                 }
@@ -244,6 +249,16 @@ public class SOSVaultWebserviceCredentials {
                 + keyPassword + ", keystoreType=" + keystoreType + ", truststorePath=" + truststorePath + ", truststorePassword=" + truststorePassword
                 + ", truststoreType=" + truststoreType + ", applicationToken=" + applicationToken + ", vaultAccount=" + vaultAccount
                 + ", vaultPassword=" + vaultPassword + "]";
+    }
+
+    
+    public String getAuthenticationMethodPath() {
+        return authenticationMethodPath;
+    }
+
+    
+    public void setAuthenticationMethodPath(String authenticationMethodPath) {
+        this.authenticationMethodPath = authenticationMethodPath;
     }
 
 }
