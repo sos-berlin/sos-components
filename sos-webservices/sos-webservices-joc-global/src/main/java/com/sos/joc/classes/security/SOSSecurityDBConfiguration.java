@@ -44,16 +44,12 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
     private void storeInVault(SOSVaultWebserviceCredentials webserviceCredentials, SecurityConfigurationAccount securityConfigurationAccount,
             String password, IdentityServiceTypes identityServiceTypes) throws Exception {
-        KeyStore keyStore = null;
         KeyStore trustStore = null;
-
-        keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeystorePath(), webserviceCredentials.getKeystoreType(), webserviceCredentials
-                .getKeystorePassword());
 
         trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
                 webserviceCredentials.getTruststorePassword());
 
-        SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
+        SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
         SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
         sosVaultAccountCredentials.setUsername(securityConfigurationAccount.getAccount());
 
@@ -73,16 +69,12 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
     }
 
     private void deleteInVault(SOSVaultWebserviceCredentials webserviceCredentials, Set<String> setOfAccounts) throws Exception {
-        KeyStore keyStore = null;
         KeyStore trustStore = null;
-
-        keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeystorePath(), webserviceCredentials.getKeystoreType(), webserviceCredentials
-                .getKeystorePassword());
 
         trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
                 webserviceCredentials.getTruststorePassword());
 
-        SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
+        SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
 
         for (String account : setOfAccounts) {
             sosVaultHandler.deleteAccount(account);
@@ -119,7 +111,8 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             DBItemIamAccount dbItemIamAcount = new DBItemIamAccount();
             dbItemIamAcount.setAccountName(securityConfigurationAccount.getAccount());
-            if (!dbItemIamIdentityService.getIdentityServiceType().contains("VAULT") && !dbItemIamIdentityService.getIdentityServiceType().contains("LDAP")) {
+            if (!dbItemIamIdentityService.getIdentityServiceType().contains("VAULT") && !dbItemIamIdentityService.getIdentityServiceType().contains(
+                    "LDAP")) {
                 dbItemIamAcount.setAccountPassword(SOSAuthHelper.getSHA512(password));
             } else {
                 dbItemIamAcount.setAccountPassword("********");

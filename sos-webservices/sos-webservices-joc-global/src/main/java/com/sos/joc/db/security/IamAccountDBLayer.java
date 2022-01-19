@@ -197,7 +197,7 @@ public class IamAccountDBLayer {
 
     public List<DBItemIamPermissionWithName> getListOfRolesForAccountName(String accountName, Long identityServiceId) throws SOSHibernateException {
 
-        String q = "select a.id as accountId,r.id as roleId," + "a.accountName as accountName," + "r.roleName as roleName" + " from "
+        String q = "select r.id as roleId,"  + "r.roleName as roleName" + " from "
                 + DBItemIamAccount + " a, " + DBItemIamAccount2Roles + " ar," + DBItemIamRole + " r" + " where a.accountName=:accountName"
                 + " and ar.accountId=a.id and r.id=ar.roleId and r.identityServiceId=:identityServiceId";
 

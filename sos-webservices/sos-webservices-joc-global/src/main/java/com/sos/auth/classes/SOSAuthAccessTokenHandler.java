@@ -29,7 +29,13 @@ public class SOSAuthAccessTokenHandler extends Thread {
         public void run() {
             if (nextAccount != null) {
                 LOGGER.debug("Renew " + nextAccount.getAccountname());
-                if (!nextAccount.getCurrentSubject().getSession().renew()) {
+                boolean valid=false;
+                try {
+                    valid = nextAccount.getCurrentSubject().getSession().renew();
+                }catch(Exception e) {
+                    valid = false;
+                }
+                if (!valid) {
                     LOGGER.info(nextAccount.getAccountname() + " no longer valid");
                     Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(nextAccount.getAccessToken());
                 }

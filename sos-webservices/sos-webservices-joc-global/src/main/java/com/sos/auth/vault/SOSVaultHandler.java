@@ -26,12 +26,10 @@ import com.sos.joc.exceptions.JocException;
 public class SOSVaultHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSVaultHandler.class);
-    private KeyStore keyStore = null;
     private KeyStore truststore = null;
     private SOSVaultWebserviceCredentials webserviceCredentials;
 
-    public SOSVaultHandler(SOSVaultWebserviceCredentials webserviceCredentials, KeyStore keyStore, KeyStore trustStore) {
-        this.keyStore = keyStore;
+    public SOSVaultHandler(SOSVaultWebserviceCredentials webserviceCredentials, KeyStore trustStore) {
         this.truststore = trustStore;
         this.webserviceCredentials = webserviceCredentials;
     }
@@ -40,8 +38,8 @@ public class SOSVaultHandler {
         SOSRestApiClient restApiClient = new SOSRestApiClient();
 
         restApiClient.addHeader("X-Vault-Token", webserviceCredentials.getApplicationToken());
-        if ((keyStore != null) || (truststore != null)) {
-            restApiClient.setSSLContext(keyStore, webserviceCredentials.getKeyPassword().toCharArray(), truststore);
+        if (truststore != null) {
+            restApiClient.setSSLContext(null, null, truststore);
         }
         URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + api);
 
@@ -181,8 +179,8 @@ public class SOSVaultHandler {
     public String deleteAccount(String account) throws JsonProcessingException, SOSException, SocketException {
         SOSRestApiClient restApiClient = new SOSRestApiClient();
         restApiClient.addHeader("X-Vault-Token", webserviceCredentials.getApplicationToken());
-        if ((keyStore != null) || (truststore != null)) {
-            restApiClient.setSSLContext(keyStore, webserviceCredentials.getKeyPassword().toCharArray(), truststore);
+        if ( (truststore != null)) {
+            restApiClient.setSSLContext(null, null, truststore);
         }
         URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + "/v1/auth/" + webserviceCredentials.getAuthenticationMethodPath() + "/users/" + account);
         String response = restApiClient.deleteRestService(requestUri);

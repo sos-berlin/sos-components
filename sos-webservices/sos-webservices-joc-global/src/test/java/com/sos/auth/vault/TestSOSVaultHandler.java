@@ -27,16 +27,14 @@ public class TestSOSVaultHandler {
     @Ignore
     @Test
     public void testStoreUserPassword() throws Exception {
-        KeyStore keyStore = null;
         KeyStore trustStore = null;
 
         SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
         SOSIdentityService sosIdentityService = new SOSIdentityService(null, null, null);
         webserviceCredentials.setValuesFromProfile(sosIdentityService);
-        keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeystorePath(), webserviceCredentials.getKeystoreType());
         trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType());
 
-        SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
+        SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
 
         SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
         sosVaultAccountCredentials.setUsername(webserviceCredentials.getVaultAccount());
@@ -49,16 +47,14 @@ public class TestSOSVaultHandler {
     @Ignore
     @Test
     public void testGetUserToken() throws Exception {
-        KeyStore keyStore = null;
         KeyStore trustStore = null;
 
         SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
         SOSIdentityService sosIdentityService = new SOSIdentityService(null, null, null);
         webserviceCredentials.setValuesFromProfile(sosIdentityService);
-        keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeystorePath(), webserviceCredentials.getKeystoreType());
         trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType());
         webserviceCredentials.setAccount("ur");
-        SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
+        SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
  
 
         SOSVaultAccountAccessToken sosVaultUserAccessToken = sosVaultHandler.login("urpass");

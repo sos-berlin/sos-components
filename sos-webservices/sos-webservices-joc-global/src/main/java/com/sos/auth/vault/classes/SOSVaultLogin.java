@@ -33,20 +33,17 @@ public class SOSVaultLogin implements ISOSLogin {
     }
 
     public void login(String account, String pwd, HttpServletRequest httpServletRequest) {
-        KeyStore keyStore = null;
         KeyStore trustStore = null;
 
         try {
             SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
             webserviceCredentials.setValuesFromProfile(identityService);
-            keyStore = KeyStoreUtil.readKeyStore(webserviceCredentials.getKeystorePath(), webserviceCredentials.getKeystoreType(),
-                    webserviceCredentials.getKeystorePassword());
 
             trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
                     webserviceCredentials.getTruststorePassword());
 
             webserviceCredentials.setAccount(account);
-            SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
+            SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
 
             SOSVaultAccountAccessToken sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
             sosVaultSubject = new SOSVaultSubject(identityService);
@@ -56,8 +53,8 @@ public class SOSVaultLogin implements ISOSLogin {
                 setMsg("There is no user with the given account/password combination");
             } else {
                 sosVaultSubject.setAuthenticated(true);
-                sosVaultSubject.setPermissionAndRoles(sosVaultAccountAccessToken.getAuth().getToken_policies(),account, identityService);
                 sosVaultSubject.setAccessToken(sosVaultAccountAccessToken);
+                sosVaultSubject.setPermissionAndRoles(sosVaultAccountAccessToken.getAuth().getToken_policies(),account, identityService);
             }
 
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {

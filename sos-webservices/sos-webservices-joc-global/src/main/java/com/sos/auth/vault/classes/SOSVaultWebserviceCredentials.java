@@ -27,11 +27,6 @@ public class SOSVaultWebserviceCredentials {
     private String serviceUrl;
     private String authenticationMethodPath;
 
-    private String keystorePath = "";
-    private String keystorePassword = "";
-    private String keyPassword = "";
-    private KeystoreType keystoreType = null;
-
     private String truststorePath = "";
     private String truststorePassword = "";
     private KeystoreType truststoreType = null;
@@ -84,30 +79,6 @@ public class SOSVaultWebserviceCredentials {
         return account;
     }
 
-    public String getKeystorePath() {
-        return keystorePath;
-    }
-
-    public void setKeystorePath(String keystorePath) {
-        this.keystorePath = keystorePath;
-    }
-
-    public String getKeystorePassword() {
-        return keystorePassword;
-    }
-
-    public void setKeystorePassword(String keystorePassword) {
-        this.keystorePassword = keystorePassword;
-    }
-
-    public KeystoreType getKeystoreType() {
-        return keystoreType;
-    }
-
-    public void setKeystoreType(KeystoreType keystoreType) {
-        this.keystoreType = keystoreType;
-    }
-
     public String getTruststorePath() {
         return truststorePath;
     }
@@ -132,14 +103,7 @@ public class SOSVaultWebserviceCredentials {
         this.truststoreType = truststoreType;
     }
 
-    public String getKeyPassword() {
-        return keyPassword;
-    }
-
-    public void setKeyPassword(String keyPassword) {
-        this.keyPassword = keyPassword;
-    }
-
+    
     private String getProperty(String value, String defaultValue) {
         if (value == null || value.isEmpty()) {
             return defaultValue;
@@ -176,22 +140,6 @@ public class SOSVaultWebserviceCredentials {
 
                 if (authenticationMethodPath == null || authenticationMethodPath.isEmpty()) {
                     authenticationMethodPath = getProperty(properties.getVault().getIamVaultAuthenticationMethodPath(), "ldap");
-                }
-
-                if (keystorePath.isEmpty()) {
-                    keystorePath = getProperty(properties.getVault().getIamVaultKeystorePath(), "");
-                }
-
-                if (keystorePassword.isEmpty()) {
-                    keystorePassword = getProperty(properties.getVault().getIamVaultKeystorePassword(), "");
-                }
-
-                if (keyPassword.isEmpty()) {
-                    keyPassword = getProperty(properties.getVault().getIamVaultKeyPassword(), "");
-                }
-
-                if (keystoreType == null) {
-                    keystoreType = KeystoreType.fromValue(getProperty(properties.getVault().getIamVaultKeystoreType(), "PKCS12"));
                 }
 
                 if (truststorePath.isEmpty()) {
@@ -245,8 +193,7 @@ public class SOSVaultWebserviceCredentials {
     @Override
     public String toString() {
         return "SOSVaultWebserviceCredentials [account=" + account + ", accessToken=" + accessToken + ", decodedAccount=" + decodedAccount
-                + ", serviceUrl=" + serviceUrl + ", keystorePath=" + keystorePath + ", keystorePassword=" + keystorePassword + ", keyPassword="
-                + keyPassword + ", keystoreType=" + keystoreType + ", truststorePath=" + truststorePath + ", truststorePassword=" + truststorePassword
+                + ", serviceUrl=" + serviceUrl + ", truststorePath=" + truststorePath + ", truststorePassword=" + truststorePassword
                 + ", truststoreType=" + truststoreType + ", applicationToken=" + applicationToken + ", vaultAccount=" + vaultAccount
                 + ", vaultPassword=" + vaultPassword + "]";
     }
