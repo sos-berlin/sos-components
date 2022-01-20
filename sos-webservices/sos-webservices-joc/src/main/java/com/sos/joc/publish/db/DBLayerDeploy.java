@@ -702,7 +702,11 @@ public class DBLayerDeploy {
                     query.setParameter("path", cfg.getPath());
                     query.setParameter("type", cfg.getObjectType().intValue());
                     query.setMaxResults(1);
-                    results.add(query.getSingleResult());
+                    try {
+                        results.add(query.getSingleResult());
+                    } catch (NoResultException e) {
+                        LOGGER.trace("no result found in db!");
+                    }
                 }
             }
             return results;
@@ -749,7 +753,15 @@ public class DBLayerDeploy {
                 query.setParameter("type", cfg.getObjectType().intValue());
                 query.setParameter("commitId", cfg.getCommitId());
                 query.setMaxResults(1);
-                results.add(query.getSingleResult());
+                DBItemDeploymentHistory result = null;
+                try {
+                    result = query.getSingleResult();
+                    if (result != null) {
+                        results.add(result);
+                    }
+                } catch (NoResultException e) {
+                    LOGGER.trace("no result found in db!");
+                }
             }
             return results;
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -1495,7 +1507,7 @@ public class DBLayerDeploy {
             } else {
                 hql.append(" and folder = :folder");
             }
-            hql.append(" type in (:types)");
+            hql.append(" and type in (:types)");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             if (recursive) {
                 if (!"/".equals(folder)) {
@@ -1505,7 +1517,7 @@ public class DBLayerDeploy {
             } else {
                 query.setParameter("folder", folder);
             }
-            query.setParameterList("tpyes", types);
+            query.setParameterList("types", types);
             List<DBItemDeploymentHistory> result = session.getResultList(query);
             Date getDepHistoryItemsFromFolderFinishedByType = Date.from(Instant.now());
             LOGGER.info("*** call getDepHistoryItemsFromFolderByType finished ***" + getDepHistoryItemsFromFolderFinishedByType);
