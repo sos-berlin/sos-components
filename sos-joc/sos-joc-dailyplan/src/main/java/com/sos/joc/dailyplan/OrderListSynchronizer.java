@@ -32,13 +32,12 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
-import com.sos.joc.dailyplan.common.CycleOrderKey;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
+import com.sos.joc.dailyplan.common.MainCyclicOrderKey;
 import com.sos.joc.dailyplan.common.OrderCounter;
 import com.sos.joc.dailyplan.common.PlannedOrder;
 import com.sos.joc.dailyplan.common.PlannedOrderKey;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
-import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
@@ -84,7 +83,7 @@ public class OrderListSynchronizer {
                         .toString(o)));
                 return false;
             }
-            PlannedOrderKey key = o.uniqueOrderkey();
+            PlannedOrderKey key = o.uniqueOrderKey();
             plannedOrders.put(key, o);
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("[%s][%s]%s[added][key=%s]%s", startupMode, controllerId, dateLog, key, SOSString.toString(o)));
@@ -210,7 +209,7 @@ public class OrderListSynchronizer {
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
 
-            Map<CycleOrderKey, List<PlannedOrder>> cyclic = new TreeMap<CycleOrderKey, List<PlannedOrder>>();
+            Map<MainCyclicOrderKey, List<PlannedOrder>> cyclics = new TreeMap<MainCyclicOrderKey, List<PlannedOrder>>();
             for (PlannedOrder plannedOrder : plannedOrders.values()) {
                 if (plannedOrder.getPeriod().getSingleStart() != null) {
                     counter.addSingle();
@@ -224,27 +223,21 @@ public class OrderListSynchronizer {
                         counter.addStoreSkippedSingle();
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format("[%s][store][%s][%s][single][skip][key=%s][isOverwrite=%s][item=%s]", startupMode,
-                                    controllerId, date, plannedOrder.uniqueOrderkey(), settings.isOverwrite(), SOSHibernate.toString(item)));
+                                    controllerId, date, plannedOrder.uniqueOrderKey(), settings.isOverwrite(), SOSHibernate.toString(item)));
                         }
                     }
                 } else {
-                    CycleOrderKey key = new CycleOrderKey();
-                    key.setPeriodBegin(plannedOrder.getPeriod().getBegin());
-                    key.setPeriodEnd(plannedOrder.getPeriod().getEnd());
-                    key.setRepeat(plannedOrder.getPeriod().getRepeat());
-                    key.setOrderName(plannedOrder.getOrderName());
-                    key.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
-
-                    if (cyclic.get(key) == null) {
-                        cyclic.put(key, new ArrayList<PlannedOrder>());
+                    MainCyclicOrderKey key = new MainCyclicOrderKey(plannedOrder);
+                    if (cyclics.get(key) == null) {
+                        cyclics.put(key, new ArrayList<PlannedOrder>());
                         counter.addCyclic();
                     }
-                    cyclic.get(key).add(plannedOrder);
+                    cyclics.get(key).add(plannedOrder);
                     counter.addCyclicTotal();
                 }
             }
 
-            for (Entry<CycleOrderKey, List<PlannedOrder>> entry : cyclic.entrySet()) {
+            for (Entry<MainCyclicOrderKey, List<PlannedOrder>> entry : cyclics.entrySet()) {
                 int size = entry.getValue().size();
                 int nr = 1;
                 String id = OrdersHelper.getUniqueOrderId();
@@ -265,11 +258,19 @@ public class OrderListSynchronizer {
 
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format("[%s][store][%s][%s][cyclic][skip][%s][isOverwrite=%s][item=%s]", startupMode, controllerId,
-                                    date, plannedOrder.uniqueOrderkey(), settings.isOverwrite(), SOSHibernate.toString(item)));
+                                    date, plannedOrder.uniqueOrderKey(), settings.isOverwrite(), SOSHibernate.toString(item)));
                         }
                     }
                 }
             }
+
+            if (!counter.hasStored() && submission != null && submission.getId() != null) {
+                Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submission.getId());
+                if (count == null || count.equals(0L)) {
+                    dbLayer.deleteSubmission(submission.getId());
+                }
+            }
+
             Globals.commit(session);
         } finally {
             Globals.disconnect(session);
@@ -285,7 +286,6 @@ public class OrderListSynchronizer {
             JsonProcessingException, ParseException, InterruptedException, ExecutionException, TimeoutException {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        boolean isTraceEnabled = LOGGER.isTraceEnabled();
         String method = "addPlannedOrderToControllerAndDB";
 
         if (isDebugEnabled) {
@@ -300,10 +300,10 @@ public class OrderListSynchronizer {
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
 
                 for (PlannedOrder plannedOrder : plannedOrders.values()) {
-                    // TODO workflowName read ???
-                    String workflowName = Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString();
-                    Date plannedStart = new Date(plannedOrder.getFreshOrder().getScheduledFor());
-                    orders.addAll(dbLayer.getDailyPlanOrders(controllerId, workflowName, plannedStart));
+                    DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
+                    if (item != null) {
+                        orders.add(item);
+                    }
                 }
             } finally {
                 Globals.disconnect(session);
@@ -322,18 +322,37 @@ public class OrderListSynchronizer {
                         session4delete.setAutoCommit(false);
                         Globals.beginTransaction(session4delete);
                         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session4delete);
-                        for (PlannedOrder plannedOrder : plannedOrders.values()) {
-                            final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                            filter.setSortMode(null);
-                            filter.setOrderCriteria(null);
-                            filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
-                            filter.setControllerId(controllerId);
-                            filter.setWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
-                            if (isTraceEnabled) {
-                                LOGGER.trace(String.format("[%s][%s][%s][%s][remove]workflowName=%s,plannedStart=%s", startupMode, method,
-                                        controllerId, date, String.join(",", filter.getWorkflowNames()), filter.getPlannedStart()));
+
+                        Set<Long> oldSubmissionIds = new HashSet<>();
+                        Set<String> cyclicMainParts = new HashSet<>();
+                        for (DBItemDailyPlanOrder item : orders) {
+                            if (!oldSubmissionIds.contains(item.getSubmissionHistoryId())) {
+                                oldSubmissionIds.add(item.getSubmissionHistoryId());
                             }
-                            dbLayer.deleteCascading(filter);
+
+                            if (item.getStartMode().equals(DBLayerDailyPlannedOrders.START_MODE_SINGLE)) {
+                                dbLayer.deleteCascading(item);
+                            } else {
+                                String mainPart = OrdersHelper.getCyclicOrderIdMainPart(item.getOrderId());
+                                if (!cyclicMainParts.contains(mainPart)) {
+                                    cyclicMainParts.add(mainPart);
+                                }
+                                dbLayer.delete(item.getId());
+                            }
+                        }
+                        // delete cyclic variables when all cyclic orders deleted
+                        for (String cyclicMainPart : cyclicMainParts) {
+                            Long count = dbLayer.getCountCyclicOrdersByMainPart(controllerId, cyclicMainPart);
+                            if (count == null || count.equals(0L)) {
+                                dbLayer.deleteVariablesByCyclicMainPart(controllerId, cyclicMainPart);
+                            }
+                        }
+                        // delete submissions with 0 orders
+                        for (Long submissionId : oldSubmissionIds) {
+                            Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submissionId);
+                            if (count == null || count.equals(0L)) {
+                                dbLayer.deleteSubmission(submissionId);
+                            }
                         }
                         Globals.commit(session4delete);
 

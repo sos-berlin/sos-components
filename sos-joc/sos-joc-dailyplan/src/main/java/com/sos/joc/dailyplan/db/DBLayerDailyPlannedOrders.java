@@ -40,6 +40,9 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 
 public class DBLayerDailyPlannedOrders {
 
+    public static final Integer START_MODE_SINGLE = new Integer(0);
+    public static final Integer START_MODE_CYCLIC = new Integer(1);
+
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlannedOrders.class);
 
     private static final int DAILY_PLAN_LATE_TOLERANCE = 60;
@@ -98,6 +101,53 @@ public class DBLayerDailyPlannedOrders {
             }
             return executeDeleteCascading(filterCopy);
         }
+    }
+
+    public int deleteCascading(DBItemDailyPlanOrder item) throws SOSHibernateException {
+        // variables
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and orderId=:orderId");
+
+        Query<DBItemDailyPlanVariable> vQuery = session.createQuery(hql);
+        vQuery.setParameter("controllerId", item.getControllerId());
+        vQuery.setParameter("orderId", item.getOrderId());
+        executeUpdate("deleteCascading(variables)", vQuery);
+
+        // order
+        hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" where id=:id");
+        Query<DBItemDailyPlanOrder> oQuery = session.createQuery(hql);
+        oQuery.setParameter("id", item.getId());
+        return executeUpdate("deleteCascading(order)", oQuery);
+    }
+
+    public int deleteVariablesByCyclicMainPart(String controllerId, String mainPart) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and orderId like :mainPart");
+
+        Query<DBItemDailyPlanVariable> query = session.createQuery(hql);
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("mainPart", mainPart + "%");
+        return executeUpdate("deleteVariablesByCyclicMainPart", query);
+    }
+
+    public int delete(Long id) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" where id=:id");
+        Query<DBItemDailyPlanOrder> query = session.createQuery(hql);
+        query.setParameter("id", id);
+        return executeUpdate("delete", query);
+    }
+
+    public Long getCountCyclicOrdersByMainPart(String controllerId, String mainPart) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and orderId like :mainPart ");
+
+        Query<Long> query = session.createQuery(hql);
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("mainPart", mainPart + "%");
+        return session.getSingleValue(query);
     }
 
     private int executeDeleteCascading(FilterDailyPlannedOrders filter) throws SOSHibernateException {
@@ -498,7 +548,7 @@ public class DBLayerDailyPlannedOrders {
                 q.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
             }
             q.append(getWhere(filter, "p.schedulePath", useHistoryOrderState)).append(" ");
-            q.append("group by p.repeatInterval,p.periodBegin,p.periodEnd,p.orderName ");
+            q.append("group by p.repeatInterval,p.periodBegin,p.periodEnd,p.orderName,p.scheduleName,p.workflowName ");
 
             hql.append("select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId");
             hql.append(",p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName");
@@ -695,13 +745,29 @@ public class DBLayerDailyPlannedOrders {
 
     public DBItemDailyPlanOrder getUniqueDailyPlan(PlannedOrder order) throws JocConfigurationException, DBConnectionRefusedException,
             SOSHibernateException {
-        FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-        filter.setPlannedStart(new Date(order.getFreshOrder().getScheduledFor()));
-        filter.setControllerId(order.getControllerId());
-        filter.setWorkflowName(order.getFreshOrder().getWorkflowPath());
-        filter.setOrderName(order.getOrderName());
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and workflowName=:workflowName ");
+        hql.append("and scheduleName=:scheduleName ");
+        hql.append("and orderName=:orderName ");
+        hql.append("and plannedStart=:plannedStart ");
+        hql.append("and startMode=:startMode ");
 
-        return getUniqueDailyPlan(filter);
+        Query<DBItemDailyPlanOrder> query = session.createQuery(hql.toString());
+        query.setParameter("controllerId", order.getControllerId());
+        query.setParameter("workflowName", order.getWorkflowName());
+        query.setParameter("scheduleName", order.getScheduleName());
+        query.setParameter("orderName", order.getOrderName());
+        query.setParameter("plannedStart", new Date(order.getFreshOrder().getScheduledFor()));
+        Integer startMode = order.getPeriod().getSingleStart() == null ? START_MODE_CYCLIC : START_MODE_SINGLE;
+        query.setParameter("startMode", startMode);
+
+        List<DBItemDailyPlanOrder> result = session.getResultList(query);
+        if (result != null && result.size() > 0) {
+            return result.get(0);
+        } else {
+            return null;
+        }
     }
 
     public DBItemDailyPlanOrder getUniqueDailyPlan(FilterDailyPlannedOrders filter) throws SOSHibernateException {
@@ -742,12 +808,12 @@ public class DBLayerDailyPlannedOrders {
         Date start = new Date(plannedOrder.getFreshOrder().getScheduledFor());
         item.setPlannedStart(start);
         if (plannedOrder.getPeriod().getSingleStart() == null) {
-            item.setStartMode(1);
+            item.setStartMode(START_MODE_CYCLIC);
             item.setPeriodBegin(start, plannedOrder.getPeriod().getBegin());
             item.setPeriodEnd(start, plannedOrder.getPeriod().getEnd());
             item.setRepeatInterval(plannedOrder.getPeriod().getRepeat());
         } else {
-            item.setStartMode(0);
+            item.setStartMode(START_MODE_SINGLE);
         }
 
         String workflowFolder = Paths.get(plannedOrder.getSchedule().getWorkflowPath()).getParent().toString().replace('\\', '/');
@@ -921,7 +987,7 @@ public class DBLayerDailyPlannedOrders {
             List<DBItemDailyPlanOrder> items = dbLayer.getDailyPlanList(filter, 0);
             if (items.size() == 1) {
                 DBItemDailyPlanOrder item = items.get(0);
-                if (item.getStartMode() == 1) {
+                if (item.getStartMode().equals(START_MODE_CYCLIC)) {
                     FilterDailyPlannedOrders filterCyclic = new FilterDailyPlannedOrders();
                     filterCyclic.setSortMode(null);
                     filterCyclic.setOrderCriteria(null);
@@ -930,7 +996,7 @@ public class DBLayerDailyPlannedOrders {
                     try {
                         cyclicMainPart = OrdersHelper.getCyclicOrderIdMainPart(orderId);
                         filterCyclic.setCyclicOrdersMainParts(Collections.singletonList(cyclicMainPart));
-                        filterCyclic.setStartMode(new Integer(1));
+                        filterCyclic.setStartMode(START_MODE_CYCLIC);
                     } catch (Throwable e) {
                         filterCyclic.setDailyPlanDate(item.getDailyPlanDate(timeZone), timeZone, periodBegin);
                         filterCyclic.setRepeatInterval(item.getRepeatInterval());
@@ -1003,7 +1069,6 @@ public class DBLayerDailyPlannedOrders {
         hql.append("where controllerId = :controllerId ");
         hql.append("and workflowPath = :workflowPath ");
         hql.append("and parentId = 0 ");
-        hql.append("and workflowPath = :workflowPath ");
         hql.append("and severity=:severity ");
         hql.append("order by id desc ");
 
@@ -1011,9 +1076,7 @@ public class DBLayerDailyPlannedOrders {
         query.setParameter("controllerId", controllerId);
         query.setParameter("workflowPath", workflowPath);
         query.setParameter("severity", HistorySeverity.SUCCESSFUL);
-
         query.setMaxResults(maxResults);
         return session.getResultList(query);
-
     }
 }

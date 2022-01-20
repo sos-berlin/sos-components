@@ -191,7 +191,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                 PlannedOrderItem p = createPlanItem(item);
                 p.setControllerId(controllerId);
 
-                if ((p.getStartMode() == 1 && !in.getExpandCycleOrders())) {
+                if ((p.getStartMode().equals(DBLayerDailyPlannedOrders.START_MODE_CYCLIC) && !in.getExpandCycleOrders())) {
                     result.add(getCyclicPlannedOrder(dbLayer, plannedStartFrom, plannedStartTo, p, getCyclicDetails));
                 } else {
                     result.add(p);

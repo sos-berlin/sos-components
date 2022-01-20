@@ -254,10 +254,10 @@ public class DailyPlanRunner extends TimerTask {
         OrderCounter c = DailyPlanHelper.getOrderCount(synchronizer.getPlannedOrders());
 
         if (synchronizer.getPlannedOrders().size() > 0) {
-            String submissionId = "unknown";
+            Long submissionId = null;
             String submissionCreated = "unknown";
             if (synchronizer.getSubmission() != null) {
-                submissionId = synchronizer.getSubmission().getId().toString();
+                submissionId = synchronizer.getSubmission().getId();
                 submissionCreated = SOSDate.getDateTimeAsString(synchronizer.getSubmission().getCreated());
             }
 
@@ -779,7 +779,6 @@ public class DailyPlanRunner extends TimerTask {
                                     }
 
                                     PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, schedule, calendar.getId());
-                                    plannedOrder.setWorkflowPath(schedule.getWorkflowPath());
                                     plannedOrder.setPeriod(periodEntry.getValue());
                                     plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
                                     if (variableSet.getOrderName() != null && !variableSet.getOrderName().isEmpty()) {

@@ -48,6 +48,10 @@ public class OrderCounter {
         storeSkippedCyclicTotal += 1;
     }
 
+    public boolean hasStored() {
+        return storedSingle > 0 || storedCyclicTotal > 0;
+    }
+
     private long getCountTotal() {
         return single + cyclicTotal;
     }
