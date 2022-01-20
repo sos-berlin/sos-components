@@ -13,6 +13,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
@@ -104,7 +105,6 @@ public class SOSVaultWebserviceCredentials {
         this.truststoreType = truststoreType;
     }
 
-    
     private String getProperty(String value, String defaultValue) {
         if (value == null || value.isEmpty()) {
             return defaultValue;
@@ -116,16 +116,16 @@ public class SOSVaultWebserviceCredentials {
 
     public void setValuesFromProfile(SOSIdentityService sosIdentityService) {
 
-        String truststorePasswordDefault="";
-        String truststoreTypeDefault="PKCS12";
-        String truststorePathDefault=""; 
-            
-        if (Globals.sosCockpitProperties != null) {
-            truststorePathDefault  =  Globals.sosCockpitProperties.getProperty("truststore_path","");
-            truststoreTypeDefault  = Globals.sosCockpitProperties.getProperty("truststore_type","PKCS12");
-            truststorePasswordDefault   = Globals.sosCockpitProperties.getProperty("truststore_password","");
+        JocCockpitProperties jocCockpitProperties = Globals.sosCockpitProperties;
+
+        if (jocCockpitProperties == null) {
+            jocCockpitProperties = new JocCockpitProperties();
         }
-        
+
+        String truststorePathDefault = getProperty(jocCockpitProperties.getProperty("truststore_path", System.getProperty("javax.net.ssl.trustStore")),"");
+        String truststoreTypeDefault = getProperty(jocCockpitProperties.getProperty("truststore_type", System.getProperty("javax.net.ssl.trustStoreType")),"PKCS12");
+        String truststorePassDefault = getProperty(jocCockpitProperties.getProperty("truststore_password", System.getProperty("javax.net.ssl.trustStorePassword")),"");
+
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSVaultWebserviceCredentials");
@@ -158,11 +158,12 @@ public class SOSVaultWebserviceCredentials {
                 }
 
                 if (truststorePassword.isEmpty()) {
-                    truststorePassword = getProperty(properties.getVault().getIamVaultTruststorePassword(), truststorePasswordDefault);
+                    truststorePassword = getProperty(properties.getVault().getIamVaultTruststorePassword(), truststorePassDefault);
                 }
 
                 if (truststoreType == null) {
-                    truststoreType = KeystoreType.fromValue(getProperty(properties.getVault().getIamVaultTruststoreType(), truststoreTypeDefault));
+                    truststoreType = KeystoreType.valueOf(getProperty(properties.getVault().getIamVaultTruststoreType(), truststoreTypeDefault)
+                            .toUpperCase());
                 }
                 if (applicationToken == null) {
                     applicationToken = getProperty(properties.getVault().getIamVaultApplicationToken(), "");
@@ -209,12 +210,10 @@ public class SOSVaultWebserviceCredentials {
                 + ", vaultPassword=" + vaultPassword + "]";
     }
 
-    
     public String getAuthenticationMethodPath() {
         return authenticationMethodPath;
     }
 
-    
     public void setAuthenticationMethodPath(String authenticationMethodPath) {
         this.authenticationMethodPath = authenticationMethodPath;
     }
