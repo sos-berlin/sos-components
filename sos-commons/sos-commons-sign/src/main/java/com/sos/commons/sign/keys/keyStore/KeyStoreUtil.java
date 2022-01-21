@@ -76,9 +76,7 @@ public abstract class KeyStoreUtil {
         try {
             boolean fileAlreadyExist = Files.exists(trustStorePath);
             if (!fileAlreadyExist) {
-                if (!fileAlreadyExist) {
-                    LOGGER.warn(String.format("TrustStore with path: %1$s does not exist!", trustStorePath.toAbsolutePath()));
-                }
+                LOGGER.warn(String.format("TrustStore with path: %1$s does not exist!", trustStorePath.toAbsolutePath()));
             }
         	trustStoreStream = Files.newInputStream(trustStorePath);
             KeyStore trustStore = KeyStore.getInstance(trustStoreType.value()); // "PKCS12" or "JKS"
