@@ -142,7 +142,9 @@ public class JobApiExecutor {
 
         client = new SOSRestApiClient();
     	logInfo("initiate REST api client");
-        client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), truststore);
+    	if (keystore != null && truststore != null) {
+    	    client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), truststore);
+    	}
     }
 
     private void closeClient() {

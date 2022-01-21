@@ -270,33 +270,39 @@ public class ExecuteRollOut {
             Certificate[] chain = new Certificate[] {certificate, rootCaCertificate}; 
             if (targetKeystore != null && !targetKeystore.isEmpty()) {
                 targetKeyStore = KeyStoreUtil.readKeyStore(targetKeystore, KeystoreType.fromValue(targetKeystoreType), targetKeystorePasswd);
-                if (keyAlias != null && !keyAlias.isEmpty()) {
-                    targetKeyStore.setKeyEntry(keyAlias, privKey, targetKeystoreEntryPasswd.toCharArray(), chain);
-                } else {
-                    System.err.println(String.format("no alias provided for the certificate and its private key. Parameter <%1$s> is required.", KS_ALIAS));
+                if (targetKeyStore != null) {
+                    if (keyAlias != null && !keyAlias.isEmpty()) {
+                        targetKeyStore.setKeyEntry(keyAlias, privKey, targetKeystoreEntryPasswd.toCharArray(), chain);
+                    } else {
+                        System.err.println(String.format("no alias provided for the certificate and its private key. Parameter <%1$s> is required.", KS_ALIAS));
+                    }
                 }
             } else if (resolved != null) {
                 KeyStoreCredentials credentials = readKeystoreCredentials(resolved);
                 targetKeyStore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
-                String defaultAlias = CertificateUtils.extractDistinguishedNameQualifier(certificate);
-                if (defaultAlias != null) {
-                    targetKeyStore.setKeyEntry(defaultAlias, privKey, resolved.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD).toCharArray(), chain);
-                    // targetKeystoreEntryPasswd.toCharArray(), 
-                    targetKeyStore.store(new FileOutputStream(new File(credentials.getPath())), credentials.getStorePwd().toCharArray());
-                } else {
-                    System.err.println(String.format("no alias provided for the certificate and its private key. Parameter <%1$s> is required.", KS_ALIAS));
+                if (targetKeyStore != null) {
+                    String defaultAlias = CertificateUtils.extractDistinguishedNameQualifier(certificate);
+                    if (defaultAlias != null) {
+                        targetKeyStore.setKeyEntry(defaultAlias, privKey, resolved.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD).toCharArray(), chain);
+                        // targetKeystoreEntryPasswd.toCharArray(), 
+                        targetKeyStore.store(new FileOutputStream(new File(credentials.getPath())), credentials.getStorePwd().toCharArray());
+                    } else {
+                        System.err.println(String.format("no alias provided for the certificate and its private key. Parameter <%1$s> is required.", KS_ALIAS));
+                    }
                 }
             } else {
                 System.err.println(String.format("no keystore found. Parameter <%1$s> is required.", TRG_KEYSTORE));
             }
             if (targetTruststore != null && !targetTruststore.isEmpty()) {
                 targetTrustStore = KeyStoreUtil.readTrustStore(targetTruststore, KeystoreType.fromValue(targetTruststoreType), targetTruststorePasswd);
-                if (caAlias != null && !caAlias.isEmpty()) {
-                    targetTrustStore.setCertificateEntry(caAlias, rootCaCertificate);
-                } else {
-                    System.err.println(String.format("no alias provided for the CA certificate. Parameter <%1$s> is required.", TS_ALIAS));
+                if (targetTrustStore != null) {
+                    if (caAlias != null && !caAlias.isEmpty()) {
+                        targetTrustStore.setCertificateEntry(caAlias, rootCaCertificate);
+                    } else {
+                        System.err.println(String.format("no alias provided for the CA certificate. Parameter <%1$s> is required.", TS_ALIAS));
+                    }
+                    targetTrustStore.store(new FileOutputStream(new File(targetTruststore)), targetTruststorePasswd.toCharArray());
                 }
-                targetTrustStore.store(new FileOutputStream(new File(targetTruststore)), targetTruststorePasswd.toCharArray());
             } else if (resolved != null) {
                 List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(resolved);
                 Optional<KeyStoreCredentials> defaultTruststoreCredentials = truststoresCredentials.stream()
@@ -304,15 +310,17 @@ public class ExecuteRollOut {
                 if (defaultTruststoreCredentials.isPresent()) {
                     KeyStoreCredentials credentials = defaultTruststoreCredentials.get();
                     targetTrustStore = KeyStoreUtil.readTrustStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
-                    String defaultAlias = CertificateUtils.extractDistinguishedNameQualifier(rootCaCertificate);
-                    if (defaultAlias == null) {
-                        defaultAlias = CertificateUtils.extractFirstCommonName(rootCaCertificate);
-                    }
-                    if (defaultAlias != null) {
-                        targetTrustStore.setCertificateEntry(defaultAlias, rootCaCertificate);
-                        targetTrustStore.store(new FileOutputStream(new File(credentials.getPath())), credentials.getStorePwd().toCharArray());
-                    } else {
-                        System.err.println(String.format("no alias provided for the certificate and its private key. Parameter <%1$s> is required.", KS_ALIAS));
+                    if (targetTrustStore != null) {
+                        String defaultAlias = CertificateUtils.extractDistinguishedNameQualifier(rootCaCertificate);
+                        if (defaultAlias == null) {
+                            defaultAlias = CertificateUtils.extractFirstCommonName(rootCaCertificate);
+                        }
+                        if (defaultAlias != null) {
+                            targetTrustStore.setCertificateEntry(defaultAlias, rootCaCertificate);
+                            targetTrustStore.store(new FileOutputStream(new File(credentials.getPath())), credentials.getStorePwd().toCharArray());
+                        } else {
+                            System.err.println(String.format("no alias provided for the certificate and its private key. Parameter <%1$s> is required.", KS_ALIAS));
+                        }
                     }
                 }
             } else {
@@ -364,18 +372,24 @@ public class ExecuteRollOut {
             
             List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(resolved);
             System.out.println("read Trustore from: " + resolved.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
-            KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(DEFAULT_TRUSTSTORE_FILENAME)).map(item -> {
+            Optional<KeyStore> truststoreOptional = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(DEFAULT_TRUSTSTORE_FILENAME)).map(item -> {
                 try {
                     return KeyStoreUtil.readTrustStore(item.getPath(), KeystoreType.PKCS12, item.getStorePwd());
                 } catch (Exception e) {
                     return null;
                 }
-            }).filter(Objects::nonNull).findFirst().get();
+            }).filter(Objects::nonNull).findAny();
+            KeyStore truststore = null; 
+            if (truststoreOptional.isPresent()) {
+                truststore = truststoreOptional.get();
+            }
             KeyStoreCredentials credentials = readKeystoreCredentials(resolved);
 //            KeyStoreCredentials credentials = readKeystoreCredentials(toUpdate);
             System.out.println("read Keystore from: " + resolved.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
             KeyStore keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
-            client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), truststore);
+            if (keystore != null && truststore != null) {
+                client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), truststore);
+            }
         } else {
             KeyStore srcKeyStore = null;
             KeyStore srcTrustStore = null;
