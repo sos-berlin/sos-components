@@ -1,6 +1,7 @@
 package com.sos.auth.vault.classes;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
@@ -125,7 +126,7 @@ public class SOSVaultWebserviceCredentials {
         String truststorePathDefault = getProperty(jocCockpitProperties.getProperty("truststore_path", System.getProperty("javax.net.ssl.trustStore")),"");
         String truststoreTypeDefault = getProperty(jocCockpitProperties.getProperty("truststore_type", System.getProperty("javax.net.ssl.trustStoreType")),"PKCS12");
         String truststorePassDefault = getProperty(jocCockpitProperties.getProperty("truststore_password", System.getProperty("javax.net.ssl.trustStorePassword")),"");
-
+  
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSVaultWebserviceCredentials");
@@ -155,6 +156,10 @@ public class SOSVaultWebserviceCredentials {
 
                 if (truststorePath.isEmpty()) {
                     truststorePath = getProperty(properties.getVault().getIamVaultTruststorePath(), truststorePathDefault);
+                    if (truststorePath != null && !truststorePath.trim().isEmpty()) {
+                        Path p = jocCockpitProperties.resolvePath(truststorePath.trim());
+                        truststorePath = p.toString();
+                    }
                 }
 
                 if (truststorePassword.isEmpty()) {
@@ -162,8 +167,7 @@ public class SOSVaultWebserviceCredentials {
                 }
 
                 if (truststoreType == null) {
-                    truststoreType = KeystoreType.valueOf(getProperty(properties.getVault().getIamVaultTruststoreType(), truststoreTypeDefault)
-                            .toUpperCase());
+                    truststoreType = KeystoreType.valueOf(getProperty(properties.getVault().getIamVaultTruststoreType(), truststoreTypeDefault));
                 }
                 if (applicationToken == null) {
                     applicationToken = getProperty(properties.getVault().getIamVaultApplicationToken(), "");
