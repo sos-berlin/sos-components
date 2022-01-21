@@ -433,6 +433,7 @@ public abstract class RepositoryUtil {
                     content = Globals.prettyPrintObjectMapper.writeValueAsString(deployable.getConfiguration());
                     String filename = deployable.getPath().substring(1).concat(extension);
                     byte[] contentBytes = content.getBytes();
+                    Files.createDirectories(repo.resolve(Paths.get(filename)).getParent());
                     Files.write(repo.resolve(Paths.get(filename)), contentBytes);
                 }
             }
@@ -459,6 +460,7 @@ public abstract class RepositoryUtil {
                     content = Globals.prettyPrintObjectMapper.writeValueAsString(releasable.getConfiguration());
                     String filename = releasable.getPath().substring(1).concat(extension);
                     byte[] contentBytes = content.getBytes();
+                    Files.createDirectories(repo.resolve(Paths.get(filename)).getParent());
                     Files.write(repo.resolve(Paths.get(filename)), contentBytes);
                 }
             }
