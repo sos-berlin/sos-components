@@ -12,9 +12,13 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class KeyStoreUtil {
 
-	
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeyStoreUtil.class);
+    
     public static KeyStore readKeyStore(String keyStorePath, KeystoreType keyStoreType) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException   {
     	return readKeyStore(Paths.get(keyStorePath), keyStoreType, null);
     }
@@ -32,7 +36,7 @@ public abstract class KeyStoreUtil {
         try {
             boolean fileAlreadyExist = Files.exists(keyStorePath);
             if (!fileAlreadyExist) {
-                Files.createFile(keyStorePath);
+                LOGGER.warn(String.format("KeyStore with path: %1$s does not exist!", keyStorePath.toAbsolutePath()));
             }
             keyStoreStream = Files.newInputStream(keyStorePath);
         	// for testing with keystore in classpath
@@ -72,7 +76,9 @@ public abstract class KeyStoreUtil {
         try {
             boolean fileAlreadyExist = Files.exists(trustStorePath);
             if (!fileAlreadyExist) {
-                Files.createFile(trustStorePath);
+                if (!fileAlreadyExist) {
+                    LOGGER.warn(String.format("TrustStore with path: %1$s does not exist!", trustStorePath.toAbsolutePath()));
+                }
             }
         	trustStoreStream = Files.newInputStream(trustStorePath);
             KeyStore trustStore = KeyStore.getInstance(trustStoreType.value()); // "PKCS12" or "JKS"
