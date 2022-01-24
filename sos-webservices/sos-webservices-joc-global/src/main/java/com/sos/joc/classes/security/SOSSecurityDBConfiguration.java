@@ -111,9 +111,13 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             DBItemIamAccount dbItemIamAcount = new DBItemIamAccount();
             dbItemIamAcount.setAccountName(securityConfigurationAccount.getAccount());
-            if (!dbItemIamIdentityService.getIdentityServiceType().contains("VAULT") && !dbItemIamIdentityService.getIdentityServiceType().contains(
-                    "LDAP")) {
-                dbItemIamAcount.setAccountPassword(SOSAuthHelper.getSHA512(password));
+            if (!"VAULT".equals(dbItemIamIdentityService.getIdentityServiceType()) && !"VAULT-JOC".equals(dbItemIamIdentityService
+                    .getIdentityServiceType()) && !dbItemIamIdentityService.getIdentityServiceType().contains("LDAP")) {
+                if (!"********".equals(password)) {
+                    dbItemIamAcount.setAccountPassword(SOSAuthHelper.getSHA512(password));
+                } else {
+                    dbItemIamAcount.setAccountPassword(SOSAuthHelper.getSHA512(securityConfigurationAccount.getHashedPassword()));
+                }
             } else {
                 dbItemIamAcount.setAccountPassword("********");
             }
@@ -283,6 +287,15 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
     }
 
+    public SecurityConfiguration exportConfiguration(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
+            DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
+        storeAccounts(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
+        storeRoles(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
+        storePermissions(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
+        return securityConfiguration;
+
+    }
+
     private List<SecurityConfigurationAccount> getAccounts(SOSHibernateSession sosHibernateSession, Long identityServiceId)
             throws SOSHibernateException {
 
@@ -294,7 +307,8 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         for (DBItemIamAccount dbItemIamAccount : listOfAccounts) {
             SecurityConfigurationAccount securityConfigurationAccount = new SecurityConfigurationAccount();
             securityConfigurationAccount.setAccount(dbItemIamAccount.getAccountName());
-            securityConfigurationAccount.setPassword(dbItemIamAccount.getAccountPassword());
+            securityConfigurationAccount.setPassword("********");
+            securityConfigurationAccount.setHashedPassword(dbItemIamAccount.getAccountPassword());
             securityConfigurationAccount.setIdentityServiceId(dbItemIamAccount.getIdentityServiceId());
             List<DBItemIamAccount2RoleWithName> listOfRoles = iamAccountDBLayer.getListOfRolesWithName(dbItemIamAccount);
             securityConfigurationAccount.setRoles(new ArrayList<String>());

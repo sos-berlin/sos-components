@@ -2,7 +2,6 @@ package com.sos.auth.classes;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -673,20 +672,6 @@ public class SOSServicePermissionIam {
                     }
                 }
 
-                if (SOSAuthHelper.emergencyKeyExist()) {
-                    listOfIdentityServices = new ArrayList<DBItemIamIdentityService>();
-                    LOGGER.info("Using JOC Service for emergency key");
-                    DBItemIamIdentityService dbItemIamIdentityService = new DBItemIamIdentityService();
-                    dbItemIamIdentityService.setId(0L);
-                    dbItemIamIdentityService.setDisabled(false);
-                    dbItemIamIdentityService.setIdentityServiceName("joc");
-                    dbItemIamIdentityService.setIdentityServiceType("JOC");
-                    dbItemIamIdentityService.setOrdering(1);
-                    dbItemIamIdentityService.setRequired(false);
-                    sosHibernateSession.setAutoCommit(false);
-                    listOfIdentityServices.add(dbItemIamIdentityService);
-                }
-
                 if (currentAccount.getCurrentSubject() == null) {
                     filter.setRequired(false);
                     if (listOfIdentityServices.size() == 0) {
@@ -789,11 +774,6 @@ public class SOSServicePermissionIam {
         Globals.jocTimeZone = TimeZone.getDefault();
         Globals.setProperties();
 
-        SOSShiroImport sosShiroImport = new SOSShiroImport();
-        if (sosShiroImport.importNeccessary()) {
-            sosShiroImport.executeImport();
-        }
-
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("login");
@@ -843,7 +823,6 @@ public class SOSServicePermissionIam {
         SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = null;
 
         sosAuthCurrentUserAnswer = authenticate(currentAccount, password);
-        SOSAuthHelper.removeEmergencyKey();
 
         if (request != null) {
             sosAuthCurrentUserAnswer.setCallerIpAddress(request.getRemoteAddr());

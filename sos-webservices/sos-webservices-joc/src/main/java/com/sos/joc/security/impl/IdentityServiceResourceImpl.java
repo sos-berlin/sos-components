@@ -209,19 +209,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
             filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
-            iamIdentityServiceDBLayer.delete(filter);
-
-            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-
-            JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
-            jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
-            jocConfigurationFilter.setName(identityServiceFilter.getIdentityServiceName());
-            jocConfigurationFilter.setObjectType(SOSAuthHelper.OBJECT_TYPE_IAM_GENERAL);
-
-            List<DBItemJocConfiguration> listOfdbItemJocConfiguration = jocConfigurationDBLayer.getJocConfigurations(jocConfigurationFilter, 0);
-            if (listOfdbItemJocConfiguration.size() == 1) {
-                sosHibernateSession.delete(listOfdbItemJocConfiguration.get(0));
-            }
+            iamIdentityServiceDBLayer.deleteCascading(filter);
 
             filter.setIdentityServiceName(null);
             if (iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0).size() == 0) {

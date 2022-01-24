@@ -22,7 +22,6 @@ import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.SecurityConfiguration;
-import com.sos.joc.model.security.SecurityConfigurationAccount;
 import com.sos.joc.model.security.permissions.SecurityConfigurationRole;
 import com.sos.joc.security.resource.ISecurityConfigurationResource;
 import com.sos.schema.JsonValidator;
@@ -142,9 +141,6 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                     
                 }
                 s.setDeliveryDate(Date.from(Instant.now()));
-                for (SecurityConfigurationAccount securityConfigurationAccount : s.getAccounts()) {
-                    securityConfigurationAccount.setPassword("********");
-                }
 
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
 

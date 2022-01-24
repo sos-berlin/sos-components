@@ -53,13 +53,10 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
 
     public static SocketFactory getDefault() {
         return new SOSLdapSSLSocketFactory();
-      /*  final SOSLdapSSLSocketFactory value = defaultFactory.get();
-        if (value == null) {
-            defaultFactory.compareAndSet(null, new SOSLdapSSLSocketFactory());
-            return defaultFactory.get();
-        }
-        return value;
-        */
+        /*
+         * final SOSLdapSSLSocketFactory value = defaultFactory.get(); if (value == null) { defaultFactory.compareAndSet(null, new SOSLdapSSLSocketFactory());
+         * return defaultFactory.get(); } return value;
+         */
     }
 
     @Override
@@ -81,13 +78,20 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
     public Socket createSocket(final InetAddress inetAddress, final int i, final InetAddress inetAddress1, final int i1) throws IOException {
         return sf.createSocket(inetAddress, i, inetAddress1, i1);
     }
-    
-    private String getValue(JocCockpitProperties  jocCockpitProperties,String property, String defaultValue) { 
-        String s = jocCockpitProperties.getProperty(property,defaultValue);
-        if (s == null || s.isEmpty()){
+
+    private String getValue(JocCockpitProperties jocCockpitProperties, String property, String defaultValue) {
+        String s = jocCockpitProperties.getProperty(property, defaultValue);
+        if (s == null || s.isEmpty()) {
             s = defaultValue;
         }
-        return s; 
+        return s;
+    }
+
+    private String getValueOrEmpty(String value, String defaultValue) {
+        if (value == null || value.isEmpty()) {
+            value = defaultValue;
+        }
+        return value;
     }
 
     private void setSSLContext() {
@@ -97,21 +101,42 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
             jocCockpitProperties = new JocCockpitProperties();
         }
 
-        String truststorePathDefault = jocCockpitProperties.getProperty("truststore_path", System.getProperty("javax.net.ssl.trustStore"));
-        String truststoreTypeDefault = jocCockpitProperties.getProperty("truststore_type", System.getProperty("javax.net.ssl.trustStoreType"));
-        String truststorePassDefault = jocCockpitProperties.getProperty("truststore_password", System.getProperty("javax.net.ssl.trustStorePassword"));
-       
-        truststorePath = getValue(jocCockpitProperties,"ldap_truststore_path",truststorePathDefault);
-        truststorePass = getValue(jocCockpitProperties,"ldap_truststore_password",truststorePassDefault);
-        String tType = getValue(jocCockpitProperties,"ldap_truststore_type",truststoreTypeDefault).toUpperCase();
-        truststoreType = KeystoreType.valueOf(tType);
-        
+        String truststorePathJocProperties = jocCockpitProperties.getProperty("truststore_path", "");
+        String truststorePassJocProperties = jocCockpitProperties.getProperty("truststore_path", "");
+        String tTypeJocProperties = jocCockpitProperties.getProperty("truststore_path", "");
+
+        String truststorePathDefault = "";
+        String truststoreTypeDefault = "";
+        String truststorePassDefault = "";
+
+        if ((truststorePathJocProperties + truststorePassJocProperties + tTypeJocProperties).isEmpty()) {
+            truststorePathDefault = jocCockpitProperties.getProperty("truststore_path", System.getProperty("javax.net.ssl.trustStore"));
+            truststoreTypeDefault = jocCockpitProperties.getProperty("truststore_type", System.getProperty("javax.net.ssl.trustStoreType"));
+            truststorePassDefault = jocCockpitProperties.getProperty("truststore_password", System.getProperty("javax.net.ssl.trustStorePassword"));
+            
+            truststorePath = getValue(jocCockpitProperties, "ldap_truststore_path", truststorePathDefault);
+            truststorePass = getValue(jocCockpitProperties, "ldap_truststore_password", truststorePassDefault);
+            String tType = getValue(jocCockpitProperties, "ldap_truststore_type", truststoreTypeDefault);
+            truststoreType = KeystoreType.valueOf(tType);
+        } else {
+            truststorePathDefault = getValueOrEmpty(System.getProperty("javax.net.ssl.trustStore"), "");
+            truststoreTypeDefault = getValueOrEmpty(System.getProperty("javax.net.ssl.trustStoreType"),"");
+            truststorePassDefault = getValueOrEmpty(System.getProperty("javax.net.ssl.trustStorePassword"),"");
+           
+            truststorePath = jocCockpitProperties.getProperty("truststore_path", truststorePathDefault);
+            String tType = jocCockpitProperties.getProperty("truststore_type", truststoreTypeDefault);
+            truststoreType = KeystoreType.valueOf(tType);
+            truststorePass = jocCockpitProperties.getProperty("truststore_password", truststorePassDefault);
+        }
+
+  
+
         if (truststorePath != null && !truststorePath.trim().isEmpty()) {
             Path p = jocCockpitProperties.resolvePath(truststorePath.trim());
             truststorePath = p.toString();
         }
     }
-    
+
     /** The hostname verifier always return true */
     final static class DummyVerifier implements HostnameVerifier {
 

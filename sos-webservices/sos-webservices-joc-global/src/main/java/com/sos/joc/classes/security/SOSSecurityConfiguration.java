@@ -1,6 +1,7 @@
 package com.sos.joc.classes.security;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,6 +55,10 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
         ini = Ini.fromResourcePath(Globals.getIniFileForShiro(Globals.getShiroIniInClassPath()));
     }
 
+    public SOSSecurityConfiguration(String iniFileName) {
+        ini = Ini.fromResourcePath(iniFileName);
+    }
+
     private Long getIdentiyServiceId() {
         SOSHibernateSession sosHibernateSession = null;
 
@@ -74,6 +79,8 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
                 idendityService = 0L;
             }
             return idendityService;
+        }catch(Exception e) {
+            return 0L;
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -367,6 +374,19 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
 
     public SecurityConfiguration readConfigurationFromFilesystem() throws InvalidFileFormatException, IOException, JocException {
         writeIni = new Wini(Globals.getShiroIniFile().toFile());
+
+        SecurityConfiguration secConfig = new SecurityConfiguration();
+
+        secConfig.setMain(getMain());
+        secConfig.setAccounts(getAccounts());
+        secConfig.setRoles(getRoles());
+
+        return secConfig;
+    }
+    
+
+    public SecurityConfiguration readConfigurationFromFilesystem(String iniFilename) throws InvalidFileFormatException, IOException, JocException {
+        writeIni = new Wini(Paths.get(iniFilename).toFile());
 
         SecurityConfiguration secConfig = new SecurityConfiguration();
 

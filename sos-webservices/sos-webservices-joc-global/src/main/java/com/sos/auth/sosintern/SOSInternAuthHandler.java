@@ -42,7 +42,7 @@ public class SOSInternAuthHandler {
                 filter.setIdentityServiceId(sosInternAuthWebserviceCredentials.getIdentityServiceId());
 
                 DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(filter);
-                if (SOSAuthHelper.emergencyKeyExist() || dbItemIamAccount != null && dbItemIamAccount.getAccountPassword().equals(accountPwd)) {
+                if (dbItemIamAccount != null && dbItemIamAccount.getAccountPassword().equals(accountPwd)) {
                     sosAuthAccessToken = new SOSAuthAccessToken();
                     sosAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
                 }
