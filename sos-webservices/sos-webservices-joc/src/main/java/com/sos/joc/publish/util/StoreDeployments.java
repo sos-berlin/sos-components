@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -183,7 +184,7 @@ public class StoreDeployments {
         }
     }
     
-    public static void updateOptimisticEntriesIfFailed (List<DBItemDeploymentHistory> optimisticEntries, String message,
+    public static void updateOptimisticEntriesIfFailed (Collection<DBItemDeploymentHistory> optimisticEntries, String message,
             DBLayerDeploy dbLayer) throws SOSHibernateException {
         for(DBItemDeploymentHistory optimistic : optimisticEntries) {
             optimistic.setErrorMessage(message);
@@ -241,27 +242,30 @@ public class StoreDeployments {
                       .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
                     }
                 } else {
-                    throw new JocDeployException("No certificate present! Cannot deploy.");
+                    String message = "No certificate present! Items could not be deployed to controller.";
+                    updateOptimisticEntriesIfFailed(signedItemsSpec.getVerifiedDeployables().keySet(), message, dbLayer);
+                    throw new JocDeployException(message);
                 }
                 break;
             case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
                 cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
                 if (cert != null) {
-                    
+                    verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+                    if (verified) {
+                        PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId,  
+                                signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
+                                signedItemsSpec.getKeyPair().getCertificate()).thenAccept(either -> 
+                                processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                    } else {
+                      signerDN = cert.getSubjectDN().getName();
+                      PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId,  
+                              signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
+                          .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                    }
                 } else {
-                    throw new JocDeployException("No certificate present! Cannot deploy.");
-                }
-                verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-                if (verified) {
-                    PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId,  
-                            signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
-                            signedItemsSpec.getKeyPair().getCertificate()).thenAccept(either -> 
-                            processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
-                } else {
-                  signerDN = cert.getSubjectDN().getName();
-                  PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId,  
-                          signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
-                      .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                    String message = "No certificate present! Items could not be deployed to controller.";
+                    updateOptimisticEntriesIfFailed(signedItemsSpec.getVerifiedDeployables().keySet(), message, dbLayer);
+                    throw new JocDeployException(message);
                 }
                 break;
             }
