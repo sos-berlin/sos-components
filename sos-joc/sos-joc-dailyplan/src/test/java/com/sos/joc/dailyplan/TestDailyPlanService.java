@@ -24,6 +24,7 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.model.common.JocSecurityLevel;
 
 public class TestDailyPlanService {
@@ -53,6 +54,16 @@ public class TestDailyPlanService {
         service.start(getControllers(), configuration, StartupMode.manual_restart);
         TestDailyPlanService.stopAfter(service, StartupMode.manual_restart, 13 * 60);
 
+    }
+
+    @Ignore
+    @Test
+    public void testGenerateNewFromOldOrderId() {
+        LOGGER.info(DailyPlanHelper.generateNewFromOldOrderId("#2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic"));
+        LOGGER.info(DailyPlanHelper.generateNewFromOldOrderId("#2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic", "2021-10-25"));
+
+        LOGGER.info(DailyPlanHelper.getNewFromOldOrderId("#2021-10-12#C4038226057-00001-12-dailyplan_shedule_cyclic", "XXX"));
+        LOGGER.info(DailyPlanHelper.getNewFromOldOrderId("#2021-10-12#C4038226057-00002-12-dailyplan_shedule_cyclic", "XXX"));
     }
 
     private static void stopAfter(IJocClusterService service, StartupMode mode, int seconds) {

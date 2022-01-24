@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -781,11 +780,7 @@ public class DailyPlanRunner extends TimerTask {
                                     PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, schedule, calendar.getId());
                                     plannedOrder.setPeriod(periodEntry.getValue());
                                     plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
-                                    if (variableSet.getOrderName() != null && !variableSet.getOrderName().isEmpty()) {
-                                        plannedOrder.setOrderName(variableSet.getOrderName());
-                                    } else {
-                                        plannedOrder.setOrderName(Paths.get(schedule.getPath()).getFileName().toString());
-                                    }
+                                    plannedOrder.setOrderName(DailyPlanHelper.getOrderName(schedule, variableSet));
                                     synchronizer.add(startupMode, plannedOrder, controllerId, dailyPlanDate);
                                     plannedOrdersCount++;
                                 }

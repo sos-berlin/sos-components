@@ -18,6 +18,7 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.schedule.VariableSet;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 
 public class DailyPlanHelper {
@@ -178,8 +179,12 @@ public class DailyPlanHelper {
 
     public static String buildOrderId(String dailyPlanDate, Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode)
             throws SOSInvalidDataException {
+        return buildOrderId(dailyPlanDate, getOrderName(schedule, variableSet), startTime, startMode);
+    }
+
+    public static String getOrderName(Schedule schedule, VariableSet variableSet) {
         String orderName = "";
-        if ((variableSet.getOrderName() == null) || (variableSet.getOrderName().isEmpty())) {
+        if (SOSString.isEmpty(variableSet.getOrderName())) {
             orderName = Paths.get(schedule.getPath()).getFileName().toString();
         } else {
             orderName = variableSet.getOrderName();
@@ -187,8 +192,7 @@ public class DailyPlanHelper {
         if (orderName.length() > 30) {
             orderName = orderName.substring(0, 30);
         }
-
-        return buildOrderId(dailyPlanDate, orderName, startTime, startMode);
+        return orderName;
     }
 
     private static String buildOrderId(String dailyPlanDate, String orderName, Long startTime, Integer startMode) throws SOSInvalidDataException {
@@ -201,29 +205,24 @@ public class DailyPlanHelper {
         return orderId;
     }
 
+    public static String generateNewFromOldOrderId(String oldOrderId, String newDailyPlanDate) {
+        return generateNewFromOldOrderId("#" + newDailyPlanDate + oldOrderId.substring(11));
+    }
+
+    public static String generateNewFromOldOrderId(String oldOrderId) {
+        return getNewFromOldOrderId(oldOrderId, OrdersHelper.getUniqueOrderId());
+    }
+
+    public static String getNewFromOldOrderId(String oldOrderId, String newUniqueOrderIdPart) {
+        // #2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
+        // replace 4038226057 with the new part
+        return oldOrderId.replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10,11}(-.+)$", "$1" + newUniqueOrderIdPart + "$2");
+    }
+
     public static Date getNextDay(Date date, DailyPlanSettings settings) throws ParseException {
         java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(settings.getTimeZone()));
         calendar.setTime(date);
         calendar.add(java.util.Calendar.DATE, 1);
         return calendar.getTime();
-    }
-
-    public static String modifiedOrderId(String oldOrderId, Long add) {
-        String[] stringSplit = oldOrderId.split("-");
-        String newOrderId = "";
-        if (stringSplit.length >= 4) {
-            for (int i = 0; i < 3; i++) {
-                newOrderId = newOrderId + stringSplit[i] + "-";
-            }
-
-            if (stringSplit.length <= 5) {
-                newOrderId = newOrderId + add + "-" + stringSplit[stringSplit.length - 1];
-            } else {
-                newOrderId = newOrderId + stringSplit[3] + "-" + stringSplit[4] + "-" + add + "-" + stringSplit[stringSplit.length - 1];
-            }
-        } else {
-            newOrderId = oldOrderId;
-        }
-        return newOrderId;
     }
 }

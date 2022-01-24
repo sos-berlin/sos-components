@@ -216,7 +216,9 @@ public class OrderListSynchronizer {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowPath()));
-                        dbLayer.store(plannedOrder, OrdersHelper.getUniqueOrderId(), 0, 0);
+                        DBItemDailyPlanOrder newItem = dbLayer.store(plannedOrder, OrdersHelper.getUniqueOrderId(), 0, 0);
+                        
+                        plannedOrder.getFreshOrder().setId(newItem.getOrderId());
                         plannedOrder.setStoredInDb(true);
                         counter.addStoredSingle();
                     } else {
@@ -249,9 +251,11 @@ public class OrderListSynchronizer {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowPath()));
-                        dbLayer.store(plannedOrder, id, nr, size);
+                        DBItemDailyPlanOrder newItem = dbLayer.store(plannedOrder, id, nr, size);
+                        
                         nr = nr + 1;
                         plannedOrder.setStoredInDb(true);
+                        plannedOrder.getFreshOrder().setId(newItem.getOrderId());
                         counter.addStoredCyclicTotal();
                     } else {
                         counter.addStoreSkippedCyclicTotal();
@@ -331,7 +335,7 @@ public class OrderListSynchronizer {
                             }
 
                             if (item.getStartMode().equals(DBLayerDailyPlannedOrders.START_MODE_SINGLE)) {
-                                dbLayer.deleteCascading(item);
+                                dbLayer.deleteSingleCascading(item);
                             } else {
                                 String mainPart = OrdersHelper.getCyclicOrderIdMainPart(item.getOrderId());
                                 if (!cyclicMainParts.contains(mainPart)) {
