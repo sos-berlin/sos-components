@@ -1,10 +1,19 @@
 package com.sos.joc.keys.db;
 
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateEncodingException;
+import java.security.spec.InvalidKeySpecException;
+
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
+import com.sos.commons.sign.keys.certificate.CertificateUtils;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepKeys;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
@@ -16,6 +25,7 @@ import com.sos.joc.model.sign.JocKeyType;
 public class DBLayerKeys {
 
     private final SOSHibernateSession session;
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerKeys.class); 
 
     public DBLayerKeys(SOSHibernateSession hibernateSession) {
         session = hibernateSession;
@@ -52,7 +62,19 @@ public class DBLayerKeys {
         if (existingKey != null) {
             existingKey.setKeyType(JocKeyType.PRIVATE.value());
             existingKey.setKey(keyPair.getPrivateKey());
-            existingKey.setCertificate(null);
+            if (keyPair.getCertificate() != null) {
+                existingKey.setCertificate(keyPair.getCertificate());
+            } else {
+                try {
+                    String certificate = CertificateUtils.asPEMString(
+                            KeyUtil.generateCertificateFromKeyPair(
+                                    KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey())));
+                    existingKey.setCertificate(certificate);
+                } catch (CertificateEncodingException | NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+                    LOGGER.warn("could not extract certificate from key pair. cause: ", e);
+                    existingKey.setCertificate(null);
+                } 
+            }
             if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 existingKey.setKeyAlgorithm(JocKeyAlgorithm.PGP.value());
             } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
