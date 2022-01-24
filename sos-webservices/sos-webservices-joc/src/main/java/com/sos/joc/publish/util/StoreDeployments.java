@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.inventory.model.deploy.DeployType;
@@ -31,6 +32,7 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.common.IDeployObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -167,17 +169,7 @@ public class StoreDeployments {
                 // get all already optimistically stored entries for the commit
                 List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
                 // update all previously optimistically stored entries with the error message and change the state
-                for(DBItemDeploymentHistory optimistic : optimisticEntries) {
-                    optimistic.setErrorMessage(either.getLeft().message());
-                    optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
-                    dbLayer.getSession().update(optimistic);
-                    // update related inventory configuration to deployed=false 
-                    DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(optimistic.getInventoryConfigurationId());
-                    if (cfg != null) {
-                        cfg.setDeployed(false);
-                        dbLayer.getSession().update(cfg);
-                    }
-                }
+                updateOptimisticEntriesIfFailed(optimisticEntries, either.getLeft().message(), dbLayer);
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
@@ -188,6 +180,21 @@ public class StoreDeployments {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
         } finally {
             Globals.disconnect(newHibernateSession);
+        }
+    }
+    
+    public static void updateOptimisticEntriesIfFailed (List<DBItemDeploymentHistory> optimisticEntries, String message,
+            DBLayerDeploy dbLayer) throws SOSHibernateException {
+        for(DBItemDeploymentHistory optimistic : optimisticEntries) {
+            optimistic.setErrorMessage(message);
+            optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
+            dbLayer.getSession().update(optimistic);
+            // update related inventory configuration to deployed=false 
+            DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(optimistic.getInventoryConfigurationId());
+            if (cfg != null) {
+                cfg.setDeployed(false);
+                dbLayer.getSession().update(cfg);
+            }
         }
     }
     
@@ -221,20 +228,29 @@ public class StoreDeployments {
                 break;
             case SOSKeyConstants.RSA_ALGORITHM_NAME:
                 cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
-                verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-                if (verified) {
-                    PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, 
-                    		SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair().getCertificate()).thenAccept(either -> 
-                                processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                if (cert != null) {
+                    verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+                    if (verified) {
+                        PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, 
+                                SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair().getCertificate()).thenAccept(either -> 
+                                    processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                    } else {
+                      signerDN = cert.getSubjectDN().getName();
+                      PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, 
+                              SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
+                      .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                    }
                 } else {
-                  signerDN = cert.getSubjectDN().getName();
-                  PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, 
-                		  SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
-                  .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                    throw new JocDeployException("No certificate present! Cannot deploy.");
                 }
                 break;
             case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
                 cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
+                if (cert != null) {
+                    
+                } else {
+                    throw new JocDeployException("No certificate present! Cannot deploy.");
+                }
                 verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
                 if (verified) {
                     PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId,  
