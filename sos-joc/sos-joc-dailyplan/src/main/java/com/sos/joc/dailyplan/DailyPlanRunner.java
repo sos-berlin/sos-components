@@ -239,6 +239,15 @@ public class DailyPlanRunner extends TimerTask {
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             IOException, ParseException, SOSException, URISyntaxException, ControllerConnectionResetException, ControllerConnectionRefusedException,
             InterruptedException, ExecutionException, TimeoutException {
+        return generateDailyPlan(startupMode, controllerId, schedules, dailyPlanDate, null, withSubmit, jocError, accessToken);
+    }
+
+    /* DailyPlanModifyOrderImpl **/
+    public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId, Collection<Schedule> schedules,
+            String dailyPlanDate, DBItemDailyPlanSubmission submission, Boolean withSubmit, JocError jocError, String accessToken)
+            throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException,
+            JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
 
         String operation = withSubmit ? "creating/submitting" : "creating";
         if (schedules == null || schedules.size() == 0) {
@@ -247,7 +256,7 @@ public class DailyPlanRunner extends TimerTask {
             return new TreeMap<PlannedOrderKey, PlannedOrder>();
         }
 
-        OrderListSynchronizer synchronizer = calculateStartTimes(startupMode, controllerId, schedules, dailyPlanDate);
+        OrderListSynchronizer synchronizer = calculateStartTimes(startupMode, controllerId, schedules, dailyPlanDate, submission);
         synchronizer.setJocError(jocError);
         synchronizer.setAccessToken(accessToken);
         OrderCounter c = DailyPlanHelper.getOrderCount(synchronizer.getPlannedOrders());
@@ -644,9 +653,9 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     private OrderListSynchronizer calculateStartTimes(StartupMode startupMode, String controllerId, Collection<Schedule> schedules,
-            String dailyPlanDate) throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException,
-            DBMissingDataException, IOException, SOSMissingDataException, SOSInvalidDataException, ParseException, JocConfigurationException,
-            SOSHibernateException, DBOpenSessionException {
+            String dailyPlanDate, DBItemDailyPlanSubmission submission) throws JsonParseException, JsonMappingException, DBConnectionRefusedException,
+            DBInvalidDataException, DBMissingDataException, IOException, SOSMissingDataException, SOSInvalidDataException, ParseException,
+            JocConfigurationException, SOSHibernateException, DBOpenSessionException {
 
         String method = "calculateStartTimes";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -664,6 +673,9 @@ public class DailyPlanRunner extends TimerTask {
 
         Map<String, Calendar> calendars = new HashMap<String, Calendar>();
         OrderListSynchronizer synchronizer = new OrderListSynchronizer(settings);
+        if (submission != null) {
+            synchronizer.setSubmission(submission);
+        }
         for (Schedule schedule : schedules) {
             if (fromService && !schedule.getPlanOrderAutomatically()) {
                 if (isDebugEnabled) {

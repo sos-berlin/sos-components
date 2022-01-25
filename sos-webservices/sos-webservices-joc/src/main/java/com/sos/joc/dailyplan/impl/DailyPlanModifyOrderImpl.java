@@ -3,7 +3,6 @@ package com.sos.joc.dailyplan.impl;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -414,11 +413,11 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             if (in.getCycle() == null || in.getCycle().getRepeat() == null) {
                 throw new JocMissingRequiredParameterException("Modify Start Time: missing cyclic definition.");
             }
+            DBItemDailyPlanSubmission submission = insertNewSubmission(in.getControllerId(), mainItems.get(0).getDailyPlanDate(getSettings()
+                    .getTimeZone()));
             for (DBItemDailyPlanOrder mainItem : mainItems) {
-                String newOrderId = modifyStartTimeCycle(in, mainItem, auditlog);
-                if (!SOSString.isEmpty(newOrderId)) {
-                    result.getAdditionalProperties().put(mainItem.getOrderId(), newOrderId);
-                }
+                String newOrderId = modifyStartTimeCycle(in, submission, mainItem, auditlog);
+                result.getAdditionalProperties().put(mainItem.getOrderId(), newOrderId == null ? "" : newOrderId);
             }
         } else {
             if (in.getScheduledFor() == null) {
@@ -498,7 +497,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(sessionNew);
                 for (Long submissionId : submissionIds) {
-                    deleteSubmission(dbLayer, in.getControllerId(), submissionId);
+                    deleteNotUsedSubmission(dbLayer, in.getControllerId(), submissionId);
                 }
                 sessionNew.commit();
                 sessionNew.close();
@@ -526,10 +525,10 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         return result;
     }
 
-    private String modifyStartTimeCycle(DailyPlanModifyOrder in, DBItemDailyPlanOrder mainItem, DBItemJocAuditLog auditlog)
-            throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException,
-            InterruptedException {
+    private String modifyStartTimeCycle(DailyPlanModifyOrder in, DBItemDailyPlanSubmission newSubmission, DBItemDailyPlanOrder mainItem,
+            DBItemJocAuditLog auditlog) throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException,
+            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+            ExecutionException, InterruptedException {
         Long oldSubmissionId = mainItem.getSubmissionHistoryId();
 
         SOSHibernateSession session = null;
@@ -568,7 +567,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             sessionNew.beginTransaction();
                             DBLayerDailyPlannedOrders dbLayerNew = new DBLayerDailyPlannedOrders(sessionNew);
                             dbLayerNew.deleteCascading(mainItem, true);
-                            deleteSubmission(dbLayerNew, mainItem.getControllerId(), oldSubmissionId);
+                            deleteNotUsedSubmission(dbLayerNew, mainItem.getControllerId(), oldSubmissionId);
                             sessionNew.commit();
                         } catch (SOSHibernateException e) {
                             Globals.rollback(sessionNew);
@@ -577,19 +576,19 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             Globals.disconnect(sessionNew);
                         }
                         // can't returns result ...
-                        recreateCyclicOrder(in, mainItem, variable, auditlog);
+                        recreateCyclicOrder(in, newSubmission, mainItem, variable, auditlog);
                     }
                 });
             } else {
                 // remove old submission
                 session.beginTransaction();
-                deleteSubmission(dbLayer, mainItem.getControllerId(), oldSubmissionId);
+                deleteNotUsedSubmission(dbLayer, mainItem.getControllerId(), oldSubmissionId);
                 session.commit();
                 session.close();
                 session = null;
 
                 // generate orders
-                generatedOrders = recreateCyclicOrder(in, mainItem, variable, auditlog);
+                generatedOrders = recreateCyclicOrder(in, newSubmission, mainItem, variable, auditlog);
             }
         } finally {
             Globals.disconnect(session);
@@ -605,7 +604,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         return newOrderId;
     }
 
-    private void deleteSubmission(DBLayerDailyPlannedOrders dbLayer, String controllerId, Long submissionId) throws SOSHibernateException {
+    private void deleteNotUsedSubmission(DBLayerDailyPlannedOrders dbLayer, String controllerId, Long submissionId) throws SOSHibernateException {
         if (submissionId != null) {
             Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submissionId);
             if (count.equals(0L)) {
@@ -633,8 +632,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         return hasCyclic;
     }
 
-    private Map<PlannedOrderKey, PlannedOrder> recreateCyclicOrder(DailyPlanModifyOrder in, final DBItemDailyPlanOrder mainItem,
-            DBItemDailyPlanVariable variable, DBItemJocAuditLog auditlog) {
+    private Map<PlannedOrderKey, PlannedOrder> recreateCyclicOrder(DailyPlanModifyOrder in, DBItemDailyPlanSubmission newSubmission,
+            final DBItemDailyPlanOrder mainItem, DBItemDailyPlanVariable variable, DBItemJocAuditLog auditlog) {
         String controllerId = in.getControllerId();
         String dDate = in.getDailyPlanDate();
         if (dDate == null) {
@@ -690,7 +689,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             DailyPlanRunner runner = new DailyPlanRunner(settings);
             generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, Collections.singletonList(schedule), mainItem
-                    .getDailyPlanDate(settings.getTimeZone()), mainItem.getSubmitted(), getJocError(), getAccessToken());
+                    .getDailyPlanDate(settings.getTimeZone()), newSubmission, mainItem.getSubmitted(), getJocError(), getAccessToken());
 
             Set<AuditLogDetail> auditLogDetails = new HashSet<>();
             for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {
@@ -748,15 +747,29 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
-    private DBItemDailyPlanSubmission newSubmission(String controllerId, Date scheduleFor) throws ParseException {
-        LOGGER.debug("newSubmission");
+    private DBItemDailyPlanSubmission insertNewSubmission(String controllerId, String dailyPlanDate) throws SOSHibernateException,
+            SOSInvalidDataException {
+        DBItemDailyPlanSubmission item = newSubmission(controllerId, dailyPlanDate);
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[insertNewSubmission][" + dailyPlanDate + "]");
+            session.beginTransaction();
+            session.save(item);
+            session.commit();
+        } finally {
+            Globals.disconnect(session);
+        }
+        return item;
+    }
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Date dateWithoutTime = sdf.parse(sdf.format(scheduleFor));
+    private DBItemDailyPlanSubmission newSubmission(String controllerId, Date scheduleFor) throws SOSInvalidDataException {
+        return newSubmission(controllerId, SOSDate.format(scheduleFor, SOSDate.DATE_FORMAT));
+    }
 
+    private DBItemDailyPlanSubmission newSubmission(String controllerId, String dailyPlanDate) throws SOSInvalidDataException {
         DBItemDailyPlanSubmission item = new DBItemDailyPlanSubmission();
         item.setControllerId(controllerId);
-        item.setSubmissionForDate(dateWithoutTime);
+        item.setSubmissionForDate(SOSDate.parse(dailyPlanDate, SOSDate.DATE_FORMAT));
         item.setUserAccount(getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
         item.setCreated(new Date());
         return item;
