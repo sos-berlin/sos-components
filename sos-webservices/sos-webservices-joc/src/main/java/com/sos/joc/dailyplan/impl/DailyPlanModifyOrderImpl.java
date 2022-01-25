@@ -283,12 +283,14 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     }
                 } else {// single start
                     if (item.getSubmitted()) {
+                        // not check the plannedStatTime due to possible cyclic workflow ..
                         // calculate new OrderId
                         result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId()));
 
                         // prepare to modify later
                         submitted.add(item);
                         submittedVariables.put(item.getId(), variables);
+
                     } else {
                         // not changed for planned order
                         result.getAdditionalProperties().put(item.getOrderId(), item.getOrderId());
@@ -309,25 +311,61 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             c.thenAccept(either -> {
                 SOSHibernateSession sessionNew = null;
                 try {
+                    List<DBItemDailyPlanOrder> toSubmit = new ArrayList<>();
+                    Date now = new Date();
+                    boolean isDebugEnabled = LOGGER.isDebugEnabled();
+
                     sessionNew = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[modifyVariables]");
                     sessionNew.setAutoCommit(false);
-
                     sessionNew.beginTransaction();
-
-                    List<DBItemDailyPlanOrder> toSubmit = new ArrayList<>();
 
                     // single & main cyclic
                     for (DBItemDailyPlanOrder item : items) {
                         DBItemDailyPlanVariable variables = submittedVariables.get(item.getId());
 
-                        String newOrderId = result.getAdditionalProperties().get(item.getOrderId());
-                        modifyVariables(in, action, variables, sessionNew, newOrderId);
-
                         // main cyclic
                         if (item.isCyclic()) {
                             String newPart = submittedCyclicNewParts.get(item.getId());
                             List<DBItemDailyPlanOrder> cyclic = submittedCyclic.get(item.getId());
+
+                            // TODO how check if already executed ?..
+                            // when a cyclic workflow ???
+                            // delete executed ???
+                            boolean hasCyclicExecuted = false;
+                            List<DBItemDailyPlanOrder> cyclic2Submit = new ArrayList<>();
                             for (DBItemDailyPlanOrder cyclicItem : cyclic) {
+                                if (now.getTime() > cyclicItem.getPlannedStart().getTime()) {
+                                    hasCyclicExecuted = true;
+                                    if (isDebugEnabled) {
+                                        try {
+                                            LOGGER.debug(String.format("[modifyVariables][%s][skip submit]now() > planned start(%s)", cyclicItem
+                                                    .getControllerId(), SOSDate.getDateTimeAsString(now), SOSDate.getDateTimeAsString(cyclicItem
+                                                            .getPlannedStart())));
+                                        } catch (Throwable ee) {
+                                        }
+                                    }
+                                } else {
+                                    cyclic2Submit.add(cyclicItem);
+                                }
+                            }
+
+                            String newOrderId = result.getAdditionalProperties().get(item.getOrderId());
+                            if (hasCyclicExecuted) {
+                                if (variables != null) {
+                                    DBItemDailyPlanVariable variablesNew = new DBItemDailyPlanVariable();
+                                    variablesNew.setControllerId(in.getControllerId());
+                                    variablesNew.setOrderId(newOrderId);
+                                    variablesNew.setVariableValue(variables.getVariableValue());
+                                    variablesNew.setModified(new Date());
+                                    variablesNew.setCreated(new Date());
+                                    sessionNew.save(variablesNew);
+
+                                    variables = variablesNew;
+                                }
+                            }
+
+                            modifyVariables(in, action, variables, sessionNew, newOrderId);
+                            for (DBItemDailyPlanOrder cyclicItem : cyclic2Submit) {
                                 cyclicItem.setSubmitted(false);
                                 cyclicItem.setOrderId(OrdersHelper.getNewFromOldOrderId(cyclicItem.getOrderId(), newPart));
                                 cyclicItem.setModified(new Date());
@@ -336,6 +374,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                                 toSubmit.add(cyclicItem);
                             }
                         } else { // single start
+                            String newOrderId = result.getAdditionalProperties().get(item.getOrderId());
+                            modifyVariables(in, action, variables, sessionNew, newOrderId);
+
                             item.setSubmitted(false);
                             item.setOrderId(newOrderId);
                             item.setModified(new Date());
