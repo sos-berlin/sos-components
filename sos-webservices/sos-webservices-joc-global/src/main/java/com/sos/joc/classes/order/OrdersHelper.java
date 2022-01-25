@@ -794,6 +794,22 @@ public class OrdersHelper {
         return Long.valueOf((Instant.now().toEpochMilli() * 100) + (n % 100)).toString().substring(4);
     }
 
+    public static String generateNewFromOldOrderId(String oldOrderId, String newDailyPlanDate) {
+        // #2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
+        // #2021-10-25#C1234567890-00012-12-dailyplan_shedule_cyclic
+        return generateNewFromOldOrderId("#" + newDailyPlanDate + oldOrderId.substring(11));
+    }
+
+    public static String generateNewFromOldOrderId(String oldOrderId) {
+        return getNewFromOldOrderId(oldOrderId, OrdersHelper.getUniqueOrderId());
+    }
+
+    public static String getNewFromOldOrderId(String oldOrderId, String newUniqueOrderIdPart) {
+        // #2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
+        // replace 4038226057 with the new part
+        return oldOrderId.replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10,11}(-.+)$", "$1" + newUniqueOrderIdPart + "$2");
+    }
+
     public static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd) {
         String orderId = String.format("#%s#T%s-%s", yyyymmdd, getUniqueOrderId(), order.getOrderName());
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());

@@ -51,7 +51,6 @@ import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.DailyPlanRunner;
-import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.common.PlannedOrder;
@@ -268,7 +267,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         // calculate new OrderId
                         String newPart = OrdersHelper.getUniqueOrderId();
                         submittedCyclicNewParts.put(item.getId(), newPart);
-                        result.getAdditionalProperties().put(item.getOrderId(), DailyPlanHelper.getNewFromOldOrderId(item.getOrderId(), newPart));
+                        result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.getNewFromOldOrderId(item.getOrderId(), newPart));
 
                         // prepare to modify later
                         List<DBItemDailyPlanOrder> cyclic = dbLayer.getDailyPlanOrdersByCyclicMainPart(item.getControllerId(), OrdersHelper
@@ -286,7 +285,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 } else {// single start
                     if (item.getSubmitted()) {
                         // calculate new OrderId
-                        result.getAdditionalProperties().put(item.getOrderId(), DailyPlanHelper.generateNewFromOldOrderId(item.getOrderId()));
+                        result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId()));
 
                         // prepare to modify later
                         submitted.add(item);
@@ -331,7 +330,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             List<DBItemDailyPlanOrder> cyclic = submittedCyclic.get(item.getId());
                             for (DBItemDailyPlanOrder cyclicItem : cyclic) {
                                 cyclicItem.setSubmitted(false);
-                                cyclicItem.setOrderId(DailyPlanHelper.getNewFromOldOrderId(cyclicItem.getOrderId(), newPart));
+                                cyclicItem.setOrderId(OrdersHelper.getNewFromOldOrderId(cyclicItem.getOrderId(), newPart));
                                 cyclicItem.setModified(new Date());
                                 sessionNew.update(cyclicItem);
 
@@ -459,7 +458,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         for (DBItemDailyPlanOrder item : items) {
             // not check if now > plannedStart of already submitted orders because of cyclic workflows
             if (item.getSubmitted()) {
-                result.getAdditionalProperties().put(item.getOrderId(), DailyPlanHelper.generateNewFromOldOrderId(item.getOrderId(), dailyPlanDate));
+                result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId(), dailyPlanDate));
             } else {// not changed for planned orders
                 result.getAdditionalProperties().put(item.getOrderId(), item.getOrderId());
             }
@@ -603,8 +602,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         if (generatedOrders != null && generatedOrders.size() > 0) {
             Optional<Map.Entry<PlannedOrderKey, PlannedOrder>> first = generatedOrders.entrySet().stream().findFirst();
             if (first.isPresent()) {
-                // TODO - not correct, only for test
-                // find max order id ???
                 newOrderId = first.get().getValue().getFreshOrder().getId();
             }
         }

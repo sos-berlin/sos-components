@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
@@ -24,7 +25,6 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
-import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.model.common.JocSecurityLevel;
 
 public class TestDailyPlanService {
@@ -59,11 +59,11 @@ public class TestDailyPlanService {
     @Ignore
     @Test
     public void testGenerateNewFromOldOrderId() {
-        LOGGER.info(DailyPlanHelper.generateNewFromOldOrderId("#2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic"));
-        LOGGER.info(DailyPlanHelper.generateNewFromOldOrderId("#2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic", "2021-10-25"));
+        LOGGER.info(OrdersHelper.generateNewFromOldOrderId("#2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic"));
+        LOGGER.info(OrdersHelper.generateNewFromOldOrderId("#2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic", "2021-10-25"));
 
-        LOGGER.info(DailyPlanHelper.getNewFromOldOrderId("#2021-10-12#C4038226057-00001-12-dailyplan_shedule_cyclic", "XXX"));
-        LOGGER.info(DailyPlanHelper.getNewFromOldOrderId("#2021-10-12#C4038226057-00002-12-dailyplan_shedule_cyclic", "XXX"));
+        LOGGER.info(OrdersHelper.getNewFromOldOrderId("#2021-10-12#C4038226057-00001-12-dailyplan_shedule_cyclic", "XXX"));
+        LOGGER.info(OrdersHelper.getNewFromOldOrderId("#2021-10-12#C4038226057-00002-12-dailyplan_shedule_cyclic", "XXX"));
     }
 
     private static void stopAfter(IJocClusterService service, StartupMode mode, int seconds) {

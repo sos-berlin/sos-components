@@ -216,9 +216,8 @@ public class OrderListSynchronizer {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowPath()));
-                        DBItemDailyPlanOrder newItem = dbLayer.store(plannedOrder, OrdersHelper.getUniqueOrderId(), 0, 0);
-                        
-                        plannedOrder.getFreshOrder().setId(newItem.getOrderId());
+                        dbLayer.store(plannedOrder, OrdersHelper.getUniqueOrderId(), 0, 0);
+
                         plannedOrder.setStoredInDb(true);
                         counter.addStoredSingle();
                     } else {
@@ -251,11 +250,10 @@ public class OrderListSynchronizer {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowPath()));
-                        DBItemDailyPlanOrder newItem = dbLayer.store(plannedOrder, id, nr, size);
-                        
+                        dbLayer.store(plannedOrder, id, nr, size);
+
                         nr = nr + 1;
                         plannedOrder.setStoredInDb(true);
-                        plannedOrder.getFreshOrder().setId(newItem.getOrderId());
                         counter.addStoredCyclicTotal();
                     } else {
                         counter.addStoreSkippedCyclicTotal();
