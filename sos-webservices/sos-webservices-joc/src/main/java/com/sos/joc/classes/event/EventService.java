@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.classes.order.OrdersHelper;
@@ -340,7 +341,7 @@ public class EventService {
             Object key = event.key();
             Event evt = event.event();
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(evt.toString());
+                LOGGER.debug(evt.toString()+", key="+SOSString.toString(key));
             }
 
             if (evt instanceof OrderEvent) {

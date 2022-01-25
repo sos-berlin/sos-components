@@ -457,11 +457,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         OrderIdMap result = new OrderIdMap();
         for (DBItemDailyPlanOrder item : items) {
             // not check if now > plannedStart of already submitted orders because of cyclic workflows
-            if (item.getSubmitted()) {
-                result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId(), dailyPlanDate));
-            } else {// not changed for planned orders
-                result.getAdditionalProperties().put(item.getOrderId(), item.getOrderId());
-            }
+            // generate for not submitted too because maybe the daily plan day was changed - use new for all - same behaviour as for cyclic orders
+            result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId(), dailyPlanDate));
         }
 
         CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(in.getControllerId(), items);
@@ -478,21 +475,21 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 DBLayerOrderVariables ovDbLayer = new DBLayerOrderVariables(sessionNew);
                 List<DBItemDailyPlanOrder> toSubmit = new ArrayList<>();
                 for (DBItemDailyPlanOrder item : items) {
+                    String oldOrderId = item.getOrderId();
+                    String newOrderId = result.getAdditionalProperties().get(oldOrderId);
+
+                    // update variables
+                    ovDbLayer.update(item.getControllerId(), oldOrderId, newOrderId);
+
                     Long expectedDuration = item.getExpectedEnd().getTime() - item.getPlannedStart().getTime();
                     item.setExpectedEnd(new Date(expectedDuration + scheduledFor.getTime()));
                     item.setPlannedStart(scheduledFor);
                     item.setSubmissionHistoryId(submission.getId());
                     item.setModified(new Date());
+                    item.setOrderId(newOrderId);
 
                     if (item.getSubmitted()) {
-                        String newOrderId = result.getAdditionalProperties().get(item.getOrderId());
-
-                        // update variables
-                        ovDbLayer.update(item.getControllerId(), item.getOrderId(), newOrderId);
-
-                        // update order
                         item.setSubmitted(false);
-                        item.setOrderId(newOrderId);
 
                         toSubmit.add(item);
                     }

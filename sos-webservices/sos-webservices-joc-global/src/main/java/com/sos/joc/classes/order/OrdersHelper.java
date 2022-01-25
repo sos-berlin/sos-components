@@ -797,7 +797,11 @@ public class OrdersHelper {
     public static String generateNewFromOldOrderId(String oldOrderId, String newDailyPlanDate) {
         // #2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
         // #2021-10-25#C1234567890-00012-12-dailyplan_shedule_cyclic
-        return generateNewFromOldOrderId("#" + newDailyPlanDate + oldOrderId.substring(11));
+        return generateNewFromOldOrderId(getWithNewDateFromOldOrderId(oldOrderId, newDailyPlanDate));
+    }
+    
+    public static String getWithNewDateFromOldOrderId(String oldOrderId, String newDailyPlanDate) {
+        return "#" + newDailyPlanDate + oldOrderId.substring(11);
     }
 
     public static String generateNewFromOldOrderId(String oldOrderId) {
