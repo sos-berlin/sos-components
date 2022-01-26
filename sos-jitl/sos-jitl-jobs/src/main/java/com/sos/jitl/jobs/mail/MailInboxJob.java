@@ -10,7 +10,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
 import com.sos.commons.mail.SOSMailReceiver;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
@@ -23,16 +24,16 @@ import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
 import js7.data_for_java.order.JOutcome;
 
 public class MailInboxJob extends ABlockingInternalJob<MailInboxArguments> {
-    
+
     private static final String MAIL_STORE_PROTOCOL_KEY = "mail.store.protocol";
-  
+
     public MailInboxJob(JobContext jobContext) {
         super(jobContext);
     }
-    
+
     @Override
     public void onStart(MailInboxArguments args) throws Exception {
-        
+
         String mailStoreProtocolPropValue = System.getProperty(MAIL_STORE_PROTOCOL_KEY);
         if (mailStoreProtocolPropValue != null && !mailStoreProtocolPropValue.isEmpty()) {
             Set<String> availableProtocols = EnumSet.allOf(SOSMailReceiver.Protocol.class).stream().map(SOSMailReceiver.Protocol::name).collect(
@@ -44,7 +45,7 @@ public class MailInboxJob extends ABlockingInternalJob<MailInboxArguments> {
             }
         }
     }
-    
+
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<MailInboxArguments> step) throws Exception {
         return step.success(process(step, step.getArguments()));
@@ -55,7 +56,7 @@ public class MailInboxJob extends ABlockingInternalJob<MailInboxArguments> {
         if (step != null) { // for Unit test
             logger = step.getLogger();
         }
-        
+
         if (args.getAction().getValue().contains(ActionProcess.dump)) {
             args.getMailDirectoryName().setRequired(true);
         }
@@ -69,31 +70,31 @@ public class MailInboxJob extends ABlockingInternalJob<MailInboxArguments> {
         default:
             break;
         }
-        
+
         if (!args.getMailProtocol().isEmpty()) {
-            //checkRequiredArguments(args.createRequiredMailArguments());
-            checkRequiredArguments(Arrays.asList(args.getMailDirectoryName(), args.getAttachmentDirectoryName(), args.getAfterProcessMailDirectoryName()));
+            // checkRequiredArguments(args.createRequiredMailArguments());
+            checkRequiredArguments(Arrays.asList(args.getMailDirectoryName(), args.getAttachmentDirectoryName(), args
+                    .getAfterProcessMailDirectoryName()));
         }
-        
+
         SOSMailReceiver sosMailHandler = null;
         try {
-            if (args.getCredentialStoreFile() != null) {
-                SOSKeePassResolver r = new SOSKeePassResolver(args.getCredentialStoreFile().getValue(), args.getCredentialStoreKeyFile().getValue(), args
-                        .getCredentialStorePassword().getValue());
-
-                r.setEntryPath(args.getCredentialStoreEntryPath().getValue());
-                args.getMailUser().setValue(r.resolve(args.getMailUser().getValue()));
-                args.getMailPassword().setValue(r.resolve(args.getMailPassword().getValue()));
-                args.getMailHost().setValue(r.resolve(args.getMailHost().getValue()));
-                //args.getMailSSL().setValue(r.resolve(args.getMailSSL().getValue()));
-            }
-            
             Map<String, Object> variables = new HashMap<>();
             if (step != null) {
+                SOSCredentialStoreArguments csArgs = step.getAppArguments(SOSCredentialStoreArguments.class);
+                if (csArgs.getCredentialStoreFile() != null) {
+                    SOSCredentialStoreResolver r = csArgs.newResolver();
+
+                    args.getMailUser().setValue(r.resolve(args.getMailUser().getValue()));
+                    args.getMailPassword().setValue(r.resolve(args.getMailPassword().getValue()));
+                    args.getMailHost().setValue(r.resolve(args.getMailHost().getValue()));
+                    // args.getMailSSL().setValue(r.resolve(args.getMailSSL().getValue()));
+                }
+
                 Map<String, JobArgument<MailInboxArguments>> allCurrent = step.getAllCurrentArguments();
                 variables = Job.asNameValueMap(allCurrent);
                 SOSMailReceiver.Protocol protocol = args.getMailProtocol().getValue();
-                
+
                 JobArgument<MailInboxArguments> port = allCurrent.getOrDefault("mail." + protocol.name() + ".port", allCurrent.get("mail.port"));
                 if (port == null || port.getValue() == null) {
                     args.setDefaultMailPort();
@@ -107,17 +108,17 @@ public class MailInboxJob extends ABlockingInternalJob<MailInboxArguments> {
             }
             variables = variables.entrySet().stream().filter(e -> e.getKey().startsWith("mail.")).filter(e -> !e.getKey().startsWith("mail.smtp."))
                     .filter(e -> e.getValue() != null).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            
+
             sosMailHandler = new MailReceiver(args.getMailProtocol().getValue(), variables, logger);
             sosMailHandler.connect();
-            
+
             MailProcessor sosMailProcessor = new MailProcessor(args, logger);
             for (String mailFolderName : args.getMailMessageFolder().getValue()) {
                 if (!mailFolderName.trim().isEmpty()) {
                     sosMailProcessor.performMessagesInFolder(sosMailHandler, mailFolderName.trim());
                 }
             }
-            
+
         } catch (Exception e) {
             throw e;
         } finally {
@@ -127,12 +128,12 @@ public class MailInboxJob extends ABlockingInternalJob<MailInboxArguments> {
         }
         return Collections.emptyMap();
     }
-    
+
     private void checkRequiredArguments(List<JobArgument<?>> args) throws SOSJobRequiredArgumentMissingException {
         Optional<String> arg = args.stream().filter(JobArgument::isRequired).filter(JobArgument::isEmpty).findAny().map(JobArgument::getName);
         if (arg.isPresent()) {
             throw new SOSJobRequiredArgumentMissingException(String.format("'%s' is missing but required", arg.get()));
         }
     }
-    
+
 }

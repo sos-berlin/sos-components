@@ -43,6 +43,9 @@ public class JobLogger {
     }
 
     public void info(final Object msg) {
+        if (step == null) {
+            return;
+        }
         step.out().println(String.format("[%s]%s", LOG_LEVEL_INFO, msg));
     }
 
@@ -55,14 +58,14 @@ public class JobLogger {
     }
 
     public void debug(final Object msg) {
-        if (!isDebugEnabled) {
+        if (!isDebugEnabled || step == null) {
             return;
         }
         step.out().println(String.format("[%s]%s", LOG_LEVEL_DEBUG, msg));
     }
 
     public void debug(final String format, final Object... args) {
-        if (!isDebugEnabled) {
+        if (!isDebugEnabled || step == null) {
             return;
         }
         if (args.length == 0) {
@@ -73,14 +76,14 @@ public class JobLogger {
     }
 
     public void trace(final Object msg) {
-        if (!isTraceEnabled) {
+        if (!isTraceEnabled || step == null) {
             return;
         }
         step.out().println(String.format("[%s]%s", LOG_LEVEL_TRACE, msg));
     }
 
     public void trace(final String format, final Object... args) {
-        if (!isTraceEnabled) {
+        if (!isTraceEnabled || step == null) {
             return;
         }
         if (args.length == 0) {
@@ -91,6 +94,9 @@ public class JobLogger {
     }
 
     public void warn(final Object msg) {
+        if (step == null) {
+            return;
+        }
         step.out().println(String.format("[%s]%s", LOG_LEVEL_WARN, msg));
     }
 
@@ -115,6 +121,9 @@ public class JobLogger {
     }
 
     public void error(final Object msg) {
+        if (step == null) {
+            return;
+        }
         step.err().println(String.format("[%s]%s", LOG_LEVEL_ERROR, msg));
     }
 

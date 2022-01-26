@@ -7,6 +7,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
@@ -138,6 +140,12 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
             step.getLogger().info("  " + args.getShellCommand().getDisplayValue());
             step.getLogger().info("  " + SOSString.toString(SOSShell.executeCommand(args.getShellCommand().getValue())));
         }
+
+        SOSCredentialStoreArguments csArgs = step.getAppArguments(SOSCredentialStoreArguments.class);
+        step.getLogger().info("----------CREDENTIAL STORE-----------------");
+        step.getLogger().info("  file=" + csArgs.getCredentialStoreFile());
+        SOSCredentialStoreResolver r = csArgs.newResolver();
+        step.getLogger().info("  resolve cs://@title=" + r.resolve("cs://@title"));
 
         step.getLogger().info("----------RETURN-----------------");
         if (args.getRedefineShowEnv().getValue() || !args.getReturnVariables().isEmpty()) {

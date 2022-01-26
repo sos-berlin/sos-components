@@ -28,7 +28,7 @@ public class JobArguments {
     }
 
     @SuppressWarnings("rawtypes")
-    public Map<String, List<JobArgument>> getAppArguments() {
+    protected Map<String, List<JobArgument>> getAppArguments() {
         return appArguments;
     }
 

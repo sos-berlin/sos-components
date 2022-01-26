@@ -2,6 +2,7 @@ package com.sos.commons.vfs.common;
 
 import java.nio.file.Path;
 
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase;
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
@@ -46,11 +47,12 @@ public abstract class AProviderArguments extends ASOSArguments {
     // Socket connect timeout in seconds based on socket.connect
     private SOSArgument<Integer> proxyConnectTimeout = new SOSArgument<Integer>("proxy_connect_timeout", false, 30);
 
-    // Keepass
-    private SOSArgument<Path> credentialStoreFile = new SOSArgument<Path>("credential_store_file", false);
-    private SOSArgument<Path> credentialStoreKeyFile = new SOSArgument<Path>("credential_store_key_file", false);
-    private SOSArgument<String> credentialStorePassword = new SOSArgument<String>("credential_store_password", false, DisplayMode.MASKED);
-    private SOSArgument<String> credentialStoreEntryPath = new SOSArgument<String>("credential_store_entry_path", false);
+    // Keepass - TODO use SOSCredentialStoreArguments
+    private SOSArgument<Path> credentialStoreFile = new SOSArgument<Path>(SOSCredentialStoreArguments.ARG_NAME_FILE, false);
+    private SOSArgument<Path> credentialStoreKeyFile = new SOSArgument<Path>(SOSCredentialStoreArguments.ARG_NAME_KEY_FILE, false);
+    private SOSArgument<String> credentialStorePassword = new SOSArgument<String>(SOSCredentialStoreArguments.ARG_NAME_PASSWORD, false,
+            DisplayMode.MASKED);
+    private SOSArgument<String> credentialStoreEntryPath = new SOSArgument<String>(SOSCredentialStoreArguments.ARG_NAME_ENTRY_PATH, false);
 
     // Internal/Keepass
     private SOSArgument<SOSKeePassDatabase> keepassDatabase = new SOSArgument<SOSKeePassDatabase>(null, false);

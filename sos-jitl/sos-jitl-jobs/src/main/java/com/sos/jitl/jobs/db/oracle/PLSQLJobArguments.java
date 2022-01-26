@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArguments;
@@ -22,11 +23,11 @@ public class PLSQLJobArguments extends JobArguments {
     private JobArgument<String> dbPassword = new JobArgument<String>("db_password", false);
     private JobArgument<String> dbUrl = new JobArgument<String>("db_url", false);
     private JobArgument<String> dbUser = new JobArgument<String>("db_user", false);
-    private JobArgument<String> credentialStoreFile = new JobArgument<String>("credential_store_file", false);
-    private JobArgument<String> credentialStoreKeyFile = new JobArgument<String>("credential_store_key_file", false);
-    private JobArgument<String> credentialStorePassword = new JobArgument<String>("credential_store_password", false);
-    private JobArgument<String> credentialStoreEntryPath = new JobArgument<String>("credential_store_entry_path", false);
- 
+
+    public PLSQLJobArguments() {
+        super(new SOSCredentialStoreArguments());
+    }
+
     public Path getHibernateFile() {
         return hibernateFile.getValue();
     }
@@ -74,39 +75,6 @@ public class PLSQLJobArguments extends JobArguments {
     public void setDbUser(String dbUser) {
         this.dbUser.setValue(dbUser);
     }
-
-    public String getCredentialStoreFile() {
-        return credentialStoreFile.getValue();
-    }
-
-    public void setCredentialStoreFile(String credentialStoreFile) {
-        this.credentialStoreFile.setValue(credentialStoreFile);
-    }
-
-    public String getCredentialStoreKeyFile() {
-        return credentialStoreKeyFile.getValue();
-    }
-
-    public void setCredentialStoreKeyFile(String credentialStoreKeyFile) {
-        this.credentialStoreKeyFile.setValue(credentialStoreKeyFile);
-    }
-
-    public String getCredentialStorePassword() {
-        return credentialStorePassword.getValue();
-    }
-
-    public void setCredentialStorePassword(String credentialStorePassword) {
-        this.credentialStorePassword.setValue(credentialStorePassword);
-    }
-
-    public String getCredentialStoreEntryPath() {
-        return credentialStoreEntryPath.getValue();
-    }
-
-    public void setCredentialStoreEntryPath(JobArgument<String> credentialStoreEntryPath) {
-        this.credentialStoreEntryPath = credentialStoreEntryPath;
-    }
-
 
     public boolean useHibernateFile() {
         return ((dbUrl.getValue() == null) || dbUrl.getValue().isEmpty()) && ((dbUser.getValue() == null) || dbUser.getValue().isEmpty());

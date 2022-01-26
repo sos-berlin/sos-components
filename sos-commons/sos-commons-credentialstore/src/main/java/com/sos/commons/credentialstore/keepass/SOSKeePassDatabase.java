@@ -675,7 +675,7 @@ public class SOSKeePassDatabase {
         return kpd;
     }
 
-    public static Path getDefaultKeyFile(Path database) throws Exception {
+    public static Path getDefaultKeyFile(Path database) {
         Path keyFile = null;
         String keyFileName = new StringBuilder(com.google.common.io.Files.getNameWithoutExtension(database.getFileName().toString())).append(".key")
                 .toString();

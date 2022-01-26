@@ -85,7 +85,7 @@ public class SOSKeePassResolver {
         }
     }
 
-    public String resolve(String uri) throws Exception {
+    public String resolve(String uri) throws SOSKeePassDatabaseException {
         SOSKeePassPath path = getKeePassPath(uri);
         if (path == null) {
             return uri;
@@ -107,7 +107,7 @@ public class SOSKeePassResolver {
         }
     }
 
-    public byte[] getBinaryProperty(String uri) throws Exception {
+    public byte[] getBinaryProperty(String uri) throws SOSKeePassDatabaseException {
         SOSKeePassPath path = getKeePassPath(uri);
         if (path == null) {
             return null;
@@ -119,7 +119,7 @@ public class SOSKeePassResolver {
         return null;
     }
 
-    private SOSKeePassPath getKeePassPath(String uri) throws Exception {
+    private SOSKeePassPath getKeePassPath(String uri) throws SOSKeePassResolverException {
         if (SOSString.isEmpty(uri)) {
             if (isTraceEnabled) {
                 LOGGER.trace("[skip]uri is empty");
@@ -151,7 +151,7 @@ public class SOSKeePassResolver {
         return path;
     }
 
-    private SOSKeePassDatabase init(SOSKeePassPath path) throws Exception {
+    private SOSKeePassDatabase init(SOSKeePassPath path) throws SOSKeePassDatabaseException {
         Map<String, String> queryParameters = path.getQueryParameters();
         Path f = getCurrentFile(path, queryParameters);
         if (isDebugEnabled) {
@@ -173,7 +173,7 @@ public class SOSKeePassResolver {
         return d;
     }
 
-    private SOSKeePassDatabase loadDatabase(Path currentFile, Path currentKeyFile, String currentPassword) throws Exception {
+    private SOSKeePassDatabase loadDatabase(Path currentFile, Path currentKeyFile, String currentPassword) throws SOSKeePassDatabaseException {
         SOSKeePassDatabase d = new SOSKeePassDatabase(currentFile);
         if (currentKeyFile == null) {
             d.load(currentPassword);
@@ -183,7 +183,8 @@ public class SOSKeePassResolver {
         return d;
     }
 
-    private Entry<?, ?, ?, ?> getCurrentEntry(SOSKeePassPath path, Path currentFile, SOSKeePassDatabase currentDatabase) throws Exception {
+    private Entry<?, ?, ?, ?> getCurrentEntry(SOSKeePassPath path, Path currentFile, SOSKeePassDatabase currentDatabase)
+            throws SOSKeePassDatabaseException {
         Entry<?, ?, ?, ?> entry = null;
         String key = new StringBuilder(currentFile.toString()).append(path.getEntryPath()).toString();
         if (entries.containsKey(key)) {
@@ -195,7 +196,7 @@ public class SOSKeePassResolver {
         return entry;
     }
 
-    private Path getCurrentFile(SOSKeePassPath path, Map<String, String> queryParameters) throws Exception {
+    private Path getCurrentFile(SOSKeePassPath path, Map<String, String> queryParameters) throws SOSKeePassResolverException {
         Path f = null;
         if (queryParameters != null) {
             String queryFile = queryParameters.get(SOSKeePassPath.QUERY_PARAMETER_FILE);
@@ -216,7 +217,7 @@ public class SOSKeePassResolver {
     }
 
     private Path getCurrentKeyFile(SOSKeePassPath path, Map<String, String> queryParameters, Path currentFile, String currentPassword)
-            throws Exception {
+            throws SOSKeePassDatabaseException {
 
         Path kf = null;
         String queryKeyFile = null;
@@ -250,7 +251,7 @@ public class SOSKeePassResolver {
         return kf;
     }
 
-    private String getCurrentPassword(SOSKeePassPath path, Map<String, String> queryParameters) throws Exception {
+    private String getCurrentPassword(SOSKeePassPath path, Map<String, String> queryParameters) {
         String p = null;
         if (queryParameters != null) {
             String queryPassword = queryParameters.get(SOSKeePassPath.QUERY_PARAMETER_PASSWORD);
