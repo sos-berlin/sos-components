@@ -22,6 +22,7 @@ import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.IdentityService;
+import com.sos.joc.model.security.IdentityServiceAuthenticationScheme;
 import com.sos.joc.model.security.IdentityServiceFilter;
 import com.sos.joc.model.security.IdentityServiceRename;
 import com.sos.joc.model.security.IdentityServiceTypes;
@@ -66,6 +67,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 identityService.setDisabled(dbItemIamIdentityService.getDisabled());
                 identityService.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
                 identityService.setIdentityServiceType(IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
+                identityService.setServiceAuthenticationScheme(IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService
+                        .getAuthenticationScheme()));
+                identityService.setSingleFactorCert(dbItemIamIdentityService.getSingleFactorCert());
+                identityService.setSingleFactorPwd(dbItemIamIdentityService.getSingleFactorPwd());
                 identityService.setOrdering(dbItemIamIdentityService.getOrdering());
                 identityService.setRequired(dbItemIamIdentityService.getRequired());
             }
@@ -114,9 +119,9 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             dbItemIamIdentityService.setIdentityServiceType(identityService.getIdentityServiceType().value());
             dbItemIamIdentityService.setOrdering(identityService.getOrdering());
             dbItemIamIdentityService.setRequired(identityService.getRequired());
-            dbItemIamIdentityService.setAuthenticationScheme("SINGLE");
-            dbItemIamIdentityService.setSingleFactorCert(false);
-            dbItemIamIdentityService.setSingleFactorPwd(true);
+            dbItemIamIdentityService.setAuthenticationScheme(identityService.getServiceAuthenticationScheme().value());
+            dbItemIamIdentityService.setSingleFactorPwd(identityService.getSingleFactorPwd());
+            dbItemIamIdentityService.setSingleFactorCert(identityService.getSingleFactorCert());
 
             if (dbItemIamIdentityService.getId() == null) {
                 sosHibernateSession.save(dbItemIamIdentityService);
@@ -268,6 +273,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 identityService.setDisabled(dbItemIamIdentityService.getDisabled());
                 identityService.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
                 identityService.setIdentityServiceType(IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
+                identityService.setServiceAuthenticationScheme(IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService
+                        .getAuthenticationScheme()));
+                identityService.setSingleFactorCert(dbItemIamIdentityService.getSingleFactorCert());
+                identityService.setSingleFactorPwd(dbItemIamIdentityService.getSingleFactorPwd());
                 identityService.setOrdering(dbItemIamIdentityService.getOrdering());
                 identityService.setRequired(dbItemIamIdentityService.getRequired());
                 identityServices.getIdentityServiceItems().add(identityService);

@@ -86,8 +86,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
     private void storeAccounts(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
 
-        SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService.getId(), dbItemIamIdentityService
-                .getIdentityServiceName(), IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
+        SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
         iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
@@ -147,8 +146,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
     private void changePasswordAccounts(SOSHibernateSession sosHibernateSession, boolean withPasswordCheck,
             SecurityConfiguration securityConfiguration, DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
 
-        SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService.getId(), dbItemIamIdentityService
-                .getIdentityServiceName(), IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
+        SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
 

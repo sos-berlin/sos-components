@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthAccessToken;
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
@@ -14,6 +15,7 @@ import com.sos.auth.ldap.SOSLdapHandler;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
+import com.sos.joc.model.security.IdentityServiceAuthenticationScheme;
 
 public class SOSLdapLogin implements ISOSLogin {
 
@@ -37,9 +39,14 @@ public class SOSLdapLogin implements ISOSLogin {
             sosLdapWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
             sosLdapWebserviceCredentials.setAccount(account);
             sosLdapWebserviceCredentials.setValuesFromProfile(identityService);
-          
-            SOSAuthAccessToken sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials, pwd);
+
+            SOSAuthAccessToken sosAuthAccessToken = null;
+            if (!identityService.isTwoFactor() || (identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(httpServletRequest, account))) {
+                sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials, pwd);
+            }
+
             sosLdapSubject = new SOSLdapSubject();
+
             if (sosAuthAccessToken == null) {
                 sosLdapSubject.setAuthenticated(false);
                 setMsg(sosLdapHandler.getMsg());

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum IdentityServiceAuthenticationScheme {
 
-    SINGLE("SINGLE"),
+    SINGLE_FACTOR("SINGLE-FACTOR"),
     TWO_FACTOR("TWO-FACTOR");
     private final String value;
     private final static Map<String, IdentityServiceAuthenticationScheme> CONSTANTS = new HashMap<String, IdentityServiceAuthenticationScheme>();

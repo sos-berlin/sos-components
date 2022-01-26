@@ -1,11 +1,14 @@
 package com.sos.auth.sosintern.classes;
 
+import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthAccessToken;
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
@@ -18,7 +21,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSInternAuthLogin.class);
 
-    private String msg="";
+    private String msg = "";
     private SOSIdentityService identityService;
     private SOSInternAuthSubject sosInternAuthSubject;
 
@@ -36,7 +39,23 @@ public class SOSInternAuthLogin implements ISOSLogin {
             sosInternAuthWebserviceCredentials.setAccount(account);
             SOSInternAuthHandler sosInternAuthHandler = new SOSInternAuthHandler();
 
-            SOSAuthAccessToken sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials,pwd);
+            SOSAuthAccessToken sosInternAuthAccessToken = null;
+
+            if (identityService.isSingleFactor()) {
+                if (identityService.isSingleFactorCert() && SOSAuthHelper.checkCertificate(httpServletRequest, account)) {
+                    sosInternAuthAccessToken = new SOSAuthAccessToken();
+                    sosInternAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
+                }
+                if (identityService.isSingleFactorPwd()) {
+                    sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
+                }
+            } else {
+
+                if ((identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(httpServletRequest, account))) {
+                    sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
+                }
+            }
+
             sosInternAuthSubject = new SOSInternAuthSubject();
             if (sosInternAuthAccessToken == null) {
                 sosInternAuthSubject.setAuthenticated(false);
@@ -44,13 +63,13 @@ public class SOSInternAuthLogin implements ISOSLogin {
             } else {
                 sosInternAuthSubject.setAuthenticated(true);
                 sosInternAuthSubject.setIsForcePasswordChange(sosInternAuthHandler.getForcePasswordChange());
-                sosInternAuthSubject.setPermissionAndRoles(account,identityService);
+                sosInternAuthSubject.setPermissionAndRoles(account, identityService);
                 sosInternAuthSubject.setAccessToken(sosInternAuthAccessToken.getAccessToken());
             }
 
         } catch (SOSHibernateException e) {
-            LOGGER.error("",e);
-         } finally {
+            LOGGER.error("", e);
+        } finally {
             Globals.disconnect(sosHibernateSession);
         }
 
@@ -74,7 +93,6 @@ public class SOSInternAuthLogin implements ISOSLogin {
         return sosInternAuthSubject;
     }
 
-    
     public void setIdentityService(SOSIdentityService identityService) {
         this.identityService = identityService;
     }

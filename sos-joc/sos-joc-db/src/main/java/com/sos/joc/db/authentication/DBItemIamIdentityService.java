@@ -111,6 +111,9 @@ public class DBItemIamIdentityService {
     }
 
     public String getAuthenticationScheme() {
+        if ("SINGLE".equals(authenticationScheme)) {
+            authenticationScheme = "SINGLE-FACTOR";
+        }
         return authenticationScheme;
     }
 

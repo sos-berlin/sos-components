@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
@@ -45,26 +46,30 @@ public class SOSVaultLogin implements ISOSLogin {
             webserviceCredentials.setAccount(account);
             SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
 
-            SOSVaultAccountAccessToken sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
-            sosVaultSubject = new SOSVaultSubject(account,identityService);
-             
+            SOSVaultAccountAccessToken sosVaultAccountAccessToken = null;
+            if (!identityService.isTwoFactor() || (identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(httpServletRequest, account))) {
+                sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
+            }
+
+            sosVaultSubject = new SOSVaultSubject(account, identityService);
+
             if (sosVaultAccountAccessToken.getAuth() == null) {
                 sosVaultSubject.setAuthenticated(false);
                 setMsg("There is no user with the given account/password combination");
             } else {
                 sosVaultSubject.setAuthenticated(true);
                 sosVaultSubject.setAccessToken(sosVaultAccountAccessToken);
-                sosVaultSubject.setPermissionAndRoles(sosVaultAccountAccessToken.getAuth().getToken_policies(),account, identityService);
+                sosVaultSubject.setPermissionAndRoles(sosVaultAccountAccessToken.getAuth().getToken_policies(), account, identityService);
             }
 
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
-            LOGGER.error("",e);
+            LOGGER.error("", e);
         } catch (SOSException e) {
-            LOGGER.error("",e);
+            LOGGER.error("", e);
         } catch (JocException e) {
             LOGGER.info("VAULT:" + e.getMessage());
         } catch (Exception e) {
-            LOGGER.error("",e);
+            LOGGER.error("", e);
         }
     }
 

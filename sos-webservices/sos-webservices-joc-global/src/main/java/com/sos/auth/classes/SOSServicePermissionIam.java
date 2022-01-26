@@ -531,8 +531,7 @@ public class SOSServicePermissionIam {
             sosLogin = new SOSShiroLogin(Globals.getShiroIniSecurityManagerFactory());
         }
 
-        sosLogin.setIdentityService(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
-                IdentityServiceTypes.fromValue(dbItemIdentityService.getIdentityServiceType())));
+        sosLogin.setIdentityService(new SOSIdentityService(dbItemIdentityService));
         sosLogin.login(currentAccount.getAccountname(), password, currentAccount.getHttpServletRequest());
 
         ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();

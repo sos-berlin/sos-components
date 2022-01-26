@@ -4,19 +4,29 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.CertificateEncodingException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import javax.naming.InvalidNameException;
+import javax.servlet.http.HttpServletRequest;
 
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.AuthenticationInfo;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.client.ClientCertificateHandler;
+import com.sos.auth.shiro.SOSUsernameRequestToken;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -132,7 +142,51 @@ public class SOSAuthHelper {
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
+    }
 
+    public static boolean checkCertificate(HttpServletRequest request, String account) {
+
+        boolean success = false;
+
+        if (request != null) {
+            String clientCertCN = null;
+            try {
+                ClientCertificateHandler clientCertHandler = new ClientCertificateHandler(request);
+                clientCertCN = clientCertHandler.getClientCN();
+                Date now = new Date();
+                if (clientCertHandler.getClientCertificate() == null) {
+                    LOGGER.debug("Certificate is null");
+                } else {
+                    if (clientCertHandler.getClientCertificate().getNotAfter() == null) {
+                        LOGGER.warn("Certificate not_after is null");
+                    }
+                    if (clientCertHandler.getClientCertificate().getNotBefore() == null) {
+                        LOGGER.warn("Certificate not_before is null");
+                    }
+                    LOGGER.debug("Now:" + now.getTime());
+                    if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotAfter() != null)) {
+                        LOGGER.debug("NotAfter:" + clientCertHandler.getClientCertificate().getNotAfter().getTime());
+                    }
+                    if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotBefore() != null)) {
+                        LOGGER.debug("NotBefore:" + clientCertHandler.getClientCertificate().getNotBefore().getTime());
+                    }
+                }
+
+                if (clientCertCN != null) {
+                    success = (account == null) || account.isEmpty() || clientCertCN.equals(account);
+                } else {
+                    LOGGER.debug("clientCertCN could not read");
+                }
+                if (success) {
+                    account = clientCertCN;
+                }
+
+            } catch (IOException | CertificateEncodingException | InvalidNameException e) {
+                LOGGER.debug("No client certificate found." + e.getMessage());
+            }
+        }
+
+        return success;
     }
 
 }
