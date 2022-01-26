@@ -41,9 +41,9 @@ public class SOSInternAuthLogin implements ISOSLogin {
             if (sosInternAuthAccessToken == null) {
                 sosInternAuthSubject.setAuthenticated(false);
                 setMsg("There is no account with the given accountname/password combination");
-
             } else {
                 sosInternAuthSubject.setAuthenticated(true);
+                sosInternAuthSubject.setIsForcePasswordChange(sosInternAuthHandler.getForcePasswordChange());
                 sosInternAuthSubject.setPermissionAndRoles(account,identityService);
                 sosInternAuthSubject.setAccessToken(sosInternAuthAccessToken.getAccessToken());
             }

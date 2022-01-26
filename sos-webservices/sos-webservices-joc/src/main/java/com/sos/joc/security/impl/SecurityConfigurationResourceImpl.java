@@ -6,6 +6,10 @@ import java.util.Map;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.interfaces.ISOSSecurityConfiguration;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -22,6 +26,7 @@ import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.SecurityConfiguration;
+import com.sos.joc.model.security.SecurityConfigurationAccount;
 import com.sos.joc.model.security.permissions.SecurityConfigurationRole;
 import com.sos.joc.security.resource.ISecurityConfigurationResource;
 import com.sos.schema.JsonValidator;
@@ -30,6 +35,7 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 @Path("authentication")
 public class SecurityConfigurationResourceImpl extends JOCResourceImpl implements ISecurityConfigurationResource {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfigurationResourceImpl.class);
     private static final String API_CALL_READ = "./authentication/auth";
     private static final String API_CALL_WRITE = "./authentication/auth/store";
 
@@ -137,8 +143,11 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 if (IdentityServiceTypes.SHIRO.name().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                     sosSecurityConfiguration = new SOSSecurityConfiguration();
                     s = sosSecurityConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
-                }else {
-                    
+                } else {
+
+                }
+                for (SecurityConfigurationAccount securityConfigurationAccount : s.getAccounts()) {
+                    securityConfigurationAccount.setPassword("********");
                 }
                 s.setDeliveryDate(Date.from(Instant.now()));
 
@@ -159,4 +168,167 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
     }
 
+    @Override
+    public JOCDefaultResponse changePassword(String accessToken, byte[] body) {
+        try {
+            initLogging(API_CALL_WRITE, body, accessToken);
+            JsonValidator.validate(body, SecurityConfiguration.class);
+            SecurityConfiguration securityConfiguration = Globals.objectMapper.readValue(body, SecurityConfiguration.class);
+            String identityServiceName = securityConfiguration.getIdentityServiceName();
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            SOSSecurityDBConfiguration sosSecurityConfiguration = null;
+
+            SOSHibernateSession sosHibernateSession = null;
+            try {
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_WRITE);
+                IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+                IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+                filter.setIdentityServiceName(identityServiceName);
+                DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
+
+                if (dbItemIamIdentityService == null) {
+                    throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
+                }
+
+                sosSecurityConfiguration = new SOSSecurityDBConfiguration();
+                SecurityConfiguration s = sosSecurityConfiguration.changePassword(true, securityConfiguration, dbItemIamIdentityService);
+
+                for (SecurityConfigurationAccount securityConfigurationAccount : s.getAccounts()) {
+                    securityConfigurationAccount.setPassword("********");
+                }
+                s.setDeliveryDate(Date.from(Instant.now()));
+
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
+
+            } finally {
+                securityConfiguration = null;
+                Globals.disconnect(sosHibernateSession);
+            }
+        } catch (
+
+        JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+
+    }
+
+    @Override
+    public JOCDefaultResponse forcePasswordChange(String accessToken, byte[] body) {
+        try {
+            initLogging(API_CALL_WRITE, body, accessToken);
+            JsonValidator.validate(body, SecurityConfiguration.class);
+            SecurityConfiguration securityConfiguration = Globals.objectMapper.readValue(body, SecurityConfiguration.class);
+            String identityServiceName = securityConfiguration.getIdentityServiceName();
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            SOSSecurityDBConfiguration sosSecurityConfiguration = null;
+
+            SOSHibernateSession sosHibernateSession = null;
+            try {
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_WRITE);
+                IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+                IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+                filter.setIdentityServiceName(identityServiceName);
+                DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
+
+                if (dbItemIamIdentityService == null) {
+                    throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
+                }
+
+                sosSecurityConfiguration = new SOSSecurityDBConfiguration();
+                SecurityConfiguration s = sosSecurityConfiguration.forcePasswordChange(securityConfiguration, dbItemIamIdentityService);
+
+                for (SecurityConfigurationAccount securityConfigurationAccount : s.getAccounts()) {
+                    securityConfigurationAccount.setPassword("********");
+                }
+                s.setDeliveryDate(Date.from(Instant.now()));
+
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
+
+            } finally {
+                securityConfiguration = null;
+                Globals.disconnect(sosHibernateSession);
+            }
+        } catch (
+
+        JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+
+    }
+
+    @Override
+    public JOCDefaultResponse resetPassword(String accessToken, byte[] body) {
+        try {
+            initLogging(API_CALL_WRITE, body, accessToken);
+            JsonValidator.validate(body, SecurityConfiguration.class);
+            SecurityConfiguration securityConfiguration = Globals.objectMapper.readValue(body, SecurityConfiguration.class);
+            String identityServiceName = securityConfiguration.getIdentityServiceName();
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            SOSSecurityDBConfiguration sosSecurityConfiguration = null;
+
+            SOSHibernateSession sosHibernateSession = null;
+            try {
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_WRITE);
+                IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+                IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+                filter.setIdentityServiceName(identityServiceName);
+                DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
+
+                if (dbItemIamIdentityService == null) {
+                    throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
+                }
+
+                String initialPassword = SOSAuthHelper.getInitialPassword();
+
+                for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
+                    securityConfigurationAccount.setPassword(initialPassword);
+                    securityConfigurationAccount.setRepeatedPassword(initialPassword);
+                }
+
+                sosSecurityConfiguration = new SOSSecurityDBConfiguration();
+                sosSecurityConfiguration.forcePasswordChange(securityConfiguration, dbItemIamIdentityService);
+                SecurityConfiguration s = sosSecurityConfiguration.changePassword(false, securityConfiguration, dbItemIamIdentityService);
+
+                for (SecurityConfigurationAccount securityConfigurationAccount : s.getAccounts()) {
+                    securityConfigurationAccount.setPassword("********");
+                }
+                s.setDeliveryDate(Date.from(Instant.now()));
+
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
+
+            } finally {
+                securityConfiguration = null;
+                Globals.disconnect(sosHibernateSession);
+            }
+        } catch (
+
+        JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+
+    }
 }

@@ -46,7 +46,7 @@ public class SOSVaultLogin implements ISOSLogin {
             SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
 
             SOSVaultAccountAccessToken sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
-            sosVaultSubject = new SOSVaultSubject(identityService);
+            sosVaultSubject = new SOSVaultSubject(account,identityService);
              
             if (sosVaultAccountAccessToken.getAuth() == null) {
                 sosVaultSubject.setAuthenticated(false);

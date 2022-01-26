@@ -21,6 +21,7 @@ import com.sos.joc.db.security.IamAccountFilter;
 public class SOSInternAuthHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSInternAuthHandler.class);
+    private Boolean forcePasswordChange;
 
     public SOSInternAuthHandler() {
     }
@@ -35,6 +36,7 @@ public class SOSInternAuthHandler {
             SOSAuthAccessToken sosAuthAccessToken = null;
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             String accountPwd;
+            forcePasswordChange = false;
             try {
                 accountPwd = SOSAuthHelper.getSHA512(password);
                 IamAccountFilter filter = new IamAccountFilter();
@@ -45,6 +47,7 @@ public class SOSInternAuthHandler {
                 if (dbItemIamAccount != null && dbItemIamAccount.getAccountPassword().equals(accountPwd)) {
                     sosAuthAccessToken = new SOSAuthAccessToken();
                     sosAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
+                    forcePasswordChange = dbItemIamAccount.getForcePasswordChange();
                 }
             } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
                 LOGGER.info(e.getMessage());
@@ -53,6 +56,12 @@ public class SOSInternAuthHandler {
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
+    }
+
+
+    
+    public Boolean getForcePasswordChange() {
+        return forcePasswordChange;
     }
 
 }

@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSSession;
@@ -22,6 +21,7 @@ public class SOSInternAuthSubject implements ISOSAuthSubject {
 
     private SOSInternAuthSession session;
     private Boolean authenticated;
+    private Boolean isForcePasswordChange;
     private Map<String, List<String>> mapOfFolderPermissions;
     private Set<String> setOfAccountPermissions;
     private Set<String> setOfRoles;
@@ -106,6 +106,15 @@ public class SOSInternAuthSubject implements ISOSAuthSubject {
     @Override
     public Map<String, List<String>> getMapOfFolderPermissions() {
         return mapOfFolderPermissions;
+    }
+
+    @Override
+    public Boolean isForcePasswordChange() {
+        return isForcePasswordChange;
+    }
+
+    public void setIsForcePasswordChange(Boolean isForcePasswordChange) {
+        this.isForcePasswordChange = isForcePasswordChange;
     }
 
 }

@@ -1,20 +1,37 @@
 package com.sos.auth.classes;
 
-import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
+import java.util.List;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
+import com.sos.joc.db.authentication.DBItemIamAccount;
+import com.sos.joc.db.configuration.JocConfigurationDbLayer;
+import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.db.security.IamAccountDBLayer;
+import com.sos.joc.db.security.IamAccountFilter;
+import com.sos.joc.exceptions.JocError;
+import com.sos.joc.exceptions.JocException;
 
 public class SOSAuthHelper {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthHelper.class);
 
     public static final String EMERGENCY_ROLE = "all";
     public static final String EMERGENCY_PERMISSION = "sos:products";
@@ -56,6 +73,66 @@ public class SOSAuthHelper {
             }
         }
         return null;
+    }
+
+    public static Boolean getForcePasswordChange(String account, SOSIdentityService identityService) throws SOSHibernateException {
+        SOSHibernateSession sosHibernateSession = null;
+
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSAuthHelper:getForcePasswordChange");
+            sosHibernateSession.setAutoCommit(false);
+            Globals.beginTransaction(sosHibernateSession);
+
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+            IamAccountFilter iamAccountFilter = new IamAccountFilter();
+            iamAccountFilter.setIdentityServiceId(identityService.getIdentityServiceId());
+            iamAccountFilter.setAccountName(account);
+
+            List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
+            if (listOfAccounts.size() == 1) {
+                return listOfAccounts.get(0).getForcePasswordChange();
+            } else {
+                return false;
+            }
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
+
+    public static String getInitialPassword() throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
+        SOSHibernateSession sosHibernateSession = null;
+
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSAuthHelper:getInitialPassword");
+
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+            JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
+            jocConfigurationFilter.setConfigurationType(CONFIGURATION_TYPE_IAM);
+            jocConfigurationFilter.setObjectType(OBJECT_TYPE_IAM_GENERAL);
+            List<DBItemJocConfiguration> result = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 1);
+            String initialPassword;
+            if (result.size() == 1) {
+                com.sos.joc.model.security.Properties properties = Globals.objectMapper.readValue(result.get(0).getConfigurationItem(),
+                        com.sos.joc.model.security.Properties.class);
+                initialPassword = properties.getInitialPassword();
+                if (initialPassword == null) {
+                    initialPassword = "initial";
+                    LOGGER.warn("Missing initial password settings. Using default value=initial");
+                } else {
+                    if (initialPassword.length() < properties.getMinPasswordLength()) {
+                        JocError error = new JocError();
+                        error.setMessage("Initial password is shorter then " + properties.getMinPasswordLength());
+                        throw new JocException(error);
+                    }
+                }
+            } else {
+                initialPassword = "initial";
+            }
+            return initialPassword;
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+
     }
 
 }

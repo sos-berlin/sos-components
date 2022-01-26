@@ -557,7 +557,6 @@ public class SOSServicePermissionIam {
         Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
 
         resetTimeOut(currentAccount);
-        currentAccount.getCurrentSubject().getSession().renew();
 
         ISOSSecurityConfiguration sosSecurityConfiguration;
         switch (identityServiceType) {
@@ -732,6 +731,7 @@ public class SOSServicePermissionIam {
             SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
 
             sosAuthCurrentUserAnswer.setIsAuthenticated(currentAccount.getCurrentSubject().isAuthenticated());
+            sosAuthCurrentUserAnswer.setIsForcePasswordChange(currentAccount.getCurrentSubject().isForcePasswordChange());
             sosAuthCurrentUserAnswer.setAccessToken(currentAccount.getAccessToken());
             sosAuthCurrentUserAnswer.setAccount(currentAccount.getAccountname());
             sosAuthCurrentUserAnswer.setRole(String.join(", ", currentAccount.getRoles()));

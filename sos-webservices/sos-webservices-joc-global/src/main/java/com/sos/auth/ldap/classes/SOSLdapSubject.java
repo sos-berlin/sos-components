@@ -127,4 +127,10 @@ public class SOSLdapSubject implements ISOSAuthSubject {
         return mapOfFolderPermissions;
     }
 
+    @Override
+    public Boolean isForcePasswordChange() {
+        return false;
+    }
+
+
 }

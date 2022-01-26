@@ -5,6 +5,8 @@ public class IamAccountFilter extends SOSHibernateFilter {
     private Long id;
     private Long identityServiceId;
     private String accountName; 
+    private String password; 
+
     
     public IamAccountFilter() {
 
@@ -34,6 +36,16 @@ public class IamAccountFilter extends SOSHibernateFilter {
     
     public void setAccountName(String accountName) {
         this.accountName = accountName;
+    }
+
+    
+    public String getPassword() {
+        return password;
+    }
+
+    
+    public void setPassword(String password) {
+        this.password = password;
     }
 
 }

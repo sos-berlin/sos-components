@@ -8,6 +8,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.joc.db.DBLayer;
 
 @Entity
@@ -29,6 +31,10 @@ public class DBItemIamAccount {
 
     @Column(name = "[ACCOUNT_PASSWORD]", nullable = false)
     private String accountPassword;
+
+    @Column(name = "[FORCE_PASSWORD_CHANGE]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private Boolean forcePasswordChange;
 
     public DBItemIamAccount() {
 
@@ -58,14 +64,20 @@ public class DBItemIamAccount {
         this.accountPassword = accountPassword;
     }
 
-    
     public Long getIdentityServiceId() {
         return identityServiceId;
     }
 
-    
     public void setIdentityServiceId(Long identityServiceId) {
         this.identityServiceId = identityServiceId;
+    }
+
+    public Boolean getForcePasswordChange() {
+        return forcePasswordChange;
+    }
+
+    public void setForcePasswordChange(Boolean forcePasswordChange) {
+        this.forcePasswordChange = forcePasswordChange;
     }
 
 }

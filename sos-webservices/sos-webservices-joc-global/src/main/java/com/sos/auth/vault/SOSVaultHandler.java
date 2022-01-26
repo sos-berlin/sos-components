@@ -128,7 +128,7 @@ public class SOSVaultHandler {
         sosVaultStoreUser.setUsername(sosVaultAccountCredentials.getUsername());
         sosVaultStoreUser.setPassword(password);
         String body = Globals.objectMapper.writeValueAsString(sosVaultStoreUser);
-        sosVaultAccountCredentials.setPassword("");
+        sosVaultAccountCredentials.setPassword(password);
         String response = getResponse(POST, "/v1/auth/" + webserviceCredentials.getAuthenticationMethodPath() + "/users/" + sosVaultAccountCredentials
                 .getUsername(), body, webserviceCredentials.getApplicationToken());
 

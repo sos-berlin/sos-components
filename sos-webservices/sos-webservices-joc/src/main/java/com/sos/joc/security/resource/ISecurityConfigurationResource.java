@@ -20,5 +20,23 @@ public interface ISecurityConfigurationResource {
     @Path("auth/store")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postAuthStore(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
+    
+
+    @POST
+    @Path("auth/changepassword")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse changePassword(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
+
+    @POST
+    @Path("auth/forcepasswordchange")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse forcePasswordChange(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
+
+    
+
+    @POST
+    @Path("auth/resetpassword")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse resetPassword(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
 
 }
