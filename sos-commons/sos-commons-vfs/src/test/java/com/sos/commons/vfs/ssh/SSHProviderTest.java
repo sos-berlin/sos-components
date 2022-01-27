@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
@@ -41,7 +42,9 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        SSHProvider p = new SSHProvider(args);
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+
+        SSHProvider p = new SSHProvider(args, csArgs);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -65,7 +68,9 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setAuthFile(SSH_AUTH_FILE);
 
-        SSHProvider p = new SSHProvider(args);
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+
+        SSHProvider p = new SSHProvider(args, csArgs);
         try {
             p.connect();
             LOGGER.info(p.executeCommand("ping -n 2 google.com").toString());
@@ -92,7 +97,9 @@ public class SSHProviderTest {
         args.setPassword(SSH_PASSWORD);
         args.setAuthFile(SSH_AUTH_FILE);
 
-        SSHProvider p = new SSHProvider(args);
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+
+        SSHProvider p = new SSHProvider(args, csArgs);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -117,7 +124,9 @@ public class SSHProviderTest {
         args.setPassword(SSH_PASSWORD);
         args.setAuthFile(SSH_AUTH_FILE);
 
-        SSHProvider p = new SSHProvider(args);
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+
+        SSHProvider p = new SSHProvider(args, csArgs);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -143,7 +152,9 @@ public class SSHProviderTest {
 
         args.setProxy(PROXY);
 
-        SSHProvider p = new SSHProvider(args);
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+
+        SSHProvider p = new SSHProvider(args, csArgs);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -169,7 +180,9 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        SSHProvider p = new SSHProvider(args);
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+
+        SSHProvider p = new SSHProvider(args, csArgs);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -201,7 +214,9 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        SSHProvider p = new SSHProvider(args);
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+
+        SSHProvider p = new SSHProvider(args, csArgs);
         try {
             p.connect();
             // p.put("D://tmp.log", "/home/sos/tmp_target.log");
@@ -246,7 +261,9 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        SSHProvider p = new SSHProvider(args);
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+
+        SSHProvider p = new SSHProvider(args, csArgs);
         try {
             p.connect();
             // p.put("D://tmp.log", "D://tmp_target.log");
@@ -291,7 +308,9 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        SSHProvider p = new SSHProvider(args);
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+
+        SSHProvider p = new SSHProvider(args, csArgs);
         try {
             p.connect();
             Map<String, String> envVars = new HashMap<>();

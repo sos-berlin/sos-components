@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
@@ -37,10 +38,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
 
     /** steps
      *
-     * - read agent environment variables 
-     * - export some of them 
-     * - execute command, script, remote script 
-     * - set return values */
+     * - read agent environment variables - export some of them - execute command, script, remote script - set return values */
     private SOSEnv envVars = new SOSEnv();
     private JobLogger logger;
     private Map<String, Object> outcomes = new HashMap<String, Object>();
@@ -58,7 +56,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         logger = step.getLogger();
 
         SSHProviderArguments providerArgs = step.getAppArguments(SSHProviderArguments.class);
-        SSHProvider provider = new SSHProvider(providerArgs);
+        SSHProvider provider = new SSHProvider(providerArgs, step.getAppArguments(SOSCredentialStoreArguments.class));
         SSHJobArguments jobArgs = step.getArguments();
 
         UUID uuid = UUID.randomUUID();
