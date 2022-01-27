@@ -1,5 +1,6 @@
 package com.sos.jitl.jobs.examples;
 
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.vfs.ssh.SSHProvider;
@@ -15,7 +16,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
     @Override
     public Completed onOrderProcess(JobStep<SSHJobArguments> step) throws Exception {
         SSHProviderArguments providerArgs = step.getAppArguments(SSHProviderArguments.class);
-        SSHProvider provider = new SSHProvider(providerArgs);
+        SSHProvider provider = new SSHProvider(providerArgs, step.getAppArguments(SOSCredentialStoreArguments.class));
 
         try {
             step.getLogger().info("[connect]%s:%s ...", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());

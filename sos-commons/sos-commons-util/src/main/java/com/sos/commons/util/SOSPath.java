@@ -360,6 +360,11 @@ public class SOSPath {
         return file.isAbsolute() ? file.toFile() : file.toAbsolutePath().toFile();
     }
 
+    public static Path toAbsolutePath(String file) {
+        Path p = Paths.get(file);
+        return p.isAbsolute() ? p : p.toAbsolutePath();
+    }
+
     public static boolean endsWithNewLine(Path file) throws IOException {
         RandomAccessFile raf = null;
         try {
