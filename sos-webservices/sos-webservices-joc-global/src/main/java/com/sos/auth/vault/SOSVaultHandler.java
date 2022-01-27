@@ -37,6 +37,22 @@ public class SOSVaultHandler {
         this.webserviceCredentials = webserviceCredentials;
     }
 
+    private String getVaultErrorResponse(String response) {
+        try {
+            SOSVaultCheckAccessTokenResponse sosVaultCheckAccessTokenResponse = Globals.objectMapper.readValue(response,
+                    SOSVaultCheckAccessTokenResponse.class);
+            if (sosVaultCheckAccessTokenResponse.getErrors() != null && sosVaultCheckAccessTokenResponse.getErrors().size() > 0) {
+                return sosVaultCheckAccessTokenResponse.getErrors().get(0);
+            } else {
+                return "";
+            }
+        } catch (IOException e) {
+            LOGGER.warn(e.getMessage());
+            return response;
+        }
+
+    }
+
     private String getResponse(boolean post, String api, String body, String xVaultAccessToken) throws SOSException, SocketException {
         SOSRestApiClient restApiClient = new SOSRestApiClient();
 
@@ -80,39 +96,40 @@ public class SOSVaultHandler {
         case 204:
             return response;
         case 400:
-            jocError.setMessage("Invalid request, missing or invalid data.");
+            jocError.setMessage(getVaultErrorResponse(response));
             throw new JocException(jocError);
         case 403:
-            jocError.setMessage(
-                    "Forbidden, your authentication details are either incorrect, you don't have access to this feature, or - if CORS is enabled - you made a cross-origin request from an origin that is not allowed to make such requests.");
+            jocError.setMessage(getVaultErrorResponse(response)
+                    + ":Forbidden, your authentication details are either incorrect, you don't have access to this feature, or - if CORS is enabled - you made a cross-origin request from an origin that is not allowed to make such requests.");
             throw new JocException(jocError);
         case 404:
-            jocError.setMessage(
-                    "Invalid path. This can both mean that the path truly doesn't exist or that you don't have permission to view a specific path. Vault uses 404 in some cases to avoid state leakage.");
+            jocError.setMessage(getVaultErrorResponse(response)
+                    + ":Invalid path. This can both mean that the path truly doesn't exist or that you don't have permission to view a specific path. Vault uses 404 in some cases to avoid state leakage.");
             throw new JocException(jocError);
         case 405:
-            jocError.setMessage(
-                    "Unsupported operation. You tried to use a method inappropriate to the request path, e.g. a POST on an endpoint that only accepts GETs.");
+            jocError.setMessage(getVaultErrorResponse(response)
+                    + ":Unsupported operation. You tried to use a method inappropriate to the request path, e.g. a POST on an endpoint that only accepts GETs.");
             throw new JocException(jocError);
         case 412:
-            jocError.setMessage(
-                    "Precondition failed. Returned on Enterprise when a request can't be processed yet due to some missing eventually consistent data. Should be retried, perhaps with a little backoff. See Vault Eventual Consistency.");
+            jocError.setMessage(getVaultErrorResponse(response)
+                    + ":Precondition failed. Returned on Enterprise when a request can't be processed yet due to some missing eventually consistent data. Should be retried, perhaps with a little backoff. See Vault Eventual Consistency.");
             throw new JocException(jocError);
         case 429:
-            jocError.setMessage("Default return code for health status of standby nodes. This will likely change in the future.");
+            jocError.setMessage(getVaultErrorResponse(response)
+                    + ": Default return code for health status of standby nodes. This will likely change in the future.");
             throw new JocException(jocError);
         case 473:
-            jocError.setMessage("Default return code for health status of performance standby nodes.");
+            jocError.setMessage(getVaultErrorResponse(response) + ":Default return code for health status of performance standby nodes.");
             throw new JocException(jocError);
         case 500:
-            jocError.setMessage("Internal server error. An internal error has occurred, try again later");
+            jocError.setMessage(getVaultErrorResponse(response) + ":Internal server error. An internal error has occurred, try again later");
             throw new JocException(jocError);
         case 502:
-            jocError.setMessage(
-                    "A request to Vault required Vault making a request to a third party; the third party responded with an error of some kind.");
+            jocError.setMessage(getVaultErrorResponse(response)
+                    + ":A request to Vault required Vault making a request to a third party; the third party responded with an error of some kind.");
             throw new JocException(jocError);
         case 503:
-            jocError.setMessage("Vault is down for maintenance or is currently sealed. Try again later.");
+            jocError.setMessage(getVaultErrorResponse(response) + ":Vault is down for maintenance or is currently sealed. Try again later.");
             throw new JocException(jocError);
         default:
             jocError.setMessage(httpReplyCode + " " + restApiClient.getHttpResponse().getStatusLine().getReasonPhrase());
@@ -176,7 +193,8 @@ public class SOSVaultHandler {
         }
     }
 
-    public String updateTokenPolicies(SOSVaultAccountCredentials sosVaultAccountCredentials) throws JsonProcessingException, SOSException, SocketException {
+    public String updateTokenPolicies(SOSVaultAccountCredentials sosVaultAccountCredentials) throws JsonProcessingException, SOSException,
+            SocketException {
         SOSVaultUpdatePolicies sosVaultUpdatePolicies = new SOSVaultUpdatePolicies();
         sosVaultUpdatePolicies.setToken_policies(sosVaultAccountCredentials.getTokenPolicies());
         String body = Globals.objectMapper.writeValueAsString(sosVaultUpdatePolicies);

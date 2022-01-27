@@ -21,7 +21,7 @@ import com.sos.joc.db.security.IamAccountFilter;
 public class SOSInternAuthHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSInternAuthHandler.class);
-    private Boolean forcePasswordChange;
+    private Boolean forcePasswordChange=false;
 
     public SOSInternAuthHandler() {
     }
