@@ -119,9 +119,21 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             dbItemIamIdentityService.setIdentityServiceType(identityService.getIdentityServiceType().value());
             dbItemIamIdentityService.setOrdering(identityService.getOrdering());
             dbItemIamIdentityService.setRequired(identityService.getRequired());
-            dbItemIamIdentityService.setAuthenticationScheme(identityService.getServiceAuthenticationScheme().value());
-            dbItemIamIdentityService.setSingleFactorPwd(identityService.getSingleFactorPwd());
-            dbItemIamIdentityService.setSingleFactorCert(identityService.getSingleFactorCert());
+            if (identityService.getServiceAuthenticationScheme() != null) {
+                dbItemIamIdentityService.setAuthenticationScheme(identityService.getServiceAuthenticationScheme().value());
+            } else {
+                dbItemIamIdentityService.setAuthenticationScheme(IdentityServiceAuthenticationScheme.SINGLE_FACTOR.value());
+            }
+            if (identityService.getSingleFactorPwd()) {
+                dbItemIamIdentityService.setSingleFactorPwd(identityService.getSingleFactorPwd());
+            } else {
+                dbItemIamIdentityService.setSingleFactorPwd(true);
+            }
+            if (identityService.getSingleFactorCert()) {
+                dbItemIamIdentityService.setSingleFactorCert(identityService.getSingleFactorCert());
+            } else {
+                dbItemIamIdentityService.setSingleFactorCert(false);
+            }
 
             if (dbItemIamIdentityService.getId() == null) {
                 sosHibernateSession.save(dbItemIamIdentityService);
