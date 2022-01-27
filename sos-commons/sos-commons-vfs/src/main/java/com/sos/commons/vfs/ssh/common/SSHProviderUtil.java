@@ -20,6 +20,10 @@ public class SSHProviderUtil {
 
     public static KeyProvider getKeyProviderFromKeepass(Config config, SSHProviderArguments args) throws Exception {
         org.linguafranca.pwdb.Entry<?, ?, ?, ?> ke = args.getKeepassDatabaseEntry();
+        if (ke == null) {
+            throw new Exception(String.format("[keepass][can't find database entry]attachment property name=%s", args
+                    .getKeepassAttachmentPropertyName()));
+        }
         try {
             return getKeyProvider(config, args.getKeepassDatabase().getAttachment(ke, args.getKeepassAttachmentPropertyName()), args.getPassphrase()
                     .getValue());
