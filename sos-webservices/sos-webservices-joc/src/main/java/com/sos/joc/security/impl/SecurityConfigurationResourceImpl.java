@@ -307,8 +307,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 }
 
                 sosSecurityConfiguration = new SOSSecurityDBConfiguration();
-                sosSecurityConfiguration.forcePasswordChange(securityConfiguration, dbItemIamIdentityService);
                 SecurityConfiguration s = sosSecurityConfiguration.changePassword(false, securityConfiguration, dbItemIamIdentityService);
+                sosSecurityConfiguration.forcePasswordChange(securityConfiguration, dbItemIamIdentityService);
 
                 for (SecurityConfigurationAccount securityConfigurationAccount : s.getAccounts()) {
                     securityConfigurationAccount.setPassword("********");
