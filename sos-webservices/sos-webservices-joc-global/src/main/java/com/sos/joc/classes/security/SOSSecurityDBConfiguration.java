@@ -169,6 +169,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                     List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
                     if (listOfAccounts.size() == 1) {
                         listOfAccounts.get(0).setAccountPassword(SOSAuthHelper.getSHA512(securityConfigurationAccount.getPassword()));
+                        listOfAccounts.get(0).setForcePasswordChange(false);
                         sosHibernateSession.update(listOfAccounts.get(0));
 
                         if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {

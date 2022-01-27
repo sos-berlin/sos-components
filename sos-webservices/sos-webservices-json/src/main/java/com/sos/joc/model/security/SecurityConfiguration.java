@@ -45,6 +45,7 @@ public class SecurityConfiguration {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("identityServiceName")
@@ -110,6 +111,7 @@ public class SecurityConfiguration {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("identityServiceName")
@@ -121,6 +123,7 @@ public class SecurityConfiguration {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("identityServiceName")

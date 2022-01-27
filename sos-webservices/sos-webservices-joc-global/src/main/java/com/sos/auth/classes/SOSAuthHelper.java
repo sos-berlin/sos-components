@@ -129,9 +129,15 @@ public class SOSAuthHelper {
                     initialPassword = "initial";
                     LOGGER.warn("Missing initial password settings. Using default value=initial");
                 } else {
-                    if (initialPassword.length() < properties.getMinPasswordLength()) {
+                    Long minPasswordLength;
+                    if (properties.getMinPasswordLength() == null){
+                        minPasswordLength = 0L;
+                    }else {
+                        minPasswordLength = properties.getMinPasswordLength();
+                    }
+                    if (initialPassword.length() < minPasswordLength) {
                         JocError error = new JocError();
-                        error.setMessage("Initial password is shorter then " + properties.getMinPasswordLength());
+                        error.setMessage("Initial password is shorter then " + minPasswordLength);
                         throw new JocException(error);
                     }
                 }
