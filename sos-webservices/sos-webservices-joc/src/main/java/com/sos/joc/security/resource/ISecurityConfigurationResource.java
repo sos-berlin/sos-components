@@ -20,6 +20,17 @@ public interface ISecurityConfigurationResource {
     @Path("auth/store")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postAuthStore(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
+
+    @POST
+    @Path("auth/accounts/delete")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postAuthAcountsDelete(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
+        
+    @POST
+    @Path("auth/roles/delete")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postAuthRolesDelete(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
+        
     
 
     @POST

@@ -46,6 +46,9 @@ public class IamAccountDBLayer {
         if (filter.getIdentityServiceId() != null) {
             query.setParameter("identityServiceId", filter.getIdentityServiceId());
         }
+        if (filter.getRoleId() != null) {
+            query.setParameter("roleId", filter.getRoleId());
+        }
 
         return query;
 
@@ -68,10 +71,22 @@ public class IamAccountDBLayer {
         query = sosHibernateSession.createQuery(hql);
         query.setParameter("identityServiceId", identityServiceId);
         row = query.executeUpdate();
+
+        IamAccountFilter filter = new IamAccountFilter();
+        filter.setIdentityServiceId(identityServiceId);
+        List<DBItemIamAccount> listOfAccounts = getIamAccountList(filter, 0);
+
+        filter.setIdentityServiceId(null);
+        for (DBItemIamAccount iamAccountDBItem : listOfAccounts) {
+            filter.setId(iamAccountDBItem.getId());
+            deleteAccount2Role(filter);
+        }
+
         return row;
     }
 
     public void deleteCascading(IamAccountFilter filter) throws SOSHibernateException {
+        Long savId = filter.getId();
         List<DBItemIamAccount> iamAccountList = getIamAccountList(filter, 0);
         delete(filter);
         filter.setAccountName(null);
@@ -81,6 +96,7 @@ public class IamAccountDBLayer {
             deleteAccount2Role(filter);
             deletePermission(filter);
         }
+        filter.setId(savId);
     }
 
     private int deletePermission(IamAccountFilter filter) throws SOSHibernateException {
@@ -95,6 +111,7 @@ public class IamAccountDBLayer {
     }
 
     private int deleteAccount2Role(IamAccountFilter filter) throws SOSHibernateException {
+        filter.setIdentityServiceId(null);
         String hql = "delete from " + DBItemIamAccount2Roles + getWhere(filter);
         Query<DBItemIamAccount> query = null;
         int row = 0;
@@ -121,6 +138,10 @@ public class IamAccountDBLayer {
         String and = "";
         if (filter.getIdentityServiceId() != null) {
             where += and + " identityServiceId = :identityServiceId";
+            and = " and ";
+        }
+        if (filter.getRoleId() != null) {
+            where += and + " roleId = :roleId";
             and = " and ";
         }
         if (filter.getId() != null) {
@@ -329,6 +350,16 @@ public class IamAccountDBLayer {
     public int update(IamAccountFilter filter) {
         return 0;
 
+    }
+
+    public void deleteRoleCascading(String role, Long identityServiceId) throws SOSHibernateException {
+        DBItemIamRole dbItemIamRole = this.getRoleByName(role,identityServiceId);
+        IamAccountFilter filter = new IamAccountFilter();
+        filter.setRoleId(dbItemIamRole.getId());
+        filter.setIdentityServiceId(identityServiceId);
+        deletePermission(filter);
+        deleteAccount2Role(filter); 
+        sosHibernateSession.delete(dbItemIamRole);
     }
 
 }

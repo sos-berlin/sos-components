@@ -703,6 +703,7 @@ public class SOSServicePermissionIam {
                             }
 
                         } catch (JocAuthenticationException e) {
+                            LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed.");
                             msg = e.getMessage();
                             continue;
                         }
@@ -788,6 +789,8 @@ public class SOSServicePermissionIam {
                         com.sos.joc.model.security.Properties.class);
                 Globals.iamSessionTimeout = properties.getSessionTimeout();
             }
+        } catch (Exception e) {
+            LOGGER.error("", e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

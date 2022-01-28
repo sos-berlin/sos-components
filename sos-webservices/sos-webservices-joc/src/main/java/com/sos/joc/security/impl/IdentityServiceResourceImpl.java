@@ -124,12 +124,12 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             } else {
                 dbItemIamIdentityService.setAuthenticationScheme(IdentityServiceAuthenticationScheme.SINGLE_FACTOR.value());
             }
-            if (identityService.getSingleFactorPwd()) {
+            if (identityService.getSingleFactorPwd() != null) {
                 dbItemIamIdentityService.setSingleFactorPwd(identityService.getSingleFactorPwd());
             } else {
                 dbItemIamIdentityService.setSingleFactorPwd(true);
             }
-            if (identityService.getSingleFactorCert()) {
+            if (identityService.getSingleFactorCert() != null) {
                 dbItemIamIdentityService.setSingleFactorCert(identityService.getSingleFactorCert());
             } else {
                 dbItemIamIdentityService.setSingleFactorCert(false);

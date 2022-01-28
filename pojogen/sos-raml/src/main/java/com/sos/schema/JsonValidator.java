@@ -128,6 +128,7 @@ public class JsonValidator {
             put("TreeFilter", "tree/treeFilter-schema.json");
             put("SecurityConfiguration", "security/security-configuration-schema.json");
             put("SecurityConfigurationRole", "security/role-schema.json");
+            put("Roles", "security/roles-schema.json");
 
             put("ReleaseFilter", "inventory/release/release-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFolder", "inventory/common/request-folder-schema.json");
