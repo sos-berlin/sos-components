@@ -16,12 +16,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-exception</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-util</artifactId>
+			<artifactId>sos-commons-credentialstore</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

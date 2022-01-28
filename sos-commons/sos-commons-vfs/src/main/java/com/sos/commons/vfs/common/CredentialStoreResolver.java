@@ -29,7 +29,7 @@ public class CredentialStoreResolver {
         if (args.getCredentialStore() == null) {
             return false;
         }
-        if (args.getCredentialStore().getCredentialStoreFile().getValue() != null && args.getKeepassDatabase() == null) {
+        if (args.getCredentialStore().getFile().getValue() != null && args.getKeepassDatabase() == null) {
             setDatabase(args);
             keepass2Arguments(args, additional2resolve);
             return true;
@@ -43,7 +43,7 @@ public class CredentialStoreResolver {
             return false;
         }
         if (args.getKeepassDatabase() == null) {
-            if (args.getCredentialStore().getCredentialStoreFile().getValue() == null) {
+            if (args.getCredentialStore().getFile().getValue() == null) {
                 return false;
             }
             setDatabase(args);
@@ -53,7 +53,7 @@ public class CredentialStoreResolver {
         }
 
         SOSKeePassPath keePassPath = new SOSKeePassPath(args.getKeepassDatabase().isKDBX(), arg.getValue().toString(), args.getCredentialStore()
-                .getCredentialStoreEntryPath().getValue());
+                .getEntryPath().getValue());
         if (keePassPath.isValid()) {
             Entry<?, ?, ?, ?> entry = getEntry(args, keePassPath.getEntryPath());
             if (entry != null) {
@@ -66,29 +66,28 @@ public class CredentialStoreResolver {
     }
 
     private static void setDatabase(AProviderArguments args) throws Exception {
-        SOSKeePassDatabase kpd = new SOSKeePassDatabase(SOSPath.toAbsolutePath(args.getCredentialStore().getCredentialStoreFile().getValue()));
+        SOSKeePassDatabase kpd = new SOSKeePassDatabase(SOSPath.toAbsolutePath(args.getCredentialStore().getFile().getValue()));
         Path keyFile = null;
-        if (args.getCredentialStore().getCredentialStoreKeyFile().getValue() != null) {
-            Path cskf = SOSPath.toAbsolutePath(args.getCredentialStore().getCredentialStoreKeyFile().getValue());
+        if (args.getCredentialStore().getKeyFile().getValue() != null) {
+            Path cskf = SOSPath.toAbsolutePath(args.getCredentialStore().getKeyFile().getValue());
             if (Files.notExists(cskf)) {
                 throw new Exception(String.format("[%s]key file not found", SOSKeePassDatabase.getFilePath(cskf)));
             }
             keyFile = cskf;
         } else {
-            Path defaultKeyFile = SOSKeePassDatabase.getDefaultKeyFile(SOSPath.toAbsolutePath(args.getCredentialStore().getCredentialStoreFile()
-                    .getValue()));
+            Path defaultKeyFile = SOSKeePassDatabase.getDefaultKeyFile(SOSPath.toAbsolutePath(args.getCredentialStore().getFile().getValue()));
             if (Files.exists(defaultKeyFile)) {
                 keyFile = defaultKeyFile;
             } else {
-                if (SOSString.isEmpty(args.getCredentialStore().getCredentialStorePassword().getValue())) {
+                if (SOSString.isEmpty(args.getCredentialStore().getPassword().getValue())) {
                     throw new Exception(String.format("[%s]key file not found. password is empty", SOSKeePassDatabase.getFilePath(defaultKeyFile)));
                 }
             }
         }
         if (keyFile == null) {
-            kpd.load(args.getCredentialStore().getCredentialStorePassword().getValue());
+            kpd.load(args.getCredentialStore().getPassword().getValue());
         } else {
-            kpd.load(args.getCredentialStore().getCredentialStorePassword().getValue(), keyFile);
+            kpd.load(args.getCredentialStore().getPassword().getValue(), keyFile);
         }
         args.setKeepassDatabase(kpd);
     }
@@ -120,9 +119,9 @@ public class CredentialStoreResolver {
             return lastEntry;
         }
         SOSKeePassPath keePassPath = new SOSKeePassPath(args.getKeepassDatabase().isKDBX(), arg.getValue().toString(), args.getCredentialStore()
-                .getCredentialStoreEntryPath().getValue());
+                .getEntryPath().getValue());
         Entry<?, ?, ?, ?> entry = null;
-        String fileName = args.getCredentialStore().getCredentialStoreFile().getValue().toString();
+        String fileName = args.getCredentialStore().getFile().getValue().toString();
         String argName = arg.getName();
         if (keePassPath.isValid()) {
             if (lastEntry == null || !keePassPath.getEntryPath().equals(lastEntry.getPath())) {
@@ -165,11 +164,11 @@ public class CredentialStoreResolver {
     private static Entry<?, ?, ?, ?> getEntry(AProviderArguments args, final String entryPath) throws Exception {
         Entry<?, ?, ?, ?> entry = args.getKeepassDatabase().getEntryByPath(entryPath);
         if (entry == null) {
-            throw new Exception(String.format("[%s][%s]entry not found", args.getCredentialStore().getCredentialStoreFile().getValue(), entryPath));
+            throw new Exception(String.format("[%s][%s]entry not found", args.getCredentialStore().getFile().getValue(), entryPath));
         }
         if (entry.getExpires()) {
-            throw new Exception(String.format("[%s][%s]entry is expired (%s)", args.getCredentialStore().getCredentialStoreFile().getValue(),
-                    entryPath, entry.getExpiryTime()));
+            throw new Exception(String.format("[%s][%s]entry is expired (%s)", args.getCredentialStore().getFile().getValue(), entryPath, entry
+                    .getExpiryTime()));
         }
         return entry;
     }

@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
@@ -36,22 +35,15 @@ public class MailJob extends ABlockingInternalJob<MailJobArguments> {
         Map<String, Object> resultMap = new HashMap<String, Object>();
         try {
             Map<String, Object> variables = null;
+            SOSCredentialStoreArguments csArgs = null;
             if (step != null) {
-                SOSCredentialStoreArguments csArgs = step.getAppArguments(SOSCredentialStoreArguments.class);
-                if (csArgs.getCredentialStoreFile() != null) {
-                    SOSCredentialStoreResolver r = csArgs.newResolver();
-
-                    args.setMailSmtpUser(r.resolve(args.getMailSmtpUser()));
-                    args.setMailSmtpPassword(r.resolve(args.getMailSmtpPassword()));
-                    args.setMailSmtpHost(r.resolve(args.getMailSmtpHost()));
-                }
-
+                csArgs = step.getAppArguments(SOSCredentialStoreArguments.class);
                 variables = Job.asNameValueMap(step.getAllCurrentArguments());
             } else {
                 variables = new HashMap<String, Object>();
             }
             MailHandler sosMailHandler = new MailHandler(args, variables, logger);
-            sosMailHandler.sendMail();
+            sosMailHandler.sendMail(csArgs);
 
         } catch (Exception e) {
             throw e;

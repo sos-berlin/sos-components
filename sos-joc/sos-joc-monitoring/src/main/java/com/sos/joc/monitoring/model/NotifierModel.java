@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -250,8 +249,8 @@ public class NotifierModel {
             if (n != null) {
                 try {
                     NotifyResult nr = n.notify(type, analyzer.getOrder(), os, mn);
-                    if (nr != null && !SOSString.isEmpty(nr.getError())) {
-                        LOGGER.error(nr.getError());
+                    if (nr != null && nr.getError() != null) {
+                        LOGGER.error(nr.getError().getMessage(), nr.getError().getException());
                     }
                     if (mn == null) {
                         LOGGER.info(String.format("[%s]%s[skip save notification result]due to save notification failed", i, ANotifier.getInfo(

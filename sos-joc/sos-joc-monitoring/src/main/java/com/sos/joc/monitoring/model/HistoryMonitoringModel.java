@@ -758,7 +758,7 @@ public class HistoryMonitoringModel implements Serializable {
                 String name = r[0].toString();
 
                 MailResource mr = conf.getMailResources().get(name);
-                mr.parse(r[1].toString());
+                mr.parse(name, r[1].toString());
                 conf.getMailResources().put(name, mr);
             }
         }

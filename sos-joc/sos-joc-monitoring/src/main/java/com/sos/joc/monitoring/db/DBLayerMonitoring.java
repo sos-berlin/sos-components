@@ -384,9 +384,9 @@ public class DBLayerMonitoring extends DBLayer {
         item.setName(monitor.getMonitorName());
         item.setMessage(notifyResult.getMessage());
         item.setConfiguration(monitor.getInfo().toString());
-        if (!SOSString.isEmpty(notifyResult.getError())) {
+        if (notifyResult.getError() != null && !SOSString.isEmpty(notifyResult.getError().getMessage())) {
             item.setError(true);
-            item.setErrorText(notifyResult.getError());
+            item.setErrorText(notifyResult.getError().getMessage());
         }
         item.setCreated(new Date());
 

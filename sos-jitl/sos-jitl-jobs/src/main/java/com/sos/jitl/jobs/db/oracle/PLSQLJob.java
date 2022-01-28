@@ -72,7 +72,7 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
             if (args.useHibernateFile()) {
                 // args.setCredentionsFromHibernateFile();
             }
-            if (csArgs.getCredentialStoreFile() != null) {
+            if (csArgs.getFile() != null) {
                 SOSCredentialStoreResolver r = csArgs.newResolver();
 
                 args.setDbUrl(r.resolve(args.getDbUrl()));

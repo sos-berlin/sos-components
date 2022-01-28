@@ -80,7 +80,9 @@ public class NotifierJMS extends ANotifier {
             producer.send(session.createTextMessage(message));
             return new NotifyResult(message, getSendInfo());
         } catch (Throwable e) {
-            return new NotifyResult(message, getSendInfo(), getInfo4executeException(mo, mos, type, "[" + monitor.getInfo().toString() + "]", e));
+            NotifyResult result = new NotifyResult(message, getSendInfo());
+            result.setError(getInfo4executeFailed(mo, mos, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
+            return result;
         } finally {
             if (producer != null) {
                 try {

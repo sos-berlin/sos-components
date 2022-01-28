@@ -55,7 +55,7 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
         }
         Map<String, Object> resultMap = new HashMap<String, Object>();
         try {
-            if (csArgs.getCredentialStoreFile() != null) {
+            if (csArgs.getFile() != null) {
                 SOSCredentialStoreResolver r = csArgs.newResolver();
 
                 args.setDbUrl(r.resolve(args.getDbUrl()));
@@ -123,8 +123,8 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
         arguments.setDbUser("cs://sos/db/ur/@user");
 
         SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
-        csArgs.setCredentialStoreFile("D:/documents/sos-berlin.com/scheduler_joc_cockpit/config/profiles/sos.kdbx");
-        csArgs.setCredentialStoreKeyFile("D:/documents/sos-berlin.com/scheduler_joc_cockpit/config/profiles/sos.key");
+        csArgs.setFile("D:/documents/sos-berlin.com/scheduler_joc_cockpit/config/profiles/sos.kdbx");
+        csArgs.setKeyFile("D:/documents/sos-berlin.com/scheduler_joc_cockpit/config/profiles/sos.key");
 
         try {
             sosSQLPlusJob.process(null, arguments, csArgs);

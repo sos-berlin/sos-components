@@ -97,7 +97,9 @@ public class NotifierNSCA extends ANotifier {
             sender.send(payload);
             return new NotifyResult(payload.getMessage(), getSendInfo());
         } catch (Throwable e) {
-            return new NotifyResult(message, getSendInfo(), getInfo4executeException(mo, mos, type, "[" + monitor.getInfo().toString() + "]", e));
+            NotifyResult result = new NotifyResult(message, getSendInfo());
+            result.setError(getInfo4executeFailed(mo, mos, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
+            return result;
         }
     }
 

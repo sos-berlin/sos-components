@@ -41,16 +41,19 @@ public class NotifierCommand extends ANotifier {
         String cmd = resolve(monitor.getCommand(), false);
         LOGGER.info(getInfo4execute(true, mo, mos, type, cmd));
 
-        SOSCommandResult result = SOSShell.executeCommand(cmd, getEnvVariables(cmd));
-        if (result.hasError()) {
+        SOSCommandResult commandResult = SOSShell.executeCommand(cmd, getEnvVariables(cmd));
+        NotifyResult result = new NotifyResult(commandResult.getCommand(), getSendInfo());
+        if (commandResult.hasError()) {
             StringBuilder info = new StringBuilder();
             info.append("[").append(monitor.getInfo()).append("]");
-            info.append(result);
-            return new NotifyResult(result.getCommand(), getSendInfo(), getInfo4executeException(mo, mos, type, info.toString(), null));
+            info.append(commandResult);
+
+            result.setError(getInfo4executeFailed(mo, mos, type, info.toString()));
+            return result;
         }
 
-        LOGGER.info("    " + getInfo4execute(false, mo, mos, type, result.getCommand()));
-        return new NotifyResult(result.getCommand(), getSendInfo());
+        LOGGER.info("    " + getInfo4execute(false, mo, mos, type, commandResult.getCommand()));
+        return result;
     }
 
     @Override

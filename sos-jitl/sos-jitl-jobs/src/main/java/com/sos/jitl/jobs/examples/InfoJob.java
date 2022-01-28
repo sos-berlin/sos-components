@@ -143,7 +143,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
         SOSCredentialStoreArguments csArgs = step.getAppArguments(SOSCredentialStoreArguments.class);
         step.getLogger().info("----------CREDENTIAL STORE-----------------");
-        step.getLogger().info("  file=" + csArgs.getCredentialStoreFile());
+        step.getLogger().info("  file=" + csArgs.getFile());
         SOSCredentialStoreResolver r = csArgs.newResolver();
         step.getLogger().info("  resolve cs://@title=" + r.resolve("cs://@title"));
 

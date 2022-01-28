@@ -18,8 +18,8 @@ public class CredentialStoreResolverTest {
         LOGGER.info(System.getProperty("user.dir"));
 
         SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
-        csArgs.getCredentialStoreFile().setValue("src/test/resources/test_kdbx.kdbx");
-        csArgs.getCredentialStorePassword().setValue("test");
+        csArgs.getFile().setValue("src/test/resources/test_kdbx.kdbx");
+        csArgs.getPassword().setValue("test");
 
         SSHProviderArguments args = new SSHProviderArguments();
         args.setCredentialStore(csArgs);

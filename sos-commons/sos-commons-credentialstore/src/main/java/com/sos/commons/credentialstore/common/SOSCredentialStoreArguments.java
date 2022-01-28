@@ -16,41 +16,41 @@ public class SOSCredentialStoreArguments extends ASOSArguments {
     // KeePass
     // TODO set <Path> instead of <String> for credentialStoreFile,credentialStoreKeyFile
     // it works but should be tested when value is not path conform, e.g. contains env variables names etc...
-    private SOSArgument<String> credentialStoreFile = new SOSArgument<String>(ARG_NAME_FILE, false);
-    private SOSArgument<String> credentialStoreKeyFile = new SOSArgument<String>(ARG_NAME_KEY_FILE, false);
-    private SOSArgument<String> credentialStorePassword = new SOSArgument<String>(ARG_NAME_PASSWORD, false, DisplayMode.MASKED);
-    private SOSArgument<String> credentialStoreEntryPath = new SOSArgument<String>(ARG_NAME_ENTRY_PATH, false);
+    private SOSArgument<String> file = new SOSArgument<String>(ARG_NAME_FILE, false);
+    private SOSArgument<String> keyFile = new SOSArgument<String>(ARG_NAME_KEY_FILE, false);
+    private SOSArgument<String> password = new SOSArgument<String>(ARG_NAME_PASSWORD, false, DisplayMode.MASKED);
+    private SOSArgument<String> entryPath = new SOSArgument<String>(ARG_NAME_ENTRY_PATH, false);
 
-    public SOSArgument<String> getCredentialStoreFile() {
-        return credentialStoreFile;
+    public SOSArgument<String> getFile() {
+        return file;
     }
 
-    public void setCredentialStoreFile(String val) {
-        credentialStoreFile.setValue(val);
+    public void setFile(String val) {
+        file.setValue(val);
     }
 
-    public SOSArgument<String> getCredentialStoreKeyFile() {
-        return credentialStoreKeyFile;
+    public SOSArgument<String> getKeyFile() {
+        return keyFile;
     }
 
-    public void setCredentialStoreKeyFile(String val) {
-        credentialStoreKeyFile.setValue(val);
+    public void setKeyFile(String val) {
+        keyFile.setValue(val);
     }
 
-    public SOSArgument<String> getCredentialStorePassword() {
-        return credentialStorePassword;
+    public SOSArgument<String> getPassword() {
+        return password;
     }
 
-    public void setCredentialStorePassword(String val) {
-        credentialStorePassword.setValue(val);
+    public void setPassword(String val) {
+        password.setValue(val);
     }
 
-    public SOSArgument<String> getCredentialStoreEntryPath() {
-        return credentialStoreEntryPath;
+    public SOSArgument<String> getEntryPath() {
+        return entryPath;
     }
 
-    public void setCredentialStoreEntryPath(String val) {
-        credentialStoreEntryPath.setValue(val);
+    public void setEntryPath(String val) {
+        entryPath.setValue(val);
     }
 
     public SOSCredentialStoreResolver newResolver() {
@@ -62,8 +62,8 @@ public class SOSCredentialStoreArguments extends ASOSArguments {
         private SOSKeePassResolver resolver;
 
         private SOSCredentialStoreResolver() {
-            resolver = new SOSKeePassResolver(credentialStoreFile.getValue(), credentialStoreKeyFile.getValue(), credentialStorePassword.getValue());
-            resolver.setEntryPath(credentialStoreEntryPath.getValue());
+            resolver = new SOSKeePassResolver(file.getValue(), keyFile.getValue(), password.getValue());
+            resolver.setEntryPath(entryPath.getValue());
         }
 
         public String resolve(String cs) throws SOSCredentialStoreException {

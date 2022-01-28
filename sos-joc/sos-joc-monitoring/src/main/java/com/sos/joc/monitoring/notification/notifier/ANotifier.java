@@ -4,7 +4,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
@@ -107,8 +106,7 @@ public abstract class ANotifier {
         return sb.toString();
     }
 
-    protected String getInfo4executeException(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type, String addInfo,
-            Throwable e) {
+    protected String getInfo4executeFailed(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type, String addInfo) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(nr).append("]");
         sb.append("[").append(getClass().getSimpleName()).append(" monitor=").append(getMonitor().getMonitorName()).append("]");
@@ -116,10 +114,6 @@ public abstract class ANotifier {
         sb.append(getInfo(mo, mos, type));
         if (addInfo != null) {
             sb.append(addInfo);
-        }
-        if (e != null) {
-            sb.append(e.toString());
-            sb.append(SOSClassUtil.getStackTrace(e));
         }
         return sb.toString();
     }
