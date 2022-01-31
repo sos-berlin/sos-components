@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
+import com.sos.auth.classes.SOSInitialPasswordSetting;
 import com.sos.auth.interfaces.ISOSSecurityConfiguration;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -23,9 +24,9 @@ import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.IdentityServiceTypes;
-import com.sos.joc.model.security.Role;
 import com.sos.joc.model.security.Roles;
 import com.sos.joc.model.security.SecurityConfiguration;
 import com.sos.joc.model.security.SecurityConfigurationAccount;
@@ -387,7 +388,14 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                     throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
                 }
 
-                String initialPassword = SOSAuthHelper.getInitialPassword();
+                SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings();
+                
+                String initialPassword = sosInitialPasswordSetting.getInitialPassword();
+                if (!sosInitialPasswordSetting.isMininumPasswordLength(initialPassword)){
+                    JocError error = new JocError();
+                    error.setMessage("Password is shorter than " + sosInitialPasswordSetting.getMininumPasswordLength());
+                    throw new JocException(error);
+                }
 
                 for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
                     securityConfigurationAccount.setPassword(initialPassword);

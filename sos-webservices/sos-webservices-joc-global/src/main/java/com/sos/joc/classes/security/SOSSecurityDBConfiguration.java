@@ -2,13 +2,12 @@ package com.sos.joc.classes.security;
 
 import java.security.KeyStore;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
+import com.sos.auth.classes.SOSInitialPasswordSetting;
 import com.sos.auth.interfaces.ISOSSecurityConfiguration;
 import com.sos.auth.vault.SOSVaultHandler;
 import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
@@ -72,19 +71,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
     }
 
-    private void deleteInVault(SOSVaultWebserviceCredentials webserviceCredentials, Set<String> setOfAccounts) throws Exception {
-        KeyStore trustStore = null;
-
-        trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
-                webserviceCredentials.getTruststorePassword());
-
-        SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
-
-        for (String account : setOfAccounts) {
-            sosVaultHandler.deleteAccount(account);
-        }
-    }
-
     private void storeAccounts(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
 
@@ -99,16 +85,22 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             webserviceCredentials.setValuesFromProfile(sosIdentityService);
         }
 
+        SOSInitialPasswordSetting sosInitialPasswordSetting = null;
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
             String password = null;
             if ((securityConfigurationAccount.getIdentityServiceId() != null && securityConfigurationAccount.getIdentityServiceId() == 0L)
                     || securityConfigurationAccount.getPassword() == null || securityConfigurationAccount.getPassword().isEmpty()) {
-                if (initialPassword == null) {
-                    initialPassword = SOSAuthHelper.getInitialPassword();
-                }
                 password = initialPassword;
             } else {
                 password = securityConfigurationAccount.getPassword();
+            }
+            if (sosInitialPasswordSetting == null) {
+                sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings();
+            }
+            if (!sosInitialPasswordSetting.isMininumPasswordLength(password)) {
+                JocError error = new JocError();
+                error.setMessage("Password is shorter than " + sosInitialPasswordSetting.getMininumPasswordLength());
+                throw new JocException(error);
             }
             iamAccountFilter.setAccountName(securityConfigurationAccount.getAccount());
             List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
@@ -120,9 +112,11 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             }
 
             dbItemIamAcount.setAccountName(securityConfigurationAccount.getAccount());
-            if (!dbItemIamIdentityService.getIdentityServiceType().contains("VAULT") && !dbItemIamIdentityService.getIdentityServiceType().contains(
-                    "LDAP")) {
-                dbItemIamAcount.setAccountPassword(SOSAuthHelper.getSHA512(password));
+            if ("JOC".equals(dbItemIamIdentityService.getIdentityServiceType()) || "VAULT-JOC-ACTIVE".equals(dbItemIamIdentityService
+                    .getIdentityServiceType())) {
+                if (!"********".equals(password)) {
+                    dbItemIamAcount.setAccountPassword(SOSAuthHelper.getSHA512(password));
+                }
             } else {
                 dbItemIamAcount.setAccountPassword("********");
             }
@@ -143,31 +137,14 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
     private void deleteAccounts(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
 
-        SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
         iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
-        List<DBItemIamAccount> listOfAccounts = null;
-        Set<String> setOfAccounts = new HashSet<String>();
-        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-            listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
-            for (DBItemIamAccount dbItemIamAccount : listOfAccounts) {
-                setOfAccounts.add(dbItemIamAccount.getAccountName());
-            }
-        }
 
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
             iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             iamAccountFilter.setAccountName(securityConfigurationAccount.getAccount());
             iamAccountDBLayer.deleteCascading(iamAccountFilter);
-        }
-
-        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-            SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                webserviceCredentials.setValuesFromProfile(sosIdentityService);
-            }
-            deleteInVault(webserviceCredentials, setOfAccounts);
         }
     }
 
@@ -185,8 +162,10 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                 webserviceCredentials.setValuesFromProfile(sosIdentityService);
             }
 
+            String initialPassword = null;
+            SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings();
+
             for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-                String password = null;
                 if (securityConfigurationAccount.getPassword() != null && securityConfigurationAccount.getPassword().equals(
                         securityConfigurationAccount.getRepeatedPassword())) {
                     iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
@@ -196,8 +175,24 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                     }
                     List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
                     if (listOfAccounts.size() == 1) {
-                        listOfAccounts.get(0).setAccountPassword(SOSAuthHelper.getSHA512(securityConfigurationAccount.getPassword()));
-                        listOfAccounts.get(0).setForcePasswordChange(false);
+                        String password;
+                        if (securityConfigurationAccount.getPassword() == null || securityConfigurationAccount.getPassword().isEmpty()) {
+                            if (initialPassword == null) {
+                                initialPassword = sosInitialPasswordSetting.getInitialPassword();
+                            }
+                            password = initialPassword;
+                            listOfAccounts.get(0).setForcePasswordChange(true);
+                        } else {
+                            password = securityConfigurationAccount.getPassword();
+                            listOfAccounts.get(0).setForcePasswordChange(false);
+                        }
+                        listOfAccounts.get(0).setAccountPassword(SOSAuthHelper.getSHA512(password));
+                        if (!sosInitialPasswordSetting.isMininumPasswordLength(password)) {
+                            JocError error = new JocError();
+                            error.setMessage("Password is shorter than " + sosInitialPasswordSetting.getMininumPasswordLength());
+                            throw new JocException(error);
+                        }
+
                         sosHibernateSession.update(listOfAccounts.get(0));
 
                         if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
@@ -292,9 +287,9 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
     private void storePermissions(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService) throws SOSHibernateException {
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-        iamAccountDBLayer.deleteRole2Permissions(dbItemIamIdentityService.getId());
 
         if (securityConfiguration.getRoles() != null) {
+            iamAccountDBLayer.deleteRole2Permissions(dbItemIamIdentityService.getId());
             for (Entry<String, SecurityConfigurationRole> roles : securityConfiguration.getRoles().getAdditionalProperties().entrySet()) {
                 DBItemIamRole dbItemIamRole = iamAccountDBLayer.getRoleByName(roles.getKey(), dbItemIamIdentityService.getId());
 

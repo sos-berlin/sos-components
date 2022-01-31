@@ -1,11 +1,14 @@
 package com.sos.joc.db.security;
 
+import java.nio.file.AccessDeniedException;
 import java.security.KeyStore;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
@@ -23,6 +26,7 @@ import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class IamIdentityServiceDBLayer {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(IamIdentityServiceDBLayer.class);
     private static final String DBItemIamIdentityService = com.sos.joc.db.authentication.DBItemIamIdentityService.class.getSimpleName();
     private static final String DBItemIamAccount = com.sos.joc.db.authentication.DBItemIamAccount.class.getSimpleName();
     private static final String DBItemIamRole = com.sos.joc.db.authentication.DBItemIamRole.class.getSimpleName();
@@ -200,9 +204,16 @@ public class IamIdentityServiceDBLayer {
             listOfDeletedAccounts.stream().forEach(e -> accounts.add(e.getAccountName()));
             deleteRolesByServiceId(identityServiceId);
             deletePermissionsByServiceId(identityServiceId);
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                deleteInVault(accounts, dbItemIamIdentityService.getId(), dbItemIamIdentityService.getIdentityServiceName(), IdentityServiceTypes
-                        .fromValue(dbItemIamIdentityService.getIdentityServiceType()));
+            try {
+                if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                    deleteInVault(accounts, dbItemIamIdentityService.getId(), dbItemIamIdentityService.getIdentityServiceName(), IdentityServiceTypes
+                            .fromValue(dbItemIamIdentityService.getIdentityServiceType()));
+                }
+            } catch (AccessDeniedException e) {
+                LOGGER.warn(e.getCause() + " -> file:" + e.getFile());
+
+            } catch (Exception e) {
+                LOGGER.warn(e.getMessage());
             }
 
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);

@@ -16,17 +16,12 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.naming.InvalidNameException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.shiro.authc.AuthenticationException;
-import org.apache.shiro.authc.AuthenticationInfo;
-import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.client.ClientCertificateHandler;
-import com.sos.auth.shiro.SOSUsernameRequestToken;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -109,9 +104,10 @@ public class SOSAuthHelper {
         }
     }
 
-    public static String getInitialPassword() throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
+    public static SOSInitialPasswordSetting getInitialPasswordSettings() throws JsonParseException, JsonMappingException, IOException,
+            SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
-
+        SOSInitialPasswordSetting sosInitialPasswordSetting = new SOSInitialPasswordSetting();
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSAuthHelper:getInitialPassword");
 
@@ -121,20 +117,20 @@ public class SOSAuthHelper {
             jocConfigurationFilter.setObjectType(OBJECT_TYPE_IAM_GENERAL);
             List<DBItemJocConfiguration> result = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 1);
             String initialPassword;
+            Long minPasswordLength;
             if (result.size() == 1) {
                 com.sos.joc.model.security.Properties properties = Globals.objectMapper.readValue(result.get(0).getConfigurationItem(),
                         com.sos.joc.model.security.Properties.class);
                 initialPassword = properties.getInitialPassword();
+                if (properties.getMinPasswordLength() == null) {
+                    minPasswordLength = 0L;
+                } else {
+                    minPasswordLength = properties.getMinPasswordLength();
+                }
                 if (initialPassword == null) {
                     initialPassword = "initial";
                     LOGGER.warn("Missing initial password settings. Using default value=initial");
                 } else {
-                    Long minPasswordLength;
-                    if (properties.getMinPasswordLength() == null){
-                        minPasswordLength = 0L;
-                    }else {
-                        minPasswordLength = properties.getMinPasswordLength();
-                    }
                     if (initialPassword.length() < minPasswordLength) {
                         JocError error = new JocError();
                         error.setMessage("Initial password is shorter then " + minPasswordLength);
@@ -143,8 +139,11 @@ public class SOSAuthHelper {
                 }
             } else {
                 initialPassword = "initial";
+                minPasswordLength = 0L;
             }
-            return initialPassword;
+            sosInitialPasswordSetting.setInitialPassword(initialPassword);
+            sosInitialPasswordSetting.setMininumPasswordLength(minPasswordLength);
+            return sosInitialPasswordSetting;
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
