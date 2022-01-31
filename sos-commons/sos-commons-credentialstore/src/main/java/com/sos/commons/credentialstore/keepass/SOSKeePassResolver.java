@@ -227,12 +227,10 @@ public class SOSKeePassResolver {
         if (SOSString.isEmpty(queryKeyFile)) {
             if (keyFile == null) {
                 kf = SOSKeePassDatabase.getDefaultKeyFile(currentFile);
-                if (Files.notExists(kf)) {
+                if (kf == null) {
                     if (SOSString.isEmpty(currentPassword)) {
-                        throw new SOSKeePassDatabaseException(String.format("[%s][%s]key file not found. password is empty", path.getQuery(),
-                                SOSKeePassDatabase.getFilePath(kf)));
+                        throw new SOSKeePassDatabaseException(String.format("[%s]default key file not found. password is empty", path.getQuery()));
                     }
-                    kf = null;
                 }
                 keyFile = kf;
             } else {

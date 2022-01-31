@@ -19,7 +19,7 @@ import com.google.common.primitives.Bytes;
 import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassCredentialException;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassDatabaseException;
-
+import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassKeyFileException;
 import com.sos.commons.util.SOSString;
 
 public class SOSKdbxCreds implements Credentials {
@@ -90,17 +90,30 @@ public class SOSKdbxCreds implements Credentials {
         key = new KdbxCreds(password.getBytes()).getKey();
     }
 
-    private void handleXmlKey(@NotNull InputStream keyFile, String password) {
+    private void handleXmlKey(@NotNull InputStream keyFile, String password) throws SOSKeePassKeyFileException {
         if (SOSString.isEmpty(password)) {
             if (isTraceEnabled) {
-                LOGGER.trace("[handleXmlKey]pass");
+                LOGGER.trace("[handleXmlKey]keyFile");
             }
-            key = new KdbxCreds(keyFile).getKey();
+            MessageDigest md = Encryption.getMessageDigestInstance();
+            byte[] keyFileData = SOSKdbxKeyFile.load(keyFile);
+            if (keyFileData == null) {
+                throw new IllegalStateException("Could not read key file");
+            }
+            this.key = md.digest(keyFileData);
         } else {
             if (isTraceEnabled) {
                 LOGGER.trace("[handleXmlKey]pass,keyFile");
             }
-            key = new KdbxCreds(password.getBytes(), keyFile).getKey();
+            MessageDigest md = Encryption.getMessageDigestInstance();
+            byte[] pwKey = md.digest(password.getBytes());
+            md.update(pwKey);
+
+            byte[] keyFileData = SOSKdbxKeyFile.load(keyFile);
+            if (keyFileData == null) {
+                throw new IllegalStateException("Could not read key file");
+            }
+            this.key = md.digest(keyFileData);
         }
     }
 

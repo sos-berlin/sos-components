@@ -75,12 +75,10 @@ public class CredentialStoreResolver {
             }
             keyFile = cskf;
         } else {
-            Path defaultKeyFile = SOSKeePassDatabase.getDefaultKeyFile(SOSPath.toAbsolutePath(args.getCredentialStore().getFile().getValue()));
-            if (Files.exists(defaultKeyFile)) {
-                keyFile = defaultKeyFile;
-            } else {
+            keyFile = SOSKeePassDatabase.getDefaultKeyFile(SOSPath.toAbsolutePath(args.getCredentialStore().getFile().getValue()));
+            if (keyFile == null) {
                 if (SOSString.isEmpty(args.getCredentialStore().getPassword().getValue())) {
-                    throw new Exception(String.format("[%s]key file not found. password is empty", SOSKeePassDatabase.getFilePath(defaultKeyFile)));
+                    throw new Exception(String.format("default key file not found. password is empty"));
                 }
             }
         }

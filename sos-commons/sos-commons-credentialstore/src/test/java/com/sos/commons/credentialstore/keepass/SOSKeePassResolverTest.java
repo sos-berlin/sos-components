@@ -118,10 +118,33 @@ public class SOSKeePassResolverTest {
         SOSKeePassResolver r = new SOSKeePassResolver(Paths.get(DIR).resolve(DATABASE_NAME), "test");
         r.setEntryPath("/server/SFTP/my_server");
 
-        String val = r.resolve("cs://@title");
-        LOGGER.info(val);
+        LOGGER.info(r.resolve("cs://@title"));
+        LOGGER.info(r.resolve("cs://@url"));
+        LOGGER.info(r.resolve("cs://@password"));
+        LOGGER.info(r.resolve("cs://@notes"));
+    }
 
-        val = r.resolve("cs://@url");
-        LOGGER.info(val);
+    @Ignore
+    @Test
+    public void keyFileVersion2Test() throws Exception {
+        SOSKeePassResolver r = new SOSKeePassResolver(Paths.get(DIR).resolve("keepass_2.50-f.kdbx"));
+        r.setEntryPath("/server/my_server");
+
+        LOGGER.info(r.resolve("cs://@title"));
+        LOGGER.info(r.resolve("cs://@url"));
+        LOGGER.info(r.resolve("cs://@password"));
+        LOGGER.info(r.resolve("cs://@notes"));
+    }
+
+    @Ignore
+    @Test
+    public void keyFileVersion2AndPasswordTest() throws Exception {
+        SOSKeePassResolver r = new SOSKeePassResolver(Paths.get(DIR).resolve("keepass_2.50-p-f.kdbx"), "test");
+        r.setEntryPath("/server/my_server");
+
+        LOGGER.info(r.resolve("cs://@title"));
+        LOGGER.info(r.resolve("cs://@url"));
+        LOGGER.info(r.resolve("cs://@password"));
+        LOGGER.info(r.resolve("cs://@notes"));
     }
 }
