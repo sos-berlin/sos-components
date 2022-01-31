@@ -14,6 +14,7 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
+import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamAccount2RoleWithName;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamAccount;
@@ -352,14 +353,39 @@ public class IamAccountDBLayer {
 
     }
 
+    public void rename(Long identityServiceId,String accountOldName, String accountNewName) throws SOSHibernateException {
+        String hql = "update " + DBItemIamAccount
+                + " set accountName=:accountNewName where accountName=:accountOldName and identityServiceId=:identityServiceId";
+        Query<DBItemIamIdentityService> query = sosHibernateSession.createQuery(hql);
+        query.setParameter("accountOldName", accountOldName);
+        query.setParameter("accountNewName", accountNewName);
+        query.setParameter("identityServiceId", identityServiceId);
+        sosHibernateSession.executeUpdate(query);
+    }
+    
+    public DBItemIamAccount getUniqueAccount(IamAccountFilter filter) throws SOSHibernateException {
+        List<DBItemIamAccount> accountList = null;
+        Query<DBItemIamAccount> query = sosHibernateSession.createQuery("from " + DBItemIamAccount + getWhere(filter) + filter.getOrderCriteria()
+                + filter.getSortMode());
+        bindParameters(filter, query);
+
+        accountList = query.getResultList();
+        if (accountList.size() == 0) {
+            return null;
+        } else {
+            return accountList.get(0);
+        }
+    }
+
     public void deleteRoleCascading(String role, Long identityServiceId) throws SOSHibernateException {
-        DBItemIamRole dbItemIamRole = this.getRoleByName(role,identityServiceId);
+        DBItemIamRole dbItemIamRole = this.getRoleByName(role, identityServiceId);
         IamAccountFilter filter = new IamAccountFilter();
         filter.setRoleId(dbItemIamRole.getId());
         filter.setIdentityServiceId(identityServiceId);
         deletePermission(filter);
-        deleteAccount2Role(filter); 
+        deleteAccount2Role(filter);
         sosHibernateSession.delete(dbItemIamRole);
     }
 
+    
 }

@@ -19,13 +19,17 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.security.SOSSecurityConfiguration;
 import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
+import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.security.IamAccountDBLayer;
+import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.security.AccountRename;
 import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.Roles;
 import com.sos.joc.model.security.SecurityConfiguration;
@@ -41,6 +45,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
     private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfigurationResourceImpl.class);
     private static final String API_CALL_READ = "./authentication/auth";
     private static final String API_CALL_WRITE = "./authentication/auth/store";
+    private static final String API_CALL_ACCOUNT_RENAME = "./authentication/auth/account/rename";;
 
     @Override
     public JOCDefaultResponse postAuthRead(String accessToken, byte[] body) {
@@ -227,7 +232,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
             JsonValidator.validate(body, Roles.class);
             Roles roles = Globals.objectMapper.readValue(body, Roles.class);
             String identityServiceName = roles.getIdentityServiceName();
-            
+
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -389,9 +394,9 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 }
 
                 SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings();
-                
+
                 String initialPassword = sosInitialPasswordSetting.getInitialPassword();
-                if (!sosInitialPasswordSetting.isMininumPasswordLength(initialPassword)){
+                if (!sosInitialPasswordSetting.isMininumPasswordLength(initialPassword)) {
                     JocError error = new JocError();
                     error.setMessage("Password is shorter than " + sosInitialPasswordSetting.getMininumPasswordLength());
                     throw new JocException(error);
@@ -418,6 +423,65 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+
+    @Override
+    public JOCDefaultResponse postAuthAcountRename(String accessToken, byte[] body) {
+
+        SOSHibernateSession sosHibernateSession = null;
+
+        try {
+            initLogging(API_CALL_WRITE, body, accessToken);
+            JsonValidator.validate(body, AccountRename.class);
+            AccountRename accountRename = Globals.objectMapper.readValue(body, AccountRename.class);
+            String identityServiceName = accountRename.getIdentityServiceName();
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNT_RENAME);
+            sosHibernateSession.setAutoCommit(false);
+            sosHibernateSession.beginTransaction();
+
+            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+            filter.setIdentityServiceName(identityServiceName);
+            DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
+
+            if (dbItemIamIdentityService == null) {
+                throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
+            }
+
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+
+            IamAccountFilter iamAccountFilter = new IamAccountFilter();
+            iamAccountFilter.setAccountName(accountRename.getAccountNewName());
+            iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
+            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(iamAccountFilter);
+            if (dbItemIamAccount != null) {
+                JocError error = new JocError();
+                error.setMessage("Account " + accountRename.getAccountNewName() + " already exists");
+                throw new JocException(error);
+            }
+
+            iamAccountDBLayer.rename(dbItemIamIdentityService.getId(), accountRename.getAccountOldName(), accountRename.getAccountNewName());
+
+            Globals.commit(sosHibernateSession);
+
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+
+        } catch (
+
+        JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(sosHibernateSession);
         }
 
     }

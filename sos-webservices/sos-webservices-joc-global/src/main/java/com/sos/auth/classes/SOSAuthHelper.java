@@ -187,7 +187,7 @@ public class SOSAuthHelper {
                 }
 
             } catch (IOException | CertificateEncodingException | InvalidNameException e) {
-                LOGGER.debug("No client certificate found." + e.getMessage());
+                LOGGER.warn("No client certificate found." + e.getMessage());
             }
         }
 
