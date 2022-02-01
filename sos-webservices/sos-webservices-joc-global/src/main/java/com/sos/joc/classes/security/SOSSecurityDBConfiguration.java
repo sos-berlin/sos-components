@@ -122,6 +122,8 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             }
             dbItemIamAcount.setIdentityServiceId(dbItemIamIdentityService.getId());
             dbItemIamAcount.setForcePasswordChange(securityConfigurationAccount.getForcePasswordChange());
+            dbItemIamAcount.setDisabled(securityConfigurationAccount.getDisabled());
+
             if (listOfAccounts.size() == 1) {
                 sosHibernateSession.update(dbItemIamAcount);
             } else {
@@ -182,6 +184,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                             }
                             password = initialPassword;
                             listOfAccounts.get(0).setForcePasswordChange(true);
+
                         } else {
                             password = securityConfigurationAccount.getPassword();
                             listOfAccounts.get(0).setForcePasswordChange(false);

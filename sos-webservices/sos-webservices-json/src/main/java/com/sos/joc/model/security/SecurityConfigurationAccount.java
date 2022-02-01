@@ -19,6 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "repeatedPassword",
     "oldPassword",
     "forcePasswordChange",
+    "disabled",
     "identityServiceId",
     "roles"
 })
@@ -49,6 +50,15 @@ public class SecurityConfigurationAccount {
     @JsonPropertyDescription("controls if the account is forced to change the password")
     private Boolean forcePasswordChange = false;
     /**
+     * disabled parameter
+     * <p>
+     * controls if the object is disabled
+     * 
+     */
+    @JsonProperty("disabled")
+    @JsonPropertyDescription("controls if the object is disabled")
+    private Boolean disabled = false;
+    /**
      * non negative long
      * <p>
      * 
@@ -74,10 +84,11 @@ public class SecurityConfigurationAccount {
      * @param oldPassword
      * @param forcePasswordChange
      * @param roles
+     * @param disabled
      * @param repeatedPassword
      * @param account
      */
-    public SecurityConfigurationAccount(String account, String password, String hashedPassword, String repeatedPassword, String oldPassword, Boolean forcePasswordChange, Long identityServiceId, List<String> roles) {
+    public SecurityConfigurationAccount(String account, String password, String hashedPassword, String repeatedPassword, String oldPassword, Boolean forcePasswordChange, Boolean disabled, Long identityServiceId, List<String> roles) {
         super();
         this.account = account;
         this.password = password;
@@ -85,6 +96,7 @@ public class SecurityConfigurationAccount {
         this.repeatedPassword = repeatedPassword;
         this.oldPassword = oldPassword;
         this.forcePasswordChange = forcePasswordChange;
+        this.disabled = disabled;
         this.identityServiceId = identityServiceId;
         this.roles = roles;
     }
@@ -172,6 +184,28 @@ public class SecurityConfigurationAccount {
     }
 
     /**
+     * disabled parameter
+     * <p>
+     * controls if the object is disabled
+     * 
+     */
+    @JsonProperty("disabled")
+    public Boolean getDisabled() {
+        return disabled;
+    }
+
+    /**
+     * disabled parameter
+     * <p>
+     * controls if the object is disabled
+     * 
+     */
+    @JsonProperty("disabled")
+    public void setDisabled(Boolean disabled) {
+        this.disabled = disabled;
+    }
+
+    /**
      * non negative long
      * <p>
      * 
@@ -205,12 +239,12 @@ public class SecurityConfigurationAccount {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("account", account).append("password", password).append("hashedPassword", hashedPassword).append("repeatedPassword", repeatedPassword).append("oldPassword", oldPassword).append("forcePasswordChange", forcePasswordChange).append("identityServiceId", identityServiceId).append("roles", roles).toString();
+        return new ToStringBuilder(this).append("account", account).append("password", password).append("hashedPassword", hashedPassword).append("repeatedPassword", repeatedPassword).append("oldPassword", oldPassword).append("forcePasswordChange", forcePasswordChange).append("disabled", disabled).append("identityServiceId", identityServiceId).append("roles", roles).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(password).append(identityServiceId).append(hashedPassword).append(oldPassword).append(forcePasswordChange).append(roles).append(repeatedPassword).append(account).toHashCode();
+        return new HashCodeBuilder().append(password).append(identityServiceId).append(hashedPassword).append(oldPassword).append(forcePasswordChange).append(roles).append(disabled).append(repeatedPassword).append(account).toHashCode();
     }
 
     @Override
@@ -222,7 +256,7 @@ public class SecurityConfigurationAccount {
             return false;
         }
         SecurityConfigurationAccount rhs = ((SecurityConfigurationAccount) other);
-        return new EqualsBuilder().append(password, rhs.password).append(identityServiceId, rhs.identityServiceId).append(hashedPassword, rhs.hashedPassword).append(oldPassword, rhs.oldPassword).append(forcePasswordChange, rhs.forcePasswordChange).append(roles, rhs.roles).append(repeatedPassword, rhs.repeatedPassword).append(account, rhs.account).isEquals();
+        return new EqualsBuilder().append(password, rhs.password).append(identityServiceId, rhs.identityServiceId).append(hashedPassword, rhs.hashedPassword).append(oldPassword, rhs.oldPassword).append(forcePasswordChange, rhs.forcePasswordChange).append(roles, rhs.roles).append(disabled, rhs.disabled).append(repeatedPassword, rhs.repeatedPassword).append(account, rhs.account).isEquals();
     }
 
 }

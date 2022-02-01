@@ -7,11 +7,12 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_IAM_ROLES)
+@Table(name = DBLayer.TABLE_IAM_ROLES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_ID]", "[ROLE_NAME]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_IAM_ROLES_SEQUENCE, sequenceName = DBLayer.TABLE_IAM_ROLES_SEQUENCE, allocationSize = 1)
 
 public class DBItemIamRole {
@@ -21,7 +22,7 @@ public class DBItemIamRole {
     @Column(name = "[ID]")
     private Long id;
     
-    @Column(name = "[IDENTITY_SERVICE_ID]")
+    @Column(name = "[IDENTITY_SERVICE_ID]", nullable = false)
     private Long identityServiceId;
     
     @Column(name = "[ROLE_NAME]", nullable = false)

@@ -17,7 +17,7 @@ public class DBItemIamPermission {
     @Column(name = "[ID]")
     private Long id;
 
-    @Column(name = "[IDENTITY_SERVICE_ID]")
+    @Column(name = "[IDENTITY_SERVICE_ID]", nullable = false)
     private Long identityServiceId;
 
     @Column(name = "[ROLE_ID]")
@@ -26,13 +26,13 @@ public class DBItemIamPermission {
     @Column(name = "[ACCOUNT_ID]")
     private Long accountId;
 
-    @Column(name = "[ACCOUNT_PERMISSION]", nullable = false)
+    @Column(name = "[ACCOUNT_PERMISSION]")
     private String accountPermission;
 
-    @Column(name = "[CONTROLLER_ID]", nullable = true)
+    @Column(name = "[CONTROLLER_ID]")
     private String controllerId;
 
-    @Column(name = "[FOLDER_PERMISSION]", nullable = true)
+    @Column(name = "[FOLDER_PERMISSION]")
     private String folderPermission;
 
     @Column(name = "[EXCLUDED]", nullable = false)

@@ -7,13 +7,15 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
 
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_IAM_ACCOUNTS)
+@Table(name = DBLayer.TABLE_IAM_ACCOUNTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_ID]", "[ACCOUNT_NAME]" }) })
+		
 @SequenceGenerator(name = DBLayer.TABLE_IAM_ACCOUNTS_SEQUENCE, sequenceName = DBLayer.TABLE_IAM_ACCOUNTS_SEQUENCE, allocationSize = 1)
 
 public class DBItemIamAccount {
@@ -36,7 +38,19 @@ public class DBItemIamAccount {
     @Type(type = "numeric_boolean")
     private Boolean forcePasswordChange;
 
-    public DBItemIamAccount() {
+    @Column(name = "[DISABLED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private Boolean disabled;
+
+    public Boolean getDisabled() {
+		return disabled;
+	}
+
+	public void setDisabled(Boolean disabled) {
+		this.disabled = disabled;
+	}
+
+	public DBItemIamAccount() {
 
     }
 

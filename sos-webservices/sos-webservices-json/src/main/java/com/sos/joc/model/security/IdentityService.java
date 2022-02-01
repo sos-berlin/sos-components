@@ -69,11 +69,11 @@ public class IdentityService {
     /**
      * disabled parameter
      * <p>
-     * controls if the identity service is disabled
+     * controls if the object is disabled
      * 
      */
     @JsonProperty("disabled")
-    @JsonPropertyDescription("controls if the identity service is disabled")
+    @JsonPropertyDescription("controls if the object is disabled")
     private Boolean disabled = false;
     /**
      * Single Factory Cert
@@ -226,7 +226,7 @@ public class IdentityService {
     /**
      * disabled parameter
      * <p>
-     * controls if the identity service is disabled
+     * controls if the object is disabled
      * 
      */
     @JsonProperty("disabled")
@@ -237,7 +237,7 @@ public class IdentityService {
     /**
      * disabled parameter
      * <p>
-     * controls if the identity service is disabled
+     * controls if the object is disabled
      * 
      */
     @JsonProperty("disabled")

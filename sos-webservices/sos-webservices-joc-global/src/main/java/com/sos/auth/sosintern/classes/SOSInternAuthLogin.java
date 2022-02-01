@@ -43,6 +43,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
 
             if (identityService.isSingleFactor()) {
                 if (identityService.isSingleFactorCert() && SOSAuthHelper.checkCertificate(httpServletRequest, account)) {
+                    LOGGER.info("==> login successful");
                     sosInternAuthAccessToken = new SOSAuthAccessToken();
                     sosInternAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
                 }
