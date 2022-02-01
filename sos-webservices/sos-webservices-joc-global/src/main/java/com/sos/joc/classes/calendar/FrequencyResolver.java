@@ -12,15 +12,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
+import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.calendar.Frequencies;
 import com.sos.inventory.model.calendar.Holidays;
 import com.sos.inventory.model.calendar.MonthDays;
@@ -34,6 +40,7 @@ import com.sos.joc.model.calendar.Dates;
 
 public class FrequencyResolver {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FrequencyResolver.class);
     private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
     private static final DateTimeFormatter DF = DateTimeFormatter.ISO_LOCAL_DATE.withZone(ZoneOffset.UTC);
 
@@ -46,6 +53,7 @@ public class FrequencyResolver {
     private Calendar dateFrom = null;
     private Calendar dateTo = null;
 
+    private Frequencies baseCalendarIncludes = null;
     private Frequencies includes = null;
     private Frequencies excludes = null;
 
@@ -97,123 +105,309 @@ public class FrequencyResolver {
         return d;
     }
 
-    public Dates resolveRestrictions(com.sos.inventory.model.calendar.Calendar basedCalendar, com.sos.inventory.model.calendar.Calendar calendar,
-            String from, String to) throws SOSMissingDataException, SOSInvalidDataException {
-        init(basedCalendar, from, to);
+    public Dates resolveRestrictions(com.sos.inventory.model.calendar.Calendar baseCalendar,
+            com.sos.inventory.model.calendar.Calendar restrictionsCalendar, String from, String to) throws SOSMissingDataException,
+            SOSInvalidDataException {
+        init(baseCalendar, from, to);
         Dates d = new Dates();
         d.setDates(new ArrayList<String>());
         datesWithoutRestrictions.clear();
         restrictions.clear();
         withExcludes.clear();
         dates.clear();
-        if (this.dateFrom.compareTo(this.dateTo) <= 0) {
+
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        String method = "resolveRestrictions";
+        int diff = this.dateFrom.compareTo(this.dateTo);
+        if (diff <= 0) {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][start][from=%s, to=%s]dateFrom=%s compareTo dateTo=%s <= 0 (%s)", method, from, to, SOSDate
+                        .getDateTimeAsString(this.dateFrom), SOSDate.getDateTimeAsString(this.dateTo), diff));
+            }
             addDates();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][addDates]dates=%s", method, dates.keySet()));
+            }
+
             addHolidays();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][addHolidays]dates=%s", method, dates.keySet()));
+            }
+
             addWeekDays();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][addWeekDays]dates=%s", method, dates.keySet()));
+            }
+
             addMonthDays();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][addMonthDays]dates=%s", method, dates.keySet()));
+            }
+
             addUltimos();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][addUltimos]dates=%s", method, dates.keySet()));
+            }
+
             addMonths();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][addMonths]dates=%s", method, dates.keySet()));
+            }
+
             addRepetitions();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][addRepetitions]dates=%s", method, dates.keySet()));
+            }
+
             removeDates();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][removeDates]dates=%s", method, dates.keySet()));
+            }
+
             removeWeekDays();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][removeWeekDays]dates=%s", method, dates.keySet()));
+            }
+
             removeMonthDays();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][removeMonthDays]dates=%s", method, dates.keySet()));
+            }
+
             removeUltimos();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][removeUltimos]dates=%s", method, dates.keySet()));
+            }
+
             removeMonths();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][removeMonths]dates=%s", method, dates.keySet()));
+            }
+
             removeHolidays();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][removeHolidays]dates=%s", method, dates.keySet()));
+            }
+
             removeRepetitions();
-            if (calendar != null && !this.dates.isEmpty()) {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][after][removeRepetitions]dates=%s", method, dates.keySet()));
+            }
+
+            if (isDebugEnabled) {
+                List<String> dc = this.dates.entrySet().stream().map(e -> {
+                    return e.getKey();
+                }).collect(Collectors.toList());
+                LOGGER.debug(String.format("[%s][provisional]dates=%s, restrictionsCalendar is null=%s", method, String.join(",", dc),
+                        restrictionsCalendar == null));
+            }
+
+            if (restrictionsCalendar != null && !this.dates.isEmpty()) {
                 this.dateFrom = getFrom(from);
                 this.dateTo = getTo(to);
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][restrictions]dateFrom=%s, dateTo=%s", method, SOSDate.getDateTimeAsString(this.dateFrom), SOSDate
+                            .getDateTimeAsString(this.dateTo)));
+                }
                 for (Entry<String, Calendar> entry : dates.entrySet()) {
                     if (entry.getValue().before(dateFrom)) {
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][restrictions][datesWithoutRestrictions][skip]%s is before dateFrom=%s", method, SOSDate
+                                    .getDateTimeAsString(entry.getValue()), SOSDate.getDateTimeAsString(dateFrom)));
+                        }
                         continue;
                     }
                     if (entry.getValue().after(dateTo)) {
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][restrictions][datesWithoutRestrictions][skip]%s is after dateTo=%s", method, SOSDate
+                                    .getDateTimeAsString(entry.getValue()), SOSDate.getDateTimeAsString(dateTo)));
+                        }
                         break;
+                    }
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][restrictions][datesWithoutRestrictions][put]%s", method, entry.getKey()));
                     }
                     datesWithoutRestrictions.put(entry.getKey(), entry.getValue());
                 }
-                if (this.dateFrom.compareTo(this.dateTo) <= 0) {
+
+                diff = this.dateFrom.compareTo(this.dateTo);
+                if (diff <= 0) {
+                    Calendar dateFromOrig = (Calendar) this.dateFrom.clone();
                     this.dateFrom = getFirstDayOfMonthCalendar(this.dateFrom);
-                    this.includes = calendar.getIncludes();
+                    this.includes = restrictionsCalendar.getIncludes();
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][restrictions][from=%s, to=%s]dateFrom=%s compareTo dateTo=%s <= 0 (%s)", method, from, to,
+                                SOSDate.getDateTimeAsString(this.dateFrom), SOSDate.getDateTimeAsString(this.dateTo), diff));
+                        LOGGER.debug(String.format("[%s][restrictions]dateFrom=%s (getFirstDayOfMonthCalendar)", method, SOSDate.getDateTimeAsString(
+                                this.dateFrom)));
+                    }
                     // this.excludes = calendar.getExcludes(); //TODO exists?
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][restrictions][start]datesWithoutRestrictions=%s", method, datesWithoutRestrictions
+                                .keySet()));
+                    }
                     addDatesRestrictions();
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][restrictions][after][addDatesRestrictions]datesWithoutRestrictions=%s", method,
+                                datesWithoutRestrictions.keySet()));
+                    }
+
                     addWeekDaysRestrictions();
-                    addMonthDaysRestrictions();
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][restrictions][after][addWeekDaysRestrictions]datesWithoutRestrictions=%s", method,
+                                datesWithoutRestrictions.keySet()));
+                    }
+
+                    addMonthDaysRestrictions(dateFromOrig);
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][restrictions][after][addMonthDaysRestrictions]datesWithoutRestrictions=%s", method,
+                                datesWithoutRestrictions.keySet()));
+                    }
+
                     addUltimosRestrictions();
-                    addMonthsRestrictions();
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][restrictions][after][addUltimosRestrictions]datesWithoutRestrictions=%s", method,
+                                datesWithoutRestrictions.keySet()));
+                    }
+
+                    addMonthsRestrictions(dateFromOrig);
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][restrictions][after][addMonthsRestrictions]datesWithoutRestrictions=%s", method,
+                                datesWithoutRestrictions.keySet()));
+                    }
+
                     addRepetitionsRestrictions();
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][restrictions][after][addRepetitionsRestrictions]datesWithoutRestrictions=%s", method,
+                                datesWithoutRestrictions.keySet()));
+                    }
+                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][restrictions][skip][from=%s, to=%s]dateFrom=%s compareTo dateTo=%s > 0 (%s)", method, from,
+                                to, SOSDate.getDateTimeAsString(this.dateFrom), SOSDate.getDateTimeAsString(this.dateTo), diff));
+                    }
                 }
             }
             restrictions.addAll(datesWithoutRestrictions.keySet());
             d.getDates().addAll(restrictions);
+        } else {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][skip][from=%s, to=%s]dateFrom=%s compareTo dateTo=%s > 0 (%s)", method, from, to, SOSDate
+                        .getDateTimeAsString(this.dateFrom), SOSDate.getDateTimeAsString(this.dateTo), diff));
+            }
         }
         d.setDeliveryDate(Date.from(Instant.now()));
         return d;
     }
 
-    private void init(com.sos.inventory.model.calendar.Calendar calendar, String from, String to) throws SOSMissingDataException,
+    private void init(com.sos.inventory.model.calendar.Calendar baseCalendar, String from, String to) throws SOSMissingDataException,
             SOSInvalidDataException {
-        if (calendar != null) {
-            setDateFrom(from, calendar.getFrom());
-            setDateTo(to, calendar.getTo());
-            this.includes = calendar.getIncludes();
-            this.excludes = calendar.getExcludes();
+        if (baseCalendar != null) {
+            setDateFrom(from, baseCalendar.getFrom());
+            setDateTo(to, baseCalendar.getTo());
+            this.baseCalendarIncludes = baseCalendar.getIncludes();
+            this.includes = baseCalendar.getIncludes();
+            this.excludes = baseCalendar.getExcludes();
         } else {
             throw new SOSMissingDataException("calendar object is undefined");
         }
     }
 
     private void setDateFrom(String dateFrom, String calendarFrom) throws SOSMissingDataException, SOSInvalidDataException {
-
-        if (calendarFrom == null || calendarFrom.isEmpty()) {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        if (calendarFrom == null || calendarFrom.isEmpty()) {// TODO will be overwritten when dateFrom is not empty - move to the dateFrom==null section ?
             this.calendarFrom = getTodayCalendar();
             // calendarFrom = df.format(this.calendarFrom.toInstant());
+
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[setDateFrom]set calendarFrom=%s from getTodayCalendar because calendarFrom is null", SOSDate
+                        .getDateTimeAsString(this.calendarFrom)));
+            }
         }
 
         if ((dateFrom == null || dateFrom.isEmpty())) {
             this.dateFrom = getTodayCalendar();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[setDateFrom]set dateFrom=%s from getTodayCalendar because dateFrom is null", SOSDate.getDateTimeAsString(
+                        this.dateFrom)));
+            }
         } else {
 
             Calendar calFrom = getCalendarFromString(calendarFrom, "calendar field 'from' must have the format YYYY-MM-DD.");
             Calendar dFrom = getCalendarFromString(dateFrom, "'dateFrom' parameter must have the format YYYY-MM-DD.");
 
             if (calFrom == null) {
+                LOGGER.debug("[setDateFrom]set dateFrom from dFrom because calFrom is null");
                 this.dateFrom = dFrom;
             } else if (dFrom == null) {
+                LOGGER.debug("[setDateFrom]set dateFrom from calFrom because dFrom is null");
                 this.dateFrom = calFrom;
             } else if (calFrom.before(dFrom)) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[setDateFrom]set dateFrom from dFrom because calFrom %s is before dFrom %s ", SOSDate
+                            .getDateTimeAsString(calFrom), SOSDate.getDateTimeAsString(dFrom)));
+                }
                 this.dateFrom = dFrom;
             } else {
+                LOGGER.debug("[setDateFrom]set dateFrom from calFrom");
                 this.dateFrom = calFrom;
             }
             if (calFrom == null) {
                 this.calendarFrom = (Calendar) dFrom.clone();
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[setDateFrom]set calendarFrom=%s from dFrom because calFrom is null", SOSDate.getDateTimeAsString(
+                            this.calendarFrom)));
+                }
             } else {
                 this.calendarFrom = (Calendar) calFrom.clone();
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[setDateFrom]set calendarFrom=%s from calFrom", SOSDate.getDateTimeAsString(this.calendarFrom)));
+                }
             }
+        }
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[setDateFrom]dateFrom=%s, calendarFrom=%s", SOSDate.getDateTimeAsString(this.dateFrom), SOSDate
+                    .getDateTimeAsString(this.calendarFrom)));
         }
     }
 
     private void setDateTo(String dateTo, String calendarTo) throws SOSMissingDataException, SOSInvalidDataException {
-
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         if ((dateTo == null || dateTo.isEmpty()) && (calendarTo == null || calendarTo.isEmpty())) {
             // throw new SOSMissingDataException("'dateTo' parameter and calendar field 'to' are undefined.");
             this.dateTo = getLastDayOfCurrentYearCalendar();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[setDateTo]set dateTo=%s from getLastDayOfCurrentYearCalendar because dateTo & calendarTo are empty",
+                        SOSDate.getDateTimeAsString(this.dateTo)));
+            }
         } else {
 
             Calendar calTo = getCalendarFromString(calendarTo, "calendar field 'to' must have the format YYYY-MM-DD.");
             Calendar dTo = getCalendarFromString(dateTo, "'dateTo' parameter must have the format YYYY-MM-DD.");
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[setDateTo]calTo=%s, dTo=%s", SOSDate.getDateTimeAsString(calTo), SOSDate.getDateTimeAsString(dTo)));
+            }
 
             if (calTo == null) {
+                LOGGER.debug("[setDateTo]set dateTo from dTo because calTo is null");
                 this.dateTo = dTo;
             } else if (dTo == null) {
+                LOGGER.debug("[setDateTo]set dateTo from calTo because dTo is null");
                 this.dateTo = calTo;
             } else if (calTo.after(dTo)) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[setDateTo]set dateTo from dTo because calTo %s is after dTo %s ", SOSDate.getDateTimeAsString(calTo),
+                            SOSDate.getDateTimeAsString(dTo)));
+                }
                 this.dateTo = dTo;
             } else {
+                LOGGER.debug("[setDateTo]set dateTo from calTo");
                 this.dateTo = calTo;
             }
+        }
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[setDateTo]dateTo=%s", SOSDate.getDateTimeAsString(this.dateTo)));
         }
     }
 
@@ -713,7 +907,8 @@ public class FrequencyResolver {
         return dates;
     }
 
-    private Set<String> resolveBasedOnMonthDays(List<Integer> days, List<WeeklyDay> weeklyDays, Calendar from, Calendar to) {
+    private Set<String> resolveBasedOnMonthDays(List<Integer> days, List<WeeklyDay> weeklyDays, Calendar from, Calendar to, Calendar dateFromOrig)
+            throws SOSInvalidDataException {
 
         Set<String> dates = new HashSet<String>();
         WeeklyDay weeklyDay = new WeeklyDay();
@@ -721,11 +916,27 @@ public class FrequencyResolver {
         int lastMonth = -1;
         int[] weeklyDayOfMonth = { 0, 0, 0, 0, 0, 0, 0 };
 
+        String method = "resolveBasedOnMonthDays";
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        String debugDays = null;
+        if (isDebugEnabled) {
+            debugDays = days == null ? "" : String.join(",", days.stream().map(e -> {
+                return e.toString();
+            }).collect(Collectors.toList()));
+            LOGGER.debug(String.format("[%s][start][from=%s, to=%s, dateFromOrig=%s]days=%s", method, SOSDate.getDateTimeAsString(from), SOSDate
+                    .getDateTimeAsString(to), SOSDate.getDateTimeAsString(dateFromOrig), debugDays));
+        }
+
+        boolean weekDaysResolved = false;
         for (Entry<String, Calendar> date : this.dates.entrySet()) {
             if (date == null || date.getValue() == null) {
                 continue;
             }
             if (date.getValue().after(to)) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][break][%s]is after to=%s", method, SOSDate.getDateTimeAsString(date.getValue()), SOSDate
+                            .getDateTimeAsString(to)));
+                }
                 break;
             }
             Calendar curDate = date.getValue();
@@ -738,12 +949,65 @@ public class FrequencyResolver {
                 lastMonth = curMonth;
             }
             if (curDate.before(from)) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][skip][%s]curDate=%s is before from=%s", method, SOSDate.getDateTimeAsString(date.getValue()),
+                            SOSDate.getDateTimeAsString(curDate), SOSDate.getDateTimeAsString(from)));
+                }
                 continue;
             }
             if (days != null) {
-                dayOfMonth++;
+                // from was set to a first day of month
+                // dateFromOrig - is the original from
+                if (!weekDaysResolved && dateFromOrig.after(from)) {// 2021-02-03 after 2021-02-01
+                    weekDaysResolved = true;
+                    if (baseCalendarIncludes != null && baseCalendarIncludes.getWeekdays() != null && baseCalendarIncludes.getWeekdays().size() > 0) {
+                        Map<String, Calendar> wd = new HashMap<>();
+                        for (WeekDays weekDay : baseCalendarIncludes.getWeekdays()) {
+                            wd.putAll(resolveWeekDays(weekDay.getDays(), getFrom(weekDay.getFrom(), from), getTo(weekDay.getTo(), dateFromOrig)));
+                        }
+                        // sort not sorted HashMap by calendar
+                        List<String> wdl = wd.entrySet().stream().sorted((c1, c2) -> c1.getValue().compareTo(c2.getValue())).map(e -> {
+                            return e.getKey();
+                        }).collect(Collectors.toList());
+
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][%s][calculated from the first day of month]%s", method, SOSDate.getDateTimeAsString(date
+                                    .getValue()), String.join(",", wdl)));
+                        }
+
+                        dayOfMonth = 0;
+                        String lastYearMonth = null;
+                        String currentYearMonth;
+                        for (String dayx : wdl) {
+                            currentYearMonth = dayx.substring(0, 7);// 2022-02
+                            if (lastYearMonth != null && !lastYearMonth.equals(currentYearMonth)) {
+                                dayOfMonth = 0;
+                            }
+                            dayOfMonth++;
+                            lastYearMonth = currentYearMonth;
+
+                            if (isDebugEnabled) {
+                                LOGGER.debug(String.format("[%s][%s][calculated from the first day of month]day=%s, dayOfMonth=%s, lastYearMonth=%s",
+                                        method, SOSDate.getDateTimeAsString(date.getValue()), dayx, dayOfMonth, lastYearMonth));
+                            }
+
+                            if (dayx.equals(date.getKey())) {
+                                break;
+                            }
+                        }
+                    } else {
+                        dayOfMonth++;// TODO
+                    }
+                } else {
+                    dayOfMonth++;
+                }
                 if (days.contains(dayOfMonth)) {
                     dates.add(date.getKey());
+                }
+
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][%s][resolve][days=%s]dates=%s", method, SOSDate.getDateTimeAsString(date.getValue()), debugDays,
+                            dates));
                 }
             }
             if (weeklyDays != null) {
@@ -756,6 +1020,11 @@ public class FrequencyResolver {
                 }
             }
         }
+
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[%s][end]dates=%s", method, dates));
+        }
+
         Map<String, Calendar> tmpDatesWithoutRestrictions = new HashMap<String, Calendar>(datesWithoutRestrictions);
         for (Entry<String, Calendar> entry : tmpDatesWithoutRestrictions.entrySet()) {
             if (entry.getValue().before(from) || entry.getValue().after(to)) {
@@ -1040,17 +1309,18 @@ public class FrequencyResolver {
         }
     }
 
-    private void addMonthDaysRestrictions() throws SOSInvalidDataException {
+    private void addMonthDaysRestrictions(Calendar dateFromOrig) throws SOSInvalidDataException {
         if (includes != null) {
-            addMonthDaysRestrictions(includes.getMonthdays(), dateFrom, dateTo);
+            addMonthDaysRestrictions(includes.getMonthdays(), dateFrom, dateTo, dateFromOrig);
         }
     }
 
-    private void addMonthDaysRestrictions(List<MonthDays> monthDays, Calendar from, Calendar to) throws SOSInvalidDataException {
+    private void addMonthDaysRestrictions(List<MonthDays> monthDays, Calendar from, Calendar to, Calendar dateFromOrig)
+            throws SOSInvalidDataException {
         if (monthDays != null) {
             for (MonthDays monthDay : monthDays) {
                 addRestrictions(resolveBasedOnMonthDays(monthDay.getDays(), monthDay.getWeeklyDays(), getFrom(monthDay.getFrom(), from), getTo(
-                        monthDay.getTo(), to)));
+                        monthDay.getTo(), to), dateFromOrig));
             }
         }
     }
@@ -1070,7 +1340,7 @@ public class FrequencyResolver {
         }
     }
 
-    private void addMonthsRestrictions() throws SOSInvalidDataException {
+    private void addMonthsRestrictions(Calendar dateFromOrig) throws SOSInvalidDataException {
         if (includes != null && includes.getMonths() != null) {
             Calendar monthStart = Calendar.getInstance(UTC);
             Calendar monthEnd = Calendar.getInstance(UTC);
@@ -1084,7 +1354,7 @@ public class FrequencyResolver {
                             Calendar monthFrom = getFromPerMonth(monthStart, from);
                             Calendar monthTo = getFromToMonth(monthEnd, from, to, lastDayOfMonth);
                             addWeekDaysRestrictions(month.getWeekdays(), monthFrom, monthTo);
-                            addMonthDaysRestrictions(month.getMonthdays(), monthFrom, monthTo);
+                            addMonthDaysRestrictions(month.getMonthdays(), monthFrom, monthTo, dateFromOrig);
                             addUltimosRestrictions(month.getUltimos(), monthFrom, monthTo);
 
                         }
