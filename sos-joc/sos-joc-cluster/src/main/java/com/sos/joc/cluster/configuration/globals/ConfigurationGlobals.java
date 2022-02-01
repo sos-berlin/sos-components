@@ -70,7 +70,7 @@ public class ConfigurationGlobals {
                 }
                 entry.setDefault(null);
                 entry.setType(null);
-
+                entry.setValues(null);
             });
         });
 
@@ -126,6 +126,7 @@ public class ConfigurationGlobals {
                 ne.setOrdering(oe.getOrdering());
                 ne.setType(oe.getType());
                 ne.setValue(oe.getValue());
+                ne.setValues(oe.getValues());
 
                 ns.getAdditionalProperties().put(e.getKey(), ne);
             });

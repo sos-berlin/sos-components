@@ -46,7 +46,7 @@ public class GlobalSettings {
     public String toString() {
         return new ToStringBuilder(this).append("additionalProperties", additionalProperties).toString();
     }
-    
+
     @Override
     public int hashCode() {
         return new HashCodeBuilder().append(additionalProperties).toHashCode();
