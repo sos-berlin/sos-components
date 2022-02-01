@@ -78,14 +78,16 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
         iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-        String initialPassword = null;
+         
 
         SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
         if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
             webserviceCredentials.setValuesFromProfile(sosIdentityService);
         }
 
-        SOSInitialPasswordSetting sosInitialPasswordSetting = null;
+        SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings();
+        String initialPassword = sosInitialPasswordSetting.getInitialPassword();
+ 
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
             String password = null;
             if ((securityConfigurationAccount.getIdentityServiceId() != null && securityConfigurationAccount.getIdentityServiceId() == 0L)
@@ -94,12 +96,10 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             } else {
                 password = securityConfigurationAccount.getPassword();
             }
-            if (sosInitialPasswordSetting == null) {
-                sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings();
-            }
+           
             if (!sosInitialPasswordSetting.isMininumPasswordLength(password)) {
                 JocError error = new JocError();
-                error.setMessage("Password is shorter than " + sosInitialPasswordSetting.getMininumPasswordLength());
+                error.setMessage("Password is too short");
                 throw new JocException(error);
             }
             iamAccountFilter.setAccountName(securityConfigurationAccount.getAccount());
@@ -110,6 +110,8 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             } else {
                 dbItemIamAcount = new DBItemIamAccount();
             }
+            
+            
 
             dbItemIamAcount.setAccountName(securityConfigurationAccount.getAccount());
             if ("JOC".equals(dbItemIamIdentityService.getIdentityServiceType()) || "VAULT-JOC-ACTIVE".equals(dbItemIamIdentityService
@@ -192,7 +194,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                         listOfAccounts.get(0).setAccountPassword(SOSAuthHelper.getSHA512(password));
                         if (!sosInitialPasswordSetting.isMininumPasswordLength(password)) {
                             JocError error = new JocError();
-                            error.setMessage("Password is shorter than " + sosInitialPasswordSetting.getMininumPasswordLength());
+                            error.setMessage("Password is too short");
                             throw new JocException(error);
                         }
 
