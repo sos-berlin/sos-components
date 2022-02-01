@@ -48,6 +48,7 @@ import com.sos.joc.model.publish.SetRootCaFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
+import com.sos.joc.model.publish.repository.Category;
 import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.model.publish.repository.DeleteFromFilter;
 import com.sos.joc.model.publish.repository.EnvIndependentConfigurations;
@@ -725,8 +726,8 @@ public class DeploymentTestUtils {
         envRelated.getDeployConfigurations().add(folder);
         envRelated.getReleasedConfigurations().add(folder);
         
-        filter.setEnvIndependent(envIndependent);
-        filter.setEnvRelated(envRelated);
+        filter.setRollout(envIndependent);
+        filter.setLocal(envRelated);
         return filter;
     }
 
@@ -738,8 +739,8 @@ public class DeploymentTestUtils {
         CopyToFilter filter = new CopyToFilter();
         filter.setControllerId("testsuite");
         filter.setAuditLog(null);
-        filter.setEnvIndependent(envIndependent);
-        filter.setEnvRelated(envRelated);
+        filter.setRollout(envIndependent);
+        filter.setLocal(envRelated);
 
         Config file = new Config();
         Configuration cfg = new Configuration();
@@ -782,9 +783,10 @@ public class DeploymentTestUtils {
     public static DeleteFromFilter createRepositoryDeleteFromFilterFolderExample () throws JsonProcessingException {
         DeleteFromFilter filter = new DeleteFromFilter();
         filter.setAuditLog(null);
+        filter.setCategory(Category.ROLLOUT);
         Config config = new Config();
         Configuration cfg = new Configuration();
-        cfg.setObjectType(ConfigurationType.WORKFLOW);
+        cfg.setObjectType(ConfigurationType.FOLDER);
         cfg.setPath("/ProductDemo");
         cfg.setRecursive(true);
         config.setConfiguration(cfg);
@@ -793,8 +795,9 @@ public class DeploymentTestUtils {
         return filter;
     }
 
-    public static DeleteFromFilter createRepositoryDeleteFromFilterFilesExample () throws JsonProcessingException {
+    public static DeleteFromFilter createRepositoryDeleteFromFilterFilesRolloutExample () throws JsonProcessingException {
         DeleteFromFilter filter = new DeleteFromFilter();
+        filter.setCategory(Category.ROLLOUT);
         filter.setAuditLog(null);
         Config config = new Config();
         Configuration cfg = new Configuration();
@@ -811,9 +814,16 @@ public class DeploymentTestUtils {
         cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicSerialWorkflow");
         config.setConfiguration(cfg);
         filter.getConfigurations().add(config);
-        
-        config = new Config();
-        cfg = new Configuration();
+
+        return filter;
+    }
+
+    public static DeleteFromFilter createRepositoryDeleteFromFilterFilesLocalExample () throws JsonProcessingException {
+        DeleteFromFilter filter = new DeleteFromFilter();
+        filter.setCategory(Category.LOCAL);
+        filter.setAuditLog(null);
+        Config config = new Config();
+        Configuration cfg = new Configuration();
         cfg.setRecursive(null);
         cfg.setObjectType(ConfigurationType.SCHEDULE);
         cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicSerialWorkflow");
@@ -831,10 +841,19 @@ public class DeploymentTestUtils {
         return filter;
     }
 
-    public static ReadFromFilter createRepositoryReadFromFilter (boolean recursive) throws JsonProcessingException {
+    public static ReadFromFilter createRepositoryReadFromRolloutFilter (boolean recursive) throws JsonProcessingException {
         ReadFromFilter filter = new ReadFromFilter();
         filter.setFolder("/ProductDemo");
         filter.setRecursive(recursive);
+        filter.setCategory(Category.ROLLOUT);
+        return filter;
+    }
+    
+    public static ReadFromFilter createRepositoryReadFromLocalFilter (boolean recursive) throws JsonProcessingException {
+        ReadFromFilter filter = new ReadFromFilter();
+        filter.setFolder("/ProductDemo");
+        filter.setRecursive(recursive);
+        filter.setCategory(Category.LOCAL);
         return filter;
     }
     
@@ -862,6 +881,7 @@ public class DeploymentTestUtils {
     public static UpdateFromFilter createRepositoryUpdateFromFilterFolderExample () throws JsonProcessingException {
         UpdateFromFilter filter = new UpdateFromFilter();
         filter.setAuditLog(null);
+        filter.setCategory(Category.ROLLOUT);
         Config config = new Config();
         Configuration cfg = new Configuration();
         cfg.setObjectType(ConfigurationType.FOLDER);
@@ -872,10 +892,10 @@ public class DeploymentTestUtils {
         return filter;
     }
 
-    public static UpdateFromFilter createRepositoryUpdateFromFilterFilesExample () throws JsonProcessingException {
+    public static UpdateFromFilter createRepositoryUpdateFromFilterFilesRolloutExample () throws JsonProcessingException {
         UpdateFromFilter filter = new UpdateFromFilter();
         filter.setAuditLog(null);
-
+        filter.setCategory(Category.ROLLOUT);
         Config config = new Config();
         Configuration cfg = new Configuration();
         cfg.setRecursive(null);
@@ -891,9 +911,16 @@ public class DeploymentTestUtils {
         cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicSerialWorkflow");
         config.setConfiguration(cfg);
         filter.getConfigurations().add(config);
-        
-        config = new Config();
-        cfg = new Configuration();
+
+        return filter;
+    }
+
+    public static UpdateFromFilter createRepositoryUpdateFromFilterFilesLocalExample () throws JsonProcessingException {
+        UpdateFromFilter filter = new UpdateFromFilter();
+        filter.setAuditLog(null);
+        filter.setCategory(Category.LOCAL);
+        Config config = new Config();
+        Configuration cfg = new Configuration();
         cfg.setRecursive(null);
         cfg.setObjectType(ConfigurationType.SCHEDULE);
         cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicSerialWorkflow");

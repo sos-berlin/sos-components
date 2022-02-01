@@ -22,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "configurations",
+    "category",
     "auditLog"
 })
 public class UpdateFromFilter {
@@ -33,6 +34,15 @@ public class UpdateFromFilter {
      */
     @JsonProperty("configurations")
     private List<Config> configurations = new ArrayList<Config>();
+    /**
+     * Repository Category, based on the local environment or environment independent/able to roll out
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("category")
+    private Category category;
     /**
      * auditParams
      * <p>
@@ -63,6 +73,30 @@ public class UpdateFromFilter {
     }
 
     /**
+     * Repository Category, based on the local environment or environment independent/able to roll out
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("category")
+    public Category getCategory() {
+        return category;
+    }
+
+    /**
+     * Repository Category, based on the local environment or environment independent/able to roll out
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("category")
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    /**
      * auditParams
      * <p>
      * 
@@ -86,12 +120,12 @@ public class UpdateFromFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("configurations", configurations).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("configurations", configurations).append("category", category).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(configurations).toHashCode();
+        return new HashCodeBuilder().append(category).append(auditLog).append(configurations).toHashCode();
     }
 
     @Override
@@ -103,7 +137,7 @@ public class UpdateFromFilter {
             return false;
         }
         UpdateFromFilter rhs = ((UpdateFromFilter) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(configurations, rhs.configurations).isEquals();
+        return new EqualsBuilder().append(category, rhs.category).append(auditLog, rhs.auditLog).append(configurations, rhs.configurations).isEquals();
     }
 
 }
