@@ -340,39 +340,44 @@ public class MappingTest {
 
     @Test
     public void test20RepositoryCopyToFilter () throws JsonProcessingException {
-        LOGGER.trace("Repository - CopyToFilter Folder Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryCopyToFilterFolderExample()));
-        LOGGER.trace("Repository - CopyToFilter Files Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryCopyToFilterFilesExample()));
+        LOGGER.info("Repository - CopyToFilter Folder Example");
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryCopyToFilterFolderExample()));
+        LOGGER.info("Repository - CopyToFilter Files Example");
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryCopyToFilterFilesExample()));
     }
 
     @Test
     public void test21RepositoryDeleteFromFilter () throws JsonProcessingException {
-        LOGGER.trace("Repository - DeleteFromFilter Folder Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilterFolderExample()));
-        LOGGER.trace("Repository - DeleteFromFilter Files Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilterFilesExample()));
+        LOGGER.info("Repository - DeleteFromFilter Folder Example");
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilterFolderExample()));
+        LOGGER.info("Repository - DeleteFromFilter Files rollout env Example");
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilterFilesRolloutExample()));
+        LOGGER.info("Repository - DeleteFromFilter Files local env Example");
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilterFilesLocalExample()));
     }
 
     @Test
     public void test22RepositoryReadFromFilter () throws JsonProcessingException {
-        LOGGER.trace("Repository - ReadFromFilter Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryReadFromFilter(true)));
+        LOGGER.info("Repository - ReadFromFilter Example");
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryReadFromRolloutFilter(true)));
     }
 
     @Ignore
     @Test
     public void test23RepositoryResponseFolder () throws Exception {
-        LOGGER.trace("Repository - ResponseFolder Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createResponseFolder(getClass() ,true)));
+        LOGGER.info("Repository - ResponseFolder Example");
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createResponseFolder(getClass() ,true)));
     }
 
     @Test
     public void test24RepositoryUpdateFromFilter () throws JsonProcessingException {
-        LOGGER.trace("Repository - UpdateFromFilter Folder Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilterFolderExample()));
-        LOGGER.trace("Repository - UpdateFromFilter Files Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilterFilesExample()));
+        LOGGER.info("Repository - UpdateFromFilter Folder rollout Example");
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilterFolderExample()));
+        LOGGER.info("Repository - UpdateFromFilter Files rollout Example");
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilterFilesRolloutExample()));
+        LOGGER.info("Repository - UpdateFromFilter Files local Example");
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilterFilesLocalExample()));
     }
+    
 
 }

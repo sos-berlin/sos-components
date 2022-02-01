@@ -835,13 +835,14 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(CopyToFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
+        // TODO: check rollout and local configurations as configured, as JOBRESOURCES may not be the only item
         List<Configuration> configurations = new ArrayList<Configuration>();
-        if (filter.getEnvIndependent() != null) {
-            configurations.addAll(filter.getEnvIndependent().getDraftConfigurations().stream()
+        if (filter.getRollout() != null) {
+            configurations.addAll(filter.getRollout().getDraftConfigurations().stream()
                     .map(item -> item.getConfiguration()).collect(Collectors.toList()));
         }
-        if (filter.getEnvRelated() != null) {
-            configurations.addAll(filter.getEnvRelated().getDraftConfigurations().stream()
+        if (filter.getLocal() != null) {
+            configurations.addAll(filter.getLocal().getDraftConfigurations().stream()
                     .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
                     .map(item -> item.getConfiguration()).collect(Collectors.toList()));
         }
@@ -866,8 +867,9 @@ public class DBLayerDeploy {
     public List<DBItemInventoryConfiguration> getFilteredReleasableConfigurations(CopyToFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         List<Configuration> configurations = Collections.emptyList();
-        if (filter.getEnvRelated() != null) {
-            configurations = filter.getEnvRelated().getDraftConfigurations().stream()
+        // TODO: check local configurations as configured, as JOBRESOURCES may not be the only item
+        if (filter.getLocal() != null) {
+            configurations = filter.getLocal().getDraftConfigurations().stream()
                     .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
                     .map(item -> item.getConfiguration()).collect(Collectors.toList());
         }
@@ -891,9 +893,10 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfigurations(CopyToFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
+        // TODO: check local configurations as configured, as JOBRESOURCES may not be the only item
         List<Configuration> configurations = Collections.emptyList();
-        if (filter.getEnvRelated() != null) {
-            configurations = filter.getEnvRelated().getReleasedConfigurations().stream()
+        if (filter.getLocal() != null) {
+            configurations = filter.getLocal().getReleasedConfigurations().stream()
                     .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
                     .map(item -> item.getConfiguration()).collect(Collectors.toList());
         }
@@ -927,14 +930,15 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemDeploymentHistory> getFilteredDeployments(CopyToFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
+        // TODO: check rollout and local configurations as configured, as JOBRESOURCES may not be the only item
         List<Configuration> configurations = new ArrayList<Configuration>();
-        if (filter.getEnvIndependent() != null) {
-            configurations = filter.getEnvIndependent().getDeployConfigurations().stream()
+        if (filter.getRollout() != null) {
+            configurations = filter.getRollout().getDeployConfigurations().stream()
                     .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                     .map(item -> item.getConfiguration()).collect(Collectors.toList());
         }
-        if (filter.getEnvRelated() != null) {
-            configurations.addAll(filter.getEnvRelated().getDeployConfigurations().stream()
+        if (filter.getLocal() != null) {
+            configurations.addAll(filter.getLocal().getDeployConfigurations().stream()
                     .filter(item -> ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
                     .map(item -> item.getConfiguration()).collect(Collectors.toList()));
         }

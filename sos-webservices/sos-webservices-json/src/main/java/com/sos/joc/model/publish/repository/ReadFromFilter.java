@@ -19,6 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "folder",
+    "category",
     "recursive"
 })
 public class ReadFromFilter {
@@ -33,6 +34,15 @@ public class ReadFromFilter {
     @JsonProperty("folder")
     @JsonPropertyDescription("absolute path of an object.")
     private String folder;
+    /**
+     * Repository Category, based on the local environment or environment independent/able to roll out
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("category")
+    private Category category;
     @JsonProperty("recursive")
     private Boolean recursive = false;
 
@@ -60,6 +70,30 @@ public class ReadFromFilter {
         this.folder = folder;
     }
 
+    /**
+     * Repository Category, based on the local environment or environment independent/able to roll out
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("category")
+    public Category getCategory() {
+        return category;
+    }
+
+    /**
+     * Repository Category, based on the local environment or environment independent/able to roll out
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("category")
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
     @JsonProperty("recursive")
     public Boolean getRecursive() {
         return recursive;
@@ -72,12 +106,12 @@ public class ReadFromFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("folder", folder).append("recursive", recursive).toString();
+        return new ToStringBuilder(this).append("folder", folder).append("category", category).append("recursive", recursive).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(recursive).append(folder).toHashCode();
+        return new HashCodeBuilder().append(folder).append(category).append(recursive).toHashCode();
     }
 
     @Override
@@ -89,7 +123,7 @@ public class ReadFromFilter {
             return false;
         }
         ReadFromFilter rhs = ((ReadFromFilter) other);
-        return new EqualsBuilder().append(recursive, rhs.recursive).append(folder, rhs.folder).isEquals();
+        return new EqualsBuilder().append(folder, rhs.folder).append(category, rhs.category).append(recursive, rhs.recursive).isEquals();
     }
 
 }

@@ -326,9 +326,9 @@ public abstract class RepositoryUtil {
             IOException, SOSHibernateException {
         Map<String, ConfigurationObject> allObjectsMap = new HashMap<String, ConfigurationObject>();
         // TODO: add missing JobResources
-        if (filter != null && filter.getEnvRelated() != null) {
-            if (filter.getEnvRelated().getReleasedConfigurations() != null && !filter.getEnvRelated().getReleasedConfigurations().isEmpty()) {
-                List<Configuration> releasedFolders = filter.getEnvRelated().getReleasedConfigurations().stream()
+        if (filter != null && filter.getLocal() != null) {
+            if (filter.getLocal().getReleasedConfigurations() != null && !filter.getLocal().getReleasedConfigurations().isEmpty()) {
+                List<Configuration> releasedFolders = filter.getLocal().getReleasedConfigurations().stream()
                         .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                         .map(item -> item.getConfiguration()).collect(Collectors.toList());
                 Set<DBItemInventoryReleasedConfiguration> allItems = new HashSet<DBItemInventoryReleasedConfiguration>();
@@ -344,8 +344,8 @@ public abstract class RepositoryUtil {
                         .forEach(item -> allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item)));
                 }
             }
-            if (filter.getEnvRelated().getDraftConfigurations() != null && !filter.getEnvRelated().getDraftConfigurations().isEmpty()) {
-                List<Configuration> draftFolders = filter.getEnvRelated().getDraftConfigurations().stream()
+            if (filter.getLocal().getDraftConfigurations() != null && !filter.getLocal().getDraftConfigurations().isEmpty()) {
+                List<Configuration> draftFolders = filter.getLocal().getDraftConfigurations().stream()
                         .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                         .map(item -> item.getConfiguration()).collect(Collectors.toList());
                 Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
@@ -644,13 +644,13 @@ public abstract class RepositoryUtil {
             Set<Integer> types) throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, 
             DBMissingDataException, IOException, SOSHibernateException {
         Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
-        if (filter != null && filter.getEnvIndependent() != null) {
-            if (!filter.getEnvIndependent().getDeployConfigurations().isEmpty()) {
-                Set<Configuration> depFolders = filter.getEnvIndependent().getDeployConfigurations().stream()
+        if (filter != null && filter.getRollout() != null) {
+            if (!filter.getRollout().getDeployConfigurations().isEmpty()) {
+                Set<Configuration> depFolders = filter.getRollout().getDeployConfigurations().stream()
                         .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                         .map(item -> item.getConfiguration()).collect(Collectors.toSet());
-                if (filter.getEnvRelated() != null && !filter.getEnvRelated().getDeployConfigurations().isEmpty()) {
-                    depFolders.addAll(filter.getEnvRelated().getDeployConfigurations().stream()
+                if (filter.getRollout() != null && !filter.getRollout().getDeployConfigurations().isEmpty()) {
+                    depFolders.addAll(filter.getRollout().getDeployConfigurations().stream()
                             .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                             .map(item -> item.getConfiguration()).collect(Collectors.toSet()));
                 }
@@ -672,12 +672,12 @@ public abstract class RepositoryUtil {
                         });
                 }
             }
-            if (!filter.getEnvIndependent().getDraftConfigurations().isEmpty()) {
-                List<Configuration> draftFolders = filter.getEnvIndependent().getDraftConfigurations().stream()
+            if (!filter.getRollout().getDraftConfigurations().isEmpty()) {
+                List<Configuration> draftFolders = filter.getRollout().getDraftConfigurations().stream()
                         .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                         .map(item -> item.getConfiguration()).collect(Collectors.toList());
-                if (filter.getEnvRelated() != null && !filter.getEnvRelated().getDraftConfigurations().isEmpty()) {
-                    draftFolders.addAll(filter.getEnvRelated().getDraftConfigurations().stream()
+                if (filter.getLocal() != null && !filter.getLocal().getDraftConfigurations().isEmpty()) {
+                    draftFolders.addAll(filter.getLocal().getDraftConfigurations().stream()
                             .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                             .map(item -> item.getConfiguration()).collect(Collectors.toList()));
                 }
