@@ -209,7 +209,6 @@ public class SOSAuthHelper {
                     if (account == null) {
                         account = "";
                     }
-                    LOGGER.info(account + "=" + clientCertCN + "or null");
                     success = (account.isEmpty() || clientCertCN.equals(account));
                     LOGGER.debug("success " + success);
                 } else {
@@ -225,7 +224,7 @@ public class SOSAuthHelper {
             }
         }
 
-        return false;
+        return success;
     }
 
 }
