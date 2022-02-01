@@ -73,17 +73,13 @@ public class IamAccountDBLayer {
         query.setParameter("identityServiceId", identityServiceId);
         row = query.executeUpdate();
 
-        IamAccountFilter filter = new IamAccountFilter();
-        filter.setIdentityServiceId(identityServiceId);
-        List<DBItemIamAccount> listOfAccounts = getIamAccountList(filter, 0);
-
-        filter.setIdentityServiceId(null);
-        for (DBItemIamAccount iamAccountDBItem : listOfAccounts) {
-            filter.setId(iamAccountDBItem.getId());
-            deleteAccount2Role(filter);
-        }
-
         return row;
+    }
+    
+    public int deleteAccount2Roles(Long identityServiceId) throws SOSHibernateException {
+        return 0;
+       
+      
     }
 
     public void deleteCascading(IamAccountFilter filter) throws SOSHibernateException {

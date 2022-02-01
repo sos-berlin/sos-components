@@ -197,6 +197,10 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                             error.setMessage("Password is too short");
                             throw new JocException(error);
                         }
+                        
+                        if (sosInitialPasswordSetting.getInitialPassword().equals(password)) {
+                            listOfAccounts.get(0).setForcePasswordChange(true);
+                        }
 
                         sosHibernateSession.update(listOfAccounts.get(0));
 
@@ -258,7 +262,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             }
 
             for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-
+               //  iamAccountDBLayer.deleteAccount2Roles(identityServiceId);
                 IamAccountFilter filter = new IamAccountFilter();
                 filter.setAccountName(securityConfigurationAccount.getAccount());
                 filter.setIdentityServiceId(dbItemIamIdentityService.getId());

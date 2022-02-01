@@ -6,6 +6,9 @@ public class SOSInitialPasswordSetting {
     Long mininumPasswordLength;
 
     public String getInitialPassword() {
+        if (initialPassword == null) {
+            return "initial";
+        }
         return initialPassword;
     }
 
