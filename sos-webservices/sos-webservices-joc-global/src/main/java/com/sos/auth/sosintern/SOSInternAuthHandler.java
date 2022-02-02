@@ -44,6 +44,10 @@ public class SOSInternAuthHandler {
                 filter.setIdentityServiceId(sosInternAuthWebserviceCredentials.getIdentityServiceId());
 
                 DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(filter);
+                if (dbItemIamAccount == null) {
+                    LOGGER.info("==>dbItemIamAccount is null");
+                }else {
+                }
                 if (dbItemIamAccount != null && dbItemIamAccount.getAccountPassword().equals(accountPwd) && !dbItemIamAccount.getDisabled()) {
                     sosAuthAccessToken = new SOSAuthAccessToken();
                     sosAuthAccessToken.setAccessToken(UUID.randomUUID().toString());

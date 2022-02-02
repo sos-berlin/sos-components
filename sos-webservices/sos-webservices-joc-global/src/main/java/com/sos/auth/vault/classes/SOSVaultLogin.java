@@ -58,7 +58,7 @@ public class SOSVaultLogin implements ISOSLogin {
 			}
 
 			if (!disabled && (!identityService.isTwoFactor() || (identityService.isTwoFactor()
-					&& SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
+					&& SOSAuthHelper.checkCertificate(httpServletRequest, "")))) {
 				sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
 			}
 

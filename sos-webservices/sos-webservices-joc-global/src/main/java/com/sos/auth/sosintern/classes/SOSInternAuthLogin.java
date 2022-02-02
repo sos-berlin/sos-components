@@ -45,13 +45,13 @@ public class SOSInternAuthLogin implements ISOSLogin {
                 if (identityService.isSingleFactorCert() && SOSAuthHelper.checkCertificate(httpServletRequest, account)) {
                     sosInternAuthAccessToken = new SOSAuthAccessToken();
                     sosInternAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
-                }
-                if (identityService.isSingleFactorPwd()) {
-                    sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
+                } else {
+                    if (identityService.isSingleFactorPwd()) {
+                        sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
+                    }
                 }
             } else {
-
-                if ((identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(httpServletRequest, account))) {
+                if ((identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(httpServletRequest, ""))) {
                     sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
                 }
             }

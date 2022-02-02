@@ -224,6 +224,7 @@ public class SOSAuthHelper {
             }
         }
 
+        LOGGER.info("=> success: " + success);
         return success;
     }
 

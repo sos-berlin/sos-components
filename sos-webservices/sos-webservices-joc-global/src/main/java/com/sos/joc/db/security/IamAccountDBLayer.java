@@ -65,8 +65,6 @@ public class IamAccountDBLayer {
         return row;
     }
 
-   
-
     public void deleteCascading(IamAccountFilter filter) throws SOSHibernateException {
         Long savId = filter.getId();
         List<DBItemIamAccount> iamAccountList = getIamAccountList(filter, 0);
@@ -235,6 +233,21 @@ public class IamAccountDBLayer {
         return null;
     }
 
+    public DBItemIamAccount2Roles getRoleAssignment(Long roleId, Long accountId) throws SOSHibernateException {
+        List<DBItemIamAccount2Roles> iamAccount2RoleList = null;
+        Query<DBItemIamAccount2Roles> query = sosHibernateSession.createQuery("from " + DBItemIamAccount2Roles
+                + " where roleId=:roleId and accountId=:accountId");
+
+        query.setParameter("roleId", roleId);
+        query.setParameter("accountId", accountId);
+
+        iamAccount2RoleList = query.getResultList();
+        if (iamAccount2RoleList.size() > 0) {
+            return iamAccount2RoleList.get(0);
+        }
+        return null;
+    }
+
     public DBItemIamRole getIamRole(Long roleId) throws SOSHibernateException {
         return (DBItemIamRole) sosHibernateSession.get(DBItemIamRole.class, roleId);
     }
@@ -334,7 +347,7 @@ public class IamAccountDBLayer {
 
     }
 
-    public void rename(Long identityServiceId,String accountOldName, String accountNewName) throws SOSHibernateException {
+    public void rename(Long identityServiceId, String accountOldName, String accountNewName) throws SOSHibernateException {
         String hql = "update " + DBItemIamAccount
                 + " set accountName=:accountNewName where accountName=:accountOldName and identityServiceId=:identityServiceId";
         Query<DBItemIamIdentityService> query = sosHibernateSession.createQuery(hql);
@@ -343,7 +356,7 @@ public class IamAccountDBLayer {
         query.setParameter("identityServiceId", identityServiceId);
         sosHibernateSession.executeUpdate(query);
     }
-    
+
     public DBItemIamAccount getUniqueAccount(IamAccountFilter filter) throws SOSHibernateException {
         List<DBItemIamAccount> accountList = null;
         Query<DBItemIamAccount> query = sosHibernateSession.createQuery("from " + DBItemIamAccount + getWhere(filter) + filter.getOrderCriteria()
@@ -368,5 +381,4 @@ public class IamAccountDBLayer {
         sosHibernateSession.delete(dbItemIamRole);
     }
 
-    
 }

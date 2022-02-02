@@ -270,8 +270,9 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                     Long accountId = dbItemIamAccount.getId();
                     for (String role : securityConfigurationAccount.getRoles()) {
                         DBItemIamRole dbItemIamRole = iamAccountDBLayer.getRoleByName(role, dbItemIamIdentityService.getId());
-                        if (dbItemIamRole != null) {
-                            DBItemIamAccount2Roles dbItemIamAccount2Roles = new DBItemIamAccount2Roles();
+                        DBItemIamAccount2Roles dbItemIamAccount2Roles = iamAccountDBLayer.getRoleAssignment(dbItemIamRole.getId(), accountId);
+                        if (dbItemIamRole != null && dbItemIamAccount2Roles == null) {
+                            dbItemIamAccount2Roles = new DBItemIamAccount2Roles();
                             dbItemIamAccount2Roles.setRoleId(dbItemIamRole.getId());
                             dbItemIamAccount2Roles.setAccountId(accountId);
                             sosHibernateSession.save(dbItemIamAccount2Roles);
