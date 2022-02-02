@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.security.SOSSecurityConfiguration;
 import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
@@ -62,17 +63,8 @@ public class SOSShiroImport {
         return result;
     }
 
-    private boolean importAllowed() {
-        boolean allowed = false;
-        try {
-            if (onlyShiroEnabled()) {
-                allowed = true;
-            }
-        } catch (SOSHibernateException e) {
-            LOGGER.error("", e);
-        }
+    public void rescue() {
 
-        return allowed;
     }
 
     public void executeImport() throws Exception {
@@ -94,16 +86,26 @@ public class SOSShiroImport {
 
     private SecurityConfiguration addDefaultIdentityService(SOSHibernateSession sosHibernateSession) throws Exception {
 
-        DBItemIamIdentityService dbItemIamIdentityService = new DBItemIamIdentityService();
-        dbItemIamIdentityService.setDisabled(false);
-        dbItemIamIdentityService.setAuthenticationScheme("SINGLE");
-        dbItemIamIdentityService.setSingleFactorCert(false);
-        dbItemIamIdentityService.setSingleFactorPwd(true);
-        dbItemIamIdentityService.setIdentityServiceName("joc");
-        dbItemIamIdentityService.setIdentityServiceType("JOC");
-        dbItemIamIdentityService.setOrdering(1);
-        dbItemIamIdentityService.setRequired(false);
-        sosHibernateSession.save(dbItemIamIdentityService);
+        IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+        IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+        filter.setIdentityServiceName("JOC-FROM-SHIRO");
+        List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+        DBItemIamIdentityService dbItemIamIdentityService;
+        if (listOfIdentityServices.size() > 0) {
+            dbItemIamIdentityService = listOfIdentityServices.get(0);
+        } else {
+            dbItemIamIdentityService = new DBItemIamIdentityService();
+            dbItemIamIdentityService.setDisabled(false);
+            dbItemIamIdentityService.setAuthenticationScheme("SINGLE");
+            dbItemIamIdentityService.setSingleFactorCert(false);
+            dbItemIamIdentityService.setSingleFactorPwd(true);
+            dbItemIamIdentityService.setIdentityServiceName("JOC-FROM-SHIRO");
+            dbItemIamIdentityService.setIdentityServiceType("JOC");
+            dbItemIamIdentityService.setOrdering(1);
+            dbItemIamIdentityService.setRequired(false);
+            dbItemIamIdentityService.setDisabled(false);
+            sosHibernateSession.save(dbItemIamIdentityService);
+        }
 
         SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration(iniFileName);
 
@@ -115,31 +117,34 @@ public class SOSShiroImport {
             securityConfigurationAccount.setPassword("");
         }
 
-        SecurityConfiguration securityConfigurationOut = sosSecurityDBConfiguration.exportConfiguration(sosHibernateSession, securityConfiguration,
+        SecurityConfiguration securityConfigurationOut = sosSecurityDBConfiguration.importConfiguration(sosHibernateSession, securityConfiguration,
                 dbItemIamIdentityService);
 
-        IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-        filter.setIamIdentityServiceType(IdentityServiceTypes.SHIRO);
-        // iamIdentityServiceDBLayer.delete(filter);
-
-        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-        JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
-        jocConfigurationFilter.setConfigurationType("IAM");
-        jocConfigurationDBLayer.delete(jocConfigurationFilter);
         return securityConfigurationOut;
     }
 
     private void importMain(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration) throws Exception {
 
-        Map<String, List<String>> mainSection = new HashMap<String, List<String>>();
+        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+        JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
+        jocConfigurationFilter.setConfigurationType("IAM");
+        jocConfigurationFilter.setObjectType("GENERAL");
 
-        DBItemJocConfiguration dbItem = new DBItemJocConfiguration();
-        dbItem.setObjectType("GENERAL");
-        dbItem.setConfigurationType("IAM");
-        dbItem.setControllerId(ConfigurationGlobals.CONTROLLER_ID);
-        dbItem.setInstanceId(ConfigurationGlobals.INSTANCE_ID);
-        dbItem.setAccount(ConfigurationGlobals.ACCOUNT);
-        dbItem.setShared(ConfigurationGlobals.SHARED);
+        List<DBItemJocConfiguration> listOfConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
+        DBItemJocConfiguration dbItem;
+        if (listOfConfigurations.size() > 0) {
+            dbItem = listOfConfigurations.get(0);
+        } else {
+            dbItem = new DBItemJocConfiguration();
+            dbItem.setObjectType("GENERAL");
+            dbItem.setConfigurationType("IAM");
+            dbItem.setControllerId(ConfigurationGlobals.CONTROLLER_ID);
+            dbItem.setInstanceId(ConfigurationGlobals.INSTANCE_ID);
+            dbItem.setAccount(ConfigurationGlobals.ACCOUNT);
+            dbItem.setShared(ConfigurationGlobals.SHARED);
+        }
+
+        Map<String, List<String>> mainSection = new HashMap<String, List<String>>();
 
         String timeoutValue = "1800000";
         for (SecurityConfigurationMainEntry entry : securityConfiguration.getMain()) {
@@ -151,12 +156,17 @@ public class SOSShiroImport {
 
         dbItem.setConfigurationItem("{\"sessionTimeout\":" + timeoutValue + "}");
         dbItem.setModified(new Date());
-        sosHibernateSession.save(dbItem);
+        if (dbItem.getId() == null) {
+            sosHibernateSession.save(dbItem);
+        } else {
+            sosHibernateSession.update(dbItem);
+        }
 
         for (SecurityConfigurationMainEntry entry : securityConfiguration.getMain()) {
             if (entry.getEntryValue().get(0).equals(SOS_LDAP_AUTHORIZING_REALM)) {
-                createLdapIdentityService(sosHibernateSession, entry.getEntryName(), mainSection);
-                createLdapSettings(sosHibernateSession, entry.getEntryName(), mainSection);
+                if (createLdapIdentityService(sosHibernateSession, entry.getEntryName(), mainSection)) {
+                    createLdapSettings(sosHibernateSession, entry.getEntryName(), mainSection);
+                }
 
             }
         }
@@ -235,37 +245,46 @@ public class SOSShiroImport {
         sosHibernateSession.save(dbItem);
     }
 
-    private void createLdapIdentityService(SOSHibernateSession sosHibernateSession, String ldapName, Map<String, List<String>> mainSection)
+    private boolean createLdapIdentityService(SOSHibernateSession sosHibernateSession, String ldapName, Map<String, List<String>> mainSection)
             throws Exception {
-        DBItemIamIdentityService dbItemIamIdentityService = new DBItemIamIdentityService();
-        dbItemIamIdentityService.setDisabled(false);
-        dbItemIamIdentityService.setAuthenticationScheme("SINGLE");
-        dbItemIamIdentityService.setSingleFactorCert(false);
-        dbItemIamIdentityService.setSingleFactorPwd(true);
-        dbItemIamIdentityService.setIdentityServiceName("LDAP_" + ldapName);
-        if (mainSection.get(ldapName + ".groupRolesMap") != null) {
-            dbItemIamIdentityService.setIdentityServiceType("LDAP");
-        } else {
-            dbItemIamIdentityService.setIdentityServiceType("LDAP-JOC");
-        }
-        dbItemIamIdentityService.setOrdering(1);
-        dbItemIamIdentityService.setRequired(false);
-        sosHibernateSession.save(dbItemIamIdentityService);
 
-        SOSSecurityDBConfiguration sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
-        sosSecurityDBConfiguration.exportConfiguration(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
+        IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+        IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+        filter.setIdentityServiceName("LDAP_" + ldapName);
+        List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+        if (listOfIdentityServices.size() == 0) {
+            DBItemIamIdentityService dbItemIamIdentityService = new DBItemIamIdentityService();
+            dbItemIamIdentityService.setDisabled(false);
+            dbItemIamIdentityService.setAuthenticationScheme("SINGLE");
+            dbItemIamIdentityService.setSingleFactorCert(false);
+            dbItemIamIdentityService.setSingleFactorPwd(true);
+            dbItemIamIdentityService.setIdentityServiceName("LDAP_" + ldapName);
+            if (mainSection.get(ldapName + ".groupRolesMap") != null) {
+                dbItemIamIdentityService.setIdentityServiceType("LDAP");
+            } else {
+                dbItemIamIdentityService.setIdentityServiceType("LDAP-JOC");
+            }
+            dbItemIamIdentityService.setOrdering(1);
+            dbItemIamIdentityService.setRequired(false);
+            sosHibernateSession.save(dbItemIamIdentityService);
+
+            SOSSecurityDBConfiguration sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
+            sosSecurityDBConfiguration.importConfiguration(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
+            return true;
+        }
+        return false;
 
     }
 
     public static void main(String[] args) {
         if (args.length < 2) {
-            LOGGER.info(String.format("Usage: %s hibernate_config_file   shiro_ini_file   [command]", SOSShiroImport.class.getSimpleName()));
+            LOGGER.info(String.format("Usage: %s command shiro_ini_file hibernate_config_file", SOSShiroImport.class.getSimpleName()));
             LOGGER.info("            hibernate_config_file : required");
             LOGGER.info("                                    path to the hibernate configuration file");
             LOGGER.info("            shiro_ini_file        : required");
             LOGGER.info("                                    path to the shiro.ini file to be imported.");
-            LOGGER.info("            command               : optional (default: import");
-            LOGGER.info("                                    import|create");
+            LOGGER.info("            command               : required ");
+            LOGGER.info("                                    import|rescue");
 
             return;
         }
@@ -275,32 +294,27 @@ public class SOSShiroImport {
 
         int exitCode = 0;
         try {
-            factory = new SOSHibernateFactory(args[0]);
+            factory = new SOSHibernateFactory(args[2]);
             SOSShiroImport sosShiroImport = new SOSShiroImport();
             factory.addClassMapping(DBLayer.getJocClassMapping());
             factory.build();
             session = factory.openStatelessSession();
 
-            String command = "import";
+            String command = args[0];
             String shiroIniFile = args[1];
 
-            if (args.length > 2) {
-                command = args[2];
-            }
-
-            if (!new File(shiroIniFile).exists()) {
-                System.out.println(" File: " + shiroIniFile + " not found");
-            } else {
-                sosShiroImport.setSession(session);
-                sosShiroImport.setIniFileName(shiroIniFile);
-                if (sosShiroImport.importAllowed()) {
+            if ("import".equalsIgnoreCase(command)) {
+                if (!new File(shiroIniFile).exists()) {
+                    LOGGER.info(" File: " + shiroIniFile + " not found");
+                } else {
+                    sosShiroImport.setSession(session);
+                    sosShiroImport.setIniFileName(shiroIniFile);
                     try {
                         sosShiroImport.executeImport();
                     } catch (Exception e) {
                         LOGGER.error("", e);
                     }
-                } else {
-                    LOGGER.info("Import can only be executed, when only a SHIRO identity service is configured");
+
                 }
             }
         } catch (Exception e) {

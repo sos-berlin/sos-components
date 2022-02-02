@@ -75,7 +75,7 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
                 if (listOfIamIdentityServices.size() == 1) {
                     idendityService = listOfIamIdentityServices.get(0).getId();
                 }
-            } catch (SOSHibernateException e) {
+            } catch (SOSHibernateException | JocConfigurationException e) {
                 idendityService = 0L;
             }
             return idendityService;

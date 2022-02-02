@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Set;
 
 import com.sos.auth.classes.SOSAuthHelper;
@@ -47,6 +51,8 @@ import com.sos.joc.model.security.permissions.SecurityConfigurationRoles;
 
 public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecurityDBConfiguration.class);
+
     private void storeInVault(SOSVaultWebserviceCredentials webserviceCredentials, SecurityConfigurationAccount securityConfigurationAccount,
             String password, IdentityServiceTypes identityServiceTypes) throws Exception {
         KeyStore trustStore = null;
@@ -80,7 +86,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
     }
 
     private void storeAccounts(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
-            DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
+            DBItemIamIdentityService dbItemIamIdentityService, boolean updateAccounts) throws Exception {
 
         SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
@@ -92,7 +98,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             webserviceCredentials.setValuesFromProfile(sosIdentityService);
         }
 
-        SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings();
+        SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
         String initialPassword = sosInitialPasswordSetting.getInitialPassword();
 
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
@@ -132,7 +138,11 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             dbItemIamAcount.setDisabled(securityConfigurationAccount.getDisabled());
 
             if (listOfAccounts.size() == 1) {
-                sosHibernateSession.update(dbItemIamAcount);
+                if (updateAccounts) {
+                    sosHibernateSession.update(dbItemIamAcount);
+                } else {
+                    dbItemIamAcount = null;
+                }
             } else {
                 sosHibernateSession.save(dbItemIamAcount);
             }
@@ -170,7 +180,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                         .getIdentityServiceType()));
             }
         }
-
     }
 
     private void deleteAccounts(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
@@ -202,7 +211,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             }
 
             String initialPassword = null;
-            SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings();
+            SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
 
             for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
                 if (securityConfigurationAccount.getPassword() != null && securityConfigurationAccount.getPassword().equals(
@@ -411,8 +420,8 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
-            storeAccounts(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
             storeRoles(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
+            storeAccounts(sosHibernateSession, securityConfiguration, dbItemIamIdentityService, true);
             storePermissions(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
 
             Globals.commit(sosHibernateSession);
@@ -462,10 +471,10 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
     }
 
-    public SecurityConfiguration exportConfiguration(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
+    public SecurityConfiguration importConfiguration(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
-        storeAccounts(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
         storeRoles(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
+        storeAccounts(sosHibernateSession, securityConfiguration, dbItemIamIdentityService, false);
         storePermissions(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
         return securityConfiguration;
 

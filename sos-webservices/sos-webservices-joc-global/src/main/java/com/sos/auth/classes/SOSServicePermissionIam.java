@@ -236,7 +236,7 @@ public class SOSServicePermissionIam {
                     if (clientCertCN == null) {
                         LOGGER.info("Client Certificate CN read from Login: n/a");
                     } else {
-                        LOGGER.info("Client Certificate CN read from Login: " + clientCertCN);
+                        LOGGER.info("Client Certificate CN read from Login" );
                     }
                 } catch (IOException e) {
                     LOGGER.debug("No Client certificate read from HttpServletRequest.");

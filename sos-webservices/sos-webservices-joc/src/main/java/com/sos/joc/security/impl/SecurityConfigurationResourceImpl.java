@@ -393,7 +393,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                     throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
                 }
 
-                SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings();
+                SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
 
                 String initialPassword = sosInitialPasswordSetting.getInitialPassword();
                 if (!sosInitialPasswordSetting.isMininumPasswordLength(initialPassword)) {

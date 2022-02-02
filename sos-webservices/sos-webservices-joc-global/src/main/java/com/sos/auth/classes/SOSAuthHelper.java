@@ -130,49 +130,43 @@ public class SOSAuthHelper {
         return false;
     }
 
-    public static SOSInitialPasswordSetting getInitialPasswordSettings() throws JsonParseException, JsonMappingException, IOException,
-            SOSHibernateException {
-        SOSHibernateSession sosHibernateSession = null;
+    public static SOSInitialPasswordSetting getInitialPasswordSettings(SOSHibernateSession sosHibernateSession) throws JsonParseException,
+            JsonMappingException, IOException, SOSHibernateException {
         SOSInitialPasswordSetting sosInitialPasswordSetting = new SOSInitialPasswordSetting();
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSAuthHelper:getInitialPassword");
-
-            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-            JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
-            jocConfigurationFilter.setConfigurationType(CONFIGURATION_TYPE_IAM);
-            jocConfigurationFilter.setObjectType(OBJECT_TYPE_IAM_GENERAL);
-            List<DBItemJocConfiguration> result = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 1);
-            String initialPassword;
-            Long minPasswordLength;
-            if (result.size() == 1) {
-                com.sos.joc.model.security.Properties properties = Globals.objectMapper.readValue(result.get(0).getConfigurationItem(),
-                        com.sos.joc.model.security.Properties.class);
-                initialPassword = properties.getInitialPassword();
-                if (properties.getMinPasswordLength() == null) {
-                    minPasswordLength = 0L;
-                } else {
-                    minPasswordLength = properties.getMinPasswordLength();
-                }
-                if (initialPassword == null) {
-                    initialPassword = "initial";
-                    LOGGER.warn("Missing initial password settings. Using default value=initial");
-                } else {
-                    if (initialPassword.length() < minPasswordLength) {
-                        JocError error = new JocError();
-                        error.setMessage("Initial password is too short");
-                        throw new JocException(error);
-                    }
-                }
-            } else {
-                initialPassword = "initial";
+        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+        JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
+        jocConfigurationFilter.setConfigurationType(CONFIGURATION_TYPE_IAM);
+        jocConfigurationFilter.setObjectType(OBJECT_TYPE_IAM_GENERAL);
+        List<DBItemJocConfiguration> result = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 1);
+        String initialPassword;
+        Long minPasswordLength;
+        if (result.size() == 1) {
+            com.sos.joc.model.security.Properties properties = Globals.objectMapper.readValue(result.get(0).getConfigurationItem(),
+                    com.sos.joc.model.security.Properties.class);
+            initialPassword = properties.getInitialPassword();
+            if (properties.getMinPasswordLength() == null) {
                 minPasswordLength = 0L;
+            } else {
+                minPasswordLength = properties.getMinPasswordLength();
             }
-            sosInitialPasswordSetting.setInitialPassword(initialPassword);
-            sosInitialPasswordSetting.setMininumPasswordLength(minPasswordLength);
-            return sosInitialPasswordSetting;
-        } finally {
-            Globals.disconnect(sosHibernateSession);
+            if (initialPassword == null) {
+                initialPassword = "initial";
+                LOGGER.warn("Missing initial password settings. Using default value=initial");
+            } else {
+                if (initialPassword.length() < minPasswordLength) {
+                    JocError error = new JocError();
+                    error.setMessage("Initial password is too short");
+                    throw new JocException(error);
+                }
+            }
+        } else {
+            initialPassword = "initial";
+            minPasswordLength = 0L;
         }
+        sosInitialPasswordSetting.setInitialPassword(initialPassword);
+        sosInitialPasswordSetting.setMininumPasswordLength(minPasswordLength);
+        return sosInitialPasswordSetting;
+
     }
 
     public static boolean checkCertificate(HttpServletRequest request, String account) {
@@ -205,7 +199,6 @@ public class SOSAuthHelper {
                 }
 
                 if (clientCertCN != null) {
-                    LOGGER.info("clientCertCN is not null");
                     if (account == null) {
                         account = "";
                     }
@@ -224,7 +217,6 @@ public class SOSAuthHelper {
             }
         }
 
-        LOGGER.info("=> success: " + success);
         return success;
     }
 
