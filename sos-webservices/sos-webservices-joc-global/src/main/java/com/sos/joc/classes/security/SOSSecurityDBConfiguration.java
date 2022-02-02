@@ -78,7 +78,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
         iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-         
 
         SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
         if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
@@ -87,7 +86,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
         SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings();
         String initialPassword = sosInitialPasswordSetting.getInitialPassword();
- 
+
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
             String password = null;
             if ((securityConfigurationAccount.getIdentityServiceId() != null && securityConfigurationAccount.getIdentityServiceId() == 0L)
@@ -96,7 +95,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             } else {
                 password = securityConfigurationAccount.getPassword();
             }
-           
+
             if (!sosInitialPasswordSetting.isMininumPasswordLength(password)) {
                 JocError error = new JocError();
                 error.setMessage("Password is too short");
@@ -110,8 +109,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             } else {
                 dbItemIamAcount = new DBItemIamAccount();
             }
-            
-            
 
             dbItemIamAcount.setAccountName(securityConfigurationAccount.getAccount());
             if ("JOC".equals(dbItemIamIdentityService.getIdentityServiceType()) || "VAULT-JOC-ACTIVE".equals(dbItemIamIdentityService
@@ -197,7 +194,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                             error.setMessage("Password is too short");
                             throw new JocException(error);
                         }
-                        
+
                         if (sosInitialPasswordSetting.getInitialPassword().equals(password)) {
                             listOfAccounts.get(0).setForcePasswordChange(true);
                         }
@@ -253,16 +250,17 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             DBItemIamIdentityService dbItemIamIdentityService) throws SOSHibernateException {
         if (securityConfiguration.getRoles() != null) {
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-            iamAccountDBLayer.deleteRoles(dbItemIamIdentityService.getId());
             for (String role : securityConfiguration.getRoles().getAdditionalProperties().keySet()) {
-                DBItemIamRole dbItemIamRole = new DBItemIamRole();
-                dbItemIamRole.setRoleName(role);
-                dbItemIamRole.setIdentityServiceId(dbItemIamIdentityService.getId());
-                sosHibernateSession.save(dbItemIamRole);
+                DBItemIamRole dbItemIamRole = iamAccountDBLayer.getRoleByName(role, dbItemIamIdentityService.getId());
+                if (dbItemIamRole == null) {
+                    dbItemIamRole = new DBItemIamRole();
+                    dbItemIamRole.setRoleName(role);
+                    dbItemIamRole.setIdentityServiceId(dbItemIamIdentityService.getId());
+                    sosHibernateSession.save(dbItemIamRole);
+                }
             }
 
             for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-               //  iamAccountDBLayer.deleteAccount2Roles(identityServiceId);
                 IamAccountFilter filter = new IamAccountFilter();
                 filter.setAccountName(securityConfigurationAccount.getAccount());
                 filter.setIdentityServiceId(dbItemIamIdentityService.getId());
@@ -277,7 +275,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                             dbItemIamAccount2Roles.setRoleId(dbItemIamRole.getId());
                             dbItemIamAccount2Roles.setAccountId(accountId);
                             sosHibernateSession.save(dbItemIamAccount2Roles);
-
                         }
                     }
                 }

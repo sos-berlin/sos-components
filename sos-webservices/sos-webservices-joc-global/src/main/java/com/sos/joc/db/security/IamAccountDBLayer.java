@@ -65,22 +65,7 @@ public class IamAccountDBLayer {
         return row;
     }
 
-    public int deleteRoles(Long identityServiceId) throws SOSHibernateException {
-        String hql = "delete from " + DBItemIamRole + " where identityServiceId=:identityServiceId";
-        Query<DBItemIamAccount> query = null;
-        int row = 0;
-        query = sosHibernateSession.createQuery(hql);
-        query.setParameter("identityServiceId", identityServiceId);
-        row = query.executeUpdate();
-
-        return row;
-    }
-    
-    public int deleteAccount2Roles(Long identityServiceId) throws SOSHibernateException {
-        return 0;
-       
-      
-    }
+   
 
     public void deleteCascading(IamAccountFilter filter) throws SOSHibernateException {
         Long savId = filter.getId();
