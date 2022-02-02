@@ -140,14 +140,19 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             iamAccountFilter = new IamAccountFilter();
             if (dbItemIamAcount != null) {
                 Long accountId = dbItemIamAcount.getId();
+                List<DBItemIamAccount2Roles> listOfRoles = iamAccountDBLayer.getListOfRoles(accountId);
+                for (DBItemIamAccount2Roles entry : listOfRoles) {
+                    DBItemIamRole dbItemIamRole = iamAccountDBLayer.getIamRole(entry.getRoleId());
+
+                    if (dbItemIamRole != null && !securityConfigurationAccount.getRoles().contains(dbItemIamRole.getRoleName())) {
+                        iamAccountFilter.setId(entry.getAccountId());
+                        iamAccountFilter.setRoleId(entry.getRoleId());
+                        iamAccountDBLayer.deleteAccount2Role(iamAccountFilter);
+                    }
+                }
                 for (String role : securityConfigurationAccount.getRoles()) {
                     DBItemIamRole dbItemIamRole = iamAccountDBLayer.getRoleByName(role, dbItemIamIdentityService.getId());
                     DBItemIamAccount2Roles dbItemIamAccount2Roles = iamAccountDBLayer.getRoleAssignment(dbItemIamRole.getId(), accountId);
-                    List<DBItemIamAccount2Roles> listOfRoles = iamAccountDBLayer.getListOfRoles(accountId);
-                    Set<Long> setOfRoleIds = new HashSet<Long>();
-                    for (DBItemIamAccount2Roles entry : listOfRoles) {
-                        setOfRoleIds.add(entry.getRoleId());
-                    }
 
                     if (dbItemIamRole != null) {
                         if (dbItemIamAccount2Roles == null) {
@@ -155,12 +160,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                             dbItemIamAccount2Roles.setRoleId(dbItemIamRole.getId());
                             dbItemIamAccount2Roles.setAccountId(accountId);
                             sosHibernateSession.save(dbItemIamAccount2Roles);
-                        } else {
-                            if (!setOfRoleIds.contains(dbItemIamRole.getId())) {
-                                iamAccountFilter.setId(accountId);
-                                iamAccountFilter.setRoleId(dbItemIamRole.getId());
-                                iamAccountDBLayer.deleteAccount2Role(iamAccountFilter);
-                            }
                         }
                     }
                 }
