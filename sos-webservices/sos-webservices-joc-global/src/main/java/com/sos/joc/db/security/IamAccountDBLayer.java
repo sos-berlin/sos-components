@@ -90,7 +90,7 @@ public class IamAccountDBLayer {
         return row;
     }
 
-    private int deleteAccount2Role(IamAccountFilter filter) throws SOSHibernateException {
+    public int deleteAccount2Role(IamAccountFilter filter) throws SOSHibernateException {
         filter.setIdentityServiceId(null);
         String hql = "delete from " + DBItemIamAccount2Roles + getWhere(filter);
         Query<DBItemIamAccount> query = null;
