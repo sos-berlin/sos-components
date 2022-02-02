@@ -48,12 +48,12 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
             }
             DBItemJocAuditLog dbAuditlog = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
 
-            Path repositories = Globals.sosCockpitProperties.resolvePath("repositories");
+            Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories");
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             
-            Set<DBItemInventoryConfiguration> dbItems = RepositoryUtil.getUpdatedDbItems(filter, repositories, dbLayer);
+            Set<DBItemInventoryConfiguration> dbItems = RepositoryUtil.getUpdatedDbItems(filter, repositoriesBase, dbLayer);
             dbItems.stream().forEach(item -> {
                 try {
                     dbLayer.getSession().update(item);

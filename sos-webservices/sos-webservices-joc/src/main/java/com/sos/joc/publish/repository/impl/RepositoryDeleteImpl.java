@@ -53,13 +53,14 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
             
             Set<Path> toDelete = RepositoryUtil.getRelativePathsToDeleteFromDB(filter, dbLayer);
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            Path repositories = Globals.sosCockpitProperties.resolvePath("repositories");
-
+            Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories").resolve(getSubfoldernameFromFilter(filter));
             toDelete = toDelete.stream().filter(item -> canAdd(Globals.normalizePath(item.toString()), permittedFolders))
                     .filter(Objects::nonNull).collect(Collectors.toSet());
             toDelete.forEach(path -> {
                 try {
-                    Files.deleteIfExists(repositories.resolve(path));
+                    LOGGER.info("resolved path: " + repositoriesBase.resolve(path).toString());
+                    boolean deleted = Files.deleteIfExists(repositoriesBase.resolve(path));
+                    LOGGER.info(String.format("File %1$s has been deleted: %2$s", repositoriesBase.resolve(path).toString(), deleted));
                 } catch (IOException e) {
                     LOGGER.debug(String.format("file - %1$s - could not be deleted!", Globals.normalizePath(path.toString())), e);
                 }
@@ -79,4 +80,13 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
         }
     }
 
+    private static String getSubfoldernameFromFilter (DeleteFromFilter filter) {
+        switch(filter.getCategory()) {
+        case LOCAL:
+            return "local";
+        case ROLLOUT:
+            return "rollout";
+        }
+        return null;
+    }
 }

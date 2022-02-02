@@ -60,6 +60,7 @@ import com.sos.joc.model.inventory.folder.Folder;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.OperationType;
+import com.sos.joc.model.publish.repository.Category;
 import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.model.publish.repository.DeleteFromFilter;
 import com.sos.joc.model.publish.repository.ResponseFolder;
@@ -301,24 +302,24 @@ public abstract class RepositoryUtil {
         }
     }
     
-    public static Set<ConfigurationObject> getDeployableEnvIndependentConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer,
+    public static Set<ConfigurationObject> getDeployableRolloutConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer,
             String commitId) throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, 
         DBMissingDataException, IOException, SOSHibernateException {
-        Set<Integer> types = new HashSet<Integer>();
-        types.add(ConfigurationType.WORKFLOW.intValue());
-        types.add(ConfigurationType.JOBCLASS.intValue());
-        types.add(ConfigurationType.LOCK.intValue());
-        types.add(ConfigurationType.FILEORDERSOURCE.intValue());
-        types.add(ConfigurationType.NOTICEBOARD.intValue());
-        return getDeployableConfigurationsFromDB(filter, dbLayer, commitId, types);
+        List<ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
+        return getDeployableConfigurationsFromDB(filter, dbLayer, commitId, rolloutTypes.stream()
+                .map(type -> type.intValue()).collect(Collectors.toSet()));
     }
 
-    public static Set<ConfigurationObject> getDeployableEnvRelatedConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, 
+    public static Set<ConfigurationObject> getDeployableLocalConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, 
             String commitId) throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, 
         DBMissingDataException, IOException, SOSHibernateException {
-        Set<Integer> types = new HashSet<Integer>();
-        types.add(ConfigurationType.JOBRESOURCE.intValue());
-        return getDeployableConfigurationsFromDB(filter, dbLayer, commitId, types);
+        List<ConfigurationType> localTypes = getLocalConfigurationTypes();
+        return getDeployableConfigurationsFromDB(filter, dbLayer, commitId, localTypes.stream()
+                .filter(type -> 
+                    !ConfigurationType.SCHEDULE.equals(type) && 
+                    !ConfigurationType.WORKINGDAYSCALENDAR.equals(type) && 
+                    !ConfigurationType.NONWORKINGDAYSCALENDAR.equals(type))
+                .map(filtered -> filtered.intValue()).collect(Collectors.toSet()));
     }
 
     public static Set<ConfigurationObject> getReleasableConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer) 
@@ -401,9 +402,11 @@ public abstract class RepositoryUtil {
         return Collections.emptySet();
     }
 
-    public static void writeToRepository(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, Path repo)
+    public static void writeToRepository(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, Path repositoryBase)
             throws IOException {
         String content = null;
+        List<ConfigurationType> localTypes = getLocalConfigurationTypes();
+        List<ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
         if (deployables != null && !deployables.isEmpty()) {
             for (ConfigurationObject deployable : deployables) {
                 String extension = null;
@@ -429,12 +432,18 @@ public abstract class RepositoryUtil {
                 default:
                     break;
                 }
+                Path repository = repositoryBase;
+                if (rolloutTypes.contains(deployable.getObjectType())) {
+                    repository = repositoryBase.resolve("rollout");
+                } else if (localTypes.contains(deployable.getObjectType())) {
+                    repository = repositoryBase.resolve("local");
+                }
                 if (extension != null) {
                     content = Globals.prettyPrintObjectMapper.writeValueAsString(deployable.getConfiguration());
                     String filename = deployable.getPath().substring(1).concat(extension);
                     byte[] contentBytes = content.getBytes();
-                    Files.createDirectories(repo.resolve(Paths.get(filename)).getParent());
-                    Files.write(repo.resolve(Paths.get(filename)), contentBytes);
+                    Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
+                    Files.write(repository.resolve(Paths.get(filename)), contentBytes);
                 }
             }
         }
@@ -456,12 +465,13 @@ public abstract class RepositoryUtil {
                 default:
                     break;
                 }
+                Path repository = repositoryBase.resolve("local");
                 if (extension != null) {
                     content = Globals.prettyPrintObjectMapper.writeValueAsString(releasable.getConfiguration());
                     String filename = releasable.getPath().substring(1).concat(extension);
                     byte[] contentBytes = content.getBytes();
-                    Files.createDirectories(repo.resolve(Paths.get(filename)).getParent());
-                    Files.write(repo.resolve(Paths.get(filename)), contentBytes);
+                    Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
+                    Files.write(repository.resolve(Paths.get(filename)), contentBytes);
                 }
             }
         }
@@ -529,6 +539,9 @@ public abstract class RepositoryUtil {
     }
 
     public static Set<DBItemInventoryConfiguration> getUpdatedDbItems(UpdateFromFilter filter, Path repositoryBase, DBLayerDeploy dbLayer) {
+        List <ConfigurationType> localTypes = getLocalConfigurationTypes();
+        List <ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
+        
         Set<DBItemInventoryConfiguration> dbItemsToUpdate = new HashSet<DBItemInventoryConfiguration>();
         Set<Config> folders = filter.getConfigurations().stream()
                 .filter(item -> ConfigurationType.FOLDER.equals(item.getConfiguration().getObjectType())).collect(Collectors.toSet());
@@ -549,12 +562,18 @@ public abstract class RepositoryUtil {
             dbItemsToUpdate.stream().peek(dbItem -> {
                 byte[] content = null;
                 try {
+                    Path repository = repositoryBase;
+                    if (localTypes.contains(dbItem.getTypeAsEnum())) {
+                        repository = repositoryBase.resolve("local");
+                    } else if (rolloutTypes.contains(dbItem.getTypeAsEnum())) {
+                        repository = repositoryBase.resolve("rollout");
+                    }
                     if (dbItem.getPath().startsWith("/")) {
                         content = Files.readAllBytes(
-                                repositoryBase.resolve(Paths.get(dbItem.getPath().substring(1) + getExtension(dbItem.getTypeAsEnum()))));
+                                repository.resolve(Paths.get(dbItem.getPath().substring(1) + getExtension(dbItem.getTypeAsEnum()))));
                     } else {
                         content = Files.readAllBytes(
-                                repositoryBase.resolve(Paths.get(dbItem.getPath() + getExtension(dbItem.getTypeAsEnum()))));
+                                repository.resolve(Paths.get(dbItem.getPath() + getExtension(dbItem.getTypeAsEnum()))));
                         
                     }
                     String updatedContent = null;
@@ -782,4 +801,63 @@ public abstract class RepositoryUtil {
         }).collect(Collectors.toSet());
     }
 
+    private static List<ConfigurationType> getLocalConfigurationTypes() {
+        List<ConfigurationType> types = new ArrayList<ConfigurationType>();
+        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue())) {
+            types.add(ConfigurationType.WORKFLOW);
+        }
+        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldLocks().getValue())) {
+            types.add(ConfigurationType.LOCK);
+        }
+        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue())) {
+            types.add(ConfigurationType.NOTICEBOARD);
+        }
+        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue())) {
+            types.add(ConfigurationType.FILEORDERSOURCE);
+        }
+        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue())) {
+            types.add(ConfigurationType.INCLUDESCRIPT);
+        }
+        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue())) {
+            types.add(ConfigurationType.JOBRESOURCE);
+        }
+        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue())) {
+            types.add(ConfigurationType.SCHEDULE);
+        }
+        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue())) {
+            types.add(ConfigurationType.WORKINGDAYSCALENDAR);
+            types.add(ConfigurationType.NONWORKINGDAYSCALENDAR);
+        }
+        return types;
+    }
+
+    private static List<ConfigurationType> getRolloutConfigurationTypes() {
+        List<ConfigurationType> types = new ArrayList<ConfigurationType>();
+        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue())) {
+            types.add(ConfigurationType.WORKFLOW);
+        }
+        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldLocks().getValue())) {
+            types.add(ConfigurationType.LOCK);
+        }
+        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue())) {
+            types.add(ConfigurationType.NOTICEBOARD);
+        }
+        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue())) {
+            types.add(ConfigurationType.FILEORDERSOURCE);
+        }
+        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue())) {
+            types.add(ConfigurationType.INCLUDESCRIPT);
+        }
+        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue())) {
+            types.add(ConfigurationType.JOBRESOURCE);
+        }
+        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue())) {
+            types.add(ConfigurationType.SCHEDULE);
+        }
+        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue())) {
+            types.add(ConfigurationType.WORKINGDAYSCALENDAR);
+            types.add(ConfigurationType.NONWORKINGDAYSCALENDAR);
+        }
+        return types;
+    }
 }

@@ -49,12 +49,12 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            Path repositories = Globals.sosCockpitProperties.resolvePath("repositories");
+            Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories").resolve(getSubfoldernameFromFilter(filter));
             Path repo = null;
             if(filter.getFolder().startsWith("/")) {
-                repo = repositories.resolve(filter.getFolder().substring(1));
+                repo = repositoriesBase.resolve(filter.getFolder().substring(1));
             } else {
-                repo = repositories.resolve(filter.getFolder());
+                repo = repositoriesBase.resolve(filter.getFolder());
             }
             final Path repository = repo;
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
@@ -62,7 +62,7 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
             if(!isPermittedForFolder) {
                 throw new JocFolderPermissionsException();
             }
-            ResponseFolder result = getResponseFolder(repository, repositories, filter.getRecursive());
+            ResponseFolder result = getResponseFolder(repository, repositoriesBase, filter.getRecursive());
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** read from repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
@@ -95,5 +95,15 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
                 }).collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(ResponseFolder::getPath).reversed())));
         return RepositoryUtil.getTree(responseFolder, RepositoryUtil.subPath(repositoryBase, repository), 
                 RepositoryUtil.subPath(repositoryBase, repositoryBase), recursive);
+    }
+    
+    private static String getSubfoldernameFromFilter (ReadFromFilter filter) {
+        switch(filter.getCategory()) {
+        case LOCAL:
+            return "local";
+        case ROLLOUT:
+            return "rollout";
+        }
+        return null;
     }
 }
