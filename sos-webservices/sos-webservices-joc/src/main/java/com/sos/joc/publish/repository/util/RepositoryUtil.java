@@ -6,10 +6,8 @@ import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -76,7 +74,7 @@ public abstract class RepositoryUtil {
 
      private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryUtil.class);
 //    private static final CopyOption[] COPYOPTIONS = new StandardCopyOption[] { StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING };
-    private static final OpenOption[] OPENOPTIONS = new StandardOpenOption[] { StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE};
+//    private static final OpenOption[] OPENOPTIONS = new StandardOpenOption[] { StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE};
 
     public static String getExtension(ConfigurationType type) {
         switch (type) {
@@ -466,6 +464,11 @@ public abstract class RepositoryUtil {
                     break;
                 }
                 Path repository = repositoryBase.resolve("local");
+                if (rolloutTypes.contains(releasable.getObjectType())) {
+                    repository = repositoryBase.resolve("rollout");
+                } else if (localTypes.contains(releasable.getObjectType())) {
+                    repository = repositoryBase.resolve("local");
+                }
                 if (extension != null) {
                     content = Globals.prettyPrintObjectMapper.writeValueAsString(releasable.getConfiguration());
                     String filename = releasable.getPath().substring(1).concat(extension);
@@ -803,60 +806,174 @@ public abstract class RepositoryUtil {
 
     private static List<ConfigurationType> getLocalConfigurationTypes() {
         List<ConfigurationType> types = new ArrayList<ConfigurationType>();
-        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue())) {
-            types.add(ConfigurationType.WORKFLOW);
+        if (Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue().isEmpty()) {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue())) {
+                types.add(ConfigurationType.WORKFLOW);
+            }
+        } else {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldWorkflows().getDefault())) {
+                types.add(ConfigurationType.WORKFLOW);
+            }
         }
-        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldLocks().getValue())) {
-            types.add(ConfigurationType.LOCK);
+        if (Globals.getConfigurationGlobalsGit().getHoldLocks().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldLocks().getValue().isEmpty()) {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldLocks().getValue())) {
+                types.add(ConfigurationType.LOCK);
+            }
+        } else {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldLocks().getDefault())) {
+                types.add(ConfigurationType.LOCK);
+            }
         }
-        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue())) {
-            types.add(ConfigurationType.NOTICEBOARD);
+        if (Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue().isEmpty()) {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue())) {
+                types.add(ConfigurationType.NOTICEBOARD);
+            }
+        } else {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getDefault())) {
+                types.add(ConfigurationType.NOTICEBOARD);
+            }
         }
-        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue())) {
-            types.add(ConfigurationType.FILEORDERSOURCE);
+        if (Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue().isEmpty()) {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue())) {
+                types.add(ConfigurationType.FILEORDERSOURCE);
+            }
+        } else {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getDefault())) {
+                types.add(ConfigurationType.FILEORDERSOURCE);
+            }
         }
-        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue())) {
-            types.add(ConfigurationType.INCLUDESCRIPT);
+        if (Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue().isEmpty()) {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue())) {
+                types.add(ConfigurationType.INCLUDESCRIPT);
+            }
+        } else {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getDefault())) {
+                types.add(ConfigurationType.INCLUDESCRIPT);
+            }
         }
-        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue())) {
-            types.add(ConfigurationType.JOBRESOURCE);
+        if (Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue().isEmpty()) {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue())) {
+                types.add(ConfigurationType.JOBRESOURCE);
+            }
+        } else {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobResources().getDefault())) {
+                types.add(ConfigurationType.JOBRESOURCE);
+            }
         }
-        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue())) {
-            types.add(ConfigurationType.SCHEDULE);
+        if (Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue().isEmpty()) {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue())) {
+                types.add(ConfigurationType.SCHEDULE);
+            }
+        } else {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldSchedules().getDefault())) {
+                types.add(ConfigurationType.SCHEDULE);
+            }
         }
-        if (Category.LOCAL.value().equals(Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue())) {
-            types.add(ConfigurationType.WORKINGDAYSCALENDAR);
-            types.add(ConfigurationType.NONWORKINGDAYSCALENDAR);
+        if (Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue().isEmpty()) {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue())) {
+                types.add(ConfigurationType.WORKINGDAYSCALENDAR);
+                types.add(ConfigurationType.NONWORKINGDAYSCALENDAR);
+            }
+        } else {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldCalendars().getDefault())) {
+                types.add(ConfigurationType.WORKINGDAYSCALENDAR);
+                types.add(ConfigurationType.NONWORKINGDAYSCALENDAR);
+            }
         }
         return types;
     }
 
     private static List<ConfigurationType> getRolloutConfigurationTypes() {
         List<ConfigurationType> types = new ArrayList<ConfigurationType>();
-        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue())) {
-            types.add(ConfigurationType.WORKFLOW);
+        if (Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue().isEmpty()) {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue())) {
+                types.add(ConfigurationType.WORKFLOW);
+            }
+        } else {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldWorkflows().getDefault())) {
+                types.add(ConfigurationType.WORKFLOW);
+            }
         }
-        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldLocks().getValue())) {
-            types.add(ConfigurationType.LOCK);
+        if (Globals.getConfigurationGlobalsGit().getHoldLocks().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldLocks().getValue().isEmpty()) {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldLocks().getValue())) {
+                types.add(ConfigurationType.LOCK);
+            }
+        } else {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldLocks().getDefault())) {
+                types.add(ConfigurationType.LOCK);
+            }
         }
-        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue())) {
-            types.add(ConfigurationType.NOTICEBOARD);
+        if (Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue().isEmpty()) {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue())) {
+                types.add(ConfigurationType.NOTICEBOARD);
+            }
+        } else {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getDefault())) {
+                types.add(ConfigurationType.NOTICEBOARD);
+            }
         }
-        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue())) {
-            types.add(ConfigurationType.FILEORDERSOURCE);
+        if (Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue().isEmpty()) {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue())) {
+                types.add(ConfigurationType.FILEORDERSOURCE);
+            }
+        } else {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getDefault())) {
+                types.add(ConfigurationType.FILEORDERSOURCE);
+            }
         }
-        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue())) {
-            types.add(ConfigurationType.INCLUDESCRIPT);
+        if (Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue().isEmpty()) {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue())) {
+                types.add(ConfigurationType.INCLUDESCRIPT);
+            }
+        } else {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getDefault())) {
+                types.add(ConfigurationType.INCLUDESCRIPT);
+            }
         }
-        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue())) {
-            types.add(ConfigurationType.JOBRESOURCE);
+        if (Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue().isEmpty()) {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue())) {
+                types.add(ConfigurationType.JOBRESOURCE);
+            }
+        } else {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobResources().getDefault())) {
+                types.add(ConfigurationType.JOBRESOURCE);
+            }
         }
-        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue())) {
-            types.add(ConfigurationType.SCHEDULE);
+        if (Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue().isEmpty()) {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue())) {
+                types.add(ConfigurationType.SCHEDULE);
+            }
+        } else {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldSchedules().getDefault())) {
+                types.add(ConfigurationType.SCHEDULE);
+            }
         }
-        if (Category.ROLLOUT.value().equals(Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue())) {
-            types.add(ConfigurationType.WORKINGDAYSCALENDAR);
-            types.add(ConfigurationType.NONWORKINGDAYSCALENDAR);
+        if (Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue().isEmpty()) {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue())) {
+                types.add(ConfigurationType.WORKINGDAYSCALENDAR);
+                types.add(ConfigurationType.NONWORKINGDAYSCALENDAR);
+            }
+        } else {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldCalendars().getDefault())) {
+                types.add(ConfigurationType.WORKINGDAYSCALENDAR);
+                types.add(ConfigurationType.NONWORKINGDAYSCALENDAR);
+            }
         }
         return types;
     }

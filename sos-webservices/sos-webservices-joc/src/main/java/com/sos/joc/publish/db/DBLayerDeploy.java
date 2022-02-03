@@ -1499,7 +1499,7 @@ public class DBLayerDeploy {
 
     public List<DBItemDeploymentHistory> getDepHistoryItemsFromFolderByType(String folder, Set<Integer> types , boolean recursive) {
         Date getDepHistoryItemsFromFolderStartedByType = Date.from(Instant.now());
-        LOGGER.info("*** call getDepHistoryItemsFromFolderByType started ***" + getDepHistoryItemsFromFolderStartedByType);
+        LOGGER.trace("*** call getDepHistoryItemsFromFolderByType started ***" + getDepHistoryItemsFromFolderStartedByType);
         try {
             // TODO: improve performance
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
@@ -1524,8 +1524,8 @@ public class DBLayerDeploy {
             query.setParameterList("types", types);
             List<DBItemDeploymentHistory> result = session.getResultList(query);
             Date getDepHistoryItemsFromFolderFinishedByType = Date.from(Instant.now());
-            LOGGER.info("*** call getDepHistoryItemsFromFolderByType finished ***" + getDepHistoryItemsFromFolderFinishedByType);
-            LOGGER.info("call getDepHistoryItemsFromFolderByType took: " + (getDepHistoryItemsFromFolderFinishedByType.getTime() - getDepHistoryItemsFromFolderStartedByType.getTime()) + " ms");
+            LOGGER.trace("*** call getDepHistoryItemsFromFolderByType finished ***" + getDepHistoryItemsFromFolderFinishedByType);
+            LOGGER.trace("call getDepHistoryItemsFromFolderByType took: " + (getDepHistoryItemsFromFolderFinishedByType.getTime() - getDepHistoryItemsFromFolderStartedByType.getTime()) + " ms");
             return result;
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
