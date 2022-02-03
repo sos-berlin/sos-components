@@ -89,8 +89,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             DBItemIamIdentityService dbItemIamIdentityService, boolean updateAccounts) throws Exception {
 
         SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
-        IamAccountFilter iamAccountFilter = new IamAccountFilter();
-        iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
         SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
@@ -103,6 +101,9 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
             String password = null;
+            IamAccountFilter iamAccountFilter = new IamAccountFilter();
+            iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
+
             if ((securityConfigurationAccount.getIdentityServiceId() != null && securityConfigurationAccount.getIdentityServiceId() == 0L)
                     || securityConfigurationAccount.getPassword() == null || securityConfigurationAccount.getPassword().isEmpty()) {
                 password = initialPassword;

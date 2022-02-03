@@ -130,6 +130,7 @@ public class JsonValidator {
             put("SecurityConfigurationRole", "security/role-schema.json");
             put("Roles", "security/roles-schema.json");
             put("AccountRename", "security/accountRename-schema.json");
+            put("RoleRename", "security/roleRename-schema.json");
 
             put("ReleaseFilter", "inventory/release/release-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFolder", "inventory/common/request-folder-schema.json");
@@ -200,6 +201,7 @@ public class JsonValidator {
             put("com.sos.joc.model.dailyplan.RelativeDatesConverter", "orderManagement/dailyplan/relativeDatesConverter-schema.json");
 
             // auth            
+            put("com.sos.joc.model.security.IdentityService", "security/identityService-schema.json");
             put("com.sos.joc.model.security.IdentityServiceRename", "security/identityServiceRename-schema.json");
             put("com.sos.joc.model.security.IdentityServiceFilter", "security/identityServiceFilter-schema.json");
             // put("com.sos.joc.model.publish.RedeployFilter", "publish/redeploy-schema.json");

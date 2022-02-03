@@ -46,6 +46,7 @@ public class IdentityService {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("identityServiceName")
@@ -54,6 +55,7 @@ public class IdentityService {
      * Identity Service Authentication Scheme
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("serviceAuthenticationScheme")
@@ -161,6 +163,7 @@ public class IdentityService {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("identityServiceName")
@@ -172,6 +175,7 @@ public class IdentityService {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("identityServiceName")
@@ -183,6 +187,7 @@ public class IdentityService {
      * Identity Service Authentication Scheme
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("serviceAuthenticationScheme")
@@ -194,6 +199,7 @@ public class IdentityService {
      * Identity Service Authentication Scheme
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("serviceAuthenticationScheme")

@@ -347,12 +347,22 @@ public class IamAccountDBLayer {
 
     }
 
-    public void rename(Long identityServiceId, String accountOldName, String accountNewName) throws SOSHibernateException {
+    public void renameAccount(Long identityServiceId, String accountOldName, String accountNewName) throws SOSHibernateException {
         String hql = "update " + DBItemIamAccount
                 + " set accountName=:accountNewName where accountName=:accountOldName and identityServiceId=:identityServiceId";
         Query<DBItemIamIdentityService> query = sosHibernateSession.createQuery(hql);
         query.setParameter("accountOldName", accountOldName);
         query.setParameter("accountNewName", accountNewName);
+        query.setParameter("identityServiceId", identityServiceId);
+        sosHibernateSession.executeUpdate(query);
+    }
+
+    public void renameRole(Long identityServiceId, String roleOldName, String roleNewName) throws SOSHibernateException {
+        String hql = "update " + DBItemIamRole
+                + " set roleName=:roleNewName where roleName=:roleOldName and identityServiceId=:identityServiceId";
+        Query<DBItemIamIdentityService> query = sosHibernateSession.createQuery(hql);
+        query.setParameter("roleOldName", roleOldName);
+        query.setParameter("roleNewName", roleNewName);
         query.setParameter("identityServiceId", identityServiceId);
         sosHibernateSession.executeUpdate(query);
     }

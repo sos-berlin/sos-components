@@ -20,86 +20,84 @@ import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSLdapLogin implements ISOSLogin {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapLogin.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapLogin.class);
 
-	private String msg = "";
-	private SOSIdentityService identityService;
-	private SOSLdapSubject sosLdapSubject;
+    private String msg = "";
+    private SOSIdentityService identityService;
+    private SOSLdapSubject sosLdapSubject;
 
-	public SOSLdapLogin() {
+    public SOSLdapLogin() {
 
-	}
+    }
 
-	public void login(String account, String pwd, HttpServletRequest httpServletRequest) {
-		SOSHibernateSession sosHibernateSession = null;
+    public void login(String account, String pwd, HttpServletRequest httpServletRequest) {
+        SOSHibernateSession sosHibernateSession = null;
 
-		SOSLdapHandler sosLdapHandler = new SOSLdapHandler();
-		try {
+        SOSLdapHandler sosLdapHandler = new SOSLdapHandler();
+        try {
 
-			SOSLdapWebserviceCredentials sosLdapWebserviceCredentials = new SOSLdapWebserviceCredentials();
-			sosLdapWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
-			sosLdapWebserviceCredentials.setAccount(account);
-			sosLdapWebserviceCredentials.setValuesFromProfile(identityService);
+            SOSLdapWebserviceCredentials sosLdapWebserviceCredentials = new SOSLdapWebserviceCredentials();
+            sosLdapWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
+            sosLdapWebserviceCredentials.setAccount(account);
+            sosLdapWebserviceCredentials.setValuesFromProfile(identityService);
 
-			SOSAuthAccessToken sosAuthAccessToken = null;
+            SOSAuthAccessToken sosAuthAccessToken = null;
 
-			boolean disabled;
-			if (identityService.getIdentyServiceType() == IdentityServiceTypes.LDAP_JOC) {
-				disabled = SOSAuthHelper.accountIsDisable(identityService.getIdentityServiceId(), account);
-			} else {
-				disabled = false;
-			}
+            boolean disabled;
+            if (identityService.getIdentyServiceType() == IdentityServiceTypes.LDAP_JOC) {
+                disabled = SOSAuthHelper.accountIsDisable(identityService.getIdentityServiceId(), account);
+            } else {
+                disabled = false;
+            }
 
-			if (!disabled && (!identityService.isTwoFactor() || (identityService.isTwoFactor()
-					&& SOSAuthHelper.checkCertificate(httpServletRequest, "")))) {
-				sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials, pwd);
-			}
+            if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
+                sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials, pwd);
+            }
 
-			sosLdapSubject = new SOSLdapSubject();
+            sosLdapSubject = new SOSLdapSubject();
 
-			if (sosAuthAccessToken == null) {
-				sosLdapSubject.setAuthenticated(false);
-				setMsg(sosLdapHandler.getMsg());
-			} else {
-				sosLdapSubject.setAuthenticated(true);
-				sosLdapSubject.setAccessToken(sosAuthAccessToken.getAccessToken());
-				sosLdapSubject.setPermissionAndRoles(sosLdapHandler.getGroupRolesMapping(sosLdapWebserviceCredentials),
-						account, identityService);
-			}
+            if (sosAuthAccessToken == null) {
+                sosLdapSubject.setAuthenticated(false);
+                setMsg(sosLdapHandler.getMsg());
+            } else {
+                sosLdapSubject.setAuthenticated(true);
+                sosLdapSubject.setAccessToken(sosAuthAccessToken.getAccessToken());
+                sosLdapSubject.setPermissionAndRoles(sosLdapHandler.getGroupRolesMapping(sosLdapWebserviceCredentials), account, identityService);
+            }
 
-		} catch (SOSHibernateException e) {
-			setMsg(e.getMessage());
-			LOGGER.error("", e);
-		} catch (NamingException e) {
-			setMsg(e.getMessage());
-			LOGGER.error("", e);
-		} finally {
-			sosLdapHandler.close();
-			Globals.disconnect(sosHibernateSession);
-		}
+        } catch (SOSHibernateException e) {
+            setMsg(e.getMessage());
+            LOGGER.error("", e);
+        } catch (NamingException e) {
+            setMsg(e.getMessage());
+            LOGGER.error("", e);
+        } finally {
+            sosLdapHandler.close();
+            Globals.disconnect(sosHibernateSession);
+        }
 
-	}
+    }
 
-	public void logout() {
+    public void logout() {
 
-	}
+    }
 
-	public String getMsg() {
-		return msg;
-	}
+    public String getMsg() {
+        return msg;
+    }
 
-	public void setMsg(String msg) {
-		LOGGER.debug("sosLogin: setMsg=" + msg);
-		this.msg = msg;
-	}
+    public void setMsg(String msg) {
+        LOGGER.debug("sosLogin: setMsg=" + msg);
+        this.msg = msg;
+    }
 
-	@Override
-	public ISOSAuthSubject getCurrentSubject() {
-		return sosLdapSubject;
-	}
+    @Override
+    public ISOSAuthSubject getCurrentSubject() {
+        return sosLdapSubject;
+    }
 
-	public void setIdentityService(SOSIdentityService identityService) {
-		this.identityService = identityService;
-	}
+    public void setIdentityService(SOSIdentityService identityService) {
+        this.identityService = identityService;
+    }
 
 }

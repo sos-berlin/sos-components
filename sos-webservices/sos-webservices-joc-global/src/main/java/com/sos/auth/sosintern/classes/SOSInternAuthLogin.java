@@ -16,6 +16,7 @@ import com.sos.auth.sosintern.SOSInternAuthHandler;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
+import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSInternAuthLogin implements ISOSLogin {
 
@@ -41,19 +42,28 @@ public class SOSInternAuthLogin implements ISOSLogin {
 
             SOSAuthAccessToken sosInternAuthAccessToken = null;
 
-            if (identityService.isSingleFactor()) {
-                if (identityService.isSingleFactorCert() && SOSAuthHelper.checkCertificate(httpServletRequest, account)) {
-                    sosInternAuthAccessToken = new SOSAuthAccessToken();
-                    sosInternAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
+            boolean disabled = SOSAuthHelper.accountIsDisable(identityService.getIdentityServiceId(), account);
+            if (!disabled) {
+                LOGGER.info("NOT disabled");
+                if (identityService.isSingleFactor()) {
+                    if (identityService.isSingleFactorCert() && SOSAuthHelper.checkCertificate(httpServletRequest, account)) {
+
+                        sosInternAuthAccessToken = new SOSAuthAccessToken();
+                        sosInternAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
+
+                    } else {
+                        if (identityService.isSingleFactorPwd()) {
+                            sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
+                        }
+                    }
                 } else {
-                    if (identityService.isSingleFactorPwd()) {
+                    if ((identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(httpServletRequest, account))) {
                         sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
                     }
                 }
-            } else {
-                if ((identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(httpServletRequest, ""))) {
-                    sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
-                }
+            }else {
+                LOGGER.info("  disabled");
+
             }
 
             sosInternAuthSubject = new SOSInternAuthSubject();

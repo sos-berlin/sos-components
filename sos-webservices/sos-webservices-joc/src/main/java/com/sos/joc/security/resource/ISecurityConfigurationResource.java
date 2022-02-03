@@ -35,6 +35,11 @@ public interface ISecurityConfigurationResource {
     @Path("auth/roles/delete")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postAuthRolesDelete(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
+    
+    @POST
+    @Path("auth/role/rename")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postAuthRoleRename(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
 
     @POST
     @Path("auth/changepassword")
