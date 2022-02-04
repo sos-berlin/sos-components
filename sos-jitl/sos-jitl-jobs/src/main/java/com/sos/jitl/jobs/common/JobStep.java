@@ -160,6 +160,14 @@ public class JobStep<A extends JobArguments> {
         return ar.getDisplayValue();
     }
 
+    public Object getDisplayValue(String name, Object value) {
+        JobArgument<?> ar = getKnownArgument(name);
+        if (ar == null) {
+            return DisplayMode.UNKNOWN.getValue();
+        }
+        return SOSArgumentHelper.getDisplayValue(value, ar.getDisplayMode());
+    }
+
     public Map<String, JobArgument<A>> getAllCurrentArguments(JobArgument.Type type) {
         getAllCurrentArguments();
         return allCurrentArguments.entrySet().stream().filter(a -> a.getValue().getType().equals(type)).collect(Collectors.toMap(Map.Entry::getKey,
@@ -656,7 +664,7 @@ public class JobStep<A extends JobArguments> {
         if (map != null && map.size() > 0) {
             logger.log(logLevel, String.format(" %s:", ValueSource.ORDER.getHeader()));
             map.entrySet().stream().forEach(e -> {
-                logger.log(logLevel, "    %s=%s", e.getKey(), getDisplayValue(e.getKey()));
+                logger.log(logLevel, "    %s=%s", e.getKey(), getDisplayValue(e.getKey(), e.getValue()));
             });
         }
         // ORDER or Node arguments
@@ -673,7 +681,7 @@ public class JobStep<A extends JobArguments> {
         if (map != null && map.size() > 0) {
             logger.log(logLevel, String.format(" %s:", ValueSource.JOB.getHeader()));
             map.entrySet().stream().forEach(e -> {
-                logger.log(logLevel, "    %s=%s", e.getKey(), getDisplayValue(e.getKey()));
+                logger.log(logLevel, "    %s=%s", e.getKey(), getDisplayValue(e.getKey(), e.getValue()));
             });
         }
         // JOB Resources
@@ -682,7 +690,7 @@ public class JobStep<A extends JobArguments> {
             logger.log(logLevel, String.format(" %s:", ValueSource.JOB_RESOURCE.getHeader()));
             resources.entrySet().stream().forEach(e -> {
                 JobDetailValue v = e.getValue();
-                logger.log(logLevel, "    %s=%s (resource=%s)", e.getKey(), getDisplayValue(e.getKey()), v.getSource());
+                logger.log(logLevel, "    %s=%s (resource=%s)", e.getKey(), getDisplayValue(e.getKey(), v.getValue()), v.getSource());
             });
         }
         logJobContextArguments(logLevel);
@@ -707,7 +715,7 @@ public class JobStep<A extends JobArguments> {
             if (map != null && map.size() > 0) {
                 logger.log(logLevel, String.format(" %s:", ValueSource.JOB_ARGUMENT.getHeader()));
                 map.entrySet().stream().forEach(e -> {
-                    logger.log(logLevel, "    %s=%s", e.getKey(), getDisplayValue(e.getKey()));
+                    logger.log(logLevel, "    %s=%s", e.getKey(), getDisplayValue(e.getKey(), e.getValue()));
                 });
             }
         }

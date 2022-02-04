@@ -2,32 +2,32 @@ package com.sos.auth.shiro;
 
 public class SOSLdapLoginUserName {
 
-    private String login;
-    private String alternateLogin;
+    private String loginAccount;
+    private String alternateLoginAccount;
     private String userName;
     private String domain;
 
-    public SOSLdapLoginUserName(String login) {
+    public SOSLdapLoginUserName(String loginAccount) {
         super();
-        this.login = login;
+        this.loginAccount = loginAccount;
         normalizeUser();
     }
 
     private void normalizeUser() {
-        userName = login;
+        userName = loginAccount;
         domain = "";
-        String[] s = login.split("@");
+        String[] s = loginAccount.split("@");
         if (s.length > 1) {
             userName = s[0];
             domain = s[1];
-            alternateLogin = domain + "\\" + userName;
+            alternateLoginAccount = domain + "\\" + userName;
         } else {
 
-            s = login.split("\\\\");
+            s = loginAccount.split("\\\\");
             if (s.length > 1) {
                 userName = s[1];
                 domain = s[0];
-                alternateLogin = userName + "@" + domain;
+                alternateLoginAccount = userName + "@" + domain;
             }
         }
     }
@@ -40,17 +40,14 @@ public class SOSLdapLoginUserName {
         return domain;
     }
 
-    
-    public String getLogin() {
-        return login;
+    public String getLoginAccount() {
+        return loginAccount;
     }
 
-    
-    public String getAlternateLogin() {
-        return alternateLogin;
+    public String getAlternateLoginAccount() {
+        return alternateLoginAccount;
     }
 
-    
     public void setDomain(String domain) {
         this.domain = domain;
     }

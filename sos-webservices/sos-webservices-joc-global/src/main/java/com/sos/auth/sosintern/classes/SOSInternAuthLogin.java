@@ -1,10 +1,14 @@
 package com.sos.auth.sosintern.classes;
 
+import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthAccessToken;
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
@@ -12,12 +16,13 @@ import com.sos.auth.sosintern.SOSInternAuthHandler;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
+import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSInternAuthLogin implements ISOSLogin {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSInternAuthLogin.class);
 
-    private String msg="";
+    private String msg = "";
     private SOSIdentityService identityService;
     private SOSInternAuthSubject sosInternAuthSubject;
 
@@ -35,21 +40,46 @@ public class SOSInternAuthLogin implements ISOSLogin {
             sosInternAuthWebserviceCredentials.setAccount(account);
             SOSInternAuthHandler sosInternAuthHandler = new SOSInternAuthHandler();
 
-            SOSInternAuthAccessToken sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials,pwd);
+            SOSAuthAccessToken sosInternAuthAccessToken = null;
+
+            boolean disabled = SOSAuthHelper.accountIsDisable(identityService.getIdentityServiceId(), account);
+            if (!disabled) {
+                LOGGER.info("NOT disabled");
+                if (identityService.isSingleFactor()) {
+                    if (identityService.isSingleFactorCert() && SOSAuthHelper.checkCertificate(httpServletRequest, account)) {
+
+                        sosInternAuthAccessToken = new SOSAuthAccessToken();
+                        sosInternAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
+
+                    } else {
+                        if (identityService.isSingleFactorPwd()) {
+                            sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
+                        }
+                    }
+                } else {
+                    if ((identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(httpServletRequest, account))) {
+                        sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
+                    }
+                }
+            }else {
+                LOGGER.info("  disabled");
+
+            }
+
             sosInternAuthSubject = new SOSInternAuthSubject();
             if (sosInternAuthAccessToken == null) {
                 sosInternAuthSubject.setAuthenticated(false);
                 setMsg("There is no account with the given accountname/password combination");
-
             } else {
                 sosInternAuthSubject.setAuthenticated(true);
-                sosInternAuthSubject.setPermissionAndRoles(account,identityService);
+                sosInternAuthSubject.setIsForcePasswordChange(sosInternAuthHandler.getForcePasswordChange());
+                sosInternAuthSubject.setPermissionAndRoles(account, identityService);
                 sosInternAuthSubject.setAccessToken(sosInternAuthAccessToken.getAccessToken());
             }
 
         } catch (SOSHibernateException e) {
-            LOGGER.error("",e);
-         } finally {
+            LOGGER.error("", e);
+        } finally {
             Globals.disconnect(sosHibernateSession);
         }
 
@@ -73,7 +103,6 @@ public class SOSInternAuthLogin implements ISOSLogin {
         return sosInternAuthSubject;
     }
 
-    
     public void setIdentityService(SOSIdentityService identityService) {
         this.identityService = identityService;
     }

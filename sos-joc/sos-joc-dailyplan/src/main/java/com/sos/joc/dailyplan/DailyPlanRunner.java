@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -82,12 +81,6 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-
-class CalendarCacheItem {
-
-    Calendar calendar;
-
-}
 
 public class DailyPlanRunner extends TimerTask {
 
@@ -246,6 +239,15 @@ public class DailyPlanRunner extends TimerTask {
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             IOException, ParseException, SOSException, URISyntaxException, ControllerConnectionResetException, ControllerConnectionRefusedException,
             InterruptedException, ExecutionException, TimeoutException {
+        return generateDailyPlan(startupMode, controllerId, schedules, dailyPlanDate, null, withSubmit, jocError, accessToken);
+    }
+
+    /* DailyPlanModifyOrderImpl **/
+    public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId, Collection<Schedule> schedules,
+            String dailyPlanDate, DBItemDailyPlanSubmission submission, Boolean withSubmit, JocError jocError, String accessToken)
+            throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException,
+            JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
 
         String operation = withSubmit ? "creating/submitting" : "creating";
         if (schedules == null || schedules.size() == 0) {
@@ -254,16 +256,16 @@ public class DailyPlanRunner extends TimerTask {
             return new TreeMap<PlannedOrderKey, PlannedOrder>();
         }
 
-        OrderListSynchronizer synchronizer = calculateStartTimes(startupMode, controllerId, schedules, dailyPlanDate);
+        OrderListSynchronizer synchronizer = calculateStartTimes(startupMode, controllerId, schedules, dailyPlanDate, submission);
         synchronizer.setJocError(jocError);
         synchronizer.setAccessToken(accessToken);
         OrderCounter c = DailyPlanHelper.getOrderCount(synchronizer.getPlannedOrders());
 
         if (synchronizer.getPlannedOrders().size() > 0) {
-            String submissionId = "unknown";
+            Long submissionId = null;
             String submissionCreated = "unknown";
             if (synchronizer.getSubmission() != null) {
-                submissionId = synchronizer.getSubmission().getId().toString();
+                submissionId = synchronizer.getSubmission().getId();
                 submissionCreated = SOSDate.getDateTimeAsString(synchronizer.getSubmission().getCreated());
             }
 
@@ -651,9 +653,9 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     private OrderListSynchronizer calculateStartTimes(StartupMode startupMode, String controllerId, Collection<Schedule> schedules,
-            String dailyPlanDate) throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException,
-            DBMissingDataException, IOException, SOSMissingDataException, SOSInvalidDataException, ParseException, JocConfigurationException,
-            SOSHibernateException, DBOpenSessionException {
+            String dailyPlanDate, DBItemDailyPlanSubmission submission) throws JsonParseException, JsonMappingException, DBConnectionRefusedException,
+            DBInvalidDataException, DBMissingDataException, IOException, SOSMissingDataException, SOSInvalidDataException, ParseException,
+            JocConfigurationException, SOSHibernateException, DBOpenSessionException {
 
         String method = "calculateStartTimes";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -669,9 +671,11 @@ public class DailyPlanRunner extends TimerTask {
         Date nextDate = DailyPlanHelper.getNextDay(date, settings);
         boolean fromService = isFromService(startupMode);
 
-        Map<String, CalendarCacheItem> calendarCache = new HashMap<String, CalendarCacheItem>();
-
+        Map<String, Calendar> calendars = new HashMap<String, Calendar>();
         OrderListSynchronizer synchronizer = new OrderListSynchronizer(settings);
+        if (submission != null) {
+            synchronizer.setSubmission(submission);
+        }
         for (Schedule schedule : schedules) {
             if (fromService && !schedule.getPlanOrderAutomatically()) {
                 if (isDebugEnabled) {
@@ -689,7 +693,6 @@ public class DailyPlanRunner extends TimerTask {
                         assignedCalendar.setTimeZone(UTC);
                     }
 
-                    CalendarCacheItem calendarCacheItem = calendarCache.get(assignedCalendar.getCalendarName() + "#" + schedule.getPath());
                     String actDateAsString = SOSDate.getDateWithTimeZoneAsString(actDate, settings.getTimeZone());
                     String nextDateAsString = SOSDate.getDateWithTimeZoneAsString(nextDate, settings.getTimeZone());
                     String dailyPlanDateAsString = SOSDate.getDateWithTimeZoneAsString(date, settings.getTimeZone());
@@ -700,9 +703,9 @@ public class DailyPlanRunner extends TimerTask {
                                 actDateAsString, nextDateAsString, dailyPlanDateAsString));
                     }
 
-                    if (calendarCacheItem == null) {
-                        calendarCacheItem = new CalendarCacheItem();
-                        Calendar calendar = null;
+                    String calendarsKey = assignedCalendar.getCalendarName() + "#" + schedule.getPath();
+                    Calendar calendar = calendars.get(calendarsKey);
+                    if (calendar == null) {
                         try {
                             calendar = getCalendar(controllerId, assignedCalendar.getCalendarName(), ConfigurationType.WORKINGDAYSCALENDAR);
                         } catch (DBMissingDataException e) {
@@ -710,98 +713,95 @@ public class DailyPlanRunner extends TimerTask {
                                     schedule.getPath(), assignedCalendar.getCalendarName()));
                             continue;
                         }
-                        calendarCacheItem.calendar = calendar;
-                        calendarCache.put(assignedCalendar.getCalendarName() + "#" + schedule.getPath(), calendarCacheItem);
+                        calendars.put(calendarsKey, calendar);
                     } else {
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format("[%s][%s][%s][%s][WorkingDayCalendar=%s][cache]%s", method, controllerId, dailyPlanDate,
-                                    schedule.getPath(), assignedCalendar.getCalendarName(), SOSString.toString(calendarCacheItem)));
+                                    schedule.getPath(), assignedCalendar.getCalendarName(), SOSString.toString(calendar)));
                         }
                     }
-                    PeriodResolver periodResolver = new PeriodResolver(settings);
+                    calendar.setFrom(actDateAsString);
+                    calendar.setTo(nextDateAsString);
+
                     Calendar restrictions = new Calendar();
-
-                    calendarCacheItem.calendar.setFrom(actDateAsString);
-                    calendarCacheItem.calendar.setTo(nextDateAsString);
-                    String calendarJson = Globals.objectMapper.writeValueAsString(calendarCacheItem.calendar);
                     restrictions.setIncludes(assignedCalendar.getIncludes());
-                    String restrictionJson = Globals.objectMapper.writeValueAsString(restrictions);
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][%s][%s][WorkingDayCalendar=%s][includes]%s", method, controllerId, dailyPlanDate,
+                                schedule.getPath(), assignedCalendar.getCalendarName(), SOSString.toString(restrictions)));
+                    }
 
-                    List<String> dates = new FrequencyResolver().resolveRestrictions(calendarJson, restrictionJson, actDateAsString, nextDateAsString)
+                    int plannedOrdersCount = 0;
+                    List<String> dates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString, nextDateAsString)
                             .getDates();
-
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s][FrequencyResolver]dates=%s", method, controllerId, dailyPlanDate,
                                 schedule.getPath(), assignedCalendar.getCalendarName(), String.join(",", dates)));
                     }
-
-                    for (Period p : assignedCalendar.getPeriods()) {
-                        Period _period = new Period();
-                        _period.setBegin(p.getBegin());
-                        _period.setEnd(p.getEnd());
-                        _period.setRepeat(p.getRepeat());
-                        _period.setSingleStart(p.getSingleStart());
-                        _period.setWhenHoliday(p.getWhenHoliday());
-                        periodResolver.addStartTimes(_period, dailyPlanDateAsString, assignedCalendar.getTimeZone());
-                    }
-
-                    int plannedOrdersCount = 0;
-                    for (String d : dates) {
-                        if (isTraceEnabled) {
-                            LOGGER.trace(String.format("[%s][%s][%s][%s][calendar=%s]date=%s", method, controllerId, dailyPlanDate, schedule
-                                    .getPath(), assignedCalendar.getCalendarName(), d));
+                    if (dates.size() > 0) {
+                        PeriodResolver periodResolver = new PeriodResolver(settings);
+                        for (Period p : assignedCalendar.getPeriods()) {
+                            Period _period = new Period();
+                            _period.setBegin(p.getBegin());
+                            _period.setEnd(p.getEnd());
+                            _period.setRepeat(p.getRepeat());
+                            _period.setSingleStart(p.getSingleStart());
+                            _period.setWhenHoliday(p.getWhenHoliday());
+                            periodResolver.addStartTimes(_period, dailyPlanDateAsString, assignedCalendar.getTimeZone());
                         }
-                        if (nonWorkingDays != null && nonWorkingDays.get(d) != null) {
-                            if (isDebugEnabled) {
-                                LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s][date=%s][skip]date is a non working day", method,
-                                        controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), d));
-                            }
-                        } else {
-                            Map<Long, Period> startTimes = periodResolver.getStartTimes(d, dailyPlanDateAsString, assignedCalendar.getTimeZone());
 
-                            if (isDebugEnabled) {
-                                LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s][timeZone=%s][date=%s][periodResolver]startTimes size=%s",
-                                        method, controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), assignedCalendar
-                                                .getTimeZone(), d, startTimes.size()));
+                        for (String d : dates) {
+                            if (isTraceEnabled) {
+                                LOGGER.trace(String.format("[%s][%s][%s][%s][calendar=%s]date=%s", method, controllerId, dailyPlanDate, schedule
+                                        .getPath(), assignedCalendar.getCalendarName(), d));
                             }
+                            if (nonWorkingDays != null && nonWorkingDays.get(d) != null) {
+                                if (isDebugEnabled) {
+                                    LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s][date=%s][skip]date is a non working day", method,
+                                            controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), d));
+                                }
+                            } else {
+                                Map<Long, Period> startTimes = periodResolver.getStartTimes(d, dailyPlanDateAsString, assignedCalendar.getTimeZone());
 
-                            for (Entry<Long, Period> periodEntry : startTimes.entrySet()) {
-                                Integer startMode;
-                                if (periodEntry.getValue().getSingleStart() == null) {
-                                    startMode = 1;
-                                } else {
-                                    startMode = 0;
+                                if (isDebugEnabled) {
+                                    LOGGER.debug(String.format(
+                                            "[%s][%s][%s][%s][calendar=%s][timeZone=%s][date=%s][periodResolver]startTimes size=%s", method,
+                                            controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), assignedCalendar
+                                                    .getTimeZone(), d, startTimes.size()));
                                 }
 
-                                if (schedule.getVariableSets() == null || schedule.getVariableSets().size() == 0) {
-                                    VariableSet variableSet = new VariableSet();
-                                    schedule.setVariableSets(new ArrayList<VariableSet>());
-                                    schedule.getVariableSets().add(variableSet);
-                                }
-
-                                for (VariableSet variableSet : schedule.getVariableSets()) {
-                                    FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, schedule, variableSet, periodEntry.getKey(), startMode);
-
-                                    if (!fromService) {
-                                        schedule.setSubmitOrderToControllerWhenPlanned(settings.isSubmit());
-                                    }
-
-                                    if (synchronizer.getSubmission() == null) {
-                                        synchronizer.setSubmission(addDailyPlanSubmission(controllerId, date));
-                                    }
-
-                                    PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, schedule, calendarCacheItem.calendar
-                                            .getId());
-                                    plannedOrder.setWorkflowPath(schedule.getWorkflowPath());
-                                    plannedOrder.setPeriod(periodEntry.getValue());
-                                    plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
-                                    if (variableSet.getOrderName() != null && !variableSet.getOrderName().isEmpty()) {
-                                        plannedOrder.setOrderName(variableSet.getOrderName());
+                                for (Entry<Long, Period> periodEntry : startTimes.entrySet()) {
+                                    Integer startMode;
+                                    if (periodEntry.getValue().getSingleStart() == null) {
+                                        startMode = 1;
                                     } else {
-                                        plannedOrder.setOrderName(Paths.get(schedule.getPath()).getFileName().toString());
+                                        startMode = 0;
                                     }
-                                    synchronizer.add(startupMode, plannedOrder, controllerId, dailyPlanDate);
-                                    plannedOrdersCount++;
+
+                                    if (schedule.getVariableSets() == null || schedule.getVariableSets().size() == 0) {
+                                        VariableSet variableSet = new VariableSet();
+                                        schedule.setVariableSets(new ArrayList<VariableSet>());
+                                        schedule.getVariableSets().add(variableSet);
+                                    }
+
+                                    for (VariableSet variableSet : schedule.getVariableSets()) {
+                                        FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, schedule, variableSet, periodEntry.getKey(),
+                                                startMode);
+
+                                        if (!fromService) {
+                                            schedule.setSubmitOrderToControllerWhenPlanned(settings.isSubmit());
+                                        }
+
+                                        if (synchronizer.getSubmission() == null) {
+                                            synchronizer.setSubmission(addDailyPlanSubmission(controllerId, date));
+                                        }
+
+                                        PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, schedule, calendar.getId());
+                                        plannedOrder.setPeriod(periodEntry.getValue());
+                                        plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
+                                        plannedOrder.setOrderName(DailyPlanHelper.getOrderName(schedule, variableSet));
+                                        synchronizer.add(startupMode, plannedOrder, controllerId, dailyPlanDate);
+                                        plannedOrdersCount++;
+                                    }
                                 }
                             }
                         }
@@ -833,12 +833,12 @@ public class DailyPlanRunner extends TimerTask {
             item.setControllerId(controllerId);
             item.setSubmissionForDate(dailyPlanDate);
             item.setUserAccount(settings.getUserAccount());
+            item.setCreated(settings.getSubmissionTime());
 
             session = Globals.createSosHibernateStatelessConnection("addDailyPlanSubmission");
             session.setAutoCommit(false);
-            DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
             Globals.beginTransaction(session);
-            dbLayer.storeSubmission(item, settings.getSubmissionTime());
+            session.save(item);
             Globals.commit(session);
 
             return item;

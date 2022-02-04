@@ -653,11 +653,10 @@ public class SOSKeePassDatabase {
         Path keyFile = null;
         if (SOSString.isEmpty(queryKeyFile)) {
             keyFile = getDefaultKeyFile(file);
-            if (Files.notExists(keyFile)) {
+            if (keyFile == null) {
                 if (SOSString.isEmpty(queryPassword)) {
-                    throw new SOSKeePassDatabaseException(String.format("[%s][%s]key file not found. password is empty", uri, getFilePath(keyFile)));
+                    throw new SOSKeePassDatabaseException(String.format("[%s]default key file not found. password is empty", uri));
                 }
-                keyFile = null;
             }
         } else {
             keyFile = Paths.get(queryKeyFile);
@@ -675,15 +674,16 @@ public class SOSKeePassDatabase {
         return kpd;
     }
 
-    public static Path getDefaultKeyFile(Path database) throws Exception {
-        Path keyFile = null;
+    public static Path getDefaultKeyFile(Path database) {
         String keyFileName = new StringBuilder(com.google.common.io.Files.getNameWithoutExtension(database.getFileName().toString())).append(".key")
                 .toString();
         Path parentDir = database.getParent();
-        if (parentDir == null) {
-            keyFile = Paths.get(keyFileName);
-        } else {
-            keyFile = parentDir.resolve(keyFileName);
+        Path keyFile = parentDir == null ? Paths.get(keyFileName) : parentDir.resolve(keyFileName);
+        if (Files.notExists(keyFile)) {// .key
+            keyFile = Paths.get(keyFile.toString() + "x");// .keyx
+            if (Files.notExists(keyFile)) {
+                keyFile = null;
+            }
         }
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[getDefaultKeyFile]%s", getFilePath(keyFile)));
@@ -716,6 +716,9 @@ public class SOSKeePassDatabase {
     }
 
     public static String getFilePath(Path path) {
+        if (path == null) {
+            return null;
+        }
         try {
             return path.toFile().getCanonicalPath();
         } catch (Exception ex) {

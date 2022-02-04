@@ -19,7 +19,7 @@ public class ConfigurationGlobals {
     public static final ConfigurationObjectType OBJECT_TYPE = null;
 
     public enum DefaultSections {
-        dailyplan, cleanup, joc, user
+        dailyplan, cleanup, joc, user, git
     }
 
     private GlobalSettings defaults = null;
@@ -31,6 +31,7 @@ public class ConfigurationGlobals {
         addDefaultSection(DefaultSections.cleanup, 1);
         addDefaultSection(DefaultSections.joc, 2);
         addDefaultSection(DefaultSections.user, 3);
+        addDefaultSection(DefaultSections.git, 4);
     }
 
     public void setConfigurationValues(GlobalSettings values) {
@@ -69,7 +70,7 @@ public class ConfigurationGlobals {
                 }
                 entry.setDefault(null);
                 entry.setType(null);
-
+                entry.setValues(null);
             });
         });
 
@@ -101,6 +102,8 @@ public class ConfigurationGlobals {
             return new ConfigurationGlobalsJoc();
         case user:
             return new ConfigurationGlobalsUser();
+        case git:
+            return new ConfigurationGlobalsGit();
         default:
             return null;
         }
@@ -123,6 +126,7 @@ public class ConfigurationGlobals {
                 ne.setOrdering(oe.getOrdering());
                 ne.setType(oe.getType());
                 ne.setValue(oe.getValue());
+                ne.setValues(oe.getValues());
 
                 ns.getAdditionalProperties().put(e.getKey(), ne);
             });

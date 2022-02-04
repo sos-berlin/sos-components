@@ -11,6 +11,8 @@ public interface ISOSAuthSubject {
 
     public Boolean isAuthenticated();
 
+    public Boolean isForcePasswordChange();
+
     public Map<String, List<String>> getMapOfFolderPermissions();
 
     public ISOSSession getSession();

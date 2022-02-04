@@ -24,8 +24,7 @@ public class MonitorTest {
 
     @Ignore
     @Test
-    public void test() throws Exception {
-
+    public void testTypes() throws Exception {
         Configuration c = new Configuration("http://localhost");
         c.process(new String(Files.readAllBytes(Paths.get("src/test/resources/Configurations.xml")), Charsets.UTF_8));
 
@@ -37,38 +36,69 @@ public class MonitorTest {
 
         LOGGER.info("---TYPE ON_SUCCESS---:" + c.getOnSuccess().size());
         showNotifications(c.getOnSuccess());
+    }
 
-        LOGGER.info("---MATCHES---:");
-        List<Notification> r = c.findWorkflowMatches(c.getOnError(), "js7.x", "my_workflow", "my_job_name", "my_job_label", JobCriticality.NORMAL
-                .intValue(), 0);
+    @Ignore
+    @Test
+    public void testMatches() throws Exception {
+
+        Configuration c = new Configuration("http://localhost");
+        c.process(new String(Files.readAllBytes(Paths.get("src/test/resources/Configurations.xml")), Charsets.UTF_8));
+
+        LOGGER.info("---WORKFLOW MATCHES---:");
+        List<Notification> r = c.findWorkflowMatches(c.getOnError(), "js7.x", "/my_workflow");
         LOGGER.info("---               MATCHES---:" + r.size());
         for (Notification n : r) {
             LOGGER.info("                  " + SOSString.toString(n));
         }
 
+        LOGGER.info("---JOB MATCHES 1---:");
+        r = c.findWorkflowMatches(c.getOnError(), "js7.x", "/my_workflow", "my_job_name", "my_job_label", JobCriticality.NORMAL.intValue(), 0);
+        LOGGER.info("---               MATCHES---:" + r.size());
+        for (Notification n : r) {
+            LOGGER.info("                  " + SOSString.toString(n));
+        }
+
+        LOGGER.info("---JOB MATCHES 2---:");
+        r = c.findWorkflowMatches(c.getOnSuccess(), "js7.x", "/my_workflow", "my_job_name", "my_job_label", JobCriticality.CRITICAL.intValue(), 0);
+        LOGGER.info("---               MATCHES---:" + r.size());
+        for (Notification n : r) {
+            LOGGER.info("                  " + SOSString.toString(n));
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testMatch() {
+        String configured = "/M.*";
+        String current = "/Match";
+
+        LOGGER.info("fixed=" + current.matches(configured));
+        LOGGER.info("old=" + configured.matches(current));
     }
 
     private void showNotifications(List<Notification> list) throws Exception {
         for (Notification n : list) {
+            LOGGER.info("Notification: " + n.getNotificationId());
             for (AMonitor monitor : n.getMonitors()) {
-                LOGGER.info("MONITOR: " + monitor.getElementName());
-                LOGGER.info("   " + SOSString.toString(monitor));
-                LOGGER.info("   " + monitor.getMessage());
+                LOGGER.info("   MONITOR: " + monitor.getElementName());
+                LOGGER.info("       " + SOSString.toString(monitor));
+                LOGGER.info("       " + monitor.getMessage());
 
                 if (monitor instanceof MonitorCommand) {
                     MonitorCommand mc = (MonitorCommand) monitor;
-                    LOGGER.info("   " + mc.getCommand());
+                    LOGGER.info("       " + mc.getCommand());
                 } else if (monitor instanceof MonitorMail) {
                     // MonitorMail mm = (MonitorMail) monitor;
                 }
             }
 
             for (Workflow workflow : n.getWorkflows()) {
-                LOGGER.info("WORKFLOW: " + workflow.getElementName());
-                LOGGER.info("   " + SOSString.toString(workflow));
-                LOGGER.info("       JOBS: " + workflow.getJobs().size());
+                LOGGER.info("   WORKFLOW: ");
+                LOGGER.info("       " + SOSString.toString(workflow));
+                LOGGER.info("           JOBS: " + workflow.getJobs().size());
                 for (WorkflowJob wj : workflow.getJobs()) {
-                    LOGGER.info("                  " + SOSString.toString(wj));
+                    LOGGER.info("                   " + SOSString.toString(wj));
                 }
             }
 

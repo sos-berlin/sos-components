@@ -32,6 +32,7 @@ public abstract class AConfigurationSection {
                     GlobalSettingsSectionEntry se = new GlobalSettingsSectionEntry();
                     se.setType(ce.getType());
                     se.setDefault(ce.getDefault());
+                    se.setValues(ce.getValues());
                     se.setOrdering(ce.getOrdering());
                     s.setAdditionalProperty(ce.getName(), se);
                 }

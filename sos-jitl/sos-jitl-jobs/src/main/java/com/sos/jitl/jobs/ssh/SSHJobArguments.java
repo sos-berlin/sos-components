@@ -2,6 +2,7 @@ package com.sos.jitl.jobs.ssh;
 
 import java.util.List;
 
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArguments;
@@ -22,66 +23,65 @@ public class SSHJobArguments extends JobArguments {
     private JobArgument<String> preCommand = new JobArgument<>("pre_command", false, "export %s='%s'");
     private JobArgument<String> postCommandRead = new JobArgument<>("post_command_read", false, "test -r %s && cat %s; exit 0");
     private JobArgument<String> postCommandDelete = new JobArgument<>("post_command_delete", false, "test -r %s && rm %s; exit 0");
-    
 
     public SSHJobArguments() {
-        super(new SSHProviderArguments());
+        super(new SSHProviderArguments(), new SOSCredentialStoreArguments());
     }
 
     public JobArgument<String> getCommand() {
         return command;
     }
 
-	public JobArgument<String> getCommandScript() {
-		return commandScript;
-	}
+    public JobArgument<String> getCommandScript() {
+        return commandScript;
+    }
 
-	public JobArgument<String> getCommandScriptFile() {
-		return commandScriptFile;
-	}
+    public JobArgument<String> getCommandScriptFile() {
+        return commandScriptFile;
+    }
 
-	public JobArgument<String> getCommandScriptParam() {
-		return commandScriptParam;
-	}
+    public JobArgument<String> getCommandScriptParam() {
+        return commandScriptParam;
+    }
 
-	public JobArgument<String> getCommandDelimiter() {
-		return commandDelimiter;
-	}
+    public JobArgument<String> getCommandDelimiter() {
+        return commandDelimiter;
+    }
 
-	public JobArgument<Boolean> getRaiseExceptionOnError() {
-		return raiseExceptionOnError;
-	}
+    public JobArgument<Boolean> getRaiseExceptionOnError() {
+        return raiseExceptionOnError;
+    }
 
-	public JobArgument<Boolean> getIgnoreError() {
-		return ignoreError;
-	}
+    public JobArgument<Boolean> getIgnoreError() {
+        return ignoreError;
+    }
 
-	public JobArgument<List<Integer>> getExitCodesToIgnore() {
-		return exitCodesToIgnore;
-	}
+    public JobArgument<List<Integer>> getExitCodesToIgnore() {
+        return exitCodesToIgnore;
+    }
 
-	public JobArgument<Boolean> getIgnoreStdErr() {
-		return ignoreStdErr;
-	}
+    public JobArgument<Boolean> getIgnoreStdErr() {
+        return ignoreStdErr;
+    }
 
-	public JobArgument<String> getTmpDir() {
-		return tmpDir;
-	}
+    public JobArgument<String> getTmpDir() {
+        return tmpDir;
+    }
 
-	public JobArgument<Boolean> getCreateEnvVars() {
-		return createEnvVars;
-	}
+    public JobArgument<Boolean> getCreateEnvVars() {
+        return createEnvVars;
+    }
 
-	public JobArgument<String> getPreCommand() {
-		return preCommand;
-	}
+    public JobArgument<String> getPreCommand() {
+        return preCommand;
+    }
 
-	public JobArgument<String> getPostCommandRead() {
-		return postCommandRead;
-	}
+    public JobArgument<String> getPostCommandRead() {
+        return postCommandRead;
+    }
 
-	public JobArgument<String> getPostCommandDelete() {
-		return postCommandDelete;
-	}
+    public JobArgument<String> getPostCommandDelete() {
+        return postCommandDelete;
+    }
 
 }

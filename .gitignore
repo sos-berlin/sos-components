@@ -4,3 +4,5 @@
 **/.classpath
 /sos-webservices/sos-webservices-deployment/.gitignore
 /.metadata/
+/sos-webservices/sos-webservices-server/src/main/resources/joc/repositories
+/sos-webservices/sos-webservices-joc/src/test/resources/joc/repositories/*

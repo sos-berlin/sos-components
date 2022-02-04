@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
@@ -53,6 +54,16 @@ public class TestDailyPlanService {
         service.start(getControllers(), configuration, StartupMode.manual_restart);
         TestDailyPlanService.stopAfter(service, StartupMode.manual_restart, 13 * 60);
 
+    }
+
+    @Ignore
+    @Test
+    public void testGenerateNewFromOldOrderId() {
+        LOGGER.info(OrdersHelper.generateNewFromOldOrderId("#2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic"));
+        LOGGER.info(OrdersHelper.generateNewFromOldOrderId("#2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic", "2021-10-25"));
+
+        LOGGER.info(OrdersHelper.getNewFromOldOrderId("#2021-10-12#C4038226057-00001-12-dailyplan_shedule_cyclic", "XXX"));
+        LOGGER.info(OrdersHelper.getNewFromOldOrderId("#2021-10-12#C4038226057-00002-12-dailyplan_shedule_cyclic", "XXX"));
     }
 
     private static void stopAfter(IJocClusterService service, StartupMode mode, int seconds) {

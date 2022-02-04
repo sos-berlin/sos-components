@@ -27,6 +27,7 @@ import java.security.SecureRandom;
 import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -99,6 +100,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.sign.keys.SOSKeyConstants;
+import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.joc.model.sign.JocKeyPair;
 
 
@@ -156,19 +158,25 @@ public abstract class KeyUtil {
     public static JocKeyPair createECDSAJOCKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         return createECDSAJOCKeyPair("prime256v1");
     }
-    
-    public static JocKeyPair createECDSAJOCKeyPair(String curveName) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-      KeyPair kp = createECDSAKeyPair(curveName);
-      JocKeyPair keyPair = new JocKeyPair();
-      byte[] encodedPrivate = kp.getPrivate().getEncoded();
-      String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
-      byte[] encodedPublic = kp.getPublic().getEncoded();
-      String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
-      keyPair.setPrivateKey(formatPrivateECDSAKey(encodedPrivateToString));
-      keyPair.setPublicKey(formatPublicECDSAKey(encodedPublicToString));
-      return keyPair;
-  }
-  
+
+    public static JocKeyPair createECDSAJOCKeyPair(String curveName) throws NoSuchAlgorithmException, NoSuchProviderException,
+            InvalidAlgorithmParameterException {
+        KeyPair kp = createECDSAKeyPair(curveName);
+        JocKeyPair keyPair = new JocKeyPair();
+        byte[] encodedPrivate = kp.getPrivate().getEncoded();
+        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+        byte[] encodedPublic = kp.getPublic().getEncoded();
+        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+        keyPair.setPrivateKey(formatPrivateECDSAKey(encodedPrivateToString));
+        keyPair.setPublicKey(formatPublicECDSAKey(encodedPublicToString));
+        try {
+            keyPair.setCertificate(CertificateUtils.asPEMString(generateCertificateFromKeyPair(kp, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM)));
+        } catch (CertificateEncodingException | IOException e) {
+            LOGGER.warn("certificate could not be extracted from key pair. cause:", e);
+        }
+        return keyPair;
+    }
+
     public static JocKeyPair createECDSAJOCKeyPair(KeyPair kp) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
       JocKeyPair keyPair = new JocKeyPair();
       byte[] encodedPrivate = kp.getPrivate().getEncoded();
@@ -1049,8 +1057,13 @@ public abstract class KeyUtil {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         return cf.generateCertificate(certificate);
     }
-    
+
     public static X509Certificate generateCertificateFromKeyPair(KeyPair keyPair) {
+        return generateCertificateFromKeyPair(keyPair, "SHA256withRSA");
+    }
+    
+    public static X509Certificate generateCertificateFromKeyPair(KeyPair keyPair, String signatureAlgorithm) {
+
         try {
             BigInteger serialNumber = BigInteger.valueOf(System.currentTimeMillis());
             Date startDate = Date.from(Instant.now());
@@ -1061,7 +1074,7 @@ public abstract class KeyUtil {
             X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(
                     issuer, serialNumber, startDate, expiryDate, subject,
                     SubjectPublicKeyInfo.getInstance(keyPair.getPublic().getEncoded()));
-            JcaContentSignerBuilder builder = new JcaContentSignerBuilder("SHA256withRSA");
+            JcaContentSignerBuilder builder = new JcaContentSignerBuilder(signatureAlgorithm);
             ContentSigner signer = builder.build(keyPair.getPrivate());
 
 

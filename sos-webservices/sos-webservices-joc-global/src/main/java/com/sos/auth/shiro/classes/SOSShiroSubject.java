@@ -56,4 +56,9 @@ public class SOSShiroSubject implements ISOSAuthSubject {
                 return sosPermissionsCreator.getMapOfFolder();
     }
 
+    @Override
+    public Boolean isForcePasswordChange() {
+        return false;
+    }
+
 }

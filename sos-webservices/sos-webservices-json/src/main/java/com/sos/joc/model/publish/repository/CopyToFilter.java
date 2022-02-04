@@ -1,13 +1,10 @@
 
 package com.sos.joc.model.publish.repository;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.publish.Config;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,8 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "draftConfigurations",
-    "deployConfigurations",
+    "rollout",
+    "local",
     "auditLog"
 })
 public class CopyToFilter {
@@ -36,10 +33,22 @@ public class CopyToFilter {
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    @JsonProperty("draftConfigurations")
-    private List<Config> draftConfigurations = new ArrayList<Config>();
-    @JsonProperty("deployConfigurations")
-    private List<Config> deployConfigurations = new ArrayList<Config>();
+    /**
+     * Filter for environment independent Objects
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("rollout")
+    private EnvIndependentConfigurations rollout;
+    /**
+     * Filter for environment related Objects
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("local")
+    private EnvRelatedConfigurations local;
     /**
      * auditParams
      * <p>
@@ -71,24 +80,48 @@ public class CopyToFilter {
         this.controllerId = controllerId;
     }
 
-    @JsonProperty("draftConfigurations")
-    public List<Config> getDraftConfigurations() {
-        return draftConfigurations;
+    /**
+     * Filter for environment independent Objects
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("rollout")
+    public EnvIndependentConfigurations getRollout() {
+        return rollout;
     }
 
-    @JsonProperty("draftConfigurations")
-    public void setDraftConfigurations(List<Config> draftConfigurations) {
-        this.draftConfigurations = draftConfigurations;
+    /**
+     * Filter for environment independent Objects
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("rollout")
+    public void setRollout(EnvIndependentConfigurations rollout) {
+        this.rollout = rollout;
     }
 
-    @JsonProperty("deployConfigurations")
-    public List<Config> getDeployConfigurations() {
-        return deployConfigurations;
+    /**
+     * Filter for environment related Objects
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("local")
+    public EnvRelatedConfigurations getLocal() {
+        return local;
     }
 
-    @JsonProperty("deployConfigurations")
-    public void setDeployConfigurations(List<Config> deployConfigurations) {
-        this.deployConfigurations = deployConfigurations;
+    /**
+     * Filter for environment related Objects
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("local")
+    public void setLocal(EnvRelatedConfigurations local) {
+        this.local = local;
     }
 
     /**
@@ -115,12 +148,12 @@ public class CopyToFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("draftConfigurations", draftConfigurations).append("deployConfigurations", deployConfigurations).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("rollout", rollout).append("local", local).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(draftConfigurations).append(controllerId).append(auditLog).append(deployConfigurations).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(rollout).append(auditLog).append(local).toHashCode();
     }
 
     @Override
@@ -132,7 +165,7 @@ public class CopyToFilter {
             return false;
         }
         CopyToFilter rhs = ((CopyToFilter) other);
-        return new EqualsBuilder().append(draftConfigurations, rhs.draftConfigurations).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(deployConfigurations, rhs.deployConfigurations).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(rollout, rhs.rollout).append(auditLog, rhs.auditLog).append(local, rhs.local).isEquals();
     }
 
 }

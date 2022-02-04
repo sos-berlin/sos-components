@@ -2,6 +2,7 @@ package com.sos.jitl.jobs.mail;
 
 import java.util.List;
 
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArguments;
@@ -9,7 +10,6 @@ import com.sos.jitl.jobs.common.JobArguments;
 public class MailJobArguments extends JobArguments {
 
     protected JobArgument<String> mailSmtpHost = new JobArgument<String>("mail.smtp.host", true);
-    // TODO release 2.2.1 changed from Integer to String - check and change back ...
     protected JobArgument<String> mailSmtpPort = new JobArgument<String>("mail.smtp.port", false);
     protected JobArgument<String> from = new JobArgument<String>("from", false);
     protected JobArgument<String> fromName = new JobArgument<String>("from_name", false);
@@ -32,10 +32,9 @@ public class MailJobArguments extends JobArguments {
     protected JobArgument<String> securityProtocol = new JobArgument<String>("security_protocol", false);
     protected JobArgument<List<String>> attachment = new JobArgument<List<String>>("attachment", false);
 
-    protected JobArgument<String> credentialStoreFile = new JobArgument<String>("credential_store_file", false);
-    protected JobArgument<String> credentialStoreKeyFile = new JobArgument<String>("credential_store_key_file", false);
-    protected JobArgument<String> credentialStorePassword = new JobArgument<String>("credential_store_password", false);
-    protected JobArgument<String> credentialStoreEntryPath = new JobArgument<String>("credential_store_entry_path", false);
+    public MailJobArguments() {
+        super(new SOSCredentialStoreArguments());
+    }
 
     public String getMailSmtpHost() {
         return mailSmtpHost.getValue();
@@ -132,21 +131,4 @@ public class MailJobArguments extends JobArguments {
     public List<String> getAttachments() {
         return attachment.getValue();
     }
-
-    public String getCredentialStoreFile() {
-        return credentialStoreFile.getValue();
-    }
-
-    public String getCredentialStoreKeyFile() {
-        return credentialStoreKeyFile.getValue();
-    }
-
-    public String getCredentialStorePassword() {
-        return credentialStorePassword.getValue();
-    }
-
-    public String getCredentialStoreEntryPath() {
-        return credentialStoreEntryPath.getValue();
-    }
-
 }

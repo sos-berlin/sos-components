@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
@@ -62,16 +63,16 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     /** e.g. "OpenSSH_$version" -> OpenSSH_for_Windows_8.1. Can be null. */
     private String serverVersion;
 
-    public SSHProvider(SSHProviderArguments args) {
-        super(args);
+    public SSHProvider(SSHProviderArguments args, SOSCredentialStoreArguments csArgs) throws Exception {
+        super(args, csArgs);
+
+        if (CredentialStoreResolver.resolve(getArguments(), getArguments().getPassphrase())) {
+            CredentialStoreResolver.resolveAttachment(getArguments(), getArguments().getAuthFile());
+        }
     }
 
     @Override
     public void connect() throws Exception {
-        if (CredentialStoreResolver.resolve(getArguments(), getArguments().getPassphrase())) {
-            CredentialStoreResolver.resolveAttachment(getArguments(), getArguments().getAuthFile());
-        }
-
         createSSHClient();
         sshClient.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
         authenticate();
@@ -515,7 +516,9 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     private AuthPublickey getAuthPublickey() throws Exception {
         // TODO Agent support getArguments().getUseKeyAgent().getValue()
         KeyProvider keyProvider = null;
-        if (getArguments().getKeepassDatabase() != null) {   // from Keepass attachment
+        // from KeePass attachment
+        if (getArguments().getKeepassDatabase() != null && getArguments().getKeepassDatabaseEntry() != null && !SOSString.isEmpty(getArguments()
+                .getKeepassAttachmentPropertyName())) {
             keyProvider = SSHProviderUtil.getKeyProviderFromKeepass(config, getArguments());
         } else {// from File
             if (SOSString.isEmpty(getArguments().getAuthFile().getValue())) {

@@ -39,11 +39,27 @@ import javax.mail.internet.MimeMultipart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
+import com.sos.commons.credentialstore.exceptions.SOSCredentialStoreException;
 import com.sos.commons.util.SOSString;
 
 public class SOSMail {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSMail.class);
+
+    public static final int PRIORITY_HIGHEST = 1;
+    public static final int PRIORITY_HIGH = 2;
+    public static final int PRIORITY_NORMAL = 3;
+    public static final int PRIORITY_LOW = 4;
+    public static final int PRIORITY_LOWEST = 5;
+
+    public static final String PROPERTY_NAME_SMTP_HOST = "mail.smtp.host";
+    public static final String PROPERTY_NAME_SMTP_PORT = "mail.smtp.port";
+    public static final String PROPERTY_NAME_SMTP_USER = "mail.smtp.user";
+    public static final String PROPERTY_NAME_SMTP_PASSWORD = "mail.smtp.password";
+
+    private SOSCredentialStoreArguments credentialStoreArguments;
     protected String subject = "";
     protected String from;
     protected String fromName;
@@ -87,11 +103,6 @@ public class SOSMail {
     private String securityProtocol = "";
     private Session session = null;
     private Properties smtpProperties = null;
-    public static final int PRIORITY_HIGHEST = 1;
-    public static final int PRIORITY_HIGH = 2;
-    public static final int PRIORITY_NORMAL = 3;
-    public static final int PRIORITY_LOW = 4;
-    public static final int PRIORITY_LOWEST = 5;
 
     abstract class MydataSource implements DataSource {
 
@@ -234,28 +245,6 @@ public class SOSMail {
         authenticator = new SOSMailAuthenticator(getUser(), getPassword());
         session = Session.getInstance(props, authenticator);
         return session;
-    }
-
-    private String getMailPropertyValue(String key) {
-        Properties p;
-        if (smtpProperties == null) {
-            p = System.getProperties();
-        } else {
-            p = smtpProperties;
-        }
-        if (p.get(key) == null) {
-            return null;
-        } else {
-            return p.get(key).toString();
-        }
-    }
-
-    private String getUser() {
-        return getMailPropertyValue("mail.smtp.user");
-    }
-
-    private String getPassword() {
-        return getMailPropertyValue("mail.smtp.password");
     }
 
     public String getSecurityProtocol() {
@@ -479,6 +468,8 @@ public class SOSMail {
     }
 
     private boolean sendJavaMail() throws Exception {
+        useCredentialStoreArguments();
+
         String host = getHost();
         if (SOSString.isEmpty(host)) {
             throw new Exception("host is empty");
@@ -514,15 +505,15 @@ public class SOSMail {
                 message.setSentDate(new Date());
                 if (smtpProperties == null) {
                     if (port != null) {
-                        System.setProperty("mail.smtp.port", port);
+                        System.setProperty(PROPERTY_NAME_SMTP_PORT, port);
                     }
-                    System.setProperty("mail.smtp.host", host);
+                    System.setProperty(PROPERTY_NAME_SMTP_HOST, host);
                 } else {
                     // TODO ??? why set smtpProperties ?
                     if (port != null) {
-                        smtpProperties.setProperty("mail.smtp.port", port);
+                        smtpProperties.setProperty(PROPERTY_NAME_SMTP_PORT, port);
                     }
-                    smtpProperties.setProperty("mail.smtp.host", host);
+                    smtpProperties.setProperty(PROPERTY_NAME_SMTP_HOST, host);
                 }
                 if (SOSString.isEmpty(getUser())) {
                     transport.connect();
@@ -588,6 +579,16 @@ public class SOSMail {
             }
         } catch (Exception e) {
             throw e;
+        }
+    }
+
+    private void useCredentialStoreArguments() throws SOSCredentialStoreException {
+        if (credentialStoreArguments != null && credentialStoreArguments.getFile() != null) {
+            SOSCredentialStoreResolver r = credentialStoreArguments.newResolver();
+
+            addMailProperty(PROPERTY_NAME_SMTP_HOST, r.resolve(getHost()));
+            addMailProperty(PROPERTY_NAME_SMTP_USER, r.resolve(getUser()));
+            addMailProperty(PROPERTY_NAME_SMTP_PASSWORD, r.resolve(getPassword()));
         }
     }
 
@@ -991,11 +992,33 @@ public class SOSMail {
     }
 
     public String getHost() {
-        return getMailPropertyValue("mail.smtp.host");
+        return getMailPropertyValue(PROPERTY_NAME_SMTP_HOST);
     }
 
     public String getPort() {
-        return getMailPropertyValue("mail.smtp.port");
+        return getMailPropertyValue(PROPERTY_NAME_SMTP_PORT);
+    }
+
+    private String getUser() {
+        return getMailPropertyValue(PROPERTY_NAME_SMTP_USER);
+    }
+
+    private String getPassword() {
+        return getMailPropertyValue(PROPERTY_NAME_SMTP_PASSWORD);
+    }
+
+    private String getMailPropertyValue(String key) {
+        Properties p;
+        if (smtpProperties == null) {
+            p = System.getProperties();
+        } else {
+            p = smtpProperties;
+        }
+        if (p.get(key) == null) {
+            return null;
+        } else {
+            return p.get(key).toString();
+        }
     }
 
     public void setQueueDir(final String queueDir) {
@@ -1099,22 +1122,22 @@ public class SOSMail {
     }
 
     public void setHost(final String host) throws Exception {
-        addMailProperty("mail.smtp.host", host);
+        addMailProperty(PROPERTY_NAME_SMTP_HOST, host);
         this.initMessage();
     }
 
     public void setPassword(final String password) throws Exception {
-        addMailProperty("mail.smtp.password", password);
+        addMailProperty(PROPERTY_NAME_SMTP_PASSWORD, password);
         this.initMessage();
     }
 
     public void setUser(final String user) throws Exception {
-        addMailProperty("mail.smtp.user", user);
+        addMailProperty(PROPERTY_NAME_SMTP_USER, user);
         this.initMessage();
     }
 
     public void setPort(final String port) throws Exception {
-        addMailProperty("mail.smtp.port", port);
+        addMailProperty(PROPERTY_NAME_SMTP_PORT, port);
         this.initMessage();
     }
 
@@ -1201,6 +1224,14 @@ public class SOSMail {
 
     public void setQueueMailOnError(boolean val) {
         this.queueMailOnError = val;
+    }
+
+    public void setCredentialStoreArguments(SOSCredentialStoreArguments val) {
+        credentialStoreArguments = val;
+    }
+
+    public SOSCredentialStoreArguments getCredentialStoreArguments() {
+        return credentialStoreArguments;
     }
 
     public static void main(final String[] args) throws Exception {

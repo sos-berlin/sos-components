@@ -16,6 +16,7 @@ public class SOSAuthCurrentAccountAnswer {
     private boolean isPermittet;
     private boolean hasRole;
     private boolean isAuthenticated;
+    private boolean isForcePasswordChange;
     private String accessToken;
     private String message;
     private Long sessionTimeout;
@@ -168,6 +169,16 @@ public class SOSAuthCurrentAccountAnswer {
 
     public String getIdentityService() {
         return identityService;
+    }
+
+    @XmlElement   
+    public boolean isForcePasswordChange() {
+        return isForcePasswordChange;
+    }
+
+    
+    public void setIsForcePasswordChange(boolean isForcePasswordChange) {
+        this.isForcePasswordChange = isForcePasswordChange;
     }
  
 

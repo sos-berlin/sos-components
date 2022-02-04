@@ -21,10 +21,10 @@ public class DBItemIamAccount2Roles {
     @Column(name = "[ID]")
     private Long id;
 
-    @Column(name = "[ROLE_ID]")
+    @Column(name = "[ROLE_ID]", nullable = false)
     private Long roleId;
 
-    @Column(name = "[ACCOUNT_ID]")
+    @Column(name = "[ACCOUNT_ID]", nullable = false)
     private Long accountId;
 
     public DBItemIamAccount2Roles() {

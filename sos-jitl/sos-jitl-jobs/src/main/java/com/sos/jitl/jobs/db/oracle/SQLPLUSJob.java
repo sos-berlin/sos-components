@@ -10,10 +10,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
-import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobArgument.Type;
@@ -38,13 +39,14 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
             if (SOSString.isEmpty(step.getArguments().getCommandScriptFile())) {
                 throw new SOSJobRequiredArgumentMissingException("command is empty. please check the   \"command_script_file\" parameter.");
             }
-            return step.success(process(step, step.getArguments()));
+            return step.success(process(step, step.getArguments(), step.getAppArguments(SOSCredentialStoreArguments.class)));
         } catch (Throwable e) {
             throw e;
         }
     }
 
-    public Map<String, Object> process(JobStep<SQLPlusJobArguments> step, SQLPlusJobArguments args) throws Exception {
+    public Map<String, Object> process(JobStep<SQLPlusJobArguments> step, SQLPlusJobArguments args, SOSCredentialStoreArguments csArgs)
+            throws Exception {
 
         args.checkRequired();
         JobLogger logger = null;
@@ -53,18 +55,12 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
         }
         Map<String, Object> resultMap = new HashMap<String, Object>();
         try {
-            if (args.getCredentialStoreFile() != null) {
-                SOSKeePassResolver r = new SOSKeePassResolver(args.getCredentialStoreFile(), args.getCredentialStoreKeyFile(), args
-                        .getCredentialStorePassword());
-
-                r.setEntryPath(args.getCredentialStoreEntryPath());
+            if (csArgs.getFile() != null) {
+                SOSCredentialStoreResolver r = csArgs.newResolver();
 
                 args.setDbUrl(r.resolve(args.getDbUrl()));
                 args.setDbUser(r.resolve(args.getDbUser()));
                 args.setDbPassword(r.resolve(args.getDbPassword().getValue()));
-                debug(logger, args.getCredentialStoreFile());
-                debug(logger, args.getCredentialStoreKeyFile());
-                debug(logger, args.getCredentialStoreEntryPath());
             }
 
             debug(logger, "dbUrl: " + args.getDbUrl());
@@ -84,7 +80,7 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
             SOSCommandResult sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName));
             final String conNL = System.getProperty("line.separator");
             String stdOut = sosCommandResult.getStdOut();
-            log(logger,String.format("[stdout]%s", stdOut));
+            log(logger, String.format("[stdout]%s", stdOut));
             String[] stdOutStringArray = stdOut.split(conNL);
 
             sqlPlusCommandHandler.getVariables(args, sosCommandResult, resultMap, stdOutStringArray);
@@ -125,11 +121,13 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
 
         arguments.setDbPassword("cs://sos/db/ur/@password");
         arguments.setDbUser("cs://sos/db/ur/@user");
-        arguments.setCredentialStoreFile("D:/documents/sos-berlin.com/scheduler_joc_cockpit/config/profiles/sos.kdbx");
-        arguments.setCredentialStoreKeyFile("D:/documents/sos-berlin.com/scheduler_joc_cockpit/config/profiles/sos.key");
+
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        csArgs.setFile("D:/documents/sos-berlin.com/scheduler_joc_cockpit/config/profiles/sos.kdbx");
+        csArgs.setKeyFile("D:/documents/sos-berlin.com/scheduler_joc_cockpit/config/profiles/sos.key");
 
         try {
-            sosSQLPlusJob.process(null, arguments);
+            sosSQLPlusJob.process(null, arguments, csArgs);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

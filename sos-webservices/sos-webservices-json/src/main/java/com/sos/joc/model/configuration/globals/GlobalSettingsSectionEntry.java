@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.configuration.globals;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -20,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "value",
     "type",
     "default",
+    "values",
     "ordering"
 })
 public class GlobalSettingsSectionEntry {
@@ -33,7 +36,7 @@ public class GlobalSettingsSectionEntry {
     @JsonProperty("value")
     private String value;
     /**
-     * JobScheduler object type
+     * Settings data type
      * <p>
      * 
      * 
@@ -48,6 +51,8 @@ public class GlobalSettingsSectionEntry {
      */
     @JsonProperty("default")
     private String _default;
+    @JsonProperty("values")
+    private List<String> values = new ArrayList<String>();
     /**
      * non negative integer
      * <p>
@@ -80,7 +85,7 @@ public class GlobalSettingsSectionEntry {
     }
 
     /**
-     * JobScheduler object type
+     * Settings data type
      * <p>
      * 
      * 
@@ -91,7 +96,7 @@ public class GlobalSettingsSectionEntry {
     }
 
     /**
-     * JobScheduler object type
+     * Settings data type
      * <p>
      * 
      * 
@@ -123,6 +128,16 @@ public class GlobalSettingsSectionEntry {
         this._default = _default;
     }
 
+    @JsonProperty("values")
+    public List<String> getValues() {
+        return values;
+    }
+
+    @JsonProperty("values")
+    public void setValues(List<String> values) {
+        this.values = values;
+    }
+
     /**
      * non negative integer
      * <p>
@@ -147,12 +162,12 @@ public class GlobalSettingsSectionEntry {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("value", value).append("type", type).append("_default", _default).append("ordering", ordering).toString();
+        return new ToStringBuilder(this).append("value", value).append("type", type).append("_default", _default).append("values", values).append("ordering", ordering).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(_default).append(type).append(value).append(ordering).toHashCode();
+        return new HashCodeBuilder().append(_default).append(type).append(value).append(ordering).append(values).toHashCode();
     }
 
     @Override
@@ -164,7 +179,7 @@ public class GlobalSettingsSectionEntry {
             return false;
         }
         GlobalSettingsSectionEntry rhs = ((GlobalSettingsSectionEntry) other);
-        return new EqualsBuilder().append(_default, rhs._default).append(type, rhs.type).append(value, rhs.value).append(ordering, rhs.ordering).isEquals();
+        return new EqualsBuilder().append(_default, rhs._default).append(type, rhs.type).append(value, rhs.value).append(ordering, rhs.ordering).append(values, rhs.values).isEquals();
     }
 
 }

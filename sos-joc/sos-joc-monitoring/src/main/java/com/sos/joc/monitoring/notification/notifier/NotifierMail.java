@@ -47,8 +47,10 @@ public class NotifierMail extends ANotifier {
 
     @Override
     public NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
+        NotifyResult result = new NotifyResult(monitor.getMessage(), getSendInfo());
         if (mail == null) {
-            return new NotifyResult(monitor.getMessage(), getSendInfo(), "mail is null");
+            result.setError("mail is null");
+            return result;
         }
 
         NotifyResult skip = checkJobNotification(type, mos);
@@ -72,13 +74,13 @@ public class NotifierMail extends ANotifier {
                     // - mail will be stored to the mail queue directory
                     // - a warning message will be logged by SOSMail
                 } else {
-                    LOGGER.error(getInfo4executeException(mo, mos, type, monitor.getInfo().toString(), null));
+                    LOGGER.error(getInfo4executeFailed(mo, mos, type, monitor.getInfo().toString()));
                 }
             }
-            return new NotifyResult(mail.getBody(), getSendInfo());
+            return result;
         } catch (Throwable e) {
-            return new NotifyResult(mail.getBody(), getSendInfo(), getInfo4executeException(mo, mos, type, "[" + monitor.getInfo().toString() + "]",
-                    e));
+            result.setError(getInfo4executeFailed(mo, mos, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
+            return result;
         } finally {
             try {
                 mail.clearRecipients();
@@ -101,10 +103,10 @@ public class NotifierMail extends ANotifier {
             MailResource mr = getMailResource(conf);
             createMail(mr);
             if (SOSString.isEmpty(mail.getHost())) {
-                throw new Exception(String.format("[%s][missing host][known properties]%s", monitor.getInfo(), mr.getMaskedProperties()));
+                throw new Exception(String.format("[%s][missing host][known properties]%s", monitor.getInfo(), mr.getMaskedMailProperties()));
             }
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][known properties]%s", monitor.getInfo(), mr.getMaskedProperties()));
+                LOGGER.debug(String.format("[%s][known properties]%s", monitor.getInfo(), mr.getMaskedMailProperties()));
             }
         } catch (Throwable e) {
             mail = null;
@@ -136,9 +138,10 @@ public class NotifierMail extends ANotifier {
     }
 
     private void createMail(MailResource res) throws Exception {
-        mail = new SOSMail(res.copyProperties());
+        mail = new SOSMail(res.copyMailProperties());
         mail.init();
         mail.setQueueMailOnError(QUEUE_MAIL_ON_ERROR);
+        mail.setCredentialStoreArguments(res.getCredentialStoreArgs());
         setMailHeaders(res);
     }
 

@@ -3,14 +3,12 @@ package com.sos.joc.db.authentication;
 public class DBItemIamPermissionWithName {
 
     private String controllerId;
-    private Long accountId;
     private Long roleId;
     private String accountPermission;
     private String folderPermission;
     private Boolean excluded;
     private Boolean recursive;
     private String roleName;
-    private String accountName;
 
     public String getControllerId() {
         return controllerId;
@@ -20,13 +18,6 @@ public class DBItemIamPermissionWithName {
         this.controllerId = controllerId;
     }
 
-    public Long getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(Long accountId) {
-        this.accountId = accountId;
-    }
 
     public Long getRoleId() {
         return roleId;
@@ -74,14 +65,6 @@ public class DBItemIamPermissionWithName {
 
     public void setRoleName(String roleName) {
         this.roleName = roleName;
-    }
-
-    public String getAccountName() {
-        return accountName;
-    }
-
-    public void setAccountName(String accountName) {
-        this.accountName = accountName;
     }
 
 }

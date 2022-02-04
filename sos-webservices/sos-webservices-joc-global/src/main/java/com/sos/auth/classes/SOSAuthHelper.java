@@ -1,21 +1,44 @@
 package com.sos.auth.classes;
 
-import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.CertificateEncodingException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
+import java.util.Date;
+import java.util.List;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import javax.naming.InvalidNameException;
+import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.client.ClientCertificateHandler;
+import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
+import com.sos.joc.db.authentication.DBItemIamAccount;
+import com.sos.joc.db.configuration.JocConfigurationDbLayer;
+import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.db.security.IamAccountDBLayer;
+import com.sos.joc.db.security.IamAccountFilter;
+import com.sos.joc.exceptions.JocError;
+import com.sos.joc.exceptions.JocException;
 
 public class SOSAuthHelper {
-    
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthHelper.class);
+
     public static final String EMERGENCY_ROLE = "all";
     public static final String EMERGENCY_PERMISSION = "sos:products";
     public static final String EMERGENY_KEY = "sos_emergency_key";
@@ -23,7 +46,7 @@ public class SOSAuthHelper {
     public static final String OBJECT_TYPE_IAM_GENERAL = "GENERAL";
 
     public static String getSHA512(String pwd) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        if (pwd.length() == 128){
+        if (pwd.length() == 128) {
             return pwd;
         }
         SecureRandom random = new SecureRandom();
@@ -58,23 +81,143 @@ public class SOSAuthHelper {
         return null;
     }
 
-    public static boolean emergencyKeyExist() {
-        if (Globals.sosCockpitProperties != null) {
-            Path p = Globals.sosCockpitProperties.resolvePath(EMERGENY_KEY);
-            File f = new File(p.toString().replace('\\', '/'));
-            return f.exists();
+    public static Boolean getForcePasswordChange(String account, SOSIdentityService identityService) throws SOSHibernateException {
+        SOSHibernateSession sosHibernateSession = null;
+
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSAuthHelper:getForcePasswordChange");
+            sosHibernateSession.setAutoCommit(false);
+            Globals.beginTransaction(sosHibernateSession);
+
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+            IamAccountFilter iamAccountFilter = new IamAccountFilter();
+            iamAccountFilter.setIdentityServiceId(identityService.getIdentityServiceId());
+            iamAccountFilter.setAccountName(account);
+
+            List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
+            if (listOfAccounts.size() == 1) {
+                return listOfAccounts.get(0).getForcePasswordChange();
+            } else {
+                return false;
+            }
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
+
+    public static boolean accountIsDisable(Long identityServiceId, String account) {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSInternAuthLogin.class.getName());
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+
+            IamAccountFilter filter = new IamAccountFilter();
+            filter.setAccountName(account);
+            filter.setIdentityServiceId(identityServiceId);
+
+            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(filter);
+            if (dbItemIamAccount != null && dbItemIamAccount.getDisabled()) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (SOSHibernateException e) {
+            LOGGER.error("", e);
+        } finally {
+            Globals.disconnect(sosHibernateSession);
         }
         return false;
     }
-    
-    public static void removeEmergencyKey(){
-        if (Globals.sosCockpitProperties != null) {
-            Path p = Globals.sosCockpitProperties.resolvePath(EMERGENY_KEY);
-            File f = new File(p.toString().replace('\\', '/'));
-            if (f.exists()){
-                f.delete();
+
+    public static SOSInitialPasswordSetting getInitialPasswordSettings(SOSHibernateSession sosHibernateSession) throws JsonParseException,
+            JsonMappingException, IOException, SOSHibernateException {
+        SOSInitialPasswordSetting sosInitialPasswordSetting = new SOSInitialPasswordSetting();
+        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+        JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
+        jocConfigurationFilter.setConfigurationType(CONFIGURATION_TYPE_IAM);
+        jocConfigurationFilter.setObjectType(OBJECT_TYPE_IAM_GENERAL);
+        List<DBItemJocConfiguration> result = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 1);
+        String initialPassword;
+        Long minPasswordLength;
+        if (result.size() == 1) {
+            com.sos.joc.model.security.Properties properties = Globals.objectMapper.readValue(result.get(0).getConfigurationItem(),
+                    com.sos.joc.model.security.Properties.class);
+            initialPassword = properties.getInitialPassword();
+            if (properties.getMinPasswordLength() == null) {
+                minPasswordLength = 0L;
+            } else {
+                minPasswordLength = properties.getMinPasswordLength();
+            }
+            if (initialPassword == null) {
+                initialPassword = "initial";
+                LOGGER.warn("Missing initial password settings. Using default value=initial");
+            } else {
+                if (initialPassword.length() < minPasswordLength) {
+                    JocError error = new JocError();
+                    error.setMessage("Initial password is too short");
+                    throw new JocException(error);
+                }
+            }
+        } else {
+            initialPassword = "initial";
+            minPasswordLength = 0L;
+        }
+        sosInitialPasswordSetting.setInitialPassword(initialPassword);
+        sosInitialPasswordSetting.setMininumPasswordLength(minPasswordLength);
+        return sosInitialPasswordSetting;
+
+    }
+
+    public static boolean checkCertificate(HttpServletRequest request, String account) {
+
+        boolean success = false;
+        LOGGER.debug("==> check certificate for " + account);
+
+        if (request != null) {
+            String clientCertCN = null;
+            try {
+                ClientCertificateHandler clientCertHandler = new ClientCertificateHandler(request);
+                clientCertCN = clientCertHandler.getClientCN();
+                Date now = new Date();
+                if (clientCertHandler.getClientCertificate() == null) {
+                    LOGGER.debug("Certificate is null");
+                } else {
+                    if (clientCertHandler.getClientCertificate().getNotAfter() == null) {
+                        LOGGER.warn("Certificate not_after is null");
+                    }
+                    if (clientCertHandler.getClientCertificate().getNotBefore() == null) {
+                        LOGGER.warn("Certificate not_before is null");
+                    }
+                    LOGGER.debug("Now:" + now.getTime());
+                    if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotAfter() != null)) {
+                        LOGGER.debug("NotAfter:" + clientCertHandler.getClientCertificate().getNotAfter().getTime());
+                    }
+                    if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotBefore() != null)) {
+                        LOGGER.debug("NotBefore:" + clientCertHandler.getClientCertificate().getNotBefore().getTime());
+                    }
+                }
+
+                if (clientCertCN != null) {
+                    if (account == null) {
+                        account = "";
+                    }
+                    success = (account.isEmpty() || clientCertCN.equals(account));
+                    LOGGER.debug("success " + success);
+                } else {
+                    LOGGER.debug("clientCertCN could not read");
+                }
+                if (success) {
+                    account = clientCertCN;
+                }
+
+            } catch (IOException | CertificateEncodingException | InvalidNameException e) {
+                LOGGER.warn("No client certificate found." + e.getMessage());
+                LOGGER.info("No client certificate found." + e.getMessage());
             }
         }
+
+        return success;
     }
 
 }

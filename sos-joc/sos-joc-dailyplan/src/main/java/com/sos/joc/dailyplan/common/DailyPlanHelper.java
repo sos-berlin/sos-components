@@ -1,15 +1,14 @@
 package com.sos.joc.dailyplan.common;
 
 import java.nio.file.Paths;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,22 +116,15 @@ public class DailyPlanHelper {
 
     public static OrderCounter getOrderCount(List<DBItemDailyPlanOrder> plannedOrders) {
         OrderCounter c = new OrderCounter();
-        DateFormat format = new SimpleDateFormat("hh:mm:ss");
 
-        Map<CycleOrderKey, List<DBItemDailyPlanOrder>> map = new TreeMap<CycleOrderKey, List<DBItemDailyPlanOrder>>();
+        Map<MainCyclicOrderKey, List<DBItemDailyPlanOrder>> map = new HashMap<MainCyclicOrderKey, List<DBItemDailyPlanOrder>>();
         for (DBItemDailyPlanOrder item : plannedOrders) {
             if ((item.getStartMode() == 1)) {
-                CycleOrderKey key = new CycleOrderKey();
-                key.setPeriodBegin(format.format(item.getPeriodBegin()));
-                key.setPeriodEnd(format.format(item.getPeriodEnd()));
-                key.setRepeat(String.valueOf(item.getRepeatInterval()));
-                key.setOrderName(item.getOrderName());
-                key.setWorkflowPath(item.getWorkflowPath());
+                MainCyclicOrderKey key = new MainCyclicOrderKey(item);
                 if (map.get(key) == null) {
                     map.put(key, new ArrayList<DBItemDailyPlanOrder>());
                     c.addCyclic();
                 }
-
                 map.get(key).add(item);
                 c.addCyclicTotal();
             } else {
@@ -145,20 +137,14 @@ public class DailyPlanHelper {
     public static OrderCounter getOrderCount(Map<PlannedOrderKey, PlannedOrder> plannedOrders) {
         OrderCounter c = new OrderCounter();
 
-        Map<CycleOrderKey, List<PlannedOrder>> map = new TreeMap<CycleOrderKey, List<PlannedOrder>>();
+        Map<MainCyclicOrderKey, List<PlannedOrder>> map = new HashMap<MainCyclicOrderKey, List<PlannedOrder>>();
         for (PlannedOrder plannedOrder : plannedOrders.values()) {
             if ((plannedOrder.getPeriod().getSingleStart() == null)) {
-                CycleOrderKey key = new CycleOrderKey();
-                key.setPeriodBegin(plannedOrder.getPeriod().getBegin());
-                key.setPeriodEnd(plannedOrder.getPeriod().getEnd());
-                key.setRepeat(String.valueOf(plannedOrder.getPeriod().getRepeat()));
-                key.setOrderName(plannedOrder.getOrderName());
-                key.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
+                MainCyclicOrderKey key = new MainCyclicOrderKey(plannedOrder);
                 if (map.get(key) == null) {
                     map.put(key, new ArrayList<PlannedOrder>());
                     c.addCyclic();
                 }
-
                 map.get(key).add(plannedOrder);
                 c.addCyclicTotal();
             } else {
@@ -166,7 +152,6 @@ public class DailyPlanHelper {
             }
         }
         return c;
-
     }
 
     public static String getStartTimeAsString(String timeZoneName, String dailyPlanStartTime, String periodBegin) {
@@ -193,8 +178,12 @@ public class DailyPlanHelper {
 
     public static String buildOrderId(String dailyPlanDate, Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode)
             throws SOSInvalidDataException {
+        return buildOrderId(dailyPlanDate, getOrderName(schedule, variableSet), startTime, startMode);
+    }
+
+    public static String getOrderName(Schedule schedule, VariableSet variableSet) {
         String orderName = "";
-        if ((variableSet.getOrderName() == null) || (variableSet.getOrderName().isEmpty())) {
+        if (SOSString.isEmpty(variableSet.getOrderName())) {
             orderName = Paths.get(schedule.getPath()).getFileName().toString();
         } else {
             orderName = variableSet.getOrderName();
@@ -202,8 +191,7 @@ public class DailyPlanHelper {
         if (orderName.length() > 30) {
             orderName = orderName.substring(0, 30);
         }
-
-        return buildOrderId(dailyPlanDate, orderName, startTime, startMode);
+        return orderName;
     }
 
     private static String buildOrderId(String dailyPlanDate, String orderName, Long startTime, Integer startMode) throws SOSInvalidDataException {
@@ -221,24 +209,5 @@ public class DailyPlanHelper {
         calendar.setTime(date);
         calendar.add(java.util.Calendar.DATE, 1);
         return calendar.getTime();
-    }
-
-    public static String modifiedOrderId(String oldOrderId, Long add) {
-        String[] stringSplit = oldOrderId.split("-");
-        String newOrderId = "";
-        if (stringSplit.length >= 4) {
-            for (int i = 0; i < 3; i++) {
-                newOrderId = newOrderId + stringSplit[i] + "-";
-            }
-
-            if (stringSplit.length <= 5) {
-                newOrderId = newOrderId + add + "-" + stringSplit[stringSplit.length - 1];
-            } else {
-                newOrderId = newOrderId + stringSplit[3] + "-" + stringSplit[4] + "-" + add + "-" + stringSplit[stringSplit.length - 1];
-            }
-        } else {
-            newOrderId = oldOrderId;
-        }
-        return newOrderId;
     }
 }

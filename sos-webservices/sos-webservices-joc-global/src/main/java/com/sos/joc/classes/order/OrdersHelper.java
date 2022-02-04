@@ -108,13 +108,12 @@ import scala.Function1;
 import scala.Option;
 
 public class OrdersHelper {
-    
+
     private static AtomicInteger no = new AtomicInteger(0);
     public static final int mainOrderIdLength = 25;
     public static final String mainOrderIdControllerPattern = "replaceAll(\"$js7EpochMilli\", '^.*([0-9]{9})$', '$1') ++ '00-'";
     public static final Pattern orderIdPattern = Pattern.compile("#(\\d{4}-\\d{2}-\\d{2})#\\D(\\d{9})\\d{2}-.*");
     public static final String cyclicOrderIdRegex = "#\\d{4}-\\d{2}-\\d{2}#C[0-9]+-.*";
-    
 
     public static final Map<Class<? extends Order.State>, OrderStateText> groupByStateClasses = Collections.unmodifiableMap(
             new HashMap<Class<? extends Order.State>, OrderStateText>() {
@@ -356,9 +355,9 @@ public class OrdersHelper {
         return null;
     }
 
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, OrderItem oItem, JControllerState controllerState, Boolean compact, Set<Folder> listOfFolders,
-            Set<OrderId> blockedButWaitingForAdmissionOrderIds, Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis)
-            throws IOException, JocFolderPermissionsException {
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, OrderItem oItem, JControllerState controllerState, Boolean compact,
+            Set<Folder> listOfFolders, Set<OrderId> blockedButWaitingForAdmissionOrderIds, Map<JWorkflowId, Collection<String>> finalParameters,
+            Long surveyDateMillis) throws IOException, JocFolderPermissionsException {
         OrderV o = new OrderV();
         WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
         if (finalParameters != null) {
@@ -382,8 +381,8 @@ public class OrdersHelper {
         if (opt.isRight()) {
             o.setAgentId(opt.get().string());
         }
-        //o.setPosition(oItem.getWorkflowPosition().getPosition());
-        //o.setPositionString(JPosition.apply(jOrder.asScala().position()).toString());
+        // o.setPosition(oItem.getWorkflowPosition().getPosition());
+        // o.setPositionString(JPosition.apply(jOrder.asScala().position()).toString());
         JPosition origPos = JPosition.apply(jOrder.asScala().position());
         String jsonPos = origPos.toJson().replaceAll("\"(try|catch|cycle)\\+?[^\"]*", "\"$1");
         JPosition pos = JPosition.fromJson(jsonPos).get();
@@ -392,7 +391,7 @@ public class OrdersHelper {
         o.setCycleState(oItem.getState().getCycleState());
         int positionsSize = o.getPosition().size();
         if ("Processing".equals(oItem.getState().getTYPE())) {
-            //o.setSubagentId(oItem.getState().getSubagentId());
+            // o.setSubagentId(oItem.getState().getSubagentId());
             o.setSubagentId(((Order.Processing) jOrder.asScala().state()).subagentId().string());
             if (positionsSize > 2) {
                 try {
@@ -406,8 +405,8 @@ public class OrdersHelper {
                     //
                 }
             }
-        } else if (oItem.getId().contains("|")) { //is (not running) child order
-            orderIsInImplicitEnd(jOrder, controllerState).ifPresent(b -> o.setPositionIsImplicitEnd(b ? true: null));
+        } else if (oItem.getId().contains("|")) { // is (not running) child order
+            orderIsInImplicitEnd(jOrder, controllerState).ifPresent(b -> o.setPositionIsImplicitEnd(b ? true : null));
         }
         Long scheduledFor = getScheduledForMillis(jOrder);
         if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis && "Fresh".equals(oItem.getState().getTYPE())) {
@@ -425,8 +424,8 @@ public class OrdersHelper {
             o.setQuestion(((Order.Prompting) jOrder.asScala().state()).question().convertToString());
         }
         o.setMarked(getMark(jOrder.asScala().mark()));
-        //o.setIsCancelable(jOrder.asScala().isCancelable() ? null : false);
-        //o.setIsSuspendible(jOrder.asScala().isSuspendible() ? null : false);
+        // o.setIsCancelable(jOrder.asScala().isCancelable() ? null : false);
+        // o.setIsSuspendible(jOrder.asScala().isSuspendible() ? null : false);
         o.setScheduledFor(scheduledFor);
         o.setScheduledNever(JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor));
         if (scheduledFor == null && surveyDateMillis != null && OrderStateText.SCHEDULED.equals(o.getState().get_text())) {
@@ -448,9 +447,9 @@ public class OrdersHelper {
         return mapJOrderToOrderV(jOrder, oItem, controllerState, compact, listOfFolders, blockedButWaitingForAdmissionOrderIds, finalParameters,
                 surveyDateMillis);
     }
-    
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis)
-            throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
+
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Map<JWorkflowId, Collection<String>> finalParameters,
+            Long surveyDateMillis) throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
         return mapJOrderToOrderV(jOrder, oItem, null, compact, null, null, finalParameters, surveyDateMillis);
@@ -669,10 +668,10 @@ public class OrdersHelper {
         return listVariables;
     }
 
-    public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Set<String> temporaryOrderIds, DailyPlanModifyOrder dailyplanModifyOrder, String accessToken,
-            JocError jocError, Long auditlogId, SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ExecutionException {
+    public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Set<String> temporaryOrderIds, DailyPlanModifyOrder dailyplanModifyOrder,
+            String accessToken, JocError jocError, Long auditlogId, SOSAuthFolderPermissions folderPermissions)
+            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
         Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
         if (temporaryOrderIds.isEmpty()) {
@@ -710,7 +709,7 @@ public class OrdersHelper {
                 }
                 args = variablesToScalaValuedArguments(checkArguments(vars, JsonConverter.signOrderPreparationToInvOrderPreparation(workflow
                         .getOrderPreparation())));
-                
+
                 // modify scheduledFor if necessary
                 Optional<Instant> scheduledFor = order.scheduledFor();
                 if (dailyplanModifyOrder.getScheduledFor() != null) {
@@ -737,7 +736,7 @@ public class OrdersHelper {
         ModifyOrders modifyOrders = new ModifyOrders();
         modifyOrders.setControllerId(controllerId);
         modifyOrders.setOrderType(OrderModeType.FRESH_ONLY);
-        
+
         if (addOrders.containsKey(true) && !addOrders.get(true).isEmpty()) {
             final Map<OrderId, JFreshOrder> freshOrders = addOrders.get(true).stream().parallel().map(Either::get).collect(Collectors.toMap(
                     FreshOrder::getOldOrderId, FreshOrder::getJFreshOrderWithDeleteOrderWhenTerminated));
@@ -763,10 +762,10 @@ public class OrdersHelper {
                     });
                 }
             });
-            
+
             OrderIdMap orderIdMap = new OrderIdMap();
             freshOrders.forEach((oldOrder, jFreshOrder) -> orderIdMap.setAdditionalProperty(oldOrder.string(), jFreshOrder.id().string()));
-            
+
             result = Either.right(orderIdMap);
         } else if (addOrders.containsKey(false) && !addOrders.get(false).isEmpty()) {
             result = Either.left(addOrders.get(false).stream().parallel().map(Either::getLeft).collect(Collectors.toList()));
@@ -789,18 +788,38 @@ public class OrdersHelper {
     public static CompletableFuture<Either<Problem, Void>> cancelOrders(ModifyOrders modifyOrders, Collection<OrderId> oIds) {
         return cancelOrders(ControllerApi.of(modifyOrders.getControllerId()), modifyOrders, oIds);
     }
-    
+
     public static String getUniqueOrderId() {
-        int n = no.getAndUpdate(x -> x == Integer.MAX_VALUE ? 0 : x+1);
+        int n = no.getAndUpdate(x -> x == Integer.MAX_VALUE ? 0 : x + 1);
         return Long.valueOf((Instant.now().toEpochMilli() * 100) + (n % 100)).toString().substring(4);
+    }
+
+    public static String generateNewFromOldOrderId(String oldOrderId, String newDailyPlanDate) {
+        // #2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
+        // #2021-10-25#C1234567890-00012-12-dailyplan_shedule_cyclic
+        return generateNewFromOldOrderId(getWithNewDateFromOldOrderId(oldOrderId, newDailyPlanDate));
+    }
+    
+    public static String getWithNewDateFromOldOrderId(String oldOrderId, String newDailyPlanDate) {
+        return "#" + newDailyPlanDate + oldOrderId.substring(11);
+    }
+
+    public static String generateNewFromOldOrderId(String oldOrderId) {
+        return getNewFromOldOrderId(oldOrderId, OrdersHelper.getUniqueOrderId());
+    }
+
+    public static String getNewFromOldOrderId(String oldOrderId, String newUniqueOrderIdPart) {
+        // #2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
+        // replace 4038226057 with the new part
+        return oldOrderId.replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10,11}(-.+)$", "$1" + newUniqueOrderIdPart + "$2");
     }
 
     public static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd) {
         String orderId = String.format("#%s#T%s-%s", yyyymmdd, getUniqueOrderId(), order.getOrderName());
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
-//        if (!scheduledFor.isPresent()) {
-//            scheduledFor = Optional.of(Instant.now());
-//        }
+        // if (!scheduledFor.isPresent()) {
+        // scheduledFor = Optional.of(Instant.now());
+        // }
         return mapToFreshOrder(OrderId.of(orderId), WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())),
                 variablesToScalaValuedArguments(order.getArguments()), scheduledFor);
     }
@@ -866,7 +885,8 @@ public class OrdersHelper {
         });
     }
 
-    public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrders(Collection<JOrder> jOrders, Long auditlogId, String controllerId) {
+    public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrders(Collection<JOrder> jOrders, Long auditlogId,
+            String controllerId) {
         return storeAuditLogDetails(jOrders.stream().parallel().map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o
                 .id().string(), controllerId)).collect(Collectors.toList()), auditlogId);
     }
@@ -917,10 +937,14 @@ public class OrdersHelper {
         return orderId.substring(0, mainOrderIdLength);
     }
 
+    public static String getDateFromOrderId(String orderId) {
+        return orderId.substring(1, 11);
+    }
+
     public static boolean isCyclicOrderId(String orderId) {
         return orderId.matches(cyclicOrderIdRegex);
     }
-    
+
     public static Set<OrderId> getWaitingForAdmissionOrderIds(Collection<OrderId> blockedOrderIds, JControllerState controllerState) {
         if (!blockedOrderIds.isEmpty()) {
             Either<Problem, Map<OrderId, Set<JOrderObstacle>>> obstaclesE = controllerState.ordersToObstacles(blockedOrderIds, controllerState
@@ -933,19 +957,19 @@ public class OrdersHelper {
         }
         return Collections.emptySet();
     }
-    
+
     public static ConcurrentMap<OrderId, JOrder> getWaitingForAdmissionOrders(Collection<JOrder> blockedOrders, JControllerState controllerState) {
-       Set<OrderId> ids = getWaitingForAdmissionOrderIds(blockedOrders.stream().map(JOrder::id).collect(Collectors.toSet()), controllerState);
-       return blockedOrders.parallelStream().filter(o -> ids.contains(o.id())).collect(Collectors.toConcurrentMap(JOrder::id, Function.identity()));
+        Set<OrderId> ids = getWaitingForAdmissionOrderIds(blockedOrders.stream().map(JOrder::id).collect(Collectors.toSet()), controllerState);
+        return blockedOrders.parallelStream().filter(o -> ids.contains(o.id())).collect(Collectors.toConcurrentMap(JOrder::id, Function.identity()));
     }
-    
+
     public static Optional<Boolean> orderIsInImplicitEnd(JOrder o, JControllerState controllerState) {
         if (controllerState == null || o == null) {
             return Optional.empty();
         }
         return Optional.of(controllerState.asScala().instruction(o.asScala().workflowPosition()) instanceof ImplicitEnd);
     }
-    
+
     public static Long getScheduledForMillis(String orderId, Long defaultMillis) {
         try {
             Matcher m = orderIdPattern.matcher(orderId);
@@ -956,11 +980,11 @@ public class OrdersHelper {
         }
         return defaultMillis;
     }
-    
+
     public static Long getScheduledForMillis(JOrder order) {
         return getScheduledForMillis(order, null);
     }
-    
+
     public static Long getScheduledForMillis(JOrder order, Long defaultMillis) {
         if (order.scheduledFor().isPresent()) {
             return order.scheduledFor().get().toEpochMilli();
@@ -968,7 +992,7 @@ public class OrdersHelper {
             return getScheduledForMillis(order.id().string(), defaultMillis);
         }
     }
-    
+
     public static Long getScheduledForMillis(Order<Order.State> order, Long defaultMillis) {
         if (!order.scheduledFor().isEmpty()) {
             return order.scheduledFor().get().toEpochMilli();
@@ -976,7 +1000,7 @@ public class OrdersHelper {
             return getScheduledForMillis(order.id().string(), defaultMillis);
         }
     }
-    
+
     public static Instant getScheduledForInstant(JOrder order) {
         if (order.scheduledFor().isPresent()) {
             return order.scheduledFor().get();
@@ -988,7 +1012,7 @@ public class OrdersHelper {
             return null;
         }
     }
-    
+
     public static ToLongFunction<JOrder> getCompareScheduledFor(long surveyDateMillis) {
         return o -> getScheduledForMillis(o, surveyDateMillis);
     }

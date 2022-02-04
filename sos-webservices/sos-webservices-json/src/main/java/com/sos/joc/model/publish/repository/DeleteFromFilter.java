@@ -21,7 +21,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "draftConfigurations",
+    "configurations",
+    "category",
     "auditLog"
 })
 public class DeleteFromFilter {
@@ -31,8 +32,17 @@ public class DeleteFromFilter {
      * (Required)
      * 
      */
-    @JsonProperty("draftConfigurations")
-    private List<Config> draftConfigurations = new ArrayList<Config>();
+    @JsonProperty("configurations")
+    private List<Config> configurations = new ArrayList<Config>();
+    /**
+     * Repository Category, based on the local environment or environment independent/able to roll out
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("category")
+    private Category category;
     /**
      * auditParams
      * <p>
@@ -47,9 +57,9 @@ public class DeleteFromFilter {
      * (Required)
      * 
      */
-    @JsonProperty("draftConfigurations")
-    public List<Config> getDraftConfigurations() {
-        return draftConfigurations;
+    @JsonProperty("configurations")
+    public List<Config> getConfigurations() {
+        return configurations;
     }
 
     /**
@@ -57,9 +67,33 @@ public class DeleteFromFilter {
      * (Required)
      * 
      */
-    @JsonProperty("draftConfigurations")
-    public void setDraftConfigurations(List<Config> draftConfigurations) {
-        this.draftConfigurations = draftConfigurations;
+    @JsonProperty("configurations")
+    public void setConfigurations(List<Config> configurations) {
+        this.configurations = configurations;
+    }
+
+    /**
+     * Repository Category, based on the local environment or environment independent/able to roll out
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("category")
+    public Category getCategory() {
+        return category;
+    }
+
+    /**
+     * Repository Category, based on the local environment or environment independent/able to roll out
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("category")
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
     /**
@@ -86,12 +120,12 @@ public class DeleteFromFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("draftConfigurations", draftConfigurations).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("configurations", configurations).append("category", category).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(draftConfigurations).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(category).append(auditLog).append(configurations).toHashCode();
     }
 
     @Override
@@ -103,7 +137,7 @@ public class DeleteFromFilter {
             return false;
         }
         DeleteFromFilter rhs = ((DeleteFromFilter) other);
-        return new EqualsBuilder().append(draftConfigurations, rhs.draftConfigurations).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(category, rhs.category).append(auditLog, rhs.auditLog).append(configurations, rhs.configurations).isEquals();
     }
 
 }

@@ -37,7 +37,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -75,7 +74,6 @@ import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
@@ -147,7 +145,6 @@ import js7.data_for_java.lock.JLock;
 import js7.data_for_java.orderwatch.JFileWatch;
 import js7.data_for_java.value.JExpression;
 import reactor.core.publisher.Flux;
-import shapeless.newtype;
 
 public abstract class PublishUtils {
 
@@ -2089,16 +2086,11 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
-//        List<DBItemDeploymentHistory> allEntries = new ArrayList<DBItemDeploymentHistory>();
-//        folders.stream().forEach(item -> allEntries.addAll(dbLayer.getDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
         ConcurrentMap<String, Optional<DBItemDeploymentHistory>> groupedEntries = 
                 folders.parallelStream().map(item -> dbLayer.getDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())).flatMap(List::stream)
                 .collect(Collectors.groupingByConcurrent(DBItemDeploymentHistory::getPath, Collectors.maxBy(Comparator.comparing(DBItemDeploymentHistory::getId))));
-//        Map<String, List<DBItemDeploymentHistory>> groupedEntries = allEntries.stream().collect(Collectors.groupingBy(DBItemDeploymentHistory::getPath));
         return groupedEntries.values().stream().filter(Optional::isPresent).map(Optional::get)
                 .filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(Collectors.toSet());
-//        return entries.stream().filter(Objects::nonNull).filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
-//            .filter(Objects::nonNull).collect(Collectors.toSet());       
     }
 
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(List<Configuration> folders,
@@ -2409,7 +2401,7 @@ public abstract class PublishUtils {
         }
     }
 
-    private static ConfigurationObject getConfigurationObjectFromDBItem(DBItemDeploymentHistory item, String commitId) {
+    public static ConfigurationObject getConfigurationObjectFromDBItem(DBItemDeploymentHistory item, String commitId) {
         try {
             ConfigurationObject configurationObject = new ConfigurationObject();
             // jsObject.setId(item.getId());
@@ -2458,7 +2450,7 @@ public abstract class PublishUtils {
         }
     }
 
-    private static ConfigurationObject getConfigurationObjectFromDBItem(DBItemInventoryConfiguration item) {
+    public static ConfigurationObject getConfigurationObjectFromDBItem(DBItemInventoryConfiguration item) {
         try {
             ConfigurationObject configuration = new ConfigurationObject();
             // configuration.setId(item.getId());
@@ -2517,7 +2509,7 @@ public abstract class PublishUtils {
         }
     }
 
-    private static ConfigurationObject getConfigurationObjectFromDBItem(DBItemInventoryReleasedConfiguration item) {
+    public static ConfigurationObject getConfigurationObjectFromDBItem(DBItemInventoryReleasedConfiguration item) {
         try {
             ConfigurationObject configuration = new ConfigurationObject();
             // configuration.setId(item.getId());

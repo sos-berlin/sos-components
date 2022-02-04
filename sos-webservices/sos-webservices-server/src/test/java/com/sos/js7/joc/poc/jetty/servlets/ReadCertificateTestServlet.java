@@ -3,8 +3,6 @@ package com.sos.js7.joc.poc.jetty.servlets;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;

@@ -1,12 +1,11 @@
 package com.sos.commons.vfs.common;
 
-import java.nio.file.Paths;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 
 public class CredentialStoreResolverTest {
@@ -18,9 +17,12 @@ public class CredentialStoreResolverTest {
     public void test() throws Exception {
         LOGGER.info(System.getProperty("user.dir"));
 
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        csArgs.getFile().setValue("src/test/resources/test_kdbx.kdbx");
+        csArgs.getPassword().setValue("test");
+
         SSHProviderArguments args = new SSHProviderArguments();
-        args.getCredentialStoreFile().setValue(Paths.get("src/test/resources/test_kdbx.kdbx"));
-        args.getCredentialStorePassword().setValue("test");
+        args.setCredentialStore(csArgs);
 
         args.getHost().setValue("cs://server/SFTP/ssh.sos@url");
         args.getPassword().setValue("cs://server/SFTP/ssh.sos@password");

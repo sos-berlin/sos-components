@@ -306,7 +306,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
 
     public static JOCDefaultResponse responseStatus401(SOSAuthCurrentAccountAnswer entity) {
         Response.ResponseBuilder responseBuilder = Response.status(401).header("Content-Type", MediaType.APPLICATION_JSON).cacheControl(setNoCaching());
-        LOGGER.error(entity.getMessage());
+        LOGGER.info(entity.getMessage());
         responseBuilder.entity(entity);
         return new JOCDefaultResponse(responseBuilder.build());
     }

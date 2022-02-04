@@ -32,17 +32,21 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCOrderResourceImpl.class);
     private DailyPlanSettings settings;
 
-    protected void setSettings() {
+    public static DailyPlanSettings getDailyPlanSettings() {
+        DailyPlanSettings settings = new DailyPlanSettings();
         if (Globals.configurationGlobals == null) {// TODO to remove
-            settings = new DailyPlanSettings();
             settings.setTimeZone("Etc/UTC");
             settings.setPeriodBegin("00:00");
             LOGGER.warn("Could not read settings. Using defaults");
         } else {
-            GlobalSettingsReader reader = new GlobalSettingsReader();
             AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
-            this.settings = reader.getSettings(section);
+            settings = new GlobalSettingsReader().getSettings(section);
         }
+        return settings;
+    }
+
+    protected void setSettings() {
+        this.settings = getDailyPlanSettings();
     }
 
     protected DailyPlanSettings getSettings() {
@@ -187,7 +191,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                 PlannedOrderItem p = createPlanItem(item);
                 p.setControllerId(controllerId);
 
-                if ((p.getStartMode() == 1 && !in.getExpandCycleOrders())) {
+                if ((p.getStartMode().equals(DBLayerDailyPlannedOrders.START_MODE_CYCLIC) && !in.getExpandCycleOrders())) {
                     result.add(getCyclicPlannedOrder(dbLayer, plannedStartFrom, plannedStartTo, p, getCyclicDetails));
                 } else {
                     result.add(p);
@@ -208,7 +212,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                 Date dateFrom = null;
                 if (plannedStartFrom != null && item.getState() != null) {
                     Date now = new Date();
-                    if (DailyPlanOrderStateText.SUBMITTED.value().equals(item.getState().get_text().value()) && now.getTime() > plannedStartFrom.getTime()) {
+                    if (DailyPlanOrderStateText.SUBMITTED.value().equals(item.getState().get_text().value()) && now.getTime() > plannedStartFrom
+                            .getTime()) {
                         dateFrom = now;
                     }
                 }

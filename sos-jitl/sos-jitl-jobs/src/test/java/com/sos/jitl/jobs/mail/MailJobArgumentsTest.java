@@ -91,21 +91,4 @@ public class MailJobArgumentsTest extends MailJobArguments {
             this.attachment.getValue().add(attachment);
         }
     }
-
-    public void setCredentialStoreFile(String credentialStoreFile) {
-        this.credentialStoreFile.setValue(credentialStoreFile);
-    }
-
-    public void setCredentialStoreKeyFile(String credentialStoreKeyFile) {
-        this.credentialStoreKeyFile.setValue(credentialStoreKeyFile);
-    }
-
-    public void setCredentialStorePassword(String credentialStorePassword) {
-        this.credentialStorePassword.setValue(credentialStorePassword);
-    }
-
-    public void setCredentialStoreEntryPath(String credentialStoreEntryPath) {
-        this.credentialStoreEntryPath.setValue(credentialStoreEntryPath);
-    }
-
 }

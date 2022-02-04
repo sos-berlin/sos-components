@@ -13,7 +13,8 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
@@ -36,7 +37,8 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
     public JOutcome.Completed onOrderProcess(JobStep<PLSQLJobArguments> step) throws Exception {
 
         try {
-            Connection connection = getConnection(step.getLogger(), step.getArguments());
+            Connection connection = getConnection(step, step.getLogger(), step.getArguments(), step.getAppArguments(
+                    SOSCredentialStoreArguments.class));
             return step.success(process(step.getLogger(), connection, step.getArguments()));
         } catch (Throwable e) {
             throw e;
@@ -57,7 +59,8 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
         }
     }
 
-    private Connection getConnection(JobLogger logger, PLSQLJobArguments args) throws Exception {
+    private Connection getConnection(JobStep<PLSQLJobArguments> step, JobLogger logger, PLSQLJobArguments args, SOSCredentialStoreArguments csArgs)
+            throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         Connection connection = null;
@@ -69,19 +72,12 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
             if (args.useHibernateFile()) {
                 // args.setCredentionsFromHibernateFile();
             }
-            if (args.getCredentialStoreFile() != null) {
-                SOSKeePassResolver r = new SOSKeePassResolver(args.getCredentialStoreFile(), args.getCredentialStoreKeyFile(), args
-                        .getCredentialStorePassword());
-
-                r.setEntryPath(args.getCredentialStoreEntryPath());
+            if (csArgs.getFile() != null) {
+                SOSCredentialStoreResolver r = csArgs.newResolver();
 
                 args.setDbUrl(r.resolve(args.getDbUrl()));
-
                 args.setDbUser(r.resolve(args.getDbUser()));
                 args.setDbPassword(r.resolve(args.getDbPassword()));
-                debug(logger, args.getCredentialStoreFile());
-                debug(logger, args.getCredentialStoreKeyFile());
-                debug(logger, args.getCredentialStoreEntryPath());
             }
 
             debug(logger, "dbUrl: " + args.getDbUrl());
@@ -143,7 +139,7 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
         }
 
         plsql = unescapeXML(plsql).replace("\r\n", "\n");
- 
+
         log(logger, String.format("substituted Statement: %s will be executed.", plsql));
 
         dbmsOutput = new DbmsOutput(connection);
@@ -220,9 +216,11 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
         arguments.setDbUrl("jdbc:oracle:thin:@//LAPTOP-7RSACSCV:1521/xe");
         // arguments.setHibernateFile(Paths.get("D:/documents/sos-berlin.com/scheduler_joc_cockpit/oracle/hibernate.cfg.xml"));
 
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+
         Connection connection;
         try {
-            connection = sosPLSQLJob.getConnection(null, arguments);
+            connection = sosPLSQLJob.getConnection(null, null, arguments, csArgs);
             sosPLSQLJob.process(null, connection, arguments);
         } catch (Exception e) {
             e.printStackTrace();

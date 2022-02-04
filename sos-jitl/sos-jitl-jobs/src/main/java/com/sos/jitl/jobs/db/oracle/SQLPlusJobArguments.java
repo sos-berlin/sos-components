@@ -1,5 +1,6 @@
 package com.sos.jitl.jobs.db.oracle;
 
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.jitl.jobs.common.JobArgument;
@@ -22,10 +23,9 @@ public class SQLPlusJobArguments extends JobArguments {
     private JobArgument<String> variableParserRegExpr = new JobArgument<String>("variable_parser_reg_expr", false,
             "^SET\\s+([^\\s]+)\\s*IS\\s+(.*)$");
 
-    private JobArgument<String> credentialStoreFile = new JobArgument<String>("credential_store_file", false);
-    private JobArgument<String> credentialStoreKeyFile = new JobArgument<String>("credential_store_key_file", false);
-    private JobArgument<String> credentialStorePassword = new JobArgument<String>("credential_store_password", false);
-    private JobArgument<String> credentialStoreEntryPath = new JobArgument<String>("credential_store_entry_path", false);
+    public SQLPlusJobArguments() {
+        super(new SOSCredentialStoreArguments());
+    }
 
     public String getVariableParserRegExpr() {
         return variableParserRegExpr.getValue();
@@ -59,38 +59,6 @@ public class SQLPlusJobArguments extends JobArguments {
         this.dbUser.setValue(dbUser);
     }
 
-    public String getCredentialStoreFile() {
-        return credentialStoreFile.getValue();
-    }
-
-    public void setCredentialStoreFile(String credentialStoreFile) {
-        this.credentialStoreFile.setValue(credentialStoreFile);
-    }
-
-    public String getCredentialStoreKeyFile() {
-        return credentialStoreKeyFile.getValue();
-    }
-
-    public void setCredentialStoreKeyFile(String credentialStoreKeyFile) {
-        this.credentialStoreKeyFile.setValue(credentialStoreKeyFile);
-    }
-
-    public String getCredentialStorePassword() {
-        return credentialStorePassword.getValue();
-    }
-
-    public void setCredentialStorePassword(String credentialStorePassword) {
-        this.credentialStorePassword.setValue(credentialStorePassword);
-    }
-
-    public String getCredentialStoreEntryPath() {
-        return credentialStoreEntryPath.getValue();
-    }
-
-    public void setCredentialStoreEntryPath(String credentialStoreEntryPath) {
-        this.credentialStoreEntryPath.setValue(credentialStoreEntryPath);
-    }
-
     public String getShellCommand() {
         return shellCommand.getValue();
     }
@@ -99,7 +67,6 @@ public class SQLPlusJobArguments extends JobArguments {
         this.shellCommand.setValue(shellCommand);
     }
 
- 
     public String getIgnoreOraMessages() {
         return ignoreOraMessages.getValue();
     }
@@ -222,9 +189,9 @@ public class SQLPlusJobArguments extends JobArguments {
                 .equalsIgnoreCase(key)) || ("ignore_ora_messages".equalsIgnoreCase(key)) || ("ignore_sp2_messages".equalsIgnoreCase(key))
                 || ("command_script_file".equalsIgnoreCase(key)) || ("command".equalsIgnoreCase(key)) || ("command_line_options".equalsIgnoreCase(
                         key)) || ("include_files".equalsIgnoreCase(key)) || ("sqlError".equalsIgnoreCase(key)) || ("variable_parser_reg_expr"
-                                .equalsIgnoreCase(key)) || ("credential_store_file".equalsIgnoreCase(key)) || ("credential_store_key_file"
-                                        .equalsIgnoreCase(key)) || ("credential_store_password".equalsIgnoreCase(key))
-                || ("credential_store_entry_path".equalsIgnoreCase(key));
+                                .equalsIgnoreCase(key)) || (SOSCredentialStoreArguments.ARG_NAME_FILE.equalsIgnoreCase(key))
+                || (SOSCredentialStoreArguments.ARG_NAME_KEY_FILE.equalsIgnoreCase(key)) || (SOSCredentialStoreArguments.ARG_NAME_PASSWORD
+                        .equalsIgnoreCase(key)) || (SOSCredentialStoreArguments.ARG_NAME_ENTRY_PATH.equalsIgnoreCase(key));
 
     }
 

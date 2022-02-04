@@ -18,11 +18,11 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
-import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.IdentityService;
+import com.sos.joc.model.security.IdentityServiceAuthenticationScheme;
 import com.sos.joc.model.security.IdentityServiceFilter;
 import com.sos.joc.model.security.IdentityServiceRename;
 import com.sos.joc.model.security.IdentityServiceTypes;
@@ -67,6 +67,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 identityService.setDisabled(dbItemIamIdentityService.getDisabled());
                 identityService.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
                 identityService.setIdentityServiceType(IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
+                identityService.setServiceAuthenticationScheme(IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService
+                        .getAuthenticationScheme()));
+                identityService.setSingleFactorCert(dbItemIamIdentityService.getSingleFactorCert());
+                identityService.setSingleFactorPwd(dbItemIamIdentityService.getSingleFactorPwd());
                 identityService.setOrdering(dbItemIamIdentityService.getOrdering());
                 identityService.setRequired(dbItemIamIdentityService.getRequired());
             }
@@ -115,9 +119,21 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             dbItemIamIdentityService.setIdentityServiceType(identityService.getIdentityServiceType().value());
             dbItemIamIdentityService.setOrdering(identityService.getOrdering());
             dbItemIamIdentityService.setRequired(identityService.getRequired());
-            dbItemIamIdentityService.setAuthenticationScheme("SINGLE");
-            dbItemIamIdentityService.setSingleFactorCert(false);
-            dbItemIamIdentityService.setSingleFactorPwd(true);
+            if (identityService.getServiceAuthenticationScheme() != null) {
+                dbItemIamIdentityService.setAuthenticationScheme(identityService.getServiceAuthenticationScheme().value());
+            } else {
+                dbItemIamIdentityService.setAuthenticationScheme(IdentityServiceAuthenticationScheme.SINGLE_FACTOR.value());
+            }
+            if (identityService.getSingleFactorPwd() != null) {
+                dbItemIamIdentityService.setSingleFactorPwd(identityService.getSingleFactorPwd());
+            } else {
+                dbItemIamIdentityService.setSingleFactorPwd(true);
+            }
+            if (identityService.getSingleFactorCert() != null) {
+                dbItemIamIdentityService.setSingleFactorCert(identityService.getSingleFactorCert());
+            } else {
+                dbItemIamIdentityService.setSingleFactorCert(false);
+            }
 
             if (dbItemIamIdentityService.getId() == null) {
                 sosHibernateSession.save(dbItemIamIdentityService);
@@ -209,19 +225,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
             filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
-            iamIdentityServiceDBLayer.delete(filter);
-
-            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-
-            JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
-            jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
-            jocConfigurationFilter.setName(identityServiceFilter.getIdentityServiceName());
-            jocConfigurationFilter.setObjectType(SOSAuthHelper.OBJECT_TYPE_IAM_GENERAL);
-
-            List<DBItemJocConfiguration> listOfdbItemJocConfiguration = jocConfigurationDBLayer.getJocConfigurations(jocConfigurationFilter, 0);
-            if (listOfdbItemJocConfiguration.size() == 1) {
-                sosHibernateSession.delete(listOfdbItemJocConfiguration.get(0));
-            }
+            iamIdentityServiceDBLayer.deleteCascading(filter);
 
             filter.setIdentityServiceName(null);
             if (iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0).size() == 0) {
@@ -264,8 +268,8 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             identityServices.setIdentityServiceTypes(new ArrayList<IdentityServiceTypes>());
 
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.JOC);
-            // identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.LDAP);
-            // identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.LDAP_JOC);
+            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.LDAP);
+            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.LDAP_JOC);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.SHIRO);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.VAULT);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.VAULT_JOC);
@@ -281,6 +285,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 identityService.setDisabled(dbItemIamIdentityService.getDisabled());
                 identityService.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
                 identityService.setIdentityServiceType(IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
+                identityService.setServiceAuthenticationScheme(IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService
+                        .getAuthenticationScheme()));
+                identityService.setSingleFactorCert(dbItemIamIdentityService.getSingleFactorCert());
+                identityService.setSingleFactorPwd(dbItemIamIdentityService.getSingleFactorPwd());
                 identityService.setOrdering(dbItemIamIdentityService.getOrdering());
                 identityService.setRequired(dbItemIamIdentityService.getRequired());
                 identityServices.getIdentityServiceItems().add(identityService);

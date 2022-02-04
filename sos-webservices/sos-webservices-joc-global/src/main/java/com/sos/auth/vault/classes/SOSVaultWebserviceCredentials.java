@@ -1,6 +1,7 @@
 package com.sos.auth.vault.classes;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
@@ -13,6 +14,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
@@ -25,11 +28,7 @@ public class SOSVaultWebserviceCredentials {
     private String accessToken = "";
     private String decodedAccount = "";
     private String serviceUrl;
-
-    private String keystorePath = "";
-    private String keystorePassword = "";
-    private String keyPassword = "";
-    private KeystoreType keystoreType = null;
+    private String authenticationMethodPath;
 
     private String truststorePath = "";
     private String truststorePassword = "";
@@ -83,30 +82,6 @@ public class SOSVaultWebserviceCredentials {
         return account;
     }
 
-    public String getKeystorePath() {
-        return keystorePath;
-    }
-
-    public void setKeystorePath(String keystorePath) {
-        this.keystorePath = keystorePath;
-    }
-
-    public String getKeystorePassword() {
-        return keystorePassword;
-    }
-
-    public void setKeystorePassword(String keystorePassword) {
-        this.keystorePassword = keystorePassword;
-    }
-
-    public KeystoreType getKeystoreType() {
-        return keystoreType;
-    }
-
-    public void setKeystoreType(KeystoreType keystoreType) {
-        this.keystoreType = keystoreType;
-    }
-
     public String getTruststorePath() {
         return truststorePath;
     }
@@ -131,14 +106,6 @@ public class SOSVaultWebserviceCredentials {
         this.truststoreType = truststoreType;
     }
 
-    public String getKeyPassword() {
-        return keyPassword;
-    }
-
-    public void setKeyPassword(String keyPassword) {
-        this.keyPassword = keyPassword;
-    }
-
     private String getProperty(String value, String defaultValue) {
         if (value == null || value.isEmpty()) {
             return defaultValue;
@@ -149,6 +116,12 @@ public class SOSVaultWebserviceCredentials {
     }
 
     public void setValuesFromProfile(SOSIdentityService sosIdentityService) {
+
+        JocCockpitProperties jocCockpitProperties = Globals.sosCockpitProperties;
+
+        if (jocCockpitProperties == null) {
+            jocCockpitProperties = new JocCockpitProperties();
+        }
 
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -173,34 +146,50 @@ public class SOSVaultWebserviceCredentials {
                     serviceUrl = getProperty(properties.getVault().getIamVaultUrl(), "https://vault:8200");
                 }
 
-                if (keystorePath.isEmpty()) {
-                    keystorePath = getProperty(properties.getVault().getIamVaultKeystorePath(), "");
+                if (authenticationMethodPath == null || authenticationMethodPath.isEmpty()) {
+                    authenticationMethodPath = getProperty(properties.getVault().getIamVaultAuthenticationMethodPath(), "ldap");
                 }
 
-                if (keystorePassword.isEmpty()) {
-                    keystorePassword = getProperty(properties.getVault().getIamVaultKeystorePassword(), "");
+                String truststorePathGui = getProperty(properties.getVault().getIamVaultTruststorePath(), "");
+                String truststorePassGui = getProperty(properties.getVault().getIamVaultTruststorePassword(), "");
+                String tTypeGui = getProperty(properties.getVault().getIamVaultTruststoreType(), "");
+
+                String truststorePathDefault = getProperty(System.getProperty("javax.net.ssl.trustStore"), "");
+                String truststoreTypeDefault = getProperty(System.getProperty("javax.net.ssl.trustStoreType"), "");
+                String truststorePassDefault = getProperty(System.getProperty("javax.net.ssl.trustStorePassword"), "");
+                if (!(truststorePathGui + truststorePassGui + tTypeGui).isEmpty()) {
+
+                    if (truststorePath.isEmpty()) {
+                        truststorePath = getProperty(truststorePathGui, truststorePathDefault);
+                    }
+
+                    if (truststorePassword.isEmpty()) {
+                        truststorePassword = getProperty(truststorePassGui, truststorePassDefault);
+                    }
+
+                    if (truststoreType == null) {
+                        truststoreType = KeystoreType.valueOf(getProperty(tTypeGui, truststoreTypeDefault));
+                    }
+                } else {
+
+                    if (truststorePath.isEmpty()) {
+                        truststorePath = jocCockpitProperties.getProperty("truststore_path", truststorePathDefault);
+                    }
+
+                    if (truststorePassword.isEmpty()) {
+                        truststorePassword = jocCockpitProperties.getProperty("truststore_password", truststorePassDefault);
+                    }
+
+                    if (truststoreType == null) {
+                        truststoreType = KeystoreType.valueOf(jocCockpitProperties.getProperty("truststore_type", truststoreTypeDefault));
+                    }
                 }
 
-                if (keyPassword.isEmpty()) {
-                    keyPassword = getProperty(properties.getVault().getIamVaultKeyPassword(), "");
+                if (truststorePath != null && !truststorePath.trim().isEmpty()) {
+                    Path p = jocCockpitProperties.resolvePath(truststorePath.trim());
+                    truststorePath = p.toString();
                 }
 
-                if (keystoreType == null) {
-                    keystoreType = KeystoreType.fromValue(getProperty(properties.getVault().getIamVaultKeystoreType(), "PKCS12"));
-                }
-
-                if (truststorePath.isEmpty()) {
-                    truststorePath = getProperty(properties.getVault().getIamVaultTruststorePath(), "");
-                }
-
-                if (truststorePassword.isEmpty()) {
-                    truststorePassword = getProperty(properties.getVault().getIamVaultTruststorePassword(), "");
-                }
-
-                if (truststoreType == null) {
-                    truststoreType = KeystoreType.fromValue(getProperty(properties.getVault().getIamVaultTruststoreType(), "PKCS12"));
-
-                }
                 if (applicationToken == null) {
                     applicationToken = getProperty(properties.getVault().getIamVaultApplicationToken(), "");
                 }
@@ -241,10 +230,17 @@ public class SOSVaultWebserviceCredentials {
     @Override
     public String toString() {
         return "SOSVaultWebserviceCredentials [account=" + account + ", accessToken=" + accessToken + ", decodedAccount=" + decodedAccount
-                + ", serviceUrl=" + serviceUrl + ", keystorePath=" + keystorePath + ", keystorePassword=" + keystorePassword + ", keyPassword="
-                + keyPassword + ", keystoreType=" + keystoreType + ", truststorePath=" + truststorePath + ", truststorePassword=" + truststorePassword
+                + ", serviceUrl=" + serviceUrl + ", truststorePath=" + truststorePath + ", truststorePassword=" + truststorePassword
                 + ", truststoreType=" + truststoreType + ", applicationToken=" + applicationToken + ", vaultAccount=" + vaultAccount
                 + ", vaultPassword=" + vaultPassword + "]";
+    }
+
+    public String getAuthenticationMethodPath() {
+        return authenticationMethodPath;
+    }
+
+    public void setAuthenticationMethodPath(String authenticationMethodPath) {
+        this.authenticationMethodPath = authenticationMethodPath;
     }
 
 }

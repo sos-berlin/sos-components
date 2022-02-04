@@ -7,13 +7,14 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
 
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_IAM_IDENTITY_SERVICES)
+@Table(name = DBLayer.TABLE_IAM_IDENTITY_SERVICES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_NAME]"}) })
 @SequenceGenerator(name = DBLayer.TABLE_IAM_IDENTITY_SERVICES_SEQUENCE, sequenceName = DBLayer.TABLE_IAM_IDENTITY_SERVICES_SEQUENCE, allocationSize = 1)
 
 public class DBItemIamIdentityService {
@@ -75,8 +76,11 @@ public class DBItemIamIdentityService {
         return disabled;
     }
 
-    public void setDisabled(Boolean disabled) {
-        this.disabled = disabled;
+    public void setDisabled(Boolean val) {
+        if (val == null) {
+            val = false;
+        }
+        this.disabled = val;
     }
 
     public Boolean getRequired() {
@@ -84,8 +88,11 @@ public class DBItemIamIdentityService {
         return required;
     }
 
-    public void setRequired(Boolean required) {
-        this.required = required;
+    public void setRequired(Boolean val) {
+        if (val == null) {
+            val = false;
+        }
+        this.required = val;
     }
 
     public String getIdentityServiceType() {
@@ -104,34 +111,37 @@ public class DBItemIamIdentityService {
         this.identityServiceName = identityServiceName;
     }
 
-    
     public String getAuthenticationScheme() {
+        if ("SINGLE".equals(authenticationScheme)) {
+            authenticationScheme = "SINGLE-FACTOR";
+        }
         return authenticationScheme;
     }
 
-    
     public void setAuthenticationScheme(String authenticationScheme) {
         this.authenticationScheme = authenticationScheme;
     }
 
-    
     public Boolean getSingleFactorPwd() {
         return singleFactorPwd;
     }
 
-    
-    public void setSingleFactorPwd(Boolean singleFactorPwd) {
-        this.singleFactorPwd = singleFactorPwd;
+    public void setSingleFactorPwd(Boolean val) {
+        if (val == null) {
+            val = false;
+        }
+        this.singleFactorPwd = val;
     }
 
-    
     public Boolean getSingleFactorCert() {
         return singleFactorCert;
     }
 
-    
-    public void setSingleFactorCert(Boolean singleFactorCert) {
-        this.singleFactorCert = singleFactorCert;
+    public void setSingleFactorCert(Boolean val) {
+        if (val == null) {
+            val = false;
+        }
+        this.singleFactorCert = val;
     }
 
 }

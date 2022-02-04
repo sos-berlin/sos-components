@@ -83,7 +83,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
 
                 filter.setOrderPlannedStartFrom(null);
                 filter.setOrderPlannedStartTo(null);
-                filter.setSubmissionIds(null);
+                // filter.setSubmissionIds(null);
                 filter.setSubmissionForDate(date);
 
                 List<DBItemDailyPlanWithHistory> orders = getOrders(session, controllerId, filter, true);

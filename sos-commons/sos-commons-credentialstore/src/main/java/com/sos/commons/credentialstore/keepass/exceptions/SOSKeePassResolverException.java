@@ -7,4 +7,5 @@ public class SOSKeePassResolverException extends SOSKeePassDatabaseException {
     public SOSKeePassResolverException(final String msg) {
         super(msg);
     }
+
 }

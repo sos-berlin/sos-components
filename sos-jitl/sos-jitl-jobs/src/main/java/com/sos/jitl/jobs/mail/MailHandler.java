@@ -9,6 +9,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.mail.SOSMailAttachment;
 import com.sos.jitl.jobs.common.JobLogger;
@@ -27,7 +28,7 @@ public class MailHandler {
 
     }
 
-    public void sendMail() throws Exception {
+    public void sendMail(SOSCredentialStoreArguments csArgs) throws Exception {
         SOSMail sosMail = null;
         try {
             Properties smtpProperties = new Properties();
@@ -40,12 +41,13 @@ public class MailHandler {
                 }
             }
 
-            putSmtpProperties(smtpProperties, "mail.smtp.host", args.getMailSmtpHost());
-            putSmtpProperties(smtpProperties, "mail.smtp.port", args.getMailSmtpPort());
-            putSmtpProperties(smtpProperties, "mail.smtp.user", args.getMailSmtpUser());
-            putSmtpProperties(smtpProperties, "mail.smtp.password", args.getMailSmtpPassword());
-            sosMail = new SOSMail(smtpProperties);
+            putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_HOST, args.getMailSmtpHost());
+            putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_PORT, args.getMailSmtpPort());
+            putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_USER, args.getMailSmtpUser());
+            putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_PASSWORD, args.getMailSmtpPassword());
 
+            sosMail = new SOSMail(smtpProperties);
+            sosMail.setCredentialStoreArguments(csArgs);
             sosMail.setProperties(smtpProperties);
             sosMail.setFrom(args.getFrom());
 

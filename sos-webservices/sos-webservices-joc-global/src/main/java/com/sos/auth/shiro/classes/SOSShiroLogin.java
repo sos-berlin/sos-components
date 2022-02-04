@@ -94,7 +94,6 @@ public class SOSShiroLogin implements ISOSLogin {
                             currentSubject.getSession().setTimeout(Globals.iamSessionTimeout*1000);
                         }
                     }
-
                 }
 
             } catch (UnknownAccountException uae) {

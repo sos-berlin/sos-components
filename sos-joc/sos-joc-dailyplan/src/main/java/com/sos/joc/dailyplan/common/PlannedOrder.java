@@ -1,5 +1,7 @@
 package com.sos.joc.dailyplan.common;
 
+import java.nio.file.Paths;
+
 import com.sos.controller.model.order.FreshOrder;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.schedule.Schedule;
@@ -11,11 +13,15 @@ public class PlannedOrder {
     private final String controllerId;
     private final Long calendarId;
 
+    private final String workflowName;
+    private final String workflowPath;
+    private final String scheduleName;
+    private final String schedulePath;
+
     private Long submissionHistoryId;
     private Period period;
     private Long averageDuration = 0L;
     private boolean storedInDb = false;
-    private String workflowPath;
     private String orderName;
 
     public PlannedOrder(String controllerId, FreshOrder freshOrder, Schedule schedule, Long calendarId) {
@@ -23,14 +29,15 @@ public class PlannedOrder {
         this.freshOrder = freshOrder;
         this.schedule = schedule;
         this.calendarId = calendarId;
+
+        this.workflowName = schedule.getWorkflowName();
+        this.workflowPath = schedule.getWorkflowPath();
+        this.scheduleName = Paths.get(schedule.getPath()).getFileName().toString();
+        this.schedulePath = schedule.getPath();
     }
 
-    public PlannedOrderKey uniqueOrderkey() {
-        PlannedOrderKey key = new PlannedOrderKey();
-        key.setControllerId(this.getControllerId());
-        key.setOrderId(freshOrder.getId());
-        key.setWorkflowName(freshOrder.getWorkflowPath());
-        return key;
+    public PlannedOrderKey uniqueOrderKey() {
+        return new PlannedOrderKey(controllerId, workflowName, scheduleName, freshOrder.getId());
     }
 
     public FreshOrder getFreshOrder() {
@@ -74,12 +81,20 @@ public class PlannedOrder {
         return controllerId;
     }
 
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
     public String getWorkflowPath() {
         return workflowPath;
     }
 
-    public void setWorkflowPath(String val) {
-        workflowPath = val;
+    public String getScheduleName() {
+        return scheduleName;
+    }
+
+    public String getSchedulePath() {
+        return schedulePath;
     }
 
     public String getOrderName() {

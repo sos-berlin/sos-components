@@ -22,12 +22,24 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "initialPassword",
+    "minPasswordLength",
     "sessionTimeout",
     "vault",
     "ldap"
 })
 public class Properties {
 
+    @JsonProperty("initialPassword")
+    private String initialPassword;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("minPasswordLength")
+    private Long minPasswordLength;
     /**
      * non negative integer
      * <p>
@@ -64,15 +76,51 @@ public class Properties {
 
     /**
      * 
+     * @param initialPassword
      * @param ldap
+     * @param minPasswordLength
      * @param sessionTimeout
      * @param vault
      */
-    public Properties(Integer sessionTimeout, VaultProperties vault, LdapProperties ldap) {
+    public Properties(String initialPassword, Long minPasswordLength, Integer sessionTimeout, VaultProperties vault, LdapProperties ldap) {
         super();
+        this.initialPassword = initialPassword;
+        this.minPasswordLength = minPasswordLength;
         this.sessionTimeout = sessionTimeout;
         this.vault = vault;
         this.ldap = ldap;
+    }
+
+    @JsonProperty("initialPassword")
+    public String getInitialPassword() {
+        return initialPassword;
+    }
+
+    @JsonProperty("initialPassword")
+    public void setInitialPassword(String initialPassword) {
+        this.initialPassword = initialPassword;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("minPasswordLength")
+    public Long getMinPasswordLength() {
+        return minPasswordLength;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("minPasswordLength")
+    public void setMinPasswordLength(Long minPasswordLength) {
+        this.minPasswordLength = minPasswordLength;
     }
 
     /**
@@ -153,12 +201,12 @@ public class Properties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("sessionTimeout", sessionTimeout).append("vault", vault).append("ldap", ldap).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("initialPassword", initialPassword).append("minPasswordLength", minPasswordLength).append("sessionTimeout", sessionTimeout).append("vault", vault).append("ldap", ldap).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(sessionTimeout).append(additionalProperties).append(ldap).append(vault).toHashCode();
+        return new HashCodeBuilder().append(initialPassword).append(ldap).append(minPasswordLength).append(sessionTimeout).append(additionalProperties).append(vault).toHashCode();
     }
 
     @Override
@@ -170,7 +218,7 @@ public class Properties {
             return false;
         }
         Properties rhs = ((Properties) other);
-        return new EqualsBuilder().append(sessionTimeout, rhs.sessionTimeout).append(additionalProperties, rhs.additionalProperties).append(ldap, rhs.ldap).append(vault, rhs.vault).isEquals();
+        return new EqualsBuilder().append(initialPassword, rhs.initialPassword).append(ldap, rhs.ldap).append(minPasswordLength, rhs.minPasswordLength).append(sessionTimeout, rhs.sessionTimeout).append(additionalProperties, rhs.additionalProperties).append(vault, rhs.vault).isEquals();
     }
 
 }

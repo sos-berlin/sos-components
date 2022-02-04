@@ -128,6 +128,9 @@ public class JsonValidator {
             put("TreeFilter", "tree/treeFilter-schema.json");
             put("SecurityConfiguration", "security/security-configuration-schema.json");
             put("SecurityConfigurationRole", "security/role-schema.json");
+            put("Roles", "security/roles-schema.json");
+            put("AccountRename", "security/accountRename-schema.json");
+            put("RoleRename", "security/roleRename-schema.json");
 
             put("ReleaseFilter", "inventory/release/release-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFolder", "inventory/common/request-folder-schema.json");
@@ -175,15 +178,15 @@ public class JsonValidator {
             // schedules
             put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/schedulesSelector-schema.json");
 
-            put("com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter", "orderManagement/dailyplan/dailyplanSubmissionsFilter-schema.json");
             put("com.sos.joc.model.dailyplan.DailyPlanOrderFilter", "orderManagement/dailyplan/dailyPlanOrdersFilter-schema.json");
             put("com.sos.joc.model.dailyplan.DailyPlanModifyOrder", "orderManagement/dailyplan/dailyPlanModifyOrder-schema.json");
-            put("com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter", "orderManagement/dailyplan/dailyplanSubmissionsFilter-schema.json");
             put("com.sos.joc.model.dailyplan.generate.GenerateRequest", "dailyplan/generate/generate-request-schema.json");
             put("com.sos.joc.model.dailyplan.history.MainRequest", "dailyplan/history/main-request-schema.json");
             put("com.sos.joc.model.dailyplan.history.SubmissionsRequest", "dailyplan/history/submissions-request-schema.json");
             put("com.sos.joc.model.dailyplan.history.SubmissionsOrdersRequest", "dailyplan/history/submissions-orders-request-schema.json");
-
+            put("com.sos.joc.model.dailyplan.submissions.SubmissionsDeleteRequest", "dailyplan/submissions/submissions-delete-request-schema.json");
+            put("com.sos.joc.model.dailyplan.submissions.SubmissionsRequest", "dailyplan/submissions/submissions-request-schema.json");
+            
             put("com.sos.joc.model.yade.TransferFilter", "yade/transferFilter-schema.json");
             put("com.sos.joc.model.yade.FileFilter", "yade/fileFilter-schema.json");
             put("com.sos.joc.model.yade.FilesFilter", "yade/filesFilter-schema.json");
@@ -198,6 +201,7 @@ public class JsonValidator {
             put("com.sos.joc.model.dailyplan.RelativeDatesConverter", "orderManagement/dailyplan/relativeDatesConverter-schema.json");
 
             // auth            
+            put("com.sos.joc.model.security.IdentityService", "security/identityService-schema.json");
             put("com.sos.joc.model.security.IdentityServiceRename", "security/identityServiceRename-schema.json");
             put("com.sos.joc.model.security.IdentityServiceFilter", "security/identityServiceFilter-schema.json");
             // put("com.sos.joc.model.publish.RedeployFilter", "publish/redeploy-schema.json");

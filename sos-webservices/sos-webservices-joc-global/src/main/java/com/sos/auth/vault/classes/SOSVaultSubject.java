@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSSession;
@@ -20,6 +24,7 @@ import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSVaultSubject implements ISOSAuthSubject {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSVaultSubject.class);
 
     private SOSVaultSession session;
     private Boolean authenticated;
@@ -28,10 +33,12 @@ public class SOSVaultSubject implements ISOSAuthSubject {
     private Set<String> setOfRoles;
     private Set<DBItemIamPermissionWithName> setOfPermissions;
     private SOSIdentityService identityService;
+    private String account;
 
-    public SOSVaultSubject(SOSIdentityService identityService) {
+    public SOSVaultSubject(String account, SOSIdentityService identityService) {
         super();
         this.identityService = identityService;
+        this.account = account;
     }
 
     @Override
@@ -85,7 +92,8 @@ public class SOSVaultSubject implements ISOSAuthSubject {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
-            if (IdentityServiceTypes.VAULT_JOC == identityService.getIdentyServiceType() || IdentityServiceTypes.VAULT_JOC_ACTIVE == identityService.getIdentyServiceType()) {
+            if (IdentityServiceTypes.VAULT_JOC == identityService.getIdentyServiceType() || IdentityServiceTypes.VAULT_JOC_ACTIVE == identityService
+                    .getIdentyServiceType()) {
                 List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(accountName, identityService
                         .getIdentityServiceId());
                 for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
@@ -95,14 +103,10 @@ public class SOSVaultSubject implements ISOSAuthSubject {
                 setOfRoles.addAll(listOfTokenRoles);
             }
 
-            List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(accountName, identityService
-                    .getIdentityServiceId());
             setOfAccountPermissions = new HashSet<String>();
-            for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
-                setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
-            }
-            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, accountName,
-                    identityService.getIdentityServiceId());
+
+            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, identityService
+                    .getIdentityServiceId());
             mapOfFolderPermissions = new HashMap<String, List<String>>();
             setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
             for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
@@ -127,6 +131,19 @@ public class SOSVaultSubject implements ISOSAuthSubject {
     public Map<String, List<String>> getMapOfFolderPermissions() {
         return this.mapOfFolderPermissions;
     }
-  
+
+    @Override
+    public Boolean isForcePasswordChange() {
+        if (identityService.getIdentyServiceType() == IdentityServiceTypes.VAULT_JOC_ACTIVE) {
+            try {
+                return SOSAuthHelper.getForcePasswordChange(account, identityService);
+            } catch (SOSHibernateException e) {
+                LOGGER.error("", e);
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
 
 }

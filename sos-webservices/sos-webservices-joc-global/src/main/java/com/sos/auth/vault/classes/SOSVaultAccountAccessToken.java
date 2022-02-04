@@ -6,7 +6,7 @@ public class SOSVaultAccountAccessToken {
    private String lease_id;
    private boolean renewable;
    private int lease_duration;
-   private String data;
+   private Object data;
    private String wrap_info;
    private Object warnings;
    private SOSVaultAccountAuth auth;
@@ -43,11 +43,11 @@ public class SOSVaultAccountAccessToken {
         this.lease_duration = lease_duration;
     }
 
-    public String getData() {
+    public Object getData() {
         return data;
     }
 
-    public void setData(String data) {
+    public void setData(Object data) {
         this.data = data;
     }
 
