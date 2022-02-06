@@ -87,6 +87,37 @@ public class SSHProviderTest {
 
     @Ignore
     @Test
+    public void testPublicKeyAuthenticationFromCredentialStore() throws Exception {
+        SSHProviderTestArguments args = new SSHProviderTestArguments();
+        args.setHost(SSH_HOST);
+        args.setPort(SSH_PORT);
+
+        args.setAuthMethod(AuthMethod.PUBLICKEY);
+        args.setUser("cs://@user");
+        args.setAuthFile("cs://@attachment");
+
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        csArgs.setFile("/tmp/kdbx-p.kdbx");
+        csArgs.setPassword("test");
+        csArgs.setEntryPath("/server/SFTP/localhost");
+
+        SSHProvider p = new SSHProvider(args, csArgs);
+        try {
+            p.connect();
+            LOGGER.info(p.executeCommand("ping -n 2 google.com").toString());
+            LOGGER.info(p.getServerInfo().toString());
+
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            if (p != null) {
+                p.disconnect();
+            }
+        }
+    }
+
+    @Ignore
+    @Test
     public void testPreferredAuthentications() throws Exception {
         SSHProviderTestArguments args = new SSHProviderTestArguments();
         args.setHost(SSH_HOST);

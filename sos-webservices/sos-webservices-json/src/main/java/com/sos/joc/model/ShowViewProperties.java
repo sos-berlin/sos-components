@@ -20,7 +20,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "history",
     "auditLog",
     "conditions",
-    "configuration"
+    "configuration",
+    "monitor"
 })
 public class ShowViewProperties {
 
@@ -46,6 +47,8 @@ public class ShowViewProperties {
     private Boolean conditions;
     @JsonProperty("configuration")
     private Boolean configuration;
+    @JsonProperty("monitor")
+    private Boolean monitor;
 
     @JsonProperty("dashboard")
     public Boolean getDashboard() {
@@ -156,15 +159,25 @@ public class ShowViewProperties {
     public void setConfiguration(Boolean configuration) {
         this.configuration = configuration;
     }
+    
+    @JsonProperty("monitor")
+    public Boolean getMonitor() {
+        return monitor;
+    }
+
+    @JsonProperty("monitor")
+    public void setMonitor(Boolean monitor) {
+        this.monitor = monitor;
+    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("dashboard", dashboard).append("dailyPlan", dailyPlan).append("workflows", workflows).append("orders", orders).append("jobStreams", jobStreams).append("fileTransfers", fileTransfers).append("resources", resources).append("history", history).append("auditLog", auditLog).append("conditions", conditions).append("configuration", configuration).toString();
+        return new ToStringBuilder(this).append("dashboard", dashboard).append("dailyPlan", dailyPlan).append("workflows", workflows).append("orders", orders).append("jobStreams", jobStreams).append("fileTransfers", fileTransfers).append("resources", resources).append("history", history).append("auditLog", auditLog).append("conditions", conditions).append("configuration", configuration).append("monitor", monitor).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobStreams).append(dailyPlan).append(auditLog).append(configuration).append(resources).append(orders).append(fileTransfers).append(workflows).append(history).append(conditions).append(dashboard).toHashCode();
+        return new HashCodeBuilder().append(jobStreams).append(dailyPlan).append(auditLog).append(configuration).append(resources).append(orders).append(fileTransfers).append(workflows).append(history).append(conditions).append(dashboard).append(monitor).toHashCode();
     }
 
     @Override
@@ -176,7 +189,7 @@ public class ShowViewProperties {
             return false;
         }
         ShowViewProperties rhs = ((ShowViewProperties) other);
-        return new EqualsBuilder().append(jobStreams, rhs.jobStreams).append(dailyPlan, rhs.dailyPlan).append(auditLog, rhs.auditLog).append(configuration, rhs.configuration).append(resources, rhs.resources).append(orders, rhs.orders).append(fileTransfers, rhs.fileTransfers).append(workflows, rhs.workflows).append(history, rhs.history).append(conditions, rhs.conditions).append(dashboard, rhs.dashboard).isEquals();
+        return new EqualsBuilder().append(jobStreams, rhs.jobStreams).append(dailyPlan, rhs.dailyPlan).append(auditLog, rhs.auditLog).append(configuration, rhs.configuration).append(resources, rhs.resources).append(orders, rhs.orders).append(fileTransfers, rhs.fileTransfers).append(workflows, rhs.workflows).append(history, rhs.history).append(conditions, rhs.conditions).append(dashboard, rhs.dashboard).append(monitor, rhs.monitor).isEquals();
     }
 
 }

@@ -81,6 +81,7 @@ public class ClusterSettings {
         svProp.setResources(showViews.get(ShowViewName.resources));
         svProp.setWorkflows(showViews.get(ShowViewName.workflows));
         svProp.setFileTransfers(showViews.get(ShowViewName.filetransfer));
+        svProp.setMonitor(showViews.get(ShowViewName.monitor));
         //svProp.setJobStreams(showViews.get(ShowViewName.jobstreams));
         return svProp;
     }
