@@ -40,6 +40,45 @@ public class FrequencyResolverTest {
         LOGGER.info("DATES: " + String.join(",", dates.getDates()));
     }
 
+    @Ignore
+    @Test
+    public void testJavaCalendar() {
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        c.set(2022, 2, 1);
+        int date = c.get(java.util.Calendar.DATE);
+        int month = c.get(java.util.Calendar.MONTH) + 1;
+        int dayOfWeek = c.get(java.util.Calendar.DAY_OF_WEEK) - 1;
+
+        LOGGER.info(String.format("Calendar now: weekNo=%s, date=%s, month=%s, dayOfWeek=%s", getWeekOfMonth(c, false), date, month, dayOfWeek));
+        LOGGER.info(String.format("Calendar now[calculate for ultimos]: weekNo=%s, date=%s, month=%s, dayOfWeek=%s", getWeekOfMonth(c, true), date,
+                month, dayOfWeek));
+    }
+
+    private int getWeekOfMonth(java.util.Calendar c, boolean isUltimo) {
+        int result = 1;
+        int month = c.get(java.util.Calendar.MONTH);
+        int weekStep = isUltimo ? 7 : -7;
+        java.util.Calendar copy = (java.util.Calendar) c.clone();
+
+        boolean run = true;
+        while (run) {
+            java.util.Calendar prev = (java.util.Calendar) copy.clone();
+            prev.add(java.util.Calendar.DATE, weekStep);
+            copy = prev;
+            if (month == prev.get(java.util.Calendar.MONTH)) {
+                result++;
+            } else {
+                run = false;
+            }
+            // max 5 - e.g. 2022-05-30 is a 5th Monday in month
+            if (result > 5) {// avoid endless loop
+                result = 5;
+                run = false;
+            }
+        }
+        return result;
+    }
+
     private Calendar getCalendar(Path json) throws JsonParseException, JsonMappingException, IOException {
         return new ObjectMapper().readValue(Files.readAllBytes(json), Calendar.class);
     }

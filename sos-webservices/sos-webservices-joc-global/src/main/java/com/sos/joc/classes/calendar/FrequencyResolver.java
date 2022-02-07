@@ -910,24 +910,25 @@ public class FrequencyResolver {
     private Set<String> resolveBasedOnMonthDays(List<Integer> days, List<WeeklyDay> weeklyDays, Calendar from, Calendar to, Calendar dateFromOrig)
             throws SOSInvalidDataException {
 
-        Set<String> dates = new HashSet<String>();
-        WeeklyDay weeklyDay = new WeeklyDay();
-        int dayOfMonth = 0;
-        int lastMonth = -1;
-        int[] weeklyDayOfMonth = { 0, 0, 0, 0, 0, 0, 0 };
-
         String method = "resolveBasedOnMonthDays";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String debugDays = null;
+        String debugWeeklyDays = null;
         if (isDebugEnabled) {
             debugDays = days == null ? "" : String.join(",", days.stream().map(e -> {
                 return e.toString();
             }).collect(Collectors.toList()));
-            LOGGER.debug(String.format("[%s][start][from=%s, to=%s, dateFromOrig=%s]days=%s", method, SOSDate.getDateTimeAsString(from), SOSDate
-                    .getDateTimeAsString(to), SOSDate.getDateTimeAsString(dateFromOrig), debugDays));
+            debugWeeklyDays = weeklyDays == null ? "" : String.join(",", weeklyDays.stream().map(e -> {
+                return e.toString();
+            }).collect(Collectors.toList()));
+            LOGGER.debug(String.format("[%s][start][from=%s, to=%s, dateFromOrig=%s][days=%s][weeklyDays=%s]", method, SOSDate.getDateTimeAsString(
+                    from), SOSDate.getDateTimeAsString(to), SOSDate.getDateTimeAsString(dateFromOrig), debugDays, debugWeeklyDays));
         }
 
-        boolean weekDaysResolved = false;
+        Set<String> dates = new HashSet<String>();
+        int dayOfMonth = 0;
+        int lastMonth = -1;
+        boolean missingDaysResolved = false;
         for (Entry<String, Calendar> date : this.dates.entrySet()) {
             if (date == null || date.getValue() == null) {
                 continue;
@@ -943,9 +944,6 @@ public class FrequencyResolver {
             int curMonth = curDate.get(Calendar.MONTH);
             if (curMonth != lastMonth) {
                 dayOfMonth = 0;
-                for (int i = 0; i < weeklyDayOfMonth.length; i++) {
-                    weeklyDayOfMonth[i] = 0;
-                }
                 lastMonth = curMonth;
             }
             if (curDate.before(from)) {
@@ -958,28 +956,20 @@ public class FrequencyResolver {
             if (days != null) {
                 // from was set to a first day of month
                 // dateFromOrig - is the original from
-                if (!weekDaysResolved && dateFromOrig.after(from)) {// 2021-02-03 after 2021-02-01
-                    weekDaysResolved = true;
-                    if (baseCalendarIncludes != null && baseCalendarIncludes.getWeekdays() != null && baseCalendarIncludes.getWeekdays().size() > 0) {
-                        Map<String, Calendar> wd = new HashMap<>();
-                        for (WeekDays weekDay : baseCalendarIncludes.getWeekdays()) {
-                            wd.putAll(resolveWeekDays(weekDay.getDays(), getFrom(weekDay.getFrom(), from), getTo(weekDay.getTo(), dateFromOrig)));
-                        }
-                        // sort not sorted HashMap by calendar
-                        List<String> wdl = wd.entrySet().stream().sorted((c1, c2) -> c1.getValue().compareTo(c2.getValue())).map(e -> {
-                            return e.getKey();
-                        }).collect(Collectors.toList());
-
+                if (!missingDaysResolved && dateFromOrig.after(from)) {// 2021-02-03 after 2021-02-01
+                    missingDaysResolved = true;
+                    if (baseCalendarIncludes != null) {
+                        List<String> missingDays = getDatesFromIncludes(from, dateFromOrig, false);
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][calculated from the first day of month]%s", method, SOSDate.getDateTimeAsString(date
-                                    .getValue()), String.join(",", wdl)));
+                            LOGGER.debug(String.format("[%s][%s][MonthDays][calculated from the first day of month]%s", method, SOSDate
+                                    .getDateTimeAsString(date.getValue()), String.join(",", missingDays)));
                         }
 
                         dayOfMonth = 0;
                         String lastYearMonth = null;
                         String currentYearMonth;
-                        for (String dayx : wdl) {
-                            currentYearMonth = dayx.substring(0, 7);// 2022-02
+                        for (String missingDay : missingDays) {
+                            currentYearMonth = missingDay.substring(0, 7);// 2022-02
                             if (lastYearMonth != null && !lastYearMonth.equals(currentYearMonth)) {
                                 dayOfMonth = 0;
                             }
@@ -987,11 +977,12 @@ public class FrequencyResolver {
                             lastYearMonth = currentYearMonth;
 
                             if (isDebugEnabled) {
-                                LOGGER.debug(String.format("[%s][%s][calculated from the first day of month]day=%s, dayOfMonth=%s, lastYearMonth=%s",
-                                        method, SOSDate.getDateTimeAsString(date.getValue()), dayx, dayOfMonth, lastYearMonth));
+                                LOGGER.debug(String.format(
+                                        "[%s][%s][MonthDays][calculated from the first day of month]day=%s, dayOfMonth=%s, lastYearMonth=%s", method,
+                                        SOSDate.getDateTimeAsString(date.getValue()), missingDay, dayOfMonth, lastYearMonth));
                             }
 
-                            if (dayx.equals(date.getKey())) {
+                            if (missingDay.equals(date.getKey())) {
                                 break;
                             }
                         }
@@ -1003,20 +994,37 @@ public class FrequencyResolver {
                 }
                 if (days.contains(dayOfMonth)) {
                     dates.add(date.getKey());
-                }
 
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][resolve][days=%s]dates=%s", method, SOSDate.getDateTimeAsString(date.getValue()), debugDays,
-                            dates));
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][MonthDays][added][dayOfMonth=%s][days=%s]dates=%s", method, SOSDate.getDateTimeAsString(
+                                date.getValue()), dayOfMonth, debugDays, dates));
+                    }
+                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][MonthDays][skip][dayOfMonth=%s][days=%s]dates=%s", method, SOSDate.getDateTimeAsString(
+                                date.getValue()), dayOfMonth, debugDays, dates));
+                    }
                 }
             }
             if (weeklyDays != null) {
-                int curDayOfWeek = curDate.get(Calendar.DAY_OF_WEEK) - 1;
-                weeklyDay.setDay(curDayOfWeek);
-                weeklyDayOfMonth[curDayOfWeek] = weeklyDayOfMonth[curDayOfWeek] + 1;
-                weeklyDay.setWeekOfMonth(weeklyDayOfMonth[curDayOfWeek]);
+                WeeklyDay weeklyDay = new WeeklyDay();
+                weeklyDay.setDay(curDate.get(Calendar.DAY_OF_WEEK) - 1);
+                weeklyDay.setWeekOfMonth(getWeekOfMonth(curDate, false));
+
                 if (weeklyDays.contains(weeklyDay)) {
                     dates.add(date.getKey());
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][WeeklyDays][added][weeklyDay day=%s, weekOfMonth=%s][weeklyDays=%s]dates=%s", method,
+                                SOSDate.getDateTimeAsString(date.getValue()), weeklyDay.getDay(), weeklyDay.getWeekOfMonth(), debugWeeklyDays,
+                                dates));
+                    }
+                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][WeeklyDays][skip][weeklyDay day=%s, weekOfMonth=%s][weeklyDays=%s]dates=%s", method,
+                                SOSDate.getDateTimeAsString(date.getValue()), weeklyDay.getDay(), weeklyDay.getWeekOfMonth(), debugWeeklyDays,
+                                dates));
+                    }
                 }
             }
         }
@@ -1033,6 +1041,71 @@ public class FrequencyResolver {
             datesWithoutRestrictions.remove(entry.getKey());
         }
         return dates;
+    }
+
+    private List<String> getDatesFromIncludes(Calendar from, Calendar to, boolean isUltimos) throws SOSInvalidDataException {
+        Map<String, Calendar> result = new HashMap<>();
+        if (baseCalendarIncludes.getWeekdays() != null && baseCalendarIncludes.getWeekdays().size() > 0) {
+            for (WeekDays weekDay : baseCalendarIncludes.getWeekdays()) {
+                result.putAll(resolveWeekDays(weekDay.getDays(), getFrom(weekDay.getFrom(), from), getTo(weekDay.getTo(), to)));
+            }
+        }
+
+        if (baseCalendarIncludes.getMonthdays() != null && baseCalendarIncludes.getMonthdays().size() > 0) {
+            for (MonthDays monthDay : baseCalendarIncludes.getMonthdays()) {
+                result.putAll(resolveMonthDays(monthDay.getDays(), monthDay.getWeeklyDays(), getFrom(monthDay.getFrom(), from), getTo(monthDay
+                        .getTo(), to)));
+            }
+        }
+
+        if (baseCalendarIncludes.getUltimos() != null && baseCalendarIncludes.getUltimos().size() > 0) {
+            for (MonthDays monthDay : baseCalendarIncludes.getUltimos()) {
+                result.putAll(resolveUltimos(monthDay.getDays(), monthDay.getWeeklyDays(), getFrom(monthDay.getFrom(), from), getTo(monthDay.getTo(),
+                        to)));
+            }
+        }
+
+        if (baseCalendarIncludes.getRepetitions() != null && baseCalendarIncludes.getRepetitions().size() > 0) {
+            for (Repetition repetition : baseCalendarIncludes.getRepetitions()) {
+                result.putAll(resolveRepetitions(repetition.getRepetition(), repetition.getStep(), getFrom(repetition.getFrom(), calendarFrom),
+                        getFrom(repetition.getFrom(), from), getTo(repetition.getTo(), to)));
+            }
+        }
+
+        if (isUltimos) {// sort descending
+            return result.entrySet().stream().sorted((c1, c2) -> c2.getValue().compareTo(c1.getValue())).map(e -> {
+                return e.getKey();
+            }).collect(Collectors.toList());
+        }
+        // sort ascending
+        return result.entrySet().stream().sorted((c1, c2) -> c1.getValue().compareTo(c2.getValue())).map(e -> {
+            return e.getKey();
+        }).collect(Collectors.toList());
+    }
+
+    private int getWeekOfMonth(Calendar c, boolean isUltimos) {
+        int result = 1;
+        int month = c.get(Calendar.MONTH);
+        int weekStep = isUltimos ? 7 : -7;
+        Calendar copy = (Calendar) c.clone();
+
+        boolean run = true;
+        while (run) {
+            java.util.Calendar prev = (Calendar) copy.clone();
+            prev.add(java.util.Calendar.DATE, weekStep);
+            copy = prev;
+            if (month == prev.get(Calendar.MONTH)) {
+                result++;
+            } else {
+                run = false;
+            }
+            // max 5 - e.g. 2022-05-30 is a 5th Monday in month
+            if (result > 5) {// avoid endless loop
+                result = 5;
+                run = false;
+            }
+        }
+        return result;
     }
 
     private Map<String, Calendar> resolveUltimos(List<Integer> days, List<WeeklyDay> weeklyDays, Calendar from, Calendar to)
@@ -1060,7 +1133,23 @@ public class FrequencyResolver {
         return dates;
     }
 
-    private Set<String> resolveBasedOnUltimos(List<Integer> days, List<WeeklyDay> weeklyDays, Calendar from, Calendar to) {
+    private Set<String> resolveBasedOnUltimos(List<Integer> days, List<WeeklyDay> weeklyDays, Calendar from, Calendar to)
+            throws SOSInvalidDataException {
+
+        String method = "resolveBasedOnUltimos";
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        String debugDays = null;
+        String debugWeeklyDays = null;
+        if (isDebugEnabled) {
+            debugDays = days == null ? "" : String.join(",", days.stream().map(e -> {
+                return e.toString();
+            }).collect(Collectors.toList()));
+            debugWeeklyDays = weeklyDays == null ? "" : String.join(",", weeklyDays.stream().map(e -> {
+                return e.toString();
+            }).collect(Collectors.toList()));
+            LOGGER.debug(String.format("[%s][start][from=%s, to=%s][days=%s][weeklyDays=%s]", method, SOSDate.getDateTimeAsString(from), SOSDate
+                    .getDateTimeAsString(to), debugDays, debugWeeklyDays));
+        }
 
         SortedMap<String, Calendar> reverseDates = new TreeMap<String, Calendar>(new Comparator<String>() {
 
@@ -1070,12 +1159,12 @@ public class FrequencyResolver {
             }
         });
         reverseDates.putAll(this.dates);
+
         Set<String> dates = new HashSet<String>();
-        WeeklyDay weeklyDay = new WeeklyDay();
         int dayOfMonth = 0;
         int lastMonth = -1;
-        int[] weeklyDayOfMonth = { 0, 0, 0, 0, 0, 0, 0 };
-
+        boolean missingDaysResolved = false;
+        Calendar lastDayOfMonthCalendar = getLastDayOfMonthCalendar(to);
         for (Entry<String, Calendar> date : reverseDates.entrySet()) {
             if (date == null || date.getValue() == null) {
                 continue;
@@ -1087,27 +1176,82 @@ public class FrequencyResolver {
             int curMonth = curDate.get(Calendar.MONTH);
             if (curMonth != lastMonth) {
                 dayOfMonth = 0;
-                for (int i = 0; i < weeklyDayOfMonth.length; i++) {
-                    weeklyDayOfMonth[i] = 0;
-                }
                 lastMonth = curMonth;
             }
             if (curDate.after(to)) {
                 continue;
             }
             if (days != null) {
-                dayOfMonth++;
+                if (!missingDaysResolved && to.before(lastDayOfMonthCalendar)) {
+                    missingDaysResolved = true;
+                    if (baseCalendarIncludes != null) {
+                        List<String> missingDays = getDatesFromIncludes(from, lastDayOfMonthCalendar, true);
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][%s][MonthDays][calculated from the last day of month]%s", method, SOSDate
+                                    .getDateTimeAsString(date.getValue()), String.join(",", missingDays)));
+                        }
+
+                        dayOfMonth = 0;
+                        String lastYearMonth = null;
+                        String currentYearMonth;
+                        for (String missingDay : missingDays) {
+                            currentYearMonth = missingDay.substring(0, 7);// 2022-02
+                            if (lastYearMonth != null && !lastYearMonth.equals(currentYearMonth)) {
+                                dayOfMonth = 0;
+                            }
+                            dayOfMonth++;
+                            lastYearMonth = currentYearMonth;
+
+                            if (isDebugEnabled) {
+                                LOGGER.debug(String.format(
+                                        "[%s][%s][MonthDays][calculated from the last day of month]day=%s, dayOfMonth=%s, lastYearMonth=%s", method,
+                                        SOSDate.getDateTimeAsString(date.getValue()), missingDay, dayOfMonth, lastYearMonth));
+                            }
+
+                            if (missingDay.equals(date.getKey())) {
+                                break;
+                            }
+                        }
+                    } else {
+                        dayOfMonth++;// TODO
+                    }
+                } else {
+                    dayOfMonth++;
+                }
                 if (days.contains(dayOfMonth)) {
                     dates.add(date.getKey());
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][MonthDays][added][dayOfMonth=%s][days=%s]dates=%s", method, SOSDate.getDateTimeAsString(
+                                date.getValue()), dayOfMonth, debugDays, dates));
+                    }
+                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][MonthDays][skip][dayOfMonth=%s][days=%s]dates=%s", method, SOSDate.getDateTimeAsString(
+                                date.getValue()), dayOfMonth, debugDays, dates));
+                    }
                 }
             }
+
             if (weeklyDays != null) {
-                int curDayOfWeek = curDate.get(Calendar.DAY_OF_WEEK) - 1;
-                weeklyDay.setDay(curDayOfWeek);
-                weeklyDayOfMonth[curDayOfWeek] = weeklyDayOfMonth[curDayOfWeek] + 1;
-                weeklyDay.setWeekOfMonth(weeklyDayOfMonth[curDayOfWeek]);
+                WeeklyDay weeklyDay = new WeeklyDay();
+                weeklyDay.setDay(curDate.get(Calendar.DAY_OF_WEEK) - 1);
+                weeklyDay.setWeekOfMonth(getWeekOfMonth(curDate, true));
+
                 if (weeklyDays.contains(weeklyDay)) {
                     dates.add(date.getKey());
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][WeeklyDays][added][weeklyDay day=%s, weekOfMonth=%s][weeklyDays=%s]dates=%s", method,
+                                SOSDate.getDateTimeAsString(date.getValue()), weeklyDay.getDay(), weeklyDay.getWeekOfMonth(), debugWeeklyDays,
+                                dates));
+                    }
+                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][WeeklyDays][skip][weeklyDay day=%s, weekOfMonth=%s][weeklyDays=%s]dates=%s", method,
+                                SOSDate.getDateTimeAsString(date.getValue()), weeklyDay.getDay(), weeklyDay.getWeekOfMonth(), debugWeeklyDays,
+                                dates));
+                    }
                 }
             }
         }
@@ -1273,6 +1417,12 @@ public class FrequencyResolver {
     private Calendar getFirstDayOfMonthCalendar(Calendar curCalendar) {
         curCalendar.set(Calendar.DATE, 1);
         return (Calendar) curCalendar.clone();
+    }
+
+    private Calendar getLastDayOfMonthCalendar(Calendar curCalendar) {
+        Calendar copy = (Calendar) curCalendar.clone();
+        copy.set(Calendar.DATE, copy.getActualMaximum(Calendar.DATE));
+        return copy;
     }
 
     private void addDatesRestrictions() throws SOSInvalidDataException {
