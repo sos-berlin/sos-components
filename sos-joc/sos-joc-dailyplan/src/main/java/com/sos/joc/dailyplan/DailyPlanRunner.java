@@ -188,31 +188,43 @@ public class DailyPlanRunner extends TimerTask {
             for (ControllerConfiguration conf : controllers) {
                 String controllerId = conf.getCurrent().getId();
 
+                Collection<Schedule> controllerSchedules = new ArrayList<>();
+                Set<String> controllerWorkflows = getDeployedWorkflowsNames(controllerId);
+                if (controllerWorkflows != null && controllerWorkflows.size() > 0) {
+                    controllerSchedules = schedules.stream().filter(s -> {
+                        return controllerWorkflows.contains(s.getWorkflowName());
+                    }).collect(Collectors.toList());
+                }
+
                 java.util.Calendar dailyPlanCalendar = java.util.Calendar.getInstance();
                 dailyPlanCalendar.setTime(savCalendar.getTime());
                 settings.setDailyPlanDate(dailyPlanCalendar.getTime());
 
-                for (int day = 0; day < settings.getDayAheadPlan(); day++) {
-                    String dailyPlanDate = SOSDate.getDateWithTimeZoneAsString(dailyPlanCalendar.getTime(), settings.getTimeZone());
-                    List<DBItemDailyPlanSubmission> l = getSubmissionsForDate(controllerId, dailyPlanCalendar);
-                    if ((l.size() == 0)) {
-                        generateDailyPlan(startupMode, controllerId, schedules, dailyPlanDate, false, null, "");
-                    } else {
-                        List<String> copy = l.stream().map(e -> {
-                            String d;
-                            try {
-                                d = SOSDate.getDateTimeAsString(e.getCreated());
-                            } catch (SOSInvalidDataException e1) {
-                                d = null;
-                            }
-                            return d == null ? "" : d;
-                        }).collect(Collectors.toList());
-                        LOGGER.info(String.format("[%s][creating][%s][%s][skip][submission(s) found][created]%s", startupMode, controllerId,
-                                dailyPlanDate, String.join(",", copy)));
-                    }
+                if (controllerSchedules.size() > 0) {
+                    for (int day = 0; day < settings.getDayAheadPlan(); day++) {
+                        String dailyPlanDate = SOSDate.getDateWithTimeZoneAsString(dailyPlanCalendar.getTime(), settings.getTimeZone());
+                        List<DBItemDailyPlanSubmission> l = getSubmissionsForDate(controllerId, dailyPlanCalendar);
+                        if ((l.size() == 0)) {
+                            generateDailyPlan(startupMode, controllerId, controllerSchedules, dailyPlanDate, false, null, "");
+                        } else {
+                            List<String> copy = l.stream().map(e -> {
+                                String d;
+                                try {
+                                    d = SOSDate.getDateTimeAsString(e.getCreated());
+                                } catch (SOSInvalidDataException e1) {
+                                    d = null;
+                                }
+                                return d == null ? "" : d;
+                            }).collect(Collectors.toList());
+                            LOGGER.info(String.format("[%s][creating][%s][%s][skip][submission(s) found][created]%s", startupMode, controllerId,
+                                    dailyPlanDate, String.join(",", copy)));
+                        }
 
-                    dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
-                    settings.setDailyPlanDate(dailyPlanCalendar.getTime());
+                        dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
+                        settings.setDailyPlanDate(dailyPlanCalendar.getTime());
+                    }
+                } else {
+                    LOGGER.info(String.format("[%s][creating][%s][%s][skip]schedules or workflows not found", startupMode, controllerId));
                 }
 
                 dailyPlanCalendar.setTime(savCalendar.getTime());
@@ -470,8 +482,8 @@ public class DailyPlanRunner extends TimerTask {
             }
             String path = WorkflowPaths.getPathOrNull(schedule.getWorkflowName());
             if (path == null) {
-                LOGGER.warn(String.format("[%s][skip][deployment path not found][workflow=%s]%s", method, schedule.getWorkflowName(), SOSHibernate
-                        .toString(item)));
+                LOGGER.warn(String.format("[%s][skip][workflow deployment path not found][workflow=%s]%s", method, schedule.getWorkflowName(),
+                        SOSHibernate.toString(item)));
                 continue;
             }
             if (isDebugEnabled) {
@@ -517,6 +529,18 @@ public class DailyPlanRunner extends TimerTask {
             session = Globals.createSosHibernateStatelessConnection(IDENTIFIER);
             DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
             return dbLayer.getSubmissions(controllerId, calendar.getTime());
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+
+    private Set<String> getDeployedWorkflowsNames(String controllerId) throws SOSHibernateException {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(IDENTIFIER);
+            DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+            List<String> result = dbLayer.getDeployedWorkflowsNames(controllerId);
+            return result == null || result.size() == 0 ? null : result.stream().collect(Collectors.toSet());
         } finally {
             Globals.disconnect(session);
         }
