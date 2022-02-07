@@ -44,7 +44,6 @@ public class SOSInternAuthLogin implements ISOSLogin {
 
             boolean disabled = SOSAuthHelper.accountIsDisable(identityService.getIdentityServiceId(), account);
             if (!disabled) {
-                LOGGER.info("NOT disabled");
                 if (identityService.isSingleFactor()) {
                     if (identityService.isSingleFactorCert() && SOSAuthHelper.checkCertificate(httpServletRequest, account)) {
 
@@ -61,10 +60,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
                         sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
                     }
                 }
-            }else {
-                LOGGER.info("  disabled");
-
-            }
+            } 
 
             sosInternAuthSubject = new SOSInternAuthSubject();
             if (sosInternAuthAccessToken == null) {
