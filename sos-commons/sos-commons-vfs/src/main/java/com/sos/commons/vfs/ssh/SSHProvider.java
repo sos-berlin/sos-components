@@ -519,7 +519,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         // from KeePass attachment
         if (getArguments().getKeepassDatabase() != null && getArguments().getKeepassDatabaseEntry() != null && !SOSString.isEmpty(getArguments()
                 .getKeepassAttachmentPropertyName())) {
-            keyProvider = SSHProviderUtil.getKeyProviderFromKeepass(config, getArguments());
+            keyProvider = SSHProviderUtil.getKeyProviderFromKeepass(sshClient, getArguments());
         } else {// from File
             if (SOSString.isEmpty(getArguments().getAuthFile().getValue())) {
                 throw new SOSRequiredArgumentMissingException(getArguments().getAuthFile().getName());

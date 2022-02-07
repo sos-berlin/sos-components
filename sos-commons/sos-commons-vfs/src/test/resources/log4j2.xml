@@ -3,17 +3,20 @@
 	<Appenders>
 		<!-- Appender for root logger -->
 		<Console name="stdout" target="SYSTEM_OUT">
-			<PatternLayout pattern="%d{ISO8601}{Europe/Berlin} %-5p %-16.16t %-44.70c{1.} - %m%n"/>
+			<PatternLayout
+				pattern="%d{ISO8601}{Europe/Berlin} %-5p %-16.16t %-44.70c{1.} - %m%n" />
 		</Console>
 	</Appenders>
 
 	<Loggers>
-		<Logger name="com.sos" level="trace"/>
-		<Logger name="net" level="trace"/>
-
-		<!-- root logger with console appender. All other loggers inherit from this logger. -->
+		<!-- root logger with console appender. All other loggers inherit from 
+			this logger. -->
 		<Root level="info">
-			<AppenderRef ref="stdout"/>
+			<AppenderRef ref="stdout" />
 		</Root>
+
+		<Logger name="net" level="trace" />
+		<Logger name="net.schmizz" level="info" />
+		<Logger name="com.sos" level="trace" />
 	</Loggers>
 </Configuration>

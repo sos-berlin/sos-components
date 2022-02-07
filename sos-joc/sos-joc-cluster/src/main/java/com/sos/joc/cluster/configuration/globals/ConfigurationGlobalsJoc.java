@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
@@ -13,7 +12,7 @@ import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
 public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     public static enum ShowViewName {
-        dashboard, dailyplan, workflows, resources, history, auditlog, configuration, filetransfer, jobstreams;
+        dashboard, dailyplan, workflows, resources, history, auditlog, configuration, filetransfer, jobstreams, monitor;
     }
 
     private static final List<String> AUDIT_LOG_COMMENTS = Arrays.asList("System maintenance", "Repeat execution", "Business requirement",
@@ -53,7 +52,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry showViewAuditlog = new ConfigurationEntry("show_view_auditlog", null, GlobalSettingsSectionValueType.BOOLEAN);
     private ConfigurationEntry showViewConfiguration = new ConfigurationEntry("show_view_configuration", null,
             GlobalSettingsSectionValueType.BOOLEAN);
-    private ConfigurationEntry showViewfiletransfer = new ConfigurationEntry("show_view_filetransfer", null, GlobalSettingsSectionValueType.BOOLEAN);
+    private ConfigurationEntry showViewFiletransfer = new ConfigurationEntry("show_view_filetransfer", null, GlobalSettingsSectionValueType.BOOLEAN);
+    private ConfigurationEntry showViewMonitor = new ConfigurationEntry("show_view_monitor", null, GlobalSettingsSectionValueType.BOOLEAN);
     // private ConfigurationEntry showViewJobstreams = new ConfigurationEntry("show_view_jobstreams", null, GlobalSettingsSectionValueType.BOOLEAN);
 
     // private Map<ShowViewName, ConfigurationEntry> showViews = EnumSet.allOf(ShowViewName.class).stream().collect(Collectors.toMap(s -> s,
@@ -83,7 +83,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         showViewHistory.setOrdering(++index);
         showViewAuditlog.setOrdering(++index);
         showViewConfiguration.setOrdering(++index);
-        showViewfiletransfer.setOrdering(++index);
+        showViewFiletransfer.setOrdering(++index);
+        showViewMonitor.setOrdering(++index);
         // showViewJobstreams.setOrdering(++index);
         
         jocPwd.setOrdering(++index);
@@ -140,9 +141,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         showViews.put(ShowViewName.configuration, getBoolean(showViewConfiguration));
         showViews.put(ShowViewName.dailyplan, getBoolean(showViewDailyplan));
         showViews.put(ShowViewName.dashboard, getBoolean(showViewDashboard));
-        showViews.put(ShowViewName.filetransfer, getBoolean(showViewfiletransfer));
+        showViews.put(ShowViewName.filetransfer, getBoolean(showViewFiletransfer));
         showViews.put(ShowViewName.history, getBoolean(showViewHistory));
         // showViews.put(ShowViewName.jobstreams, getBoolean(showViewJobstreams));
+        showViews.put(ShowViewName.monitor, getBoolean(showViewMonitor));
         showViews.put(ShowViewName.resources, getBoolean(showViewResources));
         showViews.put(ShowViewName.workflows, getBoolean(showViewWorkflows));
         return showViews;
