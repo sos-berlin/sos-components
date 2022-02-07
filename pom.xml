@@ -38,7 +38,7 @@
 		<jackson.databind.version>2.9.10.8</jackson.databind.version>
 		<jsonschema2pojo.version>0.5.1</jsonschema2pojo.version>
 		<junit.version>4.13.1</junit.version>
-		<slf4j.version>1.7.31</slf4j.version>
+		<slf4j.version>1.7.35</slf4j.version>
 		<guava.version>30.1.1-jre</guava.version>
 		<javassist.version>3.25.0-GA</javassist.version>
 		<log4j2.version>2.17.1</log4j2.version>
@@ -83,7 +83,7 @@
 		<google.findbugs.version>3.0.2</google.findbugs.version>
 		<typesafe.config.version>1.4.1</typesafe.config.version>
 		<keepass.java2.version>2.1.4</keepass.java2.version>
-		<sshj.version>0.31.0</sshj.version>
+		<sshj.version>0.32.0</sshj.version>
         <apache.commons.net.version>3.8.0</apache.commons.net.version>
 		<!-- SP: for sos-webservice-server proof-of-concept with jetty -->
 		<jetty.version>9.4.41.v20210516</jetty.version>
