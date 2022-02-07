@@ -2,14 +2,11 @@ package com.sos.joc.classes.security;
 
 import java.security.KeyStore;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Set;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
@@ -33,8 +30,10 @@ import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
+import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocInfoException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.IniPermissions;
@@ -114,7 +113,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             if (!sosInitialPasswordSetting.isMininumPasswordLength(password)) {
                 JocError error = new JocError();
                 error.setMessage("Password is too short");
-                throw new JocException(error);
+                throw new JocInfoException(error);
             }
             iamAccountFilter.setAccountName(securityConfigurationAccount.getAccount());
             List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
@@ -240,7 +239,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                         if (!sosInitialPasswordSetting.isMininumPasswordLength(password)) {
                             JocError error = new JocError();
                             error.setMessage("Password is too short");
-                            throw new JocException(error);
+                            throw new JocInfoException(error);
                         }
 
                         if (sosInitialPasswordSetting.getInitialPassword().equals(password)) {
@@ -255,14 +254,14 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                         }
                     } else {
                         JocError error = new JocError();
-                        error.setMessage("Unknown account or password is wrong: " + securityConfigurationAccount.getAccount());
-                        throw new JocException(error);
+                        error.setMessage("Unknown account or password is wrong");
+                        throw new JocInfoException(error);
                     }
 
                 } else {
                     JocError error = new JocError();
                     error.setMessage("Password does not match repeated password");
-                    throw new JocException(error);
+                    throw new JocInfoException(error);
                 }
             }
         }
@@ -288,7 +287,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                 } else {
                     JocError error = new JocError();
                     error.setMessage("Unknown account:" + securityConfigurationAccount.getAccount());
-                    throw new JocException(error);
+                    throw new JocInfoException(error);
                 }
             }
         }
@@ -615,7 +614,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         return secConfig;
     }
 
-    public SecurityConfiguration changePassword(boolean withPasswordCheck, SecurityConfiguration securityConfiguration,
+    public void changePassword(boolean withPasswordCheck, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -624,17 +623,19 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             Globals.beginTransaction(sosHibernateSession);
             changePasswordAccounts(sosHibernateSession, withPasswordCheck, securityConfiguration, dbItemIamIdentityService);
             Globals.commit(sosHibernateSession);
-            return securityConfiguration;
+        } catch (JocInfoException e) {
+            Globals.rollback(sosHibernateSession);
+            LOGGER.info(e.getError().getMessage());
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            throw e;
+            throw e;            
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
 
     }
 
-    public SecurityConfiguration forcePasswordChange(SecurityConfiguration securityConfiguration, DBItemIamIdentityService dbItemIamIdentityService)
+    public void forcePasswordChange(SecurityConfiguration securityConfiguration, DBItemIamIdentityService dbItemIamIdentityService)
             throws Exception {
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -643,14 +644,15 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             Globals.beginTransaction(sosHibernateSession);
             forcePasswordChangeAccounts(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
             Globals.commit(sosHibernateSession);
-            return securityConfiguration;
+        } catch (JocInfoException e) {
+            Globals.rollback(sosHibernateSession);
+            LOGGER.info(e.getError().getMessage());
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            throw e;
+            throw e;            
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-
     }
 
 }
