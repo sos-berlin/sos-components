@@ -14,7 +14,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.security.SOSSecurityConfiguration;
 import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
@@ -26,7 +25,6 @@ import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
-import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.LdapExpertProperties;
 import com.sos.joc.model.security.LdapGroupRolesMapping;
 import com.sos.joc.model.security.LdapGroupRolesMappingItem;
@@ -43,26 +41,7 @@ public class SOSShiroImport {
     private SOSHibernateSession sosHibernateSession = null;
     private String iniFileName;
 
-    private boolean onlyShiroEnabled() throws SOSHibernateException {
-        boolean result = true;
-
-        IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-        IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-
-        List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
-        if (listOfIdentityServices.size() > 1) {
-            return false;
-        }
-        if (listOfIdentityServices.size() == 1) {
-            DBItemIamIdentityService dbItemIamIdentityService = listOfIdentityServices.get(0);
-            if (!"SHIRO".equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                return false;
-            }
-        }
-
-        return result;
-    }
-
+  
     public void rescue() {
 
     }
@@ -242,7 +221,11 @@ public class SOSShiroImport {
 
         dbItem.setConfigurationItem(json);
         dbItem.setModified(new Date());
+        try {
         sosHibernateSession.save(dbItem);
+        }catch (Exception e) {
+        	LOGGER.info("Using existing settings");
+        }
     }
 
     private boolean createLdapIdentityService(SOSHibernateSession sosHibernateSession, String ldapName, Map<String, List<String>> mainSection)
@@ -284,7 +267,7 @@ public class SOSShiroImport {
             LOGGER.info("            shiro_ini_file        : required");
             LOGGER.info("                                    path to the shiro.ini file to be imported.");
             LOGGER.info("            command               : required ");
-            LOGGER.info("                                    import|rescue");
+            LOGGER.info("                                    import");
 
             return;
         }
