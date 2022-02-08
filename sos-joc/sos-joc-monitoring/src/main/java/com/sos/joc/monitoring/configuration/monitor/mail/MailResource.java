@@ -75,10 +75,10 @@ public class MailResource {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         for (MailResource mr : list) {
             mr.getMailProperties().entrySet().forEach(e -> {
-                if (!mailProperties.contains(e.getKey())) {
+                if (!mailProperties.containsKey(e.getKey())) {
                     mailProperties.put(e.getKey(), e.getValue());
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[parse][mail %s]added from %s job resource", e.getKey(), mr.jobResourceName));
+                        LOGGER.debug(String.format("[parse][job_resource=%s][mail %s]added", mr.jobResourceName, e.getKey()));
                     }
                 }
             });
@@ -93,7 +93,7 @@ public class MailResource {
             bcc = getCurrentValue("mail", "bcc", bcc, mr.getBCC(), isDebugEnabled, mr.jobResourceName);
         }
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("[parse][list]credentialStoreArgs=" + SOSString.toString(credentialStoreArgs));
+            LOGGER.debug("[parse][result]credentialStoreArgs=" + SOSString.toString(credentialStoreArgs));
         }
     }
 
@@ -113,7 +113,7 @@ public class MailResource {
         if (SOSString.isEmpty(currentValue) && !SOSString.isEmpty(value)) {
             currentValue = value;
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("[parse][%s %s]added from %s job resource", range, name, jobResourceName));
+                LOGGER.debug(String.format("[parse][job_resource=%s][%s %s]added", jobResourceName, range, name));
             }
         }
         return currentValue;
