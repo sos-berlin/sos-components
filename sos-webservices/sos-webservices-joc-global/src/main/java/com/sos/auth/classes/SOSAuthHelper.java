@@ -39,7 +39,7 @@ public class SOSAuthHelper {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthHelper.class);
 
-	public static final Long HASH_GAP = 300;
+	public static final Long HASH_GAP = 300L;
 	public static final String HASH_PREFIX = "$JS7-2.2.2$";
 	public static final String EMERGENCY_ROLE = "all";
 	public static final String EMERGENCY_PERMISSION = "sos:products";
