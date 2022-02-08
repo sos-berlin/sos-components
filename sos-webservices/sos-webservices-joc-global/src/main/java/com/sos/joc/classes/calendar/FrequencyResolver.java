@@ -316,6 +316,9 @@ public class FrequencyResolver {
 
     private void setDateFrom(String dateFrom, String calendarFrom) throws SOSMissingDataException, SOSInvalidDataException {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[setDateFrom][start]dateFrom=%s,calendarFrom=%s", dateFrom, calendarFrom));
+        }
         if (calendarFrom == null || calendarFrom.isEmpty()) {// TODO will be overwritten when dateFrom is not empty - move to the dateFrom==null section ?
             this.calendarFrom = getTodayCalendar();
             // calendarFrom = df.format(this.calendarFrom.toInstant());

@@ -686,14 +686,14 @@ public class DailyPlanRunner extends TimerTask {
         boolean isTraceEnabled = LOGGER.isTraceEnabled();
 
         Date date = SOSDate.getDate(dailyPlanDate);
-
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][%s]%s ...", method, controllerId, dailyPlanDate));
-        }
-
         Date actDate = date;
         Date nextDate = DailyPlanHelper.getNextDay(date, settings);
         boolean fromService = isFromService(startupMode);
+
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[%s][%s][dailyPlanDate=%s]actDate=%s,nextDate=%s", method, controllerId, dailyPlanDate, SOSDate
+                    .getDateAsString(actDate), SOSDate.getDateAsString(nextDate)));
+        }
 
         Map<String, Calendar> calendars = new HashMap<String, Calendar>();
         OrderListSynchronizer synchronizer = new OrderListSynchronizer(settings);
@@ -717,9 +717,9 @@ public class DailyPlanRunner extends TimerTask {
                         assignedCalendar.setTimeZone(UTC);
                     }
 
-                    String actDateAsString = SOSDate.getDateWithTimeZoneAsString(actDate, settings.getTimeZone());
-                    String nextDateAsString = SOSDate.getDateWithTimeZoneAsString(nextDate, settings.getTimeZone());
-                    String dailyPlanDateAsString = SOSDate.getDateWithTimeZoneAsString(date, settings.getTimeZone());
+                    String actDateAsString = SOSDate.getDateAsString(actDate);
+                    String nextDateAsString = SOSDate.getDateAsString(nextDate);
+                    String dailyPlanDateAsString = SOSDate.getDateAsString(date);
 
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s][timeZone=%s][actDate=%s][nextDate=%s]dailyPlanDate=%s", method,
