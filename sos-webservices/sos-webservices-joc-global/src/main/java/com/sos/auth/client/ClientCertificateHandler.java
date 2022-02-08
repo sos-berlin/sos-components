@@ -71,7 +71,7 @@ public class ClientCertificateHandler {
                 
                 // same with LDAP (preferred implementation, no third party jar needed)
                 LdapName ldapName = new LdapName(subjectDN);
-                this.clientCN = ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().get().getValue().toString();
+                ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().ifPresent(o -> this.clientCN = o.getValue().toString());
 
                 LOGGER.debug("Client SubjectDN read from request: " + subjectDN);
                 LOGGER.debug("Client CN read from request for comparison with shiro account: " + clientCN);

@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -1121,21 +1122,22 @@ public class DBLayerDailyPlannedOrders {
         return executeUpdate("deleteSubmission", query);
     }
 
-    // TODO calculate duration, see DBLayerMonitor avg
-    public List<Object[]> getLastHistoryDates(String controllerId, String workflowPath, int maxResults) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select startTime,endTime from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
+    public Long getWorkflowAvg(String controllerId, String workflowPath) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select ");
+        hql.append("round(");
+        hql.append("sum(").append(SOSHibernateSecondsDiff.getFunction("endTime", "startTime")).append(")/count(id)");
+        hql.append(",0) ");// ,0 precision only because of MSSQL
+        hql.append("from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
         hql.append("where controllerId = :controllerId ");
         hql.append("and workflowPath = :workflowPath ");
         hql.append("and parentId = 0 ");
         hql.append("and severity=:severity ");
-        hql.append("order by id desc ");
 
-        Query<Object[]> query = session.createQuery(hql.toString());
+        Query<Long> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
         query.setParameter("workflowPath", workflowPath);
         query.setParameter("severity", HistorySeverity.SUCCESSFUL);
-        query.setMaxResults(maxResults);
-        return session.getResultList(query);
+        return session.getSingleValue(query);
     }
 
     public List<String> getDeployedWorkflowsNames(String controllerId) throws SOSHibernateException {

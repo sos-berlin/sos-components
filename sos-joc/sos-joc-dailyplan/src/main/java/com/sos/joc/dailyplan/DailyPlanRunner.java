@@ -1,8 +1,6 @@
 package com.sos.joc.dailyplan;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -322,31 +320,22 @@ public class DailyPlanRunner extends TimerTask {
 
         SOSHibernateSession session = null;
         try {
-            // TODO calculate duration in the database (see DBLayerMonitoring avg)
             session = Globals.createSosHibernateStatelessConnection("calculateDurations");
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
 
             for (String workflowPath : workflowPaths) {
-                List<Object[]> items = dbLayer.getLastHistoryDates(controllerId, workflowPath, 10);
-                long ms = 0;
-                long rows = 0;
-                if (items != null) {
-                    for (Object[] item : items) {
-                        Date startTime = (Date) item[0];
-                        Date endTime = (Date) item[1];
-                        if (startTime == null || endTime == null) {
-                            continue;
-                        }
-                        ms += (endTime.getTime() - startTime.getTime());
-                        rows++;
-                    }
+                Long seconds;
+                try {
+                    seconds = dbLayer.getWorkflowAvg(controllerId, workflowPath);
+                    seconds = seconds == null ? 0L : seconds;
+                } catch (Throwable e) {
+                    seconds = 0L;
+                    LOGGER.warn(String.format("[calculateDurations][%s][%s]%s", controllerId, workflowPath, e.toString()), e);
                 }
-                Long duration = rows > 0 ? new BigDecimal(ms / rows).setScale(0, RoundingMode.HALF_UP).longValue() : ms;
-                durations.put(workflowPath, duration);
-
+                durations.put(workflowPath, seconds * 1_000);
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[calculateDurations][%s][%s][workflow=%s]%s", controllerId, date, workflowPath, SOSDate
-                            .getDurationOfMillis(duration)));
+                            .getDurationOfSeconds(seconds)));
                 }
             }
         } finally {
