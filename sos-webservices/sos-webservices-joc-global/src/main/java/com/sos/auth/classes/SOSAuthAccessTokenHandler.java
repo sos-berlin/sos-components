@@ -15,18 +15,18 @@ public class SOSAuthAccessTokenHandler extends Thread {
     private static final int TIME_GAP_SECONDS = 20;
     private static final String ThreadCtx = "authentication";
 
-    private boolean stop;
+    private boolean stop=false;
 
     public class AccessTokenTimerTask extends TimerTask {
 
         SOSAuthCurrentAccount nextAccount;
 
         public AccessTokenTimerTask(SOSAuthCurrentAccount nextAccount) {
-            MDC.put("context", ThreadCtx);
             this.nextAccount = nextAccount;
         }
 
         public void run() {
+            MDC.put("context", ThreadCtx);
             if (nextAccount != null) {
                 LOGGER.debug("Renew " + nextAccount.getAccountname());
                 boolean valid=false;
