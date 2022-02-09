@@ -41,6 +41,7 @@ public class SOSAuthHelper {
 
 	public static final Long HASH_GAP = 300L;
 	public static final String HASH_PREFIX = "$JS7-2.2.2$";
+	public static final String HASH_SHIRO_PREFIX = "$shiro1$";
 	public static final String EMERGENCY_ROLE = "all";
 	public static final String EMERGENCY_PERMISSION = "sos:products";
 	public static final String EMERGENY_KEY = "sos_emergency_key";
@@ -48,7 +49,7 @@ public class SOSAuthHelper {
 	public static final String OBJECT_TYPE_IAM_GENERAL = "GENERAL";
 
 	public static String getSHA512(String pwd) throws NoSuchAlgorithmException, InvalidKeySpecException {
-		if (pwd.startsWith(HASH_PREFIX) && pwd.length() == 128 + HASH_PREFIX.length()) {
+		if ((pwd.startsWith(HASH_SHIRO_PREFIX)  && pwd.length() == 128 + HASH_SHIRO_PREFIX.length()) || (pwd.startsWith(HASH_PREFIX) && pwd.length() == 128 + HASH_PREFIX.length())) {
 			return pwd;
 		}
 		final long timeStart = System.currentTimeMillis();
