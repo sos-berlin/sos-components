@@ -167,19 +167,17 @@ public class DailyPlanRunner extends TimerTask {
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, ParseException, SOSException, URISyntaxException,
             InterruptedException, ExecutionException, TimeoutException {
 
+        String method = "createPlan";
         try {
             lastActivityStart.set(new Date().getTime());
             durations = null;
 
-            LOGGER.info(String.format("[%s][createPlan]creating from %s for %s days ahead, submitting for %s days ahead", startupMode, SOSDate
+            LOGGER.info(String.format("[%s][%s]creating from %s for %s days ahead, submitting for %s days ahead", startupMode, method, SOSDate
                     .getDateAsString(calendar), settings.getDayAheadPlan(), settings.getDayAheadSubmit()));
 
             Collection<Schedule> schedules = getAllSchedules();
-            if (schedules.size() == 0) {
-                LOGGER.info(String.format("[%s][createPlan][skip]found 0 schedules", startupMode));
-                return;
-            } else {
-                LOGGER.info(String.format("[%s][createPlan]found %s schedules", startupMode, schedules.size()));
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[%s][%s][Plan Order automatically]found total=%s schedules", startupMode, method, schedules.size()));
             }
             java.util.Calendar savCalendar = java.util.Calendar.getInstance();
             savCalendar.setTime(calendar.getTime());
@@ -187,18 +185,22 @@ public class DailyPlanRunner extends TimerTask {
                 String controllerId = conf.getCurrent().getId();
 
                 Collection<Schedule> controllerSchedules = new ArrayList<>();
-                Set<String> controllerWorkflows = getDeployedWorkflowsNames(controllerId);
-                if (controllerWorkflows != null && controllerWorkflows.size() > 0) {
-                    controllerSchedules = schedules.stream().filter(s -> {
-                        return controllerWorkflows.contains(s.getWorkflowName());
-                    }).collect(Collectors.toList());
+                if (schedules != null && schedules.size() > 0) {
+                    Set<String> controllerWorkflows = getDeployedWorkflowsNames(controllerId);
+                    if (controllerWorkflows != null && controllerWorkflows.size() > 0) {
+                        controllerSchedules = schedules.stream().filter(s -> {
+                            return controllerWorkflows.contains(s.getWorkflowName());
+                        }).collect(Collectors.toList());
+                    }
                 }
-
                 java.util.Calendar dailyPlanCalendar = java.util.Calendar.getInstance();
                 dailyPlanCalendar.setTime(savCalendar.getTime());
                 settings.setDailyPlanDate(dailyPlanCalendar.getTime());
 
                 if (controllerSchedules.size() > 0) {
+                    LOGGER.info(String.format("[%s][%s][%s][Plan Order automatically]found %s schedules", startupMode, method, controllerId,
+                            controllerSchedules.size()));
+
                     for (int day = 0; day < settings.getDayAheadPlan(); day++) {
                         String dailyPlanDate = SOSDate.getDateWithTimeZoneAsString(dailyPlanCalendar.getTime(), settings.getTimeZone());
                         List<DBItemDailyPlanSubmission> l = getSubmissionsForDate(controllerId, dailyPlanCalendar);
@@ -214,7 +216,7 @@ public class DailyPlanRunner extends TimerTask {
                                 }
                                 return d == null ? "" : d;
                             }).collect(Collectors.toList());
-                            LOGGER.info(String.format("[%s][creating][%s][%s][skip][submission(s) found][created]%s", startupMode, controllerId,
+                            LOGGER.info(String.format("[%s][%s][%s][%s][skip][submission(s) found][created]%s", startupMode, method, controllerId,
                                     dailyPlanDate, String.join(",", copy)));
                         }
 
@@ -222,7 +224,7 @@ public class DailyPlanRunner extends TimerTask {
                         settings.setDailyPlanDate(dailyPlanCalendar.getTime());
                     }
                 } else {
-                    LOGGER.info(String.format("[%s][creating][%s][%s][skip]schedules or workflows not found", startupMode, controllerId));
+                    LOGGER.info(String.format("[%s][%s][%s][skip][Plan Order automatically]no schedules found", startupMode, method, controllerId));
                 }
 
                 dailyPlanCalendar.setTime(savCalendar.getTime());
@@ -469,6 +471,15 @@ public class DailyPlanRunner extends TimerTask {
                 LOGGER.warn(String.format("[%s][skip][schedule is null]%s", method, SOSHibernate.toString(item)));
                 continue;
             }
+
+            if (onlyPlanOrderAutomatically && !schedule.getPlanOrderAutomatically()) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][skip][onlyPlanOrderAutomatically=true][schedule.getPlanOrderAutomatically=false]%s", method,
+                            schedule.getWorkflowName(), SOSHibernate.toString(item)));
+                }
+                continue;
+            }
+
             String path = WorkflowPaths.getPathOrNull(schedule.getWorkflowName());
             if (path == null) {
                 LOGGER.warn(String.format("[%s][skip][workflow deployment path not found][workflow=%s]%s", method, schedule.getWorkflowName(),
@@ -485,14 +496,6 @@ public class DailyPlanRunner extends TimerTask {
                     }
                     continue;
                 }
-            }
-
-            if (onlyPlanOrderAutomatically && !schedule.getPlanOrderAutomatically()) {
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][skip][onlyPlanOrderAutomatically=true][schedule.getPlanOrderAutomatically=false]%s", method,
-                            schedule.getWorkflowName(), SOSHibernate.toString(item)));
-                }
-                continue;
             }
 
             schedule.setPath(item.getPath());
@@ -680,8 +683,8 @@ public class DailyPlanRunner extends TimerTask {
         boolean fromService = isFromService(startupMode);
 
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][%s][dailyPlanDate=%s]actDate=%s,nextDate=%s", method, controllerId, dailyPlanDate, SOSDate
-                    .getDateAsString(actDate), SOSDate.getDateAsString(nextDate)));
+            LOGGER.debug(String.format("[%s][%s][%s][dailyPlanDate=%s]actDate=%s,nextDate=%s", startupMode, method, controllerId, dailyPlanDate,
+                    SOSDate.getDateAsString(actDate), SOSDate.getDateAsString(nextDate)));
         }
 
         Map<String, Calendar> calendars = new HashMap<String, Calendar>();
@@ -692,12 +695,12 @@ public class DailyPlanRunner extends TimerTask {
         for (Schedule schedule : schedules) {
             if (fromService && !schedule.getPlanOrderAutomatically()) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s][skip schedule=%s]fromService=true, plan order automatically=false", method, controllerId,
-                            dailyPlanDate, schedule.getPath()));
+                    LOGGER.debug(String.format("[%s][%s][%s][%s][skip schedule=%s]fromService=true, plan order automatically=false", startupMode,
+                            method, controllerId, dailyPlanDate, schedule.getPath()));
                 }
             } else {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s]schedule=%s", method, controllerId, dailyPlanDate, schedule.getPath()));
+                    LOGGER.debug(String.format("[%s][%s][%s][%s]schedule=%s", startupMode, method, controllerId, dailyPlanDate, schedule.getPath()));
                 }
                 generateNonWorkingDays(controllerId, schedule, date, dailyPlanDate);
 
@@ -711,9 +714,9 @@ public class DailyPlanRunner extends TimerTask {
                     String dailyPlanDateAsString = SOSDate.getDateAsString(date);
 
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s][timeZone=%s][actDate=%s][nextDate=%s]dailyPlanDate=%s", method,
-                                controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), assignedCalendar.getTimeZone(),
-                                actDateAsString, nextDateAsString, dailyPlanDateAsString));
+                        LOGGER.debug(String.format("[%s][%s][%s][%s][%s][calendar=%s][timeZone=%s][actDate=%s][nextDate=%s]dailyPlanDate=%s",
+                                startupMode, method, controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(),
+                                assignedCalendar.getTimeZone(), actDateAsString, nextDateAsString, dailyPlanDateAsString));
                     }
 
                     String calendarsKey = assignedCalendar.getCalendarName() + "#" + schedule.getPath();
@@ -722,15 +725,15 @@ public class DailyPlanRunner extends TimerTask {
                         try {
                             calendar = getCalendar(controllerId, assignedCalendar.getCalendarName(), ConfigurationType.WORKINGDAYSCALENDAR);
                         } catch (DBMissingDataException e) {
-                            LOGGER.warn(String.format("[%s][%s][%s][%s][WorkingDayCalendar=%s][skip]not found", method, controllerId, dailyPlanDate,
-                                    schedule.getPath(), assignedCalendar.getCalendarName()));
+                            LOGGER.warn(String.format("[%s][%s][%s][%s][%s][WorkingDayCalendar=%s][skip]not found", startupMode, method, controllerId,
+                                    dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName()));
                             continue;
                         }
                         calendars.put(calendarsKey, calendar);
                     } else {
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][%s][%s][WorkingDayCalendar=%s][cache]%s", method, controllerId, dailyPlanDate,
-                                    schedule.getPath(), assignedCalendar.getCalendarName(), SOSString.toString(calendar)));
+                            LOGGER.debug(String.format("[%s][%s][%s][%s][%s][WorkingDayCalendar=%s][cache]%s", startupMode, method, controllerId,
+                                    dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), SOSString.toString(calendar)));
                         }
                     }
                     calendar.setFrom(actDateAsString);
@@ -739,16 +742,16 @@ public class DailyPlanRunner extends TimerTask {
                     Calendar restrictions = new Calendar();
                     restrictions.setIncludes(assignedCalendar.getIncludes());
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s][%s][%s][WorkingDayCalendar=%s][includes]%s", method, controllerId, dailyPlanDate,
-                                schedule.getPath(), assignedCalendar.getCalendarName(), SOSString.toString(restrictions)));
+                        LOGGER.debug(String.format("[%s][%s][%s][%s][%s][WorkingDayCalendar=%s][includes]%s", startupMode, method, controllerId,
+                                dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), SOSString.toString(restrictions)));
                     }
 
                     int plannedOrdersCount = 0;
                     List<String> dates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString, nextDateAsString)
                             .getDates();
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s][FrequencyResolver]dates=%s", method, controllerId, dailyPlanDate,
-                                schedule.getPath(), assignedCalendar.getCalendarName(), String.join(",", dates)));
+                        LOGGER.debug(String.format("[%s][%s][%s][%s][%s][calendar=%s][FrequencyResolver]dates=%s", startupMode, method, controllerId,
+                                dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), String.join(",", dates)));
                     }
                     if (dates.size() > 0) {
                         PeriodResolver periodResolver = new PeriodResolver(settings);
@@ -764,22 +767,23 @@ public class DailyPlanRunner extends TimerTask {
 
                         for (String d : dates) {
                             if (isTraceEnabled) {
-                                LOGGER.trace(String.format("[%s][%s][%s][%s][calendar=%s]date=%s", method, controllerId, dailyPlanDate, schedule
-                                        .getPath(), assignedCalendar.getCalendarName(), d));
+                                LOGGER.trace(String.format("[%s][%s][%s][%s][%s][calendar=%s]date=%s", startupMode, method, controllerId,
+                                        dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), d));
                             }
                             if (nonWorkingDays != null && nonWorkingDays.get(d) != null) {
                                 if (isDebugEnabled) {
-                                    LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s][date=%s][skip]date is a non working day", method,
-                                            controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), d));
+                                    LOGGER.debug(String.format("[%s][%s][%s][%s][%s][calendar=%s][date=%s][skip]date is a non working day",
+                                            startupMode, method, controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(),
+                                            d));
                                 }
                             } else {
                                 Map<Long, Period> startTimes = periodResolver.getStartTimes(d, dailyPlanDateAsString, assignedCalendar.getTimeZone());
 
                                 if (isDebugEnabled) {
                                     LOGGER.debug(String.format(
-                                            "[%s][%s][%s][%s][calendar=%s][timeZone=%s][date=%s][periodResolver]startTimes size=%s", method,
-                                            controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), assignedCalendar
-                                                    .getTimeZone(), d, startTimes.size()));
+                                            "[%s][%s][%s][%s][%s][calendar=%s][timeZone=%s][date=%s][periodResolver]startTimes size=%s", startupMode,
+                                            method, controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(),
+                                            assignedCalendar.getTimeZone(), d, startTimes.size()));
                                 }
 
                                 for (Entry<Long, Period> periodEntry : startTimes.entrySet()) {
@@ -827,8 +831,8 @@ public class DailyPlanRunner extends TimerTask {
 
                     } else {
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s]%s planned orders", method, controllerId, dailyPlanDate, schedule
-                                    .getPath(), assignedCalendar.getCalendarName(), plannedOrdersCount));
+                            LOGGER.debug(String.format("[%s][%s][%s][%s][%s][calendar=%s]%s planned orders", startupMode, method, controllerId,
+                                    dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), plannedOrdersCount));
                         }
                     }
                 }
