@@ -19,10 +19,7 @@ public class TestSOSServicePermissionShiro {
         accessToken = GlobalsTest.getAccessToken();
     }
 
-    @AfterClass
-    public static void testIsAuthenticated() {
-        GlobalsTest.logout();
-    }
+  
 
     @Test
     public void testHasRole() throws SessionNotExistException {
