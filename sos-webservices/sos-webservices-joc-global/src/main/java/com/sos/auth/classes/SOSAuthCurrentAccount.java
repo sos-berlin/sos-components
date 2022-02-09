@@ -55,7 +55,7 @@ public class SOSAuthCurrentAccount {
     private String accessToken;
     private SOSIdentityService identityServices;
     private Map<String, String> identyServiceAccessToken;
-    private String authorization;
+    private boolean withAuthorization;
     private Set<String> roles = Collections.emptySet();
     private Boolean haveAnyIpPermission;
     private HttpServletRequest httpServletRequest;
@@ -69,10 +69,10 @@ public class SOSAuthCurrentAccount {
         this.accountName = accountName;
     }
 
-    public SOSAuthCurrentAccount(String accountName, String authorization) {
+    public SOSAuthCurrentAccount(String accountName, boolean withAuthorization) {
         super();
         this.accountName = accountName;
-        this.authorization = authorization;
+        this.withAuthorization = withAuthorization;
     }
 
     public ControllerPermissions getControllerPermissions(String controllerId) {
@@ -369,12 +369,8 @@ public class SOSAuthCurrentAccount {
         }
     }
 
-    public String getAuthorization() {
-        return authorization;
-    }
-
-    public void setAuthorization(String authorization) {
-        this.authorization = authorization;
+    public boolean withAuthorization() {
+        return withAuthorization;
     }
 
     public SOSAuthFolderPermissions getSosShiroFolderPermissions() {

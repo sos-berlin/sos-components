@@ -72,8 +72,6 @@ public class Globals {
 	public static Map<String, String> schedulerVariables = null;
 	public static ConfigurationGlobals configurationGlobals = null;
 	public static String servletContextContextPath = null; // /joc
-	public static String loginClientId = "";
-	public static String loginUserName = "";
 	public static String apiVersion = "";
 	public static String inventoryVersion = "";
 	public static String curVersion = "";

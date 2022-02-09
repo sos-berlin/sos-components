@@ -226,7 +226,6 @@ public class SOSServicePermissionIam {
         }
 
         MDC.put("context", ThreadCtx);
-        Globals.loginClientId = loginClientId;
         String clientCertCN = null;
         try {
             if (request != null) {
@@ -493,8 +492,7 @@ public class SOSServicePermissionIam {
 
         IdentityServiceTypes identityServiceType = IdentityServiceTypes.fromValue(dbItemIdentityService.getIdentityServiceType());
         String identityServiceName = dbItemIdentityService.getIdentityServiceName();
-        SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
-
+        
         ISOSLogin sosLogin = null;
 
         switch (identityServiceType) {
@@ -526,9 +524,9 @@ public class SOSServicePermissionIam {
             sosLogin = new SOSInternAuthLogin();
             LOGGER.debug("Login with idendity service sosintern");
             break;
-        default:
-            LOGGER.debug("Login with idendity service shiro");
-            sosLogin = new SOSShiroLogin(Globals.getShiroIniSecurityManagerFactory());
+//        default:
+//            LOGGER.debug("Login with idendity service shiro");
+//            sosLogin = new SOSShiroLogin(Globals.getShiroIniSecurityManagerFactory());
         }
 
         sosLogin.setIdentityService(new SOSIdentityService(dbItemIdentityService));
@@ -569,6 +567,7 @@ public class SOSServicePermissionIam {
         SecurityConfiguration securityConfiguration = sosSecurityConfiguration.readConfiguration(null, identityServiceName);
         currentAccount.setRoles(securityConfiguration);
 
+        SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
         Permissions sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(securityConfiguration);
         currentAccount.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
         currentAccount.getCurrentSubject().getSession().setAttribute("username_joc_permissions", Globals.objectMapper.writeValueAsBytes(
@@ -618,7 +617,7 @@ public class SOSServicePermissionIam {
         if (user.isEmpty() && clientCertCN != null) {
             user = clientCertCN;
         }
-        return new SOSAuthCurrentAccount(user, authorization);
+        return new SOSAuthCurrentAccount(user, authorization.equals(EMPTY_STRING));
     }
 
     private String getPwdFromHeaderOrQuery(String basicAuthorization, String pwd) throws UnsupportedEncodingException, JocException {
@@ -649,19 +648,19 @@ public class SOSServicePermissionIam {
 
     private SOSAuthCurrentAccountAnswer authenticate(SOSAuthCurrentAccount currentAccount, String password) throws Exception {
 
-        SOSHibernateSession sosHibernateSession = null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("Login Identity Services");
-            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-            filter.setDisabled(false);
-            filter.setRequired(true);
-
-            List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
-
+            SOSHibernateSession sosHibernateSession = null;
             String msg = "";
             try {
-
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection("Login Identity Services");
+                
+                IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+                IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+                filter.setDisabled(false);
+                filter.setRequired(true);
+                
+                List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+                
                 for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
                     msg = createAccount(currentAccount, password, dbItemIamIdentityService);
                     if (!msg.isEmpty()) {
@@ -685,13 +684,12 @@ public class SOSServicePermissionIam {
                             dbItemIamIdentityService.setIdentityServiceType("SHIRO");
                             dbItemIamIdentityService.setOrdering(1);
                             dbItemIamIdentityService.setRequired(false);
-                            sosHibernateSession.setAutoCommit(false);
-                            sosHibernateSession.beginTransaction();
                             sosHibernateSession.save(dbItemIamIdentityService);
-                            sosHibernateSession.commit();
                             listOfIdentityServices.add(dbItemIamIdentityService);
                         }
                     }
+                    
+                    Globals.disconnect(sosHibernateSession);
 
                     msg = "";
                     for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
@@ -713,6 +711,8 @@ public class SOSServicePermissionIam {
                 msg = e.getMessage();
                 LOGGER.info(e.getSosAuthCurrentAccountAnswer().getIdentityService());
                 LOGGER.info(e.getMessage());
+            } finally {
+                Globals.disconnect(sosHibernateSession);
             }
             SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
             if (currentAccount.getCurrentSubject() == null || !currentAccount.getCurrentSubject().isAuthenticated()) {
@@ -759,8 +759,6 @@ public class SOSServicePermissionIam {
             sosAuthCurrentUserAnswer.setIsAuthenticated(false);
             return sosAuthCurrentUserAnswer;
 
-        } finally {
-            Globals.disconnect(sosHibernateSession);
         }
     }
 
@@ -813,14 +811,11 @@ public class SOSServicePermissionIam {
         SOSAuthCurrentAccount currentAccount = getUserFromHeaderOrQuery(basicAuthorization, clientCertCN, user);
         String password = getPwdFromHeaderOrQuery(basicAuthorization, pwd);
 
-        if (currentAccount == null || currentAccount.getAuthorization() == null) {
+        if (currentAccount == null || !currentAccount.withAuthorization()) {
             return JOCDefaultResponse.responseStatusJSError(AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
         }
 
-        currentAccount.setAuthorization(basicAuthorization);
         currentAccount.setHttpServletRequest(request);
-
-        Globals.loginUserName = currentAccount.getAccountname();
 
         SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = null;
 

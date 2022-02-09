@@ -12,10 +12,7 @@ import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.ldap.SOSLdapHandler;
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.Globals;
-import com.sos.joc.model.security.IdentityServiceAuthenticationScheme;
 import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSLdapLogin implements ISOSLogin {
@@ -31,7 +28,6 @@ public class SOSLdapLogin implements ISOSLogin {
     }
 
     public void login(String account, String pwd, HttpServletRequest httpServletRequest) {
-        SOSHibernateSession sosHibernateSession = null;
 
         SOSLdapHandler sosLdapHandler = new SOSLdapHandler();
         try {
@@ -73,7 +69,6 @@ public class SOSLdapLogin implements ISOSLogin {
             LOGGER.error("", e);
         } finally {
             sosLdapHandler.close();
-            Globals.disconnect(sosHibernateSession);
         }
 
     }

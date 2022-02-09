@@ -13,10 +13,7 @@ import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.sosintern.SOSInternAuthHandler;
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.Globals;
-import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSInternAuthLogin implements ISOSLogin {
 
@@ -31,10 +28,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
     }
 
     public void login(String account, String pwd, HttpServletRequest httpServletRequest) {
-        SOSHibernateSession sosHibernateSession = null;
-
         try {
-
             SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials = new SOSInternAuthWebserviceCredentials();
             sosInternAuthWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
             sosInternAuthWebserviceCredentials.setAccount(account);
@@ -75,8 +69,6 @@ public class SOSInternAuthLogin implements ISOSLogin {
 
         } catch (SOSHibernateException e) {
             LOGGER.error("", e);
-        } finally {
-            Globals.disconnect(sosHibernateSession);
         }
 
     }
