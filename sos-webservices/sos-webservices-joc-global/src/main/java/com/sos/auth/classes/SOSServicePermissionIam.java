@@ -617,7 +617,7 @@ public class SOSServicePermissionIam {
         if (user.isEmpty() && clientCertCN != null) {
             user = clientCertCN;
         }
-        return new SOSAuthCurrentAccount(user, authorization.equals(EMPTY_STRING));
+        return new SOSAuthCurrentAccount(user, !authorization.equals(EMPTY_STRING));
     }
 
     private String getPwdFromHeaderOrQuery(String basicAuthorization, String pwd) throws UnsupportedEncodingException, JocException {

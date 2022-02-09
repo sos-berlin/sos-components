@@ -55,7 +55,7 @@ public class SOSAuthHelper {
 
 		byte[] salt = new byte[16];
 		KeySpec spec = new PBEKeySpec(pwd.toCharArray(), salt, 65536, 128);
-		SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+		SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
 		byte[] hash = factory.generateSecret(spec).getEncoded();
 		String hashedPwd = String.format("%s%0128x", HASH_PREFIX, new BigInteger(1, hash));
 		final long timeEnd = System.currentTimeMillis();
