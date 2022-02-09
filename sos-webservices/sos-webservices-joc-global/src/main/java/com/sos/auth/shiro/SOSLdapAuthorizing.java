@@ -124,8 +124,7 @@ public class SOSLdapAuthorizing {
 
         String searchBase = "";
         if (sosLdapAuthorizingRealm.getSearchBase() == null) {
-            LOGGER.warn(String.format(
-                    "You have specified a value for userNameAttribute but you have not defined the searchBase. The default empty search base will be used"));
+            LOGGER.warn("You have specified a value for userNameAttribute but you have not defined the searchBase. The default empty search base will be used");
         } else {
             searchBase = sosLdapAuthorizingRealm.getSearchBase();
         }
@@ -133,8 +132,7 @@ public class SOSLdapAuthorizing {
         NamingEnumeration<SearchResult> answer = ldapContext.search(searchBase, searchFilter, searchCtls);
 
         if (!answer.hasMore()) {
-            LOGGER.warn(String.format("Cannot find user: %s with search filter %s and search base: %s ", sosLdapLoginUserName.getLoginAccount(),
-                    searchFilter, searchBase));
+            LOGGER.warn(String.format("Cannot find user: search filter %s and search base: %s ", searchFilter, searchBase));
         } else {
             SearchResult result = answer.nextElement();
             user = result.getAttributes();
@@ -158,8 +156,7 @@ public class SOSLdapAuthorizing {
         NamingEnumeration<SearchResult> answer = ldapContext.search(sosLdapAuthorizingRealm.getSearchBase(), searchFilter, searchCtls);
 
         if (!answer.hasMore()) {
-            LOGGER.warn(String.format("Cannot find roles for user: %s with search filter %s and search base: %s ", sosLdapLoginUserName.getUserName(),
-                    searchFilter, sosLdapAuthorizingRealm.getSearchBase()));
+            LOGGER.warn(String.format("Cannot find roles for user: search filter %s and search base: %s ", searchFilter, sosLdapAuthorizingRealm.getSearchBase()));
         } else {
             SearchResult result = answer.nextElement();
             String groupNameAttribute = sosLdapAuthorizingRealm.getGroupNameAttribute();
@@ -169,7 +166,7 @@ public class SOSLdapAuthorizing {
                 LOGGER.debug("getting all attribute values using attribute " + memberOf);
                 groupNames = LdapUtils.getAllAttributeValues(memberOf);
             } else {
-                LOGGER.info(String.format("User: %s is not member of any group", sosLdapLoginUserName.getUserName()));
+                LOGGER.info("User is not member of any group");
             }
         }
         return groupNames;
@@ -229,7 +226,7 @@ public class SOSLdapAuthorizing {
                     sosLdapLoginUserName.setUserName(user.get(sosLdapAuthorizingRealm.getUserNameAttribute()).get().toString());
                 }
             } else {
-                LOGGER.info("using the username from login: " + sosLdapLoginUserName.getLoginAccount());
+                LOGGER.info("using the username from login");
             }
         }
         LOGGER.debug("userPrincipalName: " + sosLdapLoginUserName.getUserName());

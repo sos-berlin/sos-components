@@ -1,22 +1,23 @@
 package com.sos.auth.shiro;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.ValidatingSession;
 import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSSerializerUtil;
-import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.JocException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
 
 public class SOSDistributedSessionDAO extends CachingSessionDAO {
 
@@ -75,6 +76,7 @@ public class SOSDistributedSessionDAO extends CachingSessionDAO {
             }
             Globals.commit(sosHibernateSession);
         } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
             throw new RuntimeException(e);
 
         } finally {
@@ -107,7 +109,7 @@ public class SOSDistributedSessionDAO extends CachingSessionDAO {
             filter.setConfigurationType(SHIRO_SESSION);
             List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter,0);
             Globals.commit(sosHibernateSession);
-            sosHibernateSession.close();
+            Globals.disconnect(sosHibernateSession);
 
             if (listOfConfigurtions.size() > 0) {
                 jocConfigurationDbItem = listOfConfigurtions.get(0);
@@ -116,6 +118,7 @@ public class SOSDistributedSessionDAO extends CachingSessionDAO {
                 return "";
             }
         } catch (SOSHibernateException e) {
+            Globals.rollback(sosHibernateSession);
             throw new RuntimeException(e);
 
         } catch (JocException e) {
@@ -168,10 +171,10 @@ public class SOSDistributedSessionDAO extends CachingSessionDAO {
             jocConfigurationDBLayer.delete(filter);
             putSerializedSession(session.getId().toString(), null);
             Globals.commit(sosHibernateSession);
-            sosHibernateSession.close();
         } catch (SOSHibernateException e) {
             throw new RuntimeException(e);
         } catch (JocException e) {
+            Globals.rollback(sosHibernateSession);
             throw new RuntimeException(e);
         } finally {
             Globals.disconnect(sosHibernateSession);

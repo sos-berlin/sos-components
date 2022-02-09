@@ -92,11 +92,11 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
 	}
 
 	private void setSSLContext() {
+	    
+	    if (Globals.sosCockpitProperties == null) {
+            Globals.sosCockpitProperties = new JocCockpitProperties();
+        }
 		JocCockpitProperties jocCockpitProperties = Globals.sosCockpitProperties;
-
-		if (jocCockpitProperties == null) {
-			jocCockpitProperties = new JocCockpitProperties();
-		}
 
 		String truststorePathJocProperties = jocCockpitProperties.getProperty("truststore_path", "");
 		String truststorePassJocProperties = jocCockpitProperties.getProperty("truststore_path", "");

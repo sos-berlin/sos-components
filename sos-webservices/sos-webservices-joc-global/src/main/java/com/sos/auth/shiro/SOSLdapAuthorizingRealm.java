@@ -74,7 +74,7 @@ public class SOSLdapAuthorizingRealm extends DefaultLdapRealm {
 
             authorizing.setAuthcToken(authcToken);
             try {
-                setSSLEnvironmentVariablesForTruststore(Globals.sosCockpitProperties);
+                setSSLEnvironmentVariablesForTruststore();
 
                 authorizing.setSosLdapAuthorizingRealm(this);
                 authzInfo = authorizing.setRoles(authzInfo, principalCollection);
@@ -116,7 +116,7 @@ public class SOSLdapAuthorizingRealm extends DefaultLdapRealm {
         this.authcToken = authcToken;
         AuthenticationInfo authenticationInfo = null;
         try {
-            setSSLEnvironmentVariablesForTruststore(Globals.sosCockpitProperties);
+            setSSLEnvironmentVariablesForTruststore();
 
             authenticationInfo = super.doGetAuthenticationInfo(authcToken);
             Object principal = authcToken.getPrincipal();
@@ -133,26 +133,25 @@ public class SOSLdapAuthorizingRealm extends DefaultLdapRealm {
         return authenticationInfo;
     }
 
-    public void setSSLEnvironmentVariablesForTruststore(JocCockpitProperties jocCockpitProperties) {
+    public void setSSLEnvironmentVariablesForTruststore() {
         LOGGER.debug("--> setSSLEnvironmentVariablesForTruststore");
-        if (jocCockpitProperties == null) {
-            jocCockpitProperties = new JocCockpitProperties();
+
+        if (Globals.sosCockpitProperties == null) {
+            Globals.sosCockpitProperties = new JocCockpitProperties();
         }
-        if (jocCockpitProperties != null) {
-            String tPath = jocCockpitProperties.getProperty("truststore_path", System.getProperty("javax.net.ssl.trustStore"));
-            String tType = jocCockpitProperties.getProperty("truststore_type", System.getProperty("javax.net.ssl.trustStoreType"));
-            String tPass = jocCockpitProperties.getProperty("truststore_password", System.getProperty("javax.net.ssl.trustStorePassword"));
-            if (tPath != null && !tPath.trim().isEmpty()) {
-                Path p = jocCockpitProperties.resolvePath(tPath.trim());
-                if (p != null) {
-                    LOGGER.debug("javax.net.ssl.trustStore:" + p.toString());
-                    System.setProperty("javax.net.ssl.trustStore", p.toString());
-                    if (tType != null && !tType.trim().isEmpty()) {
-                        System.setProperty("javax.net.ssl.trustStoreType", tType);
-                    }
-                    if (tPass != null && !tPass.trim().isEmpty()) {
-                        System.setProperty("javax.net.ssl.trustStorePassword", tPass);
-                    }
+        String tPath = Globals.sosCockpitProperties.getProperty("truststore_path", System.getProperty("javax.net.ssl.trustStore"));
+        String tType = Globals.sosCockpitProperties.getProperty("truststore_type", System.getProperty("javax.net.ssl.trustStoreType"));
+        String tPass = Globals.sosCockpitProperties.getProperty("truststore_password", System.getProperty("javax.net.ssl.trustStorePassword"));
+        if (tPath != null && !tPath.trim().isEmpty()) {
+            Path p = Globals.sosCockpitProperties.resolvePath(tPath.trim());
+            if (p != null) {
+                LOGGER.debug("javax.net.ssl.trustStore:" + p.toString());
+                System.setProperty("javax.net.ssl.trustStore", p.toString());
+                if (tType != null && !tType.trim().isEmpty()) {
+                    System.setProperty("javax.net.ssl.trustStoreType", tType);
+                }
+                if (tPass != null && !tPass.trim().isEmpty()) {
+                    System.setProperty("javax.net.ssl.trustStorePassword", tPass);
                 }
             }
         }

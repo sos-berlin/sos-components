@@ -150,8 +150,10 @@ public class SOSLdapGroupRolesMapping {
         NamingEnumeration<SearchResult> answer = ldapContext.search(sosLdapWebserviceCredentials.getSearchBase(), searchFilter, searchCtls);
 
         if (!answer.hasMore()) {
-            LOGGER.warn(String.format("Cannot find roles for user: %s with search filter %s and search base: %s ", sosLdapWebserviceCredentials
-                    .getSosLdapLoginUserName().getUserName(), searchFilter, sosLdapWebserviceCredentials.getSearchBase()));
+//            LOGGER.warn(String.format("Cannot find roles for user: %s with search filter %s and search base: %s ", sosLdapWebserviceCredentials
+//                    .getSosLdapLoginUserName().getUserName(), searchFilter, sosLdapWebserviceCredentials.getSearchBase()));
+            LOGGER.warn(String.format("Cannot find roles for user: search filter %s and search base: %s ", searchFilter, sosLdapWebserviceCredentials
+                    .getSearchBase()));
         } else {
             SearchResult result = answer.nextElement();
             String groupNameAttribute = sosLdapWebserviceCredentials.getGroupNameAttribute();
@@ -161,8 +163,9 @@ public class SOSLdapGroupRolesMapping {
                 LOGGER.debug("getting all attribute values using attribute " + memberOf);
                 groupNames = getAllAttributeValues(memberOf);
             } else {
-                LOGGER.info(String.format("User: %s is not member of any group", sosLdapWebserviceCredentials.getSosLdapLoginUserName()
-                        .getUserName()));
+//                LOGGER.info(String.format("User: %s is not member of any group", sosLdapWebserviceCredentials.getSosLdapLoginUserName()
+//                        .getUserName()));
+                LOGGER.info("User is not member of any group");
             }
         }
         return groupNames;
@@ -180,7 +183,7 @@ public class SOSLdapGroupRolesMapping {
                             .get().toString());
                 }
             } else {
-                LOGGER.info("using the username from login: " + sosLdapWebserviceCredentials.getSosLdapLoginUserName().getLoginAccount());
+                LOGGER.debug("using the username from login: " + sosLdapWebserviceCredentials.getSosLdapLoginUserName().getLoginAccount());
             }
         }
         LOGGER.debug("userPrincipalName: " + sosLdapWebserviceCredentials.getSosLdapLoginUserName().getUserName());

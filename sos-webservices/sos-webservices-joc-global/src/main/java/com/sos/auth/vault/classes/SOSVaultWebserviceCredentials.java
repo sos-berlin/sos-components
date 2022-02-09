@@ -117,11 +117,6 @@ public class SOSVaultWebserviceCredentials {
 
     public void setValuesFromProfile(SOSIdentityService sosIdentityService) {
 
-        JocCockpitProperties jocCockpitProperties = Globals.sosCockpitProperties;
-
-        if (jocCockpitProperties == null) {
-            jocCockpitProperties = new JocCockpitProperties();
-        }
 
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -136,8 +131,12 @@ public class SOSVaultWebserviceCredentials {
             if (listOfJocConfigurations.size() == 1) {
                 dbItem = listOfJocConfigurations.get(0);
             }
-
+            
             if (dbItem != null) {
+                
+                if (Globals.sosCockpitProperties == null) {
+                    Globals.sosCockpitProperties = new JocCockpitProperties();
+                }
 
                 com.sos.joc.model.security.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
                         com.sos.joc.model.security.Properties.class);
@@ -173,20 +172,20 @@ public class SOSVaultWebserviceCredentials {
                 } else {
 
                     if (truststorePath.isEmpty()) {
-                        truststorePath = jocCockpitProperties.getProperty("truststore_path", truststorePathDefault);
+                        truststorePath = Globals.sosCockpitProperties.getProperty("truststore_path", truststorePathDefault);
                     }
 
                     if (truststorePassword.isEmpty()) {
-                        truststorePassword = jocCockpitProperties.getProperty("truststore_password", truststorePassDefault);
+                        truststorePassword = Globals.sosCockpitProperties.getProperty("truststore_password", truststorePassDefault);
                     }
 
                     if (truststoreType == null) {
-                        truststoreType = KeystoreType.valueOf(jocCockpitProperties.getProperty("truststore_type", truststoreTypeDefault));
+                        truststoreType = KeystoreType.valueOf(Globals.sosCockpitProperties.getProperty("truststore_type", truststoreTypeDefault));
                     }
                 }
 
                 if (truststorePath != null && !truststorePath.trim().isEmpty()) {
-                    Path p = jocCockpitProperties.resolvePath(truststorePath.trim());
+                    Path p = Globals.sosCockpitProperties.resolvePath(truststorePath.trim());
                     truststorePath = p.toString();
                 }
 

@@ -1,6 +1,9 @@
 package com.sos.auth.classes;
 
-import java.io.File;
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,32 +41,28 @@ public class SOSShiroImport {
     private static final String SOS_LDAP_AUTHORIZING_REALM = "com.sos.auth.shiro.SOSLdapAuthorizingRealm";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSShiroImport.class);
     private SecurityConfiguration securityConfiguration = null;
-    private SOSHibernateSession sosHibernateSession = null;
-    private String iniFileName;
 
   
     public void rescue() {
 
     }
 
-    public void executeImport() throws Exception {
+    public void executeImport(SOSHibernateSession sosHibernateSession, Path iniFile) throws Exception {
         try {
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
-
-            SecurityConfiguration securityConfiguration = addDefaultIdentityService(sosHibernateSession);
+            
+            SecurityConfiguration securityConfiguration = addDefaultIdentityService(sosHibernateSession, iniFile);
             importMain(sosHibernateSession, securityConfiguration);
             Globals.commit(sosHibernateSession);
 
         } catch (Exception e) {
-            LOGGER.error("", e);
-        } finally {
             Globals.rollback(sosHibernateSession);
+            throw e;
         }
-
     }
 
-    private SecurityConfiguration addDefaultIdentityService(SOSHibernateSession sosHibernateSession) throws Exception {
+    private SecurityConfiguration addDefaultIdentityService(SOSHibernateSession sosHibernateSession, Path iniFile) throws Exception {
 
         IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
         IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
@@ -86,9 +85,9 @@ public class SOSShiroImport {
             sosHibernateSession.save(dbItemIamIdentityService);
         }
 
-        SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration(iniFileName);
+        SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration(iniFile.toString());
 
-        securityConfiguration = sosSecurityConfiguration.readConfigurationFromFilesystem(iniFileName);
+        securityConfiguration = sosSecurityConfiguration.readConfigurationFromFilesystem(iniFile);
 
         SOSSecurityDBConfiguration sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
 
@@ -222,9 +221,9 @@ public class SOSShiroImport {
         dbItem.setConfigurationItem(json);
         dbItem.setModified(new Date());
         try {
-        sosHibernateSession.save(dbItem);
-        }catch (Exception e) {
-        	LOGGER.info("Using existing settings");
+            sosHibernateSession.save(dbItem);
+        } catch (Exception e) {
+            LOGGER.info("Using existing settings");
         }
     }
 
@@ -258,69 +257,65 @@ public class SOSShiroImport {
         return false;
 
     }
+    
+    public static void usage(Path defaultHibernateConf) {
+        LOGGER.info(String.format("Usage: %s shiro_ini_file hibernate_config_file", SOSShiroImport.class.getSimpleName()));
+        LOGGER.info("            shiro_ini_file        : required");
+        LOGGER.info("                                    path to the shiro.ini file to be imported.");
+        LOGGER.info("            hibernate_config_file : optional, default: " + defaultHibernateConf.toAbsolutePath().toString());
+        LOGGER.info("                                    path to the hibernate configuration file");
+    }
 
     public static void main(String[] args) {
-        if (args.length < 2) {
-            LOGGER.info(String.format("Usage: %s command shiro_ini_file hibernate_config_file", SOSShiroImport.class.getSimpleName()));
-            LOGGER.info("            hibernate_config_file : required");
-            LOGGER.info("                                    path to the hibernate configuration file");
-            LOGGER.info("            shiro_ini_file        : required");
-            LOGGER.info("                                    path to the shiro.ini file to be imported.");
-            LOGGER.info("            command               : required ");
-            LOGGER.info("                                    import");
-
-            return;
-        }
-
-        SOSHibernateFactory factory = null;
-        SOSHibernateSession session = null;
-
+        Path hibernateConf = Paths.get("resources/joc/hibernate.cfg.xml");
         int exitCode = 0;
-        try {
-            factory = new SOSHibernateFactory(args[2]);
-            SOSShiroImport sosShiroImport = new SOSShiroImport();
-            factory.addClassMapping(DBLayer.getJocClassMapping());
-            factory.build();
-            session = factory.openStatelessSession();
 
-            String command = args[0];
-            String shiroIniFile = args[1];
+        if (args.length == 0 || args[0].matches("-{0,2}h(?:elp)?")) {
+            if (args.length == 0) {
+                exitCode = 1;
+                LOGGER.error("... missing parameter");
+            }
+            usage(hibernateConf);
+        } else {
 
-            if ("import".equalsIgnoreCase(command)) {
-                if (!new File(shiroIniFile).exists()) {
-                    LOGGER.info(" File: " + shiroIniFile + " not found");
-                } else {
-                    sosShiroImport.setSession(session);
-                    sosShiroImport.setIniFileName(shiroIniFile);
-                    try {
-                        sosShiroImport.executeImport();
-                    } catch (Exception e) {
-                        LOGGER.error("", e);
-                    }
+            SOSHibernateFactory factory = null;
+            SOSHibernateSession session = null;
 
+            try {
+                
+                Path iniFile = Paths.get(args[0]);
+                if (!Files.exists(iniFile)) {
+                    throw new FileNotFoundException(iniFile.toString());
                 }
-            }
-        } catch (Exception e) {
-            exitCode = 1;
-            e.printStackTrace(System.out);
 
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-            if (factory != null) {
-                factory.close();
+                if (args.length > 1) {
+                    hibernateConf = Paths.get(args[1]);
+                }
+
+                factory = new SOSHibernateFactory(hibernateConf);
+                factory.addClassMapping(DBLayer.getJocClassMapping());
+                factory.build();
+                
+                SOSShiroImport sosShiroImport = new SOSShiroImport();
+                session = factory.openStatelessSession("ShiroImport");
+                
+                sosShiroImport.executeImport(session, iniFile);
+                
+            } catch (Exception e) {
+                exitCode = 1;
+                e.printStackTrace(System.out);
+
+            } finally {
+                if (session != null) {
+                    session.close();
+                }
+                if (factory != null) {
+                    factory.close();
+                    factory = null;
+                }
             }
         }
         System.exit(exitCode);
-    }
-
-    private void setSession(SOSHibernateSession session) {
-        sosHibernateSession = session;
-    }
-
-    public void setIniFileName(String iniFileName) {
-        this.iniFileName = iniFileName;
     }
 
 }

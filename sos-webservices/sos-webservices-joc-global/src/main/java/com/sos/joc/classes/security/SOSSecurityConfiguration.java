@@ -1,7 +1,7 @@
 package com.sos.joc.classes.security;
 
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -385,8 +385,8 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
     }
     
 
-    public SecurityConfiguration readConfigurationFromFilesystem(String iniFilename) throws InvalidFileFormatException, IOException, JocException {
-        writeIni = new Wini(Paths.get(iniFilename).toFile());
+    public SecurityConfiguration readConfigurationFromFilesystem(Path iniFilename) throws InvalidFileFormatException, IOException, JocException {
+        writeIni = new Wini(iniFilename.toFile());
 
         SecurityConfiguration secConfig = new SecurityConfiguration();
 

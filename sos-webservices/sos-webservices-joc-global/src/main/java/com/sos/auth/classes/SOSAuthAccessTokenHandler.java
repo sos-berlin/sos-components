@@ -36,7 +36,8 @@ public class SOSAuthAccessTokenHandler extends Thread {
                     valid = false;
                 }
                 if (!valid) {
-                    LOGGER.info(nextAccount.getAccountname() + " no longer valid");
+                    //LOGGER.info(nextAccount.getAccountname() + " no longer valid");
+                    LOGGER.info("account is not longer valid");
                     Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(nextAccount.getAccessToken());
                 }
             }

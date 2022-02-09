@@ -100,8 +100,6 @@ public class SOSAuthHelper {
 
 		try {
 			sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSAuthHelper:getForcePasswordChange");
-			sosHibernateSession.setAutoCommit(false);
-			Globals.beginTransaction(sosHibernateSession);
 
 			IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 			IamAccountFilter iamAccountFilter = new IamAccountFilter();
