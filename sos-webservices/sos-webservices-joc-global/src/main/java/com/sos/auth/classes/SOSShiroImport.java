@@ -88,12 +88,12 @@ public class SOSShiroImport {
         SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration(iniFile.toString());
 
         securityConfiguration = sosSecurityConfiguration.readConfigurationFromFilesystem(iniFile);
+        
+        for (SecurityConfigurationAccount securityConfigurationAccount:securityConfiguration.getAccounts()) {
+        	securityConfigurationAccount.setIdentityServiceId(dbItemIamIdentityService.getId());
+        }
 
         SOSSecurityDBConfiguration sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
-
-        for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-            securityConfigurationAccount.setPassword("");
-        }
 
         SecurityConfiguration securityConfigurationOut = sosSecurityDBConfiguration.importConfiguration(sosHibernateSession, securityConfiguration,
                 dbItemIamIdentityService);

@@ -136,7 +136,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             dbItemIamAcount.setIdentityServiceId(dbItemIamIdentityService.getId());
             dbItemIamAcount.setForcePasswordChange(securityConfigurationAccount.getForcePasswordChange());
             if (sosInitialPasswordSetting.getInitialPassword().equals(password)) {
-                listOfAccounts.get(0).setForcePasswordChange(true);
+            	dbItemIamAcount.setForcePasswordChange(true);
             }
             dbItemIamAcount.setDisabled(securityConfigurationAccount.getDisabled());
 
