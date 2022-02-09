@@ -47,6 +47,7 @@ import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -562,43 +563,42 @@ public abstract class RepositoryUtil {
         });
 
         if (!dbItemsToUpdate.isEmpty()) {
+            InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
             dbItemsToUpdate.stream().peek(dbItem -> {
+                ConfigurationType objType = dbItem.getTypeAsEnum();
                 byte[] content = null;
                 try {
                     Path repository = repositoryBase;
-                    if (localTypes.contains(dbItem.getTypeAsEnum())) {
+                    if (localTypes.contains(objType)) {
                         repository = repositoryBase.resolve("local");
-                    } else if (rolloutTypes.contains(dbItem.getTypeAsEnum())) {
+                    } else if (rolloutTypes.contains(objType)) {
                         repository = repositoryBase.resolve("rollout");
                     }
                     if (dbItem.getPath().startsWith("/")) {
-                        content = Files.readAllBytes(
-                                repository.resolve(Paths.get(dbItem.getPath().substring(1) + getExtension(dbItem.getTypeAsEnum()))));
+                        content = Files.readAllBytes(repository.resolve(Paths.get(dbItem.getPath().substring(1) + getExtension(objType))));
                     } else {
-                        content = Files.readAllBytes(
-                                repository.resolve(Paths.get(dbItem.getPath() + getExtension(dbItem.getTypeAsEnum()))));
-                        
+                        content = Files.readAllBytes(repository.resolve(Paths.get(dbItem.getPath() + getExtension(objType))));
+
                     }
                     String updatedContent = null;
-                    boolean valid = false;
-                    try {
-                        Validator.validate(dbItem.getTypeAsEnum(), content);
-                    } catch (Exception e) {
-                        valid = false;
-                    }
-                    if(!ConfigurationType.FOLDER.equals(dbItem.getTypeAsEnum())) {
-                        updatedContent = Globals.objectMapper.writeValueAsString(
-                                Globals.prettyPrintObjectMapper.readValue(content, getConfigurationClass(dbItem.getTypeAsEnum())));
+                    if (!ConfigurationType.FOLDER.equals(objType)) {
+                        updatedContent = Globals.objectMapper.writeValueAsString(Globals.prettyPrintObjectMapper.readValue(content,
+                                getConfigurationClass(objType)));
                     }
                     if (updatedContent != null) {
+                        boolean valid = true;
+                        try {
+                            Validator.validate(objType, content, invDbLayer, null);
+                        } catch (Exception e) {
+                            valid = false;
+                        }
                         dbItem.setContent(updatedContent);
                         dbItem.setDeployed(false);
                         dbItem.setValid(valid);
                         dbItem.setModified(Date.from(Instant.now()));
                     }
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    LOGGER.error("", e);
                 }
             }).collect(Collectors.toSet());
         }
