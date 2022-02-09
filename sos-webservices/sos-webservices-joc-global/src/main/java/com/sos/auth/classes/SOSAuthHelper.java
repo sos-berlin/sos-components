@@ -61,7 +61,10 @@ public class SOSAuthHelper {
 		final long timeEnd = System.currentTimeMillis();
 		Long gap = HASH_GAP - (timeEnd - timeStart);
 		if (gap > 0) {
-			java.lang.Thread.sleep(gap);
+			try {
+                java.lang.Thread.sleep(gap);
+            } catch (InterruptedException e) {
+            }
 		}
 		return hashedPwd;
 	}
