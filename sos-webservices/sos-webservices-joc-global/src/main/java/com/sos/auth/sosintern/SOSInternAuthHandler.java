@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthAccessToken;
 import com.sos.auth.classes.SOSAuthHelper;
+import com.sos.auth.classes.SOSPasswordHasher;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.auth.sosintern.classes.SOSInternAuthWebserviceCredentials;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -64,24 +65,19 @@ public class SOSInternAuthHandler {
 			sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSInternAuthLogin.class.getName());
 			SOSAuthAccessToken sosAuthAccessToken = null;
 			IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-			String accountPwd;
 			forcePasswordChange = false;
-			try {
-				accountPwd = SOSAuthHelper.getSHA512(password);
-				IamAccountFilter filter = new IamAccountFilter();
-				filter.setAccountName(sosInternAuthWebserviceCredentials.getAccount());
-				filter.setIdentityServiceId(sosInternAuthWebserviceCredentials.getIdentityServiceId());
+			IamAccountFilter filter = new IamAccountFilter();
+			filter.setAccountName(sosInternAuthWebserviceCredentials.getAccount());
+			filter.setIdentityServiceId(sosInternAuthWebserviceCredentials.getIdentityServiceId());
 
-				DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(filter);
+			DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(filter);
 
-				if ((dbItemIamAccount != null && (isShiroMatch(dbItemIamAccount.getAccountPassword(), password) || dbItemIamAccount.getAccountPassword().equals(accountPwd))
-								&& !dbItemIamAccount.getDisabled())) {
-					sosAuthAccessToken = new SOSAuthAccessToken();
-					sosAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
-					forcePasswordChange = dbItemIamAccount.getForcePasswordChange();
-				}
-			} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-				LOGGER.info(e.getMessage());
+			if (dbItemIamAccount != null
+					&& (SOSPasswordHasher.verify(password, dbItemIamAccount.getAccountPassword()))
+					&& !dbItemIamAccount.getDisabled()) {
+				sosAuthAccessToken = new SOSAuthAccessToken();
+				sosAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
+				forcePasswordChange = dbItemIamAccount.getForcePasswordChange();
 			}
 			return sosAuthAccessToken;
 		} finally {

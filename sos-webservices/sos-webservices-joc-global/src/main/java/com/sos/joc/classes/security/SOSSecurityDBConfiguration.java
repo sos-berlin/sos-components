@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.classes.SOSInitialPasswordSetting;
+import com.sos.auth.classes.SOSPasswordHasher;
 import com.sos.auth.interfaces.ISOSSecurityConfiguration;
 import com.sos.auth.vault.SOSVaultHandler;
 import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
@@ -128,7 +129,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             if ("JOC".equals(dbItemIamIdentityService.getIdentityServiceType()) || "VAULT-JOC-ACTIVE".equals(dbItemIamIdentityService
                     .getIdentityServiceType())) {
                 if (!"********".equals(password)) {
-                    dbItemIamAcount.setAccountPassword(SOSAuthHelper.getSHA512(password));
+                    dbItemIamAcount.setAccountPassword(SOSPasswordHasher.hash(password));
                 }
             } else {
                 dbItemIamAcount.setAccountPassword("********");
@@ -222,7 +223,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                     iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
                     iamAccountFilter.setAccountName(securityConfigurationAccount.getAccount());
                     if (withPasswordCheck) {
-                        iamAccountFilter.setPassword(SOSAuthHelper.getSHA512(securityConfigurationAccount.getOldPassword()));
+                        iamAccountFilter.setPassword(SOSPasswordHasher.hash(securityConfigurationAccount.getOldPassword()));
                     }
                     List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
                     if (listOfAccounts.size() == 1) {
@@ -238,7 +239,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                             password = securityConfigurationAccount.getPassword();
                             listOfAccounts.get(0).setForcePasswordChange(false);
                         }
-                        listOfAccounts.get(0).setAccountPassword(SOSAuthHelper.getSHA512(password));
+                        listOfAccounts.get(0).setAccountPassword(SOSPasswordHasher.hash(password));
                         if (!sosInitialPasswordSetting.isMininumPasswordLength(password)) {
                             JocError error = new JocError();
                             error.setMessage("Password is too short");
