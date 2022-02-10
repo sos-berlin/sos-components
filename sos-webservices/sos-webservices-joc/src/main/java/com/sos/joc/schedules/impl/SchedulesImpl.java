@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -155,7 +156,12 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
                 return new ArrayList<Schedule>();
             }
 
-            return new DailyPlanRunner(null).convert(scheduleItems, permittedFolders, checkedFolders);
+            DailyPlanRunner runner = new DailyPlanRunner(null);
+            Set<String> allowedWorkflowNames = null;
+            if (!SOSString.isEmpty(controllerId)) {
+                allowedWorkflowNames = runner.getDeployedWorkflowsNames(controllerId);
+            }
+            return runner.convert(scheduleItems, permittedFolders, checkedFolders, false, allowedWorkflowNames);
         } finally {
             Globals.disconnect(session);
         }

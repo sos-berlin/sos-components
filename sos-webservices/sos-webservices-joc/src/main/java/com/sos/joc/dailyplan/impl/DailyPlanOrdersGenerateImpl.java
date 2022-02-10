@@ -222,7 +222,8 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 return new ArrayList<Schedule>();
             }
 
-            return runner.convert(scheduleItems, permittedFolders, checkedFolders);
+            Set<String> deployedWorkflowNames = runner.getDeployedWorkflowsNames(controllerId);
+            return runner.convert(scheduleItems, permittedFolders, checkedFolders, true, deployedWorkflowNames);
         } finally {
             Globals.disconnect(session);
         }
