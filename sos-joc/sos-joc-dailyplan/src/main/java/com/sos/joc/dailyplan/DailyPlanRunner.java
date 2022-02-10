@@ -475,22 +475,22 @@ public class DailyPlanRunner extends TimerTask {
                 continue;
             }
 
+            if (deployedWorkflowNames != null) {
+                if (!deployedWorkflowNames.contains(schedule.getWorkflowName())) {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][skip][schedule=%s][workflow=%s]workflow is not deployed on current controller", method, item
+                                .getPath(), schedule.getWorkflowName()));
+                    }
+                    continue;
+                }
+            }
+
             if (onlyPlanOrderAutomatically && !schedule.getPlanOrderAutomatically()) {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][skip][schedule=%s][onlyPlanOrderAutomatically=true]schedule.getPlanOrderAutomatically=false",
                             method, schedule.getPath()));
                 }
                 continue;
-            }
-
-            if (deployedWorkflowNames != null) {
-                if (!deployedWorkflowNames.contains(schedule.getWorkflowName())) {
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][skip][schedule=%s][workflow=%s]workflow is not deployed for current controller", method, item
-                                .getPath(), schedule.getWorkflowName()));
-                    }
-                    continue;
-                }
             }
 
             String path = WorkflowPaths.getPathOrNull(schedule.getWorkflowName());
@@ -506,9 +506,6 @@ public class DailyPlanRunner extends TimerTask {
                 }
                 continue;
             }
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[%s][schedule=%s]workflow=%s", method, item.getPath(), path));
-            }
             if (checkPermissions) {
                 if (!isWorkflowPermitted(path, permittedFolders, checkedFolders)) {
                     if (isDebugEnabled) {
@@ -521,6 +518,10 @@ public class DailyPlanRunner extends TimerTask {
             schedule.setPath(item.getPath());
             schedule.setWorkflowPath(path);
             result.add(schedule);
+
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][schedule=%s]workflow=%s", method, schedule.getPath(), schedule.getWorkflowPath()));
+            }
         }
         return result;
     }
