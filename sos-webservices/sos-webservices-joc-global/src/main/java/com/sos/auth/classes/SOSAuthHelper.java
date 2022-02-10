@@ -48,27 +48,6 @@ public class SOSAuthHelper {
 	public static final String CONFIGURATION_TYPE_IAM = "IAM";
 	public static final String OBJECT_TYPE_IAM_GENERAL = "GENERAL";
 
-	public static String getSHA512(String pwd) throws NoSuchAlgorithmException, InvalidKeySpecException {
-		if ((pwd.startsWith(HASH_SHIRO_PREFIX)  && pwd.length() == 128 + HASH_SHIRO_PREFIX.length()) || (pwd.startsWith(HASH_PREFIX) && pwd.length() == 128 + HASH_PREFIX.length())) {
-			return pwd;
-		}
-		final long timeStart = System.currentTimeMillis();
-
-		byte[] salt = new byte[16];
-		KeySpec spec = new PBEKeySpec(pwd.toCharArray(), salt, 65536, 128);
-		SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
-		byte[] hash = factory.generateSecret(spec).getEncoded();
-		String hashedPwd = String.format("%s%0128x", HASH_PREFIX, new BigInteger(1, hash));
-		final long timeEnd = System.currentTimeMillis();
-		Long gap = HASH_GAP - (timeEnd - timeStart);
-		if (gap > 0) {
-			try {
-                java.lang.Thread.sleep(gap);
-            } catch (InterruptedException e) {
-            }
-		}
-		return hashedPwd;
-	}
 
 	public static String createAccessToken() {
 
