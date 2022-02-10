@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -50,14 +51,13 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, TransferFilter.class);
             TransferFilter in = Globals.objectMapper.readValue(inBytes, TransferFilter.class);
-            
+
             String controllerId = in.getControllerId();
             Set<String> allowedControllers = Collections.emptySet();
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                        availableController -> getControllerPermissions(availableController, accessToken).getView()).collect(
-                                Collectors.toSet());
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                        availableController, accessToken).getView()).collect(Collectors.toSet());
             } else if (getControllerPermissions(controllerId, accessToken).getView()) {
                 allowedControllers = Collections.singleton(controllerId);
             }
@@ -66,12 +66,11 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
             if (response != null) {
                 return response;
             }
-            
+
             Map<String, Set<Folder>> permittedFoldersMap = folderPermissions.getListOfFolders(allowedControllers);
             if (controllerId.isEmpty() && allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                 allowedControllers = Collections.emptySet();
             }
-            
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
 
@@ -98,7 +97,6 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
             List<Transfer> transfers = new ArrayList<Transfer>();
             List<Long> filteredTransferIds = null;
 
-            
             JocDBLayerYade dbLayer = new JocDBLayerYade(session);
             List<DBItemYadeTransfer> items = dbLayer.getFilteredTransfers(filter);
             if (items != null && !items.isEmpty()) {
@@ -173,7 +171,7 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
         return transfer;
     }
 
-    private ProtocolFragment getProtocolFragment(JocDBLayerYade dbLayer, Long id) {
+    private ProtocolFragment getProtocolFragment(JocDBLayerYade dbLayer, Long id) throws SOSHibernateException {
         if (id != null) {
             DBItemYadeProtocol protocol = dbLayer.getProtocolById(id);
             if (protocol != null) {
