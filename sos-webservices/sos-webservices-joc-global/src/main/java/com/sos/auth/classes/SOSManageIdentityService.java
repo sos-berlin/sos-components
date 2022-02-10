@@ -36,10 +36,10 @@ import com.sos.joc.model.security.SecurityConfiguration;
 import com.sos.joc.model.security.SecurityConfigurationAccount;
 import com.sos.joc.model.security.SecurityConfigurationMainEntry;
 
-public class SOSShiroImport {
+public class SOSManageIdentityService {
 
     private static final String SOS_LDAP_AUTHORIZING_REALM = "com.sos.auth.shiro.SOSLdapAuthorizingRealm";
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSShiroImport.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSManageIdentityService.class);
     private SecurityConfiguration securityConfiguration = null;
 
   
@@ -259,7 +259,7 @@ public class SOSShiroImport {
     }
     
     public static void usage(Path defaultHibernateConf) {
-        LOGGER.info(String.format("Usage: %s shiro_ini_file hibernate_config_file", SOSShiroImport.class.getSimpleName()));
+        LOGGER.info(String.format("Usage: %s shiro_ini_file hibernate_config_file", SOSManageIdentityService.class.getSimpleName()));
         LOGGER.info("            shiro_ini_file        : required");
         LOGGER.info("                                    path to the shiro.ini file to be imported.");
         LOGGER.info("            hibernate_config_file : optional, default: " + defaultHibernateConf.toAbsolutePath().toString());
@@ -296,7 +296,7 @@ public class SOSShiroImport {
                 factory.addClassMapping(DBLayer.getJocClassMapping());
                 factory.build();
                 
-                SOSShiroImport sosShiroImport = new SOSShiroImport();
+                SOSManageIdentityService sosShiroImport = new SOSManageIdentityService();
                 session = factory.openStatelessSession("ShiroImport");
                 
                 sosShiroImport.executeImport(session, iniFile);
