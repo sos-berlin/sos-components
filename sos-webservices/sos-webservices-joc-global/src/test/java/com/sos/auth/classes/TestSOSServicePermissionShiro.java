@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sos.joc.exceptions.SessionNotExistException;
@@ -21,6 +22,7 @@ public class TestSOSServicePermissionShiro {
 
   
 
+    @Ignore
     @Test
     public void testHasRole() throws SessionNotExistException {
         SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = GlobalsTest.sosServicePermissionIam.hasRoleTest(accessToken, GlobalsTest.SHIRO_ROLE);
@@ -28,6 +30,7 @@ public class TestSOSServicePermissionShiro {
         assertEquals("testCurrentUserAnswer is has role " + GlobalsTest.SHIRO_ROLE, true, sosShiroCurrentUserAnswer.hasRole());
     }
 
+    @Ignore
     @Test
     public void testIsPermitted() throws SessionNotExistException {
         Arrays.asList("sos:products:joc:inventory:view", "sos:products:joc:auditlog:view", "sos:products:controller:deployment:deploy",
