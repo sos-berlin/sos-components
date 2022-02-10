@@ -6,9 +6,7 @@ import java.util.UUID;
 
 import org.apache.shiro.authc.credential.DefaultPasswordService;
 import org.apache.shiro.authc.credential.PasswordMatcher;
-import org.apache.shiro.authc.credential.PasswordService;
 import org.apache.shiro.crypto.hash.DefaultHashService;
-import org.apache.shiro.crypto.hash.format.HexFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,18 +36,18 @@ public class SOSInternAuthHandler {
 		String[] hashParts = s.split("\\$");
 		if ("shiro1".equals(hashParts[1])) {
 
-			PasswordMatcher p = new org.apache.shiro.authc.credential.PasswordMatcher();
+			PasswordMatcher p = new PasswordMatcher();
 			DefaultPasswordService ps = new DefaultPasswordService();
 
-			DefaultHashService sha1HashService = new DefaultHashService();
-			sha1HashService.setHashAlgorithmName(hashParts[2]);
+			DefaultHashService defaultHashService = new DefaultHashService();
+			defaultHashService.setHashAlgorithmName(hashParts[2]);
 			try {
-				sha1HashService.setHashIterations(Integer.valueOf(hashParts[3]));
+				defaultHashService.setHashIterations(Integer.valueOf(hashParts[3]));
 			} catch (NumberFormatException e) {
-				sha1HashService.setHashIterations(1);
+				defaultHashService.setHashIterations(1);
 			}
-			sha1HashService.setGeneratePublicSalt(true);
-			ps.setHashService(sha1HashService);
+			defaultHashService.setGeneratePublicSalt(true);
+			ps.setHashService(defaultHashService);
 			ps.setHashFormat(new org.apache.shiro.crypto.hash.format.Shiro1CryptFormat());
 			p.setPasswordService(ps);
 			return p.getPasswordService().passwordsMatch(pwd, hash);
@@ -76,9 +74,8 @@ public class SOSInternAuthHandler {
 
 				DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(filter);
 
-				if (isShiroMatch(dbItemIamAccount.getAccountPassword(), password)
-						|| (dbItemIamAccount != null && dbItemIamAccount.getAccountPassword().equals(accountPwd))
-								&& !dbItemIamAccount.getDisabled()) {
+				if ((dbItemIamAccount != null && (isShiroMatch(dbItemIamAccount.getAccountPassword(), password) || dbItemIamAccount.getAccountPassword().equals(accountPwd))
+								&& !dbItemIamAccount.getDisabled())) {
 					sosAuthAccessToken = new SOSAuthAccessToken();
 					sosAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
 					forcePasswordChange = dbItemIamAccount.getForcePasswordChange();
