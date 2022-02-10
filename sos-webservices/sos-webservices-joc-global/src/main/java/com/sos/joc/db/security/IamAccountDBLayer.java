@@ -38,9 +38,6 @@ public class IamAccountDBLayer {
         if (filter.getAccountName() != null && !filter.getAccountName().equals("")) {
             query.setParameter("accountName", filter.getAccountName());
         }
-        if (filter.getPassword() != null && !filter.getPassword().equals("")) {
-            query.setParameter("accountPassword", filter.getPassword());
-        }
         if (filter.getId() != null) {
             query.setParameter("accountId", filter.getId());
         }
@@ -130,10 +127,6 @@ public class IamAccountDBLayer {
         }
         if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
             where += and + " accountName = :accountName";
-            and = " and ";
-        }
-        if (filter.getPassword() != null && !filter.getPassword().isEmpty()) {
-            where += and + " accountPassword = :accountPassword";
             and = " and ";
         }
         if (!where.trim().equals("")) {
