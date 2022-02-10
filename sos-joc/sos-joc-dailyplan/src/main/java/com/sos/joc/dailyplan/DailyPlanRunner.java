@@ -175,7 +175,7 @@ public class DailyPlanRunner extends TimerTask {
             LOGGER.info(String.format("[%s][%s]creating from %s for %s days ahead, submitting for %s days ahead", startupMode, method, SOSDate
                     .getDateAsString(calendar), settings.getDayAheadPlan(), settings.getDayAheadSubmit()));
 
-            Collection<Schedule> schedules = getAllSchedules();
+            Collection<Schedule> schedules = getAllSchedules(true, null);
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("[%s][%s][Plan Order automatically]found total=%s schedules", startupMode, method, schedules.size()));
             }
@@ -187,7 +187,7 @@ public class DailyPlanRunner extends TimerTask {
                 Collection<Schedule> controllerSchedules = new ArrayList<>();
                 if (schedules != null && schedules.size() > 0) {
                     Set<String> controllerWorkflows = getDeployedWorkflowsNames(controllerId);
-                    if (controllerWorkflows != null && controllerWorkflows.size() > 0) {
+                    if (controllerWorkflows.size() > 0) {
                         controllerSchedules = schedules.stream().filter(s -> {
                             return controllerWorkflows.contains(s.getWorkflowName());
                         }).collect(Collectors.toList());
@@ -416,7 +416,8 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     // service
-    private Collection<Schedule> getAllSchedules() throws SOSHibernateException, IOException {
+    private Collection<Schedule> getAllSchedules(boolean infoOnMissingDeployedWorkflow, Set<String> deployedWorkflowNames)
+            throws SOSHibernateException, IOException {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IDENTIFIER);
@@ -426,25 +427,27 @@ public class DailyPlanRunner extends TimerTask {
             session.close();
             session = null;
 
-            return convert(result);
+            return convert(result, infoOnMissingDeployedWorkflow, deployedWorkflowNames);
         } finally {
             Globals.disconnect(session);
         }
     }
 
     // service - use only with getPlanOrderAutomatically and not check the folder permissions
-    private Collection<Schedule> convert(List<DBItemInventoryReleasedConfiguration> items) {
-        return convert(items, true, false, null, null);
+    private Collection<Schedule> convert(List<DBItemInventoryReleasedConfiguration> items, boolean infoOnMissingDeployedWorkflow,
+            Set<String> deployedWorkflowNames) {
+        return convert(items, true, false, null, null, infoOnMissingDeployedWorkflow, deployedWorkflowNames);
     }
 
     // DailyPlanOrdersGenerateImpl, SchedulesImpl
     public Collection<Schedule> convert(List<DBItemInventoryReleasedConfiguration> items, Set<Folder> permittedFolders,
-            Map<String, Boolean> checkedFolders) {
-        return convert(items, false, true, permittedFolders, checkedFolders);
+            Map<String, Boolean> checkedFolders, boolean infoOnMissingDeployedWorkflow, Set<String> deployedWorkflowNames) {
+        return convert(items, false, true, permittedFolders, checkedFolders, infoOnMissingDeployedWorkflow, deployedWorkflowNames);
     }
 
     private Collection<Schedule> convert(List<DBItemInventoryReleasedConfiguration> items, boolean onlyPlanOrderAutomatically,
-            boolean checkPermissions, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
+            boolean checkPermissions, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders, boolean infoOnMissingDeployedWorkflow,
+            Set<String> deployedWorkflowNames) {
         if (items == null || items.size() == 0) {
             return new ArrayList<Schedule>();
         }
@@ -474,16 +477,33 @@ public class DailyPlanRunner extends TimerTask {
 
             if (onlyPlanOrderAutomatically && !schedule.getPlanOrderAutomatically()) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][skip][onlyPlanOrderAutomatically=true][schedule.getPlanOrderAutomatically=false]%s", method,
-                            schedule.getWorkflowName(), SOSHibernate.toString(item)));
+                    LOGGER.debug(String.format("[%s][skip][schedule=%s][onlyPlanOrderAutomatically=true]schedule.getPlanOrderAutomatically=false",
+                            method, schedule.getPath()));
                 }
                 continue;
             }
 
+            if (deployedWorkflowNames != null) {
+                if (!deployedWorkflowNames.contains(schedule.getWorkflowName())) {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][skip][schedule=%s][workflow=%s]workflow is not deployed for current controller", method, item
+                                .getPath(), schedule.getWorkflowName()));
+                    }
+                    continue;
+                }
+            }
+
             String path = WorkflowPaths.getPathOrNull(schedule.getWorkflowName());
             if (path == null) {
-                LOGGER.warn(String.format("[%s][skip][workflow deployment path not found][workflow=%s]%s", method, schedule.getWorkflowName(),
-                        SOSHibernate.toString(item)));
+                if (infoOnMissingDeployedWorkflow) {
+                    LOGGER.info(String.format("[%s][skip][workflow deployment path not found][workflow=%s]%s", method, schedule.getWorkflowName(),
+                            SOSHibernate.toString(item)));
+                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][skip][workflow deployment path not found][workflow=%s]%s", method, schedule
+                                .getWorkflowName(), SOSHibernate.toString(item)));
+                    }
+                }
                 continue;
             }
             if (isDebugEnabled) {
@@ -526,13 +546,13 @@ public class DailyPlanRunner extends TimerTask {
         }
     }
 
-    private Set<String> getDeployedWorkflowsNames(String controllerId) throws SOSHibernateException {
+    public Set<String> getDeployedWorkflowsNames(String controllerId) throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IDENTIFIER);
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             List<String> result = dbLayer.getDeployedWorkflowsNames(controllerId);
-            return result == null || result.size() == 0 ? null : result.stream().collect(Collectors.toSet());
+            return result == null || result.size() == 0 ? new HashSet<>() : result.stream().collect(Collectors.toSet());
         } finally {
             Globals.disconnect(session);
         }
