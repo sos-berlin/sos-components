@@ -2099,10 +2099,11 @@ public abstract class PublishUtils {
         List<DBItemInventoryConfiguration> allCfgs = new ArrayList<DBItemInventoryConfiguration>(); 
         folders.stream().forEach(item -> allCfgs.addAll(dbLayer.getDeployableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
         allLatest = allLatest.stream().filter(item -> {
-            DBItemInventoryConfiguration dbItem = allCfgs.stream().filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item.getType())).findFirst().get();
+            DBItemInventoryConfiguration dbItem = allCfgs.stream()
+                    .filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item.getType())).findFirst().orElse(null);
             if (dbItem != null && item.getPath().equals(dbItem.getPath())) {
                 return true;
-            } else {
+             } else {
                 return false;
             }
         }).filter(Objects::nonNull).collect(Collectors.toSet());
@@ -2113,10 +2114,10 @@ public abstract class PublishUtils {
                 item.setName(name);
                 LOGGER.debug(String.format("Item name set to: %1$s ", item.getName()));
             }
-            Optional<DBItemInventoryConfiguration> dbItem = allCfgs.stream()
-                    .filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item.getType())).findFirst();
-            if(dbItem.isPresent()) {
-                return dbItem.get().getDeployed();
+            DBItemInventoryConfiguration dbItem = allCfgs.stream()
+                    .filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item.getType())).findFirst().orElse(null);
+            if(dbItem != null) {
+                return dbItem.getDeployed();
             } else {
                 // history items source does not exist in current configuration
                 // decision: ignore item as only objects from history with existing current configuration are relevant
