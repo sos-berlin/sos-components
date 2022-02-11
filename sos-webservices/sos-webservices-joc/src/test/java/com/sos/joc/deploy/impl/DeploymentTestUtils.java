@@ -858,8 +858,8 @@ public class DeploymentTestUtils {
     }
     
     public static ResponseFolder createResponseFolder(Class<?> clazz, boolean recursive) throws Exception {
-        Path repositories = Paths.get(clazz.getResource("/joc/repositories").toURI());
-        Path repository = Paths.get(clazz.getResource("/joc/repositories/apple").toURI());
+        Path repositories = Paths.get(clazz.getResource("/joc/repositories/rollout").toURI());
+        Path repository = Paths.get(clazz.getResource("/joc/repositories/rollout/ProductDemo").toURI());
         TreeSet<java.nio.file.Path> repoTree = RepositoryUtil.readRepositoryAsTreeSet(repository);
         Set<ResponseFolderItem> responseFolderItems = repoTree.stream().filter(path -> Files.isRegularFile(path))
                 .map(path -> RepositoryUtil.getResponseFolderItem(repositories, path)).collect(Collectors.toSet());
