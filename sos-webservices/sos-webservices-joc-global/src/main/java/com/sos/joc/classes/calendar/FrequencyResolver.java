@@ -924,8 +924,9 @@ public class FrequencyResolver {
             debugWeeklyDays = weeklyDays == null ? "" : String.join(",", weeklyDays.stream().map(e -> {
                 return e.toString();
             }).collect(Collectors.toList()));
-            LOGGER.debug(String.format("[%s][start][from=%s, to=%s, dateFromOrig=%s][days=%s][weeklyDays=%s]", method, SOSDate.getDateTimeAsString(
-                    from), SOSDate.getDateTimeAsString(to), SOSDate.getDateTimeAsString(dateFromOrig), debugDays, debugWeeklyDays));
+            LOGGER.debug(String.format("[%s][start][this.dateFrom=%s, from=%s, to=%s, dateFromOrig=%s][days=%s][weeklyDays=%s]", method, SOSDate
+                    .getDateTimeAsString(this.dateFrom), SOSDate.getDateTimeAsString(from), SOSDate.getDateTimeAsString(to), SOSDate
+                            .getDateTimeAsString(dateFromOrig), debugDays, debugWeeklyDays));
         }
 
         Set<String> dates = new HashSet<String>();
@@ -950,6 +951,7 @@ public class FrequencyResolver {
                 lastMonth = curMonth;
             }
             if (curDate.before(from)) {
+                dayOfMonth++;
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][skip][%s]curDate=%s is before from=%s", method, SOSDate.getDateTimeAsString(date.getValue()),
                             SOSDate.getDateTimeAsString(curDate), SOSDate.getDateTimeAsString(from)));
@@ -957,15 +959,17 @@ public class FrequencyResolver {
                 continue;
             }
             if (days != null) {
-                // from was set to a first day of month
+                // this.dateFrom - first day of month
+                // from - first day of month or the restriction "from"
                 // dateFromOrig - is the original from
-                if (!missingDaysResolved && dateFromOrig.after(from)) {// 2021-02-03 after 2021-02-01
+                if (!missingDaysResolved && dateFromOrig.after(this.dateFrom)) {// 2021-02-03 after 2021-02-01
                     missingDaysResolved = true;
                     if (baseCalendarIncludes != null) {
-                        List<String> missingDays = getDatesFromIncludes(from, dateFromOrig, false);
+                        List<String> missingDays = getDatesFromIncludes(this.dateFrom, dateFromOrig, false);
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][MonthDays][calculated from the first day of month]%s", method, SOSDate
-                                    .getDateTimeAsString(date.getValue()), String.join(",", missingDays)));
+                            LOGGER.debug(String.format("[%s][%s][MonthDays][calculated from the first day of month][from=%s, to=%s]%s", method,
+                                    SOSDate.getDateTimeAsString(date.getValue()), SOSDate.getDateTimeAsString(this.dateFrom), SOSDate
+                                            .getDateTimeAsString(dateFromOrig), String.join(",", missingDays)));
                         }
 
                         dayOfMonth = 0;
@@ -1190,8 +1194,9 @@ public class FrequencyResolver {
                     if (baseCalendarIncludes != null) {
                         List<String> missingDays = getDatesFromIncludes(from, lastDayOfMonthCalendar, true);
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][MonthDays][calculated from the last day of month]%s", method, SOSDate
-                                    .getDateTimeAsString(date.getValue()), String.join(",", missingDays)));
+                            LOGGER.debug(String.format("[%s][%s][MonthDays][calculated from the last day of month[from=%s, to=%s]%s", method, SOSDate
+                                    .getDateTimeAsString(date.getValue()), SOSDate.getDateTimeAsString(from), SOSDate.getDateTimeAsString(
+                                            lastDayOfMonthCalendar), String.join(",", missingDays)));
                         }
 
                         dayOfMonth = 0;
