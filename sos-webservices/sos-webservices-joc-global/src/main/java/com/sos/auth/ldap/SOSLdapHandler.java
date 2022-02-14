@@ -133,7 +133,7 @@ public class SOSLdapHandler {
 
     public List<String> getGroupRolesMapping(SOSLdapWebserviceCredentials sosLdapWebserviceCredentials) throws NamingException {
         SOSLdapGroupRolesMapping sosLdapGroupRolesMapping = new SOSLdapGroupRolesMapping(ldapContext, sosLdapWebserviceCredentials);
-        return sosLdapGroupRolesMapping.getGroupRolesMapping(sosLdapWebserviceCredentials);
+        return sosLdapGroupRolesMapping.getGroupRolesMapping();
     }
 
     public void close() {
