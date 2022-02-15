@@ -346,8 +346,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 					SecurityConfiguration.class);
 			String identityServiceName = securityConfiguration.getIdentityServiceName();
 
-			JOCDefaultResponse jocDefaultResponse = initPermissions("",
-					getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+			JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;
 			}
