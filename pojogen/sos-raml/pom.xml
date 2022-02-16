@@ -6,15 +6,15 @@
 	<parent>
 		<groupId>com.sos-berlin</groupId>
 		<artifactId>pojogen</artifactId>
-		<version>2.2.2-SNAPSHOT</version>
+		<version>2.2.2</version>
 	</parent>
 
 	<artifactId>sos-raml</artifactId>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<api.schema.version>2.2.2-SNAPSHOT</api.schema.version>
-		<inventory.schema.version>1.2.2-SNAPSHOT</inventory.schema.version>
+		<api.schema.version>2.2.2</api.schema.version>
+		<inventory.schema.version>1.2.2</inventory.schema.version>
 	</properties>
 
 	<build>
