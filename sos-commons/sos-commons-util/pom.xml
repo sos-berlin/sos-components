@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>com.sos-berlin</groupId>
 		<artifactId>sos-commons</artifactId>
-		<version>2.2.2</version>
+		<version>2.2.3-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>sos-commons-util</artifactId>
