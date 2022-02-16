@@ -174,10 +174,10 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 				for (String role : securityConfigurationAccount.getRoles()) {
 					DBItemIamRole dbItemIamRole = iamAccountDBLayer.getRoleByName(role,
 							dbItemIamIdentityService.getId());
-					DBItemIamAccount2Roles dbItemIamAccount2Roles = iamAccountDBLayer
-							.getRoleAssignment(dbItemIamRole.getId(), accountId);
-
 					if (dbItemIamRole != null) {
+						DBItemIamAccount2Roles dbItemIamAccount2Roles = iamAccountDBLayer
+								.getRoleAssignment(dbItemIamRole.getId(), accountId);
+
 						if (dbItemIamAccount2Roles == null) {
 							dbItemIamAccount2Roles = new DBItemIamAccount2Roles();
 							dbItemIamAccount2Roles.setRoleId(dbItemIamRole.getId());
