@@ -666,66 +666,120 @@ public abstract class RepositoryUtil {
             Set<Integer> types) throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, 
             DBMissingDataException, IOException, SOSHibernateException {
         Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
-        if (filter != null && filter.getRollout() != null) {
-            if (!filter.getRollout().getDeployConfigurations().isEmpty()) {
-                Set<Configuration> depFolders = filter.getRollout().getDeployConfigurations().stream()
-                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                        .map(item -> item.getConfiguration()).collect(Collectors.toSet());
-                if (filter.getRollout() != null && !filter.getRollout().getDeployConfigurations().isEmpty()) {
-                    depFolders.addAll(filter.getRollout().getDeployConfigurations().stream()
+        if (filter != null) {
+            if (filter.getRollout() != null) {
+                if (!filter.getRollout().getDeployConfigurations().isEmpty()) {
+                    Set<Configuration> depFolders = filter.getRollout().getDeployConfigurations().stream()
                             .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                            .map(item -> item.getConfiguration()).collect(Collectors.toSet()));
+                            .map(item -> item.getConfiguration()).collect(Collectors.toSet());
+                    if (filter.getRollout() != null && !filter.getRollout().getDeployConfigurations().isEmpty()) {
+                        depFolders.addAll(filter.getRollout().getDeployConfigurations().stream()
+                                .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                                .map(item -> item.getConfiguration()).collect(Collectors.toSet()));
+                    }
+                    Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
+                    if (depFolders != null && !depFolders.isEmpty()) {
+                        allItems.addAll(
+                                getLatestActiveDepHistoryEntriesFromFoldersByType(depFolders, types, dbLayer).stream()
+                                    .filter(Objects::nonNull).collect(Collectors.toSet())
+                                );
+                    }
+                    List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
+                    if (deploymentDbItems != null && !deploymentDbItems.isEmpty()) {
+                        allItems.addAll(deploymentDbItems);
+                    }
+                    if (!allItems.isEmpty()) {
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue()))
+                            .forEach(item -> {
+                                configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item, commitId));
+                            });
+                    }
                 }
-                Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
-                if (depFolders != null && !depFolders.isEmpty()) {
-                    allItems.addAll(
-                            getLatestActiveDepHistoryEntriesFromFoldersByType(depFolders, types, dbLayer).stream()
-                                .filter(Objects::nonNull).collect(Collectors.toSet())
-                            );
-                }
-                List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
-                if (deploymentDbItems != null && !deploymentDbItems.isEmpty()) {
-                    allItems.addAll(deploymentDbItems);
-                }
-                if (!allItems.isEmpty()) {
-                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue()))
-                        .forEach(item -> {
-                            configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item, commitId));
-                        });
+                if (!filter.getRollout().getDraftConfigurations().isEmpty()) {
+                    List<Configuration> draftFolders = filter.getRollout().getDraftConfigurations().stream()
+                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                            .map(item -> item.getConfiguration()).collect(Collectors.toList());
+                    Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
+                    if (draftFolders != null && !draftFolders.isEmpty()) {
+                        allItems.addAll(PublishUtils.getDeployableInventoryConfigurationsfromFolders(draftFolders, dbLayer));
+                    }
+                    List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredDeployableConfigurations(filter);
+                    if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
+                        allItems.addAll(configurationDbItems);
+                    }
+                    if (!allItems.isEmpty()) {
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
+                            .forEach(item -> {
+                                boolean alreadyExists = false;
+                                for (ConfigurationObject config : configurations) {
+                                    if (item.getName().equals(config.getName()) && item.getTypeAsEnum().equals(config.getObjectType())) {
+                                        alreadyExists = true;
+                                        break;
+                                    }
+                                }
+                                if (!alreadyExists) {
+                                    configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item));
+                                }
+                            });
+                    }
                 }
             }
-            if (!filter.getRollout().getDraftConfigurations().isEmpty()) {
-                List<Configuration> draftFolders = filter.getRollout().getDraftConfigurations().stream()
-                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                        .map(item -> item.getConfiguration()).collect(Collectors.toList());
-                if (filter.getLocal() != null && !filter.getLocal().getDraftConfigurations().isEmpty()) {
-                    draftFolders.addAll(filter.getLocal().getDraftConfigurations().stream()
+            if (filter.getLocal() != null) {
+                if (!filter.getLocal().getDeployConfigurations().isEmpty()) {
+                    Set<Configuration> depFolders = filter.getLocal().getDeployConfigurations().stream()
                             .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                            .map(item -> item.getConfiguration()).collect(Collectors.toList()));
+                            .map(item -> item.getConfiguration()).collect(Collectors.toSet());
+                    if (filter.getLocal() != null && !filter.getLocal().getDeployConfigurations().isEmpty()) {
+                        depFolders.addAll(filter.getLocal().getDeployConfigurations().stream()
+                                .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                                .map(item -> item.getConfiguration()).collect(Collectors.toSet()));
+                    }
+                    Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
+                    if (depFolders != null && !depFolders.isEmpty()) {
+                        allItems.addAll(
+                                getLatestActiveDepHistoryEntriesFromFoldersByType(depFolders, types, dbLayer).stream()
+                                    .filter(Objects::nonNull).collect(Collectors.toSet())
+                                );
+                    }
+                    List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
+                    if (deploymentDbItems != null && !deploymentDbItems.isEmpty()) {
+                        allItems.addAll(deploymentDbItems);
+                    }
+                    if (!allItems.isEmpty()) {
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue()))
+                            .forEach(item -> {
+                                configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item, commitId));
+                            });
+                    }
                 }
-                Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
-                if (draftFolders != null && !draftFolders.isEmpty()) {
-                    allItems.addAll(PublishUtils.getDeployableInventoryConfigurationsfromFolders(draftFolders, dbLayer));
-                }
-                List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredDeployableConfigurations(filter);
-                if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
-                    allItems.addAll(configurationDbItems);
-                }
-                if (!allItems.isEmpty()) {
-                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                        .forEach(item -> {
-                            boolean alreadyExists = false;
-                            for (ConfigurationObject config : configurations) {
-                                if (item.getName().equals(config.getName()) && item.getTypeAsEnum().equals(config.getObjectType())) {
-                                    alreadyExists = true;
-                                    break;
+                if (!filter.getLocal().getDraftConfigurations().isEmpty()) {
+                    List<Configuration> draftFolders = filter.getLocal().getDraftConfigurations().stream()
+                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                            .map(item -> item.getConfiguration()).collect(Collectors.toList());
+                    Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
+                    if (draftFolders != null && !draftFolders.isEmpty()) {
+                        allItems.addAll(PublishUtils.getDeployableInventoryConfigurationsfromFolders(draftFolders, dbLayer));
+                    }
+                    List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredDeployableConfigurations(filter);
+                    if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
+                        allItems.addAll(configurationDbItems);
+                    }
+                    if (!allItems.isEmpty()) {
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
+                            .forEach(item -> {
+                                boolean alreadyExists = false;
+                                for (ConfigurationObject config : configurations) {
+                                    if (item.getName().equals(config.getName()) && item.getTypeAsEnum().equals(config.getObjectType())) {
+                                        alreadyExists = true;
+                                        break;
+                                    }
                                 }
-                            }
-                            if (!alreadyExists) {
-                                configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item));
-                            }
-                        });
-                }
+                                if (!alreadyExists) {
+                                    configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item));
+                                }
+                            });
+                    }
+                }                
             }
         }
         return configurations;
