@@ -406,7 +406,7 @@ public class SOSMail {
 
     private void addFile(final SOSMailAttachment att) throws Exception {
         if (!att.getFile().exists()) {
-            throw new Exception("Datei " + att.getFile().getAbsolutePath() + " fehlt");
+            throw new Exception("File " + att.getFile().getAbsolutePath() + " does not exist");
         }
         MimeBodyPart attachment = new MimeBodyPart();
         DataSource data_source = new FileDataSource(att.getFile(), att.getContentType());
@@ -424,7 +424,7 @@ public class SOSMail {
         }
         Object m = message.getContent();
         if (!(m instanceof MimeMultipart)) {
-            throw new RuntimeException(getClass().getName() + "mime_message.getContent() liefert nicht MimeMultiPart");
+            throw new RuntimeException(getClass().getName() + "mime_message.getContent() is not MimeMultiPart");
         }
         ((MimeMultipart) m).addBodyPart(attachment);
         attachment.setHeader("Content-Transfer-Encoding", att.getEncoding());
