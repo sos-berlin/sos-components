@@ -20,117 +20,124 @@ import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSLdapSubject implements ISOSAuthSubject {
 
-    private SOSInternAuthSession session;
-    private Boolean authenticated;
-    private Map<String, List<String>> mapOfFolderPermissions;
-    private Set<String> setOfAccountPermissions;
-    private Set<DBItemIamPermissionWithName> setOfPermissions;
-    private Set<String> setOfRoles;
+	private SOSInternAuthSession session;
+	private Boolean authenticated;
+	private Map<String, List<String>> mapOfFolderPermissions;
+	private Set<String> setOfAccountPermissions;
+	private Set<DBItemIamPermissionWithName> setOfPermissions;
+	private Set<String> setOfRoles;
 
-    public SOSLdapSubject() {
-        super();
-        authenticated = false;
-        setOfRoles = new HashSet<String>();
-        setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
-        setOfAccountPermissions = new HashSet<String>();
-    }
+	public SOSLdapSubject() {
+		super();
+		authenticated = false;
+		setOfRoles = new HashSet<String>();
+		setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
+		setOfAccountPermissions = new HashSet<String>();
+	}
 
-    @Override
-    public Boolean hasRole(String role) {
-        return setOfRoles.contains(role);
-    }
+	@Override
+	public Boolean hasRole(String role) {
+		return setOfRoles.contains(role);
+	}
 
-    @Override
-    public Boolean isPermitted(String permission) {
-        permission = permission + ":";
-        for (String accountPermission : setOfAccountPermissions) {
-            accountPermission = accountPermission + ":";
-            if (permission.startsWith(accountPermission)) {
-                return true;
-            }
-        }
-        return false;
-    }
+	@Override
+	public Boolean isPermitted(String permission) {
+		permission = permission + ":";
+		for (String accountPermission : setOfAccountPermissions) {
+			accountPermission = accountPermission + ":";
+			if (permission.startsWith(accountPermission)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-    @Override
-    public Boolean isAuthenticated() {
-        return authenticated;
-    }
+	@Override
+	public Boolean isAuthenticated() {
+		return authenticated;
+	}
 
-    public void setAuthenticated(Boolean authenticated) {
-        this.authenticated = authenticated;
-    }
+	public void setAuthenticated(Boolean authenticated) {
+		this.authenticated = authenticated;
+	}
 
-    private SOSInternAuthSession getInternAuthSession() {
-        if (session == null) {
-            session = new SOSInternAuthSession();
-        }
-        return session;
-    }
+	private SOSInternAuthSession getInternAuthSession() {
+		if (session == null) {
+			session = new SOSInternAuthSession();
+		}
+		return session;
+	}
 
-    @Override
-    public ISOSSession getSession() {
-        return getInternAuthSession();
-    }
+	@Override
+	public ISOSSession getSession() {
+		return getInternAuthSession();
+	}
 
-    public void setAccessToken(String accessToken) {
-        getInternAuthSession().setAccessToken(accessToken);
-    }
+	public void setAccessToken(String accessToken) {
+		getInternAuthSession().setAccessToken(accessToken);
+	}
 
-    public void setPermissionAndRoles(List<String> listOfLdapRoles, String accountName, SOSIdentityService identityService)
-            throws SOSHibernateException {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            setOfRoles = new HashSet<String>();
+	public void setPermissionAndRoles(List<String> listOfLdapRoles, String accountName,
+			SOSIdentityService identityService) throws SOSHibernateException {
+		SOSHibernateSession sosHibernateSession = null;
+		try {
+			setOfRoles = new HashSet<String>();
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
-            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+			sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
+			IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
-            if (IdentityServiceTypes.LDAP_JOC == identityService.getIdentyServiceType()) {
-                List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(accountName, identityService
-                        .getIdentityServiceId());
-                for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
-                    setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
-                }
-            } else {
-                if (listOfLdapRoles != null) {
-                    setOfRoles.addAll(listOfLdapRoles);
-                }
-            }
+			if (IdentityServiceTypes.LDAP_JOC == identityService.getIdentyServiceType()) {
+				List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer
+						.getListOfRolesForAccountName(accountName, identityService.getIdentityServiceId());
+				for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
+					setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
+				}
+			} else {
+				if (listOfLdapRoles != null) {
+					setOfRoles.addAll(listOfLdapRoles);
+				}
+			}
 
-            setOfAccountPermissions = new HashSet<String>();
+			setOfAccountPermissions = new HashSet<String>();
 
-            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, identityService
-                    .getIdentityServiceId());
-            mapOfFolderPermissions = new HashMap<String, List<String>>();
-            setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
-            for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
-                setOfPermissions.add(dbItemSOSPermissionWithName);
-                if (dbItemSOSPermissionWithName.getAccountPermission() != null && !dbItemSOSPermissionWithName.getAccountPermission().isEmpty()) {
-                    setOfAccountPermissions.add(dbItemSOSPermissionWithName.getAccountPermission());
-                }
-                if (dbItemSOSPermissionWithName.getFolderPermission() != null && !dbItemSOSPermissionWithName.getFolderPermission().isEmpty()) {
-                    if (mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()) == null) {
-                        mapOfFolderPermissions.put(dbItemSOSPermissionWithName.getRoleName(), new ArrayList<String>());
-                    }
-                    mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()).add(dbItemSOSPermissionWithName.getFolderPermission());
-                }
-            }
+			List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer
+					.getListOfPermissionsFromRoleNames(setOfRoles, identityService.getIdentityServiceId());
+			mapOfFolderPermissions = new HashMap<String, List<String>>();
+			setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
+			for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
+				setOfPermissions.add(dbItemSOSPermissionWithName);
+				if (dbItemSOSPermissionWithName.getAccountPermission() != null
+						&& !dbItemSOSPermissionWithName.getAccountPermission().isEmpty()) {
+					setOfAccountPermissions.add(dbItemSOSPermissionWithName.getAccountPermission());
+				}
+				if (dbItemSOSPermissionWithName.getFolderPermission() != null
+						&& !dbItemSOSPermissionWithName.getFolderPermission().isEmpty()) {
+					if (mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()) == null) {
+						mapOfFolderPermissions.put(dbItemSOSPermissionWithName.getRoleName(), new ArrayList<String>());
+					}
+					if (dbItemSOSPermissionWithName.getRecursive()) {
+						mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName())
+								.add(dbItemSOSPermissionWithName.getFolderPermission() + "/*");
+					} else {
+						mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName())
+								.add(dbItemSOSPermissionWithName.getFolderPermission());
+					}
+				}
+			}
 
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-    }
+		} finally {
+			Globals.disconnect(sosHibernateSession);
+		}
+	}
 
-    @Override
-    public Map<String, List<String>> getMapOfFolderPermissions() {
-        return mapOfFolderPermissions;
-    }
+	@Override
+	public Map<String, List<String>> getMapOfFolderPermissions() {
+		return mapOfFolderPermissions;
+	}
 
-    @Override
-    public Boolean isForcePasswordChange() {
-        return false;
-    }
-
+	@Override
+	public Boolean isForcePasswordChange() {
+		return false;
+	}
 
 }
