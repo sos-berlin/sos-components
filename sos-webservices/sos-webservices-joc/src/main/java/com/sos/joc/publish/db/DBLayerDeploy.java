@@ -843,7 +843,6 @@ public class DBLayerDeploy {
         }
         if (filter.getLocal() != null) {
             configurations.addAll(filter.getLocal().getDraftConfigurations().stream()
-                    .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
                     .map(item -> item.getConfiguration()).collect(Collectors.toList()));
         }
         if (!configurations.isEmpty()) {
