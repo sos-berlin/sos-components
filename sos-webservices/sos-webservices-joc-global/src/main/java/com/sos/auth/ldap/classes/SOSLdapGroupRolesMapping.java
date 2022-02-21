@@ -211,12 +211,14 @@ public class SOSLdapGroupRolesMapping {
 			if (memberOf != null) {
 				LOGGER.debug("getting all attribute values using attribute " + memberOf);
 				groupNames = getAllAttributeValues(memberOf);
+				Set<String> groupsToAdd = new HashSet<String>();
 				if (MEMBER_OF.equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
 					for (String group : groupNames) {
 						Collection<String> nestedGroupNames = getNestedGroups(group);
-						groupNames.addAll(nestedGroupNames);
+						groupsToAdd.addAll(nestedGroupNames);
 					}
 				}
+				groupNames.addAll(groupsToAdd);
 			} else {
 				LOGGER.info("User is not member of any group");
 			}

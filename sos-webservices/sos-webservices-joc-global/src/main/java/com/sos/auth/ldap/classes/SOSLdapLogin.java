@@ -58,7 +58,12 @@ public class SOSLdapLogin implements ISOSLogin {
             } else {
                 sosLdapSubject.setAuthenticated(true);
                 sosLdapSubject.setAccessToken(sosAuthAccessToken.getAccessToken());
-                sosLdapSubject.setPermissionAndRoles(sosLdapHandler.getGroupRolesMapping(sosLdapWebserviceCredentials), account, identityService);
+                if (IdentityServiceTypes.LDAP_JOC == identityService.getIdentyServiceType()) {
+                    sosLdapSubject.setPermissionAndRoles(null,account, identityService);
+                }else {
+                    sosLdapSubject.setPermissionAndRoles(sosLdapHandler.getGroupRolesMapping(sosLdapWebserviceCredentials), account, identityService);
+                }
+                	
             }
 
         } catch (SOSHibernateException e) {

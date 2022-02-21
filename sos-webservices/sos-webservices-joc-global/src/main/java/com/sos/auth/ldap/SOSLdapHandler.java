@@ -75,12 +75,12 @@ public class SOSLdapHandler {
             env.put(Context.SECURITY_AUTHENTICATION, SOSLdapWebserviceCredentials.SECURITY_AUTHENTICATION);
             env.put(Context.SECURITY_PRINCIPAL, sosLdapWebserviceCredentials.getSecurityPrincipal());
             env.put(Context.SECURITY_CREDENTIALS, password);
-            startTls(sosLdapWebserviceCredentials);
             if (sosLdapWebserviceCredentials.isSSL()) {
                 env.put("java.naming.ldap.factory.socket", "com.sos.auth.ldap.classes.SOSLdapSSLSocketFactory");
             }
 
             ldapContext = new InitialLdapContext(env, null);
+            startTls(sosLdapWebserviceCredentials);
         }
     }
 
@@ -101,6 +101,9 @@ public class SOSLdapHandler {
             if (sosLdapWebserviceCredentials.getLdapServerUrl().isEmpty()) {
                 msg = ("LDAP configuration is not valid: Missing setting ldapUrl");
             }
+            if (password.isEmpty()) {
+            	msg = "Password is empty";
+            }
             if (msg.isEmpty()) {
                 createDirContext(sosLdapWebserviceCredentials, password);
                 sosAuthAccessToken = new SOSAuthAccessToken();
@@ -110,19 +113,26 @@ public class SOSLdapHandler {
         } catch (AuthenticationNotSupportedException ex) {
             msg = "AuthenticationNotSupportedException: The authentication is not supported by the server";
         } catch (AuthenticationException ex) {
-            msg = "There is no account with the given accountname/password combination";
+        	   String s = ex.getMessage();
+               if (ex.getCause() != null) {
+                   s = s + ex.getCause();
+               }
+            LOGGER.info(s);
+            msg = "There is no account with the given accountname/password combination. " + s;
         } catch (NamingException ex) {
             String s = ex.getMessage();
             if (ex.getCause() != null) {
                 s = s + ex.getCause();
             }
             msg = "NamingException: error when trying to create the ldap context >> " + s;
+            LOGGER.info(msg);
         } catch (IOException ex) {
             String s = ex.getMessage();
             if (ex.getCause() != null) {
                 s = s + ex.getCause();
             }
             msg = "IOException: error when trying to create the ldap context with startTls >> " + s;
+            LOGGER.info(msg);
         }
         return sosAuthAccessToken;
     }
