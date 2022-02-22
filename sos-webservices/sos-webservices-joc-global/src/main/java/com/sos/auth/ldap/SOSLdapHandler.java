@@ -23,6 +23,7 @@ import com.sos.auth.ldap.classes.SOSLdapGroupRolesMapping;
 import com.sos.auth.ldap.classes.SOSLdapWebserviceCredentials;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
+import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSLdapHandler {
 
@@ -84,12 +85,11 @@ public class SOSLdapHandler {
         }
     }
 
-    public SOSAuthAccessToken login(SOSLdapWebserviceCredentials sosLdapWebserviceCredentials, String password) throws SOSHibernateException {
+    public SOSAuthAccessToken login(SOSLdapWebserviceCredentials sosLdapWebserviceCredentials, IdentityServiceTypes identityServiceType, String password) throws SOSHibernateException {
 
         SOSAuthAccessToken sosAuthAccessToken = null;
         try {
-
-            if (sosLdapWebserviceCredentials.getSearchBase().isEmpty() && "memberOf".equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
+            if (identityServiceType == IdentityServiceTypes.LDAP && sosLdapWebserviceCredentials.getSearchBase().isEmpty() && "memberOf".equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
                 msg = "LDAP configuration is not valid: Missing setting 'searchBase'";
             }
             if (sosLdapWebserviceCredentials.getGroupSearchBase().isEmpty() && !sosLdapWebserviceCredentials.getGroupSearchFilter().isEmpty()) {
