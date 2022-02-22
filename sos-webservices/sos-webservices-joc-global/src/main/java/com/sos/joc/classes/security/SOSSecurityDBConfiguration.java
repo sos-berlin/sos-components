@@ -4,6 +4,7 @@ import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,7 @@ import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamPermission;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamRole;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
@@ -35,6 +37,8 @@ import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInfoException;
+import com.sos.joc.exceptions.JocObjectAlreadyExistException;
+import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.IniPermissions;
@@ -206,7 +210,10 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 		for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
 			iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
 			iamAccountFilter.setAccountName(securityConfigurationAccount.getAccount());
-			iamAccountDBLayer.deleteCascading(iamAccountFilter);
+			int count = iamAccountDBLayer.deleteCascading(iamAccountFilter);
+			if (count == 0) {
+				throw new JocObjectNotExistException("Object <" + securityConfigurationAccount.getAccount() + "> not found" );
+			}
 		}
 	}
 
@@ -339,7 +346,10 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 			DBItemIamIdentityService dbItemIamIdentityService) throws SOSHibernateException {
 		IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 		for (Role role : roles.getRoles()) {
-			iamAccountDBLayer.deleteRoleCascading(role.getRole(), dbItemIamIdentityService.getId());
+			if (!iamAccountDBLayer.deleteRoleCascading(role.getRole(), dbItemIamIdentityService.getId())) {
+				throw new JocObjectNotExistException("Object <" + role.getRole() + " not found");
+			}
+
 		}
 	}
 

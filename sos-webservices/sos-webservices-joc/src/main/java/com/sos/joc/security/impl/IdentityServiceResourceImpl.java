@@ -21,6 +21,7 @@ import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.security.IdentityService;
 import com.sos.joc.model.security.IdentityServiceAuthenticationScheme;
 import com.sos.joc.model.security.IdentityServiceFilter;
@@ -178,6 +179,9 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
             filter.setIdentityServiceName(identityService.getIdentityServiceOldName());
             DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
+            if (dbItemIamIdentityService == null) {
+				throw new JocObjectNotExistException("Object Identity Service <" + identityService.getIdentityServiceOldName() + "> not found");
+            }
             iamIdentityServiceDBLayer.rename(identityService.getIdentityServiceOldName(), identityService.getIdentityServiceNewName());
 
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
@@ -225,7 +229,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
             filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
-            iamIdentityServiceDBLayer.deleteCascading(filter);
+            int count = iamIdentityServiceDBLayer.deleteCascading(filter);
+            if (count == 0) {
+				throw new JocObjectNotExistException("Object Identity Service<" + identityServiceFilter.getIdentityServiceName() + "> not found");
+            }
 
             filter.setIdentityServiceName(null);
             if (iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0).size() == 0) {
