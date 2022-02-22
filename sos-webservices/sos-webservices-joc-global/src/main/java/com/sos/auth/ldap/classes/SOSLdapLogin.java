@@ -47,7 +47,7 @@ public class SOSLdapLogin implements ISOSLogin {
             }
 
             if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
-                sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials, pwd);
+                sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials, identityService.getIdentyServiceType(), pwd);
             }
 
             sosLdapSubject = new SOSLdapSubject();
