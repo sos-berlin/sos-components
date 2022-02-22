@@ -303,14 +303,14 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
         if (controllerId == null || controllerId.isEmpty()) {
             controllerId = "";
             allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                    availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
+                    availableController, accessToken).getAgents().getView()).collect(Collectors.toSet());
             permitted = !allowedControllers.isEmpty();
             if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                 allowedControllers = Collections.emptySet();
             }
         } else {
             allowedControllers = Collections.singleton(controllerId);
-            permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
+            permitted = getControllerPermissions(controllerId, accessToken).getAgents().getView();
         }
         return permitted;
     }

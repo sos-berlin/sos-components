@@ -264,14 +264,14 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
         if (controllerId == null || controllerId.isEmpty()) {
             controllerId = "";
             allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                    availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
+                    availableController, accessToken).getView()).collect(Collectors.toSet());
             permitted = !allowedControllers.isEmpty();
             if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                 allowedControllers = Collections.emptySet();
             }
         } else {
             allowedControllers = Collections.singleton(controllerId);
-            permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
+            permitted = getControllerPermissions(controllerId, accessToken).getView();
         }
         return permitted;
     }
