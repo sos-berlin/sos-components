@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSInitialPasswordSetting;
 import com.sos.auth.interfaces.ISOSSecurityConfiguration;
-import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -30,6 +29,7 @@ import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.security.AccountRename;
 import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.RoleRename;
@@ -83,8 +83,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 				DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer
 						.getUniqueIdentityService(iamIdentityServiceFilter);
 				if (dbItemIamIdentityService == null) {
-					throw new SOSMissingDataException(
-							"No identity service found for: " + securityConfiguration.getIdentityServiceName());
+					throw new JocObjectNotExistException("Object Identity Service <"
+							+ securityConfiguration.getIdentityServiceName() + "> not found");
 				}
 
 				ISOSSecurityConfiguration sosSecurityConfiguration = null;
@@ -174,7 +174,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 						.getUniqueIdentityService(filter);
 
 				if (dbItemIamIdentityService == null) {
-					throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
+					throw new JocObjectNotExistException(
+							"Object Identity Service <" + identityServiceName + "> not found");
 				}
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
@@ -252,7 +253,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 						.getUniqueIdentityService(filter);
 
 				if (dbItemIamIdentityService == null) {
-					throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
+					throw new JocObjectNotExistException(
+							"Object Identity Service <" + identityServiceName + "> not found");
 				}
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
@@ -302,7 +304,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 						.getUniqueIdentityService(filter);
 
 				if (dbItemIamIdentityService == null) {
-					throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
+					throw new JocObjectNotExistException(
+							"Object Identity Service <" + identityServiceName + "> not found");
 				}
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
@@ -364,7 +367,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 						.getUniqueIdentityService(filter);
 
 				if (dbItemIamIdentityService == null) {
-					throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
+					throw new JocObjectNotExistException(
+							"Object Identity Service <" + identityServiceName + "> not found");
 				}
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
@@ -424,7 +428,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 						.getUniqueIdentityService(filter);
 
 				if (dbItemIamIdentityService == null) {
-					throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
+					throw new JocObjectNotExistException(
+							"Object Identity Service <" + identityServiceName + "> not found");
 				}
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
@@ -486,7 +491,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 						.getUniqueIdentityService(filter);
 
 				if (dbItemIamIdentityService == null) {
-					throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
+					throw new JocObjectNotExistException(
+							"Object Identity Service <" + identityServiceName + "> not found");
 				}
 
 				SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper
@@ -549,7 +555,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 					.getUniqueIdentityService(filter);
 
 			if (dbItemIamIdentityService == null) {
-				throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
+				throw new JocObjectNotExistException("Object Identity Service <" + identityServiceName + "> not found");
 			}
 
 			IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
@@ -564,8 +570,12 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 				throw new JocException(error);
 			}
 
-			iamAccountDBLayer.renameAccount(dbItemIamIdentityService.getId(), accountRename.getAccountOldName(),
-					accountRename.getAccountNewName());
+			int count = iamAccountDBLayer.renameAccount(dbItemIamIdentityService.getId(),
+					accountRename.getAccountOldName(), accountRename.getAccountNewName());
+			if (count == 0) {
+				throw new JocObjectNotExistException(
+						"Object account <" + accountRename.getAccountOldName() + "> not found");
+			}
 
 			Globals.commit(sosHibernateSession);
 
@@ -612,7 +622,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 					.getUniqueIdentityService(filter);
 
 			if (dbItemIamIdentityService == null) {
-				throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
+				throw new JocObjectNotExistException("Object Identity Service <" + identityServiceName + "> not found");
 			}
 
 			IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
@@ -625,8 +635,11 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 				throw new JocException(error);
 			}
 
-			iamAccountDBLayer.renameRole(dbItemIamIdentityService.getId(), roleRename.getRoleOldName(),
+			int count = iamAccountDBLayer.renameRole(dbItemIamIdentityService.getId(), roleRename.getRoleOldName(),
 					roleRename.getRoleNewName());
+			if (count == 0) {
+				throw new JocObjectNotExistException("Object role <" + roleRename.getRoleOldName() + "> not found");
+			}
 
 			Globals.commit(sosHibernateSession);
 
