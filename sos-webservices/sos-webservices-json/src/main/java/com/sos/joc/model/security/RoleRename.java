@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -24,7 +25,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "identityServiceName",
     "roleOldName",
-    "roleNewName"
+    "roleNewName",
+    "auditLog"
 })
 public class RoleRename {
 
@@ -55,6 +57,14 @@ public class RoleRename {
      */
     @JsonProperty("roleNewName")
     private String roleNewName;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -69,13 +79,15 @@ public class RoleRename {
      * 
      * @param identityServiceName
      * @param roleNewName
+     * @param auditLog
      * @param roleOldName
      */
-    public RoleRename(String identityServiceName, String roleOldName, String roleNewName) {
+    public RoleRename(String identityServiceName, String roleOldName, String roleNewName, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.roleOldName = roleOldName;
         this.roleNewName = roleNewName;
+        this.auditLog = auditLog;
     }
 
     /**
@@ -150,6 +162,28 @@ public class RoleRename {
         this.roleNewName = roleNewName;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
@@ -162,12 +196,12 @@ public class RoleRename {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("roleOldName", roleOldName).append("roleNewName", roleNewName).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("roleOldName", roleOldName).append("roleNewName", roleNewName).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(roleNewName).append(additionalProperties).append(roleOldName).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(roleNewName).append(additionalProperties).append(auditLog).append(roleOldName).toHashCode();
     }
 
     @Override
@@ -179,7 +213,7 @@ public class RoleRename {
             return false;
         }
         RoleRename rhs = ((RoleRename) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(roleNewName, rhs.roleNewName).append(additionalProperties, rhs.additionalProperties).append(roleOldName, rhs.roleOldName).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(roleNewName, rhs.roleNewName).append(additionalProperties, rhs.additionalProperties).append(auditLog, rhs.auditLog).append(roleOldName, rhs.roleOldName).isEquals();
     }
 
 }

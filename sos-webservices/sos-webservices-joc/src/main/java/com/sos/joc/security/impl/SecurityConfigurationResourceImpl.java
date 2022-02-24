@@ -16,6 +16,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.security.SOSSecurityConfiguration;
 import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
 import com.sos.joc.db.authentication.DBItemIamAccount;
@@ -23,6 +24,7 @@ import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
@@ -30,7 +32,9 @@ import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.AccountRename;
+import com.sos.joc.model.security.IdentityServiceFilter;
 import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.RoleRename;
 import com.sos.joc.model.security.Roles;
@@ -66,25 +70,25 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 				return jocDefaultResponse;
 			}
 
-			SecurityConfiguration securityConfiguration = null;
+			IdentityServiceFilter identityServiceFilter = null;
 			if (body.length > 0) {
-				JsonValidator.validate(body, SecurityConfiguration.class);
-				securityConfiguration = Globals.objectMapper.readValue(body, SecurityConfiguration.class);
+				JsonValidator.validate(body, IdentityServiceFilter.class);
+				identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 			} else {
-				securityConfiguration = new SecurityConfiguration();
+				identityServiceFilter = new IdentityServiceFilter();
 			}
-
+			SecurityConfiguration securityConfiguration = null;
 			try {
 				sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_WRITE);
 				IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(
 						sosHibernateSession);
 				IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
-				iamIdentityServiceFilter.setIdentityServiceName(securityConfiguration.getIdentityServiceName());
+				iamIdentityServiceFilter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
 				DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer
 						.getUniqueIdentityService(iamIdentityServiceFilter);
 				if (dbItemIamIdentityService == null) {
 					throw new JocObjectNotExistException("Object Identity Service <"
-							+ securityConfiguration.getIdentityServiceName() + "> not found");
+							+ identityServiceFilter.getIdentityServiceName() + "> not found");
 				}
 
 				ISOSSecurityConfiguration sosSecurityConfiguration = null;
@@ -110,6 +114,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 				return JOCDefaultResponse
 						.responseStatus200(Globals.objectMapper.writeValueAsBytes(securityConfiguration));
 			} finally {
+				identityServiceFilter = null;
 				securityConfiguration = null;
 				Globals.disconnect(sosHibernateSession);
 			}
@@ -185,6 +190,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 					sosSecurityConfiguration = new SOSSecurityConfiguration();
 					sosSecurityConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
 				}
+	            DBItemJocAuditLog dbAuditLog =  storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
 
 				return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
@@ -259,6 +265,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
 				sosSecurityConfiguration.deleteAccounts(securityConfiguration, dbItemIamIdentityService);
+				
+	            DBItemJocAuditLog dbAuditLog =  storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
 
 				return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
@@ -310,6 +318,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
 				sosSecurityConfiguration.deleteRoles(roles, dbItemIamIdentityService);
+	            DBItemJocAuditLog dbAuditLog =  storeAuditLog(roles.getAuditLog(), CategoryType.IDENTITY); 
+
 
 				return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
@@ -373,6 +383,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
 				sosSecurityConfiguration.changePassword(true, securityConfiguration, dbItemIamIdentityService);
+	            DBItemJocAuditLog dbAuditLog =  storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
 
 				return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
@@ -434,6 +445,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
 				sosSecurityConfiguration.forcePasswordChange(securityConfiguration, dbItemIamIdentityService);
+	            DBItemJocAuditLog dbAuditLog =  storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
 
 				return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
@@ -512,6 +524,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
 				sosSecurityConfiguration.changePassword(false, securityConfiguration, dbItemIamIdentityService);
+	            DBItemJocAuditLog dbAuditLog =  storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
 
 				return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
@@ -576,6 +589,9 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 				throw new JocObjectNotExistException(
 						"Object account <" + accountRename.getAccountOldName() + "> not found");
 			}
+			
+            DBItemJocAuditLog dbAuditLog =  storeAuditLog(accountRename.getAuditLog(), CategoryType.IDENTITY); 
+
 
 			Globals.commit(sosHibernateSession);
 
@@ -640,6 +656,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 			if (count == 0) {
 				throw new JocObjectNotExistException("Object role <" + roleRename.getRoleOldName() + "> not found");
 			}
+
+            DBItemJocAuditLog dbAuditLog =  storeAuditLog(roleRename.getAuditLog(), CategoryType.IDENTITY); 
 
 			Globals.commit(sosHibernateSession);
 

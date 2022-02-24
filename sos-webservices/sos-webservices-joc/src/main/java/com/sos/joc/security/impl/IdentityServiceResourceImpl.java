@@ -15,13 +15,16 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.IdentityService;
 import com.sos.joc.model.security.IdentityServiceAuthenticationScheme;
 import com.sos.joc.model.security.IdentityServiceFilter;
@@ -141,7 +144,9 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             } else {
                 sosHibernateSession.update(dbItemIamIdentityService);
             }
-
+            
+            DBItemJocAuditLog dbAuditLog =  storeAuditLog(identityService.getAuditLog(), CategoryType.IDENTITY); 
+ 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -160,7 +165,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            IdentityServiceRename identityService = Globals.objectMapper.readValue(body, IdentityServiceRename.class);
+            IdentityServiceRename identityServiceRename = Globals.objectMapper.readValue(body, IdentityServiceRename.class);
             JsonValidator.validateFailFast(body, IdentityServiceRename.class);
 
             initLogging(API_CALL_SERVICES_STORE, body, accessToken);
@@ -169,31 +174,35 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 return jocDefaultResponse;
             }
 
-            this.checkRequiredParameter("identityServiceOldName", identityService.getIdentityServiceOldName());
-            this.checkRequiredParameter("identityServiceNewName", identityService.getIdentityServiceNewName());
+            this.checkRequiredParameter("identityServiceOldName", identityServiceRename.getIdentityServiceOldName());
+            this.checkRequiredParameter("identityServiceNewName", identityServiceRename.getIdentityServiceNewName());
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_READ);
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-            filter.setIdentityServiceName(identityService.getIdentityServiceOldName());
+            filter.setIdentityServiceName(identityServiceRename.getIdentityServiceOldName());
             DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
             if (dbItemIamIdentityService == null) {
-				throw new JocObjectNotExistException("Object Identity Service <" + identityService.getIdentityServiceOldName() + "> not found");
+				throw new JocObjectNotExistException("Object Identity Service <" + identityServiceRename.getIdentityServiceOldName() + "> not found");
             }
-            iamIdentityServiceDBLayer.rename(identityService.getIdentityServiceOldName(), identityService.getIdentityServiceNewName());
+            iamIdentityServiceDBLayer.rename(identityServiceRename.getIdentityServiceOldName(), identityServiceRename.getIdentityServiceNewName());
 
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
 
             JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
             jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
-            jocConfigurationFilter.setName(identityService.getIdentityServiceOldName());
+            jocConfigurationFilter.setName(identityServiceRename.getIdentityServiceOldName());
             jocConfigurationFilter.setObjectType(dbItemIamIdentityService.getIdentityServiceType());
-            jocConfigurationDBLayer.rename(jocConfigurationFilter, identityService.getIdentityServiceNewName());
+            jocConfigurationDBLayer.rename(jocConfigurationFilter, identityServiceRename.getIdentityServiceNewName());
+            
+            DBItemJocAuditLog dbAuditLog =  storeAuditLog(identityServiceRename.getAuditLog(), CategoryType.IDENTITY); 
+
+            
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityServiceRename));
         } catch (JocException e) {
             Globals.rollback(sosHibernateSession);
             e.addErrorMetaInfo(getJocError());
@@ -233,6 +242,9 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             if (count == 0) {
 				throw new JocObjectNotExistException("Object Identity Service<" + identityServiceFilter.getIdentityServiceName() + "> not found");
             }
+            
+            DBItemJocAuditLog dbAuditLog =  storeAuditLog(identityServiceFilter.getAuditLog(), CategoryType.IDENTITY); 
+
 
             filter.setIdentityServiceName(null);
             if (iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0).size() == 0) {

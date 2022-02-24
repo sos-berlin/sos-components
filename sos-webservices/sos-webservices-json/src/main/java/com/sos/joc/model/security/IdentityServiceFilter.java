@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -24,7 +25,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "identityServiceName",
-    "disabled"
+    "disabled",
+    "auditLog"
 })
 public class IdentityServiceFilter {
 
@@ -45,6 +47,14 @@ public class IdentityServiceFilter {
     @JsonProperty("disabled")
     @JsonPropertyDescription("controls if the object is disabled")
     private Boolean disabled = false;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -58,12 +68,14 @@ public class IdentityServiceFilter {
     /**
      * 
      * @param identityServiceName
+     * @param auditLog
      * @param disabled
      */
-    public IdentityServiceFilter(String identityServiceName, Boolean disabled) {
+    public IdentityServiceFilter(String identityServiceName, Boolean disabled, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.disabled = disabled;
+        this.auditLog = auditLog;
     }
 
     /**
@@ -110,6 +122,28 @@ public class IdentityServiceFilter {
         this.disabled = disabled;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
@@ -122,12 +156,12 @@ public class IdentityServiceFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("disabled", disabled).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("disabled", disabled).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(disabled).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(disabled).append(additionalProperties).append(auditLog).toHashCode();
     }
 
     @Override
@@ -139,7 +173,7 @@ public class IdentityServiceFilter {
             return false;
         }
         IdentityServiceFilter rhs = ((IdentityServiceFilter) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(disabled, rhs.disabled).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(disabled, rhs.disabled).append(additionalProperties, rhs.additionalProperties).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }
