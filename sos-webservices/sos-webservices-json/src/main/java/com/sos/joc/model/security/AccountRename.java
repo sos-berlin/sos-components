@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -24,7 +25,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "identityServiceName",
     "accountOldName",
-    "accountNewName"
+    "accountNewName",
+    "auditLog"
 })
 public class AccountRename {
 
@@ -55,6 +57,14 @@ public class AccountRename {
      */
     @JsonProperty("accountNewName")
     private String accountNewName;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -68,14 +78,16 @@ public class AccountRename {
     /**
      * 
      * @param identityServiceName
+     * @param auditLog
      * @param accountOldName
      * @param accountNewName
      */
-    public AccountRename(String identityServiceName, String accountOldName, String accountNewName) {
+    public AccountRename(String identityServiceName, String accountOldName, String accountNewName, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.accountOldName = accountOldName;
         this.accountNewName = accountNewName;
+        this.auditLog = auditLog;
     }
 
     /**
@@ -150,6 +162,28 @@ public class AccountRename {
         this.accountNewName = accountNewName;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
@@ -162,12 +196,12 @@ public class AccountRename {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountOldName", accountOldName).append("accountNewName", accountNewName).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountOldName", accountOldName).append("accountNewName", accountNewName).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(accountOldName).append(additionalProperties).append(accountNewName).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(accountOldName).append(additionalProperties).append(auditLog).append(accountNewName).toHashCode();
     }
 
     @Override
@@ -179,7 +213,7 @@ public class AccountRename {
             return false;
         }
         AccountRename rhs = ((AccountRename) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(accountOldName, rhs.accountOldName).append(additionalProperties, rhs.additionalProperties).append(accountNewName, rhs.accountNewName).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(accountOldName, rhs.accountOldName).append(additionalProperties, rhs.additionalProperties).append(auditLog, rhs.auditLog).append(accountNewName, rhs.accountNewName).isEquals();
     }
 
 }

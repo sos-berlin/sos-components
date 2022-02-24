@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -30,7 +31,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "disabled",
     "singleFactorCert",
     "singleFactorPwd",
-    "required"
+    "required",
+    "auditLog"
 })
 public class IdentityService {
 
@@ -104,6 +106,14 @@ public class IdentityService {
     @JsonProperty("required")
     @JsonPropertyDescription("controls if the identity service is required")
     private Boolean required = false;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -118,6 +128,7 @@ public class IdentityService {
      * 
      * @param identityServiceType
      * @param identityServiceName
+     * @param auditLog
      * @param serviceAuthenticationScheme
      * @param ordering
      * @param disabled
@@ -125,7 +136,7 @@ public class IdentityService {
      * @param singleFactorPwd
      * @param required
      */
-    public IdentityService(IdentityServiceTypes identityServiceType, String identityServiceName, IdentityServiceAuthenticationScheme serviceAuthenticationScheme, Integer ordering, Boolean disabled, Boolean singleFactorCert, Boolean singleFactorPwd, Boolean required) {
+    public IdentityService(IdentityServiceTypes identityServiceType, String identityServiceName, IdentityServiceAuthenticationScheme serviceAuthenticationScheme, Integer ordering, Boolean disabled, Boolean singleFactorCert, Boolean singleFactorPwd, Boolean required, AuditParams auditLog) {
         super();
         this.identityServiceType = identityServiceType;
         this.identityServiceName = identityServiceName;
@@ -135,6 +146,7 @@ public class IdentityService {
         this.singleFactorCert = singleFactorCert;
         this.singleFactorPwd = singleFactorPwd;
         this.required = required;
+        this.auditLog = auditLog;
     }
 
     /**
@@ -317,6 +329,28 @@ public class IdentityService {
         this.required = required;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
@@ -329,12 +363,12 @@ public class IdentityService {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceType", identityServiceType).append("identityServiceName", identityServiceName).append("serviceAuthenticationScheme", serviceAuthenticationScheme).append("ordering", ordering).append("disabled", disabled).append("singleFactorCert", singleFactorCert).append("singleFactorPwd", singleFactorPwd).append("required", required).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceType", identityServiceType).append("identityServiceName", identityServiceName).append("serviceAuthenticationScheme", serviceAuthenticationScheme).append("ordering", ordering).append("disabled", disabled).append("singleFactorCert", singleFactorCert).append("singleFactorPwd", singleFactorPwd).append("required", required).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceType).append(identityServiceName).append(serviceAuthenticationScheme).append(ordering).append(disabled).append(singleFactorCert).append(additionalProperties).append(singleFactorPwd).append(required).toHashCode();
+        return new HashCodeBuilder().append(identityServiceType).append(identityServiceName).append(auditLog).append(serviceAuthenticationScheme).append(ordering).append(disabled).append(singleFactorCert).append(additionalProperties).append(singleFactorPwd).append(required).toHashCode();
     }
 
     @Override
@@ -346,7 +380,7 @@ public class IdentityService {
             return false;
         }
         IdentityService rhs = ((IdentityService) other);
-        return new EqualsBuilder().append(identityServiceType, rhs.identityServiceType).append(identityServiceName, rhs.identityServiceName).append(serviceAuthenticationScheme, rhs.serviceAuthenticationScheme).append(ordering, rhs.ordering).append(disabled, rhs.disabled).append(singleFactorCert, rhs.singleFactorCert).append(additionalProperties, rhs.additionalProperties).append(singleFactorPwd, rhs.singleFactorPwd).append(required, rhs.required).isEquals();
+        return new EqualsBuilder().append(identityServiceType, rhs.identityServiceType).append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(serviceAuthenticationScheme, rhs.serviceAuthenticationScheme).append(ordering, rhs.ordering).append(disabled, rhs.disabled).append(singleFactorCert, rhs.singleFactorCert).append(additionalProperties, rhs.additionalProperties).append(singleFactorPwd, rhs.singleFactorPwd).append(required, rhs.required).isEquals();
     }
 
 }

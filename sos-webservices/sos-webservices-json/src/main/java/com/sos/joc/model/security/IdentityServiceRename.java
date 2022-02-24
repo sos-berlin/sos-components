@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -23,7 +24,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "identityServiceOldName",
-    "identityServiceNewName"
+    "identityServiceNewName",
+    "auditLog"
 })
 public class IdentityServiceRename {
 
@@ -45,6 +47,14 @@ public class IdentityServiceRename {
      */
     @JsonProperty("identityServiceNewName")
     private String identityServiceNewName;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -58,12 +68,14 @@ public class IdentityServiceRename {
     /**
      * 
      * @param identityServiceOldName
+     * @param auditLog
      * @param identityServiceNewName
      */
-    public IdentityServiceRename(String identityServiceOldName, String identityServiceNewName) {
+    public IdentityServiceRename(String identityServiceOldName, String identityServiceNewName, AuditParams auditLog) {
         super();
         this.identityServiceOldName = identityServiceOldName;
         this.identityServiceNewName = identityServiceNewName;
+        this.auditLog = auditLog;
     }
 
     /**
@@ -114,6 +126,28 @@ public class IdentityServiceRename {
         this.identityServiceNewName = identityServiceNewName;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
@@ -126,12 +160,12 @@ public class IdentityServiceRename {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceOldName", identityServiceOldName).append("identityServiceNewName", identityServiceNewName).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceOldName", identityServiceOldName).append("identityServiceNewName", identityServiceNewName).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceOldName).append(additionalProperties).append(identityServiceNewName).toHashCode();
+        return new HashCodeBuilder().append(identityServiceOldName).append(additionalProperties).append(auditLog).append(identityServiceNewName).toHashCode();
     }
 
     @Override
@@ -143,7 +177,7 @@ public class IdentityServiceRename {
             return false;
         }
         IdentityServiceRename rhs = ((IdentityServiceRename) other);
-        return new EqualsBuilder().append(identityServiceOldName, rhs.identityServiceOldName).append(additionalProperties, rhs.additionalProperties).append(identityServiceNewName, rhs.identityServiceNewName).isEquals();
+        return new EqualsBuilder().append(identityServiceOldName, rhs.identityServiceOldName).append(additionalProperties, rhs.additionalProperties).append(auditLog, rhs.auditLog).append(identityServiceNewName, rhs.identityServiceNewName).isEquals();
     }
 
 }

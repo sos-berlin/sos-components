@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.configuration.Profile;
 import com.sos.joc.model.security.permissions.SecurityConfigurationRoles;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -28,7 +29,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "main",
     "accounts",
     "profiles",
-    "roles"
+    "roles",
+    "auditLog"
 })
 public class SecurityConfiguration {
 
@@ -58,6 +60,14 @@ public class SecurityConfiguration {
     private List<Profile> profiles = new ArrayList<Profile>();
     @JsonProperty("roles")
     private SecurityConfigurationRoles roles;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     /**
      * No args constructor for use in serialization
@@ -69,13 +79,14 @@ public class SecurityConfiguration {
     /**
      * 
      * @param identityServiceName
+     * @param auditLog
      * @param roles
      * @param profiles
      * @param main
      * @param accounts
      * @param deliveryDate
      */
-    public SecurityConfiguration(Date deliveryDate, String identityServiceName, List<SecurityConfigurationMainEntry> main, List<SecurityConfigurationAccount> accounts, List<Profile> profiles, SecurityConfigurationRoles roles) {
+    public SecurityConfiguration(Date deliveryDate, String identityServiceName, List<SecurityConfigurationMainEntry> main, List<SecurityConfigurationAccount> accounts, List<Profile> profiles, SecurityConfigurationRoles roles, AuditParams auditLog) {
         super();
         this.deliveryDate = deliveryDate;
         this.identityServiceName = identityServiceName;
@@ -83,6 +94,7 @@ public class SecurityConfiguration {
         this.accounts = accounts;
         this.profiles = profiles;
         this.roles = roles;
+        this.auditLog = auditLog;
     }
 
     /**
@@ -171,14 +183,36 @@ public class SecurityConfiguration {
         this.roles = roles;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("identityServiceName", identityServiceName).append("main", main).append("accounts", accounts).append("profiles", profiles).append("roles", roles).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("identityServiceName", identityServiceName).append("main", main).append("accounts", accounts).append("profiles", profiles).append("roles", roles).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(roles).append(profiles).append(main).append(accounts).append(deliveryDate).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(auditLog).append(roles).append(profiles).append(main).append(accounts).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -190,7 +224,7 @@ public class SecurityConfiguration {
             return false;
         }
         SecurityConfiguration rhs = ((SecurityConfiguration) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(roles, rhs.roles).append(profiles, rhs.profiles).append(main, rhs.main).append(accounts, rhs.accounts).append(deliveryDate, rhs.deliveryDate).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(roles, rhs.roles).append(profiles, rhs.profiles).append(main, rhs.main).append(accounts, rhs.accounts).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }

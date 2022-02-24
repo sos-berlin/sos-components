@@ -18,14 +18,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "role",
     "folders",
     "permissions"
 })
 public class SecurityConfigurationRole {
 
-    @JsonProperty("role")
-    private String role;
     @JsonProperty("folders")
     private SecurityConfigurationFolders folders;
     /**
@@ -46,25 +43,13 @@ public class SecurityConfigurationRole {
 
     /**
      * 
-     * @param role
      * @param folders
      * @param permissions
      */
-    public SecurityConfigurationRole(String role, SecurityConfigurationFolders folders, IniPermissions permissions) {
+    public SecurityConfigurationRole(SecurityConfigurationFolders folders, IniPermissions permissions) {
         super();
-        this.role = role;
         this.folders = folders;
         this.permissions = permissions;
-    }
-
-    @JsonProperty("role")
-    public String getRole() {
-        return role;
-    }
-
-    @JsonProperty("role")
-    public void setRole(String role) {
-        this.role = role;
     }
 
     @JsonProperty("folders")
@@ -101,12 +86,12 @@ public class SecurityConfigurationRole {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("role", role).append("folders", folders).append("permissions", permissions).toString();
+        return new ToStringBuilder(this).append("folders", folders).append("permissions", permissions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(role).append(folders).append(permissions).toHashCode();
+        return new HashCodeBuilder().append(permissions).append(folders).toHashCode();
     }
 
     @Override
@@ -118,7 +103,7 @@ public class SecurityConfigurationRole {
             return false;
         }
         SecurityConfigurationRole rhs = ((SecurityConfigurationRole) other);
-        return new EqualsBuilder().append(role, rhs.role).append(folders, rhs.folders).append(permissions, rhs.permissions).isEquals();
+        return new EqualsBuilder().append(permissions, rhs.permissions).append(folders, rhs.folders).isEquals();
     }
 
 }
