@@ -403,11 +403,15 @@ public class SOSMail {
         attachmentList.put(filename, att);
         changed = true;
     }
+    
+    private void checkFileCanRead(File file) throws IOException{
+            FileReader fileReader = new FileReader(file.getAbsolutePath());
+            fileReader.read();
+            fileReader.close();
+     }
 
     private void addFile(final SOSMailAttachment att) throws Exception {
-        if (!att.getFile().exists()) {
-            throw new Exception("File " + att.getFile().getAbsolutePath() + " does not exist");
-        }
+    	checkFileCanRead(att.getFile());
         MimeBodyPart attachment = new MimeBodyPart();
         DataSource data_source = new FileDataSource(att.getFile(), att.getContentType());
         DataHandler data_handler = new DataHandler(data_source);
