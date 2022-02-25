@@ -594,6 +594,7 @@ public abstract class RepositoryUtil {
                         }
                         dbItem.setContent(updatedContent);
                         dbItem.setDeployed(false);
+                        dbItem.setReleased(false);
                         dbItem.setValid(valid);
                         dbItem.setModified(Date.from(Instant.now()));
                     }
