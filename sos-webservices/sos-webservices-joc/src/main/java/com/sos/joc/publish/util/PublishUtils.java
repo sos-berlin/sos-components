@@ -2211,27 +2211,6 @@ public abstract class PublishUtils {
             SOSHibernateException {
         Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
         if (filter != null) {
-            if (filter.getDeployConfigurations() != null && !filter.getDeployConfigurations().isEmpty()) {
-                List<Configuration> depFolders = filter.getDeployConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
-                        .equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
-                Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
-                if (depFolders != null && !depFolders.isEmpty()) {
-                    allItems.addAll(getLatestActiveDepHistoryEntriesFromFolders(depFolders, dbLayer));
-                }
-                List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
-                if (deploymentDbItems != null && !deploymentDbItems.isEmpty()) {
-                    allItems.addAll(deploymentDbItems);
-                }
-                if (!allItems.isEmpty()) {
-                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue())).forEach(
-                            item -> {
-                                if (commitId != null) {
-                                    dbLayer.storeCommitIdForLaterUsage(item, commitId);
-                                }
-                                configurations.add(getConfigurationObjectFromDBItem(item, commitId));
-                            });
-                }
-            }
             if (filter.getDraftConfigurations() != null && !filter.getDraftConfigurations().isEmpty()) {
                 List<Configuration> draftFolders = filter.getDraftConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
                         .equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
@@ -2259,6 +2238,36 @@ public abstract class PublishUtils {
                             });
                 }
             }
+            if (filter.getDeployConfigurations() != null && !filter.getDeployConfigurations().isEmpty()) {
+                List<Configuration> depFolders = filter.getDeployConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
+                        .equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
+                Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
+                if (depFolders != null && !depFolders.isEmpty()) {
+                    allItems.addAll(getLatestActiveDepHistoryEntriesFromFolders(depFolders, dbLayer));
+                }
+                List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
+                if (deploymentDbItems != null && !deploymentDbItems.isEmpty()) {
+                    allItems.addAll(deploymentDbItems);
+                }
+                if (!allItems.isEmpty()) {
+                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue())).forEach(
+                            item -> {
+                                if (commitId != null) {
+                                    dbLayer.storeCommitIdForLaterUsage(item, commitId);
+                                }
+                                ConfigurationObject fromDB = getConfigurationObjectFromDBItem(item, commitId);
+                                boolean found = false;
+                                for (ConfigurationObject c : configurations) {
+                                    if(c.getPath().equals(fromDB.getPath()) && c.getObjectType().equals(fromDB.getObjectType())) {
+                                        found = true;
+                                    }
+                                }
+                                if (!found) {
+                                    configurations.add(fromDB);
+                                }
+                            });
+                }
+            }
         }
         return configurations;
     }
@@ -2268,22 +2277,6 @@ public abstract class PublishUtils {
             SOSHibernateException {
         Map<String, ConfigurationObject> allObjectsMap = new HashMap<String, ConfigurationObject>();
         if (filter != null) {
-            if (filter.getReleasedConfigurations() != null && !filter.getReleasedConfigurations().isEmpty()) {
-                List<Configuration> releasedFolders = filter.getReleasedConfigurations().stream().filter(item -> item.getConfiguration()
-                        .getObjectType().equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
-                Set<DBItemInventoryReleasedConfiguration> allItems = new HashSet<DBItemInventoryReleasedConfiguration>();
-                if (releasedFolders != null && !releasedFolders.isEmpty()) {
-                    allItems.addAll(getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(releasedFolders, dbLayer));
-                }
-                List<DBItemInventoryReleasedConfiguration> configurationDbItems = dbLayer.getFilteredReleasedConfigurations(filter);
-                if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
-                    allItems.addAll(configurationDbItems);
-                }
-                if (!allItems.isEmpty()) {
-                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
-                            item -> allObjectsMap.put(item.getName(), getConfigurationObjectFromDBItem(item)));
-                }
-            }
             if (filter.getDraftConfigurations() != null && !filter.getDraftConfigurations().isEmpty()) {
                 List<Configuration> draftFolders = filter.getDraftConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
                         .equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
@@ -2296,12 +2289,34 @@ public abstract class PublishUtils {
                     allItems.addAll(configurationDbItems);
                 }
                 if (!allItems.isEmpty()) {
-                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
-                            item -> {
+                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
+                        .forEach(item -> {
                                 if (!allObjectsMap.containsKey(item.getName())) {
                                     allObjectsMap.put(item.getName(), getConfigurationObjectFromDBItem(item));
                                 }
-                            });
+                            }
+                        );
+                }
+            }
+            if (filter.getReleasedConfigurations() != null && !filter.getReleasedConfigurations().isEmpty()) {
+                List<Configuration> releasedFolders = filter.getReleasedConfigurations().stream().filter(item -> item.getConfiguration()
+                        .getObjectType().equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
+                Set<DBItemInventoryReleasedConfiguration> allItems = new HashSet<DBItemInventoryReleasedConfiguration>();
+                if (releasedFolders != null && !releasedFolders.isEmpty()) {
+                    allItems.addAll(getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(releasedFolders, dbLayer));
+                }
+                List<DBItemInventoryReleasedConfiguration> configurationDbItems = dbLayer.getFilteredReleasedConfigurations(filter);
+                if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
+                    allItems.addAll(configurationDbItems);
+                }
+                if (!allItems.isEmpty()) {
+                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
+                        .forEach(item -> {
+                                if (!allObjectsMap.containsKey(item.getName())) {
+                                    allObjectsMap.put(item.getName(), getConfigurationObjectFromDBItem(item));
+                                }
+                            }
+                        );
                 }
             }
         }
