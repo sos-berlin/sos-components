@@ -16,7 +16,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.security.SOSSecurityConfiguration;
 import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
 import com.sos.joc.db.authentication.DBItemIamAccount;
