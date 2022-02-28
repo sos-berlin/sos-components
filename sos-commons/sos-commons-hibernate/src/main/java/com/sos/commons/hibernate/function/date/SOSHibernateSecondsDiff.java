@@ -37,7 +37,7 @@ public class SOSHibernateSecondsDiff extends StandardSQLFunction {
 
         switch (this.factory.getDbms()) {
         case MYSQL:
-            return "(" + endTimeProperty + "-" + startTimeProperty + ")";
+            return "TIMESTAMPDIFF(SECOND," + startTimeProperty + "," + endTimeProperty + ")";
         case MSSQL:
             return "DATEDIFF(SECOND," + startTimeProperty + "," + endTimeProperty + ")";
         case ORACLE:
