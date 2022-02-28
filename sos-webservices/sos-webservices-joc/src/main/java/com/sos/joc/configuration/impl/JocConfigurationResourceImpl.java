@@ -29,12 +29,14 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSec
 import com.sos.joc.configuration.resource.IJocConfigurationResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.configuration.ConfigurationGlobalsChanged;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.configuration.Configuration;
 import com.sos.joc.model.configuration.Configuration200;
 import com.sos.joc.model.configuration.ConfigurationOk;
@@ -186,6 +188,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             case IAM:
                 dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
                 account = ConfigurationGlobals.ACCOUNT;
+                storeAuditLog(configuration.getAuditLog(), CategoryType.IDENTITY); 
+
             case CUSTOMIZATION:
                 if (isNew && !configuration.getConfigurationType().equals(ConfigurationType.IAM)) {
                     checkRequiredParameter("objectType", configuration.getObjectType());

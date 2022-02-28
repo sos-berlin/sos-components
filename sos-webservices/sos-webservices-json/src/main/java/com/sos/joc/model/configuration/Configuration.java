@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -25,7 +26,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "objectType",
     "name",
     "shared",
-    "configurationItem"
+    "configurationItem",
+    "auditLog"
 })
 public class Configuration {
 
@@ -87,6 +89,14 @@ public class Configuration {
     @JsonProperty("configurationItem")
     @JsonPropertyDescription("JSON object as string,  depends on configuration type")
     private String configurationItem;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     /**
      * controllerId
@@ -250,14 +260,36 @@ public class Configuration {
         this.configurationItem = configurationItem;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("id", id).append("account", account).append("configurationType", configurationType).append("objectType", objectType).append("name", name).append("shared", shared).append("configurationItem", configurationItem).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("id", id).append("account", account).append("configurationType", configurationType).append("objectType", objectType).append("name", name).append("shared", shared).append("configurationItem", configurationItem).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(shared).append(controllerId).append(name).append(id).append(configurationType).append(account).append(objectType).append(configurationItem).toHashCode();
+        return new HashCodeBuilder().append(shared).append(controllerId).append(auditLog).append(name).append(id).append(configurationType).append(account).append(objectType).append(configurationItem).toHashCode();
     }
 
     @Override
@@ -269,7 +301,7 @@ public class Configuration {
             return false;
         }
         Configuration rhs = ((Configuration) other);
-        return new EqualsBuilder().append(shared, rhs.shared).append(controllerId, rhs.controllerId).append(name, rhs.name).append(id, rhs.id).append(configurationType, rhs.configurationType).append(account, rhs.account).append(objectType, rhs.objectType).append(configurationItem, rhs.configurationItem).isEquals();
+        return new EqualsBuilder().append(shared, rhs.shared).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(name, rhs.name).append(id, rhs.id).append(configurationType, rhs.configurationType).append(account, rhs.account).append(objectType, rhs.objectType).append(configurationItem, rhs.configurationItem).isEquals();
     }
 
 }
