@@ -96,6 +96,10 @@ public class CachedOrderStep {
         return workflowPosition;
     }
 
+    public Date getStartTime() {
+        return startTime;
+    }
+
     public Date getEndTime() {
         return endTime;
     }

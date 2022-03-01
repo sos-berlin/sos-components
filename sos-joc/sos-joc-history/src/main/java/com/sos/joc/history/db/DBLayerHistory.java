@@ -249,22 +249,20 @@ public class DBLayerHistory extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public DBItemHistoryOrder getOrderByCurrentEventId(String controllerId, String orderId, Date currentEventDateTime) throws SOSHibernateException {
+    public DBItemHistoryOrder getLastOrderByCurrentOrderId(String controllerId, String orderId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o1 ");
         hql.append("where o1.controllerId=:controllerId ");
         hql.append("and o1.orderId=:orderId ");
-        hql.append("and o1.startTime=");
-        hql.append("(select max(o2.startTime) from ");
+        hql.append("and o1.id=");
+        hql.append("(select max(o2.id) from ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o2 ");
         hql.append("where o2.controllerId=o1.controllerId ");
         hql.append("and o2.orderId=o1.orderId ");
-        hql.append("and o2.startTime <= :currentEventDateTime");
         hql.append(")");
 
         Query<DBItemHistoryOrder> query = getSession().createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
         query.setParameter("orderId", orderId);
-        query.setParameter("currentEventDateTime", currentEventDateTime);
         query.setReadOnly(true);
 
         List<DBItemHistoryOrder> result = executeQueryList("getOrderByCurrentEventId", query);

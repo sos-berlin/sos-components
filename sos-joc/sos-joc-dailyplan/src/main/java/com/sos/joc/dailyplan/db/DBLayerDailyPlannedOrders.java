@@ -1125,13 +1125,14 @@ public class DBLayerDailyPlannedOrders {
     public Long getWorkflowAvg(String controllerId, String workflowPath) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select ");
         hql.append("round(");
-        hql.append("sum(").append(SOSHibernateSecondsDiff.getFunction("endTime", "startTime")).append(")/count(id)");
+        hql.append("sum(").append(SOSHibernateSecondsDiff.getFunction("startTime", "endTime")).append(")/count(id)");
         hql.append(",0) ");// ,0 precision only because of MSSQL
         hql.append("from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
         hql.append("where controllerId = :controllerId ");
         hql.append("and workflowPath = :workflowPath ");
         hql.append("and parentId = 0 ");
         hql.append("and severity=:severity ");
+        hql.append("and endTime >= startTime ");
 
         Query<Long> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);

@@ -415,13 +415,14 @@ public class DBLayerMonitoring extends DBLayer {
     public Long getJobAvg(String controllerId, String workflowPath, String jobName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select ");
         hql.append("round(");
-        hql.append("sum(").append(SOSHibernateSecondsDiff.getFunction("endTime", "startTime")).append(")/count(id)");
+        hql.append("sum(").append(SOSHibernateSecondsDiff.getFunction("startTime", "endTime")).append(")/count(id)");
         hql.append(",0) ");// ,0 precision only because of MSSQL
         hql.append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
         hql.append("where controllerId=:controllerId ");
         hql.append("and workflowPath=:workflowPath ");
         hql.append("and jobName=:jobName ");
         hql.append("and severity=:severity ");
+        hql.append("and endTime >= startTime ");
 
         // hibernate returns Long and not Double ...
         Query<Long> query = getSession().createQuery(hql.toString());

@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -83,6 +84,7 @@ public class HistoryMonitoringModel implements Serializable {
     private AtomicBoolean closed = new AtomicBoolean();
     private Configuration configuration;
 
+    private boolean tmpLogging = true;
     // TODO ? commit after n db operations
     // private int maxTransactions = 100;
 
@@ -295,6 +297,12 @@ public class HistoryMonitoringModel implements Serializable {
             for (Map.Entry<Long, HistoryOrderStepResult> entry : w.entrySet()) {
                 HistoryOrderStepResult sr = entry.getValue();
                 int r = dbLayer.updateOrderStepOnLongerThan(entry.getKey(), sr.getWarn());
+
+                if (tmpLogging) {
+                    LOGGER.info(String.format("    [tmp][%s][%s][handleLongerThan][tmp][1][r=%s][entryKey=%s]HistoryOrderStepResult step=%s, warn=%s",
+                            serviceIdentifier, IDENTIFIER, r, entry.getKey(), SOSString.toString(sr.getStep()), SOSString.toString(sr.getWarn())));
+                }
+
                 if (longerThan.containsKey(entry.getKey())) {
                     longerThan.remove(entry.getKey());
                 }
@@ -303,7 +311,8 @@ public class HistoryMonitoringModel implements Serializable {
                 }
             }
             dbLayer.getSession().commit();
-            LOGGER.info(String.format("[%s][%s][longerThan][processed]%s", serviceIdentifier, IDENTIFIER, w.size()));
+            LOGGER.info(String.format("[%s][%s][handleLongerThan][processed=%s]toNotify steps=%s", serviceIdentifier, IDENTIFIER, w.size(), toNotify
+                    .getSteps().size()));
         } catch (Throwable ex) {
             dbLayer.rollback();
             LOGGER.error(ex.toString(), ex);
@@ -485,6 +494,15 @@ public class HistoryMonitoringModel implements Serializable {
     private HistoryOrderStepResult orderStepProcessed(DBLayerMonitoring dbLayer, HistoryOrderStepBean hosb) throws SOSHibernateException {
         HistoryOrderStepResult r = analyzeExecutionTimeOnProcessed(dbLayer, hosb);
         dbLayer.setOrderStepEnd(r);
+
+        if (tmpLogging) {
+            if (r.getWarn() != null) {
+                LOGGER.info(String.format("    [tmp][%s][%s][orderStepProcessed][on WARN]step=%s", serviceIdentifier, IDENTIFIER, SOSString.toString(r
+                        .getStep())));
+                LOGGER.info(String.format("            [on WARN]warn=%s", SOSString.toString(r.getWarn())));
+            }
+        }
+
         return r;
     }
 
@@ -502,7 +520,7 @@ public class HistoryMonitoringModel implements Serializable {
     }
 
     private HistoryOrderStepResultWarn analyzeLongerThan(DBLayerMonitoring dbLayer, HistoryOrderStepBean hosb, String definition, Date startTime,
-            Date endDate, Long historyId, boolean remove) {
+            Date endTime, Long historyId, boolean remove) {
         ExpectedSeconds expected = getExpectedSeconds(dbLayer, JobWarning.LONGER_THAN, hosb, definition);
         if (expected == null || expected.getSeconds() == null) {
             return null;
@@ -512,7 +530,19 @@ public class HistoryMonitoringModel implements Serializable {
             longerThan.remove(historyId);
         }
 
-        Long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
+        Long diff = SOSDate.getSeconds(endTime) - SOSDate.getSeconds(startTime);
+        if (diff < 0) {
+            if (LOGGER.isDebugEnabled()) {
+                try {
+                    LOGGER.debug(String.format("[%s][%s][analyzeLongerThan][diff=%s < 0][startTime=%s, endTime=%s]%s", serviceIdentifier, IDENTIFIER,
+                            diff, SOSDate.getDateTimeAsString(startTime), SOSDate.getDateTimeAsString(endTime), SOSString.toString(hosb)));
+                } catch (SOSInvalidDataException e) {
+
+                }
+            }
+            return null;
+        }
+
         if (diff > expected.getSeconds()) {
             return new HistoryOrderStepResultWarn(JobWarning.LONGER_THAN, String.format("Job runs longer than the expected %s",
                     getExpectedDurationMessage(definition, expected)));
@@ -527,12 +557,24 @@ public class HistoryMonitoringModel implements Serializable {
     }
 
     private HistoryOrderStepResultWarn analyzeShorterThan(DBLayerMonitoring dbLayer, HistoryOrderStepBean hosb, String definition, Date startTime,
-            Date endDate) {
+            Date endTime) {
         ExpectedSeconds expected = getExpectedSeconds(dbLayer, JobWarning.SHORTER_THAN, hosb, definition);
         if (expected == null || expected.getSeconds() == null) {
             return null;
         }
-        Long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
+        Long diff = SOSDate.getSeconds(endTime) - SOSDate.getSeconds(startTime);
+        if (diff < 0) {
+            if (LOGGER.isDebugEnabled()) {
+                try {
+                    LOGGER.debug(String.format("[%s][%s][analyzeShorterThan][diff=%s < 0][startTime=%s, endTime=%s]%s", serviceIdentifier, IDENTIFIER,
+                            diff, SOSDate.getDateTimeAsString(startTime), SOSDate.getDateTimeAsString(endTime), SOSString.toString(hosb)));
+                } catch (SOSInvalidDataException e) {
+
+                }
+            }
+            return null;
+        }
+
         if (diff < expected.getSeconds()) {
             return new HistoryOrderStepResultWarn(JobWarning.SHORTER_THAN, String.format("Job runs shorter than the expected %s",
                     getExpectedDurationMessage(definition, expected)));
