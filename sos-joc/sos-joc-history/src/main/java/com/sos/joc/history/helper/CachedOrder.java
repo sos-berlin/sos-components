@@ -17,6 +17,7 @@ public class CachedOrder {
     private final String workflowPath;
     private final String workflowVersionId;
     private final String workflowPosition;
+    private final Date startTime;
     private final Date endTime;
 
     private Integer state;
@@ -34,6 +35,7 @@ public class CachedOrder {
         state = item.getState();
         hasStates = item.getHasStates();
         currentHistoryOrderStepId = item.getCurrentHistoryOrderStepId();
+        startTime = item.getStartTime();
         endTime = item.getEndTime();
     }
 
@@ -50,6 +52,7 @@ public class CachedOrder {
             b.setSeverity(HistorySeverity.map2DbSeverity(state));
         }
         b.setCurrentHistoryOrderStepId(currentHistoryOrderStepId);
+        b.setStartTime(startTime);
         b.setEndTime(endTime);
         return b;
     }
@@ -112,6 +115,10 @@ public class CachedOrder {
 
     public void setCurrentHistoryOrderStepId(Long val) {
         currentHistoryOrderStepId = val;
+    }
+
+    public Date getStartTime() {
+        return startTime;
     }
 
     public Date getEndTime() {

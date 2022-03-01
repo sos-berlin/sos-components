@@ -22,8 +22,8 @@ public class SOSHibernateSecondsDiff extends StandardSQLFunction {
         this.factory = factory;
     }
 
-    public static String getFunction(final String endTimeProperty, final String startTimeProperty) {
-        return new StringBuilder(NAME).append("(").append(endTimeProperty).append(",").append(startTimeProperty).append(")").toString();
+    public static String getFunction(final String startTimeProperty, final String endTimeProperty) {
+        return new StringBuilder(NAME).append("(").append(startTimeProperty).append(",").append(endTimeProperty).append(")").toString();
     }
 
     @SuppressWarnings("rawtypes")
@@ -32,8 +32,8 @@ public class SOSHibernateSecondsDiff extends StandardSQLFunction {
         if (arguments == null || arguments.size() < 2) {
             throw new QueryException("missing arguments");
         }
-        String endTimeProperty = arguments.get(0).toString();
-        String startTimeProperty = arguments.get(1).toString();
+        String startTimeProperty = arguments.get(0).toString();
+        String endTimeProperty = arguments.get(1).toString();
 
         switch (this.factory.getDbms()) {
         case MYSQL:

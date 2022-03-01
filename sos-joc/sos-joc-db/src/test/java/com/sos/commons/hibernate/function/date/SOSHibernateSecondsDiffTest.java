@@ -26,7 +26,7 @@ public class SOSHibernateSecondsDiffTest {
             session = factory.openStatelessSession();
 
             StringBuilder hql = new StringBuilder("select ");
-            hql.append("sum(").append(SOSHibernateSecondsDiff.getFunction("endTime", "startTime")).append(") ");
+            hql.append("sum(").append(SOSHibernateSecondsDiff.getFunction("startTime", "endTime")).append(") ");
             hql.append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
             // hql.append("where id in (1,2,3)");
 
@@ -57,7 +57,7 @@ public class SOSHibernateSecondsDiffTest {
 
             StringBuilder hql = new StringBuilder("select ");
             hql.append("round(");
-            hql.append("sum(").append(SOSHibernateSecondsDiff.getFunction("endTime", "startTime")).append(")/count(id)");
+            hql.append("sum(").append(SOSHibernateSecondsDiff.getFunction("startTime", "endTime")).append(")/count(id)");
             hql.append(",0) ");// ,0 precision only because of MSSQL
             hql.append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
             // hql.append("where id in (1,2,3)");
