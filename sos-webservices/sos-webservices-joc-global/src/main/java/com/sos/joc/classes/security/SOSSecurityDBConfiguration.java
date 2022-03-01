@@ -4,7 +4,6 @@ import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,16 +27,13 @@ import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamPermission;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamRole;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
-import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInfoException;
-import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.IdentityServiceTypes;
@@ -85,7 +81,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 			sosVaultHandler.updateTokenPolicies(sosVaultAccountCredentials);
 		} else {
 			JocError error = new JocError();
-			error.setMessage("Configuration for VAULT missingg");
+			error.setMessage("Configuration for VAULT missing");
 			throw new JocException(error);
 		}
 
