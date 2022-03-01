@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -86,6 +87,11 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             ConfigurationGlobalsJoc clusterSettings = Globals.getConfigurationGlobalsJoc();
             SuffixPrefix suffixPrefix = new SuffixPrefix(); 
             if (fixMustUsed) {
+                // JOC-1232: newFilename contains sub folder in case of type folder
+                //              suffix contains highest suffix of folder /
+                //              DB: ... "likefolder" like '%'
+                // Determine items of folder then determine SuffixPrefix per item
+                // this has to be done for each item of the folder separately
                 suffixPrefix = JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(), ClusterSettings.getCopyPasteSuffixPrefix(clusterSettings),
                         clusterSettings.getCopyPasteSuffix().getDefault(), newFilename, type, dbLayer);
             } else {
@@ -122,47 +128,97 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 if (oldDBFolderContent == null) {
                     oldDBFolderContent = Collections.emptyList();
                 }
-                
+
                 List<Integer> typesForReferences = Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.WORKINGDAYSCALENDAR
                         .intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue(), ConfigurationType.LOCK.intValue(),
                         ConfigurationType.NOTICEBOARD.intValue(), ConfigurationType.JOBRESOURCE.intValue(), ConfigurationType.INCLUDESCRIPT.intValue());
                 
-                Map<ConfigurationType, Map<String, String>> oldToNewName = (!in.getShallowCopy()) ? oldDBFolderContent.stream().filter(
-                        item -> typesForReferences.contains(item.getType())).collect(Collectors.groupingBy(
-                                DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName, item -> item
-                                        .getName().replaceFirst(replace.get(0), replace.get(1))))) : Collections.emptyMap();
-                
+                // JOC-1232: FIX
                 List<AuditLogDetail> auditLogDetails = new ArrayList<>();
-                oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
-                    java.nio.file.Path oldItemPath = Paths.get(oldItem.getPath());
-                    if (ConfigurationType.FOLDER.intValue() == oldItem.getType()) {
-                        return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)));
-                    }
-                    auditLogDetails.add(new AuditLogDetail(oldItemPath, oldItem.getType()));
-                    return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath.getParent().resolve(oldItem.getName()
-                            .replaceFirst(replace.get(0), replace.get(1))))));
-                }).collect(Collectors.toList());
-                
-                List<DBItemInventoryConfiguration> newDBFolderContent = null;
-                if (in.getShallowCopy()) {
-                    newDBFolderContent = dbLayer.getFolderContent(newPathWithoutFix, true, JocInventory.getTypesFromObjectsWithReferencesAndFolders());
-                } else {
-                    newDBFolderContent = dbLayer.getFolderContent(newPathWithoutFix, true, null);
-                }
-
-                if (newDBFolderContent != null && !newDBFolderContent.isEmpty()) {
-                    newDBFolderContent.retainAll(oldDBFolderContent);
-                    if (!newDBFolderContent.isEmpty()) {
-                        Map<Boolean, List<DBItemInventoryConfiguration>> map = newDBFolderContent.stream().collect(Collectors.groupingBy(
-                                item -> ConfigurationType.FOLDER.intValue() == item.getType()));
-                        if (!map.getOrDefault(false, Collections.emptyList()).isEmpty()) { // all not folder items
-                            throw new JocObjectAlreadyExistException("Cannot move to " + newPathWithoutFix + ": common objects are " + map.get(false).stream()
-                                    .map(DBItemInventoryConfiguration::getPath).collect(Collectors.joining("', '", "'", "'")));
+                Map<ConfigurationType, Map<String, String>> oldToNewName = new HashMap<ConfigurationType, Map<String,String>>();
+                List<DBItemInventoryConfiguration> newDBFolderItems = new ArrayList<DBItemInventoryConfiguration>(); 
+                for (DBItemInventoryConfiguration oldDBFolderItem : oldDBFolderContent) {
+                    java.nio.file.Path oldItemPath = Paths.get(oldDBFolderItem.getPath());
+                    String oldName = oldDBFolderItem.getName();
+                    DBItemInventoryConfiguration newDbItem = null; 
+                    if (!JocInventory.isFolder(oldDBFolderItem.getTypeAsEnum())) {
+                        SuffixPrefix folderItemSuffixPrefix = new SuffixPrefix(); 
+                        if (fixMustUsed) {
+                            folderItemSuffixPrefix = JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(), 
+                                    ClusterSettings.getCopyPasteSuffixPrefix(clusterSettings), clusterSettings.getCopyPasteSuffix().getDefault(),
+                                    oldDBFolderItem.getName(), oldDBFolderItem.getTypeAsEnum(), dbLayer);
+                        } else {
+                            folderItemSuffixPrefix.setPrefix("");
+                            folderItemSuffixPrefix.setSuffix("");
                         }
+                        final List<String> folderItemReplace = JocInventory.getSearchReplace(folderItemSuffixPrefix);
                         
-                        oldDBFolderContent.removeAll(map.getOrDefault(true, Collections.emptyList()));
+                        java.nio.file.Path itemPath = oldItemPath;
+                        if (!folderItemSuffixPrefix.getSuffix().isEmpty() || !folderItemSuffixPrefix.getPrefix().isEmpty()) {
+                            
+                            itemPath = Paths.get(in.getNewPath()).resolve(oldItemPath.getFileName().toString().replaceFirst(folderItemReplace.get(0), folderItemReplace.get(1)));
+                        }
+                        newDbItem = createItem(oldDBFolderItem, itemPath);
+                        String newName = newDbItem.getName();
+                        auditLogDetails.add(new AuditLogDetail(itemPath, newDbItem.getType()));
+                        
+                        if(typesForReferences.contains(newDbItem.getType()) && !in.getShallowCopy()) {
+                            if (oldToNewName.containsKey(newDbItem.getTypeAsEnum())) {
+                                oldToNewName.get(newDbItem.getTypeAsEnum()).put(oldName, newName);
+                            } else {
+                                Map<String,String> oldNewName = new HashMap<String, String>();
+                                oldNewName.put(oldName, newName);
+                                oldToNewName.put(newDbItem.getTypeAsEnum(), oldNewName);                                
+                            }
+                        }
+                        newDBFolderItems.add(newDbItem);
+                        JocInventory.insertConfiguration(dbLayer, newDbItem);
+                    } else {
+                        newDbItem = createItem(oldDBFolderItem, pWithoutFix.resolve(oldItemPath.relativize(oldItemPath)));
+                        newDBFolderItems.add(newDbItem);
+                        JocInventory.insertOrUpdateConfiguration(dbLayer, newDbItem);
                     }
                 }
+                oldDBFolderContent = newDBFolderItems;
+//                Map<ConfigurationType, Map<String, String>> oldToNewName = (!in.getShallowCopy()) ? oldDBFolderContent.stream().filter(
+//                        item -> typesForReferences.contains(item.getType())).collect(Collectors.groupingBy(
+//                                DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName, item -> item
+//                                        .getName().replaceFirst(replace.get(0), replace.get(1))))) : Collections.emptyMap();
+                
+//                List<AuditLogDetail> auditLogDetails = new ArrayList<>();
+//                oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
+//                    java.nio.file.Path oldItemPath = Paths.get(oldItem.getPath());
+//                    if (ConfigurationType.FOLDER.intValue() == oldItem.getType()) {
+//                        return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)));
+//                    }
+//                    auditLogDetails.add(new AuditLogDetail(oldItemPath, oldItem.getType()));
+//                    return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath.getParent().resolve(oldItem.getName()
+//                            .replaceFirst(replace.get(0), replace.get(1))))));
+//                }).collect(Collectors.toList());
+
+//                List<DBItemInventoryConfiguration> newDBFolderContent = null;
+//                if (in.getShallowCopy()) {
+//                    newDBFolderContent = dbLayer.getFolderContent(newPathWithoutFix, true, JocInventory.getTypesFromObjectsWithReferencesAndFolders());
+//                } else {
+//                    newDBFolderContent = dbLayer.getFolderContent(newPathWithoutFix, true, null);
+//                }
+//
+//                if (newDBFolderContent != null && !newDBFolderContent.isEmpty()) {
+//                    newDBFolderContent.retainAll(oldDBFolderContent);
+//                    if (!newDBFolderContent.isEmpty()) {
+//                        Map<Boolean, List<DBItemInventoryConfiguration>> map = newDBFolderContent.stream().collect(Collectors.groupingBy(
+//                                item -> ConfigurationType.FOLDER.intValue() == item.getType()));
+//                        if (!map.getOrDefault(false, Collections.emptyList()).isEmpty()) { // all not folder items
+//                            throw new JocObjectAlreadyExistException("Cannot move to " + newPathWithoutFix + ": common objects are " + map.get(false).stream()
+//                                    .map(DBItemInventoryConfiguration::getPath).collect(Collectors.joining("', '", "'", "'")));
+//                        }
+//                        
+//                        oldDBFolderContent.removeAll(map.getOrDefault(true, Collections.emptyList()));
+//                    }
+//                }
+                
+                // JOC-1232: FIX END
+
                 DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), auditLogDetails);
                 
                 if (!JocInventory.ROOT_FOLDER.equals(config.getPath())) {
@@ -171,7 +227,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         if (!newFolderIsRootFolder) {
                             DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
                             newDbItem.setAuditLogId(dbAuditLog.getId());
-                            JocInventory.insertConfiguration(dbLayer, newDbItem);
+                            JocInventory.insertOrUpdateConfiguration(dbLayer, newDbItem);
                             JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
                             response.setId(newDbItem.getId());
                             response.setPath(newDbItem.getPath());
@@ -265,7 +321,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                             break;
                         }
                         item.setContent(json);
-                        JocInventory.insertConfiguration(dbLayer, item);
+                        JocInventory.insertOrUpdateConfiguration(dbLayer, item);
                     }
                 }
                 
@@ -319,7 +375,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 events = Collections.singleton(newDbItem.getFolder());
             }
 
-            session.commit();
+//            session.commit();
             for (String event : events) {
                 JocInventory.postEvent(event);
             }
@@ -346,7 +402,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
         item.setDeployed(false);
         item.setReleased(false);
         item.setModified(Date.from(Instant.now()));
-        item.setCreated(item.getModified());
+        item.setCreated(Date.from(Instant.now()));
         item.setDeleted(false);
         item.setAuditLogId(0L);
         item.setTitle(oldItem.getTitle());
