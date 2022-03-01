@@ -747,8 +747,45 @@ public class JocInventory {
     public static void insertConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
         dbLayer.getSession().save(item);
-
         handleWorkflowSearch(dbLayer, item, config);
+    }
+
+    public static void insertOrUpdateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws SOSHibernateException,
+            JsonParseException, JsonMappingException, JsonProcessingException, IOException {
+        insertOrUpdateConfiguration(dbLayer, item, null);
+    }
+
+    public static void insertOrUpdateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config) 
+            throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
+        DBItemInventoryConfiguration alreadyExists = dbLayer.getConfiguration(item.getPath(), item.getType());
+        if (alreadyExists != null) {
+            alreadyExists.setAuditLogId(item.getAuditLogId());
+            alreadyExists.setContent(item.getContent());
+            alreadyExists.setCreated(item.getCreated());
+            alreadyExists.setDeleted(item.getDeleted());
+            alreadyExists.setDeployed(item.getDeployed());
+            alreadyExists.setFolder(item.getFolder());
+            alreadyExists.setName(item.getName());
+            alreadyExists.setPath(item.getPath());
+            alreadyExists.setReleased(item.getReleased());
+            alreadyExists.setTitle(item.getTitle());
+            alreadyExists.setType(item.getType());
+            alreadyExists.setValid(item.getValid());
+            alreadyExists.setModified(Date.from(Instant.now()));
+            dbLayer.getSession().getFactory().setAutoCommit(false);
+            dbLayer.getSession().beginTransaction();
+            dbLayer.getSession().update(alreadyExists);
+            dbLayer.getSession().commit();
+            dbLayer.getSession().getFactory().setAutoCommit(true);
+            handleWorkflowSearch(dbLayer, alreadyExists, config);
+        } else {
+            dbLayer.getSession().getFactory().setAutoCommit(false);
+            dbLayer.getSession().beginTransaction();
+            dbLayer.getSession().save(item);
+            dbLayer.getSession().commit();
+            dbLayer.getSession().getFactory().setAutoCommit(true);
+            handleWorkflowSearch(dbLayer, item, config);
+        }
     }
 
     public static void setConfigurationsDeployed(SOSHibernateSession session, Set<DBItemInventoryConfiguration> configs)
