@@ -296,10 +296,17 @@ public class HistoryMonitoringModel implements Serializable {
             dbLayer.getSession().beginTransaction();
             for (Map.Entry<Long, HistoryOrderStepResult> entry : w.entrySet()) {
                 HistoryOrderStepResult sr = entry.getValue();
+
+                if (tmpLogging) {
+                    DBItemMonitoringOrderStep os = dbLayer.getMonitoringOrderStep(entry.getKey(), false);
+                    LOGGER.info(String.format("    [tmp][%s][%s][handleLongerThan][tmp][1][entryKey=%s]%s", serviceIdentifier, IDENTIFIER, entry
+                            .getKey(), SOSString.toString(os)));
+                }
+
                 int r = dbLayer.updateOrderStepOnLongerThan(entry.getKey(), sr.getWarn());
 
                 if (tmpLogging) {
-                    LOGGER.info(String.format("    [tmp][%s][%s][handleLongerThan][tmp][1][r=%s][entryKey=%s]HistoryOrderStepResult step=%s, warn=%s",
+                    LOGGER.info(String.format("    [tmp][%s][%s][handleLongerThan][tmp][2][r=%s][entryKey=%s]HistoryOrderStepResult step=%s, warn=%s",
                             serviceIdentifier, IDENTIFIER, r, entry.getKey(), SOSString.toString(sr.getStep()), SOSString.toString(sr.getWarn())));
                 }
 
