@@ -50,6 +50,7 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocImportException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.SuffixPrefix;
 import com.sos.joc.model.calendar.NonWorkingDaysCalendarEdit;
@@ -119,6 +120,7 @@ public class ImportUtils {
         	case WORKFLOW:
                 referencedBy.addAll(getUsedFileOrderSourcesFromArchiveByWorkflowName(oldName, configurations));
                 referencedBy.addAll(getUsedSchedulesFromArchiveByWorkflowName(oldName, configurations));
+                referencedBy.addAll(getUsedWorkflowsFromArchiveByWorkflowName(oldName, configurations));
         		break;
         	case WORKINGDAYSCALENDAR:
         	case NONWORKINGDAYSCALENDAR:
@@ -132,7 +134,7 @@ public class ImportUtils {
     
     public static void replaceReferences (UpdateableConfigurationObject updateableItem) {
     	
-    	Date now = Date.from(Instant.now());
+//    	Date now = Date.from(Instant.now());
     	// update existing configuration from archive
     	updateableItem.getConfigurationObject().setName(updateableItem.getNewName());
     	if (updateableItem.getTargetFolder() != null && !updateableItem.getTargetFolder().isEmpty()) {
@@ -159,6 +161,14 @@ public class ImportUtils {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
                             json = json.replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
+                            ((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
+                        } catch (IOException e) {
+                            throw new JocImportException(e);
+                        }
+                    } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.WORKFLOW)) {
+                        try {
+                            String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
+                            json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
                             ((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
                         } catch (IOException e) {
                             throw new JocImportException(e);
@@ -205,21 +215,53 @@ public class ImportUtils {
     	}
     }
 
-    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByLockId (String name, Set<ConfigurationObject> configurations) {
-    	return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
-    			.map(item -> {
-    				Workflow wf = (Workflow)item.getConfiguration();
-					try {
-						String wfJson = Globals.objectMapper.writeValueAsString(wf);
-	    				Matcher matcher = Pattern.compile("(\"lockName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
-	    				if (matcher.find()) {
-	    					return item;
-	    				}
-					} catch (JsonProcessingException e) {
+    public static void updateConfigurationWithChangedReferences (DBLayerDeploy dbLayer, ConfigurationObject config) {
+        DBItemInventoryConfiguration alreadyExist = dbLayer.getInventoryConfigurationByNameAndType(config.getName(), config.getObjectType().intValue());
+        if (alreadyExist != null) {
+            try {
+                alreadyExist.setContent(Globals.objectMapper.writeValueAsString(config.getConfiguration()));
+                alreadyExist.setModified(Date.from(Instant.now()));
+                dbLayer.getSession().update(alreadyExist);
+            } catch (JsonProcessingException e) {
+                LOGGER.error(e.getMessage(),e);
+            } catch (SOSHibernateException e) {
+                throw new JocSosHibernateException(e);
+            }
+        }
+    }
+    
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByWorkflowName (String name, Set<ConfigurationObject> configurations) {
+        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
+                .map(item -> {
+                    Workflow wf = (Workflow)item.getConfiguration();
+                    try {
+                        String wfJson = Globals.objectMapper.writeValueAsString(wf);
+                        Matcher matcher = Pattern.compile("(\"workflowName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
+                        if (matcher.find()) {
+                            return item;
+                        }
+                    } catch (JsonProcessingException e) {
                         LOGGER.error(e.getMessage(), e);
-					}
-    				return null;
-    			}).filter(Objects::nonNull).collect(Collectors.toSet());
+                    }
+                    return null;
+                }).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByLockId (String name, Set<ConfigurationObject> configurations) {
+        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
+                .map(item -> {
+                    Workflow wf = (Workflow)item.getConfiguration();
+                    try {
+                        String wfJson = Globals.objectMapper.writeValueAsString(wf);
+                        Matcher matcher = Pattern.compile("(\"lockName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
+                        if (matcher.find()) {
+                            return item;
+                        }
+                    } catch (JsonProcessingException e) {
+                        LOGGER.error(e.getMessage(), e);
+                    }
+                    return null;
+                }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByBoardName (String name, Set<ConfigurationObject> configurations) {

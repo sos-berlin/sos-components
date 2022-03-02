@@ -5,6 +5,7 @@ import java.net.URLDecoder;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -175,6 +176,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         
                     	Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = configurations.stream()
                     			.collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
+                        Map<ConfigurationObject, Set<ConfigurationObject>> updatedReferencesByUpdateableConfiguration = new HashMap<ConfigurationObject, Set<ConfigurationObject>>();
                     	for (ConfigurationType type : importOrder) {
                     		List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
                     		if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
@@ -185,10 +187,24 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                     	UpdateableConfigurationObject updateable =  ImportUtils.createUpdateableConfiguration(
                                     			existingConfiguration, configuration, configurations, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(), dbLayer);
                                     	ImportUtils.replaceReferences(updateable);
+                                        updatedReferencesByUpdateableConfiguration.put(updateable.getConfigurationObject(), updateable.getReferencedBy());
                                     	dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account, auditLogId, filter.getOverwrite(), agentNames);
                         			}
                         		}
                     		}
+                    	}
+                    	// update the changed referenced object if already exists
+                    	Set<ConfigurationObject> alreadyStored = new HashSet<ConfigurationObject>();
+                    	for (ConfigurationObject reference : updatedReferencesByUpdateableConfiguration.keySet()) {
+                    	     Set<ConfigurationObject> referencedBy = updatedReferencesByUpdateableConfiguration.get(reference);
+                    	     if(referencedBy != null) {
+                                 for (ConfigurationObject refBy : referencedBy) { 
+                                     if (!alreadyStored.contains(refBy)) {
+                                         ImportUtils.updateConfigurationWithChangedReferences(dbLayer, refBy);
+                                         alreadyStored.add(refBy);
+                                     }
+                                 }
+                    	     }
                     	}
                     } else {
                     	// check if items to import already exist in current configuration and ignore them
