@@ -181,6 +181,7 @@ public class DBLayerMonitoring extends DBLayer {
     }
 
     public int setOrderStepEnd(HistoryOrderStepResult result) throws SOSHibernateException {
+        HistoryOrderStepResultWarn warn = result.getWarn();
 
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDER_STEPS).append(" ");
         hql.append("set endTime=:endTime ");
@@ -193,8 +194,10 @@ public class DBLayerMonitoring extends DBLayer {
         hql.append(",errorCode=:errorCode ");
         hql.append(",errorText=:errorText ");
         hql.append(",modified=:modified ");
-        hql.append(",warn=:warnReason ");
-        hql.append(",warnText=:warnText ");
+        if (warn != null) {
+            hql.append(",warn=:warnReason ");
+            hql.append(",warnText=:warnText ");
+        }
         hql.append("where historyId=:historyId");
 
         Query<DBItemMonitoringOrderStep> query = getSession().createQuery(hql.toString());
@@ -209,15 +212,13 @@ public class DBLayerMonitoring extends DBLayer {
         query.setParameter("errorCode", DBItemHistoryOrderStep.normalizeErrorCode(hosb.getErrorCode()));
         query.setParameter("errorText", DBItemHistoryOrderStep.normalizeErrorText(hosb.getErrorText()));
         query.setParameter("modified", new Date());
-        query.setParameter("historyId", hosb.getHistoryId());
-        HistoryOrderStepResultWarn warn = result.getWarn();
-        if (warn == null) {// set to none - e.g. handleLongerThan calculation was wrong (maybe agent was not reachable ..)
-            query.setParameter("warnReason", JobWarning.NONE.intValue());
-            query.setParameter("warnText", null);
-        } else {
+        // do not overwrite (set warnReason=0, warnText=null) if warn == null, because maybe a warning was created by longerThan
+        // in this case, a notification has already been send out...
+        if (warn != null) {
             query.setParameter("warnReason", warn.getReason().intValue());
             query.setParameter("warnText", warn.getText());
         }
+        query.setParameter("historyId", hosb.getHistoryId());
         return getSession().executeUpdate(query);
     }
 

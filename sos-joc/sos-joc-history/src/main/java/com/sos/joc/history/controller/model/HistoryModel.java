@@ -485,14 +485,14 @@ public class HistoryModel {
         Instant end = Instant.now();
         Duration duration = Duration.between(start, end);
 
-        LOGGER.info(String.format("[%s][%s(%s)-%s][%s(%s)-%s][%s-%s][%s]%s%s", identifier, startEventId, firstEventId, storedEventId,
-                startEventIdAsTime, firstEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate.getDuration(duration),
-                counter.toString(), getCachedSummary()));
+        LOGGER.info(String.format("[%s][%s(%s)-%s][UTC][%s(%s)-%s][%s-%s][%s]%s%s", identifier, startEventId, firstEventId, storedEventId,
+                startEventIdAsTime, firstEventIdAsTime, endEventIdAsTime, SOSDate.getTimeAsString(start), SOSDate.getTimeAsString(end), SOSDate
+                        .getDuration(duration), counter.toString(), getCachedSummary()));
         return duration;
     }
 
     private String eventIdAsTime(Long eventId) {
-        return eventId.equals(Long.valueOf(0)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(eventId));
+        return eventId.equals(Long.valueOf(0)) ? "0" : SOSDate.getTimeAsString(HistoryUtil.eventId2Instant(eventId));
     }
 
     private String getCachedSummary() {
