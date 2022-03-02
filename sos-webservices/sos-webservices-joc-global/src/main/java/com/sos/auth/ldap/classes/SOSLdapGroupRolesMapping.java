@@ -2,8 +2,10 @@ package com.sos.auth.ldap.classes;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.naming.NamingEnumeration;
@@ -22,8 +24,9 @@ public class SOSLdapGroupRolesMapping {
 	private static final String DISTINGUISHED_NAME = "distinguishedName";
 	private static final String MEMBER_OF = "memberOf";
 	private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapLogin.class);
-	SOSLdapWebserviceCredentials sosLdapWebserviceCredentials;
-	InitialDirContext ldapContext;
+	private SOSLdapWebserviceCredentials sosLdapWebserviceCredentials;
+	private InitialDirContext ldapContext;
+	private Map<String, Collection<String>> groupKeyCache;
 
 	public SOSLdapGroupRolesMapping(InitialDirContext ldapContext,
 			SOSLdapWebserviceCredentials sosLdapWebserviceCredentials) {
@@ -134,7 +137,33 @@ public class SOSLdapGroupRolesMapping {
 		return values;
 	}
 
+	private Collection<String> getGroupkeysFromNestedGroup(String group) throws NamingException {
+		LOGGER.debug(String.format("Get mapped groupkeys from nested group for child group  %s", group));
+		Collection<String> groupNames = new HashSet<String>();
+
+		for (String groupKey : sosLdapWebserviceCredentials.getGroupRolesMap().keySet()) {
+			LOGGER.debug("Get nested groups for: " + group);
+			Collection<String> nestedGroupNames = getNestedGroups(groupKey);
+			for (String nestedGroup : nestedGroupNames) {
+				if (nestedGroup.equals(group)) {
+					LOGGER.debug(String.format("% is child for %s.", group, groupKey));
+					groupNames.add(groupKey);
+				}
+			}
+		}
+		return groupNames;
+	}
+
 	private Collection<String> getNestedGroups(String group) throws NamingException {
+
+		if (groupKeyCache == null) {
+			groupKeyCache = new HashMap<String, Collection<String>>();
+		}
+
+		if (groupKeyCache.get(group) != null) {
+			return groupKeyCache.get(group);
+		}
+
 		SearchControls searchCtls = new SearchControls();
 		searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
 		Collection<String> groupNames = new HashSet<String>();
@@ -163,7 +192,8 @@ public class SOSLdapGroupRolesMapping {
 						Attribute distinguishName = result.getAttributes().get(DISTINGUISHED_NAME);
 						if (distinguishName != null) {
 							groupNames.add(distinguishName.get().toString());
-							LOGGER.debug(String.format("Groupname %s found in attribute", distinguishName.get().toString(), DISTINGUISHED_NAME));
+							LOGGER.debug(String.format("Groupname %s found in attribute",
+									distinguishName.get().toString(), DISTINGUISHED_NAME));
 						}
 					}
 				} else {
@@ -172,6 +202,8 @@ public class SOSLdapGroupRolesMapping {
 			}
 		} catch (Exception e) {
 		}
+
+		groupKeyCache.put(group, groupNames);
 		return groupNames;
 
 	}
@@ -213,9 +245,12 @@ public class SOSLdapGroupRolesMapping {
 				groupNames = getAllAttributeValues(memberOf);
 				Set<String> groupsToAdd = new HashSet<String>();
 				if (MEMBER_OF.equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
+					int sizeOfGroupkeys = sosLdapWebserviceCredentials.getGroupRolesMap().keySet().size();
 					for (String group : groupNames) {
-						Collection<String> nestedGroupNames = getNestedGroups(group);
-						groupsToAdd.addAll(nestedGroupNames);
+						if (groupsToAdd.size() == sizeOfGroupkeys) {
+							break;
+						}
+						groupsToAdd.addAll(getGroupkeysFromNestedGroup(group));
 					}
 				}
 				groupNames.addAll(groupsToAdd);
