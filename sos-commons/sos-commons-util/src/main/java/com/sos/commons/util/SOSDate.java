@@ -21,17 +21,26 @@ public class SOSDate {
     private static Logger LOGGER = LoggerFactory.getLogger(SOSDate.class);
 
     public static final String DATE_FORMAT = new String("yyyy-MM-dd");
-    public static final String DATETIME_FORMAT = new String("yyyy-MM-dd HH:mm:ss");
+    public static final String TIME_FORMAT = new String("HH:mm:ss");
+    public static final String DATETIME_FORMAT = new String(DATE_FORMAT + " " + TIME_FORMAT);
 
     private static final boolean LENIENT = false;
 
     // returns Date from String
     public static Date getDate(String date) throws SOSInvalidDataException {
-        return parse(date, DATE_FORMAT);
+        return getDate(date, null);
+    }
+
+    public static Date getDate(String date, TimeZone timeZone) throws SOSInvalidDataException {
+        return parse(date, DATE_FORMAT, timeZone);
     }
 
     public static Date getDateTime(String date) throws SOSInvalidDataException {
-        return parse(date, DATETIME_FORMAT);
+        return getDateTime(date, null);
+    }
+
+    public static Date getDateTime(String date, TimeZone timeZone) throws SOSInvalidDataException {
+        return parse(date, DATETIME_FORMAT, timeZone);
     }
 
     public static Date parse(String date, String format) throws SOSInvalidDataException {
@@ -58,26 +67,60 @@ public class SOSDate {
 
     // returns String from current Date
     public static String getCurrentDateAsString() throws SOSInvalidDataException {
-        return format(new Date(), DATE_FORMAT);
+        return getCurrentDateAsString(null);
+    }
+
+    public static String getCurrentDateAsString(TimeZone timeZone) throws SOSInvalidDataException {
+        return format(new Date(), DATE_FORMAT, timeZone);
     }
 
     public static String getCurrentDateTimeAsString() throws SOSInvalidDataException {
-        return format(new Date(), DATETIME_FORMAT);
+        return getCurrentDateTimeAsString(null);
+    }
+
+    public static String getCurrentDateTimeAsString(TimeZone timeZone) throws SOSInvalidDataException {
+        return format(new Date(), DATETIME_FORMAT, timeZone);
     }
 
     // returns String from Date
     public static String getDateAsString(Date date) throws SOSInvalidDataException {
-        return format(date, DATE_FORMAT);
+        return getDateAsString(date, null);
+    }
+
+    public static String getDateAsString(Date date, TimeZone timeZone) throws SOSInvalidDataException {
+        return format(date, DATE_FORMAT, timeZone);
     }
 
     public static String getDateTimeAsString(Date date) throws SOSInvalidDataException {
-        return format(date, SOSDate.DATETIME_FORMAT, null);
+        return getDateTimeAsString(date, null);
     }
 
+    public static String getDateTimeAsString(Date date, TimeZone timeZone) throws SOSInvalidDataException {
+        return format(date, SOSDate.DATETIME_FORMAT, timeZone);
+    }
+
+    public static String getTimeAsString(Date date) throws SOSInvalidDataException {
+        return getTimeAsString(date, null);
+    }
+
+    public static String getTimeAsString(Date date, TimeZone timeZone) throws SOSInvalidDataException {
+        return format(date, SOSDate.TIME_FORMAT, timeZone);
+    }
+
+    public static String getTimeAsString(Instant it) {
+        try {
+            return it.toString().split("T")[1].replace("Z", "");
+        } catch (Throwable t) {
+            return it.toString();
+        }
+    }
+
+    // TODO to remove ?
     public static String getDateWithTimeZoneAsString(Date date, String timeZone) throws SOSInvalidDataException {
         return format(date, DATE_FORMAT, SOSString.isEmpty(timeZone) ? null : TimeZone.getTimeZone(timeZone));
     }
 
+    // TODO to remove ?
     public static String getDateTimeWithTimeZoneAsString(Date date, String timeZone) throws SOSInvalidDataException {
         return format(date, DATETIME_FORMAT, SOSString.isEmpty(timeZone) ? null : TimeZone.getTimeZone(timeZone));
     }
@@ -169,14 +212,6 @@ public class SOSDate {
     /** @TODO */
     public static int getYear(Date d) {
         return d.toInstant().atZone(ZoneId.systemDefault()).get(IsoFields.WEEK_BASED_YEAR);
-    }
-
-    public static String getTime(Instant it) {
-        try {
-            return it.toString().split("T")[1].replace("Z", "");
-        } catch (Throwable t) {
-            return it.toString();
-        }
     }
 
     public static String getDuration(Instant start, Instant end) {

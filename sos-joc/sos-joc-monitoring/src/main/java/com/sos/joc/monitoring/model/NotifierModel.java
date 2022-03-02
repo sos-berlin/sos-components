@@ -183,6 +183,7 @@ public class NotifierModel {
 
         DBItemMonitoringOrderStep os = analyzer.getOrderStep();
         Long recoveredId = null;
+        String warnText = null;
         switch (type) {
         case ERROR:
         case SUCCESS:
@@ -211,14 +212,15 @@ public class NotifierModel {
                     return false;
                 }
             }
+            warnText = os.getWarnText();
             break;
         case ACKNOWLEDGED:
             return false;
         }
 
         if (notification.getMonitors().size() == 0) {
-            LOGGER.info(String.format("[notification id=%s][%s][store to database only]%s", notification.getNotificationId(), ANotifier
-                    .getTypeAsString(type), ANotifier.getInfo(analyzer)));
+            LOGGER.info(String.format("[notification id=%s][%s][store to database only]%s%s", notification.getNotificationId(), ANotifier
+                    .getTypeAsString(type), ANotifier.getInfo(analyzer), (warnText == null ? "" : warnText)));
         } else {
             LOGGER.info(String.format("[notification id=%s][%s][send to %s monitors]%s", notification.getNotificationId(), ANotifier.getTypeAsString(
                     type), notification.getMonitors().size(), notification.getMonitorsAsString()));
