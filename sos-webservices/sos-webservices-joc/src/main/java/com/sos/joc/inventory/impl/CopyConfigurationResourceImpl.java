@@ -374,7 +374,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 response.setPath(newDbItem.getPath());
                 events = Collections.singleton(newDbItem.getFolder());
             }
-
+            // JOC-1232: FIX
 //            session.commit();
             for (String event : events) {
                 JocInventory.postEvent(event);
