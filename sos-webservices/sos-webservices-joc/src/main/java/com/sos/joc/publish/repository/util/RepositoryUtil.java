@@ -401,7 +401,7 @@ public abstract class RepositoryUtil {
         return Collections.emptySet();
     }
 
-    public static void writeToRepository(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, Path repositoryBase)
+    public static void writeToRepository(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, Path repositoryBase, StoreItemsCategory category)
             throws IOException {
         String content = null;
         List<ConfigurationType> localTypes = getLocalConfigurationTypes();
@@ -428,10 +428,20 @@ public abstract class RepositoryUtil {
                 case FILEORDERSOURCE:
                     extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
                     break;
+                case SCHEDULE:
+                    extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
+                    break;
+                case INCLUDESCRIPT:
+                    extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
+                    break;
+                case WORKINGDAYSCALENDAR:
+                case NONWORKINGDAYSCALENDAR:
+                    extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
+                    break;
                 default:
                     break;
                 }
-                Path repository = repositoryBase;
+                Path repository = repositoryBase.resolve("rollout");
                 if (rolloutTypes.contains(deployable.getObjectType())) {
                     repository = repositoryBase.resolve("rollout");
                 } else if (localTypes.contains(deployable.getObjectType())) {
@@ -442,7 +452,21 @@ public abstract class RepositoryUtil {
                     String filename = deployable.getPath().substring(1).concat(extension);
                     byte[] contentBytes = content.getBytes();
                     Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
-                    Files.write(repository.resolve(Paths.get(filename)), contentBytes);
+                    switch (category) {
+                    case BOTH:
+                        Files.write(repository.resolve(Paths.get(filename)), contentBytes);
+                        break;
+                    case LOCAL:
+                        if (localTypes.contains(deployable.getObjectType())) {
+                            Files.write(repository.resolve(Paths.get(filename)), contentBytes);
+                        }
+                        break;
+                    case ROLLOUT: 
+                        if (rolloutTypes.contains(deployable.getObjectType())) {
+                            Files.write(repository.resolve(Paths.get(filename)), contentBytes);
+                        }
+                        break;
+                    }
                 }
             }
         }
@@ -451,6 +475,24 @@ public abstract class RepositoryUtil {
                 // process releasable objects
                 String extension = null;
                 switch (releasable.getObjectType()) {
+                case WORKFLOW:
+                    extension = ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                    break;
+                case JOBRESOURCE:
+                    extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
+                    break;
+                case LOCK:
+                    extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
+                    break;
+                case NOTICEBOARD:
+                    extension = ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.toString();
+                    break;
+                case JOBCLASS:
+                    extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
+                    break;
+                case FILEORDERSOURCE:
+                    extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
+                    break;
                 case SCHEDULE:
                     extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
                     break;
@@ -475,7 +517,21 @@ public abstract class RepositoryUtil {
                     String filename = releasable.getPath().substring(1).concat(extension);
                     byte[] contentBytes = content.getBytes();
                     Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
-                    Files.write(repository.resolve(Paths.get(filename)), contentBytes);
+                    switch (category) {
+                    case BOTH:
+                        Files.write(repository.resolve(Paths.get(filename)), contentBytes);
+                        break;
+                    case LOCAL:
+                        if (localTypes.contains(releasable.getObjectType())) {
+                            Files.write(repository.resolve(Paths.get(filename)), contentBytes);
+                        }
+                        break;
+                    case ROLLOUT: 
+                        if (rolloutTypes.contains(releasable.getObjectType())) {
+                            Files.write(repository.resolve(Paths.get(filename)), contentBytes);
+                        }
+                        break;
+                    }
                 }
             }
         }
@@ -673,11 +729,6 @@ public abstract class RepositoryUtil {
                     Set<Configuration> depFolders = filter.getRollout().getDeployConfigurations().stream()
                             .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                             .map(item -> item.getConfiguration()).collect(Collectors.toSet());
-                    if (filter.getRollout() != null && !filter.getRollout().getDeployConfigurations().isEmpty()) {
-                        depFolders.addAll(filter.getRollout().getDeployConfigurations().stream()
-                                .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                                .map(item -> item.getConfiguration()).collect(Collectors.toSet()));
-                    }
                     Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
                     if (depFolders != null && !depFolders.isEmpty()) {
                         allItems.addAll(
@@ -730,11 +781,6 @@ public abstract class RepositoryUtil {
                     Set<Configuration> depFolders = filter.getLocal().getDeployConfigurations().stream()
                             .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                             .map(item -> item.getConfiguration()).collect(Collectors.toSet());
-                    if (filter.getLocal() != null && !filter.getLocal().getDeployConfigurations().isEmpty()) {
-                        depFolders.addAll(filter.getLocal().getDeployConfigurations().stream()
-                                .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                                .map(item -> item.getConfiguration()).collect(Collectors.toSet()));
-                    }
                     Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
                     if (depFolders != null && !depFolders.isEmpty()) {
                         allItems.addAll(

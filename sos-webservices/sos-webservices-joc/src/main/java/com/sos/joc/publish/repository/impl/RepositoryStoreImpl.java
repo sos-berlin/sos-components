@@ -23,6 +23,7 @@ import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.repository.resource.IRepositoryStore;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
+import com.sos.joc.publish.repository.util.StoreItemsCategory;
 import com.sos.schema.JsonValidator;
 
 @javax.ws.rs.Path("inventory/repository")
@@ -55,7 +56,16 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
             deployables = deployables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
             Set<ConfigurationObject> releasables = RepositoryUtil.getReleasableConfigurationsFromDB(filter, dbLayer);
             releasables = releasables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
-            RepositoryUtil.writeToRepository(deployables, releasables, repositoriesBase);
+            if (filter.getRollout() != null && filter.getLocal() != null) {
+//              both
+                RepositoryUtil.writeToRepository(deployables, releasables, repositoriesBase, StoreItemsCategory.BOTH);
+          } else if (filter.getRollout() != null) {
+//              only rollout
+              RepositoryUtil.writeToRepository(deployables, releasables, repositoriesBase, StoreItemsCategory.ROLLOUT);
+          } else if (filter.getLocal() != null) {
+//              only local
+              RepositoryUtil.writeToRepository(deployables, releasables, repositoriesBase, StoreItemsCategory.LOCAL);
+          }
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** store to repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
