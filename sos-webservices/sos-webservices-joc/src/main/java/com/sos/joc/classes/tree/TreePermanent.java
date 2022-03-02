@@ -163,39 +163,7 @@ public class TreePermanent {
                     if (inventoryPermission) {
                         types.add(type);
                     }
-                } else {
-                    if (jocPermissions.getAdministration().getAccounts().getManage() || inventoryPermission) {
-                        types.add(TreeType.FOLDER);
-                        types.add(TreeType.WORKFLOW);
-                        types.add(TreeType.JOB);
-                        types.add(TreeType.JOBCLASS);
-                        types.add(TreeType.LOCK);
-                        types.add(TreeType.FILEORDERSOURCE);
-                        types.add(TreeType.NOTICEBOARD);
-                        types.add(TreeType.SCHEDULE);
-                        types.add(TreeType.INCLUDESCRIPT);
-                        types.add(TreeType.WORKINGDAYSCALENDAR);
-                        types.add(TreeType.NONWORKINGDAYSCALENDAR);
-                    } else {
-//                        types.add(TreeType.FOLDER);
-                        if (controllerPermission.getWorkflows().getView()) {
-                            types.add(TreeType.WORKFLOW);
-                        }
-                        if (controllerPermission.getLocks().getView()) {
-                            types.add(TreeType.LOCK);
-                        }
-                        if (controllerPermission.getNoticeBoards().getView()) {
-                            types.add(TreeType.NOTICEBOARD);
-                        }
-                        if (jocPermissions.getDailyPlan().getView()) {
-                            types.add(TreeType.SCHEDULE);
-                        }
-                        if (jocPermissions.getCalendars().getView()) {
-                            types.add(TreeType.WORKINGDAYSCALENDAR);
-                            types.add(TreeType.NONWORKINGDAYSCALENDAR);
-                        }
-                    }
-                }
+                } 
                 break;
             case DOCUMENTATION:
                 if (jocPermissions.getDocumentations().getView()) {
