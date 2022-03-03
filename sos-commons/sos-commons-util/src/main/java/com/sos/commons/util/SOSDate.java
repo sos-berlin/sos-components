@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.IsoFields;
 import java.time.temporal.TemporalUnit;
 import java.util.Calendar;
@@ -239,7 +240,14 @@ public class SOSDate {
         return val1.getTime() == val2.getTime();
     }
 
-    // TODO Weeks, Years not supported...
+    /** TODO Weeks, Years not supported...<br/>
+     * Examples: SOSDate.add(new Date(),1, ChronoUnit.DAYS);<br/>
+     * SOSDate.add(new Date(),-1, ChronoUnit.DAYS);
+     * 
+     * @param input
+     * @param amountToAdd
+     * @param unit
+     * @return */
     public static Date add(Date input, long amountToAdd, TemporalUnit unit) {
         return add(input.toInstant(), amountToAdd, unit);
     }
@@ -248,11 +256,7 @@ public class SOSDate {
         if (input == null) {
             return null;
         }
-        if (amountToAdd > 0) {
-            return Date.from(input.plus(amountToAdd, unit));
-        } else {
-            return Date.from(input.minus(amountToAdd, unit));
-        }
+        return Date.from(input.plus(amountToAdd, unit));
     }
 
     /** @param range e.g.: m - minutes,s -seconds, ms - milliseconds
@@ -359,6 +363,8 @@ public class SOSDate {
             System.out.println(SOSDate.getDurationOfSeconds(0));
             System.out.println(SOSDate.getDurationOfSeconds(60));
             System.out.println(SOSDate.getDurationOfSeconds(100_000));
+            System.out.println(SOSDate.add(new Date(), 3, ChronoUnit.DAYS));
+            System.out.println(SOSDate.add(new Date(), -3, ChronoUnit.DAYS));
         } catch (Exception e) {
             System.err.println("..error: " + e.toString());
         }

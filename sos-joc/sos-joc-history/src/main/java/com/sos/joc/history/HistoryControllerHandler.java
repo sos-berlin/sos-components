@@ -681,7 +681,8 @@ public class HistoryControllerHandler {
                 String method = "releaseEvents";
                 try {
                     LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), method, eventId));
-                    js7.data_for_java.vavr.VavrUtils.await(api.releaseEvents(eventId));
+                    // js7.data_for_java.vavr.VavrUtils.await(api.releaseEvents(eventId));
+                    api.releaseEvents(eventId);
                     lastReleaseEventId = eventId;
                 } catch (Throwable t) {
                     LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, eventId, t.toString()));
