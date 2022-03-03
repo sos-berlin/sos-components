@@ -155,9 +155,35 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         
                         java.nio.file.Path itemPath = oldItemPath;
                         if (!folderItemSuffixPrefix.getSuffix().isEmpty() || !folderItemSuffixPrefix.getPrefix().isEmpty()) {
-                            java.nio.file.Path newPath =  Paths.get(oldItemPath.toString().replace('\\', '/').substring(config.getPath().length()));
-                            String newName = oldItemPath.getFileName().toString().replaceFirst(folderItemReplace.get(0), folderItemReplace.get(1));
-                            itemPath = pWithoutFix.resolve(newPath.getParent().resolve(newName));
+                            // newpath resolve oldpath relativize olditempath
+                            if (in.getNewPath().contains(oldItemPath.getParent().getFileName().toString())) {
+                                // withouFolder=false
+                                //  /a/a1   -> /
+                                //  /a1
+                                String newName = oldItemPath.getFileName().toString().replaceFirst(folderItemReplace.get(0), folderItemReplace.get(1));
+                                if (pWithoutFix.equals(Paths.get("/").resolve(oldItemPath.getParent().getFileName()))) {
+                                    itemPath = pWithoutFix.resolve(newName);
+                                } else {
+                                    itemPath = pWithoutFix.resolve(oldItemPath.getParent().getFileName()).resolve(newName);
+                                }
+                            } else {
+                                // withouFolder=true
+                                //  /a/a1   -> /
+                                //  /
+                                itemPath = pWithoutFix.resolve(Paths.get(oldItemPath.toString().replace('\\', '/').replace(in.getPath(), "")));
+                                String newName = oldItemPath.getFileName().toString().replaceFirst(folderItemReplace.get(0), folderItemReplace.get(1));
+                                itemPath = itemPath.getParent().resolve(newName);
+                            }
+//                            java.nio.file.Path newPath =  Paths.get(oldItemPath.toString().replace('\\', '/').substring(config.getPath().length()));
+//                            String newName = oldItemPath.getFileName().toString().replaceFirst(folderItemReplace.get(0), folderItemReplace.get(1));
+//                            newPath = newPath.getParent().resolve(newName);
+//                            itemPath = pWithoutFix.resolve(newPath);
+//                          if (ConfigurationType.FOLDER.intValue() == oldItem.getType()) {
+//                             return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)));
+//                          }
+//                          auditLogDetails.add(new AuditLogDetail(oldItemPath, oldItem.getType()));
+//                          return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath.getParent().resolve(oldItem.getName()
+//                              .replaceFirst(replace.get(0), replace.get(1))))));
                         }
                         newDbItem = createItem(oldDBFolderItem, itemPath);
                         String newName = newDbItem.getName();
@@ -177,7 +203,8 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                     } else {
                         // folder
                         java.nio.file.Path newItemPath = pWithoutFix.resolve(oldPath.relativize(oldItemPath));
-                        if(!newItemPath.toString().replace('\\', '/').equals(JocInventory.ROOT_FOLDER)) {
+                        if(!newItemPath.toString().replace('\\', '/').equals(JocInventory.ROOT_FOLDER) && 
+                                 !in.getNewPath().contains(oldItemPath.getParent().getFileName().toString())) {
                             newDbItem = createItem(oldDBFolderItem, newItemPath);
                             newDBFolderItems.add(newDbItem);
                             JocInventory.insertOrUpdateConfiguration(dbLayer, newDbItem);
