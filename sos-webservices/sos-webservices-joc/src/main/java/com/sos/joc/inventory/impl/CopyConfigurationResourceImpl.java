@@ -155,8 +155,9 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         
                         java.nio.file.Path itemPath = oldItemPath;
                         if (!folderItemSuffixPrefix.getSuffix().isEmpty() || !folderItemSuffixPrefix.getPrefix().isEmpty()) {
-                            
-                            itemPath = Paths.get(in.getNewPath()).resolve(oldItemPath.getFileName().toString().replaceFirst(folderItemReplace.get(0), folderItemReplace.get(1)));
+                            java.nio.file.Path newPath =  Paths.get(oldItemPath.toString().replace('\\', '/').substring(config.getPath().length()));
+                            String newName = oldItemPath.getFileName().toString().replaceFirst(folderItemReplace.get(0), folderItemReplace.get(1));
+                            itemPath = pWithoutFix.resolve(newPath.getParent().resolve(newName));
                         }
                         newDbItem = createItem(oldDBFolderItem, itemPath);
                         String newName = newDbItem.getName();
@@ -174,9 +175,13 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         newDBFolderItems.add(newDbItem);
                         JocInventory.insertConfiguration(dbLayer, newDbItem);
                     } else {
-                        newDbItem = createItem(oldDBFolderItem, pWithoutFix.resolve(oldItemPath.relativize(oldItemPath)));
-                        newDBFolderItems.add(newDbItem);
-                        JocInventory.insertOrUpdateConfiguration(dbLayer, newDbItem);
+                        // folder
+                        java.nio.file.Path newItemPath = pWithoutFix.resolve(oldPath.relativize(oldItemPath));
+                        if(!newItemPath.toString().replace('\\', '/').equals(JocInventory.ROOT_FOLDER)) {
+                            newDbItem = createItem(oldDBFolderItem, newItemPath);
+                            newDBFolderItems.add(newDbItem);
+                            JocInventory.insertOrUpdateConfiguration(dbLayer, newDbItem);
+                        }
                     }
                 }
                 oldDBFolderContent = newDBFolderItems;
