@@ -1,12 +1,16 @@
 package com.sos.joc.cleanup.model;
 
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.db.DBLayerCleanup;
@@ -27,6 +31,8 @@ public class CleanupTaskModel implements ICleanupTask {
 
     protected static final int WAIT_INTERVAL_ON_BUSY = 15;
     protected static final int WAIT_INTERVAL_ON_ERROR = 30;
+    /** days */
+    protected static final int REMAINING_AGE = 2;
 
     private final JocClusterHibernateFactory factory;
     private final DBLayerCleanup dbLayer;
@@ -205,4 +211,23 @@ public class CleanupTaskModel implements ICleanupTask {
         return new StringBuilder("[").append(table).append("=").append(current).append(" total=").append(total).append("]");
     }
 
+    protected String getDateTime(Date date) {
+        try {
+            return SOSDate.getDateTimeAsString(date);
+        } catch (SOSInvalidDataException e) {
+            return date == null ? "" : date.toString();
+        }
+    }
+
+    protected boolean isCompleted(JocServiceTaskAnswerState state) {
+        return state == null || state.equals(JocServiceTaskAnswerState.COMPLETED);
+    }
+
+    protected Date getRemainingStartTime(TaskDateTime datetime) {
+        return SOSDate.add(datetime.getDatetime(), -1 * REMAINING_AGE, ChronoUnit.DAYS);
+    }
+
+    protected String getRemainingAgeInfo(TaskDateTime datetime) {
+        return datetime.getAge().getConfigured() + "+" + REMAINING_AGE + "d";
+    }
 }
