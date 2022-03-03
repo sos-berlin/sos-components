@@ -189,7 +189,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 					sosSecurityConfiguration = new SOSSecurityConfiguration();
 					sosSecurityConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
 				}
-	            DBItemJocAuditLog dbAuditLog =  storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
+	            storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
 
 				return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
@@ -265,7 +265,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
 				sosSecurityConfiguration.deleteAccounts(securityConfiguration, dbItemIamIdentityService);
 				
-	            DBItemJocAuditLog dbAuditLog =  storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
+	            storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
 
 				return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
@@ -317,7 +317,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
 				sosSecurityConfiguration.deleteRoles(roles, dbItemIamIdentityService);
-	            DBItemJocAuditLog dbAuditLog =  storeAuditLog(roles.getAuditLog(), CategoryType.IDENTITY); 
+	            storeAuditLog(roles.getAuditLog(), CategoryType.IDENTITY); 
 
 
 				return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -382,7 +382,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
 				sosSecurityConfiguration.changePassword(true, securityConfiguration, dbItemIamIdentityService);
-	            DBItemJocAuditLog dbAuditLog =  storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
+	            storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
 
 				return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
@@ -444,7 +444,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
 				sosSecurityConfiguration.forcePasswordChange(securityConfiguration, dbItemIamIdentityService);
-	            DBItemJocAuditLog dbAuditLog =  storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
+	            storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
 
 				return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
@@ -523,7 +523,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
 				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
 				sosSecurityConfiguration.changePassword(false, securityConfiguration, dbItemIamIdentityService);
-	            DBItemJocAuditLog dbAuditLog =  storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
+	            storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
 
 				return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
@@ -589,7 +589,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 						"Object account <" + accountRename.getAccountOldName() + "> not found");
 			}
 			
-            DBItemJocAuditLog dbAuditLog =  storeAuditLog(accountRename.getAuditLog(), CategoryType.IDENTITY); 
+            storeAuditLog(accountRename.getAuditLog(), CategoryType.IDENTITY); 
 
 
 			Globals.commit(sosHibernateSession);
@@ -656,7 +656,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 				throw new JocObjectNotExistException("Object role <" + roleRename.getRoleOldName() + "> not found");
 			}
 
-            DBItemJocAuditLog dbAuditLog =  storeAuditLog(roleRename.getAuditLog(), CategoryType.IDENTITY); 
+            storeAuditLog(roleRename.getAuditLog(), CategoryType.IDENTITY); 
 
 			Globals.commit(sosHibernateSession);
 
