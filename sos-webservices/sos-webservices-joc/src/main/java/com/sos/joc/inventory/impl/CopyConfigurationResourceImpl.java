@@ -155,7 +155,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         
                         java.nio.file.Path itemPath = oldItemPath;
                         if (!folderItemSuffixPrefix.getSuffix().isEmpty() || !folderItemSuffixPrefix.getPrefix().isEmpty()) {
-                            if (in.getNewPath().contains(oldItemPath.getParent().getFileName().toString())) {
+                            if (oldItemPath.toString().contains(Paths.get(in.getNewPath()).getFileName().toString())) {
                                 // withouFolder=false
                                 String newName = oldItemPath.getFileName().toString().replaceFirst(folderItemReplace.get(0), folderItemReplace.get(1));
                                 if (pWithoutFix.equals(Paths.get("/").resolve(oldItemPath.getParent().getFileName()))) {
@@ -165,9 +165,10 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                                 }
                             } else {
                                 // withouFolder=true
-                                itemPath = pWithoutFix.resolve(Paths.get(oldItemPath.toString().replace('\\', '/').replace(in.getPath(), "")));
+                                itemPath = pWithoutFix.resolve(Paths.get(oldItemPath.toString().replace('\\', '/').replace(in.getPath(), "").substring(1)));
                                 String newName = oldItemPath.getFileName().toString().replaceFirst(folderItemReplace.get(0), folderItemReplace.get(1));
                                 itemPath = itemPath.getParent().resolve(newName);
+                                
                             }
                         }
                         newDbItem = createItem(oldDBFolderItem, itemPath);
@@ -188,8 +189,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                     } else {
                         // folder
                         java.nio.file.Path newItemPath = pWithoutFix.resolve(oldPath.relativize(oldItemPath));
-                        if(!newItemPath.toString().replace('\\', '/').equals(JocInventory.ROOT_FOLDER) && 
-                                 !in.getNewPath().contains(oldItemPath.getParent().getFileName().toString())) {
+                        if(!newItemPath.toString().replace('\\', '/').equals(JocInventory.ROOT_FOLDER)) {
                             newDbItem = createItem(oldDBFolderItem, newItemPath);
                             newDBFolderItems.add(newDbItem);
                             JocInventory.insertOrUpdateConfiguration(dbLayer, newDbItem);
@@ -263,7 +263,8 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 if (in.getShallowCopy()) {
                     for (DBItemInventoryConfiguration item : oldDBFolderContent) {
                         item.setAuditLogId(dbAuditLog.getId());
-                        JocInventory.insertConfiguration(dbLayer, item);
+                        // JOC-1232
+                        JocInventory.insertOrUpdateConfiguration(dbLayer, item);
                     }
                 } else {
                     for (DBItemInventoryConfiguration item : oldDBFolderContent) {
