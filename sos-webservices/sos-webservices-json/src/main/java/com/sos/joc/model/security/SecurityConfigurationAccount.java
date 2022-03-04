@@ -15,7 +15,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "account",
     "password",
-    "hashedPassword",
     "repeatedPassword",
     "oldPassword",
     "forcePasswordChange",
@@ -34,8 +33,6 @@ public class SecurityConfigurationAccount {
     private String account;
     @JsonProperty("password")
     private String password;
-    @JsonProperty("hashedPassword")
-    private String hashedPassword;
     @JsonProperty("repeatedPassword")
     private String repeatedPassword;
     @JsonProperty("oldPassword")
@@ -80,7 +77,6 @@ public class SecurityConfigurationAccount {
      * 
      * @param password
      * @param identityServiceId
-     * @param hashedPassword
      * @param oldPassword
      * @param forcePasswordChange
      * @param roles
@@ -88,11 +84,10 @@ public class SecurityConfigurationAccount {
      * @param repeatedPassword
      * @param account
      */
-    public SecurityConfigurationAccount(String account, String password, String hashedPassword, String repeatedPassword, String oldPassword, Boolean forcePasswordChange, Boolean disabled, Long identityServiceId, List<String> roles) {
+    public SecurityConfigurationAccount(String account, String password, String repeatedPassword, String oldPassword, Boolean forcePasswordChange, Boolean disabled, Long identityServiceId, List<String> roles) {
         super();
         this.account = account;
         this.password = password;
-        this.hashedPassword = hashedPassword;
         this.repeatedPassword = repeatedPassword;
         this.oldPassword = oldPassword;
         this.forcePasswordChange = forcePasswordChange;
@@ -129,16 +124,6 @@ public class SecurityConfigurationAccount {
     @JsonProperty("password")
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    @JsonProperty("hashedPassword")
-    public String getHashedPassword() {
-        return hashedPassword;
-    }
-
-    @JsonProperty("hashedPassword")
-    public void setHashedPassword(String hashedPassword) {
-        this.hashedPassword = hashedPassword;
     }
 
     @JsonProperty("repeatedPassword")
@@ -239,12 +224,12 @@ public class SecurityConfigurationAccount {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("account", account).append("password", password).append("hashedPassword", hashedPassword).append("repeatedPassword", repeatedPassword).append("oldPassword", oldPassword).append("forcePasswordChange", forcePasswordChange).append("disabled", disabled).append("identityServiceId", identityServiceId).append("roles", roles).toString();
+        return new ToStringBuilder(this).append("account", account).append("password", password).append("repeatedPassword", repeatedPassword).append("oldPassword", oldPassword).append("forcePasswordChange", forcePasswordChange).append("disabled", disabled).append("identityServiceId", identityServiceId).append("roles", roles).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(password).append(identityServiceId).append(hashedPassword).append(oldPassword).append(forcePasswordChange).append(roles).append(disabled).append(repeatedPassword).append(account).toHashCode();
+        return new HashCodeBuilder().append(password).append(identityServiceId).append(oldPassword).append(forcePasswordChange).append(roles).append(disabled).append(repeatedPassword).append(account).toHashCode();
     }
 
     @Override
@@ -256,7 +241,7 @@ public class SecurityConfigurationAccount {
             return false;
         }
         SecurityConfigurationAccount rhs = ((SecurityConfigurationAccount) other);
-        return new EqualsBuilder().append(password, rhs.password).append(identityServiceId, rhs.identityServiceId).append(hashedPassword, rhs.hashedPassword).append(oldPassword, rhs.oldPassword).append(forcePasswordChange, rhs.forcePasswordChange).append(roles, rhs.roles).append(disabled, rhs.disabled).append(repeatedPassword, rhs.repeatedPassword).append(account, rhs.account).isEquals();
+        return new EqualsBuilder().append(password, rhs.password).append(identityServiceId, rhs.identityServiceId).append(oldPassword, rhs.oldPassword).append(forcePasswordChange, rhs.forcePasswordChange).append(roles, rhs.roles).append(disabled, rhs.disabled).append(repeatedPassword, rhs.repeatedPassword).append(account, rhs.account).isEquals();
     }
 
 }
