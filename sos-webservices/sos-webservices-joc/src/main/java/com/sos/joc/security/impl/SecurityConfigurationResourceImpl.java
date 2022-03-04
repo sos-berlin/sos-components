@@ -135,7 +135,6 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 					SecurityConfiguration.class);
 			for (SecurityConfigurationAccount securityConfigurationAccount : securityConfigurationMasked
 					.getAccounts()) {
-				securityConfigurationAccount.setHashedPassword("********");
 				securityConfigurationAccount.setOldPassword("********");
 				securityConfigurationAccount.setPassword("********");
 				securityConfigurationAccount.setRepeatedPassword("********");
@@ -215,7 +214,6 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 					SecurityConfiguration.class);
 			for (SecurityConfigurationAccount securityConfigurationAccount : securityConfigurationMasked
 					.getAccounts()) {
-				securityConfigurationAccount.setHashedPassword("********");
 				securityConfigurationAccount.setOldPassword("********");
 				securityConfigurationAccount.setPassword("********");
 				securityConfigurationAccount.setRepeatedPassword("********");
@@ -344,7 +342,6 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 					SecurityConfiguration.class);
 			for (SecurityConfigurationAccount securityConfigurationAccount : securityConfigurationMasked
 					.getAccounts()) {
-				securityConfigurationAccount.setHashedPassword("********");
 				securityConfigurationAccount.setOldPassword("********");
 				securityConfigurationAccount.setPassword("********");
 				securityConfigurationAccount.setRepeatedPassword("********");
@@ -406,7 +403,6 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 					SecurityConfiguration.class);
 			for (SecurityConfigurationAccount securityConfigurationAccount : securityConfigurationMasked
 					.getAccounts()) {
-				securityConfigurationAccount.setHashedPassword("********");
 				securityConfigurationAccount.setOldPassword("********");
 				securityConfigurationAccount.setPassword("********");
 				securityConfigurationAccount.setRepeatedPassword("********");
@@ -470,7 +466,6 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 					SecurityConfiguration.class);
 			for (SecurityConfigurationAccount securityConfigurationAccount : securityConfigurationMasked
 					.getAccounts()) {
-				securityConfigurationAccount.setHashedPassword("********");
 				securityConfigurationAccount.setOldPassword("********");
 				securityConfigurationAccount.setPassword("********");
 				securityConfigurationAccount.setRepeatedPassword("********");
