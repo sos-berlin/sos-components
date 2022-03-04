@@ -451,18 +451,20 @@ public abstract class RepositoryUtil {
                     content = Globals.prettyPrintObjectMapper.writeValueAsString(deployable.getConfiguration());
                     String filename = deployable.getPath().substring(1).concat(extension);
                     byte[] contentBytes = content.getBytes();
-                    Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
                     switch (category) {
                     case BOTH:
+                        Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
                         Files.write(repository.resolve(Paths.get(filename)), contentBytes);
                         break;
                     case LOCAL:
                         if (localTypes.contains(deployable.getObjectType())) {
+                            Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
                             Files.write(repository.resolve(Paths.get(filename)), contentBytes);
                         }
                         break;
                     case ROLLOUT: 
                         if (rolloutTypes.contains(deployable.getObjectType())) {
+                            Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
                             Files.write(repository.resolve(Paths.get(filename)), contentBytes);
                         }
                         break;
@@ -516,18 +518,20 @@ public abstract class RepositoryUtil {
                     content = Globals.prettyPrintObjectMapper.writeValueAsString(releasable.getConfiguration());
                     String filename = releasable.getPath().substring(1).concat(extension);
                     byte[] contentBytes = content.getBytes();
-                    Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
                     switch (category) {
                     case BOTH:
+                        Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
                         Files.write(repository.resolve(Paths.get(filename)), contentBytes);
                         break;
                     case LOCAL:
                         if (localTypes.contains(releasable.getObjectType())) {
+                            Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
                             Files.write(repository.resolve(Paths.get(filename)), contentBytes);
                         }
                         break;
                     case ROLLOUT: 
                         if (rolloutTypes.contains(releasable.getObjectType())) {
+                            Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
                             Files.write(repository.resolve(Paths.get(filename)), contentBytes);
                         }
                         break;
