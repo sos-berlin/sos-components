@@ -76,6 +76,8 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 identityService.setSingleFactorPwd(dbItemIamIdentityService.getSingleFactorPwd());
                 identityService.setOrdering(dbItemIamIdentityService.getOrdering());
                 identityService.setRequired(dbItemIamIdentityService.getRequired());
+            }else {
+                throw new JocObjectNotExistException("Object identity service <" + identityServiceFilter.getIdentityServiceName() + "> not found");
             }
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
