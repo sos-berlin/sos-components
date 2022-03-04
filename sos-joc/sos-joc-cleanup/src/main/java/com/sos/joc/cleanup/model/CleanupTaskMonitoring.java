@@ -77,7 +77,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
             getDbLayer().rollback();
             throw e;
         } finally {
-            getDbLayer().close();
+            close();
         }
     }
 

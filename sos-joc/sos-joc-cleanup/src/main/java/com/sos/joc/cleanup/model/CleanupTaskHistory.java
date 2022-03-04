@@ -92,7 +92,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             getDbLayer().rollback();
             throw e;
         } finally {
-            getDbLayer().close();
+            close();
         }
     }
 
@@ -105,7 +105,9 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             state = cleanupOrders(Scope.REMAINING, Range.ALL, remainingStartTime, remainingAgeInfo, deleteLogs);
             if (isCompleted(state)) {
                 state = cleanupOrders(Scope.REMAINING, Range.STEPS, remainingStartTime, remainingAgeInfo, deleteLogs);
-                cleanupRemaining(remainingStartTime, remainingAgeInfo, deleteLogs);
+                if (isCompleted(state)) {
+                    state = cleanupRemaining(remainingStartTime, remainingAgeInfo, deleteLogs);
+                }
             }
         }
         return state;
@@ -143,15 +145,25 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         return JocServiceTaskAnswerState.COMPLETED;
     }
 
-    private void cleanupRemaining(Date startTime, String ageInfo, boolean deleteLogs) throws SOSHibernateException {
+    private JocServiceTaskAnswerState cleanupRemaining(Date startTime, String ageInfo, boolean deleteLogs) throws SOSHibernateException {
+        if (isStopped()) {
+            return JocServiceTaskAnswerState.UNCOMPLETED;
+        }
         tryOpenSession();
 
+        JocServiceTaskAnswerState state = JocServiceTaskAnswerState.COMPLETED;
         getDbLayer().beginTransaction();
         deleteRemainingStates(startTime, ageInfo);
         if (deleteLogs) {
-            deleteRemainingLogs(startTime, ageInfo);
+            if (isStopped()) {
+                state = JocServiceTaskAnswerState.UNCOMPLETED;
+            } else {
+                deleteRemainingLogs(startTime, ageInfo);
+            }
         }
         getDbLayer().commit();
+
+        return state;
     }
 
     private List<Long> getMainOrderIds(Scope scope, Range range, Date startTime, String ageInfo) throws SOSHibernateException {
