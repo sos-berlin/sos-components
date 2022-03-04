@@ -527,7 +527,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 			SecurityConfigurationAccount securityConfigurationAccount = new SecurityConfigurationAccount();
 			securityConfigurationAccount.setAccount(dbItemIamAccount.getAccountName());
 			securityConfigurationAccount.setPassword("********");
-			securityConfigurationAccount.setHashedPassword(dbItemIamAccount.getAccountPassword());
 			securityConfigurationAccount.setIdentityServiceId(dbItemIamAccount.getIdentityServiceId());
 			securityConfigurationAccount.setForcePasswordChange(dbItemIamAccount.getForcePasswordChange());
 			securityConfigurationAccount.setDisabled(dbItemIamAccount.getDisabled());

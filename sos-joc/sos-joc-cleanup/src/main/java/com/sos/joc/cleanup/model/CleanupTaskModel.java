@@ -34,6 +34,9 @@ public class CleanupTaskModel implements ICleanupTask {
     /** days */
     protected static final int REMAINING_AGE = 2;
 
+    /** seconds */
+    private static final int WAIT_INTERVAL_ON_COMPLETING = 1;
+
     private final JocClusterHibernateFactory factory;
     private final DBLayerCleanup dbLayer;
     private final IJocClusterService service;
@@ -44,6 +47,7 @@ public class CleanupTaskModel implements ICleanupTask {
 
     private JocServiceTaskAnswerState state = null;
     private AtomicBoolean stopped = new AtomicBoolean(false);
+    private AtomicBoolean completed = new AtomicBoolean(false);
 
     protected CleanupTaskModel(JocClusterHibernateFactory factory, int batchSize, String identifier) {
         this(factory, null, batchSize, identifier);
@@ -80,6 +84,7 @@ public class CleanupTaskModel implements ICleanupTask {
     private void start(List<TaskDateTime> datetimes, int counter) {
         state = JocServiceTaskAnswerState.UNCOMPLETED;
         stopped.set(false);
+        completed.set(false);
 
         boolean run = true;
         while (run) {
@@ -105,12 +110,14 @@ public class CleanupTaskModel implements ICleanupTask {
     }
 
     @Override
-    public JocServiceTaskAnswer stop() {
+    public JocServiceTaskAnswer stop(int maxTimeoutSeconds) {
         stopped.set(true);
 
         synchronized (lock) {
             lock.notifyAll();
         }
+
+        waitForCompleting(maxTimeoutSeconds);
         return new JocServiceTaskAnswer(state);
     }
 
@@ -122,6 +129,11 @@ public class CleanupTaskModel implements ICleanupTask {
     @Override
     public boolean isStopped() {
         return stopped.get();
+    }
+
+    @Override
+    public boolean isCompleted() {
+        return completed.get();
     }
 
     @Override
@@ -140,6 +152,16 @@ public class CleanupTaskModel implements ICleanupTask {
 
     public JocServiceTaskAnswerState cleanup(int counter) throws Exception {
         return state;
+    }
+
+    protected void close() {
+        if (dbLayer != null) {
+            try {
+                dbLayer.close();
+            } catch (Throwable e) {
+            }
+        }
+        completed.set(true);
     }
 
     public TaskType getType() {
@@ -207,15 +229,41 @@ public class CleanupTaskModel implements ICleanupTask {
         }
     }
 
+    private void waitForCompleting(int maxTimeoutSeconds) {
+        if (!completed.get()) {
+            boolean run = true;
+            int counter = 0;
+            while (run) {
+                try {
+                    Thread.sleep(WAIT_INTERVAL_ON_COMPLETING * 1_000);
+
+                    if (completed.get()) {
+                        return;
+                    }
+
+                    counter++;
+                    if (counter >= maxTimeoutSeconds) {
+                        return;
+                    }
+                } catch (InterruptedException e) {
+                    run = false;
+                }
+            }
+        }
+    }
+
     protected StringBuilder getDeleted(String table, int current, int total) {
         return new StringBuilder("[").append(table).append("=").append(current).append(" total=").append(total).append("]");
     }
 
     protected String getDateTime(Date date) {
+        if (date == null) {
+            return "";
+        }
         try {
             return SOSDate.getDateTimeAsString(date);
         } catch (SOSInvalidDataException e) {
-            return date == null ? "" : date.toString();
+            return date.toString();
         }
     }
 

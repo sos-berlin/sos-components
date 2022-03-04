@@ -40,15 +40,16 @@ public class CleanupServiceSchedule {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupServiceSchedule.class);
 
-    private final static String DELIMITER = "->";
+    private static final String DELIMITER = "->";
     private static final int FACTORY_MAX_POOL_SIZE = 10;// 5;
 
     private final CleanupService service;
+    private final CleanupServiceTask task;
+    private final DBLayerCleanup dbLayer;
+
     private JocClusterHibernateFactory factory;
-    private DBLayerCleanup dbLayer;
     private ScheduledExecutorService threadPool = null;
     private ScheduledFuture<JocClusterAnswer> resultFuture = null;
-    private CleanupServiceTask task = null;
     private DBItemJocVariable item = null;
     private ZonedDateTime firstStart = null;
     private ZonedDateTime start = null;
@@ -65,6 +66,7 @@ public class CleanupServiceSchedule {
         if (factory == null) {
             createFactory(service.getConfig().getHibernateConfiguration());
         }
+        task.setStartMode(mode);
         try {
             LOGGER.info("[start]" + mode);
             service.setLastActivityStart(new Date().getTime());
@@ -73,7 +75,7 @@ public class CleanupServiceSchedule {
                 long timeout = computeTimeout();
                 service.setLastActivityEnd(new Date().getTime());
 
-                JocClusterAnswer answer = schedule(mode, delay, timeout);
+                JocClusterAnswer answer = schedule(delay, timeout);
                 LOGGER.info(SOSString.toString(answer));
                 updateJocVariableOnResult(answer);
             } else {
@@ -81,21 +83,21 @@ public class CleanupServiceSchedule {
             }
         } catch (TimeoutException e) {
             LOGGER.info(String.format("[max end at %s reached]try stop..", end.toString()));
-            closeTasks(mode);
+            closeTasks();
         } catch (InterruptedException | ExecutionException e) {
             LOGGER.error(e.toString(), e);
-            closeTasks(mode);
+            closeTasks();
         } catch (CancellationException e) {
         } catch (CleanupComputeException e) {
-            closeTasks(mode);
+            closeTasks();
             throw e;
         } finally {
             service.setLastActivityEnd(new Date().getTime());
         }
     }
 
-    private JocClusterAnswer schedule(StartupMode mode, long delay, long timeout) throws Exception {
-        closeTasks(mode);
+    private JocClusterAnswer schedule(long delay, long timeout) throws Exception {
+        closeTasks();
         CleanupService.setServiceLogger();
         threadPool = Executors.newScheduledThreadPool(1, new JocClusterThreadFactory(service.getThreadGroup(), service.getIdentifier() + "-t"));
         CleanupService.setServiceLogger();
@@ -399,32 +401,33 @@ public class CleanupServiceSchedule {
         return now.until(end, ChronoUnit.SECONDS);
     }
 
-    private void closeTasks(StartupMode mode) {
-        if (task != null) {
-            JocClusterAnswer answer = task.stop();
-            if (answer != null && answer.getState().equals(JocClusterAnswerState.UNCOMPLETED)) {
-                try {
-                    updateJocVariableOnResult(answer);
-                } catch (Throwable e) {
-                    LOGGER.error(e.toString(), e);
-                }
+    private void closeTasks() {
+        JocClusterAnswer answer = task.stop();
+        if (answer != null && answer.getState().equals(JocClusterAnswerState.UNCOMPLETED)) {
+            try {
+                updateJocVariableOnResult(answer);
+            } catch (Throwable e) {
+                LOGGER.error(e.toString(), e);
             }
         }
+
         if (resultFuture != null) {
             resultFuture.cancel(false);// without interruption
             CleanupService.setServiceLogger();
-            LOGGER.info(String.format("[%s][%s]schedule cancelled", service.getIdentifier(), mode));
+            LOGGER.info(String.format("[%s][%s]schedule cancelled", service.getIdentifier(), task.getStartMode()));
         }
         if (threadPool != null) {
             CleanupService.setServiceLogger();
-            JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            JocCluster.shutdownThreadPool(task.getStartMode(), threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
             threadPool = null;
         }
         resultFuture = null;
     }
 
     public void stop(StartupMode mode) {
-        closeTasks(mode);
+        task.setStartMode(mode);
+
+        closeTasks();
         closeFactory();
     }
 
