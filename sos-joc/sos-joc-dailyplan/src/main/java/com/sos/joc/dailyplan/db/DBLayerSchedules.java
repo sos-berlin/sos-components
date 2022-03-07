@@ -33,7 +33,7 @@ public class DBLayerSchedules extends DBLayer {
 
     public List<DBItemInventoryReleasedConfiguration> getAllSchedules(Set<Folder> scheduleFolders) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
-        hql.append("where type=:type");
+        hql.append("where type=:type ");
 
         // folders
         boolean hasFolders = scheduleFolders != null && scheduleFolders.size() > 0;

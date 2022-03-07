@@ -113,9 +113,10 @@ public class PLSQLJobArguments extends JobArguments {
             if (dbUrl.getValue() == null || dbUrl.getValue().isEmpty()) {
                 throw new SOSJobRequiredArgumentMissingException(dbUrl.getName());
             }
-            if (dbUser.getValue() == null || dbUser.getValue().isEmpty()) {
-                throw new SOSJobRequiredArgumentMissingException(dbUser.getName());
+            if ((dbUser.getValue() == null || dbUser.getValue().isEmpty())  && (dbPassword.getValue() != null)) {
+                throw new SOSJobRequiredArgumentMissingException(dbUrl.getName());
             }
+         
         } else {
             if (hibernateFile.getValue().toString().isEmpty()) {
                 throw new SOSJobRequiredArgumentMissingException(hibernateFile.getName() + " or " + dbUrl.getName() + " + username and password");
