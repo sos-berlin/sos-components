@@ -817,7 +817,7 @@ public abstract class RepositoryUtil {
                         }
                         Path newPathWithExtension = Paths.get(pathFromRepo.toString().replace('\\', '/').substring(repository.toString().replace('\\', '/').length()));
                         Path newPath = newPathWithExtension.getParent().resolve(stripFileExtension(newPathWithExtension.getFileName()));
-                        String newFolder = newPath.toString().replace('\\', '/');
+                        String newFolder = newPath.getParent().toString().replace('\\', '/');
                         existingDbItem.setPath(newPath.toString().replace('\\', '/'));
                         existingDbItem.setFolder(newFolder);
                         existingDbItem.setContent(updatedContent);
