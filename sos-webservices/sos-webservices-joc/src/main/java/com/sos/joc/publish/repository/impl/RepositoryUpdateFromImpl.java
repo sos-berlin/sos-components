@@ -1,6 +1,7 @@
 package com.sos.joc.publish.repository.impl;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Set;
@@ -16,7 +17,9 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocSosHibernateException;
@@ -66,15 +69,15 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
             newDbItems.stream().forEach(item -> {
                 try {
                     dbLayer.getSession().save(item);
+                    JocInventory.makeParentDirs(new InventoryDBLayer(dbLayer.getSession()), Paths.get(item.getFolder()));
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
             });
-          CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(dbItemsToUpdate.stream().map(item -> new AuditLogDetail(item.getPath(), 
-                item.getType())), dbAuditlog.getId(), dbAuditlog.getCreated()));
-          CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(newDbItems.stream().map(item -> new AuditLogDetail(item.getPath(), 
-                  item.getType())), dbAuditlog.getId(), dbAuditlog.getCreated()));
-
+            CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(dbItemsToUpdate.stream().map(item -> new AuditLogDetail(item.getPath(), 
+                    item.getType())), dbAuditlog.getId(), dbAuditlog.getCreated()));
+            CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(newDbItems.stream().map(item -> new AuditLogDetail(item.getPath(), 
+                    item.getType())), dbAuditlog.getId(), dbAuditlog.getCreated()));
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** read from repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
