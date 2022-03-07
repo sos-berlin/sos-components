@@ -125,7 +125,7 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             // selected schedules
             List<DBItemInventoryReleasedConfiguration> scheduleItems = null;
             if (!hasSelectedSchedules && !hasSelectedWorkflows) {
-                scheduleItems = dbLayer.getAllSchedules();
+                scheduleItems = dbLayer.getAllSchedules(permittedFolders);
             } else {
                 // selected schedules
                 if (hasSelectedSchedules) {
