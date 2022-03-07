@@ -92,9 +92,10 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
 			}
 
 			if (s.isEmpty()) {
-				LOGGER.debug("Empty password");
+				debug(logger,"Empty user and password. Trying wallet");
 				connection = DriverManager.getConnection(args.getDbUrl());
 			} else {
+				debug(logger,"Connecting with user and password.");
 				connection = DriverManager.getConnection(args.getDbUrl(), args.getDbUser(), args.getDbPassword());
 			}
 
