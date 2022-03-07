@@ -86,7 +86,10 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
 
 			DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
 
-			String s = args.getDbUser().trim() + args.getDbPassword().trim();
+			String s = "";
+			if (args.getDbUser() != null && args.getDbPassword() != null) {
+				s = args.getDbUser().trim() + args.getDbPassword().trim();
+			}
 
 			if (s.isEmpty()) {
 				LOGGER.debug("Empty password");

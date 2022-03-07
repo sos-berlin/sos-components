@@ -178,7 +178,7 @@ public class SQLPlusJobArguments extends JobArguments {
         if ((dbUrl.getValue() == null) || dbUrl.getValue().isEmpty()) {
             throw new SOSJobRequiredArgumentMissingException(dbUrl.getName());
         }
-        if ((dbUser.getValue() == null) || dbUser.getValue().isEmpty()) {
+        if ((dbUser.getValue() == null || dbUser.getValue().isEmpty())  && (dbPassword.getValue() != null)) {
             throw new SOSJobRequiredArgumentMissingException(dbUser.getName());
         }
 
