@@ -12,11 +12,13 @@ public interface ICleanupTask {
 
     public void start(int counter);
 
-    public JocServiceTaskAnswer stop();
+    public JocServiceTaskAnswer stop(int maxTimeoutSeconds);
 
     public JocServiceTaskAnswerState getState();
 
     public boolean isStopped();
+
+    public boolean isCompleted();
 
     public String getIdentifier();
 

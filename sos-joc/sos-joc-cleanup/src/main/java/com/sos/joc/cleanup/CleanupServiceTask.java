@@ -33,6 +33,7 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
 public class CleanupServiceTask implements Callable<JocClusterAnswer> {
@@ -42,11 +43,17 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
     private final String MANUAL_TASK_IDENTIFIER_DEPLOYMENT = "deployment";
     private final String MANUAL_TASK_IDENTIFIER_AUDITLOG = "auditlog";
     private final String MANUAL_TASK_IDENTIFIER_YADE = "file_transfer";
-    private final int ORACLE_MAX_BATCH_SIZE = 1_000;
+    /** seconds */
+    private final int MAX_AWAIT_TERMINATION_TIMEOUT = 3 * 60;
+    private final int MAX_AWAIT_TERMINATION_TIMEOUT_ON_START_MODE_AUTOMATIC = 60;
+    private final int MAX_BATCH_SIZE_ORACLE = 1_000;
     private final CleanupServiceSchedule schedule;
-    private List<ICleanupTask> cleanupTasks = null;
+
     private final String identifier;
     private final String logIdentifier;
+
+    private List<ICleanupTask> cleanupTasks = null;
+    private StartupMode startMode = StartupMode.unknown;
     private int batchSize;
 
     public CleanupServiceTask(CleanupServiceSchedule schedule) {
@@ -70,11 +77,11 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
             batchSize = cleanupSchedule.getService().getConfig().getBatchSize();
             try {
-                if (batchSize > ORACLE_MAX_BATCH_SIZE && Dbms.ORACLE.equals(cleanupSchedule.getFactory().getDbms())) {
+                if (batchSize > MAX_BATCH_SIZE_ORACLE && Dbms.ORACLE.equals(cleanupSchedule.getFactory().getDbms())) {
                     LOGGER.info(String.format("[%s][run][configured batch_size=%s][skip]use max batch_size=%s for oracle", logIdentifier, batchSize,
-                            ORACLE_MAX_BATCH_SIZE));
+                            MAX_BATCH_SIZE_ORACLE));
 
-                    batchSize = ORACLE_MAX_BATCH_SIZE;
+                    batchSize = MAX_BATCH_SIZE_ORACLE;
                 }
             } catch (Throwable e) {
                 LOGGER.warn(e.toString(), e);
@@ -234,11 +241,11 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             LOGGER.info(String.format("[%s][%s][%s]start...", logIdentifier, task.getTypeName(), task.getIdentifier()));
             cleanupTasks.add(task);
             task.start(datetimes);
-            LOGGER.info(String.format("[%s][%s][%s]%s", logIdentifier, task.getTypeName(), task.getIdentifier(), SOSString.toString(task
-                    .getState())));
-            task.stop();
+            LOGGER.info(String.format("[%s][%s][%s][completed=%s]%s", logIdentifier, task.getTypeName(), task.getIdentifier(), task.isCompleted(),
+                    SOSString.toString(task.getState())));
+            task.stop(getMaxAwaitTimeout());
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][%s][%s]completed", logIdentifier, task.getTypeName(), task.getIdentifier()));
+                LOGGER.debug(String.format("[%s][%s][%s]completed=%s", logIdentifier, task.getTypeName(), task.getIdentifier(), task.isCompleted()));
             }
         }
     }
@@ -255,11 +262,12 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             LOGGER.info(String.format("[%s][%s][%s][%s]start...", logIdentifier, task.getTypeName(), task.getIdentifier(), counter));
             cleanupTasks.add(task);
             task.start(counter);
-            LOGGER.info(String.format("[%s][%s][%s][%s]%s", logIdentifier, task.getTypeName(), task.getIdentifier(), counter, SOSString.toString(task
-                    .getState())));
-            task.stop();
+            LOGGER.info(String.format("[%s][%s][%s][%s][completed=%s]%s", logIdentifier, task.getTypeName(), task.getIdentifier(), counter, task
+                    .isCompleted(), SOSString.toString(task.getState())));
+            task.stop(getMaxAwaitTimeout());
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][%s][%s][%s]completed", logIdentifier, task.getTypeName(), task.getIdentifier(), counter));
+                LOGGER.debug(String.format("[%s][%s][%s][%s]completed=%s", logIdentifier, task.getTypeName(), task.getIdentifier(), counter, task
+                        .isCompleted()));
             }
         }
     }
@@ -290,14 +298,14 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                     JocServiceTaskAnswer answer = null;
                     if (cleanupTask.isStopped()) {
                         answer = new JocServiceTaskAnswer(cleanupTask.getState());
-                        LOGGER.info(String.format("[%s][%s][%s][stop]already stopped", logIdentifier, cleanupTask.getTypeName(), cleanupTask
-                                .getIdentifier()));
+                        LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s]already stopped", logIdentifier, cleanupTask.getTypeName(),
+                                cleanupTask.getIdentifier(), cleanupTask.isCompleted()));
                     } else {
-                        LOGGER.info(String.format("[%s][%s][%s][stop]start...", logIdentifier, cleanupTask.getTypeName(), cleanupTask
-                                .getIdentifier()));
-                        answer = cleanupTask.stop();
-                        LOGGER.info(String.format("[%s][%s][%s][stop][end]%s", logIdentifier, cleanupTask.getTypeName(), cleanupTask.getIdentifier(),
-                                SOSString.toString(answer)));
+                        LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s]start...", logIdentifier, cleanupTask.getTypeName(), cleanupTask
+                                .getIdentifier(), cleanupTask.isCompleted()));
+                        answer = cleanupTask.stop(getMaxAwaitTimeout());
+                        LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s][end]%s", logIdentifier, cleanupTask.getTypeName(), cleanupTask
+                                .getIdentifier(), cleanupTask.isCompleted(), SOSString.toString(answer)));
                     }
                     return answer;
                 }
@@ -334,6 +342,18 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         } else {
             return JocCluster.getOKAnswer(JocClusterAnswerState.UNCOMPLETED, String.join(",", nonCompleted));
         }
+    }
+
+    protected void setStartMode(StartupMode val) {
+        startMode = val;
+    }
+
+    protected StartupMode getStartMode() {
+        return startMode;
+    }
+
+    private int getMaxAwaitTimeout() {
+        return startMode.equals(StartupMode.automatic) ? MAX_AWAIT_TERMINATION_TIMEOUT_ON_START_MODE_AUTOMATIC : MAX_AWAIT_TERMINATION_TIMEOUT;
     }
 
     public class TaskDateTime {

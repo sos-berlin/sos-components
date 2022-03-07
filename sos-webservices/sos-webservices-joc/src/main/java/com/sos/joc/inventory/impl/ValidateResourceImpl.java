@@ -33,11 +33,11 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             try {
                 ConfigurationType type = ConfigurationType.fromValue(objectType.toUpperCase());
                 if (ConfigurationType.FOLDER.equals(type)) {
-                    throw new ControllerInvalidResponseDataException("Unsupprted objectType:" + objectType);
+                    throw new ControllerInvalidResponseDataException("Unsupported objectType:" + objectType);
                 }
                 entity = getValidate(type, inBytes);
             } catch (IllegalArgumentException e) {
-                throw new ControllerInvalidResponseDataException("Unsupprted objectType:" + objectType);
+                throw new ControllerInvalidResponseDataException("Unsupported objectType:" + objectType);
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(entity);

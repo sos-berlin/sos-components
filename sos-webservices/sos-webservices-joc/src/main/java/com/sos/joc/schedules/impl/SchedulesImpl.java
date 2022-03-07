@@ -90,7 +90,7 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             if (in.getSelector().getWorkflowPaths() != null) {
                 workflowSingles = in.getSelector().getWorkflowPaths().stream().distinct().collect(Collectors.toSet());
             }
-            final Set<Folder> permittedFolders = addPermittedFolder(null);
+            final Set<Folder> permittedFolders = addPermittedFolder(in.getSelector().getFolders());
             Map<String, Boolean> checkedFolders = new HashMap<>();
             Collection<Schedule> schedules = getSchedules(controllerId, scheduleSingles, workflowSingles, permittedFolders, checkedFolders);
 
@@ -129,11 +129,11 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             } else {
                 // selected schedules
                 if (hasSelectedSchedules) {
-                    scheduleItems = dbLayer.getSchedules(null, scheduleSingles);
+                    scheduleItems = dbLayer.getSchedules(permittedFolders, scheduleSingles);
                 }
                 // selected workflows
                 if (hasSelectedWorkflows) {
-                    List<String> workflowNames = dbLayer.getWorkflowNames(controllerId, null, workflowSingles);
+                    List<String> workflowNames = dbLayer.getWorkflowNames(controllerId, permittedFolders, workflowSingles);
                     if (workflowNames != null && workflowNames.size() > 0) {
                         InventoryDBLayer dbLayerINV = new InventoryDBLayer(session);
                         List<DBItemInventoryReleasedConfiguration> result = dbLayerINV.getUsedReleasedSchedulesByWorkflowNames(workflowNames);
