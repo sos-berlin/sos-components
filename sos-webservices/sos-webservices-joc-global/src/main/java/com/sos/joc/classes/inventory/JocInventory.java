@@ -746,8 +746,10 @@ public class JocInventory {
 
     public static void insertConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
+        dbLayer.getSession().beginTransaction();
         dbLayer.getSession().save(item);
         handleWorkflowSearch(dbLayer, item, config);
+        dbLayer.getSession().commit();
     }
 
     public static void insertOrUpdateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws SOSHibernateException,

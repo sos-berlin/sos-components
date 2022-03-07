@@ -68,7 +68,6 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             
-            session.beginTransaction();
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
             
