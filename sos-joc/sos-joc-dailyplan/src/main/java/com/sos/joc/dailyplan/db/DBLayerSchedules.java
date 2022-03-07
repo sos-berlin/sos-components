@@ -28,11 +28,48 @@ public class DBLayerSchedules extends DBLayer {
     }
 
     public List<DBItemInventoryReleasedConfiguration> getAllSchedules() throws SOSHibernateException {
+        return getAllSchedules(null);
+    }
+
+    public List<DBItemInventoryReleasedConfiguration> getAllSchedules(Set<Folder> scheduleFolders) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
         hql.append("where type=:type");
 
+        // folders
+        boolean hasFolders = scheduleFolders != null && scheduleFolders.size() > 0;
+        Map<String, String> paramsFolder = new HashMap<>();
+        Map<String, String> paramsLikeFolder = new HashMap<>();
+        if (hasFolders) {
+            hql.append("and (");
+            int i = 0;
+            for (Folder folder : scheduleFolders) {
+                if (i > 0) {
+                    hql.append(" or ");
+                }
+                String paramNameFolder = "folder" + i;
+                if (folder.getRecursive()) {
+                    String paramNameLikeFolder = "likeFolder" + i;
+                    hql.append("(folder=:").append(paramNameFolder).append(" or folder like :").append(paramNameLikeFolder).append(") ");
+                    paramsLikeFolder.put(paramNameLikeFolder, (folder.getFolder() + "/%").replaceAll("//+", "/"));
+                } else {
+                    hql.append("folder=:").append(paramNameFolder).append(" ");
+                }
+                paramsFolder.put(paramNameFolder, folder.getFolder());
+                i++;
+            }
+            hql.append(") ");
+        }
+
         Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        if (hasFolders) {
+            paramsFolder.entrySet().stream().forEach(e -> {
+                query.setParameter(e.getKey(), e.getValue());
+            });
+            paramsLikeFolder.entrySet().stream().forEach(e -> {
+                query.setParameter(e.getKey(), e.getValue());
+            });
+        }
         return getSession().getResultList(query);
     }
 
@@ -42,7 +79,7 @@ public class DBLayerSchedules extends DBLayer {
         boolean hasSingles = scheduleSingles != null && scheduleSingles.size() > 0;
 
         if (!hasFolders && !hasSingles) {
-            return getAllSchedules();
+            return getAllSchedules(scheduleFolders);
         }
 
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
