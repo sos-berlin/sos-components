@@ -157,11 +157,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                             if (oldItemPath.toString().contains(Paths.get(in.getNewPath()).getFileName().toString())) {
                                 // withouFolder=false
                                 String newName = oldItemPath.getFileName().toString().replaceFirst(folderItemReplace.get(0), folderItemReplace.get(1));
-                                if (pWithoutFix.equals(Paths.get("/").resolve(oldItemPath.getParent().getFileName()))) {
-                                    itemPath = pWithoutFix.resolve(newName);
-                                } else {
-                                    itemPath = pWithoutFix.resolve(oldItemPath.getParent().getFileName()).resolve(newName);
-                                }
+                                itemPath = pWithoutFix.resolve(newName);
                             } else {
                                 // withouFolder=true
                                 itemPath = pWithoutFix.resolve(Paths.get(oldItemPath.toString().replace('\\', '/').replace(in.getPath(), "").substring(1)));
