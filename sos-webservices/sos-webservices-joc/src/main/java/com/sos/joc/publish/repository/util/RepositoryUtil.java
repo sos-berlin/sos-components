@@ -321,7 +321,7 @@ public abstract class RepositoryUtil {
                 }
             });
         } else {
-            Files.walkFileTree(repository, EnumSet.noneOf(FileVisitOption.class), 1, new FileVisitor<Path>() {
+            Files.walkFileTree(repository, EnumSet.noneOf(FileVisitOption.class), 2, new FileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                     paths.add(dir);
@@ -721,10 +721,15 @@ public abstract class RepositoryUtil {
     }
     
     public static Set<DBItemInventoryConfiguration> getNewItemsToUpdate(UpdateFromFilter filter, Path repositoryBase, DBLayerDeploy dbLayer) {
-        List <ConfigurationType> localTypes = getLocalConfigurationTypes();
-        List <ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
         Set<Config> newItems = new HashSet<Config>();
-        Set<DBItemInventoryConfiguration> newDbItems = new HashSet<DBItemInventoryConfiguration>();
+        Set<DBItemInventoryConfiguration> dbItems = new HashSet<DBItemInventoryConfiguration>();
+        Map<Path, DBItemInventoryConfiguration> existingDbItems = new HashMap<Path, DBItemInventoryConfiguration>();
+        Path repository = repositoryBase.resolve("rollout");
+        if (Category.ROLLOUT.equals(filter.getCategory())) {
+            repository = repositoryBase.resolve("rollout");
+        } else if (Category.LOCAL.equals(filter.getCategory())) {
+            repository = repositoryBase.resolve("local");
+        }
         for (Config cfg : filter.getConfigurations()) {
             if (!ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType())) {
                 DBItemInventoryConfiguration cfgDbItem = dbLayer.getConfigurationByName(
@@ -735,21 +740,22 @@ public abstract class RepositoryUtil {
                 }
             } else {
                 try {
-                    Path repository = repositoryBase.resolve("rollout");
-                    if (Category.ROLLOUT.equals(filter.getCategory())) {
-                        repository = repositoryBase.resolve("rollout");
-                    } else if (Category.LOCAL.equals(filter.getCategory())) {
-                        repository = repositoryBase.resolve("local");
-                    }
-
                     TreeSet<Path> paths = readRepositoryAsTreeSet(repository.resolve(cfg.getConfiguration().getPath().substring(1)), cfg.getConfiguration().getRecursive());
                     for (Path path : paths) {
                         if (!ConfigurationType.FOLDER.equals(getConfigurationTypeFromFileExtension(path))) {
+                            String newPath = path.toString().replace('\\', '/').replace(repository.toString().replace('\\', '/'), "");
                             DBItemInventoryConfiguration cfgDbItem = dbLayer.getConfigurationByName(
                                     stripFileExtension(path.getFileName()), 
                                     getConfigurationTypeFromFileExtension(path));
                             if (cfgDbItem == null) {
-                                newItems.add(cfg);
+                                Config newCfg = new Config();
+                                Configuration newConf = new Configuration();
+                                newConf.setPath(stripFileExtension(Paths.get(newPath)).replace('\\', '/'));
+                                newConf.setObjectType(getConfigurationTypeFromFileExtension(path));
+                                newCfg.setConfiguration(newConf);
+                                newItems.add(newCfg);
+                            } else {
+                                existingDbItems.put(path, cfgDbItem);
                             }
                         }
                     }
@@ -760,20 +766,15 @@ public abstract class RepositoryUtil {
                 
             }
         }
-        newItems.stream().peek(newItem -> {
+        final Path repo = repository;
+        newItems.stream().forEach(newItem -> {
             ConfigurationType objType = newItem.getConfiguration().getObjectType();
             byte[] content = null;
             try {
-                Path repository = repositoryBase;
-                if (localTypes.contains(objType)) {
-                    repository = repositoryBase.resolve("local");
-                } else if (rolloutTypes.contains(objType)) {
-                    repository = repositoryBase.resolve("rollout");
-                }
                 if (newItem.getConfiguration().getPath().startsWith("/")) {
-                    content = Files.readAllBytes(repository.resolve(Paths.get(newItem.getConfiguration().getPath().substring(1) + getExtension(objType))));
+                    content = Files.readAllBytes(repo.resolve(Paths.get(newItem.getConfiguration().getPath().substring(1) + getExtension(objType))));
                 } else {
-                    content = Files.readAllBytes(repository.resolve(Paths.get(newItem.getConfiguration().getPath() + getExtension(objType))));
+                    content = Files.readAllBytes(repo.resolve(Paths.get(newItem.getConfiguration().getPath() + getExtension(objType))));
 
                 }
                 String updatedContent = null;
@@ -789,14 +790,50 @@ public abstract class RepositoryUtil {
                     } catch (Exception e) {
                         valid = false;
                     }
-                    newDbItems.add(createItem(newItem, updatedContent, valid));
+                    dbItems.add(createItem(newItem, updatedContent, valid));
                 }
             } catch (IOException e) {
                 LOGGER.error("", e);
             }
-        }).collect(Collectors.toSet());
-
-        return newDbItems;
+        });
+        if (!existingDbItems.isEmpty()) {
+            InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession()); 
+            for (Path pathFromRepo : existingDbItems.keySet()) {
+                DBItemInventoryConfiguration existingDbItem = existingDbItems.get(pathFromRepo);
+                try {
+                    byte[] content = Files.readAllBytes(pathFromRepo);
+                    ConfigurationType type = getConfigurationTypeFromFileExtension(pathFromRepo);
+                    String updatedContent = null;
+                    if (!ConfigurationType.FOLDER.equals(type)) {
+                        updatedContent = Globals.objectMapper.writeValueAsString(Globals.prettyPrintObjectMapper.readValue(content,
+                                getConfigurationClass(type)));
+                    }
+                    if (updatedContent != null) {
+                        boolean valid = true;
+                        try {
+                            Validator.validate(type, content, invDbLayer, null);
+                        } catch (Exception e) {
+                            valid = false;
+                        }
+                        Path newPathWithExtension = Paths.get(pathFromRepo.toString().replace('\\', '/').substring(repository.toString().replace('\\', '/').length()));
+                        Path newPath = newPathWithExtension.getParent().resolve(stripFileExtension(newPathWithExtension.getFileName()));
+                        String newFolder = newPath.toString().replace('\\', '/');
+                        existingDbItem.setPath(newPath.toString().replace('\\', '/'));
+                        existingDbItem.setFolder(newFolder);
+                        existingDbItem.setContent(updatedContent);
+                        existingDbItem.setValid(valid);
+                        existingDbItem.setDeployed(false);
+                        existingDbItem.setReleased(false);
+                        existingDbItem.setModified(Date.from(Instant.now()));
+                        dbItems.add(existingDbItem);
+                    }
+                } catch (IOException e) {
+                    LOGGER.error("", e);
+                }
+            }
+        }
+//        dbItems.addAll(existingDbItems);
+        return dbItems;
     }
 
     public static Path getPathWithExtension(Configuration cfg) {

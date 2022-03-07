@@ -1180,6 +1180,7 @@ public class DBLayerDeploy {
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
             query.setParameter("name", name);
             query.setParameter("type", type);
+            query.setMaxResults(1);
             return session.getSingleResult(query);
         } catch (NoResultException e) {
             return null;

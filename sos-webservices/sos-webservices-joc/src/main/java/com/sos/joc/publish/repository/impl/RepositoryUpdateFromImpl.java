@@ -68,7 +68,11 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
             });
             newDbItems.stream().forEach(item -> {
                 try {
-                    dbLayer.getSession().save(item);
+                    if (item.getId() == null || item.getId() == 0L) {
+                        dbLayer.getSession().save(item);
+                    } else {
+                        dbLayer.getSession().update(item);
+                    }
                     JocInventory.makeParentDirs(new InventoryDBLayer(dbLayer.getSession()), Paths.get(item.getFolder()));
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
