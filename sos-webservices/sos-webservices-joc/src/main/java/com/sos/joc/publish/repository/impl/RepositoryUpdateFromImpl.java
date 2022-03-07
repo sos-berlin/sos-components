@@ -53,17 +53,27 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             
-            Set<DBItemInventoryConfiguration> dbItems = RepositoryUtil.getUpdatedDbItems(filter, repositoriesBase, dbLayer);
-            dbItems.stream().forEach(item -> {
+            Set<DBItemInventoryConfiguration> dbItemsToUpdate = RepositoryUtil.getUpdatedDbItems(filter, repositoriesBase, dbLayer);
+            Set<DBItemInventoryConfiguration> newDbItems = RepositoryUtil.getNewItemsToUpdate(filter, repositoriesBase, dbLayer);
+            
+            dbItemsToUpdate.stream().forEach(item -> {
                 try {
                     dbLayer.getSession().update(item);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
             });
-            
-          CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(dbItems.stream().map(item -> new AuditLogDetail(item.getPath(), 
+            newDbItems.stream().forEach(item -> {
+                try {
+                    dbLayer.getSession().save(item);
+                } catch (SOSHibernateException e) {
+                    throw new JocSosHibernateException(e);
+                }
+            });
+          CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(dbItemsToUpdate.stream().map(item -> new AuditLogDetail(item.getPath(), 
                 item.getType())), dbAuditlog.getId(), dbAuditlog.getCreated()));
+          CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(newDbItems.stream().map(item -> new AuditLogDetail(item.getPath(), 
+                  item.getType())), dbAuditlog.getId(), dbAuditlog.getCreated()));
 
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** read from repository finished ***" + apiCallFinished);

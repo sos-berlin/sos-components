@@ -3,6 +3,7 @@ package com.sos.joc.publish.repository.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -290,6 +292,58 @@ public abstract class RepositoryUtil {
                 return FileVisitResult.CONTINUE;
             }
         });
+        return paths;
+    }
+
+    public static TreeSet<Path> readRepositoryAsTreeSet(Path repository, boolean recursive) throws IOException {
+        TreeSet<Path> paths = new TreeSet<>();
+        if (recursive) {
+            Files.walkFileTree(repository, new FileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    paths.add(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+                @Override
+                public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) throws IOException {
+                    if (filePath.getFileName().toString().endsWith(".json")) {
+                        paths.add(filePath);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } else {
+            Files.walkFileTree(repository, EnumSet.noneOf(FileVisitOption.class), 1, new FileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    paths.add(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+                @Override
+                public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) throws IOException {
+                    if (filePath.getFileName().toString().endsWith(".json")) {
+                        paths.add(filePath);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        }
         return paths;
     }
 
@@ -664,6 +718,85 @@ public abstract class RepositoryUtil {
             }).collect(Collectors.toSet());
         }
         return dbItemsToUpdate;
+    }
+    
+    public static Set<DBItemInventoryConfiguration> getNewItemsToUpdate(UpdateFromFilter filter, Path repositoryBase, DBLayerDeploy dbLayer) {
+        List <ConfigurationType> localTypes = getLocalConfigurationTypes();
+        List <ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
+        Set<Config> newItems = new HashSet<Config>();
+        Set<DBItemInventoryConfiguration> newDbItems = new HashSet<DBItemInventoryConfiguration>();
+        for (Config cfg : filter.getConfigurations()) {
+            if (!ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType())) {
+                DBItemInventoryConfiguration cfgDbItem = dbLayer.getConfigurationByName(
+                        Paths.get(cfg.getConfiguration().getPath()).getFileName().toString(), 
+                        cfg.getConfiguration().getObjectType());
+                if (cfgDbItem == null) {
+                    newItems.add(cfg);
+                }
+            } else {
+                try {
+                    Path repository = repositoryBase.resolve("rollout");
+                    if (Category.ROLLOUT.equals(filter.getCategory())) {
+                        repository = repositoryBase.resolve("rollout");
+                    } else if (Category.LOCAL.equals(filter.getCategory())) {
+                        repository = repositoryBase.resolve("local");
+                    }
+
+                    TreeSet<Path> paths = readRepositoryAsTreeSet(repository.resolve(cfg.getConfiguration().getPath().substring(1)), cfg.getConfiguration().getRecursive());
+                    for (Path path : paths) {
+                        if (!ConfigurationType.FOLDER.equals(getConfigurationTypeFromFileExtension(path))) {
+                            DBItemInventoryConfiguration cfgDbItem = dbLayer.getConfigurationByName(
+                                    stripFileExtension(path.getFileName()), 
+                                    getConfigurationTypeFromFileExtension(path));
+                            if (cfgDbItem == null) {
+                                newItems.add(cfg);
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                
+            }
+        }
+        newItems.stream().peek(newItem -> {
+            ConfigurationType objType = newItem.getConfiguration().getObjectType();
+            byte[] content = null;
+            try {
+                Path repository = repositoryBase;
+                if (localTypes.contains(objType)) {
+                    repository = repositoryBase.resolve("local");
+                } else if (rolloutTypes.contains(objType)) {
+                    repository = repositoryBase.resolve("rollout");
+                }
+                if (newItem.getConfiguration().getPath().startsWith("/")) {
+                    content = Files.readAllBytes(repository.resolve(Paths.get(newItem.getConfiguration().getPath().substring(1) + getExtension(objType))));
+                } else {
+                    content = Files.readAllBytes(repository.resolve(Paths.get(newItem.getConfiguration().getPath() + getExtension(objType))));
+
+                }
+                String updatedContent = null;
+                if (!ConfigurationType.FOLDER.equals(objType)) {
+                    updatedContent = Globals.objectMapper.writeValueAsString(Globals.prettyPrintObjectMapper.readValue(content,
+                            getConfigurationClass(objType)));
+                }
+                InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession()); 
+                if (updatedContent != null) {
+                    boolean valid = true;
+                    try {
+                        Validator.validate(objType, content, invDbLayer, null);
+                    } catch (Exception e) {
+                        valid = false;
+                    }
+                    newDbItems.add(createItem(newItem, updatedContent, valid));
+                }
+            } catch (IOException e) {
+                LOGGER.error("", e);
+            }
+        }).collect(Collectors.toSet());
+
+        return newDbItems;
     }
 
     public static Path getPathWithExtension(Configuration cfg) {
@@ -1082,4 +1215,25 @@ public abstract class RepositoryUtil {
         }
         return types;
     }
+
+
+    private static DBItemInventoryConfiguration createItem(Config newItem, String content, boolean valid) {
+        Path newItemPath = Paths.get(newItem.getConfiguration().getPath());
+        DBItemInventoryConfiguration item = new DBItemInventoryConfiguration();
+        item.setId(null);
+        item.setPath(newItem.getConfiguration().getPath());
+        item.setFolder(Paths.get(newItem.getConfiguration().getPath()).getParent().toString().replace('\\', '/'));
+        item.setName(newItemPath.getFileName().toString());
+        item.setDeployed(false);
+        item.setReleased(false);
+        item.setModified(Date.from(Instant.now()));
+        item.setCreated(Date.from(Instant.now()));
+        item.setDeleted(false);
+        item.setAuditLogId(0L);
+        item.setType(newItem.getConfiguration().getObjectType());
+        item.setValid(valid);
+        item.setContent(content);
+        return item;
+    }
+
 }
