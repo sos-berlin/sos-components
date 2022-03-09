@@ -108,7 +108,13 @@ public class SOSLdapSubject implements ISOSAuthSubject {
 				setOfPermissions.add(dbItemSOSPermissionWithName);
 				if (dbItemSOSPermissionWithName.getAccountPermission() != null
 						&& !dbItemSOSPermissionWithName.getAccountPermission().isEmpty()) {
-					setOfAccountPermissions.add(dbItemSOSPermissionWithName.getAccountPermission());
+					String permission = "";
+					if (dbItemSOSPermissionWithName.getExcluded()) {
+						permission = "-" + dbItemSOSPermissionWithName.getAccountPermission();
+					} else {
+						permission = dbItemSOSPermissionWithName.getAccountPermission();
+					}
+					setOfAccountPermissions.add(permission);
 				}
 				if (dbItemSOSPermissionWithName.getFolderPermission() != null
 						&& !dbItemSOSPermissionWithName.getFolderPermission().isEmpty()) {
