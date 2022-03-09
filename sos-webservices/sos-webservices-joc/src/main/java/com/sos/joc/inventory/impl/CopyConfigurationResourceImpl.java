@@ -68,6 +68,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             
+            session.beginTransaction();
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
             
@@ -154,17 +155,9 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         
                         java.nio.file.Path itemPath = oldItemPath;
                         if (!folderItemSuffixPrefix.getSuffix().isEmpty() || !folderItemSuffixPrefix.getPrefix().isEmpty()) {
-                            if (oldItemPath.toString().contains(Paths.get(in.getNewPath()).getFileName().toString())) {
-                                // withoutFolder=false
-                                String newName = oldItemPath.getFileName().toString().replaceFirst(folderItemReplace.get(0), folderItemReplace.get(1));
-                                itemPath = pWithoutFix.resolve(oldItemPath.getParent().toString().replace('\\', '/').substring(in.getPath().length() +1)).resolve(newName);
-                            } else {
-                                // withouFolder=true
-                                itemPath = pWithoutFix.resolve(Paths.get(oldItemPath.toString().replace('\\', '/').replace(in.getPath(), "").substring(1)));
-                                String newName = oldItemPath.getFileName().toString().replaceFirst(folderItemReplace.get(0), folderItemReplace.get(1));
-                                itemPath = itemPath.getParent().resolve(newName);
-                                
-                            }
+                            itemPath = pWithoutFix.resolve(oldPath.relativize(oldItemPath));
+                            String newName = oldItemPath.getFileName().toString().replaceFirst(folderItemReplace.get(0), folderItemReplace.get(1));
+                            itemPath = itemPath.getParent().resolve(newName);
                         }
                         newDbItem = createItem(oldDBFolderItem, itemPath);
                         String newName = newDbItem.getName();
@@ -239,7 +232,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         if (!newFolderIsRootFolder) {
                             DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
                             newDbItem.setAuditLogId(dbAuditLog.getId());
-                            JocInventory.insertOrUpdateConfiguration(dbLayer, newDbItem);
+                            JocInventory.insertConfiguration(dbLayer, newDbItem);
                             JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
                             response.setId(newDbItem.getId());
                             response.setPath(newDbItem.getPath());
@@ -259,7 +252,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                     for (DBItemInventoryConfiguration item : oldDBFolderContent) {
                         item.setAuditLogId(dbAuditLog.getId());
                         // JOC-1232
-                        JocInventory.insertOrUpdateConfiguration(dbLayer, item);
+                        JocInventory.updateConfiguration(dbLayer, item);
                     }
                 } else {
                     for (DBItemInventoryConfiguration item : oldDBFolderContent) {
@@ -334,7 +327,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                             break;
                         }
                         item.setContent(json);
-                        JocInventory.insertOrUpdateConfiguration(dbLayer, item);
+                        JocInventory.updateConfiguration(dbLayer, item);
                     }
                 }
                 
@@ -387,8 +380,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 response.setPath(newDbItem.getPath());
                 events = Collections.singleton(newDbItem.getFolder());
             }
-            // JOC-1232: FIX
-//            session.commit();
+            session.commit();
             for (String event : events) {
                 JocInventory.postEvent(event);
             }

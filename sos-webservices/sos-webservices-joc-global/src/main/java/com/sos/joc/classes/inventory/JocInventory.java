@@ -746,10 +746,8 @@ public class JocInventory {
 
     public static void insertConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
-        dbLayer.getSession().beginTransaction();
         dbLayer.getSession().save(item);
         handleWorkflowSearch(dbLayer, item, config);
-        dbLayer.getSession().commit();
     }
 
     public static void insertOrUpdateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws SOSHibernateException,
@@ -761,6 +759,7 @@ public class JocInventory {
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
         DBItemInventoryConfiguration alreadyExists = dbLayer.getConfiguration(item.getPath(), item.getType());
         if (alreadyExists != null) {
+            item.setId(alreadyExists.getId());
             alreadyExists.setAuditLogId(item.getAuditLogId());
             alreadyExists.setContent(item.getContent());
             alreadyExists.setCreated(item.getCreated());
@@ -774,18 +773,10 @@ public class JocInventory {
             alreadyExists.setType(item.getType());
             alreadyExists.setValid(item.getValid());
             alreadyExists.setModified(Date.from(Instant.now()));
-            dbLayer.getSession().getFactory().setAutoCommit(false);
-            dbLayer.getSession().beginTransaction();
             dbLayer.getSession().update(alreadyExists);
-            dbLayer.getSession().commit();
-            dbLayer.getSession().getFactory().setAutoCommit(true);
             handleWorkflowSearch(dbLayer, alreadyExists, config);
         } else {
-            dbLayer.getSession().getFactory().setAutoCommit(false);
-            dbLayer.getSession().beginTransaction();
             dbLayer.getSession().save(item);
-            dbLayer.getSession().commit();
-            dbLayer.getSession().getFactory().setAutoCommit(true);
             handleWorkflowSearch(dbLayer, item, config);
         }
     }
