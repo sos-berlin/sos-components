@@ -6,7 +6,7 @@
 
 	<groupId>com.sos-berlin</groupId>
 	<artifactId>sos-components</artifactId>
-	<version>2.2.3-SNAPSHOT</version>
+	<version>2.2.3</version>
 	<packaging>pom</packaging>
 	<name>${project.artifactId}</name>
 	<description>Parent pom project for all sos components</description>
@@ -31,7 +31,10 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<sos.engine.version>2.2.2</sos.engine.version>
+		<sos.engine.version>2.2.3</sos.engine.version>
+		<api.schema.version>2.2.3</api.schema.version>
+		<inventory.schema.version>1.2.3</inventory.schema.version>
+
 		<!-- 3rd Party version properties and the dependencyManagement have to 
 			be reworked for 2.0.0 below configuration is only as an example -->
 		<jackson.version>2.9.10</jackson.version>
