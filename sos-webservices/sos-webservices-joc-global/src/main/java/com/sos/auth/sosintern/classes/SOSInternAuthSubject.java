@@ -89,7 +89,13 @@ public class SOSInternAuthSubject implements ISOSAuthSubject {
 			for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
 				if (dbItemSOSPermissionWithName.getAccountPermission() != null
 						&& !dbItemSOSPermissionWithName.getAccountPermission().isEmpty()) {
-					setOfAccountPermissions.add(dbItemSOSPermissionWithName.getAccountPermission());
+					String permission="";
+					if (dbItemSOSPermissionWithName.getExcluded()) {
+						permission = "-" + dbItemSOSPermissionWithName.getAccountPermission();
+					}else {
+						permission = dbItemSOSPermissionWithName.getAccountPermission();
+					}
+					setOfAccountPermissions.add(permission);
 				}
 				if (dbItemSOSPermissionWithName.getFolderPermission() != null
 						&& !dbItemSOSPermissionWithName.getFolderPermission().isEmpty()) {
