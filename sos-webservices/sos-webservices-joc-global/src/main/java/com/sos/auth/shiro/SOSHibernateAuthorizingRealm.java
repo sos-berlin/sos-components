@@ -22,8 +22,8 @@ import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
-import com.sos.joc.model.security.IdentityServiceTypes;
-
+import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+ 
 public class SOSHibernateAuthorizingRealm extends AuthorizingRealm {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateAuthorizingRealm.class);

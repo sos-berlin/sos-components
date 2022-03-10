@@ -23,8 +23,8 @@ import com.sos.auth.ldap.classes.SOSLdapGroupRolesMapping;
 import com.sos.auth.ldap.classes.SOSLdapWebserviceCredentials;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
-import com.sos.joc.model.security.IdentityServiceTypes;
-
+import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+ 
 public class SOSLdapHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapHandler.class);

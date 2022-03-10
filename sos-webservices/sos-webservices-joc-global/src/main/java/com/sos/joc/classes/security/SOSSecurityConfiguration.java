@@ -28,17 +28,18 @@ import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.security.IdentityServiceTypes;
-import com.sos.joc.model.security.IniPermissions;
-import com.sos.joc.model.security.SecurityConfiguration;
-import com.sos.joc.model.security.SecurityConfigurationAccount;
-import com.sos.joc.model.security.SecurityConfigurationMainEntry;
-import com.sos.joc.model.security.permissions.ControllerFolders;
-import com.sos.joc.model.security.permissions.IniControllers;
-import com.sos.joc.model.security.permissions.IniPermission;
-import com.sos.joc.model.security.permissions.SecurityConfigurationFolders;
-import com.sos.joc.model.security.permissions.SecurityConfigurationRole;
-import com.sos.joc.model.security.permissions.SecurityConfigurationRoles;
+ import com.sos.joc.model.security.configuration.permissions.IniPermissions;
+import com.sos.joc.model.security.configuration.SecurityConfiguration;
+import com.sos.joc.model.security.configuration.SecurityConfigurationAccount;
+import com.sos.joc.model.security.configuration.SecurityConfigurationMainEntry;
+import com.sos.joc.model.security.configuration.SecurityConfigurationRole;
+import com.sos.joc.model.security.configuration.SecurityConfigurationRoles;
+import com.sos.joc.model.security.configuration.permissions.ControllerFolders;
+import com.sos.joc.model.security.configuration.permissions.IniControllers;
+import com.sos.joc.model.security.configuration.permissions.IniPermission;
+import com.sos.joc.model.security.configuration.permissions.SecurityConfigurationFolders;
+import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+ 
 
  
 public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {

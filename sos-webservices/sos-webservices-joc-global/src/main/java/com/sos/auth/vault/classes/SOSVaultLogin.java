@@ -19,8 +19,8 @@ import com.sos.auth.vault.SOSVaultHandler;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.security.IdentityServiceTypes;
-
+import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+ 
 public class SOSVaultLogin implements ISOSLogin {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SOSVaultLogin.class);

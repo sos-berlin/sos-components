@@ -6,8 +6,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.sos.joc.model.security.SecurityConfigurationMainEntry;
+import com.sos.joc.model.security.configuration.SecurityConfigurationMainEntry;
 
+ 
 public class SOSSecurityConfigurationMainEntry {
 
 

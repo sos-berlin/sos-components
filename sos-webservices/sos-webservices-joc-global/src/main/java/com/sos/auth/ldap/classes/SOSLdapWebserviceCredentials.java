@@ -18,8 +18,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
-import com.sos.joc.model.security.LdapGroupRolesMappingItem;
-
+import com.sos.joc.model.security.ldap.LdapGroupRolesMappingItem;
+ 
 public class SOSLdapWebserviceCredentials {
 
     private static final String DEFAULT_USER_DN_TEMPLATE = "{0}";

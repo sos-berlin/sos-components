@@ -46,7 +46,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.RunTime;
 import com.sos.joc.model.order.ScheduleDatesFilter;
-import com.sos.joc.model.security.permissions.JocPermissions;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
 import com.sos.joc.schedule.resource.IScheduleRuntimeResource;
 import com.sos.schema.JsonValidator;
 

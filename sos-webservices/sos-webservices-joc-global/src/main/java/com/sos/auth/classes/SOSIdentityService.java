@@ -1,8 +1,10 @@
 package com.sos.auth.classes;
 
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
-import com.sos.joc.model.security.IdentityServiceAuthenticationScheme;
-import com.sos.joc.model.security.IdentityServiceTypes;
+import com.sos.joc.model.security.idendityservice.IdentityServiceAuthenticationScheme;
+import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+ 
+ 
 
 public class SOSIdentityService {
 

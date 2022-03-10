@@ -32,14 +32,14 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.security.AccountRename;
-import com.sos.joc.model.security.IdentityServiceFilter;
-import com.sos.joc.model.security.IdentityServiceTypes;
-import com.sos.joc.model.security.RoleRename;
-import com.sos.joc.model.security.Roles;
-import com.sos.joc.model.security.SecurityConfiguration;
-import com.sos.joc.model.security.SecurityConfigurationAccount;
-import com.sos.joc.model.security.permissions.SecurityConfigurationRole;
+import com.sos.joc.model.security.accounts.AccountRename;
+import com.sos.joc.model.security.configuration.Roles;
+import com.sos.joc.model.security.configuration.SecurityConfiguration;
+import com.sos.joc.model.security.configuration.SecurityConfigurationAccount;
+import com.sos.joc.model.security.configuration.SecurityConfigurationRole;
+import com.sos.joc.model.security.idendityservice.IdentityServiceFilter;
+import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.roles.RoleRename;
 import com.sos.joc.security.resource.ISecurityConfigurationResource;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
@@ -207,80 +207,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
 	}
 
-	@Override
-	public JOCDefaultResponse postAuthAcountsDelete(String accessToken, byte[] body) {
-		try {
-			SecurityConfiguration securityConfigurationMasked = Globals.objectMapper.readValue(body,
-					SecurityConfiguration.class);
-			for (SecurityConfigurationAccount securityConfigurationAccount : securityConfigurationMasked
-					.getAccounts()) {
-				securityConfigurationAccount.setOldPassword("********");
-				securityConfigurationAccount.setPassword("********");
-				securityConfigurationAccount.setRepeatedPassword("********");
-			}
-
-			initLogging(API_CALL_ACCOUNT_DELETE, Globals.objectMapper.writeValueAsBytes(securityConfigurationMasked),
-					accessToken);
-			JsonValidator.validate(body, SecurityConfiguration.class);
-			SecurityConfiguration securityConfiguration = Globals.objectMapper.readValue(body,
-					SecurityConfiguration.class);
-			String identityServiceName = securityConfiguration.getIdentityServiceName();
-			if (securityConfiguration.getRoles() != null) {
-				for (Map.Entry<String, SecurityConfigurationRole> entry : securityConfiguration.getRoles()
-						.getAdditionalProperties().entrySet()) {
-					try {
-						JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(entry.getValue()),
-								SecurityConfigurationRole.class);
-					} catch (SOSJsonSchemaException e) {
-						throw new SOSJsonSchemaException(
-								e.getMessage().replaceFirst("(\\[\\$\\.)", "$1roles[" + entry.getKey() + "]."));
-					}
-				}
-			}
-			JOCDefaultResponse jocDefaultResponse = initPermissions("",
-					getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
-			if (jocDefaultResponse != null) {
-				return jocDefaultResponse;
-			}
-
-			SOSSecurityDBConfiguration sosSecurityConfiguration = null;
-
-			SOSHibernateSession sosHibernateSession = null;
-			try {
-				sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_WRITE);
-				IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(
-						sosHibernateSession);
-				IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-				filter.setIdentityServiceName(identityServiceName);
-				DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer
-						.getUniqueIdentityService(filter);
-
-				if (dbItemIamIdentityService == null) {
-					throw new JocObjectNotExistException(
-							"Object Identity Service <" + identityServiceName + "> not found");
-				}
-
-				sosSecurityConfiguration = new SOSSecurityDBConfiguration();
-				sosSecurityConfiguration.deleteAccounts(securityConfiguration, dbItemIamIdentityService);
-				
-	            storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY); 
-
-				return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-
-			} finally {
-				securityConfiguration = null;
-				Globals.disconnect(sosHibernateSession);
-			}
-		} catch (
-
-		JocException e) {
-			e.addErrorMetaInfo(getJocError());
-			return JOCDefaultResponse.responseStatusJSError(e);
-		} catch (Exception e) {
-			return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-		}
-
-	}
+ 
 
 	@Override
 	public JOCDefaultResponse postAuthRolesDelete(String accessToken, byte[] body) {

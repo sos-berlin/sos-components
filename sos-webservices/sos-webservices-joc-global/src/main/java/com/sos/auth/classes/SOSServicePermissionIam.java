@@ -61,9 +61,10 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.security.IdentityServiceTypes;
-import com.sos.joc.model.security.Permissions;
-import com.sos.joc.model.security.SecurityConfiguration;
+import com.sos.joc.model.security.configuration.SecurityConfiguration;
+import com.sos.joc.model.security.configuration.permissions.Permissions;
+import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+ 
 
 @SuppressWarnings("deprecation")
 @Path("/authentication")
@@ -97,22 +98,7 @@ public class SOSServicePermissionIam {
         return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosPermissionMasters));
     }
 
-    @GET
-    @Path("/joc_cockpit_permissions")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse getJocCockpitPermissions(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,
-            @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery) {
-        MDC.put("context", ThreadCtx);
-        try {
-            String accessToken = getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
-            return getJocCockpitControllerPermissions(accessToken);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } finally {
-            MDC.remove("context");
-        }
-    }
-
+ 
     @POST
     @Path("/joc_cockpit_permissions")
     @Consumes(MediaType.APPLICATION_JSON)

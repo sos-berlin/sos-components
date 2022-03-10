@@ -19,32 +19,32 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.security.IamAccountDBLayer;
-import com.sos.joc.model.security.Permissions;
-import com.sos.joc.model.security.SecurityConfiguration;
-import com.sos.joc.model.security.permissions.ControllerPermissions;
-import com.sos.joc.model.security.permissions.JocPermissions;
-import com.sos.joc.model.security.permissions.SecurityConfigurationRole;
-import com.sos.joc.model.security.permissions.controller.Agents;
-import com.sos.joc.model.security.permissions.controller.Deployments;
-import com.sos.joc.model.security.permissions.controller.Locks;
-import com.sos.joc.model.security.permissions.controller.NoticeBoards;
-import com.sos.joc.model.security.permissions.controller.Orders;
-import com.sos.joc.model.security.permissions.controller.Workflows;
-import com.sos.joc.model.security.permissions.joc.Administration;
-import com.sos.joc.model.security.permissions.joc.AuditLog;
-import com.sos.joc.model.security.permissions.joc.Calendars;
-import com.sos.joc.model.security.permissions.joc.Cluster;
-import com.sos.joc.model.security.permissions.joc.DailyPlan;
-import com.sos.joc.model.security.permissions.joc.Documentations;
-import com.sos.joc.model.security.permissions.joc.FileTransfer;
-import com.sos.joc.model.security.permissions.joc.Inventory;
-import com.sos.joc.model.security.permissions.joc.Notification;
-import com.sos.joc.model.security.permissions.joc.Others;
-import com.sos.joc.model.security.permissions.joc.admin.Accounts;
-import com.sos.joc.model.security.permissions.joc.admin.Certificates;
-import com.sos.joc.model.security.permissions.joc.admin.Controllers;
-import com.sos.joc.model.security.permissions.joc.admin.Customization;
-import com.sos.joc.model.security.permissions.joc.admin.Settings;
+import com.sos.joc.model.security.configuration.SecurityConfiguration;
+import com.sos.joc.model.security.configuration.SecurityConfigurationRole;
+import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+import com.sos.joc.model.security.configuration.permissions.Permissions;
+import com.sos.joc.model.security.configuration.permissions.controller.Agents;
+import com.sos.joc.model.security.configuration.permissions.controller.Deployments;
+import com.sos.joc.model.security.configuration.permissions.controller.Locks;
+import com.sos.joc.model.security.configuration.permissions.controller.NoticeBoards;
+import com.sos.joc.model.security.configuration.permissions.controller.Orders;
+import com.sos.joc.model.security.configuration.permissions.controller.Workflows;
+import com.sos.joc.model.security.configuration.permissions.joc.Administration;
+import com.sos.joc.model.security.configuration.permissions.joc.AuditLog;
+import com.sos.joc.model.security.configuration.permissions.joc.Calendars;
+import com.sos.joc.model.security.configuration.permissions.joc.Cluster;
+import com.sos.joc.model.security.configuration.permissions.joc.DailyPlan;
+import com.sos.joc.model.security.configuration.permissions.joc.Documentations;
+import com.sos.joc.model.security.configuration.permissions.joc.FileTransfer;
+import com.sos.joc.model.security.configuration.permissions.joc.Inventory;
+import com.sos.joc.model.security.configuration.permissions.joc.Notification;
+import com.sos.joc.model.security.configuration.permissions.joc.Others;
+import com.sos.joc.model.security.configuration.permissions.joc.admin.Accounts;
+import com.sos.joc.model.security.configuration.permissions.joc.admin.Certificates;
+import com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers;
+import com.sos.joc.model.security.configuration.permissions.joc.admin.Customization;
+import com.sos.joc.model.security.configuration.permissions.joc.admin.Settings;
 
 public class SOSPermissionsCreator {
 
@@ -81,7 +81,7 @@ public class SOSPermissionsCreator {
 
     public Permissions createJocCockpitPermissionControllerObjectList(SecurityConfiguration secConf) {
         Permissions permissions = new Permissions(currentAccount.getRoles(), getJocPermissions(), getControllerPermissions(""),
-                new com.sos.joc.model.security.permissions.Controllers());
+                new com.sos.joc.model.security.configuration.permissions.Controllers());
 
         Stream<Map.Entry<String, SecurityConfigurationRole>> controllersStream = secConf.getRoles().getAdditionalProperties().entrySet().stream();
         if (!permissions.getRoles().isEmpty()) {

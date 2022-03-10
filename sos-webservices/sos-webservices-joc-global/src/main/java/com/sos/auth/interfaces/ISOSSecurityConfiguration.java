@@ -7,8 +7,8 @@ import org.ini4j.InvalidFileFormatException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.security.SecurityConfiguration;
-
+import com.sos.joc.model.security.configuration.SecurityConfiguration;
+ 
 public interface ISOSSecurityConfiguration {
 
     public SecurityConfiguration readConfiguration(Long identityServiceId, String identityServiceName) throws InvalidFileFormatException, IOException, JocException, SOSHibernateException;

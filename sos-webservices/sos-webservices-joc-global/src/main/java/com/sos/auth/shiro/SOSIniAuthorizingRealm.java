@@ -21,8 +21,8 @@ import com.sos.auth.interfaces.ISOSAuthorizing;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.classes.security.SOSSecurityConfiguration;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.security.SecurityConfiguration;
-import com.sos.joc.model.security.SecurityConfigurationAccount;
+import com.sos.joc.model.security.configuration.SecurityConfiguration;
+import com.sos.joc.model.security.configuration.SecurityConfigurationAccount;
 
 public class SOSIniAuthorizingRealm extends AuthorizingRealm {
 

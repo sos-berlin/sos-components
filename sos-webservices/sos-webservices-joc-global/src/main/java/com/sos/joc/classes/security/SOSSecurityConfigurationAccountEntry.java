@@ -11,7 +11,8 @@ import org.apache.shiro.util.ByteSource;
 import org.apache.shiro.util.StringUtils;
 import org.ini4j.Profile;
 
-import com.sos.joc.model.security.SecurityConfigurationAccount;
+import com.sos.joc.model.security.configuration.SecurityConfigurationAccount;
+
  
 public class SOSSecurityConfigurationAccountEntry {
 

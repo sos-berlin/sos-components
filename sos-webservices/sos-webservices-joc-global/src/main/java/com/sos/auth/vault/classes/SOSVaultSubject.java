@@ -20,8 +20,8 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.security.IamAccountDBLayer;
-import com.sos.joc.model.security.IdentityServiceTypes;
-
+import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+ 
 public class SOSVaultSubject implements ISOSAuthSubject {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SOSVaultSubject.class);

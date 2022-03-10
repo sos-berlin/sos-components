@@ -28,13 +28,14 @@ import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
-import com.sos.joc.model.security.LdapExpertProperties;
-import com.sos.joc.model.security.LdapGroupRolesMapping;
-import com.sos.joc.model.security.LdapGroupRolesMappingItem;
-import com.sos.joc.model.security.LdapProperties;
-import com.sos.joc.model.security.SecurityConfiguration;
-import com.sos.joc.model.security.SecurityConfigurationAccount;
-import com.sos.joc.model.security.SecurityConfigurationMainEntry;
+import com.sos.joc.model.security.configuration.SecurityConfiguration;
+import com.sos.joc.model.security.configuration.SecurityConfigurationAccount;
+import com.sos.joc.model.security.configuration.SecurityConfigurationMainEntry;
+import com.sos.joc.model.security.ldap.LdapExpertProperties;
+import com.sos.joc.model.security.ldap.LdapGroupRolesMapping;
+import com.sos.joc.model.security.ldap.LdapGroupRolesMappingItem;
+import com.sos.joc.model.security.ldap.LdapProperties;
+ ;
 
 public class SOSManageIdentityService {
 

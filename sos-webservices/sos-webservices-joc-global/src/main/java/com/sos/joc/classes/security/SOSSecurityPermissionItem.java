@@ -1,6 +1,6 @@
 package com.sos.joc.classes.security;
 
-import com.sos.joc.model.security.permissions.IniPermission;
+import com.sos.joc.model.security.configuration.permissions.IniPermission;
 
 public class SOSSecurityPermissionItem {
 

@@ -21,7 +21,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.board.ModifyNotice;
-import com.sos.joc.model.security.permissions.controller.NoticeBoards;
+import com.sos.joc.model.security.configuration.permissions.controller.NoticeBoards;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 

@@ -20,32 +20,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.interfaces.ISOSAuthSubject;
-import com.sos.joc.model.security.IdentityServiceTypes;
-import com.sos.joc.model.security.Permissions;
-import com.sos.joc.model.security.SecurityConfiguration;
-import com.sos.joc.model.security.permissions.ControllerPermissions;
-import com.sos.joc.model.security.permissions.JocPermissions;
-import com.sos.joc.model.security.permissions.controller.Agents;
-import com.sos.joc.model.security.permissions.controller.Deployments;
-import com.sos.joc.model.security.permissions.controller.Locks;
-import com.sos.joc.model.security.permissions.controller.NoticeBoards;
-import com.sos.joc.model.security.permissions.controller.Orders;
-import com.sos.joc.model.security.permissions.controller.Workflows;
-import com.sos.joc.model.security.permissions.joc.Administration;
-import com.sos.joc.model.security.permissions.joc.AuditLog;
-import com.sos.joc.model.security.permissions.joc.Calendars;
-import com.sos.joc.model.security.permissions.joc.Cluster;
-import com.sos.joc.model.security.permissions.joc.DailyPlan;
-import com.sos.joc.model.security.permissions.joc.Documentations;
-import com.sos.joc.model.security.permissions.joc.FileTransfer;
-import com.sos.joc.model.security.permissions.joc.Inventory;
-import com.sos.joc.model.security.permissions.joc.Notification;
-import com.sos.joc.model.security.permissions.joc.Others;
-import com.sos.joc.model.security.permissions.joc.admin.Accounts;
-import com.sos.joc.model.security.permissions.joc.admin.Certificates;
-import com.sos.joc.model.security.permissions.joc.admin.Controllers;
-import com.sos.joc.model.security.permissions.joc.admin.Customization;
-import com.sos.joc.model.security.permissions.joc.admin.Settings;
+import com.sos.joc.model.security.configuration.permissions.Permissions;
+import com.sos.joc.model.security.configuration.SecurityConfiguration;
+import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+import com.sos.joc.model.security.configuration.permissions.controller.Agents;
+import com.sos.joc.model.security.configuration.permissions.controller.Deployments;
+import com.sos.joc.model.security.configuration.permissions.controller.Locks;
+import com.sos.joc.model.security.configuration.permissions.controller.NoticeBoards;
+import com.sos.joc.model.security.configuration.permissions.controller.Orders;
+import com.sos.joc.model.security.configuration.permissions.controller.Workflows;
+import com.sos.joc.model.security.configuration.permissions.joc.Administration;
+import com.sos.joc.model.security.configuration.permissions.joc.AuditLog;
+import com.sos.joc.model.security.configuration.permissions.joc.Calendars;
+import com.sos.joc.model.security.configuration.permissions.joc.Cluster;
+import com.sos.joc.model.security.configuration.permissions.joc.DailyPlan;
+import com.sos.joc.model.security.configuration.permissions.joc.Documentations;
+import com.sos.joc.model.security.configuration.permissions.joc.FileTransfer;
+import com.sos.joc.model.security.configuration.permissions.joc.Inventory;
+import com.sos.joc.model.security.configuration.permissions.joc.Notification;
+import com.sos.joc.model.security.configuration.permissions.joc.Others;
+import com.sos.joc.model.security.configuration.permissions.joc.admin.Accounts;
+import com.sos.joc.model.security.configuration.permissions.joc.admin.Certificates;
+import com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers;
+import com.sos.joc.model.security.configuration.permissions.joc.admin.Customization;
+import com.sos.joc.model.security.configuration.permissions.joc.admin.Settings;
+import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
 
 public class SOSAuthCurrentAccount {
 
@@ -198,7 +198,7 @@ public class SOSAuthCurrentAccount {
                 new Agents(), new NoticeBoards(), new Locks(), new Workflows());
         JocPermissions joc = new JocPermissions(false, administration, new Cluster(), new Inventory(), new Calendars(), new Documentations(),
                 new AuditLog(), new DailyPlan(), new FileTransfer(), new Notification(), new Others());
-        return new Permissions(getRoles(), joc, controllerDefaults, new com.sos.joc.model.security.permissions.Controllers());
+        return new Permissions(getRoles(), joc, controllerDefaults, new com.sos.joc.model.security.configuration.permissions.Controllers());
     }
 
     private Boolean getHaveAnyIpPermission() {

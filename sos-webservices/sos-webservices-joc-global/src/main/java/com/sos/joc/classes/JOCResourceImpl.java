@@ -47,9 +47,9 @@ import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.security.permissions.ControllerPermissions;
-import com.sos.joc.model.security.permissions.JocPermissions;
-
+import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+ 
 public class JOCResourceImpl {
 
     protected JobSchedulerUser jobschedulerUser;

@@ -126,11 +126,6 @@ public class JsonValidator {
             put("Xml2JsonConfiguration", "xmleditor/xml2json/xml2json-configuration-schema.json");
 
             put("TreeFilter", "tree/treeFilter-schema.json");
-            put("SecurityConfiguration", "security/security-configuration-schema.json");
-            put("SecurityConfigurationRole", "security/role-schema.json");
-            put("Roles", "security/roles-schema.json");
-            put("AccountRename", "security/accountRename-schema.json");
-            put("RoleRename", "security/roleRename-schema.json");
 
             put("ReleaseFilter", "inventory/release/release-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFolder", "inventory/common/request-folder-schema.json");
@@ -186,7 +181,7 @@ public class JsonValidator {
             put("com.sos.joc.model.dailyplan.history.SubmissionsOrdersRequest", "dailyplan/history/submissions-orders-request-schema.json");
             put("com.sos.joc.model.dailyplan.submissions.SubmissionsDeleteRequest", "dailyplan/submissions/submissions-delete-request-schema.json");
             put("com.sos.joc.model.dailyplan.submissions.SubmissionsRequest", "dailyplan/submissions/submissions-request-schema.json");
-            
+
             put("com.sos.joc.model.yade.TransferFilter", "yade/transferFilter-schema.json");
             put("com.sos.joc.model.yade.FileFilter", "yade/fileFilter-schema.json");
             put("com.sos.joc.model.yade.FilesFilter", "yade/filesFilter-schema.json");
@@ -200,11 +195,39 @@ public class JsonValidator {
             // utilities
             put("com.sos.joc.model.dailyplan.RelativeDatesConverter", "orderManagement/dailyplan/relativeDatesConverter-schema.json");
 
-            // auth            
+            // auth
+            put("SecurityConfiguration", "security/security-configuration-schema.json");
+            put("SecurityConfigurationRole", "security/role-schema.json");
+            put("Roles", "security/roles-schema.json");
+
+            // iam
             put("com.sos.joc.model.security.IdentityService", "security/identityService-schema.json");
             put("com.sos.joc.model.security.IdentityServiceRename", "security/identityServiceRename-schema.json");
             put("com.sos.joc.model.security.IdentityServiceFilter", "security/identityServiceFilter-schema.json");
-            // put("com.sos.joc.model.publish.RedeployFilter", "publish/redeploy-schema.json");
+
+            put("com.sos.joc.model.security.folders.FolderFilter", "security/folders/folderFilter-schema.json");
+            put("com.sos.joc.model.security.folders.FoldersFilter", "security/folders/foldersFilter-schema.json");
+            put("com.sos.joc.model.security.folders.Folders", "security/folders/folders-schema.json");
+            put("com.sos.joc.model.security.folders.FolderRename", "security/folders/folderRename-schema.json");
+            put("com.sos.joc.model.security.folders.FolderListFilter", "security/folders/folderListFilter-schema.json");
+
+            put("com.sos.joc.model.security.permissions.PermissionFilter", "security/permissions/permissionFilter-schema.json");
+            put("com.sos.joc.model.security.permissions.PermissionsFilter", "security/permissions/permissionsFilter-schema.json");
+            put("com.sos.joc.model.security.permissions.Permissions", "security/permissions/permissions-schema.json");
+            put("com.sos.joc.model.security.permissions.PermissionRename", "security/permissions/permissionRename-schema.json");
+            put("com.sos.joc.model.security.permissions.PermissionListFilter", "security/permissions/permissionListFilter-schema.json");
+
+            put("com.sos.joc.model.security.accounts.AccountListFilter", "security/accounts/accountListFilter-schema.json");
+            put("com.sos.joc.model.security.accounts.AccountFilter", "security/accounts/accountFilter-schema.json");
+            put("com.sos.joc.model.security.accounts.AccountsFilter", "security/accounts/accountsFilter-schema.json");
+            put("com.sos.joc.model.security.accounts.AccountRename", "security/accounts/accountRename-schema.json");
+            put("com.sos.joc.model.security.accounts.Account", "security/accounts/account-schema.json");
+
+            put("com.sos.joc.model.security.roles.RoleListFilter", "security/roles/roleListFilter-schema.json");
+            put("com.sos.joc.model.security.roles.RolesFilter", "security/roles/rolesFilter-schema.json");
+            put("com.sos.joc.model.security.roles.RoleFilter", "security/roles/roleFilter-schema.json");
+            put("com.sos.joc.model.security.roles.RoleRename", "security/roles/roleRename-schema.json");
+            put("com.sos.joc.model.security.roles.Role", "security/roles/role-schema.json");
 
             // TODO complete the map
         }

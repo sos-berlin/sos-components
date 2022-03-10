@@ -13,10 +13,10 @@ import com.sos.auth.interfaces.ISOSAuthorizing;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.classes.security.SOSSecurityConfiguration;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.security.IniPermissions;
-import com.sos.joc.model.security.SecurityConfiguration;
-import com.sos.joc.model.security.SecurityConfigurationAccount;
-import com.sos.joc.model.security.permissions.IniPermission;
+import com.sos.joc.model.security.configuration.permissions.IniPermissions;
+import com.sos.joc.model.security.configuration.SecurityConfiguration;
+import com.sos.joc.model.security.configuration.SecurityConfigurationAccount;
+import com.sos.joc.model.security.configuration.permissions.IniPermission;
 
 public class SOSIniAuthorizing implements ISOSAuthorizing {
 
