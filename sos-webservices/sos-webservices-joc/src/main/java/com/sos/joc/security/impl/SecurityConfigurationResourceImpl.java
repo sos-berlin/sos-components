@@ -23,7 +23,6 @@ import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
@@ -78,7 +77,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 			}
 			SecurityConfiguration securityConfiguration = null;
 			try {
-				sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_WRITE);
+				sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_READ);
 				IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(
 						sosHibernateSession);
 				IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
@@ -101,7 +100,6 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 				securityConfiguration = sosSecurityConfiguration.readConfiguration(dbItemIamIdentityService.getId(),
 						dbItemIamIdentityService.getIdentityServiceName());
 
-				sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_READ);
 				JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
 				JocConfigurationFilter filter = new JocConfigurationFilter();
 				filter.setConfigurationType("PROFILE");
