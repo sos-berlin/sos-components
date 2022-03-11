@@ -7,7 +7,6 @@ public class IamRoleFilter extends SOSHibernateFilter {
     private String roleName;
 
     public IamRoleFilter() {
-
     }
 
     public Long getIdentityServiceId() {

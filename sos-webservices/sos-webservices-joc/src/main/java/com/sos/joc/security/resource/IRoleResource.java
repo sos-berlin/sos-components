@@ -32,6 +32,11 @@ public interface IRoleResource {
     public JOCDefaultResponse postRolesDelete(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 
     @POST
+    @Path("roles/reorder")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postRolesReorder(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+
+    @POST
     @Path("roles")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postRoles(@HeaderParam("X-Access-Token") String accessToken, byte[] body);

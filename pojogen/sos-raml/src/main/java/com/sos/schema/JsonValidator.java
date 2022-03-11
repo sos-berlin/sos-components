@@ -196,14 +196,14 @@ public class JsonValidator {
             put("com.sos.joc.model.dailyplan.RelativeDatesConverter", "orderManagement/dailyplan/relativeDatesConverter-schema.json");
 
             // auth
-            put("SecurityConfiguration", "security/security-configuration-schema.json");
-            put("SecurityConfigurationRole", "security/role-schema.json");
+            put("SecurityConfiguration", "security/configuration/security-configuration-schema.json");
+            put("SecurityConfigurationRole", "security/configuration/role-schema.json");
             put("Roles", "security/roles-schema.json");
 
             // iam
-            put("com.sos.joc.model.security.IdentityService", "security/identityService-schema.json");
-            put("com.sos.joc.model.security.IdentityServiceRename", "security/identityServiceRename-schema.json");
-            put("com.sos.joc.model.security.IdentityServiceFilter", "security/identityServiceFilter-schema.json");
+            put("com.sos.joc.model.security.IdentityService", "security/identityServices/identityService-schema.json");
+            put("com.sos.joc.model.security.IdentityServiceRename", "security/identityServices/identityServiceRename-schema.json");
+            put("com.sos.joc.model.security.IdentityServiceFilter", "security/identityServices/identityServiceFilter-schema.json");
 
             put("com.sos.joc.model.security.folders.FolderFilter", "security/folders/folderFilter-schema.json");
             put("com.sos.joc.model.security.folders.FoldersFilter", "security/folders/foldersFilter-schema.json");

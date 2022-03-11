@@ -21,12 +21,15 @@ public class DBItemIamRole {
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_IAM_ROLES_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
-    
+
     @Column(name = "[IDENTITY_SERVICE_ID]", nullable = false)
     private Long identityServiceId;
-    
+
     @Column(name = "[ROLE_NAME]", nullable = false)
     private String roleName;
+
+    @Column(name = "[ORDERING]", nullable = true)
+    private Integer ordering;
 
     public DBItemIamRole() {
 
@@ -48,14 +51,20 @@ public class DBItemIamRole {
         this.roleName = roleName;
     }
 
-    
     public Long getIdentityServiceId() {
         return identityServiceId;
     }
 
-    
     public void setIdentityServiceId(Long identityServiceId) {
         this.identityServiceId = identityServiceId;
+    }
+
+    public Integer getOrdering() {
+        return ordering;
+    }
+
+    public void setOrdering(Integer ordering) {
+        this.ordering = ordering;
     }
 
 }

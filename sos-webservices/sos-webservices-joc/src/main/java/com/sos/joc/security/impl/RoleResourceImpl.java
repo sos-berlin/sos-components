@@ -31,6 +31,7 @@ import com.sos.joc.model.security.roles.RoleListFilter;
 import com.sos.joc.model.security.roles.RoleRename;
 import com.sos.joc.model.security.roles.Roles;
 import com.sos.joc.model.security.roles.RolesFilter;
+import com.sos.joc.security.classes.SecurityHelper;
 import com.sos.joc.security.resource.IRoleResource;
 import com.sos.schema.JsonValidator;
 
@@ -65,7 +66,8 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ROLE_READ);
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ROLE_READ);
 
-            DBItemIamIdentityService dbItemIamIdentityService = getIdentityService(sosHibernateSession, roleFilter.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, roleFilter
+                    .getIdentityServiceName());
 
             IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);
             IamRoleFilter filter = new IamRoleFilter();
@@ -111,7 +113,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
 
-            DBItemIamIdentityService dbItemIamIdentityService = getIdentityService(sosHibernateSession, role.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, role.getIdentityServiceName());
 
             IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);
 
@@ -125,6 +127,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
                 dbItemIamRole = new DBItemIamRole();
                 dbItemIamRole.setRoleName(role.getRoleName());
                 dbItemIamRole.setIdentityServiceId(dbItemIamIdentityService.getId());
+                dbItemIamRole.setOrdering(9999);
                 sosHibernateSession.save(dbItemIamRole);
             }
 
@@ -161,7 +164,8 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ROLE_RENAME);
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
-            DBItemIamIdentityService dbItemIamIdentityService = getIdentityService(sosHibernateSession, roleRename.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, roleRename
+                    .getIdentityServiceName());
 
             IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);
 
@@ -218,7 +222,8 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemIamIdentityService dbItemIamIdentityService = getIdentityService(sosHibernateSession, rolesFilter.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, rolesFilter
+                    .getIdentityServiceName());
 
             IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);
             IamRoleFilter iamRoleFilter = new IamRoleFilter();
@@ -261,13 +266,16 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             }
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ROLES);
-            DBItemIamIdentityService dbItemIamIdentityService = getIdentityService(sosHibernateSession, roleListFilter.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, roleListFilter
+                    .getIdentityServiceName());
 
             Roles roles = new Roles();
             roles.setRoles(new ArrayList<Role>());
 
             IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);
             IamRoleFilter filter = new IamRoleFilter();
+            filter.setOrderCriteria("ordering");
+
             filter.setIdentityServiceId(dbItemIamIdentityService.getId());
             List<DBItemIamRole> listOfRoles = iamRoleDBLayer.getIamRoleList(filter, 0);
             for (DBItemIamRole dbItemIamRole : listOfRoles) {
@@ -290,16 +298,58 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         }
     }
 
-    private DBItemIamIdentityService getIdentityService(SOSHibernateSession sosHibernateSession, String identityServiceName)
-            throws SOSHibernateException {
-        IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-        IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
-        iamIdentityServiceFilter.setIdentityServiceName(identityServiceName);
-        DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(iamIdentityServiceFilter);
-        if (dbItemIamIdentityService == null) {
-            throw new JocObjectNotExistException("Object Identity Service <" + identityServiceName + "> not found");
+    @Override
+    public JOCDefaultResponse postRolesReorder(String accessToken, byte[] body) {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+
+            RolesFilter roles = Globals.objectMapper.readValue(body, RolesFilter.class);
+
+            JsonValidator.validateFailFast(body, RolesFilter.class);
+
+            initLogging(API_CALL_ROLE_STORE, Globals.objectMapper.writeValueAsBytes(roles), accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ROLE_STORE);
+            sosHibernateSession.setAutoCommit(false);
+            sosHibernateSession.beginTransaction();
+
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, roles
+                    .getIdentityServiceName());
+
+            IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);
+
+            IamRoleFilter iamRoleFilter = new IamRoleFilter();
+            iamRoleFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
+
+            int order = 1;
+            for (String roleName : roles.getRoleNames()) {
+                iamRoleFilter.setRoleName(roleName);
+                DBItemIamRole dbItemIamRole = iamRoleDBLayer.getUniqueRole(iamRoleFilter);
+                if (dbItemIamRole != null) {
+                    dbItemIamRole.setOrdering(order);
+                    sosHibernateSession.update(dbItemIamRole);
+                    order = order + 1;
+                }
+            }
+
+            storeAuditLog(roles.getAuditLog(), CategoryType.IDENTITY);
+            Globals.commit(sosHibernateSession);
+
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(sosHibernateSession);
         }
-        return dbItemIamIdentityService;
     }
 
 }

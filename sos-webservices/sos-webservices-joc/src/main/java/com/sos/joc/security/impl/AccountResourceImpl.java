@@ -47,6 +47,7 @@ import com.sos.joc.model.security.accounts.AccountRename;
 import com.sos.joc.model.security.accounts.Accounts;
 import com.sos.joc.model.security.accounts.AccountsFilter;
 import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+import com.sos.joc.security.classes.SecurityHelper;
 import com.sos.joc.security.resource.IAccountResource;
 import com.sos.schema.JsonValidator;
 
@@ -82,7 +83,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNT_READ);
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNT_READ);
 
-            DBItemIamIdentityService dbItemIamIdentityService = getIdentityService(sosHibernateSession, accountFilter.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountFilter.getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter filter = new IamAccountFilter();
@@ -137,7 +138,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
 
-            DBItemIamIdentityService dbItemIamIdentityService = getIdentityService(sosHibernateSession, account.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, account.getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
@@ -255,7 +256,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNT_RENAME);
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
-            DBItemIamIdentityService dbItemIamIdentityService = getIdentityService(sosHibernateSession, accountRename.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountRename.getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
@@ -313,7 +314,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemIamIdentityService dbItemIamIdentityService = getIdentityService(sosHibernateSession, accountsFilter.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter.getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
@@ -355,7 +356,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             }
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNTS);
-            DBItemIamIdentityService dbItemIamIdentityService = getIdentityService(sosHibernateSession, accountFilter.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountFilter.getIdentityServiceName());
 
             Accounts accounts = new Accounts();
             accounts.setAccountItems(new ArrayList<Account>());
@@ -420,17 +421,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
     }
 
-    private DBItemIamIdentityService getIdentityService(SOSHibernateSession sosHibernateSession, String identityServiceName)
-            throws SOSHibernateException {
-        IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-        IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
-        iamIdentityServiceFilter.setIdentityServiceName(identityServiceName);
-        DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(iamIdentityServiceFilter);
-        if (dbItemIamIdentityService == null) {
-            throw new JocObjectNotExistException("Object Identity Service <" + identityServiceName + "> not found");
-        }
-        return dbItemIamIdentityService;
-    }
+   
 
     private void changePassword(SOSHibernateSession sosHibernateSession, boolean withPasswordCheck, Account account,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
@@ -523,7 +514,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemIamIdentityService dbItemIamIdentityService = getIdentityService(sosHibernateSession, account.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, account.getIdentityServiceName());
 
             changePassword(sosHibernateSession, true, account, dbItemIamIdentityService);
             Globals.commit(sosHibernateSession);
@@ -562,7 +553,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_FORCE_PASSWORD_CHANGE);
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
-            DBItemIamIdentityService dbItemIamIdentityService = getIdentityService(sosHibernateSession, accountsFilter.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter.getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
@@ -645,7 +636,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemIamIdentityService dbItemIamIdentityService = getIdentityService(sosHibernateSession, accountsFilter.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter.getIdentityServiceName());
             Account account = new Account();
             account.setPassword(null);
             account.setIdentityServiceName(accountsFilter.getIdentityServiceName());
