@@ -111,7 +111,7 @@ public class OrdersHelper {
 
     private static AtomicInteger no = new AtomicInteger(0);
     public static final int mainOrderIdLength = 25;
-    public static final String mainOrderIdControllerPattern = "replaceAll(\"$js7EpochMilli\", '^.*([0-9]{9})$', '$1') ++ '00-'";
+    public static final String mainOrderIdControllerPattern = "replaceAll(\"$js7EpochMilli\", '^.*([0-9]{9})$', '$1')";
     public static final Pattern orderIdPattern = Pattern.compile("#(\\d{4}-\\d{2}-\\d{2})#\\D(\\d{9})\\d{2}-.*");
     public static final String cyclicOrderIdRegex = "#\\d{4}-\\d{2}-\\d{2}#C[0-9]+-.*";
 
