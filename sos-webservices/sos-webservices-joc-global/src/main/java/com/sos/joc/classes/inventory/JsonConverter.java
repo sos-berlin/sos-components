@@ -327,10 +327,17 @@ public class JsonConverter {
         }
         int n = addOrderIndex.getAndUpdate(x -> x == Integer.MAX_VALUE ? 0 : x + 1);
         String sAddOrderIndex = ("" + (100 + (n % 100))).substring(1);
-        // first replaceAll #2022-01-01#T12345678901-test|branchname -> test|branchname
-        // second replaceAll test|branchname -> test
+        String datetimePattern = "#[0-9]{4}-[0-9]{2}-[0-9]{2}#[^-]+";
+        // first replaceAll(replaceAll...):
+        //      #2022-01-01#T12345678901-test|branchname of parent orderId -> 2022010112345678901
+        // second replaceAll(replaceAll...) 
+        //      #2022-01-01#T12345678901-test|branchname of parent orderId -> test|branchname -> test
+        // resp.
+        //      #2022-01-01#T12345678901-2022010112345678901#-test|branchname of parent orderId -> test|branchname -> test
         String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ '#D' ++ " + OrdersHelper.mainOrderIdControllerPattern + " ++ '"
-                + sAddOrderIndex + "-' ++ replaceAll(replaceAll($js7OrderId, '^#[0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+-(.*)$', '$1'), '^([^|]+).*', '$1')";
+                + sAddOrderIndex + "-' ++ replaceAll(replaceAll($js7OrderId, '^(" + datetimePattern
+                + ")-.*$', '$1'), '\\D', \"\") ++ replaceAll(replaceAll($js7OrderId, '^" + datetimePattern
+                + "-([^#]+#-)?(.*)$', '$2'), '^([^|]+).*', '#-$1')";
         sao.setOrderId(String.format(idPattern, timeZone));
 
         if (sao.getArguments() != null && sao.getArguments().getAdditionalProperties() != null) {
