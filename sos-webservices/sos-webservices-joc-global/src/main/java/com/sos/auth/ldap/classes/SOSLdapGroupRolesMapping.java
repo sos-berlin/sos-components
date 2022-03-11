@@ -50,11 +50,13 @@ public class SOSLdapGroupRolesMapping {
 		while (answer.hasMoreElements()) {
 			SearchResult result = answer.next();
 			String groupNameAttribute = sosLdapWebserviceCredentials.getGroupNameAttribute();
+			LOGGER.debug(String.format("Groupname in attribute %s", groupNameAttribute));
+
 			Attribute g = result.getAttributes().get(groupNameAttribute);
 			if (g != null) {
 				String group = g.get().toString();
 				rolesForGroups.add(group);
-				LOGGER.debug(String.format("Groupname %s found in attribute", group, groupNameAttribute));
+				LOGGER.debug(String.format("Account is member of group: %s", group));
 			} else {
 				LOGGER.warn("Could not find attribute " + groupNameAttribute);
 			}
@@ -243,6 +245,9 @@ public class SOSLdapGroupRolesMapping {
 			if (memberOf != null) {
 				LOGGER.debug("getting all attribute values using attribute " + memberOf);
 				groupNames = getAllAttributeValues(memberOf);
+				for (String group : groupNames) {
+					LOGGER.debug(String.format("Account is member of group: %s", group));
+				}
 				Set<String> groupsToAdd = new HashSet<String>();
 				if (MEMBER_OF.equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
 					int sizeOfGroupkeys = sosLdapWebserviceCredentials.getGroupRolesMap().keySet().size();
@@ -308,7 +313,7 @@ public class SOSLdapGroupRolesMapping {
 		if (sosLdapWebserviceCredentials.getGroupRolesMap() != null) {
 			LOGGER.debug("Analysing groupRolesMapping");
 			for (String groupName : groupNames) {
-				LOGGER.debug(String.format("Looking for group: %s", groupName));
+				LOGGER.debug(String.format("Checking group: %s", groupName));
 				List<String> listOfGroupRoles = sosLdapWebserviceCredentials.getGroupRolesMap().get(groupName);
 				if (listOfRoles != null && listOfGroupRoles != null) {
 					for (String role : listOfGroupRoles) {

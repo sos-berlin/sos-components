@@ -23,7 +23,6 @@ import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
