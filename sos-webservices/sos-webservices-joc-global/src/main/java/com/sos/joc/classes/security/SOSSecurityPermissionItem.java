@@ -24,7 +24,7 @@ public class SOSSecurityPermissionItem {
 
     public SOSSecurityPermissionItem(String controllerId, IniPermission securityConfigurationPermission) {
         super();
-        this.permission = securityConfigurationPermission.getPath();
+        this.permission = securityConfigurationPermission.getPermissionPath();
         this.excluded = securityConfigurationPermission.getExcluded();
         this.controllerId = controllerId;
         this.normalizedPermission = permission;

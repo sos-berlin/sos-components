@@ -290,7 +290,7 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
         SOSSecurityConfigurationRoleEntry sosSecurityConfigurationRoleEntry = new SOSSecurityConfigurationRoleEntry(role);
         if (permissions.getJoc() != null && !permissions.getJoc().isEmpty()) {
             for (IniPermission permission : permissions.getJoc()) {
-                if (permission.getPath() != null) {
+                if (permission.getPermissionPath() != null) {
                     SOSSecurityPermissionItem sosSecurityPermissionItem = new SOSSecurityPermissionItem("", permission);
                     sosSecurityConfigurationRoleEntry.addPermission(sosSecurityPermissionItem.getIniValue());
                 }
@@ -298,7 +298,7 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
         }
         if (permissions.getControllerDefaults() != null && !permissions.getControllerDefaults().isEmpty()) {
             for (IniPermission permission : permissions.getControllerDefaults()) {
-                if (permission.getPath() != null) {
+                if (permission.getPermissionPath() != null) {
                     SOSSecurityPermissionItem sosSecurityPermissionItem = new SOSSecurityPermissionItem("", permission);
                     sosSecurityConfigurationRoleEntry.addPermission(sosSecurityPermissionItem.getIniValue());
                 }
@@ -309,7 +309,7 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
             for (Map.Entry<String, List<IniPermission>> controllerPermissions : permissions.getControllers().getAdditionalProperties().entrySet()) {
                 if (controllerPermissions.getValue() != null) {
                     for (IniPermission permission : controllerPermissions.getValue()) {
-                        if (permission.getPath() != null) {
+                        if (permission.getPermissionPath() != null) {
                             SOSSecurityPermissionItem sosSecurityPermissionItem = new SOSSecurityPermissionItem(controllerPermissions.getKey(),
                                     permission);
                             sosSecurityConfigurationRoleEntry.addPermission(sosSecurityPermissionItem.getIniValue());

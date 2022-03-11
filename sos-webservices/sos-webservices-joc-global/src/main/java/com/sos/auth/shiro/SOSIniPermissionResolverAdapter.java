@@ -59,18 +59,18 @@ public class SOSIniPermissionResolverAdapter implements RolePermissionResolver {
                         for (IniPermission permission : permissions.getJoc()) {
                             final Permission _permission;
                             if (permission.getExcluded()) {
-                                _permission = new WildcardPermission("-" + permission.getPath());
+                                _permission = new WildcardPermission("-" + permission.getPermissionPath());
                             } else {
-                                _permission = new WildcardPermission(permission.getPath());
+                                _permission = new WildcardPermission(permission.getPermissionPath());
                             }
                             simpleRole.add(_permission);
                         }
                         for (IniPermission permission : permissions.getControllerDefaults()) {
                             final Permission _permission;
                             if (permission.getExcluded()) {
-                                _permission = new WildcardPermission("-" + permission.getPath());
+                                _permission = new WildcardPermission("-" + permission.getPermissionPath());
                             } else {
-                                _permission = new WildcardPermission(permission.getPath());
+                                _permission = new WildcardPermission(permission.getPermissionPath());
                             }
                             simpleRole.add(_permission);
 
@@ -84,12 +84,12 @@ public class SOSIniPermissionResolverAdapter implements RolePermissionResolver {
 
                                         final Permission _permission;
                                         if (permission.getExcluded()) {
-                                            _permission = new WildcardPermission("-" + controllerPermissions.getKey() + ":" + permission.getPath());
+                                            _permission = new WildcardPermission("-" + controllerPermissions.getKey() + ":" + permission.getPermissionPath());
                                         } else {
-                                            _permission = new WildcardPermission(controllerPermissions.getKey() + ":" + permission.getPath());
+                                            _permission = new WildcardPermission(controllerPermissions.getKey() + ":" + permission.getPermissionPath());
                                         }
 
-                                        if (permission.getPath() != null) {
+                                        if (permission.getPermissionPath() != null) {
                                             if (permission.getExcluded()) {
                                                 simpleRole.add(_permission);
                                             } else {

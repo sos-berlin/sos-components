@@ -196,8 +196,8 @@ public class JsonValidator {
             put("com.sos.joc.model.dailyplan.RelativeDatesConverter", "orderManagement/dailyplan/relativeDatesConverter-schema.json");
 
             // auth
-            put("SecurityConfiguration", "security/configuration/security-configuration-schema.json");
-            put("SecurityConfigurationRole", "security/configuration/role-schema.json");
+            put("SecurityConfiguration", "security/securityConfiguration/security-configuration-schema.json");
+            put("SecurityConfigurationRole", "security/securityConfiguration/role-schema.json");
             put("Roles", "security/roles-schema.json");
 
             // iam

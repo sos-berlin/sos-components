@@ -24,6 +24,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class SecurityConfigurationAccount {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("accountName")
     private String accountName;
     @JsonProperty("password")
@@ -91,11 +96,21 @@ public class SecurityConfigurationAccount {
         this.roles = roles;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("accountName")
     public String getAccountName() {
         return accountName;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("accountName")
     public void setAccountName(String accountName) {
         this.accountName = accountName;

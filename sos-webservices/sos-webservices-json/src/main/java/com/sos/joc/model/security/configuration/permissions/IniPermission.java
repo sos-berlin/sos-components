@@ -17,7 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "path",
+    "permissionPath",
     "excluded"
 })
 public class IniPermission {
@@ -29,8 +29,8 @@ public class IniPermission {
      * (Required)
      * 
      */
-    @JsonProperty("path")
-    private String path;
+    @JsonProperty("permissionPath")
+    private String permissionPath;
     @JsonProperty("excluded")
     private Boolean excluded;
 
@@ -44,11 +44,11 @@ public class IniPermission {
     /**
      * 
      * @param excluded
-     * @param path
+     * @param permissionPath
      */
-    public IniPermission(String path, Boolean excluded) {
+    public IniPermission(String permissionPath, Boolean excluded) {
         super();
-        this.path = path;
+        this.permissionPath = permissionPath;
         this.excluded = excluded;
     }
 
@@ -59,9 +59,9 @@ public class IniPermission {
      * (Required)
      * 
      */
-    @JsonProperty("path")
-    public String getPath() {
-        return path;
+    @JsonProperty("permissionPath")
+    public String getPermissionPath() {
+        return permissionPath;
     }
 
     /**
@@ -71,9 +71,9 @@ public class IniPermission {
      * (Required)
      * 
      */
-    @JsonProperty("path")
-    public void setPath(String path) {
-        this.path = path;
+    @JsonProperty("permissionPath")
+    public void setPermissionPath(String permissionPath) {
+        this.permissionPath = permissionPath;
     }
 
     @JsonProperty("excluded")
@@ -88,12 +88,12 @@ public class IniPermission {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("excluded", excluded).toString();
+        return new ToStringBuilder(this).append("permissionPath", permissionPath).append("excluded", excluded).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(excluded).append(path).toHashCode();
+        return new HashCodeBuilder().append(excluded).append(permissionPath).toHashCode();
     }
 
     @Override
@@ -105,7 +105,7 @@ public class IniPermission {
             return false;
         }
         IniPermission rhs = ((IniPermission) other);
-        return new EqualsBuilder().append(excluded, rhs.excluded).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(excluded, rhs.excluded).append(permissionPath, rhs.permissionPath).isEquals();
     }
 
 }

@@ -77,16 +77,16 @@ public class SOSIniAuthorizing implements ISOSAuthorizing {
                             IniPermissions permissions = securityConfiguration.getRoles().getAdditionalProperties().get(role).getPermissions();
                             for (IniPermission permission : permissions.getJoc()) {
                                 if (permission.getExcluded()) {
-                                    authorizationInfo.addStringPermission("-" + permission.getPath());
+                                    authorizationInfo.addStringPermission("-" + permission.getPermissionPath());
                                 } else {
-                                    authorizationInfo.addStringPermission(permission.getPath());
+                                    authorizationInfo.addStringPermission(permission.getPermissionPath());
                                 } 
                             }
                             for (IniPermission permission : permissions.getControllerDefaults()) {
                                 if (permission.getExcluded()) {
-                                    authorizationInfo.addStringPermission("-" + permission.getPath());
+                                    authorizationInfo.addStringPermission("-" + permission.getPermissionPath());
                                 } else {
-                                    authorizationInfo.addStringPermission(permission.getPath());
+                                    authorizationInfo.addStringPermission(permission.getPermissionPath());
                                 }
                             }
 
@@ -96,11 +96,11 @@ public class SOSIniAuthorizing implements ISOSAuthorizing {
                                         .getAdditionalProperties().entrySet()) {
                                     if (controllerPermissions.getValue() != null) {
                                         for (IniPermission permission : controllerPermissions.getValue()) {
-                                            if (permission.getPath() != null) {
+                                            if (permission.getPermissionPath() != null) {
                                                 if (permission.getExcluded()) {
-                                                    authorizationInfo.addStringPermission("-" + controllerPermissions.getKey() + ":" + permission.getPath());
+                                                    authorizationInfo.addStringPermission("-" + controllerPermissions.getKey() + ":" + permission.getPermissionPath());
                                                 } else {
-                                                    authorizationInfo.addStringPermission(controllerPermissions.getKey() + ":" + permission.getPath());
+                                                    authorizationInfo.addStringPermission(controllerPermissions.getKey() + ":" + permission.getPermissionPath());
                                                 }
                                             }
                                         }

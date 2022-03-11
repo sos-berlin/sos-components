@@ -358,7 +358,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                             dbItemIamPermission.setIdentityServiceId(dbItemIamIdentityService.getId());
                             dbItemIamPermission.setRecursive(false);
                             dbItemIamPermission.setRoleId(roleId);
-                            dbItemIamPermission.setAccountPermission(iniPermission.getPath());
+                            dbItemIamPermission.setAccountPermission(iniPermission.getPermissionPath());
                             sosHibernateSession.save(dbItemIamPermission);
                         }
                         for (IniPermission iniPermission : roles.getValue().getPermissions().getControllerDefaults()) {
@@ -366,7 +366,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                             DBItemIamPermission dbItemIamPermission = new DBItemIamPermission();
                             dbItemIamPermission.setIdentityServiceId(dbItemIamIdentityService.getId());
                             dbItemIamPermission.setRoleId(roleId);
-                            dbItemIamPermission.setAccountPermission(iniPermission.getPath());
+                            dbItemIamPermission.setAccountPermission(iniPermission.getPermissionPath());
                             dbItemIamPermission.setRecursive(false);
                             dbItemIamPermission.setExcluded(iniPermission.getExcluded());
                             sosHibernateSession.save(dbItemIamPermission);
@@ -379,7 +379,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                                     DBItemIamPermission dbItemIamPermission = new DBItemIamPermission();
                                     dbItemIamPermission.setIdentityServiceId(dbItemIamIdentityService.getId());
                                     dbItemIamPermission.setRoleId(roleId);
-                                    dbItemIamPermission.setAccountPermission(iniPermission.getPath());
+                                    dbItemIamPermission.setAccountPermission(iniPermission.getPermissionPath());
                                     dbItemIamPermission.setControllerId(controller.getKey());
                                     dbItemIamPermission.setExcluded(iniPermission.getExcluded());
                                     dbItemIamPermission.setRecursive(false);
@@ -515,9 +515,9 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                     && (dbItemSOSPermissionWithName.getAccountPermission() != null && !dbItemSOSPermissionWithName.getAccountPermission()
                             .isEmpty())) {
                 IniPermission iniPermission = new IniPermission();
-                iniPermission.setPath(dbItemSOSPermissionWithName.getAccountPermission());
+                iniPermission.setPermissionPath(dbItemSOSPermissionWithName.getAccountPermission());
                 iniPermission.setExcluded(dbItemSOSPermissionWithName.getExcluded());
-                if (iniPermission.getPath().startsWith("sos:products:controller:")) {
+                if (iniPermission.getPermissionPath().startsWith("sos:products:controller:")) {
                     securityConfigurationRole.getPermissions().getControllerDefaults().add(iniPermission);
                 } else {
                     securityConfigurationRole.getPermissions().getJoc().add(iniPermission);
@@ -528,7 +528,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                     && (dbItemSOSPermissionWithName.getAccountPermission() != null && !dbItemSOSPermissionWithName.getAccountPermission()
                             .isEmpty())) {
                 IniPermission iniPermission = new IniPermission();
-                iniPermission.setPath(dbItemSOSPermissionWithName.getAccountPermission());
+                iniPermission.setPermissionPath(dbItemSOSPermissionWithName.getAccountPermission());
                 iniPermission.setExcluded(dbItemSOSPermissionWithName.getExcluded());
                 if (securityConfigurationRole.getPermissions().getControllers().getAdditionalProperties().get(dbItemSOSPermissionWithName
                         .getControllerId()) == null) {
