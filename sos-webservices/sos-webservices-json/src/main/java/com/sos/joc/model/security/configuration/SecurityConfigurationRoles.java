@@ -1,7 +1,7 @@
 
 package com.sos.joc.model.security.configuration;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class SecurityConfigurationRoles {
 
     @JsonIgnore
-    private Map<String, SecurityConfigurationRole> additionalProperties = new HashMap<String, SecurityConfigurationRole>();
+    private Map<String, SecurityConfigurationRole> additionalProperties = new LinkedHashMap<String, SecurityConfigurationRole>();
 
     @JsonAnyGetter
     public Map<String, SecurityConfigurationRole> getAdditionalProperties() {
