@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -87,7 +88,7 @@ public class JsonConverter {
         if (signWorkflow.getInstructions() != null) {
             // at the moment the converter is only necessary to modify instructions for ForkList, AddOrder instructions
             if (hasInstructionToConvert.test(json)) {
-                convertInstructions(invWorkflow, invWorkflow.getInstructions(), signWorkflow.getInstructions());
+                convertInstructions(invWorkflow, invWorkflow.getInstructions(), signWorkflow.getInstructions(), new AtomicInteger(0));
             }
             if (hasCycleInstruction.test(json)) {
                 signWorkflow.setCalendarPath(DailyPlanCalendar.dailyPlanCalendarName); 
@@ -243,7 +244,7 @@ public class JsonConverter {
         return replaceTokens;
     }
 
-    private static void convertInstructions(Workflow w, List<Instruction> invInstructions, List<com.sos.sign.model.instruction.Instruction> signInstructions) {
+    private static void convertInstructions(Workflow w, List<Instruction> invInstructions, List<com.sos.sign.model.instruction.Instruction> signInstructions, AtomicInteger addOrderIndex) {
         if (invInstructions != null) {
             for (int i = 0; i < invInstructions.size(); i++) {
                 Instruction invInstruction = invInstructions.get(i);
@@ -254,7 +255,7 @@ public class JsonConverter {
                     com.sos.sign.model.instruction.ForkList sfl = signInstruction.cast();
                     convertForkList(fl, sfl);
                     if (fl.getWorkflow() != null) {
-                        convertInstructions(w, fl.getWorkflow().getInstructions(), sfl.getWorkflow().getInstructions());
+                        convertInstructions(w, fl.getWorkflow().getInstructions(), sfl.getWorkflow().getInstructions(), addOrderIndex);
                     }
                     break;
                 case FORK:
@@ -263,7 +264,7 @@ public class JsonConverter {
                     for (int j = 0; j < fj.getBranches().size(); j++) {
                         Branch invBranch = fj.getBranches().get(j);
                         if (invBranch.getWorkflow() != null) {
-                            convertInstructions(w, invBranch.getWorkflow().getInstructions(), sfj.getBranches().get(j).getWorkflow().getInstructions());
+                            convertInstructions(w, invBranch.getWorkflow().getInstructions(), sfj.getBranches().get(j).getWorkflow().getInstructions(), addOrderIndex);
                         }
                     }
                     break;
@@ -271,37 +272,37 @@ public class JsonConverter {
                     IfElse ifElse = invInstruction.cast();
                     com.sos.sign.model.instruction.IfElse sIfElse = signInstruction.cast();
                     if (ifElse.getThen() != null) {
-                        convertInstructions(w, ifElse.getThen().getInstructions(), sIfElse.getThen().getInstructions());
+                        convertInstructions(w, ifElse.getThen().getInstructions(), sIfElse.getThen().getInstructions(), addOrderIndex);
                     }
                     if (ifElse.getElse() != null) {
-                        convertInstructions(w, ifElse.getElse().getInstructions(), sIfElse.getElse().getInstructions());
+                        convertInstructions(w, ifElse.getElse().getInstructions(), sIfElse.getElse().getInstructions(), addOrderIndex);
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = invInstruction.cast();
                     com.sos.sign.model.instruction.TryCatch sTryCatch = signInstruction.cast();
                     if (tryCatch.getTry() != null) {
-                        convertInstructions(w, tryCatch.getTry().getInstructions(), sTryCatch.getTry().getInstructions());
+                        convertInstructions(w, tryCatch.getTry().getInstructions(), sTryCatch.getTry().getInstructions(), addOrderIndex);
                     }
                     if (tryCatch.getCatch() != null) {
-                        convertInstructions(w, tryCatch.getCatch().getInstructions(), sTryCatch.getCatch().getInstructions());
+                        convertInstructions(w, tryCatch.getCatch().getInstructions(), sTryCatch.getCatch().getInstructions(), addOrderIndex);
                     }
                     break;
                 case LOCK:
                     Lock lock = invInstruction.cast();
                     if (lock.getLockedWorkflow() != null) {
                         com.sos.sign.model.instruction.Lock sLock = signInstruction.cast();
-                        convertInstructions(w, lock.getLockedWorkflow().getInstructions(), sLock.getLockedWorkflow().getInstructions());
+                        convertInstructions(w, lock.getLockedWorkflow().getInstructions(), sLock.getLockedWorkflow().getInstructions(), addOrderIndex);
                     }
                     break;
                 case ADD_ORDER:
-                    convertAddOrder(w, invInstruction.cast(), signInstruction.cast());
+                    convertAddOrder(w, invInstruction.cast(), signInstruction.cast(), addOrderIndex);
                     break;
                 case CYCLE:
                     Cycle cycle = invInstruction.cast();
                     if (cycle.getCycleWorkflow() != null) {
                         com.sos.sign.model.instruction.Cycle sCycle = signInstruction.cast();
-                        convertInstructions(w, cycle.getCycleWorkflow().getInstructions(), sCycle.getCycleWorkflow().getInstructions());
+                        convertInstructions(w, cycle.getCycleWorkflow().getInstructions(), sCycle.getCycleWorkflow().getInstructions(), addOrderIndex);
                     }
                     break;
                 default:
@@ -318,14 +319,18 @@ public class JsonConverter {
         //sfl.setChildToId("(x) => $x." + fl.getChildToId());
     }
     
-    private static void convertAddOrder(Workflow w, AddOrder ao, com.sos.sign.model.instruction.AddOrder sao) {
+    private static void convertAddOrder(Workflow w, AddOrder ao, com.sos.sign.model.instruction.AddOrder sao, AtomicInteger addOrderIndex) {
         sao.setDeleteWhenTerminated(ao.getRemainWhenTerminated() != Boolean.TRUE);
         String timeZone = w.getTimeZone();
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = "Etc/UTC";
         }
-        String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ '#D' ++ " + OrdersHelper.mainOrderIdControllerPattern
-                + " ++ $js7EpochMilli  ++ replaceAll($js7OrderId, '^#[0-9]{4}-[0-9]{2}-[0-9]{2}#([^-]+.*)$', '$1')";
+        int n = addOrderIndex.getAndUpdate(x -> x == Integer.MAX_VALUE ? 0 : x + 1);
+        String sAddOrderIndex = ("" + (100 + (n % 100))).substring(1);
+        // first replaceAll #2022-01-01#T12345678901-test|branchname -> test|branchname
+        // second replaceAll test|branchname -> test
+        String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ '#D' ++ " + OrdersHelper.mainOrderIdControllerPattern + " ++ '"
+                + sAddOrderIndex + "-' ++ replaceAll(replaceAll($js7OrderId, '^#[0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+-(.*)$', '$1'), '^([^|]+).*', '$1')";
         sao.setOrderId(String.format(idPattern, timeZone));
 
         if (sao.getArguments() != null && sao.getArguments().getAdditionalProperties() != null) {

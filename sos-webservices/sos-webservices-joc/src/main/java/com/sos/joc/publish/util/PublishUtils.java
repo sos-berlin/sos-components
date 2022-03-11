@@ -33,7 +33,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -2716,7 +2715,7 @@ public abstract class PublishUtils {
 
     private static String getFileOrderIdPattern(FileOrderSource fileOrderSource) {
         String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ '#F' ++ " + OrdersHelper.mainOrderIdControllerPattern
-                + " ++ \"$orderWatchPath:$0\"";
+                + " ++ '00-' ++ \"$orderWatchPath:$0\"";
         String timeZone = fileOrderSource.getTimeZone();
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = "Etc/UTC";
