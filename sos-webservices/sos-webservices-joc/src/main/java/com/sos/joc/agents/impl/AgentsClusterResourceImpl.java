@@ -6,10 +6,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -43,9 +43,11 @@ import com.sos.schema.JsonValidator;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
+import js7.data.subagent.SubagentSelectionId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.subagent.JSubagentRef;
+import js7.data_for_java.subagent.JSubagentSelection;
 import reactor.core.publisher.Flux;
 
 @Path("agents")
@@ -172,16 +174,30 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                                 SubagentId::of).collect(Collectors.toList());
                 updateItems.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(agentPath, directors)));
                 
+                updateItems.addAll(subAgents.stream().map(s -> JSubagentRef.of(SubagentId.of(s.getSubAgentId()), agentPath, Uri.of(s.getUri()))).map(
+                        JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
+
                 switch (agent.getSchedulingType()) {
                 case FIXED_PRIORITY:
-                    Function<DBItemInventorySubAgentInstance, JSubagentRef> mapperFix = s -> JSubagentRef.of(SubagentId.of(s.getSubAgentId()),
-                            agentPath, Uri.of(s.getUri()), Optional.of(-1 * s.getOrdering()));
-                    updateItems.addAll(subAgents.stream().map(mapperFix).map(JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
+                    // https://github.com/sos-berlin/js7/blob/main/js7-data/shared/src/test/scala/js7/data/subagent/SubagentSelectionTest.scala
+                    /*
+     json"""{
+        "TYPE": "SubagentSelection",
+        "id": "SELECTION",
+        "subagentToPriority": {
+          "A-SUBAGENT": 1,
+          "B-SUBAGENT": 2
+        }
+      }"""
+                     */
+                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JSubagentSelection.of(SubagentSelectionId.of(agent.getAgentId()), subAgents
+                            .stream().collect(Collectors.toMap(s -> SubagentId.of(s.getSubAgentId()), s -> -1 * s.getOrdering(), (k, v) -> v)))));
+
                     break;
                 case ROUND_ROBIN:
-                    Function<DBItemInventorySubAgentInstance, JSubagentRef> mapperRound = s -> JSubagentRef.of(SubagentId.of(s.getSubAgentId()),
-                            agentPath, Uri.of(s.getUri()), Optional.of(0));
-                    updateItems.addAll(subAgents.stream().map(mapperRound).map(JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
+                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JSubagentSelection.of(SubagentSelectionId.of(agent.getAgentId()), subAgents
+                            .stream().collect(Collectors.toMap(s -> SubagentId.of(s.getSubAgentId()), s -> 0, (k, v) -> v)))));
+
                     break;
                 }
             }

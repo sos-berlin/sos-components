@@ -31,7 +31,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<sos.engine.version>2.2.3</sos.engine.version>
+		<sos.engine.version>2.3.0-beta.20220311</sos.engine.version>
 		<api.schema.version>2.3.0-SNAPSHOT</api.schema.version>
 		<inventory.schema.version>1.3.0-SNAPSHOT</inventory.schema.version>
 

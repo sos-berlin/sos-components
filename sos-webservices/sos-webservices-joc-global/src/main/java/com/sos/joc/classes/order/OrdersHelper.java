@@ -84,6 +84,7 @@ import js7.data.order.OrderId;
 import js7.data.order.OrderMark.Cancelling;
 import js7.data.order.OrderMark.Resuming;
 import js7.data.order.OrderMark.Suspending;
+import js7.data.subagent.SubagentId;
 import js7.data.value.BooleanValue;
 import js7.data.value.ListValue;
 import js7.data.value.NumberValue;
@@ -391,8 +392,10 @@ public class OrdersHelper {
         o.setCycleState(oItem.getState().getCycleState());
         int positionsSize = o.getPosition().size();
         if ("Processing".equals(oItem.getState().getTYPE())) {
-            // o.setSubagentId(oItem.getState().getSubagentId());
-            o.setSubagentId(((Order.Processing) jOrder.asScala().state()).subagentId().string());
+            Option<SubagentId> subAgentId = ((Order.Processing) jOrder.asScala().state()).subagentId();
+            if (subAgentId.nonEmpty()) {
+                o.setSubagentId(subAgentId.get().string());
+            }
             if (positionsSize > 2) {
                 try {
                     String lastPosition = (String) origPos.toList().get(positionsSize - 2);

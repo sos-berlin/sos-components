@@ -29,9 +29,11 @@ import com.sos.joc.model.agent.ReadAgentsV;
 import com.sos.schema.JsonValidator;
 
 import js7.data.order.Order;
+import js7.data.subagent.SubagentId;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
+import scala.Option;
 
 @Path("agents")
 public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsResourceTasks {
@@ -77,7 +79,10 @@ public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsR
                     ordersPerAgent.putAll(jOrderStream.collect(Collectors.groupingBy(o -> o.attached().get().string(), Collectors.mapping(o -> {
                         AgentTaskOrder ao = new AgentTaskOrder();
                         ao.setOrderId(o.id().string());
-                        ao.setSubagentId(((Order.Processing) o.asScala().state()).subagentId().string());
+                        Option<SubagentId> subAgentId = ((Order.Processing) o.asScala().state()).subagentId();
+                        if (subAgentId.nonEmpty()) {
+                            ao.setSubagentId(subAgentId.get().string());
+                        }
                         return ao;
                     }, Collectors.toList()))));
                 }
