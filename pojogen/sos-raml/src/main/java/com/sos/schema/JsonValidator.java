@@ -198,12 +198,12 @@ public class JsonValidator {
             // auth
             put("SecurityConfiguration", "security/securityConfiguration/security-configuration-schema.json");
             put("SecurityConfigurationRole", "security/securityConfiguration/role-schema.json");
-            put("Roles", "security/roles-schema.json");
+            put("Roles", "security/securityConfiguration/roles-schema.json");
 
             // iam
-            put("com.sos.joc.model.security.IdentityService", "security/identityServices/identityService-schema.json");
-            put("com.sos.joc.model.security.IdentityServiceRename", "security/identityServices/identityServiceRename-schema.json");
-            put("com.sos.joc.model.security.IdentityServiceFilter", "security/identityServices/identityServiceFilter-schema.json");
+            put("com.sos.joc.model.security.idendityservice.IdentityService", "security/identityServices/identityService-schema.json");
+            put("com.sos.joc.model.security.idendityservice.IdentityServiceRename", "security/identityServices/identityServiceRename-schema.json");
+            put("com.sos.joc.model.security.idendityservice.IdentityServiceFilter", "security/identityServices/identityServiceFilter-schema.json");
 
             put("com.sos.joc.model.security.folders.FolderFilter", "security/folders/folderFilter-schema.json");
             put("com.sos.joc.model.security.folders.FoldersFilter", "security/folders/foldersFilter-schema.json");
