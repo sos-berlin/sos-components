@@ -98,7 +98,7 @@ public class SOSSecurityConfigurationAccountEntry {
         if (s == null) {
             s="";
         }
-        String oldUserEntry = oldSection.get(securityConfigurationAccount.getAccount());
+        String oldUserEntry = oldSection.get(securityConfigurationAccount.getAccountName());
         String oldPwd = "";
         if (oldUserEntry != null) {
             oldPwd = oldUserEntry.split(",")[0];

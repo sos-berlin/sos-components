@@ -32,7 +32,9 @@ import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.Configurations;
 import com.sos.joc.model.configuration.ConfigurationsDeleteFilter;
 import com.sos.joc.model.configuration.ConfigurationsFilter;
+import com.sos.joc.model.configuration.Profiles;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
+import com.sos.joc.model.security.accounts.AccountsFilter;
 import com.sos.schema.JsonValidator;
 
 @Path("configurations")
@@ -40,6 +42,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
 
     private static final String API_CALL = "./configurations";
     private static final String API_CALL_DELETE = "./configurations/delete";
+    private static final String API_CALL_PROFILES = "./configurations/profiles";
 
     @Override
     public JOCDefaultResponse postConfigurations(String accessToken, byte[] filterBytes) {
@@ -53,42 +56,42 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                 return jocDefaultResponse;
             }
 
-//            String objectType = null;
-//            if (configurationsFilter.getObjectType() != null) {
-//                objectType = configurationsFilter.getObjectType().value();
-//            }
+            // String objectType = null;
+            // if (configurationsFilter.getObjectType() != null) {
+            // objectType = configurationsFilter.getObjectType().value();
+            // }
             String objectType = configurationsFilter.getObjectType();
             String configurationType = null;
             GlobalSettings defaultGlobalSettings = null;
-            
+
             if (configurationsFilter.getConfigurationType() != null) {
                 configurationType = configurationsFilter.getConfigurationType().value();
                 switch (configurationsFilter.getConfigurationType()) {
                 case PROFILE:
-//                    String userName = getJobschedulerUser(accessToken).getSosShiroCurrentUser().getUsername();
-//                    if (configurationsFilter.getAccount() == null || configurationsFilter.getAccount().isEmpty()) {
-//                        configurationsFilter.setAccount(userName);
-//                    } else if (!configurationsFilter.getAccount().equals(userName)) {
-//                        throw new JocBadRequestException("You can only read your own profile.");
-//                    }
+                    // String userName = getJobschedulerUser(accessToken).getSosShiroCurrentUser().getUsername();
+                    // if (configurationsFilter.getAccount() == null || configurationsFilter.getAccount().isEmpty()) {
+                    // configurationsFilter.setAccount(userName);
+                    // } else if (!configurationsFilter.getAccount().equals(userName)) {
+                    // throw new JocBadRequestException("You can only read your own profile.");
+                    // }
                     break;
                 case GLOBALS:
                     // read only user settings without permissions
-//                    if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
-//                        return accessDeniedResponse();
-//                    }
+                    // if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
+                    // return accessDeniedResponse();
+                    // }
                     configurationsFilter.setControllerId(ConfigurationGlobals.CONTROLLER_ID);
                     configurationsFilter.setAccount(ConfigurationGlobals.ACCOUNT);
-                    //configurationsFilter.setObjectType(ConfigurationGlobals.OBJECT_TYPE);
+                    // configurationsFilter.setObjectType(ConfigurationGlobals.OBJECT_TYPE);
                     configurationsFilter.setObjectType(null);
 
                     defaultGlobalSettings = new ConfigurationGlobals().getClonedDefaults();
                     if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
                         // read only user settings without permissions
                         if (defaultGlobalSettings != null) {
-                            for(DefaultSections ds : EnumSet.allOf(DefaultSections.class)) {
+                            for (DefaultSections ds : EnumSet.allOf(DefaultSections.class)) {
                                 if (!ds.equals(DefaultSections.user)) {
-                                    defaultGlobalSettings.removeAdditionalProperty(ds.name()); 
+                                    defaultGlobalSettings.removeAdditionalProperty(ds.name());
                                 }
                             }
                         }
@@ -126,7 +129,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                         if (listOfJocConfigurationDbItem == null || listOfJocConfigurationDbItem.isEmpty() || !listOfJocConfigurationDbItem.stream()
                                 .anyMatch(item -> ConfigurationType.PROFILE.value().equals(item.getConfigurationType()) && account.equals(item
                                         .getAccount()) && configurationsFilter.getControllerId().equals(item.getControllerId()))) {
-                            // then copy from default_profile_account 
+                            // then copy from default_profile_account
                             String defaultProfileAccount = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
                             JocConfigurationFilter filter2 = new JocConfigurationFilter();
                             filter2.setAccount(defaultProfileAccount);
@@ -242,4 +245,40 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
         }
     }
 
+    @Override
+    public JOCDefaultResponse postConfigurationsProfiles(String accessToken, byte[] body) {
+        SOSHibernateSession sosHibernateSession = null;
+
+        try {
+            initLogging(API_CALL_PROFILES, null, accessToken);
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
+            sosHibernateSession.setAutoCommit(false);
+            Globals.beginTransaction(sosHibernateSession);
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_PROFILES);
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+            JocConfigurationFilter filter = new JocConfigurationFilter();
+            filter.setConfigurationType("PROFILE");
+            Profiles profiles = new Profiles();
+
+            profiles.setProfiles(jocConfigurationDBLayer.getJocConfigurationProfiles(filter));
+            profiles.setDeliveryDate(Date.from(Instant.now()));
+
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(profiles));
+
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
 }

@@ -19,5 +19,10 @@ public interface IJocConfigurationsResource{
     @Path("delete")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postConfigurationsDelete(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("profiles")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postConfigurationsProfiles(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
  
 }

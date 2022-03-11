@@ -40,7 +40,7 @@ public class SOSIniAuthorizing implements ISOSAuthorizing {
                 securityConfiguration = sosSecurityConfiguration.readConfiguration();
             }
             for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-                if (accountName.equals(securityConfigurationAccount.getAccount())) {
+                if (accountName.equals(securityConfigurationAccount.getAccountName())) {
                     for (String role : securityConfigurationAccount.getRoles()) {
                         authorizationInfo.addRole(role);
                     }
@@ -71,7 +71,7 @@ public class SOSIniAuthorizing implements ISOSAuthorizing {
                 securityConfiguration = sosSecurityConfiguration.readConfiguration();
             }
             for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-                if (accountName.equals(securityConfigurationAccount.getAccount())) {
+                if (accountName.equals(securityConfigurationAccount.getAccountName())) {
                     for (String role : securityConfigurationAccount.getRoles()) {
                         if (securityConfiguration.getRoles().getAdditionalProperties().get(role) != null) {
                             IniPermissions permissions = securityConfiguration.getRoles().getAdditionalProperties().get(role).getPermissions();

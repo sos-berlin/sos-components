@@ -4,6 +4,7 @@ package com.sos.joc.model.configuration;
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,8 +19,33 @@ public class Profile {
 
     @JsonProperty("account")
     private String account;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("lastLogin")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date lastLogin;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Profile() {
+    }
+
+    /**
+     * 
+     * @param lastLogin
+     * @param account
+     */
+    public Profile(String account, Date lastLogin) {
+        super();
+        this.account = account;
+        this.lastLogin = lastLogin;
+    }
 
     @JsonProperty("account")
     public String getAccount() {
@@ -31,11 +57,23 @@ public class Profile {
         this.account = account;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("lastLogin")
     public Date getLastLogin() {
         return lastLogin;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("lastLogin")
     public void setLastLogin(Date lastLogin) {
         this.lastLogin = lastLogin;

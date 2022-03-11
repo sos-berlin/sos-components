@@ -63,7 +63,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
             SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
             SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
-            sosVaultAccountCredentials.setUsername(securityConfigurationAccount.getAccount());
+            sosVaultAccountCredentials.setUsername(securityConfigurationAccount.getAccountName());
 
             List<String> tokenPolicies = new ArrayList<String>();
             for (String role : securityConfigurationAccount.getRoles()) {
@@ -116,7 +116,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                 error.setMessage("Password is too short");
                 throw new JocInfoException(error);
             }
-            iamAccountFilter.setAccountName(securityConfigurationAccount.getAccount());
+            iamAccountFilter.setAccountName(securityConfigurationAccount.getAccountName());
             List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
             DBItemIamAccount dbItemIamAcount;
             if (listOfAccounts.size() == 1) {
@@ -125,7 +125,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                 dbItemIamAcount = new DBItemIamAccount();
             }
 
-            dbItemIamAcount.setAccountName(securityConfigurationAccount.getAccount());
+            dbItemIamAcount.setAccountName(securityConfigurationAccount.getAccountName());
             if ("JOC".equals(dbItemIamIdentityService.getIdentityServiceType()) || "VAULT-JOC-ACTIVE".equals(dbItemIamIdentityService
                     .getIdentityServiceType())) {
                 if (!"********".equals(password)) {
@@ -195,10 +195,10 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
             iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
-            iamAccountFilter.setAccountName(securityConfigurationAccount.getAccount());
+            iamAccountFilter.setAccountName(securityConfigurationAccount.getAccountName());
             int count = iamAccountDBLayer.deleteCascading(iamAccountFilter);
             if (count == 0) {
-                throw new JocObjectNotExistException("Object <" + securityConfigurationAccount.getAccount() + "> not found");
+                throw new JocObjectNotExistException("Object <" + securityConfigurationAccount.getAccountName() + "> not found");
             }
         }
     }
@@ -224,7 +224,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                 if (securityConfigurationAccount.getPassword() != null && securityConfigurationAccount.getPassword().equals(
                         securityConfigurationAccount.getRepeatedPassword())) {
                     iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
-                    iamAccountFilter.setAccountName(securityConfigurationAccount.getAccount());
+                    iamAccountFilter.setAccountName(securityConfigurationAccount.getAccountName());
 
                     List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
                     if (listOfAccounts.size() == 1) {
@@ -292,14 +292,14 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
             for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
                 iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
-                iamAccountFilter.setAccountName(securityConfigurationAccount.getAccount());
+                iamAccountFilter.setAccountName(securityConfigurationAccount.getAccountName());
                 List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
                 if (listOfAccounts.size() == 1) {
                     listOfAccounts.get(0).setForcePasswordChange(true);
                     sosHibernateSession.update(listOfAccounts.get(0));
                 } else {
                     JocError error = new JocError();
-                    error.setMessage("Unknown account:" + securityConfigurationAccount.getAccount());
+                    error.setMessage("Unknown account:" + securityConfigurationAccount.getAccountName());
                     throw new JocInfoException(error);
                 }
             }
@@ -473,7 +473,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
         for (DBItemIamAccount dbItemIamAccount : listOfAccounts) {
             SecurityConfigurationAccount securityConfigurationAccount = new SecurityConfigurationAccount();
-            securityConfigurationAccount.setAccount(dbItemIamAccount.getAccountName());
+            securityConfigurationAccount.setAccountName(dbItemIamAccount.getAccountName());
             securityConfigurationAccount.setPassword("********");
             securityConfigurationAccount.setIdentityServiceId(dbItemIamAccount.getIdentityServiceId());
             securityConfigurationAccount.setForcePasswordChange(dbItemIamAccount.getForcePasswordChange());

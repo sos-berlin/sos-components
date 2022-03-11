@@ -98,7 +98,7 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
                 SOSSecurityConfigurationAccountEntry sosSecurityConfigurationAccountEntry = new SOSSecurityConfigurationAccountEntry(entry.getValue(), null,
                         null);
 
-                securityConfigurationAccount.setAccount(entry.getKey());
+                securityConfigurationAccount.setAccountName(entry.getKey());
                 securityConfigurationAccount.setPassword(sosSecurityConfigurationAccountEntry.getPassword());
                 securityConfigurationAccount.setIdentityServiceId(identityServiceId);
                 securityConfigurationAccount.setRoles(sosSecurityConfigurationAccountEntry.getRoles());
@@ -234,7 +234,7 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
                         oldSection, sosSecurityHashSettings);
                 if ((securityConfigurationAccount.getPassword() != null && !securityConfigurationAccount.getPassword().isEmpty())
                         || !securityConfigurationAccount.getRoles().isEmpty()) {
-                    s.put(securityConfigurationAccount.getAccount(), sosSecurityConfigurationAccountEntry.getIniWriteString());
+                    s.put(securityConfigurationAccount.getAccountName(), sosSecurityConfigurationAccountEntry.getIniWriteString());
                 }
             });
         }

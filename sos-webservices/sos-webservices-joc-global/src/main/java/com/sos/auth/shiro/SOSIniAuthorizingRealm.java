@@ -71,7 +71,7 @@ public class SOSIniAuthorizingRealm extends AuthorizingRealm {
 
         String passwordIni = null;
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-            if (authToken.getUsername().equals(securityConfigurationAccount.getAccount())) {
+            if (authToken.getUsername().equals(securityConfigurationAccount.getAccountName())) {
                 passwordIni = securityConfigurationAccount.getPassword();
                 break;
             }
