@@ -333,11 +333,11 @@ public class JsonConverter {
         // second replaceAll(replaceAll...) 
         //      #2022-01-01#T12345678901-test|branchname of parent orderId -> test|branchname -> test
         // resp.
-        //      #2022-01-01#T12345678901-2022010112345678901#-test|branchname of parent orderId -> test|branchname -> test
+        //      #2022-01-01#T12345678901-2022010112345678901!-test|branchname of parent orderId -> test|branchname -> test
         String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ '#D' ++ " + OrdersHelper.mainOrderIdControllerPattern + " ++ '"
                 + sAddOrderIndex + "-' ++ replaceAll(replaceAll($js7OrderId, '^(" + datetimePattern
                 + ")-.*$', '$1'), '\\D', \"\") ++ replaceAll(replaceAll($js7OrderId, '^" + datetimePattern
-                + "-([^#]+#-)?(.*)$', '$2'), '^([^|]+).*', '#-$1')";
+                + "-([^!]+!-)?(.*)$', '$2'), '^([^|]+).*', '!-$1')";
         sao.setOrderId(String.format(idPattern, timeZone));
 
         if (sao.getArguments() != null && sao.getArguments().getAdditionalProperties() != null) {
