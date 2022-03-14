@@ -46,16 +46,18 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
 	}
 
 	private void log(JobLogger logger, String log) {
-		LOGGER.info(log);
 		if (logger != null) {
 			logger.info(log);
+		} else {
+			LOGGER.info(log);
 		}
 	}
 
 	private void debug(JobLogger logger, String log) {
-		LOGGER.debug(log);
 		if (logger != null) {
 			logger.debug(log);
+		} else {
+			LOGGER.debug(log);
 		}
 	}
 
@@ -92,10 +94,10 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
 			}
 
 			if (s.isEmpty()) {
-				debug(logger,"Empty user and password. Trying wallet");
+				debug(logger, "Empty user and password. Trying wallet");
 				connection = DriverManager.getConnection(args.getDbUrl());
 			} else {
-				debug(logger,"Connecting with user and password.");
+				debug(logger, "Connecting with user and password.");
 				connection = DriverManager.getConnection(args.getDbUrl(), args.getDbUser(), args.getDbPassword());
 			}
 
@@ -206,6 +208,7 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
 		} catch (SQLException e) {
 			String errorMessage = String.format("SQL Exception raised. Msg='%1$s', Status='%2$s'", e.getMessage(),
 					e.getSQLState());
+			debug(logger, errorMessage);
 			LOGGER.error(errorMessage, e);
 			throw new Exception(errorMessage, e);
 		} finally {
