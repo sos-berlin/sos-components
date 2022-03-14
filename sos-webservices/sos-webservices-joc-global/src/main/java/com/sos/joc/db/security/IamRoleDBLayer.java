@@ -128,7 +128,7 @@ public class IamRoleDBLayer {
         bindParameters(filter, query);
        
         List<String> iamRoleList = query.getResultList();
-        iamRoleList.add("default");
+        iamRoleList.add("");
         return iamRoleList == null ? Collections.emptyList() : iamRoleList;
     }
 

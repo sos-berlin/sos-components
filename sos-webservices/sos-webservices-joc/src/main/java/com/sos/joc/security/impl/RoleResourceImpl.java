@@ -209,7 +209,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            JsonValidator.validate(body, RoleFilter.class);
+            JsonValidator.validate(body, RolesFilter.class);
             RolesFilter rolesFilter = Globals.objectMapper.readValue(body, RolesFilter.class);
             initLogging(API_CALL_ROLE_DELETE, Globals.objectMapper.writeValueAsBytes(rolesFilter), accessToken);
 
