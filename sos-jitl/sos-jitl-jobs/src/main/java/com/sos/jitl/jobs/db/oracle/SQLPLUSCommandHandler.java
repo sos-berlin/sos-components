@@ -159,17 +159,19 @@ public class SQLPLUSCommandHandler {
         }
     }
 
-    private void log(JobLogger logger, String log) {
-        LOGGER.info(log);
-        if (logger != null) {
-            logger.info(log);
-        }
-    }
+	private void log(JobLogger logger, String log) {
+		if (logger != null) {
+			logger.info(log);
+		} else {
+			LOGGER.info(log);
+		}
+	}
 
-    private void debug(JobLogger logger, String log) {
-        LOGGER.debug(log);
-        if (logger != null) {
-            logger.debug(log);
-        }
-    }
+	private void debug(JobLogger logger, String log) {
+		if (logger != null) {
+			logger.debug(log);
+		} else {
+			LOGGER.debug(log);
+		}
+	}
 }

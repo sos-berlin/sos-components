@@ -96,19 +96,21 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
         return resultMap;
     }
 
-    private void log(JobLogger logger, String log) {
-        LOGGER.info(log);
-        if (logger != null) {
-            logger.info(log);
-        }
-    }
+	private void log(JobLogger logger, String log) {
+		if (logger != null) {
+			logger.info(log);
+		} else {
+			LOGGER.info(log);
+		}
+	}
 
-    private void debug(JobLogger logger, String log) {
-        LOGGER.debug(log);
-        if (logger != null) {
-            logger.debug(log);
-        }
-    }
+	private void debug(JobLogger logger, String log) {
+		if (logger != null) {
+			logger.debug(log);
+		} else {
+			LOGGER.debug(log);
+		}
+	}
 
     public static void main(String[] args) {
         SQLPLUSJob sosSQLPlusJob = new SQLPLUSJob(null);
