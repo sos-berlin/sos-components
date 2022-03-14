@@ -125,8 +125,10 @@ public class SQLPlusJobArguments extends JobArguments {
 
     public String getConnectionString() {
         String connectionString = "";
-        if (getDbUser() != null) {
+        if (getDbUser() != null && !getDbUser().isEmpty()) {
             connectionString = getDbUser() + "/" + getDbPassword().getValue() + "@" + getDbUrl();
+        }else {
+            connectionString = "/@" + getDbUrl();
         }
         return connectionString;
     }
@@ -138,9 +140,8 @@ public class SQLPlusJobArguments extends JobArguments {
             commandParams += " " + dbConnectionString;
         }
 
-        if (!getCommandScriptFile().isEmpty()) {
-            commandParams += " @" + tempFileName;
-        }
+             commandParams += " @" + tempFileName;
+        
         return commandParams;
 
     }
@@ -155,7 +156,7 @@ public class SQLPlusJobArguments extends JobArguments {
             shellCommand += " " + getCommandLineOptions();
         }
 
-        return shellCommand + " " + getCommandParams(tempFileName);
+        return shellCommand + " " + getCommandParams(tempFileName) ;
     }
 
     public String getCommandLineForLog(String tempFileName) {
