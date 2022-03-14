@@ -141,10 +141,13 @@ public class MailHandler {
         }
     }
 
-    private void log(JobLogger logger, String log) {
-        LOGGER.info(log);
-        if (logger != null) {
-            logger.info(log);
-        }
-    }
+	private void log(JobLogger logger, String log) {
+		if (logger != null) {
+			logger.info(log);
+		} else {
+			LOGGER.info(log);
+		}
+	}
+
+	 
 }
