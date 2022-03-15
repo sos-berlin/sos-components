@@ -49,10 +49,9 @@ import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.model.publish.repository.Category;
+import com.sos.joc.model.publish.repository.Configurations;
 import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.model.publish.repository.DeleteFromFilter;
-import com.sos.joc.model.publish.repository.EnvIndependentConfigurations;
-import com.sos.joc.model.publish.repository.EnvRelatedConfigurations;
 import com.sos.joc.model.publish.repository.ReadFromFilter;
 import com.sos.joc.model.publish.repository.ResponseFolder;
 import com.sos.joc.model.publish.repository.ResponseFolderItem;
@@ -717,30 +716,31 @@ public class DeploymentTestUtils {
         cfgFolder.setRecursive(true);
         folder.setConfiguration(cfgFolder);
         
-        EnvIndependentConfigurations envIndependent = new EnvIndependentConfigurations();
-        envIndependent.getDraftConfigurations().add(folder);
-        envIndependent.getDeployConfigurations().add(folder);
+        Configurations rollout = new Configurations();
+        rollout.getDraftConfigurations().add(folder);
+        rollout.getDeployConfigurations().add(folder);
+        rollout.getReleasedConfigurations().add(folder);
         
-        EnvRelatedConfigurations envRelated = new EnvRelatedConfigurations();
-        envRelated.getDraftConfigurations().add(folder);
-        envRelated.getDeployConfigurations().add(folder);
-        envRelated.getReleasedConfigurations().add(folder);
+        Configurations local = new Configurations();
+        local.getDraftConfigurations().add(folder);
+        local.getDeployConfigurations().add(folder);
+        local.getReleasedConfigurations().add(folder);
         
-        filter.setRollout(envIndependent);
-        filter.setLocal(envRelated);
+        filter.setRollout(rollout);
+        filter.setLocal(local);
         return filter;
     }
 
     public static CopyToFilter createRepositoryCopyToFilterFilesExample () throws JsonProcessingException {
         
-        EnvIndependentConfigurations envIndependent = new EnvIndependentConfigurations();
-        EnvRelatedConfigurations envRelated = new EnvRelatedConfigurations();
+        Configurations rollout = new Configurations();
+        Configurations local = new Configurations();
 
         CopyToFilter filter = new CopyToFilter();
         filter.setControllerId("testsuite");
         filter.setAuditLog(null);
-        filter.setRollout(envIndependent);
-        filter.setLocal(envRelated);
+        filter.setRollout(rollout);
+        filter.setLocal(local);
 
         Config file = new Config();
         Configuration cfg = new Configuration();
@@ -749,7 +749,7 @@ public class DeploymentTestUtils {
         cfg.setPath("/ProductDemo/AdmissionTimes/pdAdmissionTimeJob2");
         cfg.setCommitId("0a4b2077-6912-4a98-b5f1-799af9c1d90a");
         file.setConfiguration(cfg);
-        envIndependent.getDeployConfigurations().add(file);
+        rollout.getDeployConfigurations().add(file);
 
         file = new Config();
         cfg = new Configuration();
@@ -757,7 +757,7 @@ public class DeploymentTestUtils {
         cfg.setObjectType(ConfigurationType.WORKFLOW);
         cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicSerialWorkflow");
         file.setConfiguration(cfg);
-        envIndependent.getDraftConfigurations().add(file);
+        rollout.getDraftConfigurations().add(file);
         
         file = new Config();
         cfg = new Configuration();
@@ -765,9 +765,9 @@ public class DeploymentTestUtils {
         cfg.setObjectType(ConfigurationType.SCHEDULE);
         cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicSerialWorkflow");
         file.setConfiguration(cfg);
-        envRelated.getDraftConfigurations().add(file);
+        local.getDraftConfigurations().add(file);
 
-        envRelated.setDeployConfigurations(null);
+        local.setDeployConfigurations(null);
 
         file = new Config();
         cfg = new Configuration();
@@ -775,7 +775,7 @@ public class DeploymentTestUtils {
         cfg.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
         cfg.setPath("/ProductDemo/CyclicExecution/pdCyclicAllDays");
         file.setConfiguration(cfg);
-        envRelated.getReleasedConfigurations().add(file);
+        local.getReleasedConfigurations().add(file);
         
         return filter;
     }

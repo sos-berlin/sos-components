@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Filter for environment related Objects
+ * Filter for configurations
  * <p>
  * 
  * 
@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deployConfigurations",
     "releasedConfigurations"
 })
-public class EnvRelatedConfigurations {
+public class Configurations {
 
     @JsonProperty("draftConfigurations")
     private List<Config> draftConfigurations = new ArrayList<Config>();
@@ -78,10 +78,10 @@ public class EnvRelatedConfigurations {
         if (other == this) {
             return true;
         }
-        if ((other instanceof EnvRelatedConfigurations) == false) {
+        if ((other instanceof Configurations) == false) {
             return false;
         }
-        EnvRelatedConfigurations rhs = ((EnvRelatedConfigurations) other);
+        Configurations rhs = ((Configurations) other);
         return new EqualsBuilder().append(draftConfigurations, rhs.draftConfigurations).append(releasedConfigurations, rhs.releasedConfigurations).append(deployConfigurations, rhs.deployConfigurations).isEquals();
     }
 

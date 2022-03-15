@@ -54,7 +54,8 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
             Set<ConfigurationObject> deployables = RepositoryUtil.getDeployableRolloutConfigurationsFromDB(filter, dbLayer, null);
             deployables.addAll(RepositoryUtil.getDeployableLocalConfigurationsFromDB(filter, dbLayer, null));
             deployables = deployables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
-            Set<ConfigurationObject> releasables = RepositoryUtil.getReleasableConfigurationsFromDB(filter, dbLayer);
+            Set<ConfigurationObject> releasables = RepositoryUtil.getReleasableRolloutConfigurationsFromDB(filter, dbLayer);
+            releasables.addAll(RepositoryUtil.getReleasableLocalConfigurationsFromDB(filter, dbLayer));
             releasables = releasables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
             if (filter.getRollout() != null && filter.getLocal() != null) {
 //              both

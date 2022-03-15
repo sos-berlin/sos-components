@@ -32,8 +32,8 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
 		<sos.engine.version>2.2.3</sos.engine.version>
-		<api.schema.version>2.2.3</api.schema.version>
-		<inventory.schema.version>1.2.3</inventory.schema.version>
+		<api.schema.version>2.2.4-SNAPSHOT</api.schema.version>
+		<inventory.schema.version>1.2.4-SNAPSHOT</inventory.schema.version>
 
 		<!-- 3rd Party version properties and the dependencyManagement have to 
 			be reworked for 2.0.0 below configuration is only as an example -->

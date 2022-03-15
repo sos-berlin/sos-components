@@ -368,60 +368,23 @@ public abstract class RepositoryUtil {
         DBMissingDataException, IOException, SOSHibernateException {
         List<ConfigurationType> localTypes = getLocalConfigurationTypes();
         return getDeployableConfigurationsFromDB(filter, dbLayer, commitId, localTypes.stream()
-                .filter(type -> 
-                    !ConfigurationType.SCHEDULE.equals(type) && 
-                    !ConfigurationType.WORKINGDAYSCALENDAR.equals(type) && 
-                    !ConfigurationType.NONWORKINGDAYSCALENDAR.equals(type))
-                .map(filtered -> filtered.intValue()).collect(Collectors.toSet()));
+                .map(type -> type.intValue()).collect(Collectors.toSet()));
     }
-
-    public static Set<ConfigurationObject> getReleasableConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer) 
+    
+    public static Set<ConfigurationObject> getReleasableRolloutConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer) 
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
             IOException, SOSHibernateException {
-        Map<String, ConfigurationObject> allObjectsMap = new HashMap<String, ConfigurationObject>();
-        // TODO: add missing JobResources
-        if (filter != null && filter.getLocal() != null) {
-            if (filter.getLocal().getReleasedConfigurations() != null && !filter.getLocal().getReleasedConfigurations().isEmpty()) {
-                List<Configuration> releasedFolders = filter.getLocal().getReleasedConfigurations().stream()
-                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                        .map(item -> item.getConfiguration()).collect(Collectors.toList());
-                Set<DBItemInventoryReleasedConfiguration> allItems = new HashSet<DBItemInventoryReleasedConfiguration>();
-                if (releasedFolders != null && !releasedFolders.isEmpty()) {
-                    allItems.addAll(PublishUtils.getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(releasedFolders, dbLayer));
-                }
-                List<DBItemInventoryReleasedConfiguration> configurationDbItems = dbLayer.getFilteredReleasedConfigurations(filter);
-                if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
-                    allItems.addAll(configurationDbItems);
-                }
-                if (!allItems.isEmpty()) {
-                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                        .forEach(item -> allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item)));
-                }
-            }
-            if (filter.getLocal().getDraftConfigurations() != null && !filter.getLocal().getDraftConfigurations().isEmpty()) {
-                List<Configuration> draftFolders = filter.getLocal().getDraftConfigurations().stream()
-                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                        .map(item -> item.getConfiguration()).collect(Collectors.toList());
-                Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
-                if (draftFolders != null && !draftFolders.isEmpty()) {
-                    allItems.addAll(PublishUtils.getReleasableInventoryConfigurationsWithoutReleasedfromFolders(draftFolders, dbLayer));
-                }
-                List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredReleasableConfigurations(filter);
-                if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
-                    allItems.addAll(configurationDbItems);
-                }
-                if (!allItems.isEmpty()) {
-                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                        .forEach(item -> {
-                            if (!allObjectsMap.containsKey(item.getName())) {
-                                allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item));
-                            }
-                        });
-                }
-            }
-        }
-        Set<ConfigurationObject> withoutDuplicates = new HashSet<ConfigurationObject>(allObjectsMap.values());
-        return withoutDuplicates;
+        List<ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
+        return getReleasableConfigurationsFromDB(filter, dbLayer, rolloutTypes.stream()
+                .map(type -> type.intValue()).collect(Collectors.toSet()));
+    }
+
+    public static Set<ConfigurationObject> getReleasableLocalConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer) 
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
+            IOException, SOSHibernateException {
+        List<ConfigurationType> localTypes = getLocalConfigurationTypes();
+        return getReleasableConfigurationsFromDB(filter, dbLayer, localTypes.stream()
+                .map(type -> type.intValue()).collect(Collectors.toSet()));
     }
 
     public static Set<Path> getRelativePathsToDeleteFromDB(DeleteFromFilter filter, DBLayerDeploy dbLayer) throws DBConnectionRefusedException,
@@ -1004,6 +967,99 @@ public abstract class RepositoryUtil {
             }
         }
         return configurations;
+    }
+
+    private static Set<ConfigurationObject> getReleasableConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, Set<Integer> types) 
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
+            IOException, SOSHibernateException {
+        Map<String, ConfigurationObject> allObjectsMap = new HashMap<String, ConfigurationObject>();
+        if (filter != null) {
+            if(filter.getLocal() != null) {
+                if (filter.getLocal().getReleasedConfigurations() != null && !filter.getLocal().getReleasedConfigurations().isEmpty()) {
+                    List<Configuration> releasedFolders = filter.getLocal().getReleasedConfigurations().stream()
+                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                            .map(item -> item.getConfiguration()).collect(Collectors.toList());
+                    Set<DBItemInventoryReleasedConfiguration> allItems = new HashSet<DBItemInventoryReleasedConfiguration>();
+                    if (releasedFolders != null && !releasedFolders.isEmpty()) {
+                        allItems.addAll(PublishUtils.getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(releasedFolders, dbLayer));
+                    }
+                    List<DBItemInventoryReleasedConfiguration> configurationDbItems = dbLayer.getFilteredReleasedConfigurations(filter);
+                    if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
+                        allItems.addAll(configurationDbItems);
+                    }
+                    if (!allItems.isEmpty()) {
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
+                            .forEach(item -> allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item)));
+                    }
+                }
+                if (filter.getLocal().getDraftConfigurations() != null && !filter.getLocal().getDraftConfigurations().isEmpty()) {
+                    List<Configuration> draftFolders = filter.getLocal().getDraftConfigurations().stream()
+                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                            .map(item -> item.getConfiguration()).collect(Collectors.toList());
+                    Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
+                    if (draftFolders != null && !draftFolders.isEmpty()) {
+                        allItems.addAll(PublishUtils.getReleasableInventoryConfigurationsWithoutReleasedfromFolders(draftFolders, dbLayer));
+                    }
+                    List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredReleasableConfigurations(filter);
+                    if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
+                        allItems.addAll(configurationDbItems);
+                    }
+                    if (!allItems.isEmpty()) {
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
+                            .forEach(item -> {
+                                if (!allObjectsMap.containsKey(item.getName())) {
+                                    allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item));
+                                }
+                            });
+                    }
+                }
+            }
+            if (filter.getRollout() != null) {
+                if (filter.getRollout().getReleasedConfigurations() != null && !filter.getRollout().getReleasedConfigurations().isEmpty()) {
+                    List<Configuration> releasedFolders = filter.getRollout().getReleasedConfigurations().stream()
+                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                            .map(item -> item.getConfiguration()).collect(Collectors.toList());
+                    Set<DBItemInventoryReleasedConfiguration> allItems = new HashSet<DBItemInventoryReleasedConfiguration>();
+                    if (releasedFolders != null && !releasedFolders.isEmpty()) {
+                        allItems.addAll(PublishUtils.getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(releasedFolders, dbLayer));
+                    }
+                    List<DBItemInventoryReleasedConfiguration> configurationDbItems = dbLayer.getFilteredReleasedConfigurations(filter);
+                    if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
+                        allItems.addAll(configurationDbItems);
+                    }
+                    if (!allItems.isEmpty()) {
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
+                            .forEach(item -> allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item)));
+                    }
+                }
+                if (filter.getRollout().getDraftConfigurations() != null && !filter.getRollout().getDraftConfigurations().isEmpty()) {
+                    List<Configuration> draftFolders = filter.getRollout().getDraftConfigurations().stream()
+                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                            .map(item -> item.getConfiguration()).collect(Collectors.toList());
+                    Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
+                    if (draftFolders != null && !draftFolders.isEmpty()) {
+                        allItems.addAll(PublishUtils.getReleasableInventoryConfigurationsWithoutReleasedfromFolders(draftFolders, dbLayer));
+                    }
+                    List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredReleasableConfigurations(filter);
+                    if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
+                        allItems.addAll(configurationDbItems);
+                    }
+                    if (!allItems.isEmpty()) {
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
+                            .forEach(item -> {
+                                if (!allObjectsMap.containsKey(item.getName())) {
+                                    allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item));
+                                }
+                            });
+                    }
+                }
+                
+            }
+        }
+        if (filter != null && filter.getLocal() != null) {
+        }
+        Set<ConfigurationObject> withoutDuplicates = new HashSet<ConfigurationObject>(allObjectsMap.values());
+        return withoutDuplicates;
     }
 
     private static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFoldersByType(Set<Configuration> folders,
