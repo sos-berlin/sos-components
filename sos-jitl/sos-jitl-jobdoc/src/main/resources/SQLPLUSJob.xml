@@ -56,20 +56,7 @@
 
             <xi:include href="./includes/com.sos.jitl.jobs.sql/param_sqlplus_script_file.xml" parse="xml"/>
 
-            <param name="command_script_file" required="one of command or command_script_file">
-                <note>
-                	<title>Path to a file that contains the SQL statement(s)</title>
-                	<p>
-                    	SQL statements are specified from an input file to the SQL*Plus Client.
-                    	SQL statements included in a file have to be separated by a semicolon and a subsequent new line.
-                    </p>
-                    <p>
-                    	Placeholders are replaced in SQL statements by the job. This is achieved by embedding a variable in the form ${argument}
-                    	in the SQL statement. On execution of the job the variable "argument" is assigned the value of the
-                    	argument with the same name.
-                  	</p>
-                </note>
-            </param>
+             
 
             <param name="include_files" required="false" default_value="">
                 <note>
