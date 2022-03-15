@@ -56,7 +56,7 @@
 
             <xi:include href="./includes/com.sos.jitl.jobs.sql/param_sqlplus_script_file.xml" parse="xml"/>
 
-             
+            
 
             <param name="include_files" required="false" default_value="">
                 <note>
