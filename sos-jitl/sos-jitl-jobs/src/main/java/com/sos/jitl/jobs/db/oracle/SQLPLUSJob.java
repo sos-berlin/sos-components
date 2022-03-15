@@ -36,9 +36,9 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
 	public JOutcome.Completed onOrderProcess(JobStep<SQLPlusJobArguments> step) throws Exception {
 
 		try {
-			if (SOSString.isEmpty(step.getArguments().getCommandScriptFile())) {
+			if (SOSString.isEmpty(step.getArguments().getCommandScriptFile()) & SOSString.isEmpty(step.getArguments().getCommand())) {
 				throw new SOSJobRequiredArgumentMissingException(
-						"command is empty. please check the   \"command_script_file\" parameter.");
+						"command is empty. please check the   \"command_script_file\" or \"command\"parameter.");
 			}
 			return step.success(
 					process(step, step.getArguments(), step.getAppArguments(SOSCredentialStoreArguments.class)));
@@ -118,7 +118,7 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
 		SQLPLUSJob sosSQLPlusJob = new SQLPLUSJob(null);
 		SQLPlusJobArguments arguments = new SQLPlusJobArguments();
 		arguments.setShellCommand("sqlplus");
-		//arguments.setCommandScriptFile("c:/temp/1.sql");
+		arguments.setCommandScriptFile("c:/temp/1.sql");
 	    arguments.setCommand("select 1 from dual;");
 		// arguments.setDbPassword("scheduler");
 		// arguments.setDbUser("scheduler");
