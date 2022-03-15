@@ -34,21 +34,21 @@ public class CopyToFilter {
     @JsonProperty("controllerId")
     private String controllerId;
     /**
-     * Filter for environment independent Objects
+     * Filter for configurations
      * <p>
      * 
      * 
      */
     @JsonProperty("rollout")
-    private EnvIndependentConfigurations rollout;
+    private Configurations rollout;
     /**
-     * Filter for environment related Objects
+     * Filter for configurations
      * <p>
      * 
      * 
      */
     @JsonProperty("local")
-    private EnvRelatedConfigurations local;
+    private Configurations local;
     /**
      * auditParams
      * <p>
@@ -81,46 +81,46 @@ public class CopyToFilter {
     }
 
     /**
-     * Filter for environment independent Objects
+     * Filter for configurations
      * <p>
      * 
      * 
      */
     @JsonProperty("rollout")
-    public EnvIndependentConfigurations getRollout() {
+    public Configurations getRollout() {
         return rollout;
     }
 
     /**
-     * Filter for environment independent Objects
+     * Filter for configurations
      * <p>
      * 
      * 
      */
     @JsonProperty("rollout")
-    public void setRollout(EnvIndependentConfigurations rollout) {
+    public void setRollout(Configurations rollout) {
         this.rollout = rollout;
     }
 
     /**
-     * Filter for environment related Objects
+     * Filter for configurations
      * <p>
      * 
      * 
      */
     @JsonProperty("local")
-    public EnvRelatedConfigurations getLocal() {
+    public Configurations getLocal() {
         return local;
     }
 
     /**
-     * Filter for environment related Objects
+     * Filter for configurations
      * <p>
      * 
      * 
      */
     @JsonProperty("local")
-    public void setLocal(EnvRelatedConfigurations local) {
+    public void setLocal(Configurations local) {
         this.local = local;
     }
 
