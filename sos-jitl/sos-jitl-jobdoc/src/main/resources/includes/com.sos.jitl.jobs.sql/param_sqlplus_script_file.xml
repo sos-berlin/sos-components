@@ -5,6 +5,18 @@
        name="command_script_file" required="false" DataType="SOSOptionCommandString"
     OptionName="SQLPlusScriptFile" see="" prefix="" scope="all">
 
+<note>
+      <title>Path to a file that contains the SQL statement(s)</title>
+      <p>
+      	SQL statements are specified from an input file to the SQL*Plus Client.
+      	SQL statements included in a file have to be separated by a semicolon and a subsequent new line.
+       </p>
+       <p>
+         Placeholders are replaced in SQL statements by the job. This is achieved by embedding a variable in the form ${argument}
+          in the SQL statement. On execution of the job the variable "argument" is assigned the value of the
+          argument with the same name.
+       </p>
+</note>
     
 <codeexample type="sql*plus">
 <embeddedExample>
