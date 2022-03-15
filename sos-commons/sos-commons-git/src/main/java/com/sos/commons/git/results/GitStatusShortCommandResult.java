@@ -1,4 +1,4 @@
-package com.sos.commons.git;
+package com.sos.commons.git.results;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,6 +36,14 @@ public class GitStatusShortCommandResult extends GitCommandResult {
         parseStdOut();
     }
     
+    public static GitCommandResult getInstance(SOSCommandResult result) {
+        return getInstance(result, null);
+    }
+    
+    public static GitCommandResult getInstance(SOSCommandResult result, String original) {
+        return new GitStatusShortCommandResult(result, original);
+    }
+    
     public Set<Path> getModified() {
         return modified;
     }
@@ -43,8 +51,9 @@ public class GitStatusShortCommandResult extends GitCommandResult {
     public Set<Path> getAdded() {
         return added;
     }
-
-    private void parseStdOut() {
+    
+    @Override
+    public void parseStdOut() {
         try {
             if (getStdOut() != null && !getStdOut().isEmpty()) {
                 Pattern modifiedPattern = Pattern.compile(REGEX_FIND_MODIFIED);

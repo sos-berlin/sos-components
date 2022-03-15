@@ -12,6 +12,9 @@ import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.git.results.GitCommandResult;
+import com.sos.commons.git.results.GitStatusShortCommandResult;
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitTest {
 
@@ -29,26 +32,11 @@ public class GitTest {
     }
 
     @Test
-    public void test01GitStatus() {
-        LOGGER.info("**************************  Test 01 - git status started  ***************************");
+    public void test01GitStatusShort() {
+        LOGGER.info("**************************  Test 01 - git status short started  *********************");
         LOGGER.info("**************************  status current directory      ***************************");
         LOGGER.info("Working Directory: " + System.getProperty("user.dir"));
-        GitCommandResult result = GitCommand.executeGitStatus();
-        LOGGER.info("command: " + result.getCommand());
-        LOGGER.info("ExitCode: " + result.getExitCode());
-        LOGGER.info("hashCode: " + result.hashCode());
-        LOGGER.info("StdOut:\n" + result.getStdOut());
-        LOGGER.info("StdErr: " + result.getStdErr());
-        LOGGER.info("error: " + result.getError());
-        LOGGER.info("**************************  Test 01 - git status finished  **************************");
-    }
-
-    @Test
-    public void test02GitStatusShort() {
-        LOGGER.info("**************************  Test 02 - git status short started  *********************");
-        LOGGER.info("**************************  status current directory      ***************************");
-        LOGGER.info("Working Directory: " + System.getProperty("user.dir"));
-        GitStatusShortCommandResult result = GitCommand.executeGitStatusShort();
+        GitStatusShortCommandResult result = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort();
         LOGGER.info("command: " + result.getCommand());
         LOGGER.info("ExitCode: " + result.getExitCode());
         LOGGER.info("hashCode: " + result.hashCode());
@@ -65,46 +53,50 @@ public class GitTest {
             LOGGER.info("   " + filename.toString());
             LOGGER.info("   " + Paths.get(System.getProperty("user.dir")).resolve(filename).normalize().toString());
         }
-        LOGGER.info("**************************  Test 02 - git status short finished  ********************");
+        LOGGER.info("**************************  Test 01 - git status short finished  ********************");
     }
 
     @Ignore
     @Test
-    public void test03GitStatusShort() {
-        LOGGER.info("**************************  Test 03 - git status short started  *********************");
+    public void test02GitStatusShort() {
+        LOGGER.info("**************************  Test 02 - git status short started  *********************");
         LOGGER.info("**************************  status specific directory      **************************");
         Path repository = Paths.get("C:/sp/devel/js7/testing/git/local_repos/sp");
         LOGGER.info("Working Directory " + repository.toString());
-        GitStatusShortCommandResult result = GitCommand.executeGitStatusShort(repository);
+        // get working dir
+        Path workingDir = Paths.get(System.getProperty("user.dir"));
+        GitStatusShortCommandResult result = (GitStatusShortCommandResult)GitCommand.executeGitStatusShort(repository, workingDir);
         LOGGER.info("command: " + result.getCommand());
         LOGGER.info("ExitCode: " + result.getExitCode());
         LOGGER.info("hashCode: " + result.hashCode());
         LOGGER.info("StdOut:\n" + result.getStdOut());
         LOGGER.info("StdErr: " + result.getStdErr());
         LOGGER.info("error: " + result.getError());
-        LOGGER.info("modified Files: filename and full path");
+        LOGGER.info("StdOut parsed - results:");
+        LOGGER.info("File(s) marked as modified:");
         for (Path filename : result.getModified()) {
-            LOGGER.info("   " + filename.toString());
-            LOGGER.info("   " + repository.resolve(filename).normalize().toString());
+//            String.format("%-2s filename: %-3s", null)
+            LOGGER.info("\tfilename:\t" + filename.toString());
+            LOGGER.info("\tfull path:\t" + repository.resolve(filename).normalize().toString());
         }
-        LOGGER.info("added Files: filename and full path");
+        LOGGER.info("File(s) marked as added:");
         for(Path filename : result.getAdded()) {
-            LOGGER.info("   " + filename.toString());
-            LOGGER.info("   " + repository.resolve(filename).normalize().toString());
+            LOGGER.info("\tfilename:\t" + filename.toString());
+            LOGGER.info("\tfull path:\t" + repository.resolve(filename).normalize().toString());
         }
-        LOGGER.info("**************************  Test 03 - git status short finished  ********************");
+        LOGGER.info("**************************  Test 02 - git status short finished  ********************");
     }
 
     @Test
-    public void test04GitPull() {
-        LOGGER.info("**************************  Test 04 - git pull started  *****************************");
+    public void test03GitPull() {
+        LOGGER.info("**************************  Test 03 - git pull started  *****************************");
         GitCommandResult result = GitCommand.executeGitPull();
         LOGGER.info("ExitCode: " + result.getExitCode());
         LOGGER.info("hashCode: " + result.hashCode());
         LOGGER.info("StdOut:\n" + result.getStdOut());
         LOGGER.info("StdErr: " + result.getStdErr());
         LOGGER.info("error: " + result.getError());
-        LOGGER.info("**************************  Test 04 - git pull finished  ****************************");
+        LOGGER.info("**************************  Test 03 - git pull finished  ****************************");
     }
     
 }

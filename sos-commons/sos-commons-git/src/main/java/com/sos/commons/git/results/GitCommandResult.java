@@ -1,8 +1,8 @@
-package com.sos.commons.git;
+package com.sos.commons.git.results;
 
 import com.sos.commons.util.common.SOSCommandResult;
 
-public class GitCommandResult {
+public abstract class GitCommandResult {
 
     private final String stdOut;
     private final String stdErr;
@@ -31,6 +31,8 @@ public class GitCommandResult {
         this.stdOut = result.getStdOut();
     }
 
+    public abstract void parseStdOut(); 
+    
     public String getStdOut() {
         return stdOut;
     }
@@ -55,11 +57,11 @@ public class GitCommandResult {
         return originalCommand;
     }
     
-    protected void setError(String msg) {
+    public void setError(String msg) {
         setError(msg, null);
     }
     
-    protected void setError(String msg, Throwable e) {
+    public void setError(String msg, Throwable e) {
         error = new GitCommandResultError(msg, e);
     }
 
