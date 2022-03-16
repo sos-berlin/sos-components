@@ -21,7 +21,7 @@ public class IamRoleDBLayer {
     public IamRoleDBLayer(SOSHibernateSession session) {
         this.sosHibernateSession = session;
     }
-    
+
     private String getWhere(IamRoleFilter filter) {
         String where = " ";
         String and = "";
@@ -33,7 +33,7 @@ public class IamRoleDBLayer {
             where += and + " roleId = :roleId";
             and = " and ";
         }
-        
+
         if (filter.getRoleName() != null && !filter.getRoleName().isEmpty()) {
             where += and + " roleName = :roleName";
             and = " and ";
@@ -43,7 +43,6 @@ public class IamRoleDBLayer {
         }
         return where;
     }
-
 
     private <T> Query<T> bindParameters(IamRoleFilter filter, Query<T> query) {
         if (filter.getRoleName() != null && !filter.getRoleName().equals("")) {
@@ -109,7 +108,6 @@ public class IamRoleDBLayer {
         return row;
     }
 
- 
     public List<DBItemIamRole> getIamRoleList(IamRoleFilter filter, final int limit) throws SOSHibernateException {
         Query<DBItemIamRole> query = sosHibernateSession.createQuery("from " + DBItemIamRole + getWhere(filter) + filter.getOrderCriteria() + filter
                 .getSortMode());
@@ -124,11 +122,14 @@ public class IamRoleDBLayer {
 
     public List<String> getIamControllersForRole(IamRoleFilter filter) throws SOSHibernateException {
         filter.setRoleName(null);
-        Query<String> query = sosHibernateSession.createQuery("select DISTINCT controllerId from " + DBItemIamPermission + getWhere(filter) + " and  controller_id is not null " );
+        Query<String> query = sosHibernateSession.createQuery("select DISTINCT controllerId from " + DBItemIamPermission + getWhere(filter)
+                + " and  controller_id is not null ");
         bindParameters(filter, query);
-       
+
         List<String> iamRoleList = query.getResultList();
-        iamRoleList.add("");
+        if (iamRoleList.size() == 0) {
+            iamRoleList.add("");
+        }
         return iamRoleList == null ? Collections.emptyList() : iamRoleList;
     }
 

@@ -31,7 +31,7 @@ public class SecurityHelper {
         iamRoleFilter.setRoleName(roleName);
         DBItemIamRole dbItemIamRole = iamRoleDBLayer.getUniqueRole(iamRoleFilter);
         if (dbItemIamRole == null) {
-            throw new JocObjectNotExistException("Object Identity Service <" + roleName + "> not found");
+            throw new JocObjectNotExistException("Object Role <" + roleName + "> not found");
         }
         return dbItemIamRole;
     }
