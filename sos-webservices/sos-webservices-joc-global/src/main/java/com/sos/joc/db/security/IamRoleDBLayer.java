@@ -68,20 +68,16 @@ public class IamRoleDBLayer {
     }
 
     public int deleteCascading(IamRoleFilter filter) throws SOSHibernateException {
-        Long savId = filter.getRoleId();
+        IamRoleFilter filterCascade = new IamRoleFilter();
         List<DBItemIamRole> iamRoleList = getIamRoleList(filter, 0);
         if (iamRoleList.size() > 0) {
-
             delete(filter);
-            filter.setRoleName(null);
-            filter.setIdentityServiceId(null);
             for (DBItemIamRole iamRoleDBItem : iamRoleList) {
-                filter.setRoleId(iamRoleDBItem.getId());
-                deleteAccount2Role(filter);
-                deletePermission(filter);
+                filterCascade.setRoleId(iamRoleDBItem.getId());
+                deleteAccount2Role(filterCascade);
+                deletePermission(filterCascade);
             }
         }
-        filter.setRoleId(savId);
         return iamRoleList.size();
     }
 
@@ -127,10 +123,11 @@ public class IamRoleDBLayer {
         bindParameters(filter, query);
 
         List<String> iamRoleList = query.getResultList();
-        if (iamRoleList.size() == 0) {
+        if (!iamRoleList.contains("")) {
             iamRoleList.add("");
         }
         return iamRoleList == null ? Collections.emptyList() : iamRoleList;
+
     }
 
     public DBItemIamRole getIamRole(Long roleId) throws SOSHibernateException {

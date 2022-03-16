@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.security.idendityservice;
+package com.sos.joc.model.security.identityservice;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -17,36 +16,37 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * IdentityService Filter
+ * IdentityServiceRename
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "identityServiceName",
-    "disabled",
+    "identityServiceOldName",
+    "identityServiceNewName",
     "auditLog"
 })
-public class IdentityServiceFilter {
+public class IdentityServiceRename {
 
     /**
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("identityServiceName")
-    private String identityServiceName;
+    @JsonProperty("identityServiceOldName")
+    private String identityServiceOldName;
     /**
-     * disabled parameter
+     * string without < and >
      * <p>
-     * controls if the object is disabled
+     * 
+     * (Required)
      * 
      */
-    @JsonProperty("disabled")
-    @JsonPropertyDescription("controls if the object is disabled")
-    private Boolean disabled = false;
+    @JsonProperty("identityServiceNewName")
+    private String identityServiceNewName;
     /**
      * auditParams
      * <p>
@@ -62,19 +62,19 @@ public class IdentityServiceFilter {
      * No args constructor for use in serialization
      * 
      */
-    public IdentityServiceFilter() {
+    public IdentityServiceRename() {
     }
 
     /**
      * 
-     * @param identityServiceName
+     * @param identityServiceOldName
      * @param auditLog
-     * @param disabled
+     * @param identityServiceNewName
      */
-    public IdentityServiceFilter(String identityServiceName, Boolean disabled, AuditParams auditLog) {
+    public IdentityServiceRename(String identityServiceOldName, String identityServiceNewName, AuditParams auditLog) {
         super();
-        this.identityServiceName = identityServiceName;
-        this.disabled = disabled;
+        this.identityServiceOldName = identityServiceOldName;
+        this.identityServiceNewName = identityServiceNewName;
         this.auditLog = auditLog;
     }
 
@@ -82,44 +82,48 @@ public class IdentityServiceFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("identityServiceName")
-    public String getIdentityServiceName() {
-        return identityServiceName;
+    @JsonProperty("identityServiceOldName")
+    public String getIdentityServiceOldName() {
+        return identityServiceOldName;
     }
 
     /**
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("identityServiceName")
-    public void setIdentityServiceName(String identityServiceName) {
-        this.identityServiceName = identityServiceName;
+    @JsonProperty("identityServiceOldName")
+    public void setIdentityServiceOldName(String identityServiceOldName) {
+        this.identityServiceOldName = identityServiceOldName;
     }
 
     /**
-     * disabled parameter
+     * string without < and >
      * <p>
-     * controls if the object is disabled
+     * 
+     * (Required)
      * 
      */
-    @JsonProperty("disabled")
-    public Boolean getDisabled() {
-        return disabled;
+    @JsonProperty("identityServiceNewName")
+    public String getIdentityServiceNewName() {
+        return identityServiceNewName;
     }
 
     /**
-     * disabled parameter
+     * string without < and >
      * <p>
-     * controls if the object is disabled
+     * 
+     * (Required)
      * 
      */
-    @JsonProperty("disabled")
-    public void setDisabled(Boolean disabled) {
-        this.disabled = disabled;
+    @JsonProperty("identityServiceNewName")
+    public void setIdentityServiceNewName(String identityServiceNewName) {
+        this.identityServiceNewName = identityServiceNewName;
     }
 
     /**
@@ -156,12 +160,12 @@ public class IdentityServiceFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("disabled", disabled).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceOldName", identityServiceOldName).append("identityServiceNewName", identityServiceNewName).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(disabled).append(additionalProperties).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(identityServiceOldName).append(additionalProperties).append(auditLog).append(identityServiceNewName).toHashCode();
     }
 
     @Override
@@ -169,11 +173,11 @@ public class IdentityServiceFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof IdentityServiceFilter) == false) {
+        if ((other instanceof IdentityServiceRename) == false) {
             return false;
         }
-        IdentityServiceFilter rhs = ((IdentityServiceFilter) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(disabled, rhs.disabled).append(additionalProperties, rhs.additionalProperties).append(auditLog, rhs.auditLog).isEquals();
+        IdentityServiceRename rhs = ((IdentityServiceRename) other);
+        return new EqualsBuilder().append(identityServiceOldName, rhs.identityServiceOldName).append(additionalProperties, rhs.additionalProperties).append(auditLog, rhs.auditLog).append(identityServiceNewName, rhs.identityServiceNewName).isEquals();
     }
 
 }

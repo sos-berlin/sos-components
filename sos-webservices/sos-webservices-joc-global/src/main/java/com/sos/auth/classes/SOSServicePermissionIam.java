@@ -63,7 +63,7 @@ import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
-import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
  
 
 @SuppressWarnings("deprecation")

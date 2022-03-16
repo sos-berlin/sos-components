@@ -38,7 +38,7 @@ import com.sos.joc.model.security.configuration.permissions.ControllerFolders;
 import com.sos.joc.model.security.configuration.permissions.IniControllers;
 import com.sos.joc.model.security.configuration.permissions.IniPermission;
 import com.sos.joc.model.security.configuration.permissions.SecurityConfigurationFolders;
-import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
  
 
  

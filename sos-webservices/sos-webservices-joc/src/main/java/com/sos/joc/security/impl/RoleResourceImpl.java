@@ -227,8 +227,8 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
 
             IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);
             IamRoleFilter iamRoleFilter = new IamRoleFilter();
+            iamRoleFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             for (String roleName : rolesFilter.getRoleNames()) {
-                iamRoleFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
                 iamRoleFilter.setRoleName(roleName);
                 int count = iamRoleDBLayer.deleteCascading(iamRoleFilter);
                 if (count == 0) {

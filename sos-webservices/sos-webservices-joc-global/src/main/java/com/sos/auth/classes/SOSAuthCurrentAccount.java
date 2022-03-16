@@ -45,7 +45,7 @@ import com.sos.joc.model.security.configuration.permissions.joc.admin.Certificat
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers;
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Customization;
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Settings;
-import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSAuthCurrentAccount {
 

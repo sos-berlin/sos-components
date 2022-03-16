@@ -13,7 +13,7 @@ import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.ldap.SOSLdapHandler;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
  
 public class SOSLdapLogin implements ISOSLogin {
 

@@ -16,21 +16,26 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
+import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
+import com.sos.joc.db.security.IamRoleDBLayer;
+import com.sos.joc.db.security.IamRoleFilter;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.security.idendityservice.IdentityService;
-import com.sos.joc.model.security.idendityservice.IdentityServiceAuthenticationScheme;
-import com.sos.joc.model.security.idendityservice.IdentityServiceFilter;
-import com.sos.joc.model.security.idendityservice.IdentityServiceRename;
-import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
-import com.sos.joc.model.security.idendityservice.IdentityServices;
+import com.sos.joc.model.security.identityservice.IdentityService;
+import com.sos.joc.model.security.identityservice.IdentityServiceAuthenticationScheme;
+import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
+import com.sos.joc.model.security.identityservice.IdentityServiceRename;
+import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.identityservice.IdentityServices;
+import com.sos.joc.model.security.identityservice.IdentityServicesFilter;
+import com.sos.joc.security.classes.SecurityHelper;
 import com.sos.joc.security.resource.IIdentityServiceResource;
 import com.sos.schema.JsonValidator;
 
@@ -43,6 +48,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
     private static final String API_CALL_SERVICES_READ = "./iam/identityservice";
     private static final String API_CALL_SERVICES_STORE = "./iam/identityservice/store";
     private static final String API_CALL_SERVICES_DELETE = "./iam/identityservice/delete";
+    private static final String API_CALL_SERVICES_REORDER = "./iam/identityservices/reorder";
 
     @Override
     public JOCDefaultResponse postIdentityServiceRead(String accessToken, byte[] body) {
@@ -318,6 +324,56 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
+
+    @Override
+    public JOCDefaultResponse postIdentityServicesReorder(String accessToken, byte[] body) {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+
+            IdentityServicesFilter identityServices = Globals.objectMapper.readValue(body, IdentityServicesFilter.class);
+
+            JsonValidator.validateFailFast(body, IdentityServicesFilter.class);
+
+            initLogging(API_CALL_SERVICES_REORDER, Globals.objectMapper.writeValueAsBytes(identityServices), accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_REORDER);
+            sosHibernateSession.setAutoCommit(false);
+            sosHibernateSession.beginTransaction();
+
+            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+
+            IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
+
+            int order = 1;
+            for (String identityServiceName : identityServices.getIdentityServiceNames()) {
+                iamIdentityServiceFilter.setIdentityServiceName(identityServiceName);
+                DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(iamIdentityServiceFilter);
+                if (dbItemIamIdentityService != null) {
+                    dbItemIamIdentityService.setOrdering(order);
+                    sosHibernateSession.update(dbItemIamIdentityService);
+                    order = order + 1;
+                }
+            }
+
+            storeAuditLog(identityServices.getAuditLog(), CategoryType.IDENTITY);
+            Globals.commit(sosHibernateSession);
+
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(sosHibernateSession);

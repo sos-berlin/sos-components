@@ -65,21 +65,17 @@ public class IamAccountDBLayer {
 	}
 
 	public int deleteCascading(IamAccountFilter filter) throws SOSHibernateException {
-		Long savId = filter.getId();
-		List<DBItemIamAccount> iamAccountList = getIamAccountList(filter, 0);
+	    IamAccountFilter filterCascade = new IamAccountFilter();
+ 		List<DBItemIamAccount> iamAccountList = getIamAccountList(filter, 0);
 		if (iamAccountList.size() > 0) {
-
 			delete(filter);
-			filter.setAccountName(null);
-			filter.setIdentityServiceId(null);
 			for (DBItemIamAccount iamAccountDBItem : iamAccountList) {
-				filter.setId(iamAccountDBItem.getId());
-				deleteAccount2Role(filter);
-				deletePermission(filter);
+			    filterCascade.setId(iamAccountDBItem.getId());
+				deleteAccount2Role(filterCascade);
+				deletePermission(filterCascade);
 			}
 		}
-		filter.setId(savId);
-		return iamAccountList.size();
+	    return iamAccountList.size();
 	}
 
 	private int deletePermission(IamAccountFilter filter) throws SOSHibernateException {

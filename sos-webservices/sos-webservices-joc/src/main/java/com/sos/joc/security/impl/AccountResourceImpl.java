@@ -20,7 +20,6 @@ import com.sos.auth.vault.SOSVaultHandler;
 import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
 import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -33,8 +32,6 @@ import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
-import com.sos.joc.db.security.IamIdentityServiceDBLayer;
-import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInfoException;
@@ -46,7 +43,7 @@ import com.sos.joc.model.security.accounts.AccountListFilter;
 import com.sos.joc.model.security.accounts.AccountRename;
 import com.sos.joc.model.security.accounts.Accounts;
 import com.sos.joc.model.security.accounts.AccountsFilter;
-import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.security.classes.SecurityHelper;
 import com.sos.joc.security.resource.IAccountResource;
 import com.sos.schema.JsonValidator;
@@ -155,6 +152,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             }
 
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
+            iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             iamAccountFilter.setAccountName(account.getAccountName());
             DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(iamAccountFilter);
             boolean newAccount = false;

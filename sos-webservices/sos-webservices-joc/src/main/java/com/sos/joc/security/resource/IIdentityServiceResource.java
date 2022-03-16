@@ -36,4 +36,9 @@ public interface IIdentityServiceResource {
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postIdentityServices(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 
+    @POST
+    @Path("identityservices/reorder")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postIdentityServicesReorder(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+
 }

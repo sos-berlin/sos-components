@@ -7,7 +7,7 @@ import org.slf4j.MDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.sos.joc.Globals;
-import com.sos.joc.model.security.idendityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
  
 public class SOSAuthAccessTokenHandler extends Thread {
 

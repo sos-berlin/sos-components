@@ -1,25 +1,30 @@
 
-package com.sos.joc.model.security.idendityservice;
+package com.sos.joc.model.security.identityservice;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum IdentityServiceAuthenticationScheme {
+public enum IdentityServiceTypes {
 
-    SINGLE_FACTOR("SINGLE-FACTOR"),
-    TWO_FACTOR("TWO-FACTOR");
+    SHIRO("SHIRO"),
+    VAULT("VAULT"),
+    VAULT_JOC("VAULT-JOC"),
+    VAULT_JOC_ACTIVE("VAULT-JOC-ACTIVE"),
+    LDAP("LDAP"),
+    LDAP_JOC("LDAP-JOC"),
+    JOC("JOC");
     private final String value;
-    private final static Map<String, IdentityServiceAuthenticationScheme> CONSTANTS = new HashMap<String, IdentityServiceAuthenticationScheme>();
+    private final static Map<String, IdentityServiceTypes> CONSTANTS = new HashMap<String, IdentityServiceTypes>();
 
     static {
-        for (IdentityServiceAuthenticationScheme c: values()) {
+        for (IdentityServiceTypes c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private IdentityServiceAuthenticationScheme(String value) {
+    private IdentityServiceTypes(String value) {
         this.value = value;
     }
 
@@ -34,8 +39,8 @@ public enum IdentityServiceAuthenticationScheme {
     }
 
     @JsonCreator
-    public static IdentityServiceAuthenticationScheme fromValue(String value) {
-        IdentityServiceAuthenticationScheme constant = CONSTANTS.get(value);
+    public static IdentityServiceTypes fromValue(String value) {
+        IdentityServiceTypes constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {

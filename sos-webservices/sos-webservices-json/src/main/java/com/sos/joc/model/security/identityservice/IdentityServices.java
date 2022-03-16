@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.security.idendityservice;
+package com.sos.joc.model.security.identityservice;
 
 import java.util.ArrayList;
 import java.util.Date;
