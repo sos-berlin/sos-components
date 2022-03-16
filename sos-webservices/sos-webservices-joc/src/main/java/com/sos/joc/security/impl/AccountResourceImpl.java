@@ -158,6 +158,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             boolean newAccount = false;
             if (dbItemIamAccount == null) {
                 dbItemIamAccount = new DBItemIamAccount();
+                dbItemIamAccount.setAccountPassword(password);
                 newAccount = true;
             }
 
