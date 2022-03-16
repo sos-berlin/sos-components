@@ -134,6 +134,32 @@ public abstract class RepositoryUtil {
         return path;
     }
 
+    public static Path stripFileExtensionFromPath(Path path) {
+        Path newPath = null;
+        if (path.toString().endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString())) {
+            newPath = Paths.get(path.toString().replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
+        } else if (path.getFileName().toString().endsWith(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString())) {
+            newPath = Paths.get(path.toString().replace(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value(), ""));
+        } else if (path.getFileName().toString().endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString())) {
+            newPath = Paths.get(path.toString().replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+        } else if (path.getFileName().toString().endsWith(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.toString())) {
+            newPath = Paths.get(path.toString().replace(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value(), ""));
+        } else if (path.getFileName().toString().endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString())) {
+            newPath = Paths.get(path.toString().replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""));
+        } else if (path.getFileName().toString().endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString())) {
+            newPath = Paths.get(path.toString().replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), ""));
+        } else if (path.getFileName().toString().endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString())) {
+            newPath = Paths.get(path.toString().replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
+        } else if (path.getFileName().toString().endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString())) {
+            newPath = Paths.get(path.toString().replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), ""));
+        } else if (path.getFileName().toString().endsWith(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString())) {
+            newPath = Paths.get(path.toString().replace(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.value(), ""));
+        } else {
+            newPath = path;
+        }
+        return newPath;
+    }
+
     public static String stripFileExtensionNormalized(Path path) {
         String normalizedPath = "";
         if (path.toString().endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString())) {
@@ -347,6 +373,32 @@ public abstract class RepositoryUtil {
         return paths;
     }
 
+    public static TreeSet<Path> readItemsFromRepositoryFolderAsTreeSet(Path repository) throws IOException {
+        TreeSet<Path> paths = new TreeSet<>();
+        Files.walkFileTree(repository, new FileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+            @Override
+            public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) throws IOException {
+                if (filePath.getFileName().toString().endsWith(".json")) {
+                    paths.add(filePath);
+                }
+                return FileVisitResult.CONTINUE;
+            }
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+        });
+        return paths;
+    }
+
     public static Date getLastModified(Path path) {
         try {
             return Date.from(Files.getLastModifiedTime(path).toInstant());
@@ -387,39 +439,34 @@ public abstract class RepositoryUtil {
                 .map(type -> type.intValue()).collect(Collectors.toSet()));
     }
 
-    public static Set<Path> getRelativePathsToDeleteFromDB(DeleteFromFilter filter, DBLayerDeploy dbLayer) throws DBConnectionRefusedException,
-            DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException, SOSHibernateException {
+    public static Set<Path> getPathsToDeleteFromFS(DeleteFromFilter filter, Path repositoryBase) {
+        Set<Path> entries = new TreeSet<Path>();
         if (filter != null && !filter.getConfigurations().isEmpty()) {
-            Set<Configuration> folders = filter.getConfigurations().stream()
-                    .filter(cfg -> ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
-                    .map(config -> config.getConfiguration()).collect(Collectors.toSet());
-            Set<Configuration> configurations = filter.getConfigurations().stream()
-                    .filter(cfg -> !ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
-                    .map(config -> config.getConfiguration()).collect(Collectors.toSet());
-            Map<String, ConfigurationType> result = configurations.stream().collect(
-                    Collectors.toMap(Configuration::getPath, Configuration::getObjectType));
-            if (!folders.isEmpty()) {
-                Set<DBItemInventoryConfiguration> dbItemConfigurations = new HashSet<DBItemInventoryConfiguration>();
-                folders.stream().map(folder -> dbItemConfigurations.addAll(
-                        dbLayer.getAllInventoryConfigurationsByFolder(folder.getPath(), folder.getRecursive())));
-                if (!dbItemConfigurations.isEmpty()) {
-                    result.putAll(dbItemConfigurations.stream().collect(Collectors.toMap(DBItemInventoryConfiguration::getPath,
-                            DBItemInventoryConfiguration::getTypeAsEnum)));
-                }
-            }
-            return result.entrySet().stream().map(entry -> {
-                if (entry.getKey().startsWith("/")) {
-                    return Paths.get(entry.getKey().substring(1) + getExtension(entry.getValue()));
-                } else {
-                    return Paths.get(entry.getKey() + getExtension(entry.getValue()));
-                }
-            }).collect(Collectors.toSet());
+            filter.getConfigurations().stream()
+                .filter(cfg -> ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
+                .map(config -> config.getConfiguration())
+                .forEach(folder -> {
+                    try {
+                        entries.addAll(RepositoryUtil.readRepositoryAsTreeSet(
+                                repositoryBase.resolve(Paths.get("/").relativize(Paths.get(folder.getPath())))));
+                    } catch (IOException e) {
+                        LOGGER.error("Could not read from repository: " + 
+                                repositoryBase.resolve(Paths.get("/").relativize(Paths.get(folder.getPath()))).toString());
+                    }
+                });
+            filter.getConfigurations().stream()
+                .filter(cfg -> !ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
+                .map(config -> config.getConfiguration())
+                .forEach(cfg -> entries.add(repositoryBase.resolve(
+                        Paths.get("/").relativize(Paths.get(cfg.getPath() + RepositoryUtil.getExtension(cfg.getObjectType())))))
+                );
+            
         }
-        return Collections.emptySet();
+        return entries;
     }
-
-    public static void writeToRepository(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, Path repositoryBase, StoreItemsCategory category)
-            throws IOException {
+    
+    public static void writeToRepository(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, Path repositoryBase,
+            StoreItemsCategory category) throws IOException {
         String content = null;
         List<ConfigurationType> localTypes = getLocalConfigurationTypes();
         List<ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();

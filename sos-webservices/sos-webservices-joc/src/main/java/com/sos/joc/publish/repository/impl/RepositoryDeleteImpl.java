@@ -3,6 +3,7 @@ package com.sos.joc.publish.repository.impl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
@@ -12,16 +13,15 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.repository.DeleteFromFilter;
-import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.repository.resource.IRepositoryDelete;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.schema.JsonValidator;
@@ -34,7 +34,6 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
 
     @Override
     public JOCDefaultResponse postDelete(String xAccessToken, byte[] deleteFromFilter) throws Exception {
-        SOSHibernateSession hibernateSession = null;
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** delete from repository started ***" + started);
@@ -45,27 +44,33 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
 
-            DBItemJocAuditLog dbAuditlog = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
-            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
-            
-            Set<Path> toDelete = RepositoryUtil.getRelativePathsToDeleteFromDB(filter, dbLayer);
+            storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories").resolve(getSubfoldernameFromFilter(filter));
-            toDelete = toDelete.stream().filter(item -> canAdd(Globals.normalizePath(item.toString()), permittedFolders))
-                    .filter(Objects::nonNull).collect(Collectors.toSet());
+            Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories").resolve(getSubrepositoryFromFilter(filter));
+            
+            Set<Path> toDelete = RepositoryUtil.getPathsToDeleteFromFS(filter, repositoriesBase);
+            toDelete = toDelete.stream().filter(item -> canAdd(
+                    Globals.normalizePath(
+                                    Paths.get("/").resolve(repositoriesBase.relativize(RepositoryUtil.stripFileExtensionFromPath(item))).toString()),
+                    permittedFolders))
+                .filter(Objects::nonNull).collect(Collectors.toSet());
             toDelete.forEach(path -> {
                 try {
-                    LOGGER.info("resolved path: " + repositoriesBase.resolve(path).toString());
-                    boolean deleted = Files.deleteIfExists(repositoriesBase.resolve(path));
-                    LOGGER.info(String.format("File %1$s has been deleted: %2$s", repositoriesBase.resolve(path).toString(), deleted));
+                    if (!Files.isDirectory(repositoriesBase.resolve(path))) {
+                        LOGGER.debug("resolved path: " + repositoriesBase.resolve(path).toString());
+                        boolean deleted = Files.deleteIfExists(repositoriesBase.resolve(path));
+                        if (deleted) {
+                            LOGGER.debug(String.format("File %1$s has been deleted.", repositoriesBase.resolve(path).toString()));
+                        } else {
+                            LOGGER.debug(String.format("File %1$s does not exist in filesystem.", repositoriesBase.resolve(path).toString()));
+                        }
+                    }
                 } catch (IOException e) {
                     LOGGER.debug(String.format("file - %1$s - could not be deleted!", Globals.normalizePath(path.toString())), e);
                 }
             });
-            
+            deleteFolders(filter, repositoriesBase);
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** delete from repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
@@ -75,12 +80,10 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(hibernateSession);
         }
     }
 
-    private static String getSubfoldernameFromFilter (DeleteFromFilter filter) {
+    private static String getSubrepositoryFromFilter (DeleteFromFilter filter) {
         switch(filter.getCategory()) {
         case LOCAL:
             return "local";
@@ -88,5 +91,22 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
             return "rollout";
         }
         return null;
+    }
+    
+    private static void deleteFolders(DeleteFromFilter filter, Path repositoriesBase) {
+        Set<Configuration> folders = filter.getConfigurations().stream()
+                .filter(cfg -> ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
+                .map(config -> config.getConfiguration()).collect(Collectors.toSet());
+        folders.forEach(folder -> {
+            try {
+                Path relFolder = Paths.get("/").relativize(Paths.get(folder.getPath()));
+                Path pathToDelete = repositoriesBase.resolve(relFolder);
+                LOGGER.info("resolved path: " + pathToDelete.toString());
+                boolean deleted = Files.deleteIfExists(pathToDelete);
+                LOGGER.debug(String.format("Folder %1$s has been deleted: %2$s", folder.getPath(), deleted));
+            } catch (IOException e) {
+                LOGGER.debug(String.format("Folder - %1$s - could not be deleted!", folder.getPath()), e);
+            }
+        });
     }
 }

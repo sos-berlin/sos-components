@@ -49,7 +49,7 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories").resolve(getSubfoldernameFromFilter(filter));
+            Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories").resolve(getSubrepositoryFromFilter(filter));
             Path repo = null;
             if(filter.getFolder().startsWith("/")) {
                 repo = repositoriesBase.resolve(filter.getFolder().substring(1));
@@ -97,7 +97,7 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
                 RepositoryUtil.subPath(repositoryBase, repositoryBase), recursive);
     }
     
-    private static String getSubfoldernameFromFilter (ReadFromFilter filter) {
+    private static String getSubrepositoryFromFilter (ReadFromFilter filter) {
         switch(filter.getCategory()) {
         case LOCAL:
             return "local";
