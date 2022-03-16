@@ -131,11 +131,11 @@ public class SOSPasswordHasher {
 
 	public static boolean verify(String pwd, String hashedPassword) {
 
-		String s = hashedPassword + "$$$$";
+		String s = hashedPassword;
 		boolean verified = false;
 
 		String[] hashParts = s.split("\\$");
-		if (HASH_PREFIX.equals("$" + hashParts[1])) {
+		if (hashParts.length > 3 && HASH_PREFIX.equals("$" + hashParts[1])) {
 			String iterationsFromHash = hashParts[2];
 			int interations = Integer.valueOf(iterationsFromHash);
 			String publicSaltFromHash = hashParts[3];
