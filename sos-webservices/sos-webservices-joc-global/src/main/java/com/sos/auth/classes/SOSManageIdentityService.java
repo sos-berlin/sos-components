@@ -296,7 +296,7 @@ public class SOSManageIdentityService {
             if ("hash".equalsIgnoreCase(command)) {
                 SOSManageIdentityService sosShiroImport = new SOSManageIdentityService();
                 String secret = args[1];
-                LOGGER.info(sosShiroImport.hash(secret));
+                System.out.println(sosShiroImport.hash(secret));
 
             } else if ("import".equalsIgnoreCase(command)) {
                 SOSHibernateFactory factory = null;
