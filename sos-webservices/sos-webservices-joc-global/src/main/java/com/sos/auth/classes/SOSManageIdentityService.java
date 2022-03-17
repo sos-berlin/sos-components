@@ -293,12 +293,14 @@ public class SOSManageIdentityService {
         } else {
 
             String command = args[0];
-            if ("hash".equalsIgnoreCase(command)) {
-                SOSManageIdentityService sosShiroImport = new SOSManageIdentityService();
+            SOSManageIdentityService sosShiroImport = new SOSManageIdentityService();
+
+            switch (command) {
+            case "hash":
                 String secret = args[1];
                 System.out.println(sosShiroImport.hash(secret));
-
-            } else if ("import".equalsIgnoreCase(command)) {
+                break;
+            case "import":
                 SOSHibernateFactory factory = null;
                 SOSHibernateSession session = null;
 
@@ -317,7 +319,6 @@ public class SOSManageIdentityService {
                     factory.addClassMapping(DBLayer.getJocClassMapping());
                     factory.build();
 
-                    SOSManageIdentityService sosShiroImport = new SOSManageIdentityService();
                     session = factory.openStatelessSession("ShiroImport");
 
                     sosShiroImport.executeImport(session, iniFile);
@@ -335,12 +336,12 @@ public class SOSManageIdentityService {
                         factory = null;
                     }
                 }
-            } else {
-                LOGGER.error("... unknown command");
+                break;
 
+            default:
+                LOGGER.error("... unknown command");
                 usage(hibernateConf);
             }
-
         }
         System.exit(exitCode);
     }
