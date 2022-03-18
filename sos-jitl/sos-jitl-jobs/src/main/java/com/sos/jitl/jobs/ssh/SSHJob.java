@@ -95,6 +95,9 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             } else {
                 commands = new String[1];
                 commands[0] = createRemoteCommandScript(provider, jobArgs);
+                if (jobArgs.getCommandScriptParam().isDirty() && !jobArgs.getCommandScriptParam().isEmpty()) {
+                    commands[0] += " " + jobArgs.getCommandScriptParam().getValue();
+                }
             }
             logger.info("command: %s", commands[0]);
             if (logger.isDebugEnabled()) {
