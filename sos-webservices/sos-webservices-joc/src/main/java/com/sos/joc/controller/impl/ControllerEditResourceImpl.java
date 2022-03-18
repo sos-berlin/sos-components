@@ -281,6 +281,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     dbAgent.setStartedAt(null);
                     dbAgent.setUri(clusterWatcher.getUrl());
                     dbAgent.setVersion(null);
+                    dbAgent.setTitle(null); // TODO
+                    // dbAgent.setDeployed(null); // TODO
                     agentDBLayer.saveAgent(dbAgent);
                 }
                 if (updateAgentRequired) {

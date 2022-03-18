@@ -21,10 +21,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "clusterAgents",
+    "subagentClusters",
     "auditLog"
 })
-public class StoreClusterAgents {
+public class StoreSubagentClusters {
 
     /**
      * controllerId
@@ -35,13 +35,8 @@ public class StoreClusterAgents {
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("clusterAgents")
-    private List<ClusterAgent> clusterAgents = new ArrayList<ClusterAgent>();
+    @JsonProperty("subagentClusters")
+    private List<SubagentCluster> subagentClusters = new ArrayList<SubagentCluster>();
     /**
      * auditParams
      * <p>
@@ -75,24 +70,14 @@ public class StoreClusterAgents {
         this.controllerId = controllerId;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("clusterAgents")
-    public List<ClusterAgent> getClusterAgents() {
-        return clusterAgents;
+    @JsonProperty("subagentClusters")
+    public List<SubagentCluster> getSubagentClusters() {
+        return subagentClusters;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("clusterAgents")
-    public void setClusterAgents(List<ClusterAgent> clusterAgents) {
-        this.clusterAgents = clusterAgents;
+    @JsonProperty("subagentClusters")
+    public void setSubagentClusters(List<SubagentCluster> subagentClusters) {
+        this.subagentClusters = subagentClusters;
     }
 
     /**
@@ -119,12 +104,12 @@ public class StoreClusterAgents {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("clusterAgents", clusterAgents).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("subagentClusters", subagentClusters).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(auditLog).append(clusterAgents).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(auditLog).append(subagentClusters).toHashCode();
     }
 
     @Override
@@ -132,11 +117,11 @@ public class StoreClusterAgents {
         if (other == this) {
             return true;
         }
-        if ((other instanceof StoreClusterAgents) == false) {
+        if ((other instanceof StoreSubagentClusters) == false) {
             return false;
         }
-        StoreClusterAgents rhs = ((StoreClusterAgents) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(clusterAgents, rhs.clusterAgents).isEquals();
+        StoreSubagentClusters rhs = ((StoreSubagentClusters) other);
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(subagentClusters, rhs.subagentClusters).isEquals();
     }
 
 }

@@ -6,12 +6,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -31,10 +29,9 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingLicenseException;
-import com.sos.joc.model.agent.ClusterAgent;
-import com.sos.joc.model.agent.ClusterAgents;
-import com.sos.joc.model.agent.DeployClusterAgent;
 import com.sos.joc.model.agent.DeployClusterAgents;
+import com.sos.joc.model.agent.InventoryClusterAgent;
+import com.sos.joc.model.agent.InventoryClusterAgents;
 import com.sos.joc.model.agent.ReadAgents;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubagentDirectorType;
@@ -53,8 +50,8 @@ import reactor.core.publisher.Flux;
 @Path("agents")
 public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgentsClusterResource {
 
-    private static final String API_CALL_P = "./agents/cluster/p";
-    private static final String API_CALL_DEPLOY = "./agents/cluster/deploy";
+    private static final String API_CALL_P = "./agents/cluster";
+    private static final String API_CALL_DEPLOY = "./agents/inventory/cluster/deploy";
 
     @Override
     public JOCDefaultResponse postCluster(String accessToken, byte[] filterBytes) {
@@ -101,7 +98,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                     .getAgentIds(), false, agentParameter.getOnlyEnabledAgents());
             Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(allowedControllers, false,
                     agentParameter.getOnlyEnabledAgents());
-            ClusterAgents agents = new ClusterAgents();
+            InventoryClusterAgents agents = new InventoryClusterAgents();
             if (dbAgents != null) {
                 Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).collect(Collectors.toSet());
                 Map<String, Set<String>> allAliases = dbLayer.getAgentNamesByAgentIds(controllerIds);
@@ -109,13 +106,20 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                     if (!subAgents.containsKey(a.getAgentId())) { // solo agent
                         return null;
                     }
-                    ClusterAgent agent = new ClusterAgent();
+                    InventoryClusterAgent agent = new InventoryClusterAgent();
                     agent.setAgentId(a.getAgentId());
                     agent.setAgentName(a.getAgentName());
                     agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
                     agent.setDisabled(a.getDisabled());
                     agent.setControllerId(a.getControllerId());
                     agent.setUrl(a.getUri());
+//                    Map<SubagentDirectorType, List<DBItemInventorySubAgentInstance>> subagentsByDirectorType = subAgents.get(a.getAgentId()).stream()
+//                            .collect(Collectors.groupingBy(DBItemInventorySubAgentInstance::getDirectorAsEnum));
+//                    agent.setPrimaryDirector(toSubAgentMapper(subagentsByDirectorType.getOrDefault(SubagentDirectorType.PRIMARY_DIRECTOR, Collections
+//                            .emptyList()).get(0)));
+//                    agent.setSecondaryDirector(toSubAgentMapper(subagentsByDirectorType.getOrDefault(SubagentDirectorType.SECONDARY_DIRECTOR,
+//                            Collections.emptyList()).get(0)));
+//                    agent.setSubagents(mapDBSubAgentsToSubAgents(subagentsByDirectorType.get(SubagentDirectorType.NO_DIRECTOR)));
                     agent.setSubagents(mapDBSubAgentsToSubAgents(subAgents.get(a.getAgentId())));
                     return agent;
                 }).filter(Objects::nonNull).collect(Collectors.toList()));
@@ -131,6 +135,17 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    @Override
+    public JOCDefaultResponse postClusterP(String accessToken, byte[] filterBytes) {
+        return postCluster(accessToken, filterBytes);
+    }
+    
+    @Override
+    public JOCDefaultResponse postDeploy2(String accessToken, byte[] filterBytes) {
+        // TODO new API
+        return postDeploy(accessToken, filterBytes);
     }
     
     @Override
@@ -158,17 +173,17 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
             List<SubagentDirectorType> directorTypes = Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR, SubagentDirectorType.SECONDARY_DIRECTOR);
             List<JUpdateItemOperation> updateItems = new ArrayList<>();
             
-            Set<DeployClusterAgent> agents = agentParameter.getClusterAgents();
-            for (DeployClusterAgent agent : agents) {
-                List<DBItemInventorySubAgentInstance> subAgents = dbLayer.getSubAgentInstancesByAgentId(agent.getAgentId());
+            Set<String> agentIds = agentParameter.getClusterAgentIds();
+            for (String agentId : agentIds) {
+                List<DBItemInventorySubAgentInstance> subAgents = dbLayer.getSubAgentInstancesByAgentId(agentId);
                 if (subAgents.isEmpty()) {
-                    throw new JocBadRequestException("Agent Cluster '" + agent.getAgentId() + "' doesn't have Subagents");
+                    throw new JocBadRequestException("Agent Cluster '" + agentId + "' doesn't have Subagents");
                 }
                 if (subAgents.stream().noneMatch(s -> s.getIsDirector() == SubagentDirectorType.PRIMARY_DIRECTOR.intValue())) {
-                    throw new JocBadRequestException("Agent Cluster '" + agent.getAgentId() + "' doesn't have a primary director");
+                    throw new JocBadRequestException("Agent Cluster '" + agentId + "' doesn't have a primary director");
                 }
                 
-                AgentPath agentPath = AgentPath.of(agent.getAgentId());
+                AgentPath agentPath = AgentPath.of(agentId);
                 List<SubagentId> directors = subAgents.stream().filter(s -> directorTypes.contains(s.getDirectorAsEnum())).sorted(Comparator
                         .comparingInt(DBItemInventorySubAgentInstance::getIsDirector)).map(DBItemInventorySubAgentInstance::getSubAgentId).map(
                                 SubagentId::of).collect(Collectors.toList());
@@ -177,29 +192,29 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                 updateItems.addAll(subAgents.stream().map(s -> JSubagentRef.of(SubagentId.of(s.getSubAgentId()), agentPath, Uri.of(s.getUri()))).map(
                         JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
 
-                switch (agent.getSchedulingType()) {
-                case FIXED_PRIORITY:
-                    // https://github.com/sos-berlin/js7/blob/main/js7-data/shared/src/test/scala/js7/data/subagent/SubagentSelectionTest.scala
-                    /*
-     json"""{
-        "TYPE": "SubagentSelection",
-        "id": "SELECTION",
-        "subagentToPriority": {
-          "A-SUBAGENT": 1,
-          "B-SUBAGENT": 2
-        }
-      }"""
-                     */
-                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JSubagentSelection.of(SubagentSelectionId.of(agent.getAgentId()), subAgents
-                            .stream().collect(Collectors.toMap(s -> SubagentId.of(s.getSubAgentId()), s -> -1 * s.getOrdering(), (k, v) -> v)))));
-
-                    break;
-                case ROUND_ROBIN:
-                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JSubagentSelection.of(SubagentSelectionId.of(agent.getAgentId()), subAgents
-                            .stream().collect(Collectors.toMap(s -> SubagentId.of(s.getSubAgentId()), s -> 0, (k, v) -> v)))));
-
-                    break;
-                }
+//                switch (agent.getSchedulingType()) {
+//                case FIXED_PRIORITY:
+//                    // https://github.com/sos-berlin/js7/blob/main/js7-data/shared/src/test/scala/js7/data/subagent/SubagentSelectionTest.scala
+//                    /*
+//     json"""{
+//        "TYPE": "SubagentSelection",
+//        "id": "SELECTION",
+//        "subagentToPriority": {
+//          "A-SUBAGENT": 1,
+//          "B-SUBAGENT": 2
+//        }
+//      }"""
+//                     */
+//                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JSubagentSelection.of(SubagentSelectionId.of(agent.getAgentId()), subAgents
+//                            .stream().collect(Collectors.toMap(s -> SubagentId.of(s.getSubAgentId()), s -> -1 * s.getOrdering(), (k, v) -> v)))));
+//
+//                    break;
+//                case ROUND_ROBIN:
+//                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JSubagentSelection.of(SubagentSelectionId.of(agent.getAgentId()), subAgents
+//                            .stream().collect(Collectors.toMap(s -> SubagentId.of(s.getSubAgentId()), s -> 0, (k, v) -> v)))));
+//
+//                    break;
+//                }
             }
             
             if (!updateItems.isEmpty()) {
@@ -227,14 +242,21 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
         for (DBItemInventorySubAgentInstance item : dbSubagents) {
             item.setOrdering(++index);
         }
-        return dbSubagents.stream().map(dbSubagent -> {
-            SubAgent subagent = new SubAgent();
-            subagent.setSubagentId(dbSubagent.getSubAgentId());
-            subagent.setUrl(dbSubagent.getUri());
-            subagent.setIsDirector(dbSubagent.getDirectorAsEnum());
-            subagent.setIsClusterWatcher(dbSubagent.getIsWatcher());
-            subagent.setPosition(dbSubagent.getOrdering());
-            return subagent;
-        }).collect(Collectors.toList());
+        return dbSubagents.stream().map(dbSubagent -> toSubAgentMapper(dbSubagent)).filter(Objects::nonNull).collect(Collectors.toList());
     }
+    
+    private static SubAgent toSubAgentMapper(DBItemInventorySubAgentInstance dbSubagent) {
+        if (dbSubagent == null) {
+            return null;
+        }
+        SubAgent subagent = new SubAgent();
+        subagent.setSubagentId(dbSubagent.getSubAgentId());
+        subagent.setUrl(dbSubagent.getUri());
+        subagent.setIsDirector(dbSubagent.getDirectorAsEnum());
+        subagent.setIsClusterWatcher(dbSubagent.getIsWatcher());
+        subagent.setPosition(dbSubagent.getOrdering());
+        subagent.setDisabled(dbSubagent.getDisabled());
+        return subagent;
+    }
+    
 }

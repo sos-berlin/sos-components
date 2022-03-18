@@ -10,8 +10,15 @@ import com.sos.joc.classes.JOCDefaultResponse;
 
 public interface IAgentsResourceReassign {
 
+    //old
     @POST
     @Path("reassign")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse reAssign2(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("inventory/reassign")
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse reAssign(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);

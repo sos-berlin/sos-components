@@ -1,4 +1,4 @@
-package com.sos.joc.agent.resource;
+package com.sos.joc.agents.resource;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
@@ -10,9 +10,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 
 public interface ISubAgentStoreResource {
 
-    //old
     @POST
-    @Path("subagents/store")
+    @Path("inventory/cluster/subagents/store")
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse store(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);

@@ -32,9 +32,9 @@ import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingLicenseException;
 import com.sos.joc.model.agent.Agent;
-import com.sos.joc.model.agent.ClusterAgent;
+import com.sos.joc.model.agent.InventoryClusterAgent;
 import com.sos.joc.model.agent.StoreAgents;
-import com.sos.joc.model.agent.StoreClusterAgents;
+import com.sos.joc.model.agent.StoreInventoryClusterAgents;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
@@ -56,7 +56,13 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
 
     private static final String API_STORE = "./agents/store";
     private static final String API_CLUSTER_STORE = "./agents/cluster/store";
+    private static final String API_CLUSTER_INVENTORY_STORE = "./agents/inventory/cluster/store";
 
+    @Override
+    public JOCDefaultResponse inventoryStore(String accessToken, byte[] filterBytes) {
+        return store(accessToken, filterBytes);
+    }
+    
     @Override
     public JOCDefaultResponse store(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
@@ -170,6 +176,8 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 dbAgent.setStartedAt(null);
                 dbAgent.setUri(agent.getUrl());
                 dbAgent.setVersion(null);
+                dbAgent.setTitle(null); // TODO
+                // dbAgent.setDeployed(null); // TODO
                 agentDBLayer.saveAgent(dbAgent);
 
                 if (controllerUpdateRequired) {
@@ -217,19 +225,19 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
     private static JSubagentRef createSubagentDirector(DBItemInventoryAgentInstance a) {
         return JSubagentRef.of(SubagentId.of(a.getAgentId()), AgentPath.of(a.getAgentId()), Uri.of(a.getUri()));
     }
-
+    
     @Override
-    public JOCDefaultResponse clusterStore(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse clusterInventoryStore(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CLUSTER_STORE, filterBytes, accessToken);
+            initLogging(API_CLUSTER_INVENTORY_STORE, filterBytes, accessToken);
 
             if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
                 throw new JocMissingLicenseException("missing license for Agent cluster");
             }
 
-            JsonValidator.validateFailFast(filterBytes, StoreClusterAgents.class);
-            StoreClusterAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreClusterAgents.class);
+            JsonValidator.validateFailFast(filterBytes, StoreInventoryClusterAgents.class);
+            StoreInventoryClusterAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreInventoryClusterAgents.class);
             boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
             String controllerId = agentStoreParameter.getControllerId();
 
@@ -238,7 +246,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 return jocDefaultResponse;
             }
 
-            Map<String, Long> agentIds = agentStoreParameter.getClusterAgents().stream().collect(Collectors.groupingBy(ClusterAgent::getAgentId,
+            Map<String, Long> agentIds = agentStoreParameter.getClusterAgents().stream().collect(Collectors.groupingBy(InventoryClusterAgent::getAgentId,
                     Collectors.counting()));
 
             // check uniqueness of AgentId
@@ -249,7 +257,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             checkUniquenessOfAgentNames(agentStoreParameter.getClusterAgents());
 
             // check uniqueness of SubagentUrl
-            agentStoreParameter.getClusterAgents().stream().map(ClusterAgent::getSubagents).flatMap(List::stream).collect(Collectors.groupingBy(
+            agentStoreParameter.getClusterAgents().stream().map(InventoryClusterAgent::getSubagents).flatMap(List::stream).collect(Collectors.groupingBy(
                     SubAgent::getUrl, Collectors.counting())).entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
                         throw new JocBadRequestException(getUniquenessMsg("Subagent url", e));
                     });
@@ -261,12 +269,12 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
 
             storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CLUSTER_STORE);
+            connection = Globals.createSosHibernateStatelessConnection(API_CLUSTER_INVENTORY_STORE);
             connection.setAutoCommit(false);
             connection.beginTransaction();
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
 
-            Map<String, ClusterAgent> agentMap = agentStoreParameter.getClusterAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function
+            Map<String, InventoryClusterAgent> agentMap = agentStoreParameter.getClusterAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function
                     .identity()));
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(null);
             Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds.keySet());
@@ -274,7 +282,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
 
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-                    ClusterAgent agent = agentMap.remove(dbAgent.getAgentId());
+                    InventoryClusterAgent agent = agentMap.remove(dbAgent.getAgentId());
                     if (agent == null) {
                         // throw something?
                         continue;
@@ -305,7 +313,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 }
             }
 
-            for (ClusterAgent agent : agentMap.values()) {
+            for (InventoryClusterAgent agent : agentMap.values()) {
                 DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
                 dbAgent.setId(null);
                 dbAgent.setAgentId(agent.getAgentId());
@@ -317,6 +325,8 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 dbAgent.setUri(agent.getSubagents().get(0).getUrl());
                 dbAgent.setStartedAt(null);
                 dbAgent.setVersion(null);
+                dbAgent.setTitle(null); // TODO
+                // dbAgent.setDeployed(null); // TODO
                 agentDBLayer.saveAgent(dbAgent);
 
                 List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(

@@ -45,7 +45,7 @@ import reactor.core.publisher.Flux;
 public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentCommandResource {
 
     private static final String API_CALL_RESET = "./agent/reset";
-    private static final String API_CALL_REMOVE = "./agent/remove";
+    private static final String API_CALL_REMOVE = "./agent/delete";
     private static final Logger LOGGER = LoggerFactory.getLogger(AgentCommandResourceImpl.class);
 
     @Override
@@ -76,6 +76,11 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
+    }
+    
+    @Override
+    public JOCDefaultResponse delete(String accessToken, byte[] filterBytes) {
+        return remove(accessToken, filterBytes);
     }
     
     @Override

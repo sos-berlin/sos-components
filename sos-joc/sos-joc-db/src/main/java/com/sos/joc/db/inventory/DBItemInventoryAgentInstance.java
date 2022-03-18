@@ -46,6 +46,9 @@ public class DBItemInventoryAgentInstance extends DBItem {
     @Column(name = "[OS_ID]", nullable = false)
     private Long osId;
 
+    @Column(name = "[TITLE]", nullable = true)
+    private String title;
+
     @Column(name = "[VERSION]", nullable = true)
     private String version;
 
@@ -67,6 +70,11 @@ public class DBItemInventoryAgentInstance extends DBItem {
     @Column(name = "[DISABLED]", nullable = false)
     @Type(type = "numeric_boolean")
     private boolean disabled;
+
+    /* 0=no, 1=yes */
+    @Column(name = "[DEPLOYED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean deployed;
 
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -122,6 +130,14 @@ public class DBItemInventoryAgentInstance extends DBItem {
         }
         osId = val;
     }
+    
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String val) {
+        title = val;
+    }
 
     public String getVersion() {
         return version;
@@ -161,6 +177,14 @@ public class DBItemInventoryAgentInstance extends DBItem {
 
     public void setDisabled(boolean val) {
         disabled = val;
+    }
+    
+    public boolean getDeployed() {
+        return deployed;
+    }
+
+    public void setDeployed(boolean val) {
+        deployed = val;
     }
 
     public void setModified(Date val) {

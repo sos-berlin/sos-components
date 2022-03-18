@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "subagentId",
     "url",
     "isDirector",
+    "disabled",
     "isClusterWatcher",
     "position"
 })
@@ -61,6 +62,8 @@ public class SubAgent {
      */
     @JsonProperty("isDirector")
     private SubagentDirectorType isDirector;
+    @JsonProperty("disabled")
+    private Boolean disabled = false;
     @JsonProperty("isClusterWatcher")
     private Boolean isClusterWatcher = false;
     @JsonProperty("position")
@@ -160,6 +163,16 @@ public class SubAgent {
         this.isDirector = isDirector;
     }
 
+    @JsonProperty("disabled")
+    public Boolean getDisabled() {
+        return disabled;
+    }
+
+    @JsonProperty("disabled")
+    public void setDisabled(Boolean disabled) {
+        this.disabled = disabled;
+    }
+
     @JsonProperty("isClusterWatcher")
     public Boolean getIsClusterWatcher() {
         return isClusterWatcher;
@@ -182,12 +195,12 @@ public class SubAgent {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("subagentId", subagentId).append("url", url).append("isDirector", isDirector).append("isClusterWatcher", isClusterWatcher).append("position", position).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("subagentId", subagentId).append("url", url).append("isDirector", isDirector).append("disabled", disabled).append("isClusterWatcher", isClusterWatcher).append("position", position).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(isDirector).append(subagentId).append(isClusterWatcher).append(position).append(url).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(isDirector).append(subagentId).append(disabled).append(isClusterWatcher).append(position).append(url).toHashCode();
     }
 
     @Override
@@ -199,7 +212,7 @@ public class SubAgent {
             return false;
         }
         SubAgent rhs = ((SubAgent) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(isDirector, rhs.isDirector).append(subagentId, rhs.subagentId).append(isClusterWatcher, rhs.isClusterWatcher).append(position, rhs.position).append(url, rhs.url).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(isDirector, rhs.isDirector).append(subagentId, rhs.subagentId).append(disabled, rhs.disabled).append(isClusterWatcher, rhs.isClusterWatcher).append(position, rhs.position).append(url, rhs.url).isEquals();
     }
 
 }

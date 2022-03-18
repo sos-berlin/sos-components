@@ -21,18 +21,33 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "subagents"
 })
-public class ClusterAgent
+public class InventoryClusterAgent
     extends Agent
 {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("subagents")
     private List<SubAgent> subagents = new ArrayList<SubAgent>();
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("subagents")
     public List<SubAgent> getSubagents() {
         return subagents;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("subagents")
     public void setSubagents(List<SubAgent> subagents) {
         this.subagents = subagents;
@@ -53,10 +68,10 @@ public class ClusterAgent
         if (other == this) {
             return true;
         }
-        if ((other instanceof ClusterAgent) == false) {
+        if ((other instanceof InventoryClusterAgent) == false) {
             return false;
         }
-        ClusterAgent rhs = ((ClusterAgent) other);
+        InventoryClusterAgent rhs = ((InventoryClusterAgent) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(subagents, rhs.subagents).isEquals();
     }
 

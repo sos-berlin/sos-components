@@ -53,6 +53,19 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     @Type(type = "numeric_boolean")
     private boolean isWatcher;
 
+    /* 0=no, 1=yes */
+    @Column(name = "[DISABLED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean disabled;
+
+    /* 0=no, 1=yes */
+    @Column(name = "[DEPLOYED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean deployed;
+    
+    @Column(name = "[TITLE]", nullable = true)
+    private String title;
+
     /* foreign key INVENTORY_OPERTATION_SYSTEM.ID */
     @Column(name = "[OS_ID]", nullable = false)
     private Long osId;
@@ -146,6 +159,14 @@ public class DBItemInventorySubAgentInstance extends DBItem {
         osId = val;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String val) {
+        title = val;
+    }
+
     public String getVersion() {
         return version;
     }
@@ -172,6 +193,22 @@ public class DBItemInventorySubAgentInstance extends DBItem {
 
     public void setIsWatcher(boolean val) {
         isWatcher = val;
+    }
+
+    public boolean getDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean val) {
+        disabled = val;
+    }
+
+    public boolean getDeployed() {
+        return deployed;
+    }
+
+    public void setDeployed(boolean val) {
+        deployed = val;
     }
 
     public Date getModified() {

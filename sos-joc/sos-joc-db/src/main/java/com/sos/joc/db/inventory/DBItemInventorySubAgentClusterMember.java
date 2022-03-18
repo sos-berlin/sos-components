@@ -17,7 +17,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CLUSTER_NAME]", "[SUB_AGENT_ID]" }) })
+@Table(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SUBAGENT_CLUSTER_ID]", "[SUBAGENT_ID]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS_SEQUENCE, allocationSize = 1)
 public class DBItemInventorySubAgentClusterMember extends DBItem {
 
@@ -28,14 +28,14 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[CLUSTER_NAME]", nullable = false)
-    private String clusterName;
+    @Column(name = "[SUBAGENT_CLUSTER_ID]", nullable = false)
+    private String subAgentClusterId;
 
-    @Column(name = "[SUB_AGENT_ID]", nullable = false)
+    @Column(name = "[SUBAGENT_ID]", nullable = false)
     private String subAgentId;
 
-    @Column(name = "[ORDERING]", nullable = false)
-    private Integer ordering;
+    @Column(name = "[PRIORITY]", nullable = false)
+    private Integer priority;
 
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -49,12 +49,12 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
         id = val;
     }
     
-    public String getClusterName() {
-        return clusterName;
+    public String getSubAgentClusterId() {
+        return subAgentClusterId;
     }
 
-    public void setClusterName(String val) {
-        clusterName = val;
+    public void setSubAgentClusterId(String val) {
+        subAgentClusterId = val;
     }
     
     public String getSubAgentId() {
@@ -65,12 +65,12 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
         subAgentId = val;
     }
     
-    public Integer getOrdering() {
-        return ordering;
+    public Integer getPriority() {
+        return priority;
     }
 
-    public void setOrdering(Integer val) {
-        ordering = val;
+    public void setPriority(Integer val) {
+        priority = val;
     }
 
     public void setModified(Date val) {

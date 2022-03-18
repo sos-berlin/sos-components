@@ -31,9 +31,14 @@ import com.sos.schema.JsonValidator;
 @Path("agents")
 public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResource {
 
-    private static final String API_CALL_P = "./agents/p";
+    private static final String API_CALL_P = "./agents/inventory";
     private static final String API_CALL_NAMES = "./agents/names";
 
+    @Override
+    public JOCDefaultResponse post2(String accessToken, byte[] filterBytes) {
+     return post(accessToken, filterBytes);   
+    }
+    
     @Override
     public JOCDefaultResponse post(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;

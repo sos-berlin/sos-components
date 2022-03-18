@@ -398,6 +398,8 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryAgentInstance.class);
         cl.add(DBItemInventoryAgentName.class);
         cl.add(DBItemInventorySubAgentInstance.class);
+        cl.add(DBItemInventorySubAgentCluster.class);
+        cl.add(DBItemInventorySubAgentClusterMember.class);
         cl.add(DBItemInventoryConfiguration.class);
         cl.add(DBItemInventoryConfigurationTrash.class);
         cl.add(DBItemInventoryReleasedConfiguration.class);

@@ -1,4 +1,4 @@
-package com.sos.joc.agent.impl;
+package com.sos.joc.agents.impl;
 
 import java.time.Instant;
 import java.util.Date;
@@ -12,7 +12,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
-import com.sos.joc.agent.resource.ISubAgentCommandResource;
+import com.sos.joc.agents.resource.ISubAgentCommandResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
@@ -33,14 +33,13 @@ import js7.data_for_java.item.JUpdateItemOperation;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
-//old api, see "./agents/inventory/cluster/subagents/delete"
-@Path("agent")
+@Path("agents")
 public class SubAgentCommandResourceImpl extends JOCResourceImpl implements ISubAgentCommandResource {
 
-    private static final String API_CALL_REMOVE = "./agent/subagents/remove";
+    private static final String API_CALL_REMOVE = "./agents/inventory/cluster/subagents/delete";
 
     @Override
-    public JOCDefaultResponse remove(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse delete(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL_REMOVE, filterBytes, accessToken);

@@ -43,8 +43,13 @@ import reactor.core.publisher.Flux;
 @Path("agents")
 public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgentsResourceReassign {
 
-    private static final String API_CALL = "./agents/reassign";
+    private static final String API_CALL = "./agents/inventory/reassign";
 
+    @Override
+    public JOCDefaultResponse reAssign2(String accessToken, byte[] filterBytes) {
+        return reAssign(accessToken, filterBytes);
+    }
+    
     @Override
     public JOCDefaultResponse reAssign(String accessToken, byte[] filterBytes) {
         SOSHibernateSession sosHibernateSession = null;

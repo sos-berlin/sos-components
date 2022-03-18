@@ -13,11 +13,13 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[AGENT_ID]", "[CLUSTER_NAME]" }) })
+@Table(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SUBAGENT_CLUSTER_ID]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTERS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_SUBAGENT_CLUSTERS_SEQUENCE, allocationSize = 1)
 public class DBItemInventorySubAgentCluster extends DBItem {
 
@@ -31,15 +33,15 @@ public class DBItemInventorySubAgentCluster extends DBItem {
     @Column(name = "[AGENT_ID]", nullable = false)
     private String agentId;
 
-    @Column(name = "[CLUSTER_NAME]", nullable = false)
-    private String clusterName;
+    @Column(name = "[SUBAGENT_CLUSTER_ID]", nullable = false)
+    private String subAgentClusterId;
 
     @Column(name = "[TITLE]", nullable = true)
     private String title;
 
-    /* 1=round robin, 2=fix priority */
-    @Column(name = "[SCHEDULING_MODE]", nullable = false)
-    private Integer schedulingMode;
+    @Column(name = "[DEPLOYED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean deployed;
 
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -61,12 +63,12 @@ public class DBItemInventorySubAgentCluster extends DBItem {
         agentId = val;
     }
     
-    public String getClusterName() {
-        return clusterName;
+    public String getSubAgentClusterId() {
+        return subAgentClusterId;
     }
 
-    public void setClusterName(String val) {
-        clusterName = val;
+    public void setSubAgentClusterId(String val) {
+        subAgentClusterId = val;
     }
     
     public String getTitle() {
@@ -77,12 +79,12 @@ public class DBItemInventorySubAgentCluster extends DBItem {
         title = val;
     }
     
-    public Integer getSchedulingMode() {
-        return schedulingMode;
+    public boolean getDeployed() {
+        return deployed;
     }
 
-    public void setSchedulingMode(Integer val) {
-        schedulingMode = val;
+    public void setDeployed(boolean val) {
+        deployed = val;
     }
 
     public void setModified(Date val) {

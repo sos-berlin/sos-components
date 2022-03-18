@@ -138,6 +138,7 @@
 								<exclude>inventory/*.json</exclude>
 								<exclude>configuration/globals/*.json</exclude>
 								<exclude>security/*.json</exclude>
+								<exclude>agent/*.json</exclude>
 							</excludes>
 						</configuration>
 						<goals>
@@ -182,6 +183,7 @@
 							<includes>
 								<include>configuration/globals/*.json</include>
 								<include>order/orderIdMap*.json</include>
+								<include>agent/*.json</include>
 							</includes>
 						</configuration>
 						<goals>
