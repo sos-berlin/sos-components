@@ -8,7 +8,7 @@ import javax.ws.rs.Produces;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface ISubAgentClusterStoreResource {
+public interface ISubAgentClusterStore {
 
     @POST
     @Path("cluster/store")

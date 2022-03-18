@@ -55,7 +55,6 @@ import reactor.core.publisher.Flux;
 public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsResourceStore {
 
     private static final String API_STORE = "./agents/store";
-    private static final String API_CLUSTER_STORE = "./agents/cluster/store";
     private static final String API_CLUSTER_INVENTORY_STORE = "./agents/inventory/cluster/store";
 
     @Override

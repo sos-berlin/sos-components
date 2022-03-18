@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "agentId",
     "subagentClusterId",
+    "title",
     "subagentIds"
 })
 public class SubagentCluster {
@@ -43,6 +44,14 @@ public class SubagentCluster {
      */
     @JsonProperty("subagentClusterId")
     private String subagentClusterId;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    private String title;
     /**
      * 
      * (Required)
@@ -100,6 +109,28 @@ public class SubagentCluster {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public String getTitle() {
+        return title;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    /**
      * 
      * (Required)
      * 
@@ -121,12 +152,12 @@ public class SubagentCluster {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("subagentClusterId", subagentClusterId).append("subagentIds", subagentIds).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("subagentClusterId", subagentClusterId).append("title", title).append("subagentIds", subagentIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(subagentClusterId).append(subagentIds).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(subagentClusterId).append(subagentIds).append(title).toHashCode();
     }
 
     @Override
@@ -138,7 +169,7 @@ public class SubagentCluster {
             return false;
         }
         SubagentCluster rhs = ((SubagentCluster) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(subagentClusterId, rhs.subagentClusterId).append(subagentIds, rhs.subagentIds).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(subagentClusterId, rhs.subagentClusterId).append(subagentIds, rhs.subagentIds).append(title, rhs.title).isEquals();
     }
 
 }
