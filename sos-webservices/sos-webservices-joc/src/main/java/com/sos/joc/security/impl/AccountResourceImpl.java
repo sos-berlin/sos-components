@@ -144,13 +144,6 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
             String password = "";
 
-            if (account.getPassword() != null && !account.getPassword().isEmpty()) {
-                password = account.getPassword();
-            }
-            if (password.isEmpty()) {
-                password = initialPassword;
-            }
-
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
             iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             iamAccountFilter.setAccountName(account.getAccountName());
@@ -158,10 +151,20 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             boolean newAccount = false;
             if (dbItemIamAccount == null) {
                 dbItemIamAccount = new DBItemIamAccount();
-                dbItemIamAccount.setAccountPassword(password);
+                if (account.getPassword() == null) {
+                    account.setPassword(initialPassword);
+                }  
                 newAccount = true;
             }
 
+            if (account.getPassword() != null) {
+                password = account.getPassword();
+                if (password.isEmpty()) {
+                    password = initialPassword;
+                }          
+            }
+             
+            
             dbItemIamAccount.setAccountName(account.getAccountName());
             if ("JOC".equals(dbItemIamIdentityService.getIdentityServiceType()) || "VAULT-JOC-ACTIVE".equals(dbItemIamIdentityService
                     .getIdentityServiceType())) {
@@ -177,9 +180,10 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 dbItemIamAccount.setAccountPassword("********");
             }
             dbItemIamAccount.setIdentityServiceId(dbItemIamIdentityService.getId());
-            dbItemIamAccount.setForcePasswordChange(account.getForcePasswordChange());
             if (sosInitialPasswordSetting.getInitialPassword().equals(password)) {
                 dbItemIamAccount.setForcePasswordChange(true);
+            }else {
+                dbItemIamAccount.setForcePasswordChange(account.getForcePasswordChange());
             }
             dbItemIamAccount.setDisabled(account.getDisabled());
 
