@@ -74,6 +74,15 @@ public class MailResource {
         init();
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         for (MailResource mr : list) {
+            // is not really necessary - null entries were already filtered by HitoryMonitoringModel.handleMailResources && NotifierMail.getMailResource
+            if (mr == null || mr.getMailProperties() == null) {
+                if (isDebugEnabled) {
+                    String n = mr == null ? "unknown" : mr.jobResourceName;
+                    LOGGER.debug(String.format("[parse][%s][skip]not deployed???", n));
+                }
+                continue;
+            }
+
             mr.getMailProperties().entrySet().forEach(e -> {
                 if (!mailProperties.containsKey(e.getKey())) {
                     mailProperties.put(e.getKey(), e.getValue());
@@ -200,6 +209,22 @@ public class MailResource {
 
     public String getBCC() {
         return bcc;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("jobResourceName=").append(jobResourceName);
+        sb.append(",from=").append(from);
+        sb.append(",fromName=").append(fromName);
+        sb.append(",to=").append(to);
+        sb.append(",cc=").append(cc);
+        sb.append(",bcc=").append(bcc);
+        sb.append(",mailProperties=").append(getMaskedMailProperties());
+        if (credentialStoreArgs != null) {
+            sb.append(",credentialStoreArgs");
+        }
+        return sb.toString();
     }
 
 }

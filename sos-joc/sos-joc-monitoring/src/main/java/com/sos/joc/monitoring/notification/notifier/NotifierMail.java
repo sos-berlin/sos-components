@@ -116,6 +116,7 @@ public class NotifierMail extends ANotifier {
 
     private MailResource getMailResource(Configuration conf) throws Exception {
         MailResource resource = null;
+        List<String> notDeployed = new ArrayList<>();
         if (monitor.getJobResources() != null) {
             if (monitor.getJobResources().size() == 1) {
                 resource = conf.getMailResources().get(monitor.getJobResources().get(0));
@@ -123,8 +124,17 @@ public class NotifierMail extends ANotifier {
                 List<MailResource> list = new ArrayList<>();
                 for (String res : monitor.getJobResources()) {
                     MailResource r = conf.getMailResources().get(res);
-                    list.add(r);
+                    if (r == null) {
+                        notDeployed.add(res);
+                    } else {
+                        list.add(r);
+                    }
                 }
+
+                if (notDeployed.size() > 0) {
+                    throw new Exception(String.format("[monitor %s][Job Resource not deployed]%s", monitor.getInfo(), String.join(",", notDeployed)));
+                }
+
                 if (list.size() > 0) {
                     resource = new MailResource();
                     resource.parse(list);
@@ -132,7 +142,7 @@ public class NotifierMail extends ANotifier {
             }
         }
         if (resource == null) {
-            throw new Exception("missing job_resources=" + monitor.getJobResources());
+            throw new Exception(String.format("[monitor %s]missing Job Resource", monitor.getInfo()));
         }
         return resource;
     }

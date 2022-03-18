@@ -239,7 +239,7 @@ public class NotifierModel {
             try {
                 n = m.createNotifier(i, conf);
             } catch (Throwable e) {
-                LOGGER.error(e.toString());// contains all informations about the type etc
+                LOGGER.error(e.toString(), e);// contains all informations about the type etc
                 if (mn == null) {
                     LOGGER.info(String.format("[%s]%s[skip save notification monitor]due to save notification failed", i, ANotifier.getInfo(analyzer,
                             m, type)));

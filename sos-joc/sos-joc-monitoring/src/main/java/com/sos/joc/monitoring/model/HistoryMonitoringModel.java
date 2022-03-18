@@ -835,11 +835,6 @@ public class HistoryMonitoringModel implements Serializable {
                         NOTIFICATION_IDENTIFIER, NotificationType.ERROR.name(), configuration.getOnError().size(), NotificationType.WARNING.name(),
                         configuration.getOnWarning().size(), NotificationType.SUCCESS.name(), configuration.getOnSuccess().size(), String.join(", ",
                                 names)));
-
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("MailResources=" + SOSString.mapToString(configuration.getMailResources(), true));
-                }
-
             } else {
                 LOGGER.info(String.format("[%s][%s][configuration]exists=false", serviceIdentifier, NOTIFICATION_IDENTIFIER));
             }
@@ -865,6 +860,20 @@ public class HistoryMonitoringModel implements Serializable {
                 MailResource mr = conf.getMailResources().get(name);
                 mr.parse(name, r[1].toString());
                 conf.getMailResources().put(name, mr);
+            }
+            if (resources.size() != conf.getMailResources().size()) {// some configured resources were not found in the database
+                List<String> toRemove = conf.getMailResources().entrySet().stream().filter(e -> {
+                    return e.getValue().getMailProperties() == null;
+                }).map(Map.Entry::getKey).collect(Collectors.toList());
+
+                if (toRemove.size() > 0) {
+                    LOGGER.warn(String.format("[Job Resource=%s]configured Job Resource not found in the deployment history", String.join(",",
+                            toRemove)));
+
+                    for (String name : toRemove) {
+                        conf.getMailResources().remove(name);
+                    }
+                }
             }
         }
         return names;
