@@ -70,6 +70,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                 Map<String, String> envVarsOfWorkflowParameters = SSHJobUtil.getWorkflowParamsAsEnvVars(step, jobArgs);
                 allEnvVars = Stream.of(js7EnvVars, envVarsOfWorkflowParameters).flatMap(map -> map.entrySet().stream())
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                allEnvVars.putAll(resolveReturnValuesFilename(jobArgs));
                 envVars.setLocalEnvs(allEnvVars);// ??? local?global
                 if (logger.isDebugEnabled()) {
                     logWorkflowCredentials(step);
@@ -78,6 +79,8 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                     logger.debug("Additional Environment Variables - workflow");
                     logSosEnvVars(envVarsOfWorkflowParameters);
                 }
+            } else {
+                envVars.setLocalEnvs(resolveReturnValuesFilename(jobArgs));
             }
             logger.info("[connect]%s:%s ...", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());
             provider.connect();
@@ -100,7 +103,6 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             }
             for (String command : commands) {
                 StringBuilder preCommand = new StringBuilder();
-                resolveReturnValuesFilename(jobArgs);
                 SSHJobUtil.addPreCommand(jobArgs, preCommand, isWindowsShell, delimiter, resolvedReturnValuesFileName);
                 command = SSHJobUtil.substituteVariables(parameterSubstitutor, command);
                 if (preCommand.length() > 0) {
@@ -113,11 +115,8 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                     }
                 }
 
-                if (envVars.getLocalEnvs() != null && !envVars.getLocalEnvs().isEmpty() && jobArgs.getCreateEnvVars().getValue()) {
-                    result = provider.executeCommand(command, envVars);
-                } else {
-                    result = provider.executeCommand(command);
-                }
+                result = provider.executeCommand(command, envVars);
+
                 if (!SOSString.isEmpty(result.getStdOut())) {
                     outcomes.put("std_out", result.getStdOut());
                     logger.info("[stdOut]%s", result.getStdOut());
@@ -241,11 +240,12 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         }
     }
 
-    private void resolveReturnValuesFilename(SSHJobArguments jobArgs) {
+    private Map<String, String> resolveReturnValuesFilename(SSHJobArguments jobArgs) {
         resolvedReturnValuesFileName = SSHJobUtil.resolve(jobArgs, returnValuesFileName, isWindowsShell);
         addTemporaryFilesToDelete(resolvedReturnValuesFileName);
-        // TODO
-        // envVars.getEnvVars().put(SSHJobUtil.JS7_RETURN_VALUES, resolvedReturnValuesFileName);
+        Map<String, String> retVal = new HashMap<String, String>();
+        retVal.put(SSHJobUtil.JS7_RETURN_VALUES, resolvedReturnValuesFileName);
+        return retVal;
     }
 
     private void executePostCommand(SSHJobArguments jobArgs, SSHProvider provider) {
@@ -280,7 +280,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                             String value = regExMatcher.group(2).trim();
                             outcomes.put(key, value);
                             if (logger.isDebugEnabled()) {
-                                logger.debug(String.format("[return value]%s=%s", key, value));
+                                logger.debug(String.format("[return value added to outcomes] Key: %1$s = Value: %2$s", key, value));
                             }
                         }
                     }
