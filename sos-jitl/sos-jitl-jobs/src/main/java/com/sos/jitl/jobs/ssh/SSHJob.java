@@ -64,23 +64,19 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
 
         SOSCommandResult result = null;
         try {
-            Map<String, String> envVarsAgent = Collections.emptyMap();
+            Map<String, String> allEnvVars = Collections.emptyMap();
             if (jobArgs.getCreateEnvVars().getValue()) {
-                envVarsAgent = SSHJobUtil.getAgentEnvVars();
-                Map<String, String> envVarsYade = SSHJobUtil.getYadeEnvVars();
-                Map<String, String> combined = Stream.of(envVarsAgent, envVarsYade).flatMap(map -> map.entrySet().stream()).collect(Collectors.toMap(
-                        Map.Entry::getKey, Map.Entry::getValue));
-                envVars.setLocalEnvs(combined);// ??? local?global
+                Map<String, String> js7EnvVars = SSHJobUtil.getJS7EnvVars();
+                Map<String, String> envVarsOfWorkflowParameters = SSHJobUtil.getWorkflowParamsAsEnvVars(step, jobArgs);
+                allEnvVars = Stream.of(js7EnvVars, envVarsOfWorkflowParameters).flatMap(map -> map.entrySet().stream())
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                envVars.setLocalEnvs(allEnvVars);// ??? local?global
                 if (logger.isDebugEnabled()) {
                     logWorkflowCredentials(step);
-                    logger.debug("Systems Environment Variables - Agent");
-                    logSosEnvVars(envVarsAgent);
-                    logger.debug("Systems Environment Variables - Yade");
-                    logSosEnvVars(envVarsYade);
-                }
-                if (logger.isTraceEnabled()) {
-                    logger.debug("Complete JS7 Environment Variables");
-                    // logSosEnvVars(envVars);
+                    logger.debug("Systems Environment Variables - JS7");
+                    logSosEnvVars(js7EnvVars);
+                    logger.debug("Additional Environment Variables - workflow");
+                    logSosEnvVars(envVarsOfWorkflowParameters);
                 }
             }
             logger.info("[connect]%s:%s ...", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());
@@ -117,8 +113,8 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                     }
                 }
 
-                if (envVars != null && jobArgs.getCreateEnvVars().getValue() && !envVarsAgent.isEmpty()) {
-                    result = provider.executeCommand(command, new SOSEnv(envVarsAgent));
+                if (envVars.getLocalEnvs() != null && !envVars.getLocalEnvs().isEmpty() && jobArgs.getCreateEnvVars().getValue()) {
+                    result = provider.executeCommand(command, envVars);
                 } else {
                     result = provider.executeCommand(command);
                 }

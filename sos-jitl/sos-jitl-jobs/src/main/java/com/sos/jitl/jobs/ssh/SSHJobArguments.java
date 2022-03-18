@@ -20,6 +20,7 @@ public class SSHJobArguments extends JobArguments {
     private JobArgument<Boolean> ignoreStdErr = new JobArgument<>("ignore_stderr", false, false);
     private JobArgument<String> tmpDir = new JobArgument<>("tmp_dir", false);
     private JobArgument<Boolean> createEnvVars = new JobArgument<>("create_env_vars", false, false);
+    private JobArgument<String> filterRegex = new JobArgument<>("filter_regex", false, "");
     private JobArgument<String> preCommand = new JobArgument<>("pre_command", false, "export %s='%s'");
     private JobArgument<String> postCommandRead = new JobArgument<>("post_command_read", false, "test -r %s && cat %s; exit 0");
     private JobArgument<String> postCommandDelete = new JobArgument<>("post_command_delete", false, "test -r %s && rm %s; exit 0");
@@ -70,6 +71,10 @@ public class SSHJobArguments extends JobArguments {
 
     public JobArgument<Boolean> getCreateEnvVars() {
         return createEnvVars;
+    }
+
+    public JobArgument<String> getFilterRegex() {
+        return filterRegex;
     }
 
     public JobArgument<String> getPreCommand() {
