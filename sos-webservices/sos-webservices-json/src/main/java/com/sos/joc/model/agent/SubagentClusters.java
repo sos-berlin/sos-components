@@ -2,9 +2,11 @@
 package com.sos.joc.model.agent;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -13,28 +15,29 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * store subagent clusters
+ * subagent clusters
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
+    "deliveryDate",
     "subagentClusters",
     "auditLog"
 })
-public class StoreSubagentClusters {
+public class SubagentClusters {
 
     /**
-     * controllerId
+     * timestamp
      * <p>
-     * 
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
-    @JsonProperty("controllerId")
-    private String controllerId;
+    @JsonProperty("deliveryDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date deliveryDate;
     /**
      * 
      * (Required)
@@ -52,27 +55,27 @@ public class StoreSubagentClusters {
     private AuditParams auditLog;
 
     /**
-     * controllerId
+     * timestamp
      * <p>
-     * 
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
+    @JsonProperty("deliveryDate")
+    public Date getDeliveryDate() {
+        return deliveryDate;
     }
 
     /**
-     * controllerId
+     * timestamp
      * <p>
-     * 
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * (Required)
      * 
      */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
+    @JsonProperty("deliveryDate")
+    public void setDeliveryDate(Date deliveryDate) {
+        this.deliveryDate = deliveryDate;
     }
 
     /**
@@ -119,12 +122,12 @@ public class StoreSubagentClusters {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("subagentClusters", subagentClusters).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("subagentClusters", subagentClusters).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(auditLog).append(subagentClusters).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(auditLog).append(subagentClusters).toHashCode();
     }
 
     @Override
@@ -132,11 +135,11 @@ public class StoreSubagentClusters {
         if (other == this) {
             return true;
         }
-        if ((other instanceof StoreSubagentClusters) == false) {
+        if ((other instanceof SubagentClusters) == false) {
             return false;
         }
-        StoreSubagentClusters rhs = ((StoreSubagentClusters) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(subagentClusters, rhs.subagentClusters).isEquals();
+        SubagentClusters rhs = ((SubagentClusters) other);
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(auditLog, rhs.auditLog).append(subagentClusters, rhs.subagentClusters).isEquals();
     }
 
 }

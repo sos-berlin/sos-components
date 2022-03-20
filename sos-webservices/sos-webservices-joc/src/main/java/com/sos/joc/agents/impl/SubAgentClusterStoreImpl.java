@@ -72,6 +72,7 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
 
             connection = Globals.createSosHibernateStatelessConnection(API_STORE);
             connection.setAutoCommit(false);
+            connection.beginTransaction();
             InventorySubagentClustersDBLayer agentDBLayer = new InventorySubagentClustersDBLayer(connection);
 
             // Check if all subagents in the inventory
@@ -155,6 +156,14 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
         if (members == null) {
             members = Collections.emptyList();
         }
+        
+        Map<String, Long> subagentIds = subAgents.stream().collect(Collectors.groupingBy(SubAgentId::getSubagentId, Collectors.counting()));
+        // check uniqueness of SubagentIds per Subagent Cluster
+        subagentIds.entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
+            throw new JocBadRequestException("Subagent ID has to be unique per Subagent Cluster: " + e.getKey() + " is used " + (e.getValue() == 2L
+                    ? "twice" : e.getValue() + " times"));
+        });
+        
         // update member
         for (DBItemInventorySubAgentClusterMember member : members) {
             if (subAgents.isEmpty()) {
