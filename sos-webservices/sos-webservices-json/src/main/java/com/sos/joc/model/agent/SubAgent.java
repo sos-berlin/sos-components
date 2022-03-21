@@ -4,6 +4,7 @@ package com.sos.joc.model.agent;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.controller.model.common.SyncState;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -21,7 +22,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "subagentId",
     "url",
     "isDirector",
+    "title",
+    "syncState",
     "disabled",
+    "deployed",
     "isClusterWatcher",
     "position"
 })
@@ -62,8 +66,26 @@ public class SubAgent {
      */
     @JsonProperty("isDirector")
     private SubagentDirectorType isDirector;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    private String title;
+    /**
+     * sync state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("syncState")
+    private SyncState syncState;
     @JsonProperty("disabled")
     private Boolean disabled = false;
+    @JsonProperty("deployed")
+    private Boolean deployed = false;
     @JsonProperty("isClusterWatcher")
     private Boolean isClusterWatcher = false;
     @JsonProperty("position")
@@ -163,6 +185,50 @@ public class SubAgent {
         this.isDirector = isDirector;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public String getTitle() {
+        return title;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    /**
+     * sync state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("syncState")
+    public SyncState getSyncState() {
+        return syncState;
+    }
+
+    /**
+     * sync state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("syncState")
+    public void setSyncState(SyncState syncState) {
+        this.syncState = syncState;
+    }
+
     @JsonProperty("disabled")
     public Boolean getDisabled() {
         return disabled;
@@ -171,6 +237,16 @@ public class SubAgent {
     @JsonProperty("disabled")
     public void setDisabled(Boolean disabled) {
         this.disabled = disabled;
+    }
+
+    @JsonProperty("deployed")
+    public Boolean getDeployed() {
+        return deployed;
+    }
+
+    @JsonProperty("deployed")
+    public void setDeployed(Boolean deployed) {
+        this.deployed = deployed;
     }
 
     @JsonProperty("isClusterWatcher")
@@ -195,12 +271,12 @@ public class SubAgent {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("subagentId", subagentId).append("url", url).append("isDirector", isDirector).append("disabled", disabled).append("isClusterWatcher", isClusterWatcher).append("position", position).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("subagentId", subagentId).append("url", url).append("isDirector", isDirector).append("title", title).append("syncState", syncState).append("disabled", disabled).append("deployed", deployed).append("isClusterWatcher", isClusterWatcher).append("position", position).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(isDirector).append(subagentId).append(disabled).append(isClusterWatcher).append(position).append(url).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(isDirector).append(syncState).append(deployed).append(subagentId).append(disabled).append(isClusterWatcher).append(position).append(title).append(url).toHashCode();
     }
 
     @Override
@@ -212,7 +288,7 @@ public class SubAgent {
             return false;
         }
         SubAgent rhs = ((SubAgent) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(isDirector, rhs.isDirector).append(subagentId, rhs.subagentId).append(disabled, rhs.disabled).append(isClusterWatcher, rhs.isClusterWatcher).append(position, rhs.position).append(url, rhs.url).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(isDirector, rhs.isDirector).append(syncState, rhs.syncState).append(deployed, rhs.deployed).append(subagentId, rhs.subagentId).append(disabled, rhs.disabled).append(isClusterWatcher, rhs.isClusterWatcher).append(position, rhs.position).append(title, rhs.title).append(url, rhs.url).isEquals();
     }
 
 }

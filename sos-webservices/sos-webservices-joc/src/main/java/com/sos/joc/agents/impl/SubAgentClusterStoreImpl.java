@@ -48,7 +48,6 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
             JsonValidator.validateFailFast(filterBytes, StoreSubagentClusters.class);
             StoreSubagentClusters agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreSubagentClusters.class);
             boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
-            String controllerId = agentStoreParameter.getControllerId();
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
             if (jocDefaultResponse != null) {
@@ -68,7 +67,7 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
                 CheckJavaVariableName.test("Subagent Cluster ID", subagentClusterId);
             }
             
-            storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(agentStoreParameter.getAuditLog(), CategoryType.CONTROLLER);
 
             connection = Globals.createSosHibernateStatelessConnection(API_STORE);
             connection.setAutoCommit(false);

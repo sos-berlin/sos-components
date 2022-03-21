@@ -87,7 +87,9 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                     agent.setAgentId(a.getAgentId());
                     agent.setAgentName(a.getAgentName());
                     agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
+                    agent.setTitle(a.getTitle());
                     agent.setDisabled(a.getDisabled());
+                    agent.setDeployed(a.getDeployed());
                     agent.setIsClusterWatcher(a.getIsWatcher());
                     agent.setControllerId(a.getControllerId());
                     agent.setUrl(a.getUri());

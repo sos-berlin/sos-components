@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.exceptions.ControllerAuthorizationException;
@@ -32,8 +34,11 @@ import io.vavr.control.Either;
 import js7.base.auth.UserAndPassword;
 import js7.base.problem.Problem;
 import js7.base.web.Uri;
+import js7.data.agent.AgentPath;
 import js7.data.node.NodeId;
+import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
+import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.subagent.JSubagentRef;
 import js7.proxy.data.event.ProxyEvent;
@@ -173,12 +178,15 @@ public class ProxyContext {
             SOSHibernateSession sosHibernateSession = null;
             try {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetAgents");
+                sosHibernateSession.setAutoCommit(false);
+                sosHibernateSession.beginTransaction();
                 InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
 //                boolean versionBefore220beta20211201 = false;
                 Map<JAgentRef, List<JSubagentRef>> agents = Proxies.getAgents(credentials.getControllerId(), dbLayer);
+                JControllerState currentState = p.currentState();
                 if (!agents.isEmpty()) {
                     boolean redeploy = false;
-                    Either<Problem, JAgentRef> agentE = p.currentState().pathToAgentRef(agents.keySet().iterator().next().path());
+                    Either<Problem, JAgentRef> agentE = currentState.pathToAgentRef(agents.keySet().iterator().next().path());
                     if (agentE.isLeft()) {
                         redeploy = true;
 //                    } else if (!agentE.get().director().isPresent() || agentE.get().directors().isEmpty()) {
@@ -189,20 +197,42 @@ public class ProxyContext {
                     // before version v2.2.0-beta.20211201 doesn't work -> comment out 
                     if (redeploy) {
                         LOGGER.info(toString() + ": Redeploy Agents");
-                        
+
                         Stream<JUpdateItemOperation> a = agents.keySet().stream().map(JUpdateItemOperation::addOrChangeSimple);
                         Stream<JUpdateItemOperation> s = agents.values().stream().flatMap(l -> l.stream().map(
                                 JUpdateItemOperation::addOrChangeSimple));
 
-                            p.api().updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s))).thenAccept(e -> {
-                                if (e.isLeft()) {
-                                    LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
+                        p.api().updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s))).thenAccept(e -> {
+                            if (e.isLeft()) {
+                                LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
+                            } else {
+                                SOSHibernateSession connection1 = null;
+                                try {
+                                    connection1 = Globals.createSosHibernateStatelessConnection("UpdateAgents");
+                                    connection1.setAutoCommit(false);
+                                    Globals.beginTransaction(connection1);
+                                    InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
+                                    dbLayer1.setAgentsDeployed(agents.keySet().stream().map(JAgentRef::path).map(AgentPath::string).collect(Collectors
+                                            .toList()));
+                                    dbLayer1.setSubAgentsDeployed(agents.values().stream().flatMap(l -> l.stream()).map(JSubagentRef::path).map(
+                                            SubagentId::string).collect(Collectors.toList()));
+                                    Globals.commit(connection1);
+                                } catch (Exception e1) {
+                                    Globals.rollback(connection1);
+                                    LOGGER.error(e1.toString());
+                                } finally {
+                                    Globals.disconnect(connection1);
                                 }
-                            });
+                            }
+                        });
                     }
+                } else {
+//                    dbLayer.setSubAgentsDeployed(currentState.idToSubagentRef().keySet().stream().map(SubagentId::string).collect(Collectors.toList()));
+//                    Globals.commit(sosHibernateSession);
                 }
                 DailyPlanCalendar.getInstance().updateDailyPlanCalendar(p, toString());
             } catch (Exception e) {
+                Globals.rollback(sosHibernateSession);
                 LOGGER.error(e.toString());
             } finally {
                 Globals.disconnect(sosHibernateSession);

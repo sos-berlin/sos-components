@@ -771,6 +771,38 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             return getSession().executeUpdate(query);
         }
     }
+    
+    public int setAgentsDeployed(List<String> agentIds) throws SOSHibernateException {
+        if (agentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            int j = 0;
+            for (int i = 0; i < agentIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                j += setAgentsDeployed(SOSHibernate.getInClausePartition(i, agentIds));
+            }
+            return j;
+        } else {
+            StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(
+                    " set deployed = 1 where agentId in (:agentIds)");
+            Query<?> query = getSession().createQuery(hql.toString());
+            query.setParameterList("agentIds", agentIds);
+            return getSession().executeUpdate(query);
+        }
+    }
+    
+    public int setSubAgentsDeployed(List<String> subagentIds) throws SOSHibernateException {
+        if (subagentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            int j = 0;
+            for (int i = 0; i < subagentIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                j += setSubAgentsDeployed(SOSHibernate.getInClausePartition(i, subagentIds));
+            }
+            return j;
+        } else {
+            StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(
+                    " set deployed = 1 where subAgentId in (:subagentIds)");
+            Query<?> query = getSession().createQuery(hql.toString());
+            query.setParameterList("subagentIds", subagentIds);
+            return getSession().executeUpdate(query);
+        }
+    }
 
     public boolean subAgentIdAlreadyExists(Collection<String> subAgentIds, String controllerId) throws DBInvalidDataException,
             DBConnectionRefusedException, JocObjectAlreadyExistException {

@@ -20,21 +20,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "subagentClusters",
     "auditLog"
 })
 public class StoreSubagentClusters {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * 
      * (Required)
@@ -50,30 +40,6 @@ public class StoreSubagentClusters {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     /**
      * 
@@ -119,12 +85,12 @@ public class StoreSubagentClusters {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("subagentClusters", subagentClusters).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("subagentClusters", subagentClusters).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(auditLog).append(subagentClusters).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(subagentClusters).toHashCode();
     }
 
     @Override
@@ -136,7 +102,7 @@ public class StoreSubagentClusters {
             return false;
         }
         StoreSubagentClusters rhs = ((StoreSubagentClusters) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(subagentClusters, rhs.subagentClusters).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(subagentClusters, rhs.subagentClusters).isEquals();
     }
 
 }

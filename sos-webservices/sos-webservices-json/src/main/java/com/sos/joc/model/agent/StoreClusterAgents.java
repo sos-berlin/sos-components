@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "clusterAgents",
     "auditLog"
 })
-public class StoreInventoryClusterAgents {
+public class StoreClusterAgents {
 
     /**
      * controllerId
@@ -41,7 +41,7 @@ public class StoreInventoryClusterAgents {
      * 
      */
     @JsonProperty("clusterAgents")
-    private List<InventoryClusterAgent> clusterAgents = new ArrayList<InventoryClusterAgent>();
+    private List<ClusterAgent> clusterAgents = new ArrayList<ClusterAgent>();
     /**
      * auditParams
      * <p>
@@ -81,7 +81,7 @@ public class StoreInventoryClusterAgents {
      * 
      */
     @JsonProperty("clusterAgents")
-    public List<InventoryClusterAgent> getClusterAgents() {
+    public List<ClusterAgent> getClusterAgents() {
         return clusterAgents;
     }
 
@@ -91,7 +91,7 @@ public class StoreInventoryClusterAgents {
      * 
      */
     @JsonProperty("clusterAgents")
-    public void setClusterAgents(List<InventoryClusterAgent> clusterAgents) {
+    public void setClusterAgents(List<ClusterAgent> clusterAgents) {
         this.clusterAgents = clusterAgents;
     }
 
@@ -132,10 +132,10 @@ public class StoreInventoryClusterAgents {
         if (other == this) {
             return true;
         }
-        if ((other instanceof StoreInventoryClusterAgents) == false) {
+        if ((other instanceof StoreClusterAgents) == false) {
             return false;
         }
-        StoreInventoryClusterAgents rhs = ((StoreInventoryClusterAgents) other);
+        StoreClusterAgents rhs = ((StoreClusterAgents) other);
         return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(clusterAgents, rhs.clusterAgents).isEquals();
     }
 

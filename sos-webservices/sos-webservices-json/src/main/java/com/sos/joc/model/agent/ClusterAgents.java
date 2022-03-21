@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deliveryDate",
     "agents"
 })
-public class InventoryClusterAgents {
+public class ClusterAgents {
 
     /**
      * timestamp
@@ -37,7 +37,7 @@ public class InventoryClusterAgents {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     @JsonProperty("agents")
-    private List<InventoryClusterAgent> agents = new ArrayList<InventoryClusterAgent>();
+    private List<ClusterAgent> agents = new ArrayList<ClusterAgent>();
 
     /**
      * timestamp
@@ -64,12 +64,12 @@ public class InventoryClusterAgents {
     }
 
     @JsonProperty("agents")
-    public List<InventoryClusterAgent> getAgents() {
+    public List<ClusterAgent> getAgents() {
         return agents;
     }
 
     @JsonProperty("agents")
-    public void setAgents(List<InventoryClusterAgent> agents) {
+    public void setAgents(List<ClusterAgent> agents) {
         this.agents = agents;
     }
 
@@ -88,10 +88,10 @@ public class InventoryClusterAgents {
         if (other == this) {
             return true;
         }
-        if ((other instanceof InventoryClusterAgents) == false) {
+        if ((other instanceof ClusterAgents) == false) {
             return false;
         }
-        InventoryClusterAgents rhs = ((InventoryClusterAgents) other);
+        ClusterAgents rhs = ((ClusterAgents) other);
         return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(agents, rhs.agents).isEquals();
     }
 

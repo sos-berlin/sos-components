@@ -29,28 +29,27 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingLicenseException;
+import com.sos.joc.model.agent.ClusterAgent;
+import com.sos.joc.model.agent.ClusterAgents;
 import com.sos.joc.model.agent.DeployClusterAgents;
-import com.sos.joc.model.agent.InventoryClusterAgent;
-import com.sos.joc.model.agent.InventoryClusterAgents;
 import com.sos.joc.model.agent.ReadAgents;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubagentDirectorType;
 import com.sos.schema.JsonValidator;
 
+import io.vavr.control.Either;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
-import js7.data.subagent.SubagentSelectionId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.subagent.JSubagentRef;
-import js7.data_for_java.subagent.JSubagentSelection;
 import reactor.core.publisher.Flux;
 
 @Path("agents")
 public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgentsClusterResource {
 
-    private static final String API_CALL_P = "./agents/cluster";
+    private static final String API_CALL_P = "./agents/inventory/cluster";
     private static final String API_CALL_DEPLOY = "./agents/inventory/cluster/deploy";
 
     @Override
@@ -98,7 +97,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                     .getAgentIds(), false, agentParameter.getOnlyEnabledAgents());
             Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(allowedControllers, false,
                     agentParameter.getOnlyEnabledAgents());
-            InventoryClusterAgents agents = new InventoryClusterAgents();
+            ClusterAgents agents = new ClusterAgents();
             if (dbAgents != null) {
                 Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).collect(Collectors.toSet());
                 Map<String, Set<String>> allAliases = dbLayer.getAgentNamesByAgentIds(controllerIds);
@@ -106,20 +105,15 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                     if (!subAgents.containsKey(a.getAgentId())) { // solo agent
                         return null;
                     }
-                    InventoryClusterAgent agent = new InventoryClusterAgent();
+                    ClusterAgent agent = new ClusterAgent();
                     agent.setAgentId(a.getAgentId());
                     agent.setAgentName(a.getAgentName());
                     agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
                     agent.setDisabled(a.getDisabled());
                     agent.setControllerId(a.getControllerId());
                     agent.setUrl(a.getUri());
-//                    Map<SubagentDirectorType, List<DBItemInventorySubAgentInstance>> subagentsByDirectorType = subAgents.get(a.getAgentId()).stream()
-//                            .collect(Collectors.groupingBy(DBItemInventorySubAgentInstance::getDirectorAsEnum));
-//                    agent.setPrimaryDirector(toSubAgentMapper(subagentsByDirectorType.getOrDefault(SubagentDirectorType.PRIMARY_DIRECTOR, Collections
-//                            .emptyList()).get(0)));
-//                    agent.setSecondaryDirector(toSubAgentMapper(subagentsByDirectorType.getOrDefault(SubagentDirectorType.SECONDARY_DIRECTOR,
-//                            Collections.emptyList()).get(0)));
-//                    agent.setSubagents(mapDBSubAgentsToSubAgents(subagentsByDirectorType.get(SubagentDirectorType.NO_DIRECTOR)));
+                    agent.setDeployed(a.getDeployed());
+                    agent.setTitle(a.getTitle());
                     agent.setSubagents(mapDBSubAgentsToSubAgents(subAgents.get(a.getAgentId())));
                     return agent;
                 }).filter(Objects::nonNull).collect(Collectors.toList()));
@@ -172,6 +166,8 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<SubagentDirectorType> directorTypes = Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR, SubagentDirectorType.SECONDARY_DIRECTOR);
             List<JUpdateItemOperation> updateItems = new ArrayList<>();
+            List<String> updateAgentIds = new ArrayList<>();
+            List<DBItemInventorySubAgentInstance> updateSubagents = new ArrayList<>();
             
             Set<String> agentIds = agentParameter.getClusterAgentIds();
             for (String agentId : agentIds) {
@@ -188,9 +184,11 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                         .comparingInt(DBItemInventorySubAgentInstance::getIsDirector)).map(DBItemInventorySubAgentInstance::getSubAgentId).map(
                                 SubagentId::of).collect(Collectors.toList());
                 updateItems.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(agentPath, directors)));
+                updateAgentIds.add(agentId);
                 
                 updateItems.addAll(subAgents.stream().map(s -> JSubagentRef.of(SubagentId.of(s.getSubAgentId()), agentPath, Uri.of(s.getUri()))).map(
                         JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
+                updateSubagents.addAll(subAgents);
 
 //                switch (agent.getSchedulingType()) {
 //                case FIXED_PRIORITY:
@@ -218,8 +216,29 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
             }
             
             if (!updateItems.isEmpty()) {
-                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(updateItems)).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e,
-                        accessToken, getJocError(), controllerId));
+                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(updateItems)).thenAccept(e -> {
+                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                    if (e.isRight()) {
+                        SOSHibernateSession connection1 = null;
+                        try {
+                            connection1 = Globals.createSosHibernateStatelessConnection(API_CALL_DEPLOY);
+                            connection1.setAutoCommit(false);
+                            Globals.beginTransaction(connection1);
+                            for (DBItemInventorySubAgentInstance updateSubagent : updateSubagents) {
+                                updateSubagent.setDeployed(true); 
+                                connection1.update(updateSubagent);
+                            }
+                            InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
+                            dbLayer1.setAgentsDeployed(updateAgentIds);
+                            Globals.commit(connection1);
+                        } catch (Exception e1) {
+                            Globals.rollback(connection1);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
+                        } finally {
+                            Globals.disconnect(connection1);
+                        }
+                    }
+                });
             }
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -256,6 +275,8 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
         subagent.setIsClusterWatcher(dbSubagent.getIsWatcher());
         subagent.setPosition(dbSubagent.getOrdering());
         subagent.setDisabled(dbSubagent.getDisabled());
+        subagent.setTitle(dbSubagent.getTitle());
+        subagent.setDeployed(dbSubagent.getDeployed());
         return subagent;
     }
     

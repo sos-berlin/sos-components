@@ -73,6 +73,7 @@ public class JsonValidator {
             put("UrlParameter", "controller/urlParam-schema.json");
             put("TestConnect", "controller/testParam-schema.json");
             put("RegisterParameters", "controller/registerParam-schema.json");
+            
             put("AgentCommand", "agent/agentCommand-schema.json");
             put("SubAgentsCommand", "agent/subagentCommand-schema.json");
             put("StoreAgents", "agent/storeParam-schema.json");
@@ -82,6 +83,8 @@ public class JsonValidator {
             put("ReadAgents", "agent/readAgents-schema.json");
             put("ReadAgentsV", "agent/readAgents_v-schema.json");
             put("AgentReportFilter", "agent/agentReportFilter-schema.json");
+            put("StoreSubagentClusters", "agent/storeSubagentClusters-schema.json");
+            put("ReadSubagentClusters", "agent/readSubagentClusters-schema.json");
 
             put("LockFilter", "lock/lockFilter-schema.json");
             put("LocksFilter", "lock/locksFilter-schema.json");

@@ -187,6 +187,9 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
                 newDbSubAgent.setUri(subAgent.getUrl());
                 newDbSubAgent.setIsWatcher(false);
                 newDbSubAgent.setOsId(0L);
+                newDbSubAgent.setTitle(subAgent.getTitle());
+                newDbSubAgent.setDisabled(false);
+                newDbSubAgent.setDeployed(false);
                 newDbSubAgent.setTransaction("save");
                 if (subAgent.getPosition() == Integer.MIN_VALUE || curDbSubAgents.size() < subAgent.getPosition()) {
                     curDbSubAgents.add(newDbSubAgent);
@@ -225,6 +228,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
 //                }
                 dbSubAgent.setIsDirector(subAgent.getIsDirector());
                 dbSubAgent.setUri(subAgent.getUrl());
+                dbSubAgent.setTitle(subAgent.getTitle());
                 dbSubAgent.setTransaction("update");
                 if (subAgent.getPosition() != Integer.MIN_VALUE) {
                     dbSubAgent.setOrdering(subAgent.getPosition());

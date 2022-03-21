@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "subagents"
 })
-public class InventoryClusterAgent
+public class ClusterAgent
     extends Agent
 {
 
@@ -68,10 +68,10 @@ public class InventoryClusterAgent
         if (other == this) {
             return true;
         }
-        if ((other instanceof InventoryClusterAgent) == false) {
+        if ((other instanceof ClusterAgent) == false) {
             return false;
         }
-        InventoryClusterAgent rhs = ((InventoryClusterAgent) other);
+        ClusterAgent rhs = ((ClusterAgent) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(subagents, rhs.subagents).isEquals();
     }
 
