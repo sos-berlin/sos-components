@@ -25,6 +25,9 @@ public class IamPermissionDBLayer {
         if (filter.getControllerId() != null && !filter.getControllerId().isEmpty()) {
             where += and + " controllerId = :controllerId";
             and = " and ";
+        } else {
+            where += and + " (controllerId is null or controllerId = '')";
+            and = " and ";
         }
         if (filter.getIdentityServiceId() != null) {
             where += and + " identityServiceId = :identityServiceId";
