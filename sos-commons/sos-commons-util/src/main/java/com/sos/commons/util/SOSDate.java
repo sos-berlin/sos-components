@@ -188,30 +188,48 @@ public class SOSDate {
     }
 
     public static Long getMinutes(Date d) {
+        if (d == null) {
+            return 0L;
+        }
         return d.getTime() / 1000 / 60;
     }
 
     public static Long getSeconds(Date d) {
+        if (d == null) {
+            return 0L;
+        }
         return d.getTime() / 1000;
     }
 
     /** @TODO */
     public static int getWeek(Date d) {
+        if (d == null) {
+            return 0;
+        }
         return d.toInstant().atZone(ZoneId.systemDefault()).get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
     }
 
     /** @TODO */
     public static int getMonth(Date d) {
+        if (d == null) {
+            return 0;
+        }
         return d.toInstant().atZone(ZoneId.systemDefault()).getMonthValue();
     }
 
     /** @TODO */
     public static int getQuarter(Date d) {
+        if (d == null) {
+            return 0;
+        }
         return d.toInstant().atZone(ZoneId.systemDefault()).get(IsoFields.QUARTER_OF_YEAR);
     }
 
     /** @TODO */
     public static int getYear(Date d) {
+        if (d == null) {
+            return 0;
+        }
         return d.toInstant().atZone(ZoneId.systemDefault()).get(IsoFields.WEEK_BASED_YEAR);
     }
 

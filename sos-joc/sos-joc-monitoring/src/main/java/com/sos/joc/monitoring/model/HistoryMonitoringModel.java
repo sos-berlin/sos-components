@@ -330,9 +330,9 @@ public class HistoryMonitoringModel implements Serializable {
 
                     try {
                         LOGGER.info(String.format(
-                                "[%s][%s][handleLongerThan][UTC][start=%s,calculated current=%s][%s][step historyId=%s]orderId=%s,workflow=%s,job=%s",
+                                "[%s][%s][handleLongerThan][UTC][start=%s,calculated current=%s][%s]orderId=%s,workflow=%s,job=%s(historyId=%s)",
                                 serviceIdentifier, IDENTIFIER, SOSDate.getTimeAsString(hosb.getStartTime()), SOSDate.getTimeAsString(stepEndTime), r
-                                        .getWarn().getText(), hosb.getHistoryId(), hosb.getOrderId(), hosb.getWorkflowPath(), hosb.getJobName()));
+                                        .getWarn().getText(), hosb.getOrderId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb.getHistoryId()));
                     } catch (Throwable e) {
                         LOGGER.warn(e.toString(), e);
                     }
@@ -582,37 +582,53 @@ public class HistoryMonitoringModel implements Serializable {
 
     private HistoryOrderStepResultWarn analyzeLongerThan(DBLayerMonitoring dbLayer, HistoryOrderStepBean hosb, String definition, Date startTime,
             Date endTime, Long historyId, boolean remove) {
-        ExpectedSeconds expected = getExpectedSeconds(dbLayer, JobWarning.LONGER_THAN, hosb, definition);
-        if (expected == null || expected.getSeconds() == null) {
-            return null;
-        }
 
-        if (remove) {
-            longerThan.remove(historyId);
-        }
-
-        Long diff = SOSDate.getSeconds(endTime) - SOSDate.getSeconds(startTime);
-        if (diff < 0) {
-            if (LOGGER.isDebugEnabled()) {
-                try {
-                    LOGGER.debug(String.format("[%s][%s][analyzeLongerThan][diff=%s < 0][startTime=%s, endTime=%s]%s", serviceIdentifier, IDENTIFIER,
-                            diff, SOSDate.getDateTimeAsString(startTime), SOSDate.getDateTimeAsString(endTime), SOSString.toString(hosb)));
-                } catch (Throwable e) {
-                    LOGGER.warn(e.toString(), e);
-                }
+        try {
+            if (remove) {
+                longerThan.remove(historyId);
             }
-            return null;
-        }
 
-        if (diff > expected.getSeconds()) {
-            return new HistoryOrderStepResultWarn(JobWarning.LONGER_THAN, String.format("Job runs longer than the expected %s",
-                    getExpectedDurationMessage(definition, expected)));
-        } else {
-            if (!remove) {// remove old entries
-                if (diff > MAX_LONGER_THAN_SECONDS) {
+            ExpectedSeconds expected = getExpectedSeconds(dbLayer, JobWarning.LONGER_THAN, hosb, definition);
+            if (expected == null || expected.getSeconds() == null) {
+                return null;
+            }
+
+            Long diff = SOSDate.getSeconds(endTime) - SOSDate.getSeconds(startTime);
+            if (diff < 0) {
+                if (!remove) {// remove=true - already removed at begin
+                    // remove because startTime > endTime
                     longerThan.remove(historyId);
                 }
+
+                if (LOGGER.isDebugEnabled()) {
+                    try {
+                        LOGGER.debug(String.format("[%s][%s][analyzeLongerThan][diff=%s < 0][startTime=%s, endTime=%s]%s", serviceIdentifier,
+                                IDENTIFIER, diff, SOSDate.getDateTimeAsString(startTime), SOSDate.getDateTimeAsString(endTime), SOSString.toString(
+                                        hosb)));
+                    } catch (Throwable e) {
+                        LOGGER.warn(e.toString(), e);
+                    }
+                }
+                return null;
             }
+
+            if (diff > expected.getSeconds()) {
+                return new HistoryOrderStepResultWarn(JobWarning.LONGER_THAN, String.format("Job runs longer than the expected %s",
+                        getExpectedDurationMessage(definition, expected)));
+            } else {
+                if (!remove) {// remove old entries
+                    if (diff > MAX_LONGER_THAN_SECONDS) {
+                        longerThan.remove(historyId);
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            if (!remove) {// remove=true - already removed at begin
+                // remove on error because can'be processed
+                longerThan.remove(historyId);
+            }
+            LOGGER.warn(String.format("[%s][%s][analyzeLongerThan][skip onError][workflow=%s, orderId=%s, job=%s(historyid=%s)]%s", serviceIdentifier,
+                    IDENTIFIER, hosb.getWorkflowPath(), hosb.getOrderId(), hosb.getJobName(), hosb.getHistoryId(), e.toString()), e);
         }
         return null;
     }
@@ -655,27 +671,46 @@ public class HistoryMonitoringModel implements Serializable {
 
     private ExpectedSeconds getExpectedSeconds(DBLayerMonitoring dbLayer, JobWarning type, HistoryOrderStepBean hosb, String definition) {
         if (SOSString.isEmpty(definition)) {
-            return new ExpectedSeconds(null, null);
+            return null;
         }
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        Long seconds = null;
-        Long avg = null;
+        Long seconds = 0L;
+        Long avg = 0L;
         if (isPercentage(definition)) {
             try {
                 int percentage = Integer.parseInt(definition.substring(0, definition.length() - 1));
                 if (percentage != 0) {
-                    avg = dbLayer.getJobAvg(hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName());
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s][%s][workflowPath=%s,job=%s][%s definition=%s]avg=%s", serviceIdentifier, IDENTIFIER, hosb
-                                .getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), type, definition, avg));
+                    // get from cache
+                    HistoryOrderStepBean hosbLt = longerThan.get(hosb.getHistoryId());
+                    avg = hosbLt == null ? null : hosbLt.getWarnIfLongerAvgSeconds();
+
+                    if (avg == null) {
+                        // get from database
+                        avg = dbLayer.getJobAvg(hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName());
                     }
-                    if (avg != null) {// job found
-                        seconds = new BigDecimal(percentage / 100 * avg).setScale(0, RoundingMode.HALF_UP).longValue();
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][%s][workflowPath=%s,job=%s(historyId=%s)][%s definition=%s]avg=%s", serviceIdentifier,
+                                IDENTIFIER, hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb.getHistoryId(), type, definition,
+                                avg));
+                    }
+                    if (avg == null || avg.equals(0L)) {
+                        avg = 0L;
+                        seconds = 0L;
+                    } else {// successfully job runs found
+                        Double r = Double.valueOf(percentage) / 100 * Double.valueOf(avg);
+                        seconds = new BigDecimal(r).setScale(0, RoundingMode.HALF_UP).longValue();
+                    }
+
+                    if (hosbLt != null && hosbLt.getWarnIfLongerAvgSeconds() == null) {
+                        hosbLt.setWarnIfLongerAvgSeconds(avg);
+                        // set cache
+                        longerThan.put(hosb.getHistoryId(), hosbLt);
                     }
                 }
             } catch (SOSHibernateException e) {
-                LOGGER.error(String.format("[%s][%s][%s][workflowPath=%s,job=%s][%s definition=%s][error on get jobAvg]%s", serviceIdentifier,
-                        IDENTIFIER, hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), type, definition, e.toString()), e);
+                LOGGER.error(String.format("[%s][%s][%s][workflowPath=%s,job=%s(historyId=%s)][%s definition=%s][error on get jobAvg]%s",
+                        serviceIdentifier, IDENTIFIER, hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb.getHistoryId(), type,
+                        definition, e.toString()), e);
             }
         } else if (isSeconds(definition)) {
             seconds = Long.parseLong(definition.substring(0, definition.length() - 1));
@@ -685,8 +720,8 @@ public class HistoryMonitoringModel implements Serializable {
             seconds = Long.parseLong(definition);
         }
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][%s][%s][workflowPath=%s,job=%s][%s definition=%s]seconds=%s", serviceIdentifier, IDENTIFIER, hosb
-                    .getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), type, definition, seconds));
+            LOGGER.debug(String.format("[%s][%s][%s][workflowPath=%s,job=%s(historyId=%s)][%s definition=%s]seconds=%s", serviceIdentifier,
+                    IDENTIFIER, hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb.getHistoryId(), type, definition, seconds));
         }
         return new ExpectedSeconds(seconds, avg);
     }
