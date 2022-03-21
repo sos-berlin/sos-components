@@ -1,7 +1,9 @@
 package com.sos.auth.shiro.classes;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.shiro.session.InvalidSessionException;
 import org.apache.shiro.subject.Subject;
@@ -59,6 +61,11 @@ public class SOSShiroSubject implements ISOSAuthSubject {
     @Override
     public Boolean isForcePasswordChange() {
         return false;
+    }
+
+    @Override
+    public Set<String> getListOfAccountPermissions() {
+        return new HashSet<String>();
     }
 
 }

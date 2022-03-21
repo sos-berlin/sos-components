@@ -160,4 +160,8 @@ public class SOSVaultSubject implements ISOSAuthSubject {
 		}
 	}
 
+    @Override
+    public Set<String> getListOfAccountPermissions() {
+        return setOfAccountPermissions;
+    }
 }

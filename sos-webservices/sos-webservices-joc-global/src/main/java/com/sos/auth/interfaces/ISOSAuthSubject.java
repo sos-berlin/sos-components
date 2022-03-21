@@ -2,6 +2,7 @@ package com.sos.auth.interfaces;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface ISOSAuthSubject {
 
@@ -15,6 +16,10 @@ public interface ISOSAuthSubject {
 
     public Map<String, List<String>> getMapOfFolderPermissions();
 
+    public Set<String> getListOfAccountPermissions();
+    
     public ISOSSession getSession();
+    
+    
 
 }

@@ -146,4 +146,9 @@ public class SOSLdapSubject implements ISOSAuthSubject {
 		return false;
 	}
 
+    @Override
+    public Set<String> getListOfAccountPermissions() {
+        return setOfAccountPermissions;
+    }
+
 }

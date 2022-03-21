@@ -54,7 +54,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
                         sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
                     }
                 }
-            } 
+            }
 
             sosInternAuthSubject = new SOSInternAuthSubject();
             if (sosInternAuthAccessToken == null) {

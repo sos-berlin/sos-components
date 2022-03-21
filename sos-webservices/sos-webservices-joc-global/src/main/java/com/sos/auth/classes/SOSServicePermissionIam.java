@@ -2,9 +2,13 @@ package com.sos.auth.classes;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TimeZone;
 
 import javax.servlet.http.HttpServletRequest;
@@ -61,10 +65,17 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
+import com.sos.joc.model.security.configuration.SecurityConfigurationRole;
+import com.sos.joc.model.security.configuration.SecurityConfigurationRoles;
+import com.sos.joc.model.security.configuration.permissions.ControllerFolders;
+import com.sos.joc.model.security.configuration.permissions.IniControllers;
+import com.sos.joc.model.security.configuration.permissions.IniPermission;
+import com.sos.joc.model.security.configuration.permissions.IniPermissions;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
+import com.sos.joc.model.security.configuration.permissions.SecurityConfigurationFolders;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
- 
 
 @SuppressWarnings("deprecation")
 @Path("/authentication")
@@ -98,7 +109,6 @@ public class SOSServicePermissionIam {
         return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosPermissionMasters));
     }
 
- 
     @POST
     @Path("/joc_cockpit_permissions")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -221,7 +231,7 @@ public class SOSServicePermissionIam {
                     if (clientCertCN == null) {
                         LOGGER.info("Client Certificate CN read from Login: n/a");
                     } else {
-                        LOGGER.info("Client Certificate CN read from Login" );
+                        LOGGER.info("Client Certificate CN read from Login");
                     }
                 } catch (IOException e) {
                     LOGGER.debug("No Client certificate read from HttpServletRequest.");
@@ -478,7 +488,7 @@ public class SOSServicePermissionIam {
 
         IdentityServiceTypes identityServiceType = IdentityServiceTypes.fromValue(dbItemIdentityService.getIdentityServiceType());
         String identityServiceName = dbItemIdentityService.getIdentityServiceName();
-        
+
         ISOSLogin sosLogin = null;
 
         switch (identityServiceType) {
@@ -510,9 +520,9 @@ public class SOSServicePermissionIam {
             sosLogin = new SOSInternAuthLogin();
             LOGGER.debug("Login with idendity service sosintern");
             break;
-//        default:
-//            LOGGER.debug("Login with idendity service shiro");
-//            sosLogin = new SOSShiroLogin(Globals.getShiroIniSecurityManagerFactory());
+        default:
+            sosLogin = new SOSInternAuthLogin();
+            LOGGER.debug("Login with idendity service sosintern");
         }
 
         sosLogin.setIdentityService(new SOSIdentityService(dbItemIdentityService));
@@ -540,33 +550,6 @@ public class SOSServicePermissionIam {
         Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
 
         resetTimeOut(currentAccount);
-
-        ISOSSecurityConfiguration sosSecurityConfiguration;
-        switch (identityServiceType) {
-        case SHIRO:
-            sosSecurityConfiguration = new SOSSecurityConfiguration();
-            break;
-        default:
-            sosSecurityConfiguration = new SOSSecurityDBConfiguration();
-        }
-
-        SecurityConfiguration securityConfiguration = sosSecurityConfiguration.readConfiguration(null, identityServiceName);
-        currentAccount.setRoles(securityConfiguration);
-
-        SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
-        Permissions sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(securityConfiguration);
-        currentAccount.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
-        currentAccount.getCurrentSubject().getSession().setAttribute("username_joc_permissions", Globals.objectMapper.writeValueAsBytes(
-                sosPermissionJocCockpitControllers));
-
-        currentAccount.initFolders();
-
-        Map<String, List<String>> fs = sosPermissionsCreator.getMapOfFolder();
-        for (String role : fs.keySet()) {
-            for (String folder : fs.get(role)) {
-                currentAccount.addFolder(role, folder);
-            }
-        }
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -632,27 +615,48 @@ public class SOSServicePermissionIam {
         return pwd;
     }
 
+    private void addFolder(SOSAuthCurrentAccount currentAccount) {
+        SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
+
+        Map<String, List<String>> fs = sosPermissionsCreator.getMapOfFolder();
+        for (String role : fs.keySet()) {
+            for (String folder : fs.get(role)) {
+                currentAccount.addFolder(role, folder);
+            }
+        }
+    }
+
     private SOSAuthCurrentAccountAnswer authenticate(SOSAuthCurrentAccount currentAccount, String password) throws Exception {
 
         try {
+            SOSPermissionMerger sosPermissionMerger = new SOSPermissionMerger();
             SOSHibernateSession sosHibernateSession = null;
             String msg = "";
             try {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("Login Identity Services");
-                
+
                 IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
                 IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
                 filter.setDisabled(false);
                 filter.setRequired(true);
-                
+
                 List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
-                
+
+                currentAccount.initFolders();
+                  Set<String> setOfAccountPermissions = new HashSet<String>();
+
                 for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
                     msg = createAccount(currentAccount, password, dbItemIamIdentityService);
+                    SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
+                            dbItemIamIdentityService));
+                    currentAccount.setRoles(securityConfiguration);
+                    setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
                     if (!msg.isEmpty()) {
                         LOGGER.info("Login with required Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed." + msg);
-
                     }
+
+                    addFolder(currentAccount);
+
                 }
 
                 if (currentAccount.getCurrentSubject() == null) {
@@ -674,15 +678,20 @@ public class SOSServicePermissionIam {
                             listOfIdentityServices.add(dbItemIamIdentityService);
                         }
                     }
-                    
+
                     Globals.disconnect(sosHibernateSession);
 
                     msg = "";
                     for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
                         try {
                             msg = createAccount(currentAccount, password, dbItemIamIdentityService);
+                            SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
+                                    dbItemIamIdentityService));
+                            currentAccount.setRoles(securityConfiguration);
+
                             if (msg.isEmpty()) {
                                 LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " successful.");
+                                addFolder(currentAccount);
                                 break;
                             }
 
@@ -692,7 +701,16 @@ public class SOSServicePermissionIam {
                             continue;
                         }
                     }
+
                 }
+
+                currentAccount.getCurrentSubject().getListOfAccountPermissions().addAll(setOfAccountPermissions);
+                SecurityConfiguration securityConfigurationEntry = sosPermissionMerger.mergePermissions();
+                SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
+                Permissions sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(
+                        securityConfigurationEntry);
+                currentAccount.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
+
             } catch (JocAuthenticationException e) {
                 msg = e.getMessage();
                 LOGGER.info(e.getSosAuthCurrentAccountAnswer().getIdentityService());
@@ -736,7 +754,9 @@ public class SOSServicePermissionIam {
             sosAuthCurrentUserAnswer.setEnableTouch(enableTouch);
 
             return sosAuthCurrentUserAnswer;
-        } catch (JocAuthenticationException e) {
+        } catch (
+
+        JocAuthenticationException e) {
             return e.getSosAuthCurrentAccountAnswer();
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);

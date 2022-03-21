@@ -132,4 +132,9 @@ public class SOSInternAuthSubject implements ISOSAuthSubject {
 		this.isForcePasswordChange = isForcePasswordChange;
 	}
 
+    @Override
+    public Set<String> getListOfAccountPermissions() {
+        return setOfAccountPermissions;
+    }
+
 }

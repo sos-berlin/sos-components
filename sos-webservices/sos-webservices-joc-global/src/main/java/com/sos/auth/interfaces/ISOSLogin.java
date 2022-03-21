@@ -15,4 +15,5 @@ public interface ISOSLogin {
     public ISOSAuthSubject getCurrentSubject();
 
     public void setIdentityService(SOSIdentityService sosIdentityService);
+
 }

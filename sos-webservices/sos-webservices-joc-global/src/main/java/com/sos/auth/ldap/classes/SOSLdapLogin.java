@@ -22,7 +22,7 @@ public class SOSLdapLogin implements ISOSLogin {
     private String msg = "";
     private SOSIdentityService identityService;
     private SOSLdapSubject sosLdapSubject;
-
+ 
     public SOSLdapLogin() {
 
     }
@@ -99,5 +99,7 @@ public class SOSLdapLogin implements ISOSLogin {
     public void setIdentityService(SOSIdentityService identityService) {
         this.identityService = identityService;
     }
+
+ 
 
 }

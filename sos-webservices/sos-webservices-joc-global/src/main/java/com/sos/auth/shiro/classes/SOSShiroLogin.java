@@ -28,13 +28,13 @@ import com.sos.auth.shiro.SOSUsernameRequestToken;
 import com.sos.auth.shiro.SOSX509AuthorizingRealm;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.security.configuration.SecurityConfiguration;
 
 public class SOSShiroLogin implements ISOSLogin {
 
     private static final String SOS_LOGIN_INIT = "sosLogin.init";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSShiroLogin.class);
-
     private Subject currentSubject;
     private String msg = "";
     private IniSecurityManagerFactory factory = null;
@@ -91,7 +91,7 @@ public class SOSShiroLogin implements ISOSLogin {
                         currentSubject.getSession().setTimeout(-1);
                     } else {
                         if (Globals.iamSessionTimeout != null) {
-                            currentSubject.getSession().setTimeout(Globals.iamSessionTimeout*1000);
+                            currentSubject.getSession().setTimeout(Globals.iamSessionTimeout * 1000);
                         }
                     }
                 }

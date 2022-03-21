@@ -20,91 +20,90 @@ import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
- 
+
 public class SOSVaultLogin implements ISOSLogin {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SOSVaultLogin.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSVaultLogin.class);
 
-	private String msg = "";
-	private SOSIdentityService identityService;
+    private String msg = "";
+    private SOSIdentityService identityService;
 
-	SOSVaultSubject sosVaultSubject;
+    SOSVaultSubject sosVaultSubject;
 
-	public SOSVaultLogin() {
+    public SOSVaultLogin() {
 
-	}
+    }
 
-	public void login(String account, String pwd, HttpServletRequest httpServletRequest) {
-		KeyStore trustStore = null;
+    public void login(String account, String pwd, HttpServletRequest httpServletRequest) {
+        KeyStore trustStore = null;
 
-		try {
-			SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-			webserviceCredentials.setValuesFromProfile(identityService);
+        try {
+            SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
+            webserviceCredentials.setValuesFromProfile(identityService);
 
-			trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(),
-					webserviceCredentials.getTrustStoreType(), webserviceCredentials.getTruststorePassword());
+            trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                    webserviceCredentials.getTruststorePassword());
 
-			webserviceCredentials.setAccount(account);
-			SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
+            webserviceCredentials.setAccount(account);
+            SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
 
-			SOSVaultAccountAccessToken sosVaultAccountAccessToken = null;
+            SOSVaultAccountAccessToken sosVaultAccountAccessToken = null;
 
-			boolean disabled;
-			if (identityService.getIdentyServiceType() == IdentityServiceTypes.VAULT_JOC
-					|| identityService.getIdentyServiceType() == IdentityServiceTypes.VAULT_JOC_ACTIVE) {
-				disabled = SOSAuthHelper.accountIsDisable(identityService.getIdentityServiceId(), account);
-			} else {
-				disabled = false;
-			}
+            boolean disabled;
+            if (identityService.getIdentyServiceType() == IdentityServiceTypes.VAULT_JOC || identityService
+                    .getIdentyServiceType() == IdentityServiceTypes.VAULT_JOC_ACTIVE) {
+                disabled = SOSAuthHelper.accountIsDisable(identityService.getIdentityServiceId(), account);
+            } else {
+                disabled = false;
+            }
 
-			if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
-				sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
-			}
+            if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
+                sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
+            }
 
-			sosVaultSubject = new SOSVaultSubject(account, identityService);
+            sosVaultSubject = new SOSVaultSubject(account, identityService);
 
-			if (sosVaultAccountAccessToken.getAuth() == null) {
-				sosVaultSubject.setAuthenticated(false);
-				setMsg("There is no user with the given account/password combination");
-			} else {
-				sosVaultSubject.setAuthenticated(true);
-				sosVaultSubject.setAccessToken(sosVaultAccountAccessToken);
-				sosVaultSubject.setPermissionAndRoles(sosVaultAccountAccessToken.getAuth().getToken_policies(), account,
-						identityService);
-			}
+            if (sosVaultAccountAccessToken.getAuth() == null) {
+                sosVaultSubject.setAuthenticated(false);
+                setMsg("There is no user with the given account/password combination");
+            } else {
+                sosVaultSubject.setAuthenticated(true);
+                sosVaultSubject.setAccessToken(sosVaultAccountAccessToken);
+                sosVaultSubject.setPermissionAndRoles(sosVaultAccountAccessToken.getAuth().getToken_policies(), account, identityService);
+            }
 
-		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
-			LOGGER.error("", e);
-		} catch (SOSException e) {
-			LOGGER.error("", e);
-		} catch (JocException e) {
-			LOGGER.info("VAULT:" + e.getMessage());
-		} catch (Exception e) {
-			LOGGER.error("", e);
-		}
-	}
+        } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
+            LOGGER.error("", e);
+        } catch (SOSException e) {
+            LOGGER.error("", e);
+        } catch (JocException e) {
+            LOGGER.info("VAULT:" + e.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("", e);
+        }
+    }
 
-	public void logout() {
+    public void logout() {
 
-	}
+    }
 
-	public String getMsg() {
-		return msg;
-	}
+    public String getMsg() {
+        return msg;
+    }
 
-	public void setMsg(String msg) {
-		LOGGER.debug("sosLogin: setMsg=" + msg);
-		this.msg = msg;
-	}
+    public void setMsg(String msg) {
+        LOGGER.debug("sosLogin: setMsg=" + msg);
+        this.msg = msg;
+    }
 
-	@Override
-	public ISOSAuthSubject getCurrentSubject() {
-		return sosVaultSubject;
-	}
+    @Override
+    public ISOSAuthSubject getCurrentSubject() {
+        return sosVaultSubject;
+    }
 
-	@Override
-	public void setIdentityService(SOSIdentityService sosIdentityService) {
-		identityService = sosIdentityService;
-	}
+    @Override
+    public void setIdentityService(SOSIdentityService sosIdentityService) {
+        identityService = sosIdentityService;
+    }
 
 }

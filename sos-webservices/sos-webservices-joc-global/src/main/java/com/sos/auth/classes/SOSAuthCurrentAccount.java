@@ -20,10 +20,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.interfaces.ISOSAuthSubject;
-import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.configuration.permissions.controller.Agents;
 import com.sos.joc.model.security.configuration.permissions.controller.Deployments;
 import com.sos.joc.model.security.configuration.permissions.controller.Locks;
@@ -56,12 +56,12 @@ public class SOSAuthCurrentAccount {
     private SOSIdentityService identityServices;
     private Map<String, String> identyServiceAccessToken;
     private boolean withAuthorization;
-    private Set<String> roles = Collections.emptySet();
+    private Set<String> roles;
     private Boolean haveAnyIpPermission;
     private HttpServletRequest httpServletRequest;
 
     private Permissions sosPermissionJocCockpitControllers;
-    private SOSAuthFolderPermissions sosShiroFolderPermissions;
+    private SOSAuthFolderPermissions sosAuthFolderPermissions;
 
     public SOSAuthCurrentAccount(String accountName) {
         super();
@@ -142,26 +142,20 @@ public class SOSAuthCurrentAccount {
         return accountName;
     }
 
- 
-
     public void setRoles(Set<String> roles) {
         this.roles = roles;
     }
 
     public void setRoles(SecurityConfiguration securityConf) {
 
-        /*
-         * if (this.roles==null){ this.roles = new HashSet<String>(); } for (SecurityConfigurationUser securityConfigurationUser : securityConf.getUsers()) { if
-         * (securityConfigurationUser.getRoles() != null) { for (String role : securityConf.getRoles().getAdditionalProperties().keySet()) { if
-         * (currentSubject.hasRole(role)) { this.roles.add(role); } } } }
-         */
         if (this.roles == null) {
             this.roles = new HashSet<String>();
         }
         if (currentSubject != null) {
-            this.roles = Stream.concat(securityConf.getAccounts().stream().filter(account -> account.getRoles() != null).flatMap(account -> account
-                    .getRoles().stream()), securityConf.getRoles().getAdditionalProperties().keySet().stream()).filter(role -> currentSubject.hasRole(
-                            role)).collect(Collectors.toSet());
+            this.roles.addAll(Stream.concat(securityConf.getAccounts().stream().filter(account -> account.getRoles() != null).flatMap(
+                    account -> account.getRoles().stream()), securityConf.getRoles().getAdditionalProperties().keySet().stream()).filter(
+                            role -> currentSubject.hasRole(role)).collect(Collectors.toSet()));
+
         }
     }
 
@@ -346,11 +340,11 @@ public class SOSAuthCurrentAccount {
     }
 
     public void initFolders() {
-        sosShiroFolderPermissions = new SOSAuthFolderPermissions();
+        sosAuthFolderPermissions = new SOSAuthFolderPermissions();
     }
 
     public void addFolder(String role, String folders) {
-        if (sosShiroFolderPermissions == null) {
+        if (sosAuthFolderPermissions == null) {
             this.initFolders();
         }
 
@@ -365,7 +359,7 @@ public class SOSAuthCurrentAccount {
 
         if (hasRole(role)) {
             LOGGER.debug(String.format("Adding folders %s for role %s", folders, role));
-            sosShiroFolderPermissions.setFolders(jobSchedulerId, folders);
+            sosAuthFolderPermissions.setFolders(jobSchedulerId, folders);
         }
     }
 
@@ -374,7 +368,7 @@ public class SOSAuthCurrentAccount {
     }
 
     public SOSAuthFolderPermissions getSosShiroFolderPermissions() {
-        return sosShiroFolderPermissions;
+        return sosAuthFolderPermissions;
     }
 
     public void setHttpServletRequest(HttpServletRequest httpServletRequest) {
@@ -410,17 +404,15 @@ public class SOSAuthCurrentAccount {
         return identyServiceAccessToken.get(identityServiceName);
     }
 
-    
     public SOSIdentityService getIdentityServices() {
         return identityServices;
     }
 
-    
     public void setIdentityServices(SOSIdentityService identityServices) {
         this.identityServices = identityServices;
     }
 
-    public  boolean isShiro() {
+    public boolean isShiro() {
         if (identityServices == null) {
             return false;
         }
