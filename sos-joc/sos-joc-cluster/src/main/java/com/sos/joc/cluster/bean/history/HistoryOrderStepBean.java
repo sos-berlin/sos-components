@@ -37,7 +37,8 @@ public class HistoryOrderStepBean extends AHistoryBean {
 
     private String warnIfLonger;
     private String warnIfShorter;
-
+    private Long warnIfLongerAvgSeconds;
+    
     private String notification;
 
     public HistoryOrderStepBean(EventType eventType, Long eventId, String controllerId, Long historyId) {
@@ -295,6 +296,14 @@ public class HistoryOrderStepBean extends AHistoryBean {
 
     public String getWarnIfShorter() {
         return warnIfShorter;
+    }
+    
+    public void setWarnIfLongerAvgSeconds(Long val) {
+        warnIfLongerAvgSeconds = val;
+    }
+
+    public Long getWarnIfLongerAvgSeconds() {
+        return warnIfLongerAvgSeconds;
     }
 
     public String getNotification() {
