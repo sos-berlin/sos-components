@@ -4,6 +4,7 @@ import com.sos.commons.git.results.GitAddCommandResult;
 import com.sos.commons.git.results.GitCherryPickCommandResult;
 import com.sos.commons.git.results.GitCommandResult;
 import com.sos.commons.git.results.GitCommitCommandResult;
+import com.sos.commons.git.results.GitDiffCommandResult;
 import com.sos.commons.git.results.GitLogCommandResult;
 import com.sos.commons.git.results.GitPullCommandResult;
 import com.sos.commons.git.results.GitPushCommandResult;
@@ -72,6 +73,10 @@ public class GitUtil {
         return result;
     }
 
+    public static final GitCommandResult createGitCommitCommandResult(SOSCommandResult commandResult) {
+        return createGitCommitCommandResult(commandResult, null);
+    }
+    
     public static final GitCommandResult createGitCommitCommandResult(SOSCommandResult commandResult, String original) {
         GitCommandResult result;
         if (original != null) {
@@ -87,6 +92,10 @@ public class GitUtil {
         return result;
     }
 
+    public static final GitCommandResult createGitLogCommandResult(SOSCommandResult commandResult) {
+        return createGitLogCommandResult(commandResult, null);
+    }
+    
     public static final GitCommandResult createGitLogCommandResult(SOSCommandResult commandResult, String original) {
         GitCommandResult result;
         if (original != null) {
@@ -121,6 +130,10 @@ public class GitUtil {
         return result;
     }
 
+    public static final GitCommandResult createGitPushCommandResult(SOSCommandResult commandResult) {
+        return createGitPushCommandResult(commandResult, null);
+    }
+
     public static final GitCommandResult createGitPushCommandResult(SOSCommandResult commandResult, String original) {
         GitCommandResult result;
         if (original != null) {
@@ -134,6 +147,10 @@ public class GitUtil {
             result.setError(info.toString());
         }
         return result;
+    }
+
+    public static final GitCommandResult createGitRemoteCommandResult(SOSCommandResult commandResult) {
+        return createGitRemoteCommandResult(commandResult, null);
     }
 
     public static final GitCommandResult createGitRemoteCommandResult(SOSCommandResult commandResult, String original) {
@@ -151,6 +168,10 @@ public class GitUtil {
         return result;
     }
 
+    public static final GitCommandResult createGitRestoreCommandResult(SOSCommandResult commandResult) {
+        return createGitRestoreCommandResult(commandResult, null);
+    }
+
     public static final GitCommandResult createGitRestoreCommandResult(SOSCommandResult commandResult, String original) {
         GitCommandResult result;
         if (original != null) {
@@ -164,6 +185,10 @@ public class GitUtil {
             result.setError(info.toString());
         }
         return result;
+    }
+
+    public static final GitCommandResult createGitTagCommandResult(SOSCommandResult commandResult) {
+        return createGitTagCommandResult(commandResult, null);
     }
 
     public static final GitCommandResult createGitTagCommandResult(SOSCommandResult commandResult, String original) {
@@ -181,12 +206,35 @@ public class GitUtil {
         return result;
     }
 
+    public static final GitCommandResult createGitCherryPickCommandResult(SOSCommandResult commandResult) {
+        return createGitCherryPickCommandResult(commandResult, null);
+    }
+
     public static final GitCommandResult createGitCherryPickCommandResult(SOSCommandResult commandResult, String original) {
         GitCommandResult result;
         if (original != null) {
             result = GitCherryPickCommandResult.getInstance(commandResult, original);
         } else {
             result = GitCherryPickCommandResult.getInstance(commandResult);
+        }
+        if (commandResult.hasError()) {
+            StringBuilder info = new StringBuilder();
+            info.append(commandResult);
+            result.setError(info.toString());
+        }
+        return result;
+    }
+
+    public static final GitCommandResult createGitDiffCommandResult(SOSCommandResult commandResult) {
+        return createGitDiffCommandResult(commandResult, null);
+    }
+
+    public static final GitCommandResult createGitDiffCommandResult(SOSCommandResult commandResult, String original) {
+        GitCommandResult result;
+        if (original != null) {
+            result = GitDiffCommandResult.getInstance(commandResult, original);
+        } else {
+            result = GitDiffCommandResult.getInstance(commandResult);
         }
         if (commandResult.hasError()) {
             StringBuilder info = new StringBuilder();

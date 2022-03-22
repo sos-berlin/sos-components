@@ -4,27 +4,24 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.git.util.GitCommandConstants;
 import com.sos.commons.util.common.SOSCommandResult;
 
 public class GitCommitCommandResult extends GitCommandResult {
 
     private static final String REGEX_COMMIT_HASH_AND_MESSAGE = "\\[.{4,}\\s([a-z,0-9]{7})\\]\\s(.*)";
-    private static final String REGEX_COMMIT_UPDATE_COUNT = "\\s(\\d)\\s[a-z]{4}\\s[a-z]{1,},\\s(\\d)\\s[a-z]{1,}\\(\\+\\),\\s(\\d).*";
     private static final Logger LOGGER = LoggerFactory.getLogger(GitCommitCommandResult.class);
     private String commitHash;
     private String commitMessage;
-    private Integer changeCount;
-    private Integer insertionCount;
-    private Integer deleteCount;
+    private Integer changesCount;
+    private Integer insertionsCount;
+    private Integer deletionsCount;
 
     protected GitCommitCommandResult(SOSCommandResult result) {
         super(result);
@@ -52,16 +49,16 @@ public class GitCommitCommandResult extends GitCommandResult {
         return commitMessage;
     }
 
-    public Integer getChangeCount() {
-        return changeCount;
+    public Integer getChangesCount() {
+        return changesCount;
     }
 
-    public Integer getInsertionCount() {
-        return insertionCount;
+    public Integer getInsertionsCount() {
+        return insertionsCount;
     }
     
-    public Integer getDeleteCount() {
-        return deleteCount;
+    public Integer getDeletionsCount() {
+        return deletionsCount;
     }
 
     @Override
@@ -69,7 +66,7 @@ public class GitCommitCommandResult extends GitCommandResult {
         try {
             if (getStdOut() != null && !getStdOut().isEmpty()) {
                 Pattern hashAndMessagePattern = Pattern.compile(REGEX_COMMIT_HASH_AND_MESSAGE);
-                Pattern updateCountPattern = Pattern.compile(REGEX_COMMIT_UPDATE_COUNT);
+                Pattern commitChangesCountPattern = Pattern.compile(GitCommandConstants.REGEX_CHANGES_COUNT);
                 Reader reader = new StringReader(getStdOut());
                 BufferedReader buff = new BufferedReader(reader);
                 String line = null;
@@ -78,16 +75,16 @@ public class GitCommitCommandResult extends GitCommandResult {
                         continue;
                     }
                     Matcher hashAndMessageMatcher = hashAndMessagePattern.matcher(line);
-                    Matcher updateCountMatcher = updateCountPattern.matcher(line);
+                    Matcher commitChangesCountMatcher = commitChangesCountPattern.matcher(line);
                     if(hashAndMessageMatcher.matches()) {
                         commitHash = hashAndMessageMatcher.group(1);
                         commitMessage = hashAndMessageMatcher.group(2);
                         continue;
                     }
-                    if(updateCountMatcher.matches()) {
-                        changeCount = Integer.parseInt(updateCountMatcher.group(1));
-                        insertionCount = Integer.parseInt(updateCountMatcher.group(2));
-                        deleteCount = Integer.parseInt(updateCountMatcher.group(3));
+                    if(commitChangesCountMatcher.matches()) {
+                        changesCount = Integer.parseInt(commitChangesCountMatcher.group(1));
+                        insertionsCount = Integer.parseInt(commitChangesCountMatcher.group(2));
+                        deletionsCount = Integer.parseInt(commitChangesCountMatcher.group(3));
                         continue;
                     }
                 }

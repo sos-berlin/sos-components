@@ -6,12 +6,10 @@ public class GitRestoreCommandResult extends GitCommandResult {
 
     protected GitRestoreCommandResult(SOSCommandResult result) {
         super(result);
-        // TODO Auto-generated constructor stub
     }
 
     protected GitRestoreCommandResult(SOSCommandResult result, String original) {
         super(result, original);
-        // TODO Auto-generated constructor stub
     }
 
     public static GitCommandResult getInstance(SOSCommandResult result) {
@@ -24,8 +22,7 @@ public class GitRestoreCommandResult extends GitCommandResult {
     
     @Override
     public void parseStdOut() {
-        // TODO Auto-generated method stub
-        
+        // no stdout for git restore command, nothing to parse
     }
 
 }

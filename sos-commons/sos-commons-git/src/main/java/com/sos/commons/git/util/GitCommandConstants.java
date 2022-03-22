@@ -10,8 +10,12 @@ public class GitCommandConstants {
     public static final String CMD_GIT_ADD = "git add ";
     // git add all 
     public static final String CMD_GIT_ADD_ALL = "git add .";
+    // git restore <FILE>
+    // restores changes of the file in the file system
+    public static final String CMD_GIT_RESTORE = "git restore ";
     // git restore --staged <FILE>
-    public static final String CMD_GIT_RESTORE = "git restore --staged ";
+    // unstages an added file from the stage area
+    public static final String CMD_GIT_RESTORE_STAGED = "git restore --staged ";
     // git diff
     // compares file from the filesystem with the file from the stage area 
     // or with the file from the last commit if no version is present in the stage area
@@ -43,4 +47,6 @@ public class GitCommandConstants {
     // git push
     public static final String CMD_GIT_PUSH = "git push";
     public static final String CMD_SHELL_CD = "cd ";
+    public static final String REGEX_CHANGES_COUNT = "\\s(\\d)\\s[a-z]{4}\\s[a-z]{1,},\\s(\\d)\\s[a-z]{1,}\\(\\+\\),\\s(\\d).*";
+
 }

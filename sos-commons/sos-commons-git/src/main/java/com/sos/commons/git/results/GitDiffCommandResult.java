@@ -2,14 +2,16 @@ package com.sos.commons.git.results;
 
 import com.sos.commons.util.common.SOSCommandResult;
 
-public class GitAddCommandResult extends GitCommandResult {
+public class GitDiffCommandResult extends GitCommandResult {
 
-    protected GitAddCommandResult(SOSCommandResult result) {
+    protected GitDiffCommandResult(SOSCommandResult result) {
         super(result);
+        parseStdOut();
     }
 
-    protected GitAddCommandResult(SOSCommandResult result, String original) {
+    protected GitDiffCommandResult(SOSCommandResult result, String original) {
         super(result, original);
+        parseStdOut();
     }
 
     public static GitCommandResult getInstance(SOSCommandResult result) {
@@ -17,7 +19,7 @@ public class GitAddCommandResult extends GitCommandResult {
     }
     
     public static GitCommandResult getInstance(SOSCommandResult result, String original) {
-        return new GitAddCommandResult(result, original);
+        return new GitDiffCommandResult(result, original);
     }
     
     @Override

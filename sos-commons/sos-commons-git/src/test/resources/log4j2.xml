@@ -8,9 +8,9 @@
 	</Appenders>
 
 	<Loggers>
-		<Logger name="com.sos" level="trace"/>
+		<Logger name="com.sos" level="info"/>
 		<Logger name="net" level="trace"/>
-		<logger name="com.sos.commons.git" level="debug"/>
+		<logger name="com.sos.commons.git" level="info"/>
 
 		<!-- root logger with console appender. All other loggers inherit from this logger. -->
 		<Root level="info">
