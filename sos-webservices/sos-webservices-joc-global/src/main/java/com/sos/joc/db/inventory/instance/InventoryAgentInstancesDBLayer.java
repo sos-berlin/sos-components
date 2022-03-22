@@ -803,6 +803,22 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             return getSession().executeUpdate(query);
         }
     }
+    
+    public int setSubAgentClustersDeployed(List<String> subagentClusterIds) throws SOSHibernateException {
+        if (subagentClusterIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            int j = 0;
+            for (int i = 0; i < subagentClusterIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                j += setSubAgentClustersDeployed(SOSHibernate.getInClausePartition(i, subagentClusterIds));
+            }
+            return j;
+        } else {
+            StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS).append(
+                    " set deployed = 1 where subAgentClusterId in (:subagentClusterIds)");
+            Query<?> query = getSession().createQuery(hql.toString());
+            query.setParameterList("subagentClusterIds", subagentClusterIds);
+            return getSession().executeUpdate(query);
+        }
+    }
 
     public boolean subAgentIdAlreadyExists(Collection<String> subAgentIds, String controllerId) throws DBInvalidDataException,
             DBConnectionRefusedException, JocObjectAlreadyExistException {

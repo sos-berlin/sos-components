@@ -1,8 +1,6 @@
 package com.sos.joc.agents.impl;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -19,44 +17,27 @@ import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsClusterResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.cluster.JocClusterService;
-import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
-import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingLicenseException;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.ClusterAgents;
-import com.sos.joc.model.agent.DeployClusterAgents;
 import com.sos.joc.model.agent.ReadAgents;
 import com.sos.joc.model.agent.SubAgent;
-import com.sos.joc.model.agent.SubagentDirectorType;
 import com.sos.schema.JsonValidator;
-
-import io.vavr.control.Either;
-import js7.base.web.Uri;
-import js7.data.agent.AgentPath;
-import js7.data.subagent.SubagentId;
-import js7.data_for_java.agent.JAgentRef;
-import js7.data_for_java.item.JUpdateItemOperation;
-import js7.data_for_java.subagent.JSubagentRef;
-import reactor.core.publisher.Flux;
 
 @Path("agents")
 public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgentsClusterResource {
 
-    private static final String API_CALL_P = "./agents/inventory/cluster";
-    private static final String API_CALL_DEPLOY = "./agents/inventory/cluster/deploy";
+    private static final String API_CALL = "./agents/inventory/cluster";
 
     @Override
     public JOCDefaultResponse postCluster(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL_P, filterBytes, accessToken);
+            initLogging(API_CALL, filterBytes, accessToken);
             
 //            if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
 //                ClusterAgents agents = new ClusterAgents();
@@ -91,7 +72,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                 return jocDefaultResponse;
             }
             
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL_P);
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(allowedControllers, agentParameter
                     .getAgentIds(), false, agentParameter.getOnlyEnabledAgents());
@@ -131,125 +112,10 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
         }
     }
     
+    // old api address
     @Override
     public JOCDefaultResponse postClusterP(String accessToken, byte[] filterBytes) {
         return postCluster(accessToken, filterBytes);
-    }
-    
-    @Override
-    public JOCDefaultResponse postDeploy2(String accessToken, byte[] filterBytes) {
-        // TODO new API
-        return postDeploy(accessToken, filterBytes);
-    }
-    
-    @Override
-    public JOCDefaultResponse postDeploy(String accessToken, byte[] filterBytes) {
-        SOSHibernateSession connection = null;
-        try {
-            initLogging(API_CALL_DEPLOY, filterBytes, accessToken);
-            
-            if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
-                throw new JocMissingLicenseException("missing license for Agent cluster");
-            }
-            
-            JsonValidator.validateFailFast(filterBytes, DeployClusterAgents.class);
-            DeployClusterAgents agentParameter = Globals.objectMapper.readValue(filterBytes, DeployClusterAgents.class);
-            
-            String controllerId = agentParameter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
-                    .getManage());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
-            
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL_DEPLOY);
-            InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-            List<SubagentDirectorType> directorTypes = Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR, SubagentDirectorType.SECONDARY_DIRECTOR);
-            List<JUpdateItemOperation> updateItems = new ArrayList<>();
-            List<String> updateAgentIds = new ArrayList<>();
-            List<DBItemInventorySubAgentInstance> updateSubagents = new ArrayList<>();
-            
-            Set<String> agentIds = agentParameter.getClusterAgentIds();
-            for (String agentId : agentIds) {
-                List<DBItemInventorySubAgentInstance> subAgents = dbLayer.getSubAgentInstancesByAgentId(agentId);
-                if (subAgents.isEmpty()) {
-                    throw new JocBadRequestException("Agent Cluster '" + agentId + "' doesn't have Subagents");
-                }
-                if (subAgents.stream().noneMatch(s -> s.getIsDirector() == SubagentDirectorType.PRIMARY_DIRECTOR.intValue())) {
-                    throw new JocBadRequestException("Agent Cluster '" + agentId + "' doesn't have a primary director");
-                }
-                
-                AgentPath agentPath = AgentPath.of(agentId);
-                List<SubagentId> directors = subAgents.stream().filter(s -> directorTypes.contains(s.getDirectorAsEnum())).sorted(Comparator
-                        .comparingInt(DBItemInventorySubAgentInstance::getIsDirector)).map(DBItemInventorySubAgentInstance::getSubAgentId).map(
-                                SubagentId::of).collect(Collectors.toList());
-                updateItems.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(agentPath, directors)));
-                updateAgentIds.add(agentId);
-                
-                updateItems.addAll(subAgents.stream().map(s -> JSubagentRef.of(SubagentId.of(s.getSubAgentId()), agentPath, Uri.of(s.getUri()))).map(
-                        JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
-                updateSubagents.addAll(subAgents);
-
-//                switch (agent.getSchedulingType()) {
-//                case FIXED_PRIORITY:
-//                    // https://github.com/sos-berlin/js7/blob/main/js7-data/shared/src/test/scala/js7/data/subagent/SubagentSelectionTest.scala
-//                    /*
-//     json"""{
-//        "TYPE": "SubagentSelection",
-//        "id": "SELECTION",
-//        "subagentToPriority": {
-//          "A-SUBAGENT": 1,
-//          "B-SUBAGENT": 2
-//        }
-//      }"""
-//                     */
-//                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JSubagentSelection.of(SubagentSelectionId.of(agent.getAgentId()), subAgents
-//                            .stream().collect(Collectors.toMap(s -> SubagentId.of(s.getSubAgentId()), s -> -1 * s.getOrdering(), (k, v) -> v)))));
-//
-//                    break;
-//                case ROUND_ROBIN:
-//                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JSubagentSelection.of(SubagentSelectionId.of(agent.getAgentId()), subAgents
-//                            .stream().collect(Collectors.toMap(s -> SubagentId.of(s.getSubAgentId()), s -> 0, (k, v) -> v)))));
-//
-//                    break;
-//                }
-            }
-            
-            if (!updateItems.isEmpty()) {
-                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(updateItems)).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
-                    if (e.isRight()) {
-                        SOSHibernateSession connection1 = null;
-                        try {
-                            connection1 = Globals.createSosHibernateStatelessConnection(API_CALL_DEPLOY);
-                            connection1.setAutoCommit(false);
-                            Globals.beginTransaction(connection1);
-                            for (DBItemInventorySubAgentInstance updateSubagent : updateSubagents) {
-                                updateSubagent.setDeployed(true); 
-                                connection1.update(updateSubagent);
-                            }
-                            InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
-                            dbLayer1.setAgentsDeployed(updateAgentIds);
-                            Globals.commit(connection1);
-                        } catch (Exception e1) {
-                            Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
-                        } finally {
-                            Globals.disconnect(connection1);
-                        }
-                    }
-                });
-            }
-            
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(connection);
-        }
     }
     
     private static List<SubAgent> mapDBSubAgentsToSubAgents(List<DBItemInventorySubAgentInstance> dbSubagents) {

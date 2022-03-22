@@ -22,17 +22,4 @@ public interface IAgentsClusterResource {
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse postClusterP(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
-    
-    //old
-    @POST
-    @Path("cluster/deploy")
-    @Consumes("application/json")
-    @Produces({ "application/json" })
-    public JOCDefaultResponse postDeploy2(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
-    
-    @POST
-    @Path("inventory/cluster/deploy")
-    @Consumes("application/json")
-    @Produces({ "application/json" })
-    public JOCDefaultResponse postDeploy(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

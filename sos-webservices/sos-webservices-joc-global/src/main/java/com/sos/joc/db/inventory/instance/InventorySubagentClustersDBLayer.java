@@ -1,6 +1,7 @@
 package com.sos.joc.db.inventory.instance;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -69,7 +70,7 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
         }
     }
     
-    public Map<DBItemInventorySubAgentCluster, List<SubAgentId>> getSubagentClusters(Set<String> controllerIds, List<String> agentIds,
+    public Map<DBItemInventorySubAgentCluster, List<SubAgentId>> getSubagentClusters(Collection<String> controllerIds, List<String> agentIds,
             List<String> subagentClusterIds) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
 
         if (agentIds != null && agentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
@@ -83,7 +84,7 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
         }
     }
 
-    private Map<DBItemInventorySubAgentCluster, List<SubAgentId>> getSubagentClusters2(Set<String> controllerIds, List<String> agentIds,
+    private Map<DBItemInventorySubAgentCluster, List<SubAgentId>> getSubagentClusters2(Collection<String> controllerIds, List<String> agentIds,
             List<String> subagentClusterIds) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
 
         if (subagentClusterIds != null && subagentClusterIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
