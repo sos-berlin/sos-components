@@ -32,7 +32,7 @@ public class SOSShiroSubject implements ISOSAuthSubject {
 
     private Subject subject;
     private SOSShiroSession session;
-    private Set<String> setOfAccountPermissions = new HashSet<String>();
+    private Set<String> setOfAccountPermissions;
 
     @Override
     public Boolean hasRole(String role) {

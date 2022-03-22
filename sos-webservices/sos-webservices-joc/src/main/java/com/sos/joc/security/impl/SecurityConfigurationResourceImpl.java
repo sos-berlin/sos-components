@@ -50,7 +50,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 	private static final String API_CALL_READ = "./authentication/auth";
 	private static final String API_CALL_WRITE = "./authentication/auth/store";
 	private static final String API_CALL_ACCOUNT_RENAME = "./authentication/auth/account/rename";;
-	private static final String API_CALL_ACCOUNT_DELETE = "./authentication/auth/account/delete";;
+
 	private static final String API_CALL_ROLE_RENAME = "./authentication/auth/role/rename";;
 	private static final String API_CALL_ROLE_DELETE = "./authentication/auth/role/delete";;
 	private static final String API_CALL_CHANGE_PASSWORD = "./authentication/auth/changepassword";;

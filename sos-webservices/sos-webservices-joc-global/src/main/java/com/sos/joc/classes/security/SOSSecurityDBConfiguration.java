@@ -429,9 +429,25 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
     }
 
     @Override
-    public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration, DBItemIamIdentityService dbItemIamIdentityService)
-            throws Exception {
-        return securityConfiguration;
+    public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration,
+            DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
+            sosHibernateSession.setAutoCommit(false);
+            Globals.beginTransaction(sosHibernateSession);
+            storeRoles(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
+            storeAccounts(sosHibernateSession, securityConfiguration, dbItemIamIdentityService, true);
+            storePermissions(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
+
+            Globals.commit(sosHibernateSession);
+            return securityConfiguration;
+        } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
+            throw e;
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
 
     }
 

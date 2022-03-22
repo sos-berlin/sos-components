@@ -643,7 +643,7 @@ public class SOSServicePermissionIam {
                 List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
                 currentAccount.initFolders();
-                  Set<String> setOfAccountPermissions = new HashSet<String>();
+                Set<String> setOfAccountPermissions = new HashSet<String>();
 
                 for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
                     msg = createAccount(currentAccount, password, dbItemIamIdentityService);
