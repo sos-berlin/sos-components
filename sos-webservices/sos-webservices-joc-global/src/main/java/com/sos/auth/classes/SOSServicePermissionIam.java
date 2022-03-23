@@ -2,12 +2,10 @@ package com.sos.auth.classes;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -29,7 +27,6 @@ import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.ExpiredSessionException;
 import org.apache.shiro.session.mgt.DefaultSessionKey;
 import org.apache.shiro.session.mgt.SessionKey;
-import org.ini4j.InvalidFileFormatException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -37,7 +34,6 @@ import org.slf4j.MDC;
 import com.sos.auth.client.ClientCertificateHandler;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
-import com.sos.auth.interfaces.ISOSSecurityConfiguration;
 import com.sos.auth.ldap.classes.SOSLdapLogin;
 import com.sos.auth.shiro.classes.SOSShiroIniShare;
 import com.sos.auth.shiro.classes.SOSShiroLogin;
@@ -50,8 +46,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.audit.JocAuditLog;
-import com.sos.joc.classes.security.SOSSecurityConfiguration;
-import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
@@ -65,16 +59,8 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
-import com.sos.joc.model.security.configuration.SecurityConfigurationRole;
-import com.sos.joc.model.security.configuration.SecurityConfigurationRoles;
-import com.sos.joc.model.security.configuration.permissions.ControllerFolders;
-import com.sos.joc.model.security.configuration.permissions.IniControllers;
-import com.sos.joc.model.security.configuration.permissions.IniPermission;
-import com.sos.joc.model.security.configuration.permissions.IniPermissions;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
-import com.sos.joc.model.security.configuration.permissions.SecurityConfigurationFolders;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 @SuppressWarnings("deprecation")
@@ -96,18 +82,7 @@ public class SOSServicePermissionIam {
     @Context
     UriInfo uriInfo;
 
-    private JOCDefaultResponse getJocCockpitControllerPermissions(String accessToken) throws JocException, InvalidFileFormatException,
-            SOSHibernateException, IOException {
-        SOSAuthCurrentAccount currentAccount = this.getCurrentAccount(accessToken);
-        SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
-
-        SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
-        SecurityConfiguration entity = sosSecurityConfiguration.readConfiguration();
-
-        currentAccount.setRoles(entity);
-        Permissions sosPermissionMasters = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(entity);
-        return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosPermissionMasters));
-    }
+   
 
     @POST
     @Path("/joc_cockpit_permissions")

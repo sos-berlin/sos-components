@@ -58,6 +58,8 @@ public class SOSAuthCurrentAccount {
     private boolean withAuthorization;
     private Set<String> roles;
     private Boolean haveAnyIpPermission;
+    private Set<ISOSAuthSubject> currentSubjects;
+
     private HttpServletRequest httpServletRequest;
 
     private Permissions sosPermissionJocCockpitControllers;
@@ -174,6 +176,10 @@ public class SOSAuthCurrentAccount {
     }
 
     public void setCurrentSubject(ISOSAuthSubject currentSubject) {
+        if (currentSubjects == null) {
+            currentSubjects = new HashSet<ISOSAuthSubject>();
+        }
+        currentSubjects.add(currentSubject);
         this.currentSubject = currentSubject;
     }
 
@@ -305,30 +311,31 @@ public class SOSAuthCurrentAccount {
 
     }
 
-    private boolean getPermissionFromSubject(String controllerId, String permission) {
+    private boolean getPermissionFromSubject(ISOSAuthSubject subject, String controllerId, String permission) {
         if (this.getHaveAnyIpPermission()) {
-            return (handleIpPermission(controllerId, permission) || currentSubject.isPermitted(permission) || currentSubject.isPermitted(controllerId
-                    + ":" + permission)) && !getExcluded(permission, controllerId);
+            return (handleIpPermission(controllerId, permission) || subject.isPermitted(permission) || subject.isPermitted(controllerId + ":"
+                    + permission)) && !getExcluded(permission, controllerId);
         } else {
-            return (currentSubject.isPermitted(permission) || currentSubject.isPermitted(controllerId + ":" + permission)) && !getExcluded(permission,
+            return (subject.isPermitted(permission) || subject.isPermitted(controllerId + ":" + permission)) && !getExcluded(permission,
                     controllerId);
         }
     }
 
     public boolean isPermitted(String controllerId, String permission) {
-        if (currentSubject != null) {
-            return getPermissionFromSubject(controllerId, permission);
-        } else {
-            return false;
+        boolean permitted = false;
+        if (currentSubjects != null) {
+            for (ISOSAuthSubject subject : currentSubjects) {
+                permitted = getPermissionFromSubject(subject,controllerId, permission);
+                if (permitted){
+                    return true;
+                }
+            }
         }
+        return permitted;
     }
 
     public boolean isPermitted(String permission) {
-        if (currentSubject != null) {
-            return getPermissionFromSubject("", permission);
-        } else {
-            return false;
-        }
+        return (isPermitted("",permission));
     }
 
     public boolean isAuthenticated() {

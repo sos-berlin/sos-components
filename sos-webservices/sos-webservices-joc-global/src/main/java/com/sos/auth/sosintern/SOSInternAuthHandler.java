@@ -1,7 +1,5 @@
 package com.sos.auth.sosintern;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.UUID;
 
 import org.apache.shiro.authc.credential.DefaultPasswordService;
@@ -11,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthAccessToken;
-import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSPasswordHasher;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.auth.sosintern.classes.SOSInternAuthWebserviceCredentials;

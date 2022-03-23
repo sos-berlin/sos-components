@@ -91,7 +91,7 @@ public class SOSAuthHelper {
 		}
 	}
 
-	public static boolean accountIsDisable(Long identityServiceId, String account) {
+	public static boolean accountIsDisabled(Long identityServiceId, String account) {
 		SOSHibernateSession sosHibernateSession = null;
 		try {
 			sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSInternAuthLogin.class.getName());
