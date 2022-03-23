@@ -203,6 +203,28 @@ public class GitCommand {
         }
     }
     
+    public static GitCommandResult executeGitClone(String remoteRepositoryUri) {
+        return executeGitClone(remoteRepositoryUri, null, null);
+    }
+    
+    public static GitCommandResult executeGitClone(String remoteRepositoryUri, Path repository) {
+        return executeGitClone(remoteRepositoryUri, repository, null);
+    }
+    
+    public static GitCommandResult executeGitClone(String remoteRepositoryUri, Path repository, Path workingDir) {
+        if (repository == null) {
+            return GitUtil.createGitCloneCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri));
+        } else {
+            GitCommandResult result = GitUtil.createGitCloneCommandResult(SOSShell.executeCommand(
+                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri)),
+                    GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri);
+            if(workingDir != null) {
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+            }
+            return result;
+        }
+    }
+    
     public static GitCommandResult executeGitTag() {
         return executeGitTag(null, null);
     }

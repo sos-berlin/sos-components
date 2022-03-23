@@ -46,6 +46,8 @@ public class GitCommandConstants {
     public static final String CMD_GIT_CHERRY_PICK = "git cherry-pick";
     // git push
     public static final String CMD_GIT_PUSH = "git push";
+    // git clone
+    public static final String CMD_GIT_CLONE = "git clone ";
     public static final String CMD_SHELL_CD = "cd ";
     public static final String REGEX_CHANGES_COUNT = "\\s(\\d)\\s[a-z]{4}\\s[a-z]{1,},\\s(\\d)\\s[a-z]{1,}\\(\\+\\),\\s(\\d).*";
 

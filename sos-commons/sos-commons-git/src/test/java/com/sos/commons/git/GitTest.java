@@ -1,10 +1,15 @@
 package com.sos.commons.git;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -16,6 +21,7 @@ import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.git.results.GitCloneCommandResult;
 import com.sos.commons.git.results.GitCommandResult;
 import com.sos.commons.git.results.GitLogCommandResult;
 import com.sos.commons.git.results.GitPullCommandResult;
@@ -46,7 +52,7 @@ public class GitTest {
         LOGGER.debug(" **************************         current directory      ***************************");
         LOGGER.debug(" Working Directory: " + System.getProperty("user.dir"));
         GitStatusShortCommandResult result = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort();
-        LOGGER.debug(" command: " + result.getCommand());
+        LOGGER.debug(" command: " + result.getOriginalCommand());
         LOGGER.debug(" ExitCode: " + result.getExitCode());
         LOGGER.debug(" StdOut:\n" + result.getStdOut());
         LOGGER.debug(" modified Files: relative and resolved path");
@@ -74,7 +80,7 @@ public class GitTest {
         Path repository = Paths.get("C:/sp/devel/js7/testing/git/local_repos/sp");
         LOGGER.debug(" Repository path: " + repository.toString());
         GitStatusShortCommandResult result = (GitStatusShortCommandResult)GitCommand.executeGitStatusShort(repository, workingDir);
-        LOGGER.debug(" command: " + result.getCommand());
+        LOGGER.debug(" command: " + result.getOriginalCommand());
         LOGGER.debug(" ExitCode: " + result.getExitCode());
         LOGGER.debug(" StdOut:\n" + result.getStdOut());
         LOGGER.debug(" StdOut parsed - results:");
@@ -101,7 +107,7 @@ public class GitTest {
         Path repository = Paths.get("C:/sp/devel/js7/testing/git/local_repos/sp");
         LOGGER.debug("Repository path: " + repository.toString());
         GitPullCommandResult result = (GitPullCommandResult)GitCommand.executeGitPull(repository, workingDir);
-        LOGGER.debug("command: " + result.getCommand());
+        LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
         LOGGER.debug("StdOut parsed - results:");
@@ -121,7 +127,7 @@ public class GitTest {
         Path repository = Paths.get("C:/sp/devel/js7/testing/git/local_repos/sp");
         LOGGER.debug("Repository path: " + repository.toString());
         GitCommandResult result = GitCommand.executeGitAddAll(repository, workingDir);
-        LOGGER.debug("command: " + result.getCommand());
+        LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
         LOGGER.debug("**************************  Test 03 - git add all finished  *************************");
@@ -138,7 +144,7 @@ public class GitTest {
         Path repository = Paths.get("C:/sp/devel/js7/testing/git/local_repos/sp");
         LOGGER.debug("Repository path: " + repository.toString());
         GitCommandResult result = GitCommand.executeGitRestore(repository, workingDir);
-        LOGGER.debug("command: " + result.getCommand());
+        LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
         LOGGER.debug("**************************  Test 04 - git restore --staged finished  ****************");
@@ -170,7 +176,7 @@ public class GitTest {
         Path repository = Paths.get("C:/sp/devel/js7/testing/git/local_repos/sp");
         LOGGER.debug("Repository path: " + repository.toString());
         GitCommandResult result = GitCommand.executeGitRestore(repository, workingDir);
-        LOGGER.debug("command: " + result.getCommand());
+        LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdErr: " + result.getStdErr());
         LOGGER.debug("error: " + result.getError());
@@ -183,7 +189,7 @@ public class GitTest {
         LOGGER.debug("**************************         current directory       **************************");
 
         GitRemoteCommandResult result = (GitRemoteCommandResult)GitCommand.executeGitRemoteRead();
-        LOGGER.debug("command: " + result.getCommand());
+        LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
         LOGGER.debug("StdOut parsed - results:");
@@ -212,7 +218,7 @@ public class GitTest {
         LOGGER.debug("Repository path: " + repository.toString());
 
         GitRemoteCommandResult result = (GitRemoteCommandResult)GitCommand.executeGitRemoteRead(repository, workingDir);
-        LOGGER.debug("command: " + result.getCommand());
+        LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
         LOGGER.debug("StdOut parsed - results:");
@@ -235,7 +241,7 @@ public class GitTest {
         LOGGER.debug("**************************         current directory       **************************");
 
         GitLogCommandResult result = (GitLogCommandResult)GitCommand.executeGitLogParseable();
-        LOGGER.debug("command: " + result.getCommand());
+        LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut parsed - results:");
         int i = 0;
@@ -262,7 +268,7 @@ public class GitTest {
         LOGGER.debug("Repository path: " + repository.toString());
 
         GitLogCommandResult result = (GitLogCommandResult)GitCommand.executeGitLogParseable(repository, workingDir);
-        LOGGER.debug("command: " + result.getCommand());
+        LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
         LOGGER.debug("StdOut parsed - results:");
@@ -271,11 +277,51 @@ public class GitTest {
         Assert.assertTrue(!result.getCommits().isEmpty());
         LOGGER.debug("**************************  Test 07b - git log finished  ****************************");
     }
+    
+    @Test
+    public void test08aClone() {
+        LOGGER.debug("**************************  Test 08a - git clone started   **************************");
+        LOGGER.debug("**************************         current directory       **************************");
+        Path workingDir = Paths.get(System.getProperty("user.dir"));
+        LOGGER.debug("Working Directory: " + workingDir.toString());
+        Path repositoryParent = null;
+        String repoToClone = "git@github.com:sos-berlin/JS7Demo.git";
+        if(SOSShell.IS_WINDOWS) {
+            repositoryParent = Paths.get("C:/tmp/test_repos");
+        } else {
+            repositoryParent = Paths.get("/tmp/test_repos");
+        }
+        LOGGER.debug("Repository parent path: " + repositoryParent.toString());
+        try {
+            if(!Files.exists(repositoryParent)) {
+                Files.createDirectories(repositoryParent);
+            }
+        } catch (IOException e) {
+            LOGGER.info(e.getMessage(), e);
+        }
+        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir);
+        LOGGER.debug("command: " + result.getOriginalCommand());
+        LOGGER.debug("ExitCode: " + result.getExitCode());
+        LOGGER.debug("StdOut:\n" + result.getStdOut());
+        LOGGER.debug("StdErr: " + result.getStdErr());
+        LOGGER.debug("StdOut parsed - results:");
+        LOGGER.debug("  child folder " + result.getClonedInto() + " with git entries created in " + repositoryParent.toString() + " !");
+        Assert.assertTrue(Files.exists(repositoryParent.resolve(result.getClonedInto())));
+        try {
+            deleteFolderRecursively(repositoryParent.resolve(result.getClonedInto()));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        LOGGER.debug("target folder cleanup");
+        Assert.assertTrue(!Files.exists(repositoryParent.resolve(result.getClonedInto())));
+        LOGGER.debug("**************************  Test 08a - git clone finished  **************************");
+    }
 
     @Ignore
     @Test
-    public void test08GitRemoteAddUpdateRemoveChain() {
-        LOGGER.debug("**************************  Test 08 - git remote started  ***************************");
+    public void test09GitRemoteAddUpdateRemoveChain() {
+        LOGGER.debug("**************************  Test 09 - git remote started  ***************************");
         // get working dir
         Path workingDir = Paths.get(System.getProperty("user.dir"));
         LOGGER.debug("Working Directory: " + workingDir.toString());
@@ -366,7 +412,11 @@ public class GitTest {
         SOSCommandResult r = SOSShell.executeCommand(cdTo + " && FOR /f \"tokens=*\" %a in ('git tag') DO git tag -d %a");
         SOSShell.executeCommand(cdBack);
         Assert.assertTrue(r.getExitCode() == 0);
-        LOGGER.debug("**************************  Test 08 - git remote finished  **************************");
+        LOGGER.debug("**************************  Test 09 - git remote finished  **************************");
     }
 
+    private void deleteFolderRecursively(Path path) throws IOException {
+        Files.walk(path).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+    }
+    
 }
