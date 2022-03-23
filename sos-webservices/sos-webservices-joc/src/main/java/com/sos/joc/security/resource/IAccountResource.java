@@ -22,6 +22,11 @@ public interface IAccountResource {
     public JOCDefaultResponse postAccountRename(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 
     @POST
+    @Path("account/permissions")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postAccountPermissions(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+    
+    @POST
     @Path("account/store")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postAccountStore(@HeaderParam("X-Access-Token") String accessToken, byte[] body);

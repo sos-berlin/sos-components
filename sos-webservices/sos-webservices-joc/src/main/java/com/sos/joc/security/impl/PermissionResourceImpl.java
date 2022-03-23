@@ -19,7 +19,6 @@ import com.sos.joc.db.authentication.DBItemIamPermission;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.security.IamPermissionDBLayer;
 import com.sos.joc.db.security.IamPermissionFilter;
-import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;

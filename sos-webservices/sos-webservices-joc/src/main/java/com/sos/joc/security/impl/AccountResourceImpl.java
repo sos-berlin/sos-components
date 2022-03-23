@@ -4,7 +4,9 @@ import java.security.KeyStore;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -12,12 +14,22 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.classes.SOSInitialPasswordSetting;
 import com.sos.auth.classes.SOSPasswordHasher;
+import com.sos.auth.classes.SOSPermissionMerger;
+import com.sos.auth.classes.SOSPermissionsCreator;
+import com.sos.auth.interfaces.ISOSAuthSubject;
+import com.sos.auth.interfaces.ISOSLogin;
+import com.sos.auth.ldap.classes.SOSLdapLogin;
+import com.sos.auth.shiro.classes.SOSShiroIniShare;
+import com.sos.auth.shiro.classes.SOSShiroLogin;
+import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.auth.vault.SOSVaultHandler;
 import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
+import com.sos.auth.vault.classes.SOSVaultLogin;
 import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
@@ -28,10 +40,15 @@ import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamAccount2RoleWithName;
 import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
+import com.sos.joc.db.authentication.DBItemIamPermission;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
+import com.sos.joc.db.security.IamIdentityServiceDBLayer;
+import com.sos.joc.db.security.IamIdentityServiceFilter;
+import com.sos.joc.db.security.IamPermissionDBLayer;
+import com.sos.joc.db.security.IamPermissionFilter;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInfoException;
@@ -43,6 +60,11 @@ import com.sos.joc.model.security.accounts.AccountListFilter;
 import com.sos.joc.model.security.accounts.AccountRename;
 import com.sos.joc.model.security.accounts.Accounts;
 import com.sos.joc.model.security.accounts.AccountsFilter;
+import com.sos.joc.model.security.configuration.SecurityConfiguration;
+import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
+import com.sos.joc.model.security.configuration.permissions.Controllers;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.security.classes.SecurityHelper;
 import com.sos.joc.security.resource.IAccountResource;
@@ -59,6 +81,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
     private static final String API_CALL_ACCOUNT_RENAME = "./iam/account/rename";
     private static final String API_CALL_ACCOUNT_DELETE = "./iam/account/delete";
     private static final String API_CALL_CHANGE_PASSWORD = "./iam/account/changePassword";
+    private static final String API_CALL_ACCOUNT_PERMISSIONS = "./iam/account/permissions";
+
     private static final String API_CALL_FORCE_PASSWORD_CHANGE = "./iam/account/forcePasswordChange";
 
     @Override
@@ -80,7 +104,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNT_READ);
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNT_READ);
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountFilter.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountFilter
+                    .getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter filter = new IamAccountFilter();
@@ -135,7 +160,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, account.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, account
+                    .getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
@@ -153,7 +179,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 dbItemIamAccount = new DBItemIamAccount();
                 if (account.getPassword() == null) {
                     account.setPassword(initialPassword);
-                }  
+                }
                 newAccount = true;
             }
 
@@ -161,10 +187,9 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 password = account.getPassword();
                 if (password.isEmpty()) {
                     password = initialPassword;
-                }          
+                }
             }
-             
-            
+
             dbItemIamAccount.setAccountName(account.getAccountName());
             if ("JOC".equals(dbItemIamIdentityService.getIdentityServiceType()) || "VAULT-JOC-ACTIVE".equals(dbItemIamIdentityService
                     .getIdentityServiceType())) {
@@ -182,7 +207,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             dbItemIamAccount.setIdentityServiceId(dbItemIamIdentityService.getId());
             if (sosInitialPasswordSetting.getInitialPassword().equals(password)) {
                 dbItemIamAccount.setForcePasswordChange(true);
-            }else {
+            } else {
                 dbItemIamAccount.setForcePasswordChange(account.getForcePasswordChange());
             }
             dbItemIamAccount.setDisabled(account.getDisabled());
@@ -259,7 +284,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNT_RENAME);
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountRename.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountRename
+                    .getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
@@ -317,7 +343,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter
+                    .getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
@@ -359,7 +386,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             }
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNTS);
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountFilter.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountFilter
+                    .getIdentityServiceName());
 
             Accounts accounts = new Accounts();
             accounts.setAccountItems(new ArrayList<Account>());
@@ -383,6 +411,111 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             }
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(accounts));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
+
+    @Override
+    public JOCDefaultResponse postAccountPermissions(String accessToken, byte[] body) {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+
+            AccountListFilter accountFilter = Globals.objectMapper.readValue(body, AccountListFilter.class);
+            JsonValidator.validateFailFast(body, AccountListFilter.class);
+            this.checkRequiredParameter("accountName", accountFilter.getAccountName());
+
+            initLogging(API_CALL_ACCOUNT_PERMISSIONS, body, accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            SOSPermissionMerger sosPermissionMerger = new SOSPermissionMerger();
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNT_PERMISSIONS);
+
+            Permissions permissions = new Permissions();
+            Set<String> setOfAccountPermissions = new HashSet<String>();
+
+            SOSAuthCurrentAccount currentAccount = new SOSAuthCurrentAccount(accountFilter.getAccountName());
+
+            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+
+            IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
+            iamIdentityServiceFilter.setDisabled(false);
+            iamIdentityServiceFilter.setRequired(true);
+
+            List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(iamIdentityServiceFilter, 0);
+            listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(iamIdentityServiceFilter, 0);
+
+            if (listOfIdentityServices.size() == 0) {
+                DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountFilter
+                        .getIdentityServiceName());
+                listOfIdentityServices.add(dbItemIamIdentityService);
+            }
+
+            ISOSLogin sosLogin = null;
+
+            for (DBItemIamIdentityService dbItemIamIdentityServiceEntry : listOfIdentityServices) {
+                SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityServiceEntry);
+
+                switch (sosIdentityService.getIdentyServiceType()) {
+                case SHIRO:
+                    try {
+                        SOSShiroIniShare sosShiroIniShare = new SOSShiroIniShare(sosHibernateSession);
+                        sosShiroIniShare.provideIniFile();
+                    } finally {
+                        Globals.disconnect(sosHibernateSession);
+                    }
+                    sosLogin = new SOSShiroLogin(Globals.getShiroIniSecurityManagerFactory());
+                    LOGGER.debug("Login with idendity service shiro");
+                    break;
+                case LDAP:
+                case LDAP_JOC:
+                    sosLogin = new SOSLdapLogin();
+                    LOGGER.debug("Login with idendity service ldap");
+                    break;
+                case VAULT:
+                case VAULT_JOC:
+                case VAULT_JOC_ACTIVE:
+                    sosLogin = new SOSVaultLogin();
+                    LOGGER.debug("Login with idendity service vault");
+                    break;
+                case JOC:
+                    sosLogin = new SOSInternAuthLogin();
+                    LOGGER.debug("Login with idendity service sosintern");
+                    break;
+                default:
+                    sosLogin = new SOSInternAuthLogin();
+                    LOGGER.debug("Login with idendity service sosintern");
+                }
+
+                sosLogin.setIdentityService(sosIdentityService);
+                sosLogin.simulateLogin(currentAccount.getAccountname());
+
+                ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
+
+                currentAccount.setCurrentSubject(sosAuthSubject);
+                currentAccount.setIdentityServices(new SOSIdentityService(dbItemIamIdentityServiceEntry.getId(), dbItemIamIdentityServiceEntry
+                        .getIdentityServiceName(), sosIdentityService.getIdentyServiceType()));
+
+                SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(sosIdentityService);
+
+                currentAccount.setRoles(securityConfiguration);
+                setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
+            }
+
+            SecurityConfiguration securityConfiguration = sosPermissionMerger.mergePermissions();
+            SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
+            permissions = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(securityConfiguration);
+
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(permissions));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -423,8 +556,6 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         }
 
     }
-
-   
 
     private void changePassword(SOSHibernateSession sosHibernateSession, boolean withPasswordCheck, Account account,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
@@ -517,7 +648,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, account.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, account
+                    .getIdentityServiceName());
 
             changePassword(sosHibernateSession, true, account, dbItemIamIdentityService);
             Globals.commit(sosHibernateSession);
@@ -556,7 +688,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_FORCE_PASSWORD_CHANGE);
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter
+                    .getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
@@ -639,7 +772,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter
+                    .getIdentityServiceName());
             Account account = new Account();
             account.setPassword(null);
             account.setIdentityServiceName(accountsFilter.getIdentityServiceName());
