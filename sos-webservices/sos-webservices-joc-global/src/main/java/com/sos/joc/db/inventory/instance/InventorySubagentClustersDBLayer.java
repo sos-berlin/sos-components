@@ -6,13 +6,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
@@ -52,6 +52,60 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
                     }
                 }
                 Query<DBItemInventorySubAgentCluster> query = getSession().createQuery(hql.toString());
+                if (subagentClusterIds != null && !subagentClusterIds.isEmpty()) {
+                    if (subagentClusterIds.size() == 1) {
+                        query.setParameter("subagentClusterId", subagentClusterIds.get(0));
+                    } else {
+                        query.setParameterList("subagentClusterIds", subagentClusterIds);
+                    }
+                }
+                return getSession().getResultList(query);
+            } catch (DBMissingDataException ex) {
+                throw ex;
+            } catch (SOSHibernateInvalidSessionException ex) {
+                throw new DBConnectionRefusedException(ex);
+            } catch (Exception ex) {
+                throw new DBInvalidDataException(ex);
+            }
+        }
+    }
+    
+    public List<DBItemInventorySubAgentCluster> getSubagentClusters(Collection<String> controllerIds, List<String> subagentClusterIds)
+            throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+        if (controllerIds == null || controllerIds.isEmpty()) {
+            return getSubagentClusters(subagentClusterIds);
+        }
+
+        if (subagentClusterIds != null && subagentClusterIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventorySubAgentCluster> r = new ArrayList<>();
+            for (int i = 0; i < subagentClusterIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                r.addAll(getSubagentClusters(controllerIds, SOSHibernate.getInClausePartition(i, subagentClusterIds)));
+            }
+            return r;
+        } else {
+            try {
+                StringBuilder hql = new StringBuilder();
+                hql.append("from ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS).append(" sac, ");
+                hql.append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" ai ");
+                hql.append("where ai.agentId = sac.agentId ");
+                if (controllerIds.size() == 1) {
+                    hql.append("and ai.controllerId = :controllerId ");
+                } else {
+                    hql.append("and ai.controllerId in (:controllerIds) ");
+                }
+                if (subagentClusterIds != null && !subagentClusterIds.isEmpty()) {
+                    if (subagentClusterIds.size() == 1) {
+                        hql.append(" and sac.subAgentClusterId = :subagentClusterId");
+                    } else {
+                        hql.append(" and sac.subAgentClusterId in (:subagentClusterIds)");
+                    }
+                }
+                Query<DBItemInventorySubAgentCluster> query = getSession().createQuery(hql.toString());
+                if (controllerIds.size() == 1) {
+                    query.setParameter("controllerId", controllerIds.iterator().next());
+                } else {
+                    query.setParameterList("controllerIds", controllerIds);
+                }
                 if (subagentClusterIds != null && !subagentClusterIds.isEmpty()) {
                     if (subagentClusterIds.size() == 1) {
                         query.setParameter("subagentClusterId", subagentClusterIds.get(0));
@@ -249,6 +303,38 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
             } catch (Exception ex) {
                 throw new DBInvalidDataException(ex);
             }
+        }
+    }
+    
+    public int deleteSubAgentClusters(List<String> subagentClusterIds) throws SOSHibernateException {
+        if (subagentClusterIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            int j = 0;
+            for (int i = 0; i < subagentClusterIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                j += deleteSubAgentClusters(SOSHibernate.getInClausePartition(i, subagentClusterIds));
+            }
+            return j;
+        } else {
+            StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS);
+            StringBuilder hql2 = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTER_MEMBERS);
+            if (subagentClusterIds.size() == 1) {
+                hql.append(" where subAgentClusterId = :subagentClusterId");
+                hql2.append(" where subAgentClusterId = :subagentClusterId");
+            } else {
+                hql.append(" where subAgentClusterId in (:subagentClusterIds)");
+                hql2.append(" where subAgentClusterId in (:subagentClusterIds)");
+            }
+            Query<?> query = getSession().createQuery(hql.toString());
+            Query<?> query2 = getSession().createQuery(hql2.toString());
+            if (subagentClusterIds != null && !subagentClusterIds.isEmpty()) {
+                if (subagentClusterIds.size() == 1) {
+                    query.setParameter("subagentClusterId", subagentClusterIds.get(0));
+                    query2.setParameter("subagentClusterId", subagentClusterIds.get(0));
+                } else {
+                    query.setParameterList("subagentClusterIds", subagentClusterIds);
+                    query2.setParameterList("subagentClusterIds", subagentClusterIds);
+                }
+            }
+            return getSession().executeUpdate(query2) + getSession().executeUpdate(query);
         }
     }
 
