@@ -16,4 +16,6 @@ public interface ISOSLogin {
 
     public void setIdentityService(SOSIdentityService sosIdentityService);
 
+    public void simulateLogin(String accountname);
+
 }

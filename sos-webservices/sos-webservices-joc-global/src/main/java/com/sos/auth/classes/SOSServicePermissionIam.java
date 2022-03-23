@@ -504,7 +504,7 @@ public class SOSServicePermissionIam {
         sosLogin.login(currentAccount.getAccountname(), password, currentAccount.getHttpServletRequest());
 
         ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
-
+        
         currentAccount.setCurrentSubject(sosAuthSubject);
         currentAccount.setIdentityServices(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
                 identityServiceType));

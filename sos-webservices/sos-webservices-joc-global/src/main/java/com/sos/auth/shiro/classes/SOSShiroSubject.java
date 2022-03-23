@@ -33,15 +33,40 @@ public class SOSShiroSubject implements ISOSAuthSubject {
     private Subject subject;
     private SOSShiroSession session;
     private Set<String> setOfAccountPermissions;
+    private Set<String> roles;
+    private String accountName;
 
     @Override
     public Boolean hasRole(String role) {
-        return subject.hasRole(role);
+        if (subject == null) {
+            if (roles == null) {
+                roles = new HashSet<String>();
+                readAccountPermissions();
+            }
+            return roles.contains(role);
+        } else {
+            return subject.hasRole(role);
+        }
+
     }
 
     @Override
     public Boolean isPermitted(String permission) {
-        return subject.isPermitted(permission);
+        if (subject == null) {
+            if (setOfAccountPermissions == null) {
+                readAccountPermissions();
+            }
+            permission = permission + ":";
+            for (String accountPermission : setOfAccountPermissions) {
+                accountPermission = accountPermission + ":";
+                if (permission.startsWith(accountPermission)) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return subject.isPermitted(permission);
+        }
     }
 
     @Override
@@ -82,6 +107,7 @@ public class SOSShiroSubject implements ISOSAuthSubject {
 
     private void readAccountPermissions() {
         setOfAccountPermissions = new HashSet<String>();
+        roles = new HashSet<String>();
         SOSHibernateSession sosHibernateSession = null;
         try {
 
@@ -97,18 +123,22 @@ public class SOSShiroSubject implements ISOSAuthSubject {
             }
 
             Long identityServiceId = dbItemIamIdentityService.getId();
-            Set<String> setOfRoles = new HashSet<String>();
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
             IamAccountDBLayer iamAccountDbLayer = new IamAccountDBLayer(sosHibernateSession);
-            String account = (String) subject.getPrincipal();
+            String account;
+            if (subject == null) {
+                account = this.accountName;
+            } else {
+                account = (String) subject.getPrincipal();
+            }
             List<DBItemIamPermissionWithName> listOfRoles = iamAccountDbLayer.getListOfRolesForAccountName(account, identityServiceId);
             for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
-                setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
+                roles.add(dbItemSOSPermissionWithName.getRoleName());
             }
 
-            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles,
-                    dbItemIamIdentityService.getId());
+            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(roles, dbItemIamIdentityService
+                    .getId());
             Map<String, List<String>> mapOfFolderPermissions = new HashMap<String, List<String>>();
             Set<DBItemIamPermissionWithName> setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
             for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
@@ -150,6 +180,14 @@ public class SOSShiroSubject implements ISOSAuthSubject {
         }
         return setOfAccountPermissions;
 
+    }
+
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 
 }

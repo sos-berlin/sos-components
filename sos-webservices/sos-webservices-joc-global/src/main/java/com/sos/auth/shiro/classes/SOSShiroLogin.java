@@ -36,6 +36,7 @@ public class SOSShiroLogin implements ISOSLogin {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSShiroLogin.class);
     private Subject currentSubject;
+    private String accountName;
     private String msg = "";
     private IniSecurityManagerFactory factory = null;
 
@@ -127,7 +128,12 @@ public class SOSShiroLogin implements ISOSLogin {
             this.init();
 
             createSubject(user, pwd, httpServletRequest);
+            this.accountName = user;
         }
+    }
+
+    public void simulateLogin(String accountName) {
+        this.accountName = accountName;
     }
 
     public void logout() {
@@ -164,9 +170,13 @@ public class SOSShiroLogin implements ISOSLogin {
 
     public ISOSAuthSubject getCurrentSubject() {
         if (currentSubject == null) {
-            return null;
+            SOSShiroSubject sosShiroSubject = new SOSShiroSubject();
+            sosShiroSubject.setAccountName(accountName);
+            sosShiroSubject.getListOfAccountPermissions();
+            return sosShiroSubject;
         } else {
             SOSShiroSubject sosShiroSubject = new SOSShiroSubject();
+            sosShiroSubject.setAccountName(accountName);
             sosShiroSubject.setSubject(currentSubject);
             return sosShiroSubject;
         }

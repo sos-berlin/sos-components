@@ -36,7 +36,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
 
             SOSAuthAccessToken sosInternAuthAccessToken = null;
 
-            boolean disabled = SOSAuthHelper.accountIsDisable(identityService.getIdentityServiceId(), account);
+            boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), account);
             if (!disabled) {
                 if (identityService.isSingleFactor()) {
                     if (identityService.isSingleFactorCert() && SOSAuthHelper.checkCertificate(httpServletRequest, account)) {
@@ -71,6 +71,16 @@ public class SOSInternAuthLogin implements ISOSLogin {
             LOGGER.error("", e);
         }
 
+    }
+
+    public void simulateLogin(String account) {
+        try {
+            sosInternAuthSubject = new SOSInternAuthSubject();
+            sosInternAuthSubject.setAuthenticated(true);
+            sosInternAuthSubject.setPermissionAndRoles(account, identityService);
+        } catch (SOSHibernateException e) {
+            LOGGER.error("", e);
+        }
     }
 
     public void logout() {

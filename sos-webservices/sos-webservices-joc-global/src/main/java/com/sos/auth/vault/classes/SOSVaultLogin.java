@@ -5,6 +5,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -50,12 +51,8 @@ public class SOSVaultLogin implements ISOSLogin {
             SOSVaultAccountAccessToken sosVaultAccountAccessToken = null;
 
             boolean disabled;
-            if (identityService.getIdentyServiceType() == IdentityServiceTypes.VAULT_JOC || identityService
-                    .getIdentyServiceType() == IdentityServiceTypes.VAULT_JOC_ACTIVE) {
-                disabled = SOSAuthHelper.accountIsDisable(identityService.getIdentityServiceId(), account);
-            } else {
-                disabled = false;
-            }
+
+            disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), account);
 
             if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
                 sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
@@ -74,6 +71,26 @@ public class SOSVaultLogin implements ISOSLogin {
 
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
             LOGGER.error("", e);
+        } catch (SOSException e) {
+            LOGGER.error("", e);
+        } catch (JocException e) {
+            LOGGER.info("VAULT:" + e.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("", e);
+        }
+    }
+
+    public void simulateLogin(String account) {
+
+        try {
+            sosVaultSubject = new SOSVaultSubject(account, identityService);
+            sosVaultSubject.setAuthenticated(true);
+
+            if (IdentityServiceTypes.VAULT_JOC == identityService.getIdentyServiceType() || IdentityServiceTypes.VAULT_JOC_ACTIVE == identityService
+                    .getIdentyServiceType()) {
+                sosVaultSubject.setPermissionAndRoles(new ArrayList<String>(), account, identityService);
+            }
+
         } catch (SOSException e) {
             LOGGER.error("", e);
         } catch (JocException e) {
