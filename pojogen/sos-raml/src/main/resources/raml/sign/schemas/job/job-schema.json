@@ -16,6 +16,13 @@
   		"maxLength": 255,
   		"minLength": 1
 	},
+	"subagentSelectionId": {
+		"alias": "subagentClusterId",
+		"type": "string",
+  		"pattern": "^[^<>]*$",
+  		"maxLength": 255,
+  		"minLength": 1
+	},
 	"executable": {
 	  "javaType": "com.sos.inventory.model.job.Executable",
 	  "oneOf": [

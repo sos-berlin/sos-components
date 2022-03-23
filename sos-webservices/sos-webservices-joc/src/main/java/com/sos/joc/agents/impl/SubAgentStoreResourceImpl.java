@@ -165,10 +165,10 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
         mapOfAgentIds = null;
 
         for (SubAgent subAgent : subAgents.stream().peek(s -> {
-            if (s.getPosition() == null) {
-                s.setPosition(Integer.MIN_VALUE);
+            if (s.getOrdering() == null) {
+                s.setOrdering(Integer.MIN_VALUE);
             }
-        }).sorted(Comparator.comparingInt(SubAgent::getPosition)).collect(Collectors.toList())) {
+        }).sorted(Comparator.comparingInt(SubAgent::getOrdering)).collect(Collectors.toList())) {
             DBItemInventorySubAgentInstance dbSubAgent = subAgentsOfCurAgent.get(subAgent.getSubagentId());
             if (dbSubAgent == null) {
                 //save
@@ -183,7 +183,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
                 newDbSubAgent.setAgentId(agentId);
                 newDbSubAgent.setSubAgentId(subAgent.getSubagentId());
                 newDbSubAgent.setIsDirector(subAgent.getIsDirector());
-                newDbSubAgent.setOrdering(subAgent.getPosition());
+                newDbSubAgent.setOrdering(subAgent.getOrdering());
                 newDbSubAgent.setUri(subAgent.getUrl());
                 newDbSubAgent.setIsWatcher(false);
                 newDbSubAgent.setOsId(0L);
@@ -191,10 +191,10 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
                 newDbSubAgent.setDisabled(false);
                 newDbSubAgent.setDeployed(false);
                 newDbSubAgent.setTransaction("save");
-                if (subAgent.getPosition() == Integer.MIN_VALUE || curDbSubAgents.size() < subAgent.getPosition()) {
+                if (subAgent.getOrdering() == Integer.MIN_VALUE || curDbSubAgents.size() < subAgent.getOrdering()) {
                     curDbSubAgents.add(newDbSubAgent);
                 } else {
-                    curDbSubAgents.add(subAgent.getPosition() - 1, newDbSubAgent);
+                    curDbSubAgents.add(subAgent.getOrdering() - 1, newDbSubAgent);
                 }
                 
 //              subAgentsToController.add(JUpdateItemOperation.addOrChangeSimple(JSubagentRef.of(SubagentId.of(subAgent.getSubagentId()), AgentPath.of(
@@ -203,7 +203,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
             } else {
                 // update (if subagent and dbSubangent unequal)
                 if (dbSubAgent.getDirectorAsEnum().equals(subAgent.getIsDirector()) && dbSubAgent.getUri().equals(subAgent.getUrl()) && dbSubAgent
-                        .getOrdering().equals(subAgent.getPosition())) {
+                        .getOrdering().equals(subAgent.getOrdering())) {
                     continue;
                 }
                 if (primaryDirector != null && subAgent.getIsDirector().equals(SubagentDirectorType.PRIMARY_DIRECTOR) && !subAgent.getSubagentId()
@@ -230,13 +230,13 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
                 dbSubAgent.setUri(subAgent.getUrl());
                 dbSubAgent.setTitle(subAgent.getTitle());
                 dbSubAgent.setTransaction("update");
-                if (subAgent.getPosition() != Integer.MIN_VALUE) {
-                    dbSubAgent.setOrdering(subAgent.getPosition());
+                if (subAgent.getOrdering() != Integer.MIN_VALUE) {
+                    dbSubAgent.setOrdering(subAgent.getOrdering());
                     curDbSubAgents.remove(dbSubAgent);
-                    if (curDbSubAgents.size() < subAgent.getPosition()) {
+                    if (curDbSubAgents.size() < subAgent.getOrdering()) {
                         curDbSubAgents.add(dbSubAgent);
                     } else {
-                        curDbSubAgents.add(subAgent.getPosition() - 1, dbSubAgent);
+                        curDbSubAgents.add(subAgent.getOrdering() - 1, dbSubAgent);
                     }
                 } else {
                     int i = curDbSubAgents.indexOf(dbSubAgent);
