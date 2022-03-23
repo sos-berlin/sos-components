@@ -1,7 +1,6 @@
 package com.sos.joc.agents.impl;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -21,9 +20,7 @@ import com.sos.joc.agents.resource.IAgentsResourceStore;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.cluster.JocClusterService;
-import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
@@ -39,22 +36,10 @@ import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
-import js7.base.web.Uri;
-import js7.data.agent.AgentPath;
-import js7.data.subagent.SubagentId;
-import js7.data_for_java.agent.JAgentRef;
-import js7.data_for_java.controller.JControllerState;
-import js7.data_for_java.item.JUpdateItemOperation;
-import js7.data_for_java.subagent.JSubagentRef;
-import js7.proxy.javaapi.JControllerProxy;
-import reactor.core.publisher.Flux;
-
 @Path("agents")
-public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsResourceStore {
+public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsResourceStore {
 
-    private static final String API_STORE = "./agents/store";
+    private static final String API_INVENTORY_STORE = "./agents/inventory/store";
     private static final String API_CLUSTER_INVENTORY_STORE = "./agents/inventory/cluster/store";
 
     @Override
@@ -66,7 +51,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
     public JOCDefaultResponse store(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_STORE, filterBytes, accessToken);
+            initLogging(API_INVENTORY_STORE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, StoreAgents.class);
             StoreAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreAgents.class);
             boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
@@ -100,19 +85,15 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
 
             storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
-            connection = Globals.createSosHibernateStatelessConnection(API_STORE);
+            connection = Globals.createSosHibernateStatelessConnection(API_INVENTORY_STORE);
             connection.setAutoCommit(false);
+            Globals.beginTransaction(connection);
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
 
             Map<String, Agent> agentMap = agentStoreParameter.getAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function.identity()));
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(null);
             Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds.keySet());
-            List<JUpdateItemOperation> agentRefs = new ArrayList<>();
-            List<String> updateAgentRefs = new ArrayList<>();
             
-            JControllerProxy proxy = Proxy.of(controllerId);
-            JControllerState currentState = proxy.currentState();
-
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     Agent agent = agentMap.remove(dbAgent.getAgentId());
@@ -124,59 +105,27 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                         throw new JocBadRequestException(String.format("Agent '%s' is already assigned for Controller '%s'", dbAgent.getAgentId(),
                                 dbAgent.getControllerId()));
                     }
-                    boolean controllerUpdateRequired = true; // false;
-                    boolean dbUpdateRequired = false;
-                    if (dbAgent.getDisabled() != agent.getDisabled()) {
-                        dbAgent.setDisabled(agent.getDisabled());
-                        dbUpdateRequired = true;
-                        if (agent.getDisabled()) {
-                            controllerUpdateRequired = false;
-                        }
-                    }
-                    if (!dbAgent.getAgentName().equals(agent.getAgentName())) {
-                        dbAgent.setAgentName(agent.getAgentName());
-                        dbUpdateRequired = true;
-                    }
-                    if ((dbAgent.getTitle() == null && agent.getTitle() != null) || (dbAgent.getTitle() != null && !dbAgent.getTitle().equals(agent
-                            .getTitle()))) {
-                        dbAgent.setTitle(agent.getTitle());
-                        dbUpdateRequired = true;
-                    }
+                    dbAgent.setDisabled(agent.getDisabled());
+                    dbAgent.setAgentName(agent.getAgentName());
+                    dbAgent.setTitle(agent.getTitle());
+                    
                     if (!dbAgent.getUri().equals(agent.getUrl())) {
-                        dbAgent.setUri(agent.getUrl());
-                        dbUpdateRequired = true;
-                        // controllerUpdateRequired = true;
+                        dbAgent.setDeployed(false);
                     }
-                    if (dbUpdateRequired) {
-                        agentDBLayer.updateAgent(dbAgent);
-                    }
-                    if (controllerUpdateRequired) {
-                        // TODO consider old Agents
-                        Either<Problem, JAgentRef> agentE = currentState.pathToAgentRef(AgentPath.of(dbAgent.getAgentId()));
-                        if (agentE.isRight() && (!agentE.get().director().isPresent() || agentE.get().directors().isEmpty())) {
-                            agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createOldAgent(dbAgent)));
-                        } else {
-                            agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createNewAgent(dbAgent)));
-                            agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createSubagentDirector(dbAgent)));
-                        }
-                        updateAgentRefs.add(dbAgent.getAgentId());
-                    }
+                    dbAgent.setUri(agent.getUrl());
+                    agentDBLayer.updateAgent(dbAgent);
 
                     updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
                 }
             }
 
             for (Agent agent : agentMap.values()) {
-                boolean controllerUpdateRequired = true;
                 DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
                 dbAgent.setId(null);
                 dbAgent.setAgentId(agent.getAgentId());
                 dbAgent.setAgentName(agent.getAgentName());
                 dbAgent.setControllerId(controllerId);
                 dbAgent.setDisabled(agent.getDisabled());
-                if (agent.getDisabled()) {
-                    controllerUpdateRequired = false;
-                }
                 dbAgent.setIsWatcher(false);
                 dbAgent.setOsId(0L);
                 dbAgent.setStartedAt(null);
@@ -185,45 +134,11 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 dbAgent.setTitle(agent.getTitle());
                 dbAgent.setDeployed(false);
                 agentDBLayer.saveAgent(dbAgent);
-
-                if (controllerUpdateRequired) {
-                    // TODO consider old Agents
-                    Either<Problem, JAgentRef> agentE = currentState.pathToAgentRef(AgentPath.of(dbAgent.getAgentId()));
-                    if (agentE.isRight() && (!agentE.get().director().isPresent() || agentE.get().directors().isEmpty())) {
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createOldAgent(dbAgent)));
-                    } else {
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createNewAgent(dbAgent)));
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createSubagentDirector(dbAgent)));
-                    }
-                    updateAgentRefs.add(dbAgent.getAgentId());
-                }
-
+                
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
             }
 
             Globals.commit(connection);
-
-            if (!agentRefs.isEmpty()) {
-                proxy.api().updateItems(Flux.fromIterable(agentRefs)).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId);
-                    if (e.isRight()) {
-                        SOSHibernateSession connection1 = null;
-                        try {
-                            connection1 = Globals.createSosHibernateStatelessConnection(API_STORE);
-                            connection1.setAutoCommit(false);
-                            Globals.beginTransaction(connection1);
-                            InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
-                            dbLayer1.setAgentsDeployed(updateAgentRefs);
-                            Globals.commit(connection1);
-                        } catch (Exception e1) {
-                            Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
-                        } finally {
-                            Globals.disconnect(connection1);
-                        }
-                    }
-                });
-            }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -236,18 +151,6 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
         } finally {
             Globals.disconnect(connection);
         }
-    }
-    
-    private static JAgentRef createOldAgent(DBItemInventoryAgentInstance a) {
-        return JAgentRef.of(AgentPath.of(a.getAgentId()), Uri.of(a.getUri()));
-    }
-    
-    private static JAgentRef createNewAgent(DBItemInventoryAgentInstance a) {
-        return JAgentRef.of(AgentPath.of(a.getAgentId()), SubagentId.of((a.getAgentId())));
-    }
-    
-    private static JSubagentRef createSubagentDirector(DBItemInventoryAgentInstance a) {
-        return JSubagentRef.of(SubagentId.of(a.getAgentId()), AgentPath.of(a.getAgentId()), Uri.of(a.getUri()));
     }
     
     @Override

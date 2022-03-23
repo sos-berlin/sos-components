@@ -77,6 +77,7 @@ public class JsonValidator {
             put("AgentCommand", "agent/agentCommand-schema.json");
             put("SubAgentsCommand", "agent/subagentCommand-schema.json");
             put("StoreAgents", "agent/storeParam-schema.json");
+            put("DeployAgents", "agent/deployAgents-schema.json");
             put("StoreSubAgents", "agent/storeSubagentsParam-schema.json");
             put("StoreClusterAgents", "agent/storeClusterParam-schema.json");
             put("DeployClusterAgents", "agent/deployClusterParam-schema.json");
