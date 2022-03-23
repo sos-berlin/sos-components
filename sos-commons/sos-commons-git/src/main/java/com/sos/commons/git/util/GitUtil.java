@@ -2,6 +2,7 @@ package com.sos.commons.git.util;
 
 import com.sos.commons.git.results.GitAddCommandResult;
 import com.sos.commons.git.results.GitCherryPickCommandResult;
+import com.sos.commons.git.results.GitCloneCommandResult;
 import com.sos.commons.git.results.GitCommandResult;
 import com.sos.commons.git.results.GitCommitCommandResult;
 import com.sos.commons.git.results.GitDiffCommandResult;
@@ -140,6 +141,25 @@ public class GitUtil {
             result = GitPushCommandResult.getInstance(commandResult, original);
         } else {
             result = GitPushCommandResult.getInstance(commandResult);
+        }
+        if (commandResult.hasError()) {
+            StringBuilder info = new StringBuilder();
+            info.append(commandResult);
+            result.setError(info.toString());
+        }
+        return result;
+    }
+
+    public static final GitCommandResult createGitCloneCommandResult(SOSCommandResult commandResult) {
+        return createGitCloneCommandResult(commandResult, null);
+    }
+
+    public static final GitCommandResult createGitCloneCommandResult(SOSCommandResult commandResult, String original) {
+        GitCommandResult result;
+        if (original != null) {
+            result = GitCloneCommandResult.getInstance(commandResult, original);
+        } else {
+            result = GitCloneCommandResult.getInstance(commandResult);
         }
         if (commandResult.hasError()) {
             StringBuilder info = new StringBuilder();

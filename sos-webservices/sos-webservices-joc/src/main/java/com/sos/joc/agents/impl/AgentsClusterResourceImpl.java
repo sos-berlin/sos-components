@@ -75,9 +75,9 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(allowedControllers, agentParameter
-                    .getAgentIds(), false, agentParameter.getOnlyEnabledAgents());
+                    .getAgentIds(), false, false);
             Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(allowedControllers, false,
-                    agentParameter.getOnlyEnabledAgents());
+                    false);
             ClusterAgents agents = new ClusterAgents();
             if (dbAgents != null) {
                 Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).collect(Collectors.toSet());
@@ -90,7 +90,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                     agent.setAgentId(a.getAgentId());
                     agent.setAgentName(a.getAgentName());
                     agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
-                    agent.setDisabled(a.getDisabled());
+                    //agent.setDisabled(a.getDisabled());
                     agent.setControllerId(a.getControllerId());
                     agent.setUrl(a.getUri());
                     agent.setDeployed(a.getDeployed());
