@@ -147,8 +147,14 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
         return roles;
     }
 
+    private static List<String> mapFromJS1(List<String> perms){
+        SOSPermissionMapTable sosPermissionMapTable = new SOSPermissionMapTable();       
+        return sosPermissionMapTable.map(perms);
+    }
+    
     private static IniPermissions mapIniPermissionsToPermissionsObject(String iniPermissions) {
-        List<String> perms = Arrays.asList(iniPermissions.trim().split("\\s*,\\s*"));
+        List<String> perms = mapFromJS1(Arrays.asList(iniPermissions.trim().split("\\s*,\\s*")));
+               
         IniPermissions iniPerms = new IniPermissions();
         List<IniPermission> jocPerms = new ArrayList<>();
         List<IniPermission> defaultPerms = new ArrayList<>();

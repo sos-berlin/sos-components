@@ -40,6 +40,7 @@ import com.sos.joc.model.security.ldap.LdapProperties;;
 
 public class SOSManageIdentityService {
 
+    private static final String JOC_FROM_SHIRO = "JOC-FROM-SHIRO";
     private static final String SOS_LDAP_AUTHORIZING_REALM = "com.sos.auth.shiro.SOSLdapAuthorizingRealm";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSManageIdentityService.class);
     private SecurityConfiguration securityConfiguration = null;
@@ -67,7 +68,7 @@ public class SOSManageIdentityService {
 
         IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
         IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-        filter.setIdentityServiceName("JOC-FROM-SHIRO");
+        filter.setIdentityServiceName(JOC_FROM_SHIRO);
         List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
         DBItemIamIdentityService dbItemIamIdentityService;
         if (listOfIdentityServices.size() > 0) {
@@ -78,7 +79,7 @@ public class SOSManageIdentityService {
             dbItemIamIdentityService.setAuthenticationScheme("SINGLE");
             dbItemIamIdentityService.setSingleFactorCert(false);
             dbItemIamIdentityService.setSingleFactorPwd(true);
-            dbItemIamIdentityService.setIdentityServiceName("JOC-FROM-SHIRO");
+            dbItemIamIdentityService.setIdentityServiceName(JOC_FROM_SHIRO);
             dbItemIamIdentityService.setIdentityServiceType("JOC");
             dbItemIamIdentityService.setOrdering(1);
             dbItemIamIdentityService.setRequired(false);
