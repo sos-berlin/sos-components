@@ -218,23 +218,10 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsResourceS
                         throw new JocBadRequestException(String.format("Agent '%s' is already assigned for Controller '%s'", dbAgent.getAgentId(),
                                 dbAgent.getControllerId()));
                     }
-                    boolean dbUpdateRequired = false;
-                    if (dbAgent.getDisabled() != agent.getDisabled()) {
-                        dbAgent.setDisabled(agent.getDisabled());
-                        dbUpdateRequired = true;
-                    }
-                    if (!dbAgent.getAgentName().equals(agent.getAgentName())) {
-                        dbAgent.setAgentName(agent.getAgentName());
-                        dbUpdateRequired = true;
-                    }
-                    if ((dbAgent.getTitle() == null && agent.getTitle() != null) || (dbAgent.getTitle() != null && !dbAgent.getTitle().equals(agent
-                            .getTitle()))) {
-                        dbAgent.setTitle(agent.getTitle());
-                        dbUpdateRequired = true;
-                    }
-                    if (dbUpdateRequired) {
-                        agentDBLayer.updateAgent(dbAgent);
-                    }
+                    dbAgent.setDisabled(false);
+                    dbAgent.setAgentName(agent.getAgentName());
+                    dbAgent.setTitle(agent.getTitle());
+                    agentDBLayer.updateAgent(dbAgent);
 
                     List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                             controllerId));
