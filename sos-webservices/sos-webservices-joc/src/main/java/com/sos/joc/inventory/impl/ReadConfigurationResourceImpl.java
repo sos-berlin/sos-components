@@ -1,14 +1,12 @@
 package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.controller.model.common.SyncStateText;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;

@@ -950,7 +950,6 @@ public class JocInventory {
                                 s.getWorkflowNames().add(s.getWorkflowName());
                             }
                         }
-                        s.setWorkflowName(null);
                     }
 
                     List<String> wn = new ArrayList<>();
@@ -962,6 +961,11 @@ public class JocInventory {
                         }
                     }
                     s.setWorkflowNames(wn);
+                    
+                    //tmp
+                    if(s.getWorkflowNames().size() > 0) {
+                        s.setWorkflowName(s.getWorkflowNames().get(0));
+                    }
 
                     schedule.setContent(Globals.objectMapper.writeValueAsString(s));
                     schedule.setReleased(false);

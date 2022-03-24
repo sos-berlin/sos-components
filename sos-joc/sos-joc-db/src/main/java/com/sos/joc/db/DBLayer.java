@@ -38,6 +38,8 @@ import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedSchedule2Workflow;
+import com.sos.joc.db.inventory.DBItemInventorySchedule2Workflow;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentClusterMember;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
@@ -205,6 +207,12 @@ public class DBLayer implements Serializable {
     public static final String TABLE_INV_DOCUMENTATION_IMAGES = "INV_DOCUMENTATION_IMAGES";
     public static final String TABLE_INV_DOCUMENTATION_IMAGES_SEQUENCE = "SEQ_INV_DI";
 
+    public static final String DBITEM_INV_SCHEDULE2WORKFLOWS = DBItemInventorySchedule2Workflow.class.getSimpleName();
+    public static final String VIEW_INV_SCHEDULE2WORKFLOWS = "INV_SCHEDULE2WORKFLOWS";
+
+    public static final String DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS = DBItemInventoryReleasedSchedule2Workflow.class.getSimpleName();
+    public static final String VIEW_INV_RELEASED_SCHEDULE2WORKFLOWS = "INV_RELEASED_SCHEDULE2WORKFLOWS";
+
     /** Search (helper) tables */
     public static final String DBITEM_SEARCH_WORKFLOWS = DBItemSearchWorkflow.class.getSimpleName();
     public static final String TABLE_SEARCH_WORKFLOWS = "SEARCH_WORKFLOWS";
@@ -270,14 +278,13 @@ public class DBLayer implements Serializable {
 
     public static final String TABLE_IAM_IDENTITY_SERVICES = "IAM_IDENTITY_SERVICES";
     public static final String TABLE_IAM_IDENTITY_SERVICES_SEQUENCE = "SEQ_IAM_IDENTITY_SERVICES";
- 
+
     public static final String TABLE_IAM_PERMISSIONS = "IAM_PERMISSIONS";
     public static final String TABLE_IAM_PERMISSIONS_SEQUENCE = "SEQ_IAM_PERMISSIONS";
 
     public static final String TABLE_IAM_ROLES = "IAM_ROLES";
     public static final String TABLE_IAM_ROLES_SEQUENCE = "SEQ_IAM_ROLES";
 
-     
     // public static final String DEFAULT_FOLDER = "/";
     // public static final Long DEFAULT_ID = 0L;
     public static final String DEFAULT_KEY = ".";
@@ -404,6 +411,8 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryConfigurationTrash.class);
         cl.add(DBItemInventoryReleasedConfiguration.class);
         cl.add(DBItemInventoryCertificate.class);
+        cl.add(DBItemInventorySchedule2Workflow.class);
+        cl.add(DBItemInventoryReleasedSchedule2Workflow.class);
         cl.add(DBItemSearchWorkflow.class);
         cl.add(DBItemSearchWorkflow2DeploymentHistory.class);
         cl.add(DBItemDocumentation.class);

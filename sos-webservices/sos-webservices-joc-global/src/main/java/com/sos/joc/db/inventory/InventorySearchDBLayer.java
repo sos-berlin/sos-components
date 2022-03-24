@@ -254,12 +254,10 @@ public class InventorySearchDBLayer extends DBLayer {
             }
             if (!SOSString.isEmpty(advanced.getSchedule())) {
                 hql.append("and mt.name in (");
-                hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName")).append(" ");
-                hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subt ");
-                hql.append("where subt.type=").append(ConfigurationType.SCHEDULE.intValue()).append(" ");
+                hql.append("select workflowName from ").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" subt ");
                 if (!advanced.getSchedule().equals(FIND_ALL)) {
                     schedule = advanced.getSchedule();
-                    hql.append("and lower(subt.name) like :schedule ");
+                    hql.append("and lower(subt.scheduleName) like :schedule ");
                 }
                 hql.append(") ");
             }
@@ -294,13 +292,28 @@ public class InventorySearchDBLayer extends DBLayer {
             if (!SOSString.isEmpty(advanced.getWorkflow())) {
                 if (!advanced.getWorkflow().equals(FIND_ALL)) {
                     workflow = advanced.getWorkflow();
-                    hql.append("and lower(");
-                    hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.jsonContent", "$.workflowName"));
-                    hql.append(") ");
-                    hql.append("like :workflow ");
+
+                    switch (type) {
+                    case FILEORDERSOURCE:
+                        hql.append("and lower(");
+                        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.jsonContent", "$.workflowName"));
+                        hql.append(") ");
+                        hql.append("like :workflow ");
+                        break;
+                    case SCHEDULE:
+                        hql.append("and exists (");
+                        hql.append("select scheduleName from ").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" subt ");
+                        hql.append("where mt.name=subt.scheduleName ");
+                        hql.append("and lower(subt.workflowName) like :workflow ");
+                        hql.append(")");
+                        break;
+                    default:
+                        break;
+                    }
                 }
             }
 
+            // type - SCHEDULE
             if (!SOSString.isEmpty(advanced.getFileOrderSource())) {
                 hql.append("and exists (");
                 hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName")).append(" ");
@@ -318,33 +331,43 @@ public class InventorySearchDBLayer extends DBLayer {
                 }
                 hql.append(") ");
             }
+
+            // type - FILEORDERSOURCE
             if (!SOSString.isEmpty(advanced.getSchedule())) {
                 hql.append("and exists (");
-                hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName")).append(" ");
-                hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subt ");
-                hql.append("where subt.type=").append(ConfigurationType.SCHEDULE.intValue()).append(" ");
+                hql.append("select scheduleName from ").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" subt ");
+                String add = " where ";
                 if (!advanced.getSchedule().equals(FIND_ALL)) {
                     schedule = advanced.getSchedule();
-                    hql.append("and lower(subt.name) like :schedule ");
+                    hql.append(add).append("lower(subt.scheduleName) like :schedule ");
+                    add = " and ";
                 }
                 if (workflow != null) {
-                    hql.append("and lower(");
-                    hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName"));
-                    hql.append(") ");
-                    hql.append("like :workflow ");
+                    hql.append(add).append("lower(subt.workflowName) like :workflow ");
                 }
                 hql.append(") ");
             }
 
             hql.append("and exists(");// start exists
             hql.append("  select sw.id from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
-            // hql.append(" where sw.deployed=mt.deployed ");
-            // hql.append(" and sw.inventoryConfigurationId in (");
             hql.append("  where sw.inventoryConfigurationId in (");
             hql.append("    select ic.id from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
-            hql.append("    where ic.name=").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.jsonContent", "$.workflowName"));
+            switch (type) {
+            case FILEORDERSOURCE:
+                hql.append("    where ic.name=").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.jsonContent", "$.workflowName"));
+                break;
+            case SCHEDULE:
+                hql.append("    where ic.name in(");
+                hql.append("         select workflowName from ").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" subt ");
+                hql.append("         where mt.name=subt.scheduleName ");
+                hql.append("    )");
+                break;
+            default:
+                break;
+            }
             hql.append("    and ic.type=").append(ConfigurationType.WORKFLOW.intValue()).append(" ");
             hql.append("  )");
+
             if (advanced.getJobCountFrom() != null) {
                 jobCountFrom = advanced.getJobCountFrom();
                 hql.append("and sw.jobsCount >= :jobCountFrom ");
@@ -577,12 +600,10 @@ public class InventorySearchDBLayer extends DBLayer {
             }
             if (!SOSString.isEmpty(advanced.getSchedule())) {
                 hql.append("and mt.name in (");
-                hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName")).append(" ");
-                hql.append("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" subt ");
-                hql.append("where subt.type=").append(ConfigurationType.SCHEDULE.intValue()).append(" ");
+                hql.append("select workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
                 if (!advanced.getSchedule().equals(FIND_ALL)) {
                     schedule = advanced.getSchedule();
-                    hql.append("and lower(subt.name) like :schedule ");
+                    hql.append("and lower(subt.scheduleName) like :schedule ");
                 }
                 hql.append(") ");
             }
@@ -617,13 +638,28 @@ public class InventorySearchDBLayer extends DBLayer {
             if (!SOSString.isEmpty(advanced.getWorkflow())) {
                 if (!advanced.getWorkflow().equals(FIND_ALL)) {
                     workflow = advanced.getWorkflow();
-                    hql.append("and lower(");
-                    hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.content", "$.workflowName"));
-                    hql.append(") ");
-                    hql.append("like :workflow ");
+
+                    switch (type) {
+                    case FILEORDERSOURCE:
+                        hql.append("and lower(");
+                        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.content", "$.workflowName"));
+                        hql.append(") ");
+                        hql.append("like :workflow ");
+                        break;
+                    case SCHEDULE:
+                        hql.append("and exists (");
+                        hql.append("select scheduleName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
+                        hql.append("where mt.name=subt.scheduleName ");
+                        hql.append("and lower(subt.workflowName) like :workflow ");
+                        hql.append(")");
+                        break;
+                    default:
+                        break;
+                    }
                 }
             }
 
+            // type - SCHEDULE
             if (!SOSString.isEmpty(advanced.getFileOrderSource())) {
                 hql.append("and exists (");
                 hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.content", "$.workflowName")).append(" ");
@@ -644,20 +680,19 @@ public class InventorySearchDBLayer extends DBLayer {
                 }
                 hql.append(") ");
             }
+
+            // type - FILEORDERSOURCE
             if (!SOSString.isEmpty(advanced.getSchedule())) {
                 hql.append("and exists (");
-                hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName")).append(" ");
-                hql.append("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" subt ");
-                hql.append("where subt.type=").append(ConfigurationType.SCHEDULE.intValue()).append(" ");
+                hql.append("select scheduleName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
+                String add = " where ";
                 if (!advanced.getSchedule().equals(FIND_ALL)) {
                     schedule = advanced.getSchedule();
-                    hql.append("and lower(subt.name) like :schedule ");
+                    hql.append(add).append("lower(subt.scheduleName) like :schedule ");
+                    add = " and ";
                 }
                 if (workflow != null) {
-                    hql.append("and lower(");
-                    hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName"));
-                    hql.append(") ");
-                    hql.append("like :workflow ");
+                    hql.append(add).append("lower(subt.workflowName) like :workflow ");
                 }
                 hql.append(") ");
             }
@@ -668,7 +703,19 @@ public class InventorySearchDBLayer extends DBLayer {
             hql.append("  where sw.id=swdh.searchWorkflowId ");
             hql.append("  and swdh.deploymentHistoryId in (");
             hql.append("    select dc.id from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc ");
-            hql.append("    where dc.name=").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.content", "$.workflowName"));
+            switch (type) {
+            case FILEORDERSOURCE:
+                hql.append("    where dc.name=").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.content", "$.workflowName"));
+                break;
+            case SCHEDULE:
+                hql.append("    where ic.name in(");
+                hql.append("         select workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
+                hql.append("         where mt.name=subt.scheduleName ");
+                hql.append("    )");
+                break;
+            default:
+                break;
+            }
             hql.append("    and dc.type=").append(ConfigurationType.WORKFLOW.intValue()).append(" ");
             if (controllerId != null) {
                 hql.append("and dc.controllerId=:controllerId ");
