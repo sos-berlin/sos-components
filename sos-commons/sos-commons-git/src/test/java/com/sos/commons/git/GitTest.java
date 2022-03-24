@@ -9,7 +9,6 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -21,8 +20,11 @@ import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSException;
+import com.sos.commons.git.enums.GitConfigType;
 import com.sos.commons.git.results.GitCloneCommandResult;
 import com.sos.commons.git.results.GitCommandResult;
+import com.sos.commons.git.results.GitConfigCommandResult;
 import com.sos.commons.git.results.GitLogCommandResult;
 import com.sos.commons.git.results.GitPullCommandResult;
 import com.sos.commons.git.results.GitRemoteCommandResult;
@@ -297,7 +299,7 @@ public class GitTest {
                 Files.createDirectories(repositoryParent);
             }
         } catch (IOException e) {
-            LOGGER.info(e.getMessage(), e);
+            LOGGER.debug(e.getMessage(), e);
         }
         GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir);
         LOGGER.debug("command: " + result.getOriginalCommand());
@@ -318,10 +320,87 @@ public class GitTest {
         LOGGER.debug("**************************  Test 08a - git clone finished  **************************");
     }
 
+    @Test
+    public void test09ChangeSSHConfigThenClone() throws SOSException {
+        LOGGER.debug("**************************  Test 09 - git config started   **************************");
+        LOGGER.debug("**************************         specific directory      **************************");
+        Path workingDir = Paths.get(System.getProperty("user.dir"));
+        LOGGER.debug("Working Directory: " + workingDir.toString());
+        Path repositoryParent = null;
+        Path keyFilePath = null;
+        String repoToClone = "git@github.com:sos-berlin/JS7Demo.git";
+        if(SOSShell.IS_WINDOWS) {
+            repositoryParent = Paths.get("C:/tmp/test_repos");
+            keyFilePath = Paths.get("C:/sp/devel/merken/github/id_rsa");
+        } else {
+            repositoryParent = Paths.get("/tmp/test_repos");
+            keyFilePath = Paths.get("~/.ssh/id_rsa");
+        }
+        LOGGER.debug("Repository parent path: " + repositoryParent.toString());
+        try {
+            if(!Files.exists(repositoryParent)) {
+                Files.createDirectories(repositoryParent);
+            }
+        } catch (IOException e) {
+            LOGGER.debug(e.getMessage(), e);
+        }
+        LOGGER.debug("**************************  Step 1: read current config    **************************");
+        GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshGet(GitConfigType.GLOBAL);
+        LOGGER.debug("command: " + configResult.getCommand());
+        LOGGER.debug("ExitCode: " + configResult.getExitCode());
+        LOGGER.debug("StdOut:\n" + configResult.getStdOut());
+        LOGGER.debug("StdErr: " + configResult.getStdErr());
+        String oldValue = configResult.getCurrentValue();
+        LOGGER.debug("**************************  Step 2: remove current config  **************************");
+        configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshUnset(GitConfigType.GLOBAL);
+        LOGGER.debug("command: " + configResult.getCommand());
+        LOGGER.debug("ExitCode: " + configResult.getExitCode());
+        LOGGER.debug("StdOut:\n" + configResult.getStdOut());
+        LOGGER.debug("StdErr: " + configResult.getStdErr());
+        LOGGER.debug("**************************  Step 3: add new config         **************************");
+        configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(GitConfigType.GLOBAL, keyFilePath);
+        LOGGER.debug("command: " + configResult.getCommand());
+        LOGGER.debug("ExitCode: " + configResult.getExitCode());
+        LOGGER.debug("StdOut:\n" + configResult.getStdOut());
+        LOGGER.debug("StdErr: " + configResult.getStdErr());
+        LOGGER.debug("**************************  Step 4: clone                  **************************");
+        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir);
+        LOGGER.debug("command: " + result.getOriginalCommand());
+        LOGGER.debug("ExitCode: " + result.getExitCode());
+        LOGGER.debug("StdOut:\n" + result.getStdOut());
+        LOGGER.debug("StdErr: " + result.getStdErr());
+        LOGGER.debug("StdOut parsed - results:");
+        LOGGER.debug("  child folder " + result.getClonedInto() + " with git entries created in " + repositoryParent.toString() + " !");
+        Assert.assertTrue(Files.exists(repositoryParent.resolve(result.getClonedInto())));
+        try {
+            deleteFolderRecursively(repositoryParent.resolve(result.getClonedInto()));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        LOGGER.debug("target folder cleanup");
+        Assert.assertTrue(!Files.exists(repositoryParent.resolve(result.getClonedInto())));
+        LOGGER.debug("**************************  Step 5: remove new config      **************************");
+        configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshUnset(GitConfigType.GLOBAL);
+        LOGGER.debug("command: " + configResult.getCommand());
+        LOGGER.debug("ExitCode: " + configResult.getExitCode());
+        LOGGER.debug("StdOut:\n" + configResult.getStdOut());
+        LOGGER.debug("StdErr: " + configResult.getStdErr());
+        LOGGER.debug("**************************  Step 6: restore current config **************************");
+        if(!oldValue.isEmpty()) {
+            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAddCustom(GitConfigType.GLOBAL, oldValue);
+            LOGGER.debug("command: " + configResult.getCommand());
+            LOGGER.debug("ExitCode: " + configResult.getExitCode());
+            LOGGER.debug("StdOut:\n" + configResult.getStdOut());
+            LOGGER.debug("StdErr: " + configResult.getStdErr());
+        }
+        LOGGER.debug("**************************  Test 09 - git config finished  **************************");
+    }
+
     @Ignore
     @Test
-    public void test09GitRemoteAddUpdateRemoveChain() {
-        LOGGER.debug("**************************  Test 09 - git remote started  ***************************");
+    public void test10GitRemoteAddUpdateRemoveChain() {
+        LOGGER.debug("**************************  Test 10 - git remote started  ***************************");
         // get working dir
         Path workingDir = Paths.get(System.getProperty("user.dir"));
         LOGGER.debug("Working Directory: " + workingDir.toString());
@@ -412,7 +491,7 @@ public class GitTest {
         SOSCommandResult r = SOSShell.executeCommand(cdTo + " && FOR /f \"tokens=*\" %a in ('git tag') DO git tag -d %a");
         SOSShell.executeCommand(cdBack);
         Assert.assertTrue(r.getExitCode() == 0);
-        LOGGER.debug("**************************  Test 09 - git remote finished  **************************");
+        LOGGER.debug("**************************  Test 10 - git remote finished  **************************");
     }
 
     private void deleteFolderRecursively(Path path) throws IOException {

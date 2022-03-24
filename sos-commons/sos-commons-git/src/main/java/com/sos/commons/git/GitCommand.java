@@ -2,6 +2,9 @@ package com.sos.commons.git;
 
 import java.nio.file.Path;
 
+import com.sos.commons.exception.SOSException;
+import com.sos.commons.git.enums.GitConfigType;
+import com.sos.commons.git.enums.GitConfigAction;
 import com.sos.commons.git.results.GitCommandResult;
 import com.sos.commons.git.util.GitCommandConstants;
 import com.sos.commons.git.util.GitUtil;
@@ -432,6 +435,115 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitRestoreCommandResult(SOSShell.executeCommand(
                     getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_RESTORE)), GitCommandConstants.CMD_GIT_RESTORE);
+            if(workingDir != null) {
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+            }
+            return result;
+        }
+    }
+    
+    public static GitCommandResult executeGitConfig(String params) {
+        return executeGitConfig(params, null, null);
+    }
+    
+    public static GitCommandResult executeGitConfig(String params, Path repository) {
+        return executeGitConfig(params, repository, null);
+    }
+    
+    public static GitCommandResult executeGitConfig(String params, Path repository, Path workingDir) {
+        if (repository == null) {
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CONFIG + params));
+        } else {
+            GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, GitCommandConstants.CMD_GIT_CONFIG + params)), GitCommandConstants.CMD_GIT_CONFIG + params);
+            if(workingDir != null) {
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+            }
+            return result;
+        }
+    }
+    
+    public static GitCommandResult executeGitConfigSshGet(GitConfigType configType) throws SOSException {
+        return executeGitConfigSshGet(configType, null, null);
+    }
+    
+    public static GitCommandResult executeGitConfigSshGet(GitConfigType configType, Path repository) throws SOSException {
+        return executeGitConfigSshGet(configType, repository, null);
+    }
+    
+    public static GitCommandResult executeGitConfigSshGet(GitConfigType configType, Path repository, Path workingDir) throws SOSException {
+        String command = GitUtil.getConfigCommand(configType, GitConfigAction.GET);
+        if (repository == null) {
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+        } else {
+            GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, command)), command);
+            if(workingDir != null) {
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+            }
+            return result;
+        }
+    }
+    
+    public static GitCommandResult executeGitConfigSshUnset(GitConfigType configType) throws SOSException {
+        return executeGitConfigSshUnset(configType, null, null);
+    }
+    
+    public static GitCommandResult executeGitConfigSshUnset(GitConfigType configType, Path repository) throws SOSException {
+        return executeGitConfigSshUnset(configType, repository, null);
+    }
+    
+    public static GitCommandResult executeGitConfigSshUnset(GitConfigType configType, Path repository, Path workingDir) throws SOSException {
+        String command = GitUtil.getConfigCommand(configType, GitConfigAction.UNSET);
+        if (repository == null) {
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+        } else {
+            GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, command)), command);
+            if(workingDir != null) {
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+            }
+            return result;
+        }
+    }
+    
+    public static GitCommandResult executeGitConfigSshAdd(GitConfigType configType, Path keyFilePath) throws SOSException {
+        return executeGitConfigSshAdd(configType, keyFilePath, null, null);
+    }
+    
+    public static GitCommandResult executeGitConfigSshAdd(GitConfigType configType, Path keyFilePath, Path repository) throws SOSException {
+        return executeGitConfigSshAdd(configType, keyFilePath, repository, null);
+    }
+    
+    public static GitCommandResult executeGitConfigSshAdd(GitConfigType configType, Path keyFilePath, Path repository, Path workingDir) throws SOSException {
+        String command = GitUtil.getConfigCommand(configType, GitConfigAction.ADD, keyFilePath);
+        if (repository == null) {
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+        } else {
+            GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, command)), command);
+            if(workingDir != null) {
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+            }
+            return result;
+        }
+    }
+    
+    public static GitCommandResult executeGitConfigSshAddCustom(GitConfigType configType, String value) throws SOSException {
+        return executeGitConfigSshAddCustom(configType, value, null, null);
+    }
+    
+    public static GitCommandResult executeGitConfigSshAddCustom(GitConfigType configType, String value, Path repository) throws SOSException {
+        return executeGitConfigSshAddCustom(configType, value, repository, null);
+    }
+    
+    public static GitCommandResult executeGitConfigSshAddCustom(GitConfigType configType, String value, Path repository, Path workingDir) throws SOSException {
+        String command = GitUtil.getConfigCommand(configType, GitConfigAction.ADD, value);
+        if (repository == null) {
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+        } else {
+            GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, command)), command);
             if(workingDir != null) {
                 SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
             }

@@ -6,15 +6,15 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.git.enums.RepositoryLinkType;
+import com.sos.commons.git.enums.RepositoryUpdateType;
 import com.sos.commons.util.common.SOSCommandResult;
 
 public class GitRemoteCommandResult extends GitCommandResult {
@@ -139,7 +139,7 @@ public class GitRemoteCommandResult extends GitCommandResult {
                         currentRepo = remoteUpdateInfoRepoMatcher.group(1);
                         continue;
                     } else if(remoteUpdateInfoMatcher.matches()) {
-                        if(RepositoryUpdatesType.BRANCH.value().equals(remoteUpdateInfoMatcher.group(1))) {
+                        if(RepositoryUpdateType.BRANCH.value().equals(remoteUpdateInfoMatcher.group(1))) {
                             if (fetchedNewBranches.isEmpty()) {
                                 fetchedNewBranches = new HashMap();
                             }
@@ -150,7 +150,7 @@ public class GitRemoteCommandResult extends GitCommandResult {
                             } else {
                                 fetchedNewBranches.get(currentRepo).put(remoteUpdateInfoMatcher.group(2), remoteUpdateInfoMatcher.group(3));
                             }
-                        } else if (RepositoryUpdatesType.TAG.value().equals(remoteUpdateInfoMatcher.group(1))) {
+                        } else if (RepositoryUpdateType.TAG.value().equals(remoteUpdateInfoMatcher.group(1))) {
                             if(fetchedNewTags.isEmpty()) {
                                 fetchedNewTags = new HashMap();
                             }
@@ -170,64 +170,4 @@ public class GitRemoteCommandResult extends GitCommandResult {
         }
     }
     
-    private enum RepositoryLinkType {
-        FETCH("(fetch)"),
-        PUSH("(push)");
-        private final String value;
-        private final static Map<String, RepositoryLinkType> CONSTANTS = new HashMap<String, RepositoryLinkType>();
-        static {
-            for (RepositoryLinkType c: values()) {
-                CONSTANTS.put(c.value, c);
-            }
-        }
-        RepositoryLinkType(String value) {
-            this.value = value;
-        }
-        @Override
-        public String toString() {
-            return this.value;
-        }
-        public String value() {
-            return this.value;
-        }
-        public static RepositoryLinkType fromValue(String value) {
-            RepositoryLinkType constant = CONSTANTS.get(value);
-            if (constant == null) {
-                throw new IllegalArgumentException(value);
-            } else {
-                return constant;
-            }
-        }
-    }
-
-    private enum RepositoryUpdatesType {
-        BRANCH("[new branch]"),
-        TAG("[new tag]");
-        private final String value;
-        private final static Map<String, RepositoryUpdatesType> CONSTANTS = new HashMap<String, RepositoryUpdatesType>();
-        static {
-            for (RepositoryUpdatesType c: values()) {
-                CONSTANTS.put(c.value, c);
-            }
-        }
-        RepositoryUpdatesType(String value) {
-            this.value = value;
-        }
-        @Override
-        public String toString() {
-            return this.value;
-        }
-        public String value() {
-            return this.value;
-        }
-        public static RepositoryUpdatesType fromValue(String value) {
-            RepositoryUpdatesType constant = CONSTANTS.get(value);
-            if (constant == null) {
-                throw new IllegalArgumentException(value);
-            } else {
-                return constant;
-            }
-        }
-    }
-
 }
