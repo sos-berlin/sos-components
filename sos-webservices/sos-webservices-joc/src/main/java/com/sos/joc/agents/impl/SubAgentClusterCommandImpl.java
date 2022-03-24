@@ -36,13 +36,72 @@ import reactor.core.publisher.Flux;
 @Path("agents")
 public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubAgentClusterCommand {
 
-    private static final String API_CALL = "./agents/cluster/delete";
+    private static final String API_CALL_DELETE = "./agents/cluster/delete";
+    private static final String API_CALL_REVOKE = "./agents/cluster/revoke";
+    
+    @Override
+    public JOCDefaultResponse revoke(String accessToken, byte[] filterBytes) {
+        SOSHibernateSession connection = null;
+        try {
+            initLogging(API_CALL_REVOKE, filterBytes, accessToken);
+
+            if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
+                throw new JocMissingLicenseException("missing license for Agent cluster");
+            }
+
+            JsonValidator.validateFailFast(filterBytes, DeployClusterAgents.class);
+            DeployClusterAgents agentParameter = Globals.objectMapper.readValue(filterBytes, DeployClusterAgents.class);
+
+            String controllerId = agentParameter.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
+                    .getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            
+            storeAuditLog(agentParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL_REVOKE);
+            InventorySubagentClustersDBLayer dbLayer = new InventorySubagentClustersDBLayer(connection);
+            Set<String> subagentClusterIds = agentParameter.getSubagentClusterIds();
+            List<DBItemInventorySubAgentCluster> subAgentClusters = dbLayer.getSubagentClusters(Collections.singleton(controllerId),
+                    subagentClusterIds.stream().collect(Collectors.toList()));
+
+            final List<String> dbSubagentClusterIds = subAgentClusters.stream().map(DBItemInventorySubAgentCluster::getSubAgentClusterId).distinct()
+                    .collect(Collectors.toList());
+
+            // check that controllerId corresponds to subagentClusterIds
+            if (subAgentClusters.size() != subagentClusterIds.size()) {
+                subagentClusterIds.removeAll(dbSubagentClusterIds);
+                throw new JocBadRequestException(String.format("The Subagent Clusters %s are not assigned to Controller '%s'", subagentClusterIds
+                        .toString(), controllerId));
+            }
+            
+            JControllerProxy proxy = Proxy.of(controllerId);
+            final List<String> knownSubagentSelectionIds = proxy.currentState().idToSubagentSelection().keySet().stream().map(
+                    SubagentSelectionId::string).collect(Collectors.toList());
+            Predicate<String> knownInController = s -> knownSubagentSelectionIds.contains(s);
+            proxy.api().updateItems(Flux.fromStream(subagentClusterIds.stream().filter(knownInController).map(SubagentSelectionId::of).map(
+                    JUpdateItemOperation::deleteSimple))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(),
+                            controllerId));
+
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(connection);
+        }
+
+    }
 
     @Override
     public JOCDefaultResponse delete(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            initLogging(API_CALL_DELETE, filterBytes, accessToken);
 
             if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
                 throw new JocMissingLicenseException("missing license for Agent cluster");
@@ -60,7 +119,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
 
             storeAuditLog(agentParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
             connection.setAutoCommit(false);
             Globals.beginTransaction(connection);
             InventorySubagentClustersDBLayer dbLayer = new InventorySubagentClustersDBLayer(connection);
@@ -82,19 +141,19 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
             final List<String> knownSubagentSelectionIds = proxy.currentState().idToSubagentSelection().keySet().stream().map(SubagentSelectionId::string).collect(Collectors.toList());
             Predicate<String> knownInController = s -> knownSubagentSelectionIds.contains(s);
             
-            List<String> unknownSubagentSelectionIds = dbSubagentClusterIds.stream().filter(knownInController.negate()).collect(Collectors.toList());
+            List<String> unknownSubagentSelectionIds = subagentClusterIds.stream().filter(knownInController.negate()).collect(Collectors.toList());
             if (!unknownSubagentSelectionIds.isEmpty()) {
                 dbLayer.deleteSubAgentClusters(unknownSubagentSelectionIds);
                 Globals.commit(connection);
             }
 
-            proxy.api().updateItems(Flux.fromStream(dbSubagentClusterIds.stream().filter(knownInController).map(SubagentSelectionId::of).map(
+            proxy.api().updateItems(Flux.fromStream(subagentClusterIds.stream().filter(knownInController).map(SubagentSelectionId::of).map(
                     JUpdateItemOperation::deleteSimple))).thenAccept(e -> {
                         ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
                         if (e.isRight()) {
                             SOSHibernateSession connection1 = null;
                             try {
-                                connection1 = Globals.createSosHibernateStatelessConnection(API_CALL);
+                                connection1 = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
                                 connection1.setAutoCommit(false);
                                 Globals.beginTransaction(connection1);
                                 InventorySubagentClustersDBLayer dbLayer1 = new InventorySubagentClustersDBLayer(connection1);

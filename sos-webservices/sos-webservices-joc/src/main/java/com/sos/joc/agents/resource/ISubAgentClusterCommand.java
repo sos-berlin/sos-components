@@ -16,4 +16,10 @@ public interface ISubAgentClusterCommand {
     @Produces({ "application/json" })
     public JOCDefaultResponse delete(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
+    @POST
+    @Path("cluster/revoke")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse revoke(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
 }
