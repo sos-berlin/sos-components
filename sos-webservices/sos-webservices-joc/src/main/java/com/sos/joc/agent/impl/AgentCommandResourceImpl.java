@@ -23,6 +23,7 @@ import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentCommand;
 import com.sos.joc.model.audit.CategoryType;
@@ -101,8 +102,6 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             String agentId = agentCommand.getAgentId();
             JControllerProxy proxy = Proxy.of(controllerId);
             JControllerState currentState = proxy.currentState();
-            Either<Problem, JAgentRef> agentOnController = currentState.pathToAgentRef(AgentPath.of(agentId));
-            ProblemHelper.throwProblemIfExist(agentOnController);
             
             Map<SubagentId, JSubagentRef> subAgentsOnController = currentState.idToSubagentRef();
 
@@ -110,30 +109,20 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                     agentId)).map(JSubagentRef::id).map(JUpdateItemOperation::deleteSimple).collect(Collectors.toSet());
 
             // add agent
-            subAgentIdsOnController.add(JUpdateItemOperation.deleteSimple(agentOnController.get().path()));
-            proxy.api().updateItems(Flux.fromIterable(subAgentIdsOnController)).thenAccept(e -> {
-                ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
-                if (e.isRight()) {
-                    SOSHibernateSession connection = null;
-                    try {
-                        connection = Globals.createSosHibernateStatelessConnection(API_CALL_REMOVE);
-                        connection.setAutoCommit(false);
-                        Globals.beginTransaction(connection);
-                        InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-                        List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(Collections.singleton(
-                                controllerId), Collections.singletonList(agentCommand.getAgentId()), false, false);
-                        if (dbAgents != null && !dbAgents.isEmpty()) {
-                            dbLayer.deleteInstance(dbAgents.get(0));
-                        }
-                        Globals.commit(connection);
-                    } catch (Exception e1) {
-                        Globals.rollback(connection);
-                        ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
-                    } finally {
-                        Globals.disconnect(connection);
+            Either<Problem, JAgentRef> agentOnController = currentState.pathToAgentRef(AgentPath.of(agentId));
+            if (agentOnController.isRight()) {
+                subAgentIdsOnController.add(JUpdateItemOperation.deleteSimple(agentOnController.get().path()));
+            }
+            if (!subAgentIdsOnController.isEmpty()) {
+                proxy.api().updateItems(Flux.fromIterable(subAgentIdsOnController)).thenAccept(e -> {
+                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                    if (e.isRight()) {
+                        deleteAgentInstance(agentId, accessToken, getJocError(), controllerId);
                     }
-                }
-            });
+                });
+            } else {
+                deleteAgentInstance(agentId, accessToken, getJocError(), controllerId);
+            }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -141,6 +130,23 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    private static void deleteAgentInstance(String agentId, String accessToken, JocError jocError, String controllerId) {
+        SOSHibernateSession connection = null;
+        try {
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL_REMOVE);
+            connection.setAutoCommit(false);
+            Globals.beginTransaction(connection);
+            InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
+            dbLayer.deleteInstance(dbLayer.getAgentInstance(agentId));
+            Globals.commit(connection);
+        } catch (Exception e1) {
+            Globals.rollback(connection);
+            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, jocError, controllerId);
+        } finally {
+            Globals.disconnect(connection);
         }
     }
 }
