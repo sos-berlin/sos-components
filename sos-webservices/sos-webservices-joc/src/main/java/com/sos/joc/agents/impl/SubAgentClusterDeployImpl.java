@@ -140,9 +140,9 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
             if (updateSubagentIds != null) {
                 InventoryAgentInstancesDBLayer dbLayer2 = new InventoryAgentInstancesDBLayer(connection);
                 List<DBItemInventorySubAgentInstance> subAgents = dbLayer2.getSubAgentInstancesByControllerIds(Collections.singleton(controllerId));
-                updateItems.addAll(subAgents.stream().filter(s -> updateSubagentIds.contains(s.getSubAgentId())).filter(s -> directorTypes.contains(s
-                        .getDirectorAsEnum())).map(s -> JSubagentRef.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s.getAgentId()), Uri.of(s
-                                .getUri()))).map(JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
+                updateItems.addAll(subAgents.stream().filter(s -> updateSubagentIds.contains(s.getSubAgentId())).map(s -> JSubagentRef.of(SubagentId
+                        .of(s.getSubAgentId()), AgentPath.of(s.getAgentId()), Uri.of(s.getUri()))).map(JUpdateItemOperation::addOrChangeSimple)
+                        .collect(Collectors.toList()));
             }
             
             if (!updateItems.isEmpty()) {
