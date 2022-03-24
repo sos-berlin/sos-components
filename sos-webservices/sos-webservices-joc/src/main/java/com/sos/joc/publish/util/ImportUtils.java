@@ -798,7 +798,7 @@ public class ImportUtils {
 
     private static boolean checkObjectNotEmpty(Schedule schedule) {
         if (schedule != null && schedule.getDocumentationName() == null && schedule.getPlanOrderAutomatically() == null && schedule.getPath() == null
-                && schedule.getCalendars() == null && schedule.getWorkflowPath() == null && schedule.getSubmitOrderToControllerWhenPlanned() == null
+                && schedule.getCalendars() == null && schedule.getWorkflowName() == null && schedule.getWorkflowNames() == null && schedule.getSubmitOrderToControllerWhenPlanned() == null
                 && schedule.getNonWorkingDayCalendars() == null && schedule.getVariableSets() == null) {
             return false;
         } else {

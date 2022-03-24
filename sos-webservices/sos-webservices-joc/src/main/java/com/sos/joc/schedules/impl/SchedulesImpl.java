@@ -25,6 +25,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.DailyPlanRunner;
+import com.sos.joc.dailyplan.common.DailyPlanSchedule;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerSchedules;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -92,14 +93,15 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             }
             final Set<Folder> permittedFolders = addPermittedFolder(in.getSelector().getFolders());
             Map<String, Boolean> checkedFolders = new HashMap<>();
-            Collection<Schedule> schedules = getSchedules(controllerId, scheduleSingles, workflowSingles, permittedFolders, checkedFolders);
+            Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(controllerId, scheduleSingles, workflowSingles, permittedFolders,
+                    checkedFolders);
 
             SchedulesList answer = new SchedulesList();
             answer.setSchedules(new ArrayList<Schedule>());
 
-            if (schedules != null && schedules.size() > 0) {
-                for (Schedule schedule : schedules) {
-                    answer.getSchedules().add(schedule);
+            if (dailyPlanSchedules != null && dailyPlanSchedules.size() > 0) {
+                for (DailyPlanSchedule dailyPlanSchedule : dailyPlanSchedules) {
+                    answer.getSchedules().add(dailyPlanSchedule.getSchedule());
                 }
             }
 
@@ -112,7 +114,7 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
         }
     }
 
-    private Collection<Schedule> getSchedules(String controllerId, Set<String> scheduleSingles, Set<String> workflowSingles,
+    private Collection<DailyPlanSchedule> getSchedules(String controllerId, Set<String> scheduleSingles, Set<String> workflowSingles,
             Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) throws IOException, SOSHibernateException {
 
         SOSHibernateSession session = null;
@@ -153,7 +155,7 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             session = null;
 
             if (scheduleItems == null || scheduleItems.size() == 0) {
-                return new ArrayList<Schedule>();
+                return new ArrayList<DailyPlanSchedule>();
             }
 
             DailyPlanRunner runner = new DailyPlanRunner(null);

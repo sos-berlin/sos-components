@@ -1,6 +1,5 @@
 package com.sos.joc.dailyplan.db;
 
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -872,8 +871,8 @@ public class DBLayerDailyPlannedOrders {
             DBConnectionRefusedException, SOSHibernateException, ParseException, JsonProcessingException {
 
         DBItemDailyPlanOrder item = new DBItemDailyPlanOrder();
-        item.setSchedulePath(plannedOrder.getSchedule().getPath());
-        item.setScheduleName(Paths.get(plannedOrder.getSchedule().getPath()).getFileName().toString());
+        item.setSchedulePath(plannedOrder.getSchedulePath());
+        item.setScheduleName(plannedOrder.getScheduleName());
         item.setOrderName(plannedOrder.getOrderName());
         item.setOrderId(plannedOrder.getFreshOrder().getId());
 
@@ -888,13 +887,10 @@ public class DBLayerDailyPlannedOrders {
             item.setStartMode(START_MODE_SINGLE);
         }
 
-        String workflowFolder = Paths.get(plannedOrder.getSchedule().getWorkflowPath()).getParent().toString().replace('\\', '/');
-        String scheduleFolder = Paths.get(plannedOrder.getSchedule().getPath()).getParent().toString().replace('\\', '/');
-
         item.setControllerId(plannedOrder.getControllerId());
-        item.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
-        item.setWorkflowFolder(workflowFolder);
-        item.setScheduleFolder(scheduleFolder);
+        item.setWorkflowPath(plannedOrder.getWorkflowPath());
+        item.setWorkflowFolder(plannedOrder.getWorkflowFolder());
+        item.setScheduleFolder(plannedOrder.getScheduleFolder());
         item.setWorkflowName(plannedOrder.getFreshOrder().getWorkflowPath());
         item.setSubmitted(false);
         item.setSubmissionHistoryId(plannedOrder.getSubmissionHistoryId());

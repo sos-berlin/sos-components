@@ -1297,24 +1297,40 @@ public class InventoryDBLayer extends DBLayer {
     public List<DBItemInventoryConfiguration> getUsedSchedulesByWorkflowName(String workflowName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
-        hql.append("and ");
-        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append("=:workflowName");
+        hql.append("and (");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.workflowNames")).append(" like :likeWorkflowName");
+        if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
+            hql.append(" or ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append("=:workflowName");
+        }
+        hql.append(")");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
-        query.setParameter("workflowName", workflowName);
+        query.setParameter("likeWorkflowName", "%\"" + workflowName + "\"%");
+        if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
+            query.setParameter("workflowName", workflowName);
+        }
         return getSession().getResultList(query);
     }
 
     public List<DBItemInventoryReleasedConfiguration> getUsedReleasedSchedulesByWorkflowName(String workflowName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
-        hql.append("and ");
-        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append("=:workflowName");
+        hql.append("and (");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.workflowNames")).append(" like :likeWorkflowName");
+        if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
+            hql.append(" or ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append("=:workflowName");
+        }
+        hql.append(")");
 
         Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
-        query.setParameter("workflowName", workflowName);
+        query.setParameter("likeWorkflowName", "%\"" + workflowName + "\"%");
+        if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
+            query.setParameter("workflowName", workflowName);
+        }
         return getSession().getResultList(query);
     }
 
@@ -1322,7 +1338,8 @@ public class InventoryDBLayer extends DBLayer {
         if (workflowNames == null) {
             workflowNames = Collections.emptyList();
         }
-        if (workflowNames.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+        int size = workflowNames.size();
+        if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
             List<DBItemInventoryConfiguration> result = new ArrayList<>();
             for (int i = 0; i < workflowNames.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
                 result.addAll(getUsedSchedulesByWorkflowNames(SOSHibernate.getInClausePartition(i, workflowNames)));
@@ -1331,12 +1348,34 @@ public class InventoryDBLayer extends DBLayer {
         } else {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
             hql.append("where type=:type ");
-            hql.append("and ");
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append(" in (:workflowNames)");
+            if (size > 0) {
+                hql.append("and (");
+                hql.append("(");
+                for (int i = 0; i < size; i++) {
+                    hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.workflowNames")).append(" like :likeWorkflowName"
+                            + i);
+                    if (i < (size - 1)) {
+                        hql.append(" or ");
+                    }
+                }
+                hql.append(")");
+                if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
+                    hql.append(" or ");
+                    hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append(" in (:workflowNames)");
+                }
+                hql.append(")");
+            }
 
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
             query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
-            query.setParameterList("workflowNames", workflowNames);
+            if (size > 0) {
+                for (int i = 0; i < size; i++) {
+                    query.setParameter("likeWorkflowName_" + i, "%\"" + workflowNames.get(i) + "\"%");
+                }
+                if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
+                    query.setParameterList("workflowNames", workflowNames);
+                }
+            }
             List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
@@ -1350,7 +1389,8 @@ public class InventoryDBLayer extends DBLayer {
         if (workflowNames == null) {
             workflowNames = Collections.emptyList();
         }
-        if (workflowNames.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+        int size = workflowNames.size();
+        if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
             List<DBItemInventoryReleasedConfiguration> result = new ArrayList<>();
             for (int i = 0; i < workflowNames.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
                 result.addAll(getUsedReleasedSchedulesByWorkflowNames(SOSHibernate.getInClausePartition(i, workflowNames)));
@@ -1359,13 +1399,35 @@ public class InventoryDBLayer extends DBLayer {
         } else {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
             hql.append("where type=:type ");
-            hql.append("and ");
-            // TODO consider maxInSize
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append(" in (:workflowNames)");
+            if (size > 0) {
+                hql.append("and (");
+                // TODO consider maxInSize
+                hql.append("(");
+                for (int i = 0; i < size; i++) {
+                    hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.workflowNames")).append(" like :likeWorkflowName"
+                            + i);
+                    if (i < (size - 1)) {
+                        hql.append(" or ");
+                    }
+                }
+                hql.append(")");
+                if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
+                    hql.append(" or ");
+                    hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append(" in (:workflowNames)");
+                }
+                hql.append(")");
+            }
 
             Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
             query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
-            query.setParameterList("workflowNames", workflowNames);
+            if (size > 0) {
+                for (int i = 0; i < size; i++) {
+                    query.setParameter("likeWorkflowName_" + i, "%\"" + workflowNames.get(i) + "\"%");
+                }
+                if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
+                    query.setParameterList("workflowNames", workflowNames);
+                }
+            }
             List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();

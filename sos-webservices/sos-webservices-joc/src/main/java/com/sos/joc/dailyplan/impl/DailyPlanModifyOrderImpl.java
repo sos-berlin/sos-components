@@ -5,7 +5,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,9 +47,12 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.audit.AuditLogDetail;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.DailyPlanRunner;
+import com.sos.joc.dailyplan.common.DailyPlanSchedule;
+import com.sos.joc.dailyplan.common.DailyPlanScheduleWorkflow;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.common.PlannedOrder;
@@ -697,8 +700,11 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             Schedule schedule = new Schedule();
             schedule.setVersion("");
             schedule.setPath(mainItem.getSchedulePath());
+            if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
+                schedule.setWorkflowName(null);
+            }
+            schedule.setWorkflowNames(Arrays.asList(mainItem.getWorkflowName()));
             schedule.setWorkflowName(mainItem.getWorkflowName());
-            schedule.setWorkflowPath(mainItem.getWorkflowPath());
             schedule.setTitle("");
             schedule.setDocumentationName("");
             schedule.setSubmitOrderToControllerWhenPlanned(mainItem.getSubmitted());
@@ -729,8 +735,12 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             schedule.getCalendars().add(calendars);
 
             DailyPlanRunner runner = new DailyPlanRunner(settings);
-            generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, Collections.singletonList(schedule), mainItem
-                    .getDailyPlanDate(settings.getTimeZone()), newSubmission, mainItem.getSubmitted(), getJocError(), getAccessToken());
+
+            DailyPlanScheduleWorkflow w = new DailyPlanScheduleWorkflow(mainItem.getWorkflowName(), mainItem.getWorkflowPath());
+            DailyPlanSchedule dailyPlanSchedule = new DailyPlanSchedule(schedule, Arrays.asList(w));
+
+            generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, Arrays.asList(dailyPlanSchedule), mainItem.getDailyPlanDate(
+                    settings.getTimeZone()), newSubmission, mainItem.getSubmitted(), getJocError(), getAccessToken());
 
             Set<AuditLogDetail> auditLogDetails = new HashSet<>();
             for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {

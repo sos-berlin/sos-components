@@ -76,7 +76,7 @@ public class OrderListSynchronizer {
         String workflow = null;
         String dateLog = SOSString.isEmpty(dailyPlanDate) ? "" : "[" + dailyPlanDate + "]";
         try {
-            workflow = o.getSchedule().getWorkflowName();
+            workflow = o.getWorkflowName();
             String wpath = WorkflowPaths.getPathOrNull(workflow);
             if (wpath == null) {
                 LOGGER.info(String.format("[%s][%s]%s[workflow=%s not deployed][skip]%s", startupMode, controllerId, dateLog, workflow, SOSString
@@ -121,7 +121,7 @@ public class OrderListSynchronizer {
             item.setDailyPlanDate(dailyPlanDate);
             item.setOrderId(order.getFreshOrder().getId());
             item.setScheduledFor(new Date(order.getFreshOrder().getScheduledFor()));
-            item.setWorkflowPath(order.getSchedule().getWorkflowPath());
+            item.setWorkflowPath(order.getWorkflowPath());
             if (item.getWorkflowPath() != null) {
                 String folderName = Paths.get(item.getWorkflowPath()).getParent().toString().replace('\\', '/');
                 item.setWorkflowFolder(folderName);
@@ -145,7 +145,7 @@ public class OrderListSynchronizer {
         String logDailyPlanDate = SOSString.isEmpty(dailyPlanDate) ? "" : "[" + dailyPlanDate + "]";
         Set<PlannedOrder> orders = new HashSet<PlannedOrder>();
         for (PlannedOrder p : plannedOrders.values()) {
-            if (p.isStoredInDb() && p.getSchedule().getSubmitOrderToControllerWhenPlanned()) {
+            if (p.isStoredInDb() && p.getSubmitOrderToControllerWhenPlanned()) {
                 orders.add(p);
             } else {
                 if (isDebugEnabled) {
@@ -215,7 +215,7 @@ public class OrderListSynchronizer {
                     counter.addSingle();
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
-                        plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowPath()));
+                        plannedOrder.setAverageDuration(durations.get(plannedOrder.getWorkflowPath()));
                         dbLayer.store(plannedOrder, OrdersHelper.getUniqueOrderId(), 0, 0);
 
                         plannedOrder.setStoredInDb(true);
@@ -249,7 +249,7 @@ public class OrderListSynchronizer {
                 for (PlannedOrder plannedOrder : entry.getValue()) {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
-                        plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowPath()));
+                        plannedOrder.setAverageDuration(durations.get(plannedOrder.getWorkflowPath()));
                         dbLayer.store(plannedOrder, id, nr, size);
 
                         nr = nr + 1;

@@ -19,15 +19,15 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * Schedule
  * <p>
- * The order template for scheduling orders to Controller
+ * The order template for scheduling orders to Controller. workflowName is deprecated
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "version",
     "path",
-    "workflowPath",
     "workflowName",
+    "workflowNames",
     "title",
     "documentationName",
     "submitOrderToControllerWhenPlanned",
@@ -47,7 +47,7 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
      */
     @JsonProperty("version")
     @JsonPropertyDescription("inventory repository version")
-    private String version = "1.1.0";
+    private String version = "1.3.0";
     /**
      * path
      * <p>
@@ -63,17 +63,10 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
      * 
      * 
      */
-    @JsonProperty("workflowPath")
-    private String workflowPath;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("workflowName")
     private String workflowName;
+    @JsonProperty("workflowNames")
+    private List<String> workflowNames = null;
     /**
      * string without < and >
      * <p>
@@ -98,7 +91,6 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
      * Assigned Calendars
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("calendars")
@@ -164,29 +156,6 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
      * 
      * 
      */
-    @JsonProperty("workflowPath")
-    public String getWorkflowPath() {
-        return workflowPath;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("workflowPath")
-    public void setWorkflowPath(String workflowPath) {
-        this.workflowPath = workflowPath;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("workflowName")
     public String getWorkflowName() {
         return workflowName;
@@ -196,12 +165,21 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("workflowName")
     public void setWorkflowName(String workflowName) {
         this.workflowName = workflowName;
+    }
+
+    @JsonProperty("workflowNames")
+    public List<String> getWorkflowNames() {
+        return workflowNames;
+    }
+
+    @JsonProperty("workflowNames")
+    public void setWorkflowNames(List<String> workflowNames) {
+        this.workflowNames = workflowNames;
     }
 
     /**
@@ -272,7 +250,6 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
      * Assigned Calendars
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("calendars")
@@ -284,7 +261,6 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
      * Assigned Calendars
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("calendars")
@@ -326,12 +302,12 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("path", path).append("workflowPath", workflowPath).append("workflowName", workflowName).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingDayCalendars", nonWorkingDayCalendars).append("variableSets", variableSets).toString();
+        return new ToStringBuilder(this).append("version", version).append("path", path).append("workflowName", workflowName).append("workflowNames", workflowNames).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingDayCalendars", nonWorkingDayCalendars).append("variableSets", variableSets).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(planOrderAutomatically).append(path).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars).append(workflowName).append(documentationName).append(variableSets).append(title).append(version).toHashCode();
+        return new HashCodeBuilder().append(workflowNames).append(planOrderAutomatically).append(path).append(calendars).append(submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars).append(workflowName).append(documentationName).append(variableSets).append(title).append(version).toHashCode();
     }
 
     @Override
@@ -343,7 +319,7 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
             return false;
         }
         Schedule rhs = ((Schedule) other);
-        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars, rhs.nonWorkingDayCalendars).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(variableSets, rhs.variableSets).append(title, rhs.title).append(version, rhs.version).isEquals();
+        return new EqualsBuilder().append(workflowNames, rhs.workflowNames).append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars, rhs.nonWorkingDayCalendars).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(variableSets, rhs.variableSets).append(title, rhs.title).append(version, rhs.version).isEquals();
     }
 
 }

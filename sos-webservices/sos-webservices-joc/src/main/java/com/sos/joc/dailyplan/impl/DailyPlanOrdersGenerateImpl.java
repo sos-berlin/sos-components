@@ -22,7 +22,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
-import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.ProblemHelper;
@@ -35,6 +34,7 @@ import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.DailyPlanRunner;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
+import com.sos.joc.dailyplan.common.DailyPlanSchedule;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.common.PlannedOrder;
@@ -132,10 +132,10 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             settings.setSubmissionTime(new Date());
 
             DailyPlanRunner runner = new DailyPlanRunner(settings);
-            Collection<Schedule> schedules = getSchedules(runner, controllerId, scheduleFolders, scheduleSingles, workflowFolders, workflowSingles,
-                    permittedFolders, checkedFolders);
+            Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(runner, controllerId, scheduleFolders, scheduleSingles, workflowFolders,
+                    workflowSingles, permittedFolders, checkedFolders);
 
-            Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, schedules, in
+            Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, dailyPlanSchedules, in
                     .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken);
             AJocClusterService.clearAllLoggers();
 
@@ -160,9 +160,9 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         }
     }
 
-    private Collection<Schedule> getSchedules(DailyPlanRunner runner, String controllerId, Set<Folder> scheduleFolders, Set<String> scheduleSingles,
-            Set<Folder> workflowFolders, Set<String> workflowSingles, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders)
-            throws IOException, SOSHibernateException {
+    private Collection<DailyPlanSchedule> getSchedules(DailyPlanRunner runner, String controllerId, Set<Folder> scheduleFolders,
+            Set<String> scheduleSingles, Set<Folder> workflowFolders, Set<String> workflowSingles, Set<Folder> permittedFolders,
+            Map<String, Boolean> checkedFolders) throws IOException, SOSHibernateException {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         boolean hasSelectedSchedules = (scheduleFolders != null && scheduleFolders.size() > 0) || (scheduleSingles != null && scheduleSingles
@@ -219,7 +219,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             session = null;
 
             if (scheduleItems == null || scheduleItems.size() == 0) {
-                return new ArrayList<Schedule>();
+                return new ArrayList<DailyPlanSchedule>();
             }
 
             Set<String> deployedWorkflowNames = runner.getDeployedWorkflowsNames(controllerId);

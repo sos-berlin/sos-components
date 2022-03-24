@@ -2,14 +2,13 @@ package com.sos.joc.dailyplan.common;
 
 import java.nio.file.Paths;
 
+import com.sos.commons.util.SOSString;
 import com.sos.controller.model.order.FreshOrder;
 import com.sos.inventory.model.calendar.Period;
-import com.sos.inventory.model.schedule.Schedule;
 
 public class PlannedOrder {
 
     private final FreshOrder freshOrder;
-    private final Schedule schedule;
     private final String controllerId;
     private final Long calendarId;
 
@@ -17,6 +16,7 @@ public class PlannedOrder {
     private final String workflowPath;
     private final String scheduleName;
     private final String schedulePath;
+    private final boolean submitOrderToControllerWhenPlanned;
 
     private Long submissionHistoryId;
     private Period period;
@@ -24,20 +24,37 @@ public class PlannedOrder {
     private boolean storedInDb = false;
     private String orderName;
 
-    public PlannedOrder(String controllerId, FreshOrder freshOrder, Schedule schedule, Long calendarId) {
+    public PlannedOrder(String controllerId, FreshOrder freshOrder, DailyPlanSchedule dailyPlanSchedule, DailyPlanScheduleWorkflow scheduleWorkflow,
+            Long calendarId) {
         this.controllerId = controllerId;
         this.freshOrder = freshOrder;
-        this.schedule = schedule;
         this.calendarId = calendarId;
 
-        this.workflowName = schedule.getWorkflowName();
-        this.workflowPath = schedule.getWorkflowPath();
-        this.scheduleName = Paths.get(schedule.getPath()).getFileName().toString();
-        this.schedulePath = schedule.getPath();
+        this.workflowName = scheduleWorkflow.getName();
+        this.workflowPath = scheduleWorkflow.getPath();
+        this.scheduleName = Paths.get(dailyPlanSchedule.getSchedule().getPath()).getFileName().toString();
+        this.schedulePath = dailyPlanSchedule.getSchedule().getPath();
+        this.submitOrderToControllerWhenPlanned = dailyPlanSchedule.getSchedule().getSubmitOrderToControllerWhenPlanned() == null ? false
+                : dailyPlanSchedule.getSchedule().getSubmitOrderToControllerWhenPlanned();
     }
 
     public PlannedOrderKey uniqueOrderKey() {
         return new PlannedOrderKey(controllerId, workflowName, scheduleName, freshOrder.getId());
+    }
+
+    public String getScheduleFolder() {
+        return getParentFolder(schedulePath);
+    }
+
+    public String getWorkflowFolder() {
+        return getParentFolder(workflowPath);
+    }
+
+    private String getParentFolder(String path) {
+        if (SOSString.isEmpty(path) || path.equals("/")) {
+            return "/";
+        }
+        return Paths.get(path).getParent().toString().replace('\\', '/');
     }
 
     public FreshOrder getFreshOrder() {
@@ -54,10 +71,6 @@ public class PlannedOrder {
 
     public Long getCalendarId() {
         return calendarId;
-    }
-
-    public Schedule getSchedule() {
-        return schedule;
     }
 
     public void setAverageDuration(Long val) {
@@ -95,6 +108,10 @@ public class PlannedOrder {
 
     public String getSchedulePath() {
         return schedulePath;
+    }
+
+    public boolean getSubmitOrderToControllerWhenPlanned() {
+        return submitOrderToControllerWhenPlanned;
     }
 
     public String getOrderName() {

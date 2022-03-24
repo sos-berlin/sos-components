@@ -83,6 +83,8 @@ public class JocInventory {
     public static final String DEFAULT_COPY_SUFFIX = "copy";
     public static final String DEFAULT_RESTORE_SUFFIX = "restored";
     public static final String DEFAULT_IMPORT_SUFFIX = "imported";
+    // introduced with 2.3.0 - compatibility with scheduler.workflowName (deprecated, scheduler.workflowNames will be used)
+    public static final boolean SCHEDULE_CONSIDER_WORKFLOW_NAME = true;
 
     public static final Map<ConfigurationType, String> SCHEMA_LOCATION = Collections.unmodifiableMap(new HashMap<ConfigurationType, String>() {
 
@@ -154,7 +156,8 @@ public class JocInventory {
             ConfigurationType.JOBRESOURCE, ConfigurationType.NOTICEBOARD)));
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            ConfigurationType.SCHEDULE, ConfigurationType.INCLUDESCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
+            ConfigurationType.SCHEDULE, ConfigurationType.INCLUDESCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR,
+            ConfigurationType.WORKINGDAYSCALENDAR)));
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);
@@ -755,7 +758,7 @@ public class JocInventory {
         insertOrUpdateConfiguration(dbLayer, item, null);
     }
 
-    public static void insertOrUpdateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config) 
+    public static void insertOrUpdateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
         DBItemInventoryConfiguration alreadyExists = dbLayer.getConfiguration(item.getPath(), item.getType());
         if (alreadyExists != null) {
@@ -917,8 +920,8 @@ public class JocInventory {
             List<DBItemInventoryConfiguration> workflow3 = dbLayer.getUsedWorkflowsByBoardName(config.getName());
             if (workflow3 != null && !workflow3.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflow3) {
-                    workflow.setContent(workflow.getContent().replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
-                            + "\""));
+                    workflow.setContent(workflow.getContent().replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + config.getName() + "\"", "$1"
+                            + newName + "\""));
                     workflow.setDeployed(false);
                     int i = items.indexOf(workflow);
                     if (i != -1) {
@@ -936,8 +939,31 @@ public class JocInventory {
             List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(config.getName());
             if (schedules != null && !schedules.isEmpty()) {
                 for (DBItemInventoryConfiguration schedule : schedules) {
-                    schedule.setContent(schedule.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
-                            + "\""));
+                    Schedule s = Globals.objectMapper.readValue(schedule.getContent(), Schedule.class);
+
+                    if (s.getWorkflowNames() == null) {
+                        s.setWorkflowNames(new ArrayList<>());
+                    }
+                    if (SCHEDULE_CONSIDER_WORKFLOW_NAME) {
+                        if (s.getWorkflowName() != null) {
+                            if (s.getWorkflowNames().size() == 0) {
+                                s.getWorkflowNames().add(s.getWorkflowName());
+                            }
+                        }
+                        s.setWorkflowName(null);
+                    }
+
+                    List<String> wn = new ArrayList<>();
+                    for (String w : s.getWorkflowNames()) {
+                        if (w.equals(config.getName())) {
+                            wn.add(newName);
+                        } else {
+                            wn.add(w);
+                        }
+                    }
+                    s.setWorkflowNames(wn);
+
+                    schedule.setContent(Globals.objectMapper.writeValueAsString(s));
                     schedule.setReleased(false);
                     int i = items.indexOf(schedule);
                     if (i != -1) {

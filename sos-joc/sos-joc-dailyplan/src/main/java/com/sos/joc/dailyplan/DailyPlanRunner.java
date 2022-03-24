@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -46,12 +47,15 @@ import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
+import com.sos.joc.dailyplan.common.DailyPlanSchedule;
+import com.sos.joc.dailyplan.common.DailyPlanScheduleWorkflow;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.OrderCounter;
 import com.sos.joc.dailyplan.common.PeriodResolver;
@@ -175,22 +179,25 @@ public class DailyPlanRunner extends TimerTask {
             LOGGER.info(String.format("[%s][%s]creating from %s for %s days ahead, submitting for %s days ahead", startupMode, method, SOSDate
                     .getDateAsString(calendar), settings.getDayAheadPlan(), settings.getDayAheadSubmit()));
 
-            Collection<Schedule> schedules = getAllSchedules(true, null);
+            Collection<DailyPlanSchedule> dailyPlanSchedules = getAllSchedules(true, null);
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][%s][Plan Order automatically]found total=%s schedules", startupMode, method, schedules.size()));
+                LOGGER.debug(String.format("[%s][%s][Plan Order automatically]found total=%s schedules", startupMode, method, dailyPlanSchedules
+                        .size()));
             }
             java.util.Calendar savCalendar = java.util.Calendar.getInstance();
             savCalendar.setTime(calendar.getTime());
             for (ControllerConfiguration conf : controllers) {
                 String controllerId = conf.getCurrent().getId();
 
-                Collection<Schedule> controllerSchedules = new ArrayList<>();
-                if (schedules != null && schedules.size() > 0) {
+                Collection<DailyPlanSchedule> controllerSchedules = new ArrayList<>();
+                if (dailyPlanSchedules != null && dailyPlanSchedules.size() > 0) {
                     Set<String> controllerWorkflows = getDeployedWorkflowsNames(controllerId);
                     if (controllerWorkflows.size() > 0) {
-                        controllerSchedules = schedules.stream().filter(s -> {
-                            return controllerWorkflows.contains(s.getWorkflowName());
-                        }).collect(Collectors.toList());
+                        for (DailyPlanSchedule s : dailyPlanSchedules) {
+                            if (s.hasMinimumOneOfWorkflows(controllerWorkflows)) {
+                                controllerSchedules.add(s);
+                            }
+                        }
                     }
                 }
                 java.util.Calendar dailyPlanCalendar = java.util.Calendar.getInstance();
@@ -246,29 +253,30 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     /* service (createPlan) & DailyPlanModifyOrderImpl, DailyPlanOrdersGenerateImpl **/
-    public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId, Collection<Schedule> schedules,
-            String dailyPlanDate, Boolean withSubmit, JocError jocError, String accessToken) throws JsonParseException, JsonMappingException,
-            DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
-            IOException, ParseException, SOSException, URISyntaxException, ControllerConnectionResetException, ControllerConnectionRefusedException,
-            InterruptedException, ExecutionException, TimeoutException {
-        return generateDailyPlan(startupMode, controllerId, schedules, dailyPlanDate, null, withSubmit, jocError, accessToken);
-    }
-
-    /* DailyPlanModifyOrderImpl **/
-    public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId, Collection<Schedule> schedules,
-            String dailyPlanDate, DBItemDailyPlanSubmission submission, Boolean withSubmit, JocError jocError, String accessToken)
+    public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
+            Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, Boolean withSubmit, JocError jocError, String accessToken)
             throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
+        return generateDailyPlan(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, null, withSubmit, jocError, accessToken);
+    }
+
+    /* DailyPlanModifyOrderImpl **/
+    public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
+            Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, DBItemDailyPlanSubmission submission, Boolean withSubmit,
+            JocError jocError, String accessToken) throws JsonParseException, JsonMappingException, DBConnectionRefusedException,
+            DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, IOException, ParseException,
+            SOSException, URISyntaxException, ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException,
+            ExecutionException, TimeoutException {
 
         String operation = withSubmit ? "creating/submitting" : "creating";
-        if (schedules == null || schedules.size() == 0) {
+        if (dailyPlanSchedules == null || dailyPlanSchedules.size() == 0) {
             LOGGER.info(String.format("[%s][%s][%s][%s][skip]found 0 schedules", startupMode, operation, controllerId, dailyPlanDate));
             // TODO initialize OrderListSynchronizer before calculateStartTimes and return synchronizer.getPlannedOrders()
             return new TreeMap<PlannedOrderKey, PlannedOrder>();
         }
 
-        OrderListSynchronizer synchronizer = calculateStartTimes(startupMode, controllerId, schedules, dailyPlanDate, submission);
+        OrderListSynchronizer synchronizer = calculateStartTimes(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, submission);
         synchronizer.setJocError(jocError);
         synchronizer.setAccessToken(accessToken);
         OrderCounter c = DailyPlanHelper.getOrderCount(synchronizer.getPlannedOrders());
@@ -284,7 +292,7 @@ public class DailyPlanRunner extends TimerTask {
             LOGGER.info(String.format("[%s][%s][%s][%s][calculated][%s][submission created=%s, id=%s]", startupMode, operation, controllerId,
                     dailyPlanDate, c, submissionCreated, submissionId));
 
-            calculateDurations(controllerId, dailyPlanDate, schedules);
+            calculateDurations(controllerId, dailyPlanDate, dailyPlanSchedules);
 
             synchronizer.addPlannedOrderToControllerAndDB(startupMode, operation, controllerId, dailyPlanDate, withSubmit, durations);
             EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
@@ -294,10 +302,15 @@ public class DailyPlanRunner extends TimerTask {
         return synchronizer.getPlannedOrders();
     }
 
-    private void calculateDurations(String controllerId, String date, Collection<Schedule> schedules) throws SOSHibernateException {
-        Set<String> schedulesWorkflowPaths = schedules.stream().map(e -> {
-            return e.getWorkflowPath();
-        }).distinct().collect(Collectors.toSet());
+    private void calculateDurations(String controllerId, String date, Collection<DailyPlanSchedule> dailyPlanSchedules) throws SOSHibernateException {
+        Set<String> schedulesWorkflowPaths = new HashSet<>();
+        for (DailyPlanSchedule s : dailyPlanSchedules) {
+            for (DailyPlanScheduleWorkflow w : s.getWorkflows()) {
+                if (!schedulesWorkflowPaths.contains(w.getPath())) {// distinct
+                    schedulesWorkflowPaths.add(w.getPath());
+                }
+            }
+        }
 
         Set<String> workflowPaths = null;
         if (durations == null || durations.size() == 0) {
@@ -366,11 +379,9 @@ public class DailyPlanRunner extends TimerTask {
 
             Map<String, DBItemDailyPlanVariable> cyclicVariables = new HashMap<>();
             for (DBItemDailyPlanOrder item : items) {
-
                 Schedule schedule = new Schedule();
                 schedule.setPath(item.getSchedulePath());
-                schedule.setWorkflowPath(item.getWorkflowPath());
-                schedule.setWorkflowName(item.getWorkflowName());
+                schedule.setWorkflowNames(Arrays.asList(item.getWorkflowName()));
                 schedule.setSubmitOrderToControllerWhenPlanned(true);
                 schedule.setVariableSets(new ArrayList<VariableSet>());
 
@@ -395,10 +406,14 @@ public class DailyPlanRunner extends TimerTask {
                 variableSet.setVariables(variables);
                 schedule.getVariableSets().add(variableSet);
 
-                FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, schedule, variableSet, item.getPlannedStart().getTime(), item.getStartMode());
+                DailyPlanScheduleWorkflow dailyPlanScheduleWorkflow = new DailyPlanScheduleWorkflow(item.getWorkflowName(), item.getWorkflowPath());
+                FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, schedule, dailyPlanScheduleWorkflow, variableSet, item.getPlannedStart()
+                        .getTime(), item.getStartMode());
                 freshOrder.setId(item.getOrderId());
 
-                PlannedOrder p = new PlannedOrder(item.getControllerId(), freshOrder, schedule, item.getCalendarId());
+                DailyPlanSchedule dailyPlanSchedule = new DailyPlanSchedule(schedule, Arrays.asList(dailyPlanScheduleWorkflow));
+                PlannedOrder p = new PlannedOrder(item.getControllerId(), freshOrder, dailyPlanSchedule, dailyPlanScheduleWorkflow, item
+                        .getCalendarId());
                 p.setStoredInDb(true);
 
                 synchronizer.add(startupMode, p, controllerId, dailyPlanDate);
@@ -416,7 +431,7 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     // service
-    private Collection<Schedule> getAllSchedules(boolean infoOnMissingDeployedWorkflow, Set<String> deployedWorkflowNames)
+    private Collection<DailyPlanSchedule> getAllSchedules(boolean infoOnMissingDeployedWorkflow, Set<String> deployedWorkflowNames)
             throws SOSHibernateException, IOException {
         SOSHibernateSession session = null;
         try {
@@ -434,29 +449,29 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     // service - use only with getPlanOrderAutomatically and not check the folder permissions
-    private Collection<Schedule> convert(List<DBItemInventoryReleasedConfiguration> items, boolean infoOnMissingDeployedWorkflow,
+    private Collection<DailyPlanSchedule> convert(List<DBItemInventoryReleasedConfiguration> items, boolean infoOnMissingDeployedWorkflow,
             Set<String> deployedWorkflowNames) {
         return convert(items, true, false, null, null, infoOnMissingDeployedWorkflow, deployedWorkflowNames);
     }
 
     // DailyPlanOrdersGenerateImpl, SchedulesImpl
-    public Collection<Schedule> convert(List<DBItemInventoryReleasedConfiguration> items, Set<Folder> permittedFolders,
+    public Collection<DailyPlanSchedule> convert(List<DBItemInventoryReleasedConfiguration> items, Set<Folder> permittedFolders,
             Map<String, Boolean> checkedFolders, boolean infoOnMissingDeployedWorkflow, Set<String> deployedWorkflowNames) {
         return convert(items, false, true, permittedFolders, checkedFolders, infoOnMissingDeployedWorkflow, deployedWorkflowNames);
     }
 
-    private Collection<Schedule> convert(List<DBItemInventoryReleasedConfiguration> items, boolean onlyPlanOrderAutomatically,
+    private Collection<DailyPlanSchedule> convert(List<DBItemInventoryReleasedConfiguration> items, boolean onlyPlanOrderAutomatically,
             boolean checkPermissions, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders, boolean infoOnMissingDeployedWorkflow,
             Set<String> deployedWorkflowNames) {
         if (items == null || items.size() == 0) {
-            return new ArrayList<Schedule>();
+            return new ArrayList<DailyPlanSchedule>();
         }
 
         String method = "convert";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        List<Schedule> result = new ArrayList<Schedule>();
+        List<DailyPlanSchedule> result = new ArrayList<>();
         for (DBItemInventoryReleasedConfiguration item : items) {
             String content = item.getContent();
             if (SOSString.isEmpty(content)) {
@@ -475,11 +490,41 @@ public class DailyPlanRunner extends TimerTask {
                 continue;
             }
 
+            if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
+                List<String> wn = new ArrayList<>();
+                if (schedule.getWorkflowName() == null) {
+                    if (schedule.getWorkflowNames() != null) {
+                        wn.addAll(schedule.getWorkflowNames());
+                    }
+                } else {
+                    if (schedule.getWorkflowNames() == null) {
+                        wn.add(schedule.getWorkflowName());
+                    } else {
+                        wn.addAll(schedule.getWorkflowNames());
+                    }
+                }
+                schedule.setWorkflowNames(wn);
+            }
+
             if (deployedWorkflowNames != null) {
-                if (!deployedWorkflowNames.contains(schedule.getWorkflowName())) {
+                List<String> found = new ArrayList<>();
+
+                for (String w : schedule.getWorkflowNames()) {
+                    if (!deployedWorkflowNames.contains(w)) {
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][skip][schedule=%s][workflow=%s]workflow is not deployed on current controller", method,
+                                    item.getPath(), w));
+                        }
+                        continue;
+                    }
+                    found.add(w);
+                }
+                schedule.setWorkflowNames(found);
+
+                if (schedule.getWorkflowNames().size() == 0) {
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][skip][schedule=%s][workflow=%s]workflow is not deployed on current controller", method, item
-                                .getPath(), schedule.getWorkflowName()));
+                        LOGGER.debug(String.format("[%s][skip][schedule=%s]all workflows are not deployed on current controller", method, item
+                                .getPath()));
                     }
                     continue;
                 }
@@ -493,34 +538,51 @@ public class DailyPlanRunner extends TimerTask {
                 continue;
             }
 
-            String path = WorkflowPaths.getPathOrNull(schedule.getWorkflowName());
-            if (path == null) {
+            List<DailyPlanScheduleWorkflow> scheduleWorkflows = new ArrayList<>();
+            for (String w : schedule.getWorkflowNames()) {
+                String path = WorkflowPaths.getPathOrNull(w);
+                if (path == null) {
+                    if (infoOnMissingDeployedWorkflow) {
+                        LOGGER.info(String.format("[%s][skip][schedule=%s][workflow deployment path not found][workflow=%s]%s", method, schedule
+                                .getPath(), w, SOSHibernate.toString(item)));
+                    } else {
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][skip][schedule=%s][workflow deployment path not found][workflow=%s]%s", method, schedule
+                                    .getPath(), w, SOSHibernate.toString(item)));
+                        }
+                    }
+                    continue;
+                }
+                if (checkPermissions) {
+                    if (!isWorkflowPermitted(path, permittedFolders, checkedFolders)) {
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][skip][schedule=%s][workflow not permitted]workflow=%s", method, schedule.getPath(),
+                                    path));
+                        }
+                        continue;
+                    }
+                }
+                scheduleWorkflows.add(new DailyPlanScheduleWorkflow(w, path));
+            }
+
+            if (scheduleWorkflows.size() == 0) {
                 if (infoOnMissingDeployedWorkflow) {
-                    LOGGER.info(String.format("[%s][skip][workflow deployment path not found][workflow=%s]%s", method, schedule.getWorkflowName(),
-                            SOSHibernate.toString(item)));
+                    LOGGER.info(String.format("[%s][skip][schedule=%s]no deployed or permitted workflows found", method, schedule.getPath()));
                 } else {
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][skip][workflow deployment path not found][workflow=%s]%s", method, schedule
-                                .getWorkflowName(), SOSHibernate.toString(item)));
+                        LOGGER.debug(String.format("[%s][skip][schedule=%s]no deployed or permitted workflows found", method, schedule.getPath()));
                     }
                 }
                 continue;
             }
-            if (checkPermissions) {
-                if (!isWorkflowPermitted(path, permittedFolders, checkedFolders)) {
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][skip][not permitted]workflow=%s", method, path));
-                    }
-                    continue;
-                }
-            }
 
             schedule.setPath(item.getPath());
-            schedule.setWorkflowPath(path);
-            result.add(schedule);
+
+            DailyPlanSchedule dailyPlanSchedule = new DailyPlanSchedule(schedule, scheduleWorkflows);
+            result.add(dailyPlanSchedule);
 
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("[%s][schedule=%s]workflow=%s", method, schedule.getPath(), schedule.getWorkflowPath()));
+                LOGGER.debug(String.format("[%s][schedule=%s]workflow=%s", method, schedule.getPath(), dailyPlanSchedule.getWorkflowsAsString()));
             }
         }
         return result;
@@ -627,13 +689,13 @@ public class DailyPlanRunner extends TimerTask {
         }
     }
 
-    private FreshOrder buildFreshOrder(String dailyPlanDate, Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode)
-            throws SOSInvalidDataException {
+    private FreshOrder buildFreshOrder(String dailyPlanDate, Schedule schedule, DailyPlanScheduleWorkflow scheduleWorkflow, VariableSet variableSet,
+            Long startTime, Integer startMode) throws SOSInvalidDataException {
         FreshOrder order = new FreshOrder();
         order.setId(DailyPlanHelper.buildOrderId(dailyPlanDate, schedule, variableSet, startTime, startMode));
         order.setScheduledFor(startTime);
         order.setArguments(variableSet.getVariables());
-        order.setWorkflowPath(schedule.getWorkflowName());
+        order.setWorkflowPath(scheduleWorkflow.getName());
         return order;
     }
 
@@ -689,7 +751,7 @@ public class DailyPlanRunner extends TimerTask {
         return mode.equals(StartupMode.automatic) || mode.equals(StartupMode.manual_restart);
     }
 
-    private OrderListSynchronizer calculateStartTimes(StartupMode startupMode, String controllerId, Collection<Schedule> schedules,
+    private OrderListSynchronizer calculateStartTimes(StartupMode startupMode, String controllerId, Collection<DailyPlanSchedule> dailyPlanSchedules,
             String dailyPlanDate, DBItemDailyPlanSubmission submission) throws JsonParseException, JsonMappingException, DBConnectionRefusedException,
             DBInvalidDataException, DBMissingDataException, IOException, SOSMissingDataException, SOSInvalidDataException, ParseException,
             JocConfigurationException, SOSHibernateException, DBOpenSessionException {
@@ -713,7 +775,9 @@ public class DailyPlanRunner extends TimerTask {
         if (submission != null) {
             synchronizer.setSubmission(submission);
         }
-        for (Schedule schedule : schedules) {
+        for (DailyPlanSchedule dailyPlanSchedule : dailyPlanSchedules) {
+            Schedule schedule = dailyPlanSchedule.getSchedule();
+
             if (fromService && !schedule.getPlanOrderAutomatically()) {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][%s][%s][%s][skip schedule=%s]fromService=true, plan order automatically=false", startupMode,
@@ -822,23 +886,27 @@ public class DailyPlanRunner extends TimerTask {
                                     }
 
                                     for (VariableSet variableSet : schedule.getVariableSets()) {
-                                        FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, schedule, variableSet, periodEntry.getKey(),
-                                                startMode);
+                                        for (DailyPlanScheduleWorkflow sw : dailyPlanSchedule.getWorkflows()) {
 
-                                        if (!fromService) {
-                                            schedule.setSubmitOrderToControllerWhenPlanned(settings.isSubmit());
+                                            FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, dailyPlanSchedule.getSchedule(), sw, variableSet,
+                                                    periodEntry.getKey(), startMode);
+
+                                            if (!fromService) {
+                                                schedule.setSubmitOrderToControllerWhenPlanned(settings.isSubmit());
+                                            }
+
+                                            if (synchronizer.getSubmission() == null) {
+                                                synchronizer.setSubmission(addDailyPlanSubmission(controllerId, date));
+                                            }
+
+                                            PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, dailyPlanSchedule, sw, calendar
+                                                    .getId());
+                                            plannedOrder.setPeriod(periodEntry.getValue());
+                                            plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
+                                            plannedOrder.setOrderName(DailyPlanHelper.getOrderName(schedule, variableSet));
+                                            synchronizer.add(startupMode, plannedOrder, controllerId, dailyPlanDate);
+                                            plannedOrdersCount++;
                                         }
-
-                                        if (synchronizer.getSubmission() == null) {
-                                            synchronizer.setSubmission(addDailyPlanSubmission(controllerId, date));
-                                        }
-
-                                        PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, schedule, calendar.getId());
-                                        plannedOrder.setPeriod(periodEntry.getValue());
-                                        plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
-                                        plannedOrder.setOrderName(DailyPlanHelper.getOrderName(schedule, variableSet));
-                                        synchronizer.add(startupMode, plannedOrder, controllerId, dailyPlanDate);
-                                        plannedOrdersCount++;
                                     }
                                 }
                             }
