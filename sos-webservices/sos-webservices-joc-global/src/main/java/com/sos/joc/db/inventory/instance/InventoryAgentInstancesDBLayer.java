@@ -804,7 +804,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
     
-    public int setSubAgentClustersDeployed(List<String> subagentClusterIds) throws SOSHibernateException {
+    public int setSubAgentClustersDeployed(List<String> subagentClusterIds, boolean deployed) throws SOSHibernateException {
         if (subagentClusterIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             int j = 0;
             for (int i = 0; i < subagentClusterIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
@@ -812,12 +812,17 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             }
             return j;
         } else {
-            StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS).append(
-                    " set deployed = 1 where subAgentClusterId in (:subagentClusterIds)");
+            StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS).append(" set deployed = ");
+            hql.append(deployed ? "1" : "0");
+            hql.append(" where subAgentClusterId in (:subagentClusterIds)");
             Query<?> query = getSession().createQuery(hql.toString());
             query.setParameterList("subagentClusterIds", subagentClusterIds);
             return getSession().executeUpdate(query);
         }
+    }
+    
+    public int setSubAgentClustersDeployed(List<String> subagentClusterIds) throws SOSHibernateException {
+        return setSubAgentClustersDeployed(subagentClusterIds, true);
     }
 
     public boolean subAgentIdAlreadyExists(Collection<String> subAgentIds, String controllerId) throws DBInvalidDataException,

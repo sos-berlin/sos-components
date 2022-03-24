@@ -19,6 +19,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
+import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
@@ -82,8 +83,25 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
                     SubagentSelectionId::string).collect(Collectors.toList());
             Predicate<String> knownInController = s -> knownSubagentSelectionIds.contains(s);
             proxy.api().updateItems(Flux.fromStream(subagentClusterIds.stream().filter(knownInController).map(SubagentSelectionId::of).map(
-                    JUpdateItemOperation::deleteSimple))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(),
-                            controllerId));
+                    JUpdateItemOperation::deleteSimple))).thenAccept(e -> {
+                        ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                        if (e.isRight()) {
+                            SOSHibernateSession connection1 = null;
+                            try {
+                                connection1 = Globals.createSosHibernateStatelessConnection(API_CALL_REVOKE);
+                                connection1.setAutoCommit(false);
+                                Globals.beginTransaction(connection1);
+                                InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
+                                dbLayer1.setSubAgentClustersDeployed(subagentClusterIds.stream().collect(Collectors.toList()), false);
+                                Globals.commit(connection1);
+                            } catch (Exception e1) {
+                                Globals.rollback(connection1);
+                                ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
+                            } finally {
+                                Globals.disconnect(connection1);
+                            }
+                        }
+                    });
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
