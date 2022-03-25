@@ -34,6 +34,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.deployment.DBItemDepConfiguration;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
@@ -1503,6 +1504,12 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("name", name);
         query.setParameter("type", type.intValue());
         return getSession().getSingleResult(query);
+    }
+
+    // TODO controller?
+    public DBItemDepConfiguration getDeployedConfigurationByName(String name, ConfigurationType type) {
+        List<DBItemDepConfiguration> result = getConfigurationByName(name, type.intValue(), DBLayer.DBITEM_DEP_CONFIGURATIONS);
+        return result == null || result.size() == 0 ? null : result.get(0);
     }
 
     private String getRegexpParameter(String param, String prefixSuffix) {
