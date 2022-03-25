@@ -12,5 +12,6 @@
 			<AppenderRef ref="console" />
 		</Root>
 		<Logger name="com.sos" level="debug" />
+		<Logger name="com.sos.joc.publish" level="info" />
 	</Loggers>
 </Configuration>
