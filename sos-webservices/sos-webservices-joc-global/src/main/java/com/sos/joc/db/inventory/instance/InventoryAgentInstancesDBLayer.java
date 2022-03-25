@@ -772,6 +772,27 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
     
+    
+    public int setSubAgentsDisabled(List<String> subagentIds) throws SOSHibernateException {
+        return setSubAgentsDisabled(subagentIds, true);
+    }
+    
+    public int setSubAgentsDisabled(List<String> subagentIds, boolean disabled) throws SOSHibernateException {
+        if (subagentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            int j = 0;
+            for (int i = 0; i < subagentIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                j += setSubAgentsDisabled(SOSHibernate.getInClausePartition(i, subagentIds), disabled);
+            }
+            return j;
+        } else {
+            StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(
+                    " set disabled = ").append(disabled ? 1 : 0).append(" where subAgentId in (:subagentIds)");
+            Query<?> query = getSession().createQuery(hql.toString());
+            query.setParameterList("subagentIds", subagentIds);
+            return getSession().executeUpdate(query);
+        }
+    }
+    
     public int setAgentsDeployed(List<String> agentIds) throws SOSHibernateException {
         if (agentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             int j = 0;
