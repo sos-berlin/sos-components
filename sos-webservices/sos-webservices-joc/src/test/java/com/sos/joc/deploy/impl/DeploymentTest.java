@@ -83,20 +83,20 @@ public class DeploymentTest {
 
     @BeforeClass
     public static void logTestsStarted() {
-        LOGGER.info("**************************  Deployment Tests started  *******************************");
-        LOGGER.info("");
-        LOGGER.info("**************************  Using PGP Keys  *****************************************");
-        LOGGER.info("");
+        LOGGER.debug("**************************  Deployment Tests started  *******************************");
+        LOGGER.debug("");
+        LOGGER.debug("**************************  Using PGP Keys  *****************************************");
+        LOGGER.debug("");
     }
 
     @AfterClass
     public static void logTestsFinished() {
-        LOGGER.info("**************************  Deployment Tests finished  ******************************");
+        LOGGER.debug("**************************  Deployment Tests finished  ******************************");
     }
 
     @Test
     public void test01ExportWorkflowsToArchiveFile() throws IOException {
-        LOGGER.info("*************************  export workflows to zip file Test ************************");
+        LOGGER.debug("*************************  export workflows to zip file Test ************************");
         Set<Workflow> workflows = DeploymentTestUtils.createWorkflowsforDeployment();
         Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
         for (Workflow workflow : workflows) {
@@ -105,14 +105,14 @@ public class DeploymentTest {
         }
         exportWorkflows(jsObjectsToExport);
         assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME)));
-        LOGGER.info("Archive bundle_js_single_workflow.zip succefully created in ./target/created_test_files!");
-        LOGGER.info("************************ End Test export workflows to zip file  *********************");
-        LOGGER.info("");
+        LOGGER.debug("Archive bundle_js_single_workflow.zip succefully created in ./target/created_test_files!");
+        LOGGER.debug("************************ End Test export workflows to zip file  *********************");
+        LOGGER.debug("");
     }
 
 //    @Test
 //    public void test01aExportWorkflowToArchiveFile() throws IOException {
-//        LOGGER.info("*************************  export single workflow to zip file Test ******************");
+//        LOGGER.debug("*************************  export single workflow to zip file Test ******************");
 //        Set<Workflow> workflows = DeploymentTestUtils.createSingleWorkflowsforDeployment();
 //        Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
 //        for (Workflow workflow : workflows) {
@@ -121,29 +121,29 @@ public class DeploymentTest {
 //        }
 //        exportSingleWorkflow(jsObjectsToExport);
 //        assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME_SINGLE)));
-//        LOGGER.info("Archive bundle_js_workflows.zip succefully created in ./target/created_test_files!");
-//        LOGGER.info("************************ End Test export workflows to zip file  *********************");
-//        LOGGER.info("");
+//        LOGGER.debug("Archive bundle_js_workflows.zip succefully created in ./target/created_test_files!");
+//        LOGGER.debug("************************ End Test export workflows to zip file  *********************");
+//        LOGGER.debug("");
 //    }
 
     @Test
     public void test02ImportWorkflowsfromArchiveFile() throws IOException {
-        LOGGER.info("*************************  import workflows from zip file Test **********************");
+        LOGGER.debug("*************************  import workflows from zip file Test **********************");
         Set<Workflow> workflows = importWorkflows();
         assertEquals(100, workflows.size());
-        LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
-        LOGGER.info("************************* End Test import workflows from zip file  ******************");
-        LOGGER.info("");
+        LOGGER.debug(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
+        LOGGER.debug("************************* End Test import workflows from zip file  ******************");
+        LOGGER.debug("");
     }
 
     @Test
     public void test03ImportWorkflowsFromSignAndUpdateArchiveFile() throws IOException, PGPException {
-        LOGGER.info("*************************  import sign and update workflows from zip file Test ******");
-        LOGGER.info("*************************       import workflows ************************************");
+        LOGGER.debug("*************************  import sign and update workflows from zip file Test ******");
+        LOGGER.debug("*************************       import workflows ************************************");
         Set<Workflow> workflows = importWorkflows();
         assertEquals(100, workflows.size());
-        LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
-        LOGGER.info("*************************       sign Workflows **************************************");
+        LOGGER.debug(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
+        LOGGER.debug("*************************       sign Workflows **************************************");
         Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
         int counterSigned = 0;
         for (Workflow workflow : workflows) {
@@ -154,28 +154,28 @@ public class DeploymentTest {
             jsObjectsToExport.add(jsObject);
         }
         assertEquals(100, counterSigned);
-        LOGGER.info(String.format("%1$d workflows signed", counterSigned));
-        LOGGER.info("*************************       export signature to zip file ************************");
+        LOGGER.debug(String.format("%1$d workflows signed", counterSigned));
+        LOGGER.debug("*************************       export signature to zip file ************************");
         exportWorkflows(jsObjectsToExport);
         assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME)));
-        LOGGER.info("Archive bundle_js_workflows.zip succefully created in ./target/created_test_files!");
-        LOGGER.info("Archive contains the workflows and their signatures.");
-        LOGGER.info("************************* End Test import workflows from zip file  ******************");
-        LOGGER.info("");
+        LOGGER.debug("Archive bundle_js_workflows.zip succefully created in ./target/created_test_files!");
+        LOGGER.debug("Archive contains the workflows and their signatures.");
+        LOGGER.debug("************************* End Test import workflows from zip file  ******************");
+        LOGGER.debug("");
     }
 
     @Test
     public void test04ImportWorkflowsandSignaturesFromArchiveFile() throws IOException, PGPException {
         Set<ControllerObject> jsObjects = new HashSet<ControllerObject>();
-        LOGGER.info("************************* import workflows/signatures from zip file and verify Test *");
-        LOGGER.info("*************************       import workflows ************************************");
+        LOGGER.debug("************************* import workflows/signatures from zip file and verify Test *");
+        LOGGER.debug("*************************       import workflows ************************************");
         Set<Workflow> workflows = importWorkflows();
         assertEquals(100, workflows.size());
-        LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
-        LOGGER.info("*************************       import signatures ***********************************");
+        LOGGER.debug(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
+        LOGGER.debug("*************************       import signatures ***********************************");
         Set<SignaturePath> signatures = importSignaturePaths();
         assertEquals(100, signatures.size());
-        LOGGER.info(String.format("%1$d signatures successfully imported from archive!", workflows.size()));
+        LOGGER.debug(String.format("%1$d signatures successfully imported from archive!", workflows.size()));
         for (Workflow workflow : workflows) {
             ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
             SignaturePath signaturePath = signatures.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath().equals(
@@ -184,8 +184,8 @@ public class DeploymentTest {
             jsObjects.add(jsObject);
         }
         assertEquals(100, jsObjects.size());
-        LOGGER.info("mapping signatures to workflows was successful!");
-        LOGGER.info("*************************  verify signatures ****************************************");
+        LOGGER.debug("mapping signatures to workflows was successful!");
+        LOGGER.debug("*************************  verify signatures ****************************************");
         int countVerified = 0;
         int countNotVerified = 0;
         for (ControllerObject jsObject : jsObjects) {
@@ -195,58 +195,58 @@ public class DeploymentTest {
                 countNotVerified++;
             }
         }
-        LOGGER.info(String.format("%1$d workflow signatures verified successfully", countVerified));
-        LOGGER.info(String.format("%1$d workflow signature verifications failed", countNotVerified));
-        LOGGER.info("************************* End Test import and verify ********************************");
+        LOGGER.debug(String.format("%1$d workflow signatures verified successfully", countVerified));
+        LOGGER.debug(String.format("%1$d workflow signature verifications failed", countNotVerified));
+        LOGGER.debug("************************* End Test import and verify ********************************");
     }
 
     @Test
     public void test05ImportWorkflowsFromSignAndUpdateArchiveFile()
             throws IOException, DataLengthException, NoSuchAlgorithmException, InvalidKeySpecException, CryptoException {
-        LOGGER.info("");
-        LOGGER.info("**************************  Using RSA Keys and a generate X.509 Certificate  ********");
-        LOGGER.info("********************************  PKCS12  *******************************************");
-        LOGGER.info("");
-        LOGGER.info("*************************  import sign and update workflows from zip file Test ******");
-        LOGGER.info("*************************       import workflows ************************************");
+        LOGGER.debug("");
+        LOGGER.debug("**************************  Using RSA Keys and a generate X.509 Certificate  ********");
+        LOGGER.debug("********************************  PKCS12  *******************************************");
+        LOGGER.debug("");
+        LOGGER.debug("*************************  import sign and update workflows from zip file Test ******");
+        LOGGER.debug("*************************       import workflows ************************************");
         Set<Workflow> workflows = importWorkflows();
         assertEquals(100, workflows.size());
-        LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
-        LOGGER.info("*************************       sign Workflows **************************************");
+        LOGGER.debug(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
+        LOGGER.debug("*************************       sign Workflows **************************************");
         Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
         int counterSigned = 0;
         for (Workflow workflow : workflows) {
             Signature signature = signWorkflowRSA(workflow);
-//            LOGGER.info("Base64 MIME encoded: " + signature.getSignatureString());
+//            LOGGER.debug("Base64 MIME encoded: " + signature.getSignatureString());
             ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
             assertNotNull(jsObject.getSignedContent());
             counterSigned++;
             jsObjectsToExport.add(jsObject);
         }
         assertEquals(100, counterSigned);
-        LOGGER.info(String.format("%1$d workflows signed", counterSigned));
-        LOGGER.info("*************************       export signature to zip file ************************");
+        LOGGER.debug(String.format("%1$d workflows signed", counterSigned));
+        LOGGER.debug("*************************       export signature to zip file ************************");
         exportWorkflows(jsObjectsToExport);
         assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME)));
-        LOGGER.info("Archive bundle_js_workflows.zip succefully created in ./target/created_test_files!");
-        LOGGER.info("Archive contains the workflows and their signatures.");
-        LOGGER.info("************************* End Test import workflows from zip file  ******************");
-        LOGGER.info("");
+        LOGGER.debug("Archive bundle_js_workflows.zip succefully created in ./target/created_test_files!");
+        LOGGER.debug("Archive contains the workflows and their signatures.");
+        LOGGER.debug("************************* End Test import workflows from zip file  ******************");
+        LOGGER.debug("");
     }
 
     @Test
     public void test06ImportWorkflowsandSignaturesFromArchiveFile()
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, NoSuchProviderException {
         Set<ControllerObject> jsObjects = new HashSet<ControllerObject>();
-        LOGGER.info("************************* import workflows/signatures from zip file and verify Test *");
-        LOGGER.info("*************************       import workflows ************************************");
+        LOGGER.debug("************************* import workflows/signatures from zip file and verify Test *");
+        LOGGER.debug("*************************       import workflows ************************************");
         Set<Workflow> workflows = importWorkflows();
         assertEquals(100, workflows.size());
-        LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
-        LOGGER.info("*************************       import signatures ***********************************");
+        LOGGER.debug(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
+        LOGGER.debug("*************************       import signatures ***********************************");
         Set<SignaturePath> signatures = importSignaturePaths();
         assertEquals(100, signatures.size());
-        LOGGER.info(String.format("%1$d signatures successfully imported from archive!", workflows.size()));
+        LOGGER.debug(String.format("%1$d signatures successfully imported from archive!", workflows.size()));
         for (Workflow workflow : workflows) {
             ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
             SignaturePath signaturePath = signatures.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath().equals(
@@ -255,9 +255,9 @@ public class DeploymentTest {
             jsObjects.add(jsObject);
         }
         assertEquals(100, jsObjects.size());
-        LOGGER.info("mapping signatures to workflows was successful!");
-        LOGGER.info("*************************  verify signatures ****************************************");
-        LOGGER.info("*************************  verify signatures with extracted Public Key **************");
+        LOGGER.debug("mapping signatures to workflows was successful!");
+        LOGGER.debug("*************************  verify signatures ****************************************");
+        LOGGER.debug("*************************  verify signatures with extracted Public Key **************");
         int countVerified = 0;
         int countNotVerified = 0;
         String privateKey = new String (Files.readAllBytes(Paths.get(PRIVATE_RSA_KEY_PATH)));
@@ -269,9 +269,9 @@ public class DeploymentTest {
                 countNotVerified++;
             }
         }
-        LOGGER.info(String.format("%1$d workflow signatures verified with extracted PublicKey successfully", countVerified));
-        LOGGER.info(String.format("%1$d workflow signature verifications failed", countNotVerified));
-        LOGGER.info("*************************  verify signatures with generated Certificate  ************");
+        LOGGER.debug(String.format("%1$d workflow signatures verified with extracted PublicKey successfully", countVerified));
+        LOGGER.debug(String.format("%1$d workflow signature verifications failed", countNotVerified));
+        LOGGER.debug("*************************  verify signatures with generated Certificate  ************");
         countVerified = 0;
         countNotVerified = 0;
         Certificate cert = KeyUtil.generateCertificateFromKeyPair(kp);
@@ -282,25 +282,25 @@ public class DeploymentTest {
                 countNotVerified++;
             }
         }
-        LOGGER.info(String.format("%1$d workflow signatures verified with generated Certificate successfully", countVerified));
-        LOGGER.info(String.format("%1$d workflow signature verifications failed", countNotVerified));
-        LOGGER.info("************************* End Test import and verify ********************************");
-        LOGGER.info("");
+        LOGGER.debug(String.format("%1$d workflow signatures verified with generated Certificate successfully", countVerified));
+        LOGGER.debug(String.format("%1$d workflow signature verifications failed", countNotVerified));
+        LOGGER.debug("************************* End Test import and verify ********************************");
+        LOGGER.debug("");
     }
 
     @Test
     public void test07ImportWorkflowsFromSignAndUpdateArchiveFile()
             throws IOException, InvalidKeyException, SignatureException, NoSuchAlgorithmException, InvalidKeySpecException {
-        LOGGER.info("");
-        LOGGER.info("**************************  Using RSA Keys and a generate X.509 Certificate  ********");
-        LOGGER.info("********************************  PKCS8  ********************************************");
-        LOGGER.info("");
-        LOGGER.info("*************************  import sign and update workflows from zip file Test ******");
-        LOGGER.info("*************************       import workflows ************************************");
+        LOGGER.debug("");
+        LOGGER.debug("**************************  Using RSA Keys and a generate X.509 Certificate  ********");
+        LOGGER.debug("********************************  PKCS8  ********************************************");
+        LOGGER.debug("");
+        LOGGER.debug("*************************  import sign and update workflows from zip file Test ******");
+        LOGGER.debug("*************************       import workflows ************************************");
         Set<Workflow> workflows = importWorkflows();
         assertEquals(100, workflows.size());
-        LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
-        LOGGER.info("*************************       sign Workflows **************************************");
+        LOGGER.debug(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
+        LOGGER.debug("*************************       sign Workflows **************************************");
         Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
         int counterSigned = 0;
         for (Workflow workflow : workflows) {
@@ -311,29 +311,29 @@ public class DeploymentTest {
             jsObjectsToExport.add(jsObject);
         }
         assertEquals(100, counterSigned);
-        LOGGER.info(String.format("%1$d workflows signed", counterSigned));
-        LOGGER.info("*************************       export signature to zip file ************************");
+        LOGGER.debug(String.format("%1$d workflows signed", counterSigned));
+        LOGGER.debug("*************************       export signature to zip file ************************");
         exportWorkflows(jsObjectsToExport);
         assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME)));
-        LOGGER.info("Archive bundle_js_workflows.zip succefully created in ./target/created_test_files!");
-        LOGGER.info("Archive contains the workflows and their signatures.");
-        LOGGER.info("************************* End Test import workflows from zip file  ******************");
-        LOGGER.info("");
+        LOGGER.debug("Archive bundle_js_workflows.zip succefully created in ./target/created_test_files!");
+        LOGGER.debug("Archive contains the workflows and their signatures.");
+        LOGGER.debug("************************* End Test import workflows from zip file  ******************");
+        LOGGER.debug("");
     }
 
     @Test
     public void test08ImportWorkflowsandSignaturesFromArchiveFile()
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, NoSuchProviderException {
         Set<ControllerObject> jsObjects = new HashSet<ControllerObject>();
-        LOGGER.info("************************* import workflows/signatures from zip file and verify Test *");
-        LOGGER.info("*************************       import workflows ************************************");
+        LOGGER.debug("************************* import workflows/signatures from zip file and verify Test *");
+        LOGGER.debug("*************************       import workflows ************************************");
         Set<Workflow> workflows = importWorkflows();
         assertEquals(100, workflows.size());
-        LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
-        LOGGER.info("*************************       import signatures ***********************************");
+        LOGGER.debug(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
+        LOGGER.debug("*************************       import signatures ***********************************");
         Set<SignaturePath> signatures = importSignaturePaths();
         assertEquals(100, signatures.size());
-        LOGGER.info(String.format("%1$d signatures successfully imported from archive!", workflows.size()));
+        LOGGER.debug(String.format("%1$d signatures successfully imported from archive!", workflows.size()));
         for (Workflow workflow : workflows) {
             ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
             SignaturePath signaturePath = signatures.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath().equals(
@@ -342,9 +342,9 @@ public class DeploymentTest {
             jsObjects.add(jsObject);
         }
         assertEquals(100, jsObjects.size());
-        LOGGER.info("mapping signatures to workflows was successful!");
-        LOGGER.info("*************************  verify signatures ****************************************");
-        LOGGER.info("*************************  verify signatures with extracted Public Key **************");
+        LOGGER.debug("mapping signatures to workflows was successful!");
+        LOGGER.debug("*************************  verify signatures ****************************************");
+        LOGGER.debug("*************************  verify signatures with extracted Public Key **************");
         int countVerified = 0;
         int countNotVerified = 0;
         String privateKey = new String (Files.readAllBytes(Paths.get(PRIVATE_RSA_PKCS8_KEY_PATH)));
@@ -356,9 +356,9 @@ public class DeploymentTest {
                 countNotVerified++;
             }
         }
-        LOGGER.info(String.format("%1$d workflow signatures verified with extracted PublicKey successfully", countVerified));
-        LOGGER.info(String.format("%1$d workflow signature verifications failed", countNotVerified));
-        LOGGER.info("*************************  verify signatures with generated Certificate  ************");
+        LOGGER.debug(String.format("%1$d workflow signatures verified with extracted PublicKey successfully", countVerified));
+        LOGGER.debug(String.format("%1$d workflow signature verifications failed", countNotVerified));
+        LOGGER.debug("*************************  verify signatures with generated Certificate  ************");
         countVerified = 0;
         countNotVerified = 0;
         Certificate cert = KeyUtil.generateCertificateFromKeyPair(kp);
@@ -369,21 +369,21 @@ public class DeploymentTest {
                 countNotVerified++;
             }
         }
-        LOGGER.info(String.format("%1$d workflow signatures verified with generated Certificate successfully", countVerified));
-        LOGGER.info(String.format("%1$d workflow signature verifications failed", countNotVerified));
-        LOGGER.info("************************* End Test import and verify ********************************");
-        LOGGER.info("");
+        LOGGER.debug(String.format("%1$d workflow signatures verified with generated Certificate successfully", countVerified));
+        LOGGER.debug(String.format("%1$d workflow signature verifications failed", countNotVerified));
+        LOGGER.debug("************************* End Test import and verify ********************************");
+        LOGGER.debug("");
     }
 
     @Test
     public void test11ImportWorkflowsFromSignAndUpdateArchiveFile() 
             throws IOException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, PGPException {
-        LOGGER.info("*************************  import sign and update workflows from zip file Test ******");
-        LOGGER.info("*************************       import workflows ************************************");
+        LOGGER.debug("*************************  import sign and update workflows from zip file Test ******");
+        LOGGER.debug("*************************       import workflows ************************************");
         Set<Workflow> workflows = importWorkflows2();
         assertEquals(2, workflows.size());
-        LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
-        LOGGER.info("*************************       sign Workflows **************************************");
+        LOGGER.debug(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
+        LOGGER.debug("*************************       sign Workflows **************************************");
         Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
         int counterSigned = 0;
         for (Workflow workflow : workflows) {
@@ -394,29 +394,29 @@ public class DeploymentTest {
             jsObjectsToExport.add(jsObject);
         }
         assertEquals(2, counterSigned);
-        LOGGER.info(String.format("%1$d workflows signed", counterSigned));
-        LOGGER.info("*************************       export signature to zip file ************************");
+        LOGGER.debug(String.format("%1$d workflows signed", counterSigned));
+        LOGGER.debug("*************************       export signature to zip file ************************");
         exportWorkflows(jsObjectsToExport, "export_high_from_gui.zip", ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value());
         assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve("export_high_from_gui.zip")));
-        LOGGER.info("Archive export_high_from_gui.zip succefully created in ./target/created_test_files!");
-        LOGGER.info("Archive contains the workflows and their signatures.");
-        LOGGER.info("************************* End Test import workflows from zip file  ******************");
-        LOGGER.info("");
+        LOGGER.debug("Archive export_high_from_gui.zip succefully created in ./target/created_test_files!");
+        LOGGER.debug("Archive contains the workflows and their signatures.");
+        LOGGER.debug("************************* End Test import workflows from zip file  ******************");
+        LOGGER.debug("");
     }
 
     @Test
     public void test12ImportWorkflowsFromFolderSignAndUpdateArchiveFiles() 
             throws IOException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, PGPException {
-        LOGGER.info("*************************  import sign and update workflows from zip files Test *****");
-        LOGGER.info("*************************       import workflows ************************************");
+        LOGGER.debug("*************************  import sign and update workflows from zip files Test *****");
+        LOGGER.debug("*************************       import workflows ************************************");
         Path archivesPath = Paths.get("src/test/resources/import_deploy");
         Set<Path> filePaths = Files.list(archivesPath).collect(Collectors.toSet());
         Integer archivesToSignCount = filePaths.size();
         filePaths.stream().forEach(item -> {
             try {
                 Set<Workflow> workflows = importWorkflows(item.toString().replace("\\", "/").replace("src/test/resources", ""));
-                LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
-                LOGGER.info("*************************       sign Workflows **************************************");
+                LOGGER.debug(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
+                LOGGER.debug("*************************       sign Workflows **************************************");
                 Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
                 int counterSigned = 0;
                 for (Workflow workflow : workflows) {
@@ -426,23 +426,23 @@ public class DeploymentTest {
                     counterSigned++;
                     jsObjectsToExport.add(jsObject);
                 }
-                LOGGER.info(String.format("%1$d workflows signed", counterSigned));
-                LOGGER.info("*************************       export signature to zip file ************************");
+                LOGGER.debug(String.format("%1$d workflows signed", counterSigned));
+                LOGGER.debug("*************************       export signature to zip file ************************");
                 exportWorkflows(jsObjectsToExport, item.getFileName().toString(),
                         item.getParent().toString().replace("\\", "/").replace("src/test/resources/",""), 
                         ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value());
-                LOGGER.info(String.format("Archive %1$s succefully created in ./target/created_test_files/%2$s!",
+                LOGGER.debug(String.format("Archive %1$s succefully created in ./target/created_test_files/%2$s!",
                         item.getFileName().toString(), item.getParent().toString().replace("\\", "/").replace("src/test/resources/","")));
-                LOGGER.info("Archive contains the workflows and their signatures.");
+                LOGGER.debug("Archive contains the workflows and their signatures.");
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
         Set<Path> signedArchivesPaths = Files.list(Paths.get("target/created_test_files/import_deploy")).collect(Collectors.toSet());
         assertTrue(archivesToSignCount == signedArchivesPaths.size());
-        LOGGER.info(String.format("%1$d archives signed.", signedArchivesPaths.size()));
-        LOGGER.info("************************* End Test import workflows from zip file  ******************");
-        LOGGER.info("");
+        LOGGER.debug(String.format("%1$d archives signed.", signedArchivesPaths.size()));
+        LOGGER.debug("************************* End Test import workflows from zip file  ******************");
+        LOGGER.debug("");
     }
 
     @Test
@@ -453,7 +453,7 @@ public class DeploymentTest {
      * uncomment the Ignore annotation
      **/
     public void test13DetermineItemsForCleanup() throws SOSHibernateException {
-        LOGGER.info("******************************  Determine Items For Cleanup Test  *******************");
+        LOGGER.debug("******************************  Determine Items For Cleanup Test  *******************");
         SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/sp_hibernate.cfg.xml"));
         factory.setAutoCommit(true);
         factory.addClassMapping(DBLayer.getJocClassMapping());
@@ -467,8 +467,8 @@ public class DeploymentTest {
         Map<String, Set<DBItemDeploymentHistory>> mapPerItemName = 
                 items.stream().collect(Collectors.groupingBy(DBItemDeploymentHistory::getName, Collectors.toSet()));
         for (Map.Entry<String, Set<DBItemDeploymentHistory>> entry : mapPerItemName.entrySet()) {
-            LOGGER.info("Object withName: " + entry.getKey());
-            LOGGER.info("has deployment count of: " + entry.getValue().size());
+            LOGGER.debug("Object withName: " + entry.getKey());
+            LOGGER.debug("has deployment count of: " + entry.getValue().size());
             if(entry.getValue().size() <= 5) {
                 continue;
             } else {
@@ -477,11 +477,11 @@ public class DeploymentTest {
                         entry.getValue().stream().collect(Collectors.groupingBy(DBItemDeploymentHistory::getDeploymentDate));
                 
                 Set<Date> sortedDates = mapPerDate.keySet().stream().sorted(Comparator.comparing(Date::getTime)).collect(Collectors.toSet());
-                sortedDates.stream().sorted(Comparator.naturalOrder()).forEach(item -> LOGGER.info("Nat. Order" + item.toLocaleString()));
-                sortedDates.stream().sorted(Comparator.reverseOrder()).forEach(item -> LOGGER.info("Rev. Order" + item.toLocaleString()));
+                sortedDates.stream().sorted(Comparator.naturalOrder()).forEach(item -> LOGGER.debug("Nat. Order" + item.toLocaleString()));
+                sortedDates.stream().sorted(Comparator.reverseOrder()).forEach(item -> LOGGER.debug("Rev. Order" + item.toLocaleString()));
             }
         }
-        LOGGER.info("**************************** Determine Items For Cleanup Test finished **************");
+        LOGGER.debug("**************************** Determine Items For Cleanup Test finished **************");
     }
     
     private void exportWorkflows(Set<ControllerObject> jsObjectsToExport) throws IOException {
@@ -505,7 +505,7 @@ public class DeploymentTest {
         Boolean notExists = Files.notExists(targetFolderPath);
         if (notExists) {
             Files.createDirectory(targetFolderPath);
-            LOGGER.info(String.format("folder \"%1$s\" created.", targetFolderPath.toString()));
+            LOGGER.debug(String.format("folder \"%1$s\" created.", targetFolderPath.toString()));
         }
         out = Files.newOutputStream(targetFolderPath.resolve(filename));
         zipOut = new ZipOutputStream(new BufferedOutputStream(out), StandardCharsets.UTF_8);
@@ -538,7 +538,7 @@ public class DeploymentTest {
 //        Boolean notExists = Files.notExists(Paths.get("target").resolve("created_test_files"));
 //        if (notExists) {
 //            Files.createDirectory(Paths.get("target").resolve("created_test_files"));
-//            LOGGER.info("subfolder \"created_test_files\" created in target folder.");
+//            LOGGER.debug("subfolder \"created_test_files\" created in target folder.");
 //        }
 //        out = Files.newOutputStream(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME_SINGLE));
 //        zipOut = new ZipOutputStream(new BufferedOutputStream(out), StandardCharsets.UTF_8);
@@ -567,7 +567,7 @@ public class DeploymentTest {
 //
     private Set<Workflow> importWorkflows() throws IOException {
         Set<Workflow> workflows = new HashSet<Workflow>();
-        LOGGER.info("archive to read from exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME)));
+        LOGGER.debug("archive to read from exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME)));
         InputStream fileStream = Files.newInputStream(Paths.get("target/created_test_files").resolve(TARGET_FILENAME));
         ZipInputStream zipStream = new ZipInputStream(fileStream);
         ZipEntry entry = null;
@@ -615,7 +615,7 @@ public class DeploymentTest {
 
     private Set<Workflow> importWorkflows2() throws IOException {
         Set<Workflow> workflows = new HashSet<Workflow>();
-        LOGGER.info("archive to read from exists: " + Files.exists(Paths.get("src/test/resources/import_deploy").resolve("export_high_from_gui.zip")));
+        LOGGER.debug("archive to read from exists: " + Files.exists(Paths.get("src/test/resources/import_deploy").resolve("export_high_from_gui.zip")));
         InputStream fileStream = getClass().getResourceAsStream("/import_deploy/export_high_from_gui.zip");
         ZipInputStream zipStream = new ZipInputStream(fileStream);
         ZipEntry entry = null;
@@ -640,7 +640,7 @@ public class DeploymentTest {
     @SuppressWarnings("unused")
     private Set<Workflow> importSingleWorkflow() throws IOException {
         Set<Workflow> workflows = new HashSet<Workflow>();
-        LOGGER.info("archive to read from exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME_SINGLE)));
+        LOGGER.debug("archive to read from exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME_SINGLE)));
         InputStream fileStream = Files.newInputStream(Paths.get("target/created_test_files").resolve(TARGET_FILENAME_SINGLE));
         ZipInputStream zipStream = new ZipInputStream(fileStream);
         ZipEntry entry = null;
@@ -664,7 +664,7 @@ public class DeploymentTest {
 
     private Set<SignaturePath> importSignaturePaths() throws IOException {
         Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
-        LOGGER.info("archive to read exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME)));
+        LOGGER.debug("archive to read exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME)));
         InputStream fileStream = Files.newInputStream(Paths.get("target/created_test_files").resolve(TARGET_FILENAME));
         ZipInputStream zipStream = new ZipInputStream(fileStream);
         ZipEntry entry = null;

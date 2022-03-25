@@ -327,13 +327,13 @@ public class GitUtil {
                     if(custom) {
                         command = String.format(GitCommandConstants.CMD_GIT_CONFIG_SSH_ADD_GLOBAL_PREFORMAT_WIN, newValue);
                     } else {
-                        command = String.format(GitCommandConstants.CMD_GIT_CONFIG_SSH_ADD_LOCAL_PREFORMAT_WIN, keyFilePath.toString());
+                        command = String.format(GitCommandConstants.CMD_GIT_CONFIG_SSH_ADD_LOCAL_PREFORMAT_WIN, keyFilePath.toString().replace('\\', '/'));
                     }
                 } else {
                     if(custom) {
                         command = String.format(GitCommandConstants.CMD_GIT_CONFIG_SSH_ADD_LOCAL_FORMAT_LINUX, newValue);
                     } else {
-                        command = String.format(GitCommandConstants.CMD_GIT_CONFIG_SSH_ADD_LOCAL_PREFORMAT_LINUX, keyFilePath.toString());
+                        command = String.format(GitCommandConstants.CMD_GIT_CONFIG_SSH_ADD_LOCAL_PREFORMAT_LINUX, keyFilePath.toString().replace('\\', '/'));
                     }
                 }
                 break;
@@ -355,13 +355,13 @@ public class GitUtil {
                     if(custom) {
                         command = String.format(GitCommandConstants.CMD_GIT_CONFIG_SSH_ADD_GLOBAL_FORMAT_WIN, newValue);
                     } else {
-                        command = String.format(GitCommandConstants.CMD_GIT_CONFIG_SSH_ADD_GLOBAL_PREFORMAT_WIN, keyFilePath.toString());
+                        command = String.format(GitCommandConstants.CMD_GIT_CONFIG_SSH_ADD_GLOBAL_PREFORMAT_WIN, keyFilePath.toString().replace('\\', '/'));
                     }
                 } else {
                     if(custom) {
                         command = String.format(GitCommandConstants.CMD_GIT_CONFIG_SSH_ADD_GLOBAL_FORMAT_LINUX, newValue);
                     } else {
-                        command = String.format(GitCommandConstants.CMD_GIT_CONFIG_SSH_ADD_GLOBAL_PREFORMAT_LINUX, keyFilePath.toString());
+                        command = String.format(GitCommandConstants.CMD_GIT_CONFIG_SSH_ADD_GLOBAL_PREFORMAT_LINUX, keyFilePath.toString().replace('\\', '/'));
                     }
                 }
                 break;

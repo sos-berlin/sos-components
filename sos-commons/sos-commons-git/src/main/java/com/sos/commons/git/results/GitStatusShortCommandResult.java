@@ -20,9 +20,13 @@ import com.sos.commons.util.common.SOSCommandResult;
 public class GitStatusShortCommandResult extends GitCommandResult {
     
     private static final String REGEX_FIND_MODIFIED = "\\sM\\s(.*)";
-    private static final String REGEX_FIND_ADDED = "\\?\\?\\s(.*)";
+    private static final String REGEX_FIND_NEW = "\\?\\?\\s(.*)";
+    private static final String REGEX_FIND_ADDED = "A[^M]\\s*(.*)";
+    private static final String REGEX_FIND_ADDED_AND_MODIFIED = "AM\\s*(.*)";
     private Set<Path> modified = Collections.emptySet();
+    private Set<Path> toAdd = Collections.emptySet();
     private Set<Path> added = Collections.emptySet();
+    private Set<Path> addedAndModified = Collections.emptySet();
     private static final Logger LOGGER = LoggerFactory.getLogger(GitStatusShortCommandResult.class);
     
 
@@ -48,8 +52,16 @@ public class GitStatusShortCommandResult extends GitCommandResult {
         return modified;
     }
     
+    public Set<Path> getToAdd() {
+        return toAdd;
+    }
+    
     public Set<Path> getAdded() {
         return added;
+    }
+    
+    public Set<Path> getAddedAndModified() {
+        return addedAndModified;
     }
     
     @Override
@@ -57,7 +69,9 @@ public class GitStatusShortCommandResult extends GitCommandResult {
         try {
             if (getStdOut() != null && !getStdOut().isEmpty()) {
                 Pattern modifiedPattern = Pattern.compile(REGEX_FIND_MODIFIED);
+                Pattern toAddPattern = Pattern.compile(REGEX_FIND_NEW);
                 Pattern addedPattern = Pattern.compile(REGEX_FIND_ADDED);
+                Pattern addedAndModifiedPattern = Pattern.compile(REGEX_FIND_ADDED_AND_MODIFIED);
                 Reader reader = new StringReader(getStdOut());
                 BufferedReader buff = new BufferedReader(reader);
                 String line = null;
@@ -66,7 +80,6 @@ public class GitStatusShortCommandResult extends GitCommandResult {
                         continue;
                     }
                     Matcher modifiedMatcher = modifiedPattern.matcher(line);
-                    Matcher addedMatcher = addedPattern.matcher(line);
                     if(modifiedMatcher.matches()) {
                         if(modified.isEmpty()) {
                             modified = new HashSet<Path>();
@@ -78,15 +91,40 @@ public class GitStatusShortCommandResult extends GitCommandResult {
                         modified.add(Paths.get(toModify));
                         continue;
                     }
+                    Matcher toAddMatcher = toAddPattern.matcher(line);
+                    if(toAddMatcher.matches()) {
+                        if(toAdd.isEmpty()) {
+                            toAdd = new HashSet<Path>();
+                        }
+                        String newToAdd = toAddMatcher.group(1);
+                        if (newToAdd.contains("\"")) {
+                            newToAdd = newToAdd.replace("\"", "");
+                        }
+                        toAdd.add(Paths.get(newToAdd));
+                        continue;
+                    }
+                    Matcher addedMatcher = addedPattern.matcher(line);
                     if(addedMatcher.matches()) {
                         if(added.isEmpty()) {
                             added = new HashSet<Path>();
                         }
-                        String toAdd = addedMatcher.group(1);
-                        if (toAdd.contains("\"")) {
-                            toAdd = toAdd.replace("\"", "");
+                        String alreadyAdded = addedMatcher.group(1);
+                        if (alreadyAdded.contains("\"")) {
+                            alreadyAdded = alreadyAdded.replace("\"", "");
                         }
-                        added.add(Paths.get(toAdd));
+                        added.add(Paths.get(alreadyAdded));
+                        continue;
+                    }
+                    Matcher addedAndModifiedMatcher = addedAndModifiedPattern.matcher(line);
+                    if(addedAndModifiedMatcher.matches()) {
+                        if(addedAndModified.isEmpty()) {
+                            addedAndModified = new HashSet<Path>();
+                        }
+                        String alreadyAddedAndModified = addedAndModifiedMatcher.group(1);
+                        if (alreadyAddedAndModified.contains("\"")) {
+                            alreadyAddedAndModified = alreadyAddedAndModified.replace("\"", "");
+                        }
+                        addedAndModified.add(Paths.get(alreadyAddedAndModified));
                         continue;
                     }
                 }
