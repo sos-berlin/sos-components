@@ -41,7 +41,7 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
         String property = arguments.get(1).toString();
         String path = arguments.get(2).toString();
         ReturnType returnType;
-        
+
         switch (this.factory.getDbms()) {
         case MYSQL:
             returnType = argument2ReturnType(arguments.get(0).toString());
@@ -79,7 +79,7 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
             return r.toString();
         case H2:
             // path = '$.ports.usb' -> '$.ports.usb'
-            return com.sos.commons.hibernate.function.json.h2.Function.NAME + "(" + property + "," + path + ")";
+            return com.sos.commons.hibernate.function.json.h2.Functions.NAME_JSON_VALUE + "(" + property + "," + path + ")";
         default:
             return NAME;
         }

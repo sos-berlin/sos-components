@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -22,11 +25,42 @@ public class SOSHibernateExecuterTest {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
-            // create connection
+            factory = createFactory();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+            if (factory != null) {
+                factory.close();
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testH2() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
             factory = createFactory();
 
-            LOGGER.info("DBMS=" + factory.getDbms());
-            LOGGER.info("DIALECT=" + factory.getDialect());
+            JsonObjectBuilder builder = Json.createObjectBuilder();
+            builder.add("workflowNames", Json.createArrayBuilder().add("name1").add("name2").add("name3"));
+            builder.add("workflowName", "myWorkflowName");
+
+            StringBuilder sql = new StringBuilder("update INV_CONFIGURATIONS ");
+            // H2 - use "format JSON" otherwise the content will be stored as quoted string,
+            // e.g.: \"{\"workflowNames\":...}\" instead of {"workflowNames":...}
+            sql.append("set CONTENT='").append(builder.build().toString()).append("' format JSON ");
+            sql.append("where ID=6");
+
+            session = factory.openStatelessSession();
+            // execute
+            session.beginTransaction();
+            session.getSQLExecutor().execute(sql.toString());
+            session.commit();
 
         } catch (Exception e) {
             throw e;
@@ -92,6 +126,8 @@ public class SOSHibernateExecuterTest {
     private SOSHibernateFactory createFactory() throws Exception {
         SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
         factory.build();
+
+        LOGGER.info("DBMS=" + factory.getDbms() + ", DIALECT=" + factory.getDialect());
         return factory;
     }
 
