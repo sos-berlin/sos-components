@@ -28,7 +28,7 @@ import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
- import com.sos.joc.model.security.configuration.permissions.IniPermissions;
+import com.sos.joc.model.security.configuration.permissions.IniPermissions;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.SecurityConfigurationAccount;
 import com.sos.joc.model.security.configuration.SecurityConfigurationMainEntry;
@@ -39,9 +39,7 @@ import com.sos.joc.model.security.configuration.permissions.IniControllers;
 import com.sos.joc.model.security.configuration.permissions.IniPermission;
 import com.sos.joc.model.security.configuration.permissions.SecurityConfigurationFolders;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
- 
 
- 
 public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
 
     private static final String SECTION_USERS = "users";
@@ -71,8 +69,8 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
             IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
             iamIdentityServiceFilter.setIamIdentityServiceType(IdentityServiceTypes.SHIRO);
             try {
-                List<DBItemIamIdentityService> listOfIamIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(
-                        iamIdentityServiceFilter, 0);
+                List<DBItemIamIdentityService> listOfIamIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(iamIdentityServiceFilter,
+                        0);
                 if (listOfIamIdentityServices.size() == 1) {
                     idendityService = listOfIamIdentityServices.get(0).getId();
                 }
@@ -80,7 +78,7 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
                 idendityService = 0L;
             }
             return idendityService;
-        }catch(Exception e) {
+        } catch (Exception e) {
             return 0L;
         } finally {
             Globals.disconnect(sosHibernateSession);
@@ -95,8 +93,8 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
             Long identityServiceId = getIdentiyServiceId();
             return s.entrySet().stream().map(entry -> {
                 SecurityConfigurationAccount securityConfigurationAccount = new SecurityConfigurationAccount();
-                SOSSecurityConfigurationAccountEntry sosSecurityConfigurationAccountEntry = new SOSSecurityConfigurationAccountEntry(entry.getValue(), null,
-                        null);
+                SOSSecurityConfigurationAccountEntry sosSecurityConfigurationAccountEntry = new SOSSecurityConfigurationAccountEntry(entry.getValue(),
+                        null, null);
 
                 securityConfigurationAccount.setAccountName(entry.getKey());
                 securityConfigurationAccount.setPassword(sosSecurityConfigurationAccountEntry.getPassword());
@@ -131,7 +129,7 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
         }).collect(Collectors.toList());
     }
 
-    private SecurityConfigurationRoles getRoles() {
+    private SecurityConfigurationRoles getRoles(boolean withMapping) {
 
         final Section s = getSection(SECTION_ROLES);
         SecurityConfigurationRoles roles = new SecurityConfigurationRoles();
@@ -139,7 +137,7 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
             Map<String, SecurityConfigurationFolders> folders = getFolders();
             s.forEach((role, perms) -> {
                 SecurityConfigurationRole r = new SecurityConfigurationRole();
-                r.setPermissions(mapIniPermissionsToPermissionsObject(perms));
+                r.setPermissions(mapIniPermissionsToPermissionsObject(perms, withMapping));
                 r.setFolders(folders.get(role));
                 roles.setAdditionalProperty(role, r);
             });
@@ -147,14 +145,20 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
         return roles;
     }
 
-    private static List<String> mapFromJS1(List<String> perms){
-        SOSPermissionMapTable sosPermissionMapTable = new SOSPermissionMapTable();       
+    private static List<String> mapFromJS1(List<String> perms) {
+        SOSPermissionMapTable sosPermissionMapTable = new SOSPermissionMapTable();
         return sosPermissionMapTable.map(perms);
     }
-    
-    private static IniPermissions mapIniPermissionsToPermissionsObject(String iniPermissions) {
-        List<String> perms = mapFromJS1(Arrays.asList(iniPermissions.trim().split("\\s*,\\s*")));
-               
+
+    private static IniPermissions mapIniPermissionsToPermissionsObject(String iniPermissions, boolean withMapping) {
+
+        List<String> perms;
+        if (withMapping) {
+            perms = mapFromJS1(Arrays.asList(iniPermissions.trim().split("\\s*,\\s*")));
+        } else {
+            perms = Arrays.asList(iniPermissions.trim().split("\\s*,\\s*"));
+        }
+
         IniPermissions iniPerms = new IniPermissions();
         List<IniPermission> jocPerms = new ArrayList<>();
         List<IniPermission> defaultPerms = new ArrayList<>();
@@ -236,8 +240,8 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
             sosSecurityHashSettings.setMain(getSection(SECTION_MAIN));
 
             accounts.stream().distinct().forEachOrdered(securityConfigurationAccount -> {
-                SOSSecurityConfigurationAccountEntry sosSecurityConfigurationAccountEntry = new SOSSecurityConfigurationAccountEntry(securityConfigurationAccount,
-                        oldSection, sosSecurityHashSettings);
+                SOSSecurityConfigurationAccountEntry sosSecurityConfigurationAccountEntry = new SOSSecurityConfigurationAccountEntry(
+                        securityConfigurationAccount, oldSection, sosSecurityHashSettings);
                 if ((securityConfigurationAccount.getPassword() != null && !securityConfigurationAccount.getPassword().isEmpty())
                         || !securityConfigurationAccount.getRoles().isEmpty()) {
                     s.put(securityConfigurationAccount.getAccountName(), sosSecurityConfigurationAccountEntry.getIniWriteString());
@@ -366,7 +370,8 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
     }
 
     @Override
-    public SecurityConfiguration readConfiguration(Long identityServiceId,String identityServiceName) throws InvalidFileFormatException, IOException, JocException, SOSHibernateException {
+    public SecurityConfiguration readConfiguration(Long identityServiceId, String identityServiceName) throws InvalidFileFormatException, IOException,
+            JocException, SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("Export shiro.ini");
@@ -379,34 +384,30 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
         }
     }
 
-    public SecurityConfiguration readConfigurationFromFilesystem() throws InvalidFileFormatException, IOException, JocException {
-        writeIni = new Wini(Globals.getShiroIniFile().toFile());
-
-        SecurityConfiguration secConfig = new SecurityConfiguration();
-
-        secConfig.setMain(getMain());
-        secConfig.setAccounts(getAccounts());
-        secConfig.setRoles(getRoles());
-
-        return secConfig;
-    }
-    
-
-    public SecurityConfiguration readConfigurationFromFilesystem(Path iniFilename) throws InvalidFileFormatException, IOException, JocException {
+    private SecurityConfiguration readConfigurationFromFilesystem(Path iniFilename, boolean withMapping) throws InvalidFileFormatException,
+            IOException, JocException {
         writeIni = new Wini(iniFilename.toFile());
 
         SecurityConfiguration secConfig = new SecurityConfiguration();
 
         secConfig.setMain(getMain());
         secConfig.setAccounts(getAccounts());
-        secConfig.setRoles(getRoles());
+        secConfig.setRoles(getRoles(withMapping));
 
         return secConfig;
     }
 
+    public SecurityConfiguration readConfigurationFromFilesystem() throws InvalidFileFormatException, IOException, JocException {
+        return readConfigurationFromFilesystem(Globals.getShiroIniFile(), false);
+    }
+
+    public SecurityConfiguration readConfigurationFromFilesystem(Path iniFilename) throws InvalidFileFormatException, IOException, JocException {
+        return readConfigurationFromFilesystem(iniFilename, true);
+    }
+
     @Override
-    public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration,DBItemIamIdentityService dbItemIamIdentityService) throws IOException, SOSHibernateException,
-            JocException {
+    public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration, DBItemIamIdentityService dbItemIamIdentityService)
+            throws IOException, SOSHibernateException, JocException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             writeIni = new Wini(Globals.getShiroIniFile().toFile());
@@ -431,6 +432,6 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
     }
 
     public SecurityConfiguration readConfiguration() throws InvalidFileFormatException, JocException, SOSHibernateException, IOException {
-        return readConfiguration(null,"");
+        return readConfiguration(null, "");
     }
 }

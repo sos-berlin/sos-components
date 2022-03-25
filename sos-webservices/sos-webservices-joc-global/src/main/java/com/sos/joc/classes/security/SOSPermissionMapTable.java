@@ -140,7 +140,7 @@ public class SOSPermissionMapTable {
                 mappedPerms.add(entry);
                 }
             } else {
-                if (perm.startsWith("sos:products:joc:") || perm.length() < 13) {
+                if (perm.startsWith("sos:products:joc") || perm.length() < 17) {
                     mappedPerms.add(perm);
                 }
             }
