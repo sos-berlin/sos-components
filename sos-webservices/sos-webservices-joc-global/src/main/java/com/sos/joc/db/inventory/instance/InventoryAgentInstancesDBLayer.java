@@ -785,7 +785,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             }
             return j;
         } else {
-            StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(
+            StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(
                     " set disabled = ").append(disabled ? 1 : 0).append(" where subAgentId in (:subagentIds)");
             Query<?> query = getSession().createQuery(hql.toString());
             query.setParameterList("subagentIds", subagentIds);
