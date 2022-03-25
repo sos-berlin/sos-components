@@ -25,6 +25,8 @@ import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingLicenseException;
@@ -139,6 +141,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsResourceS
             }
 
             Globals.commit(connection);
+            EventBus.getInstance().post(new AgentInventoryEvent(controllerId, agentIds.keySet()));
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -260,6 +263,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsResourceS
             Globals.commit(connection);
             Globals.disconnect(connection);
             connection = null;
+            EventBus.getInstance().post(new AgentInventoryEvent(controllerId, agentIds.keySet()));
 
 //            if (!subAgentsToController.isEmpty()) {
 //                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(subAgentsToController)).thenAccept(e -> ProblemHelper

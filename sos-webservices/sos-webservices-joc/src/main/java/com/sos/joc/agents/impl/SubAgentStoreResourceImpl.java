@@ -26,6 +26,8 @@ import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingLicenseException;
@@ -82,6 +84,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
             Globals.commit(connection);
             Globals.disconnect(connection);
             connection = null;
+            EventBus.getInstance().post(new AgentInventoryEvent(controllerId, agentId));
             
 //            if (!subAgentsToController.isEmpty()) {
 //                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(subAgentsToController)).thenAccept(e -> ProblemHelper

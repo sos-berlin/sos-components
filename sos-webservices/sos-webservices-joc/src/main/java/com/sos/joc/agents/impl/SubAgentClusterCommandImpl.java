@@ -21,6 +21,8 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingLicenseException;
@@ -70,6 +72,9 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
 
             final List<String> dbSubagentClusterIds = subAgentClusters.stream().map(DBItemInventorySubAgentCluster::getSubAgentClusterId).distinct()
                     .collect(Collectors.toList());
+            
+            final List<String> dbAgentIds = subAgentClusters.stream().map(DBItemInventorySubAgentCluster::getAgentId).distinct().collect(Collectors
+                    .toList());
 
             // check that controllerId corresponds to subagentClusterIds
             if (subAgentClusters.size() != subagentClusterIds.size()) {
@@ -94,6 +99,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
                                 InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
                                 dbLayer1.setSubAgentClustersDeployed(subagentClusterIds.stream().collect(Collectors.toList()), false);
                                 Globals.commit(connection1);
+                                EventBus.getInstance().post(new AgentInventoryEvent(controllerId, dbAgentIds));
                             } catch (Exception e1) {
                                 Globals.rollback(connection1);
                                 ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
@@ -147,6 +153,8 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
 
             final List<String> dbSubagentClusterIds = subAgentClusters.stream().map(DBItemInventorySubAgentCluster::getSubAgentClusterId).distinct()
                     .collect(Collectors.toList());
+            final List<String> dbAgentIds = subAgentClusters.stream().map(DBItemInventorySubAgentCluster::getAgentId).distinct().collect(Collectors
+                    .toList());
 
             // check that controllerId corresponds to subagentClusterIds
             if (subAgentClusters.size() != subagentClusterIds.size()) {
@@ -162,6 +170,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
             List<String> unknownSubagentSelectionIds = subagentClusterIds.stream().filter(knownInController.negate()).collect(Collectors.toList());
             if (!unknownSubagentSelectionIds.isEmpty()) {
                 dbLayer.deleteSubAgentClusters(unknownSubagentSelectionIds);
+                EventBus.getInstance().post(new AgentInventoryEvent(controllerId, dbAgentIds));
                 Globals.commit(connection);
             }
 
@@ -177,6 +186,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
                                 InventorySubagentClustersDBLayer dbLayer1 = new InventorySubagentClustersDBLayer(connection1);
                                 dbLayer1.deleteSubAgentClusters(dbSubagentClusterIds);
                                 Globals.commit(connection1);
+                                EventBus.getInstance().post(new AgentInventoryEvent(controllerId, dbAgentIds));
                             } catch (Exception e1) {
                                 Globals.rollback(connection1);
                                 ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);

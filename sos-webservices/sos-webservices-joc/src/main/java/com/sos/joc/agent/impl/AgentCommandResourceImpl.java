@@ -1,9 +1,7 @@
 package com.sos.joc.agent.impl;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,8 +19,9 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentCommand;
@@ -113,6 +112,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             if (agentOnController.isRight()) {
                 subAgentIdsOnController.add(JUpdateItemOperation.deleteSimple(agentOnController.get().path()));
             }
+            // TODO consider to delete selection
             if (!subAgentIdsOnController.isEmpty()) {
                 proxy.api().updateItems(Flux.fromIterable(subAgentIdsOnController)).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
@@ -142,6 +142,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             dbLayer.deleteInstance(dbLayer.getAgentInstance(agentId));
             Globals.commit(connection);
+            EventBus.getInstance().post(new AgentInventoryEvent(controllerId, agentId));
         } catch (Exception e1) {
             Globals.rollback(connection);
             ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, jocError, controllerId);

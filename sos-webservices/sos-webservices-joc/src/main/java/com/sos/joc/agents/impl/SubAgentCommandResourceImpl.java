@@ -19,6 +19,8 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.items.SubAgentItem;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.SubAgentsCommand;
@@ -75,6 +77,7 @@ public class SubAgentCommandResourceImpl extends JOCResourceImpl implements ISub
             
             if (subAgentsMap.get(false) != null) {
                 dbLayer.deleteSubAgents(controllerId, subAgentsMap.get(false));
+                EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
             }
             if (subAgentsMap.get(true) != null) {
                 List<SubAgentItem> directors = dbLayer.getDirectorSubAgentIdsByControllerId(controllerId, subAgentsMap.get(true));
@@ -103,6 +106,7 @@ public class SubAgentCommandResourceImpl extends JOCResourceImpl implements ISub
                             InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
                             dbLayer1.deleteSubAgents(controllerId, subAgentsMap.get(true));
                             Globals.commit(connection1);
+                            EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
                             ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);

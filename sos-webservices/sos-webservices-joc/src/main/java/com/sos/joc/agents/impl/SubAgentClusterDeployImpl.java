@@ -25,6 +25,8 @@ import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingLicenseException;
@@ -159,6 +161,7 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
                             dbLayer1.setAgentsDeployed(updateAgentIds);
                             dbLayer1.setSubAgentClustersDeployed(subagentClusterIds.stream().collect(Collectors.toList()));
                             Globals.commit(connection1);
+                            EventBus.getInstance().post(new AgentInventoryEvent(controllerId, updateAgentIds));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
                             ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);

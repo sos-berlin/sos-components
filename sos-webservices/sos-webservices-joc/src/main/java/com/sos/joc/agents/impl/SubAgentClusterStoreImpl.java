@@ -126,6 +126,10 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
             }
             
             Globals.commit(connection);
+            
+            // TODO event determine controller Ids
+//            Set<String> agentIds = agentStoreParameter.getSubagentClusters().stream().map(SubagentCluster::getAgentId).collect(Collectors.toSet());
+//            EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
 
             return JOCDefaultResponse.responseStatusJSOk(now);
         } catch (JocException e) {

@@ -18,6 +18,8 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.DeployAgents;
@@ -74,7 +76,7 @@ public class AgentsDeployImpl extends JOCResourceImpl implements IAgentsDeploy {
             }
             
             List<JUpdateItemOperation> agentRefs = new ArrayList<>();
-            List<String> updateAgentRefs = new ArrayList<>();
+            List<String> updateAgentIds = new ArrayList<>();
             
             JControllerProxy proxy = Proxy.of(controllerId);
             JControllerState currentState = proxy.currentState();
@@ -88,7 +90,7 @@ public class AgentsDeployImpl extends JOCResourceImpl implements IAgentsDeploy {
                         agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createNewAgent(dbAgent)));
                         agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createSubagentDirector(dbAgent)));
                     }
-                    updateAgentRefs.add(dbAgent.getAgentId());
+                    updateAgentIds.add(dbAgent.getAgentId());
                 }
             }
 
@@ -102,8 +104,9 @@ public class AgentsDeployImpl extends JOCResourceImpl implements IAgentsDeploy {
                             connection1.setAutoCommit(false);
                             Globals.beginTransaction(connection1);
                             InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
-                            dbLayer1.setAgentsDeployed(updateAgentRefs);
+                            dbLayer1.setAgentsDeployed(updateAgentIds);
                             Globals.commit(connection1);
+                            EventBus.getInstance().post(new AgentInventoryEvent(controllerId, updateAgentIds));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
                             ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);

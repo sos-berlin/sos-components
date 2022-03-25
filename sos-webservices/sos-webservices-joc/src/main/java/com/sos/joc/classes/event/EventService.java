@@ -22,6 +22,7 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogChangedEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogWorkflowEvent;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
@@ -315,6 +316,18 @@ public class EventService {
             eventSnapshot.setEventType(evt.getKey());
             eventSnapshot.setObjectType(EventType.WORKFLOW);
             eventSnapshot.setWorkflow(new WorkflowId(evt.getWorkflowPath(), evt.getVersionId()));
+            addEvent(eventSnapshot);
+        }
+    }
+    
+    @Subscribe({ AgentInventoryEvent.class })
+    public void createEvent(AgentInventoryEvent evt) {
+        if (controllerId.equals(evt.getControllerId())) {
+            EventSnapshot eventSnapshot = new EventSnapshot();
+            eventSnapshot.setEventId(evt.getEventId() / 1000);
+            eventSnapshot.setEventType(evt.getKey());
+            eventSnapshot.setObjectType(EventType.AGENT);
+            eventSnapshot.setMessage(evt.getAgentId());
             addEvent(eventSnapshot);
         }
     }
