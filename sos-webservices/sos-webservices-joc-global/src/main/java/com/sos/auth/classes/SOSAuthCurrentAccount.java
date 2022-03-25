@@ -233,16 +233,17 @@ public class SOSAuthCurrentAccount {
         boolean excluded = false;
         if (currentSubjects != null) {
             for (ISOSAuthSubject subject : currentSubjects) {
-                Path path = Paths.get(permission.replace(':', '/'));
-                int nameCount = path.getNameCount();
-                for (int i = 0; i < nameCount - 1; i++) {
-                    if (excluded) {
-                        break;
+                if (subject != null) {
+                    Path path = Paths.get(permission.replace(':', '/'));
+                    int nameCount = path.getNameCount();
+                    for (int i = 0; i < nameCount - 1; i++) {
+                        if (excluded) {
+                            break;
+                        }
+                        String s = path.subpath(0, nameCount - i).toString().replace(File.separatorChar, ':');
+                        excluded = subject.isPermitted("-" + s) || subject.isPermitted("-" + controllerId + ":" + s);
                     }
-                    String s = path.subpath(0, nameCount - i).toString().replace(File.separatorChar, ':');
-                    excluded = subject.isPermitted("-" + s) || subject.isPermitted("-" + controllerId + ":" + s);
                 }
-
             }
         }
 
@@ -328,13 +329,17 @@ public class SOSAuthCurrentAccount {
         boolean permitted = false;
         if (currentSubjects != null) {
             for (ISOSAuthSubject subject : currentSubjects) {
-                permitted = getPermissionFromSubject(subject, controllerId, permission);
-                if (permitted) {
-                    return true;
+                if (subject != null) {
+                    permitted = getPermissionFromSubject(subject, controllerId, permission);
+                    if (permitted) {
+                        return true;
+                    }
                 }
             }
         }
+
         return permitted;
+
     }
 
     public boolean isPermitted(String permission) {
