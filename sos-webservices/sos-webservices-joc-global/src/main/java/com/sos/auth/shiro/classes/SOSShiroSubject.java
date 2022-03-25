@@ -71,7 +71,11 @@ public class SOSShiroSubject implements ISOSAuthSubject {
 
     @Override
     public Boolean isAuthenticated() {
-        return subject.isAuthenticated();
+        if (subject == null) {
+            return false;
+        } else {
+            return subject.isAuthenticated();
+        }
     }
 
     @Override
