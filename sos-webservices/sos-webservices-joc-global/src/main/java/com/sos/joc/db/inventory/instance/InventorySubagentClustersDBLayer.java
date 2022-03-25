@@ -85,7 +85,7 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
         } else {
             try {
                 StringBuilder hql = new StringBuilder();
-                hql.append("from ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS).append(" sac, ");
+                hql.append("select sac from ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS).append(" sac, ");
                 hql.append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" ai ");
                 hql.append("where ai.agentId = sac.agentId ");
                 if (controllerIds.size() == 1) {

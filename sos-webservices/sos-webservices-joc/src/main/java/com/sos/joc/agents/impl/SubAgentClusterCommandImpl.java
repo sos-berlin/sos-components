@@ -127,9 +127,9 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
         try {
             initLogging(API_CALL_DELETE, filterBytes, accessToken);
 
-            if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
-                throw new JocMissingLicenseException("missing license for Agent cluster");
-            }
+//            if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
+//                throw new JocMissingLicenseException("missing license for Agent cluster");
+//            }
 
             JsonValidator.validateFailFast(filterBytes, DeployClusterAgents.class);
             DeployClusterAgents agentParameter = Globals.objectMapper.readValue(filterBytes, DeployClusterAgents.class);
