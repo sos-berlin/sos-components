@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -54,15 +55,13 @@ import com.sos.joc.model.controller.TestConnect;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
-import js7.data_for_java.subagent.JSubagentRef;
+import js7.data_for_java.subagent.JSubagentItem;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
@@ -312,9 +311,11 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 JControllerProxy proxy = Proxy.of(controllerId);
                 JControllerState currentState = proxy.currentState();
                 
+                Map<AgentPath, JAgentRef> knownAgents = currentState.pathToAgentRef();
+                
                 proxy.api().updateItems(Flux.fromStream(agentWatchers.stream().map(a -> {
-                    Either<Problem, JAgentRef> agentE = currentState.pathToAgentRef(AgentPath.of(a.getAgentId()));
-                    if (agentE.isRight() && (!agentE.get().director().isPresent() || agentE.get().directors().isEmpty())) {
+                    JAgentRef agentE = knownAgents.get(AgentPath.of(a.getAgentId()));
+                    if (agentE != null && (!agentE.director().isPresent() || agentE.directors().isEmpty())) {
                         return Collections.singletonList(JUpdateItemOperation.addOrChangeSimple(createOldAgent(a)));
                     } else {
                         return Arrays.asList(JUpdateItemOperation.addOrChangeSimple(createNewAgent(a)), JUpdateItemOperation.addOrChangeSimple(
@@ -347,8 +348,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         return JAgentRef.of(AgentPath.of(a.getAgentId()), SubagentId.of((a.getAgentId())));
     }
     
-    private static JSubagentRef createSubagentDirector(Agent a) {
-        return JSubagentRef.of(SubagentId.of(a.getAgentId()), AgentPath.of(a.getAgentId()), Uri.of(a.getUrl()));
+    private static JSubagentItem createSubagentDirector(Agent a) {
+        return JSubagentItem.of(SubagentId.of(a.getAgentId()), AgentPath.of(a.getAgentId()), Uri.of(a.getUrl()), true);
     }
     
     @Override

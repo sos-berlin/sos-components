@@ -37,7 +37,6 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
-import js7.base.problem.Problem;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
@@ -45,7 +44,7 @@ import js7.data.subagent.SubagentSelectionId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
-import js7.data_for_java.subagent.JSubagentRef;
+import js7.data_for_java.subagent.JSubagentItem;
 import js7.data_for_java.subagent.JSubagentSelection;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
@@ -98,9 +97,10 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
             List<SubagentDirectorType> directorTypes = Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR, SubagentDirectorType.SECONDARY_DIRECTOR);
             List<JUpdateItemOperation> updateItems = new ArrayList<>();
             List<String> updateAgentIds = new ArrayList<>();
-            List<String> subagentIdsAtController = currentState.idToSubagentRef().keySet().stream().map(SubagentId::string).collect(Collectors.toList());
+            List<String> subagentIdsAtController = currentState.idToSubagentItem().keySet().stream().map(SubagentId::string).collect(Collectors.toList());
             List<String> updateSubagentIds = subAgentClusters.values().stream().flatMap(List::stream).map(SubAgentId::getSubagentId).distinct()
                     .collect(Collectors.toList());
+            Map<AgentPath, JAgentRef> knownAgents = currentState.pathToAgentRef();
 
             for (Map.Entry<DBItemInventorySubAgentCluster, List<SubAgentId>> subAgentCluster : subAgentClusters.entrySet()) {
                 DBItemInventorySubAgentCluster key = subAgentCluster.getKey();
@@ -109,7 +109,7 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
                         subAgentCluster.getValue().stream().collect(Collectors.toMap(s -> SubagentId.of(s.getSubagentId()),
                                 SubAgentId::getPriority)));
                 
-                if (!updateAgentIds.contains(key.getAgentId()) && eitherIsLeft(currentState.pathToAgentRef(AgentPath.of(key.getAgentId())))) {
+                if (!updateAgentIds.contains(key.getAgentId()) && knownAgents.get(AgentPath.of(key.getAgentId())) != null) {
                     updateAgentIds.add(key.getAgentId());
                 }
                 
@@ -142,9 +142,9 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
             if (updateSubagentIds != null) {
                 InventoryAgentInstancesDBLayer dbLayer2 = new InventoryAgentInstancesDBLayer(connection);
                 List<DBItemInventorySubAgentInstance> subAgents = dbLayer2.getSubAgentInstancesByControllerIds(Collections.singleton(controllerId));
-                updateItems.addAll(subAgents.stream().filter(s -> updateSubagentIds.contains(s.getSubAgentId())).map(s -> JSubagentRef.of(SubagentId
-                        .of(s.getSubAgentId()), AgentPath.of(s.getAgentId()), Uri.of(s.getUri()))).map(JUpdateItemOperation::addOrChangeSimple)
-                        .collect(Collectors.toList()));
+                updateItems.addAll(subAgents.stream().filter(s -> updateSubagentIds.contains(s.getSubAgentId())).map(s -> JSubagentItem.of(SubagentId
+                        .of(s.getSubAgentId()), AgentPath.of(s.getAgentId()), Uri.of(s.getUri()), s.getDisabled())).map(
+                                JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
             }
             
             if (!updateItems.isEmpty()) {
@@ -181,12 +181,5 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
         } finally {
             Globals.disconnect(connection);
         }
-    }
-    
-    private static <T> boolean eitherIsLeft(Either<Problem, T> e) {
-        if (e.isLeft()) {
-            return true;
-        }
-        return false;
     }
 }

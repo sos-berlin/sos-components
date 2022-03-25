@@ -38,8 +38,6 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.model.common.Folder;
 
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
 import js7.data.board.BoardPath;
 import js7.data.board.BoardState;
 import js7.data.order.Order;
@@ -63,10 +61,9 @@ public class BoardHelper {
         JBoardState jBoardState = null;
         if (controllerState != null) {
             stateText = SyncStateText.NOT_IN_SYNC;
-            Either<Problem, JBoardState> boardV = controllerState.pathToBoardState(BoardPath.of(dc.getName()));
-            if (boardV != null && boardV.isRight()) {
+            jBoardState = controllerState.pathToBoardState().get(BoardPath.of(dc.getName()));
+            if (jBoardState != null) {
                 stateText = SyncStateText.IN_SYNC;
-                jBoardState = boardV.get();
             }
         }
 
@@ -90,10 +87,9 @@ public class BoardHelper {
         JBoardState jBoardState = null;
         if (controllerState != null) {
             stateText = SyncStateText.NOT_IN_SYNC;
-            Either<Problem, JBoardState> boardV = controllerState.pathToBoardState(BoardPath.of(dc.getName()));
-            if (boardV != null && boardV.isRight()) {
+            jBoardState = controllerState.pathToBoardState().get(BoardPath.of(dc.getName()));
+            if (jBoardState != null) {
                 stateText = SyncStateText.IN_SYNC;
-                jBoardState = boardV.get();
             }
         }
 

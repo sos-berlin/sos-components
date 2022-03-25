@@ -18,6 +18,7 @@ import js7.data.job.JobResourcePath;
 import js7.data.lock.LockPath;
 import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
+import js7.data_for_java.common.JJsonable;
 import js7.data_for_java.controller.JControllerState;
 
 public class SyncStateHelper {
@@ -62,7 +63,7 @@ public class SyncStateHelper {
                 stateText = SyncStateText.NOT_DEPLOYED;
             } else {
                 if (currentstate != null) {
-                    stateText = getState(currentstate.pathToJobResource(JobResourcePath.of(deployedNames.get(invCId))));
+                    stateText = getState(currentstate.pathToJobResource().get(JobResourcePath.of(deployedNames.get(invCId))));
                 }
             }
             break;
@@ -71,7 +72,7 @@ public class SyncStateHelper {
                 stateText = SyncStateText.NOT_DEPLOYED;
             } else {
                 if (currentstate != null) {
-                    stateText = getState(currentstate.pathToLock(LockPath.of(deployedNames.get(invCId))));
+                    stateText = getState(currentstate.pathToLock().get(LockPath.of(deployedNames.get(invCId))));
                 }
             }
             break;
@@ -80,7 +81,7 @@ public class SyncStateHelper {
                 stateText = SyncStateText.NOT_DEPLOYED;
             } else {
                 if (currentstate != null) {
-                    stateText = getState(currentstate.pathToFileWatch(OrderWatchPath.of(deployedNames.get(invCId))));
+                    stateText = getState(currentstate.pathToFileWatch().get(OrderWatchPath.of(deployedNames.get(invCId))));
                 }
             }
             break;
@@ -89,7 +90,7 @@ public class SyncStateHelper {
                 stateText = SyncStateText.NOT_DEPLOYED;
             } else {
                 if (currentstate != null) {
-                    stateText = getState(currentstate.pathToBoard(BoardPath.of(deployedNames.get(invCId))));
+                    stateText = getState(currentstate.pathToBoard().get(BoardPath.of(deployedNames.get(invCId))));
                 }
             }
             break;
@@ -112,13 +113,13 @@ public class SyncStateHelper {
         case WORKFLOW:
             return isNotInSync(currentstate.repo().pathToWorkflow(WorkflowPath.of(name)));
         case JOBRESOURCE:
-            return isNotInSync(currentstate.pathToJobResource(JobResourcePath.of(name)));
+            return currentstate.pathToJobResource().get(JobResourcePath.of(name)) != null;
         case LOCK:
-            return isNotInSync(currentstate.pathToLock(LockPath.of(name)));
+            return currentstate.pathToLock().get(LockPath.of(name)) != null;
         case FILEORDERSOURCE:
-            return isNotInSync(currentstate.pathToFileWatch(OrderWatchPath.of(name)));
+            return currentstate.pathToFileWatch().get(OrderWatchPath.of(name)) != null;
         case NOTICEBOARD:
-            return isNotInSync(currentstate.pathToBoard(BoardPath.of(name)));
+            return currentstate.pathToBoard().get(BoardPath.of(name)) != null;
         default:
             return true;
         }
@@ -127,6 +128,14 @@ public class SyncStateHelper {
     private static SyncStateText getState(Either<Problem, ?> either) {
         SyncStateText stateText = SyncStateText.NOT_IN_SYNC;
         if (either != null && either.isRight()) {
+            stateText = SyncStateText.IN_SYNC;
+        }
+        return stateText;
+    }
+    
+    private static SyncStateText getState(JJsonable<?> o) {
+        SyncStateText stateText = SyncStateText.NOT_IN_SYNC;
+        if (o != null) {
             stateText = SyncStateText.IN_SYNC;
         }
         return stateText;

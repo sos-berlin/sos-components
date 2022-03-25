@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -27,14 +28,13 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
-import js7.base.problem.Problem;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
-import js7.data_for_java.subagent.JSubagentRef;
+import js7.data_for_java.subagent.JSubagentItem;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
@@ -82,9 +82,10 @@ public class AgentsDeployImpl extends JOCResourceImpl implements IAgentsDeploy {
             JControllerState currentState = proxy.currentState();
 
             if (dbAgents != null) {
+                Map<AgentPath, JAgentRef> knownAgents = currentState.pathToAgentRef();
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-                    Either<Problem, JAgentRef> agentE = currentState.pathToAgentRef(AgentPath.of(dbAgent.getAgentId()));
-                    if (agentE.isRight() && (!agentE.get().director().isPresent() || agentE.get().directors().isEmpty())) {
+                    JAgentRef agentRef = knownAgents.get(AgentPath.of(dbAgent.getAgentId()));
+                    if (agentRef != null && (!agentRef.director().isPresent() || agentRef.directors().isEmpty())) {
                         agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createOldAgent(dbAgent)));
                     } else {
                         agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createNewAgent(dbAgent)));
@@ -138,7 +139,7 @@ public class AgentsDeployImpl extends JOCResourceImpl implements IAgentsDeploy {
         return JAgentRef.of(AgentPath.of(a.getAgentId()), SubagentId.of((a.getAgentId())));
     }
     
-    private static JSubagentRef createSubagentDirector(DBItemInventoryAgentInstance a) {
-        return JSubagentRef.of(SubagentId.of(a.getAgentId()), AgentPath.of(a.getAgentId()), Uri.of(a.getUri()));
+    private static JSubagentItem createSubagentDirector(DBItemInventoryAgentInstance a) {
+        return JSubagentItem.of(SubagentId.of(a.getAgentId()), AgentPath.of(a.getAgentId()), Uri.of(a.getUri()), true);
     }
 }

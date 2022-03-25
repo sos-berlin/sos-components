@@ -360,12 +360,12 @@ public class EventService {
             if (evt instanceof OrderEvent) {
                 final OrderId orderId = (OrderId) key;
                 String mainOrderId = orderId.string().substring(0, OrdersHelper.mainOrderIdLength);
-                Optional<JOrder> opt = currentState.idToOrder(orderId);
-                if (opt.isPresent()) {
+                JOrder optOrder = currentState.idToOrder().get(orderId);
+                if (optOrder != null) {
                     //LOGGER.info(opt.get().toString());
                     WorkflowId w = orders.get(mainOrderId);
                     if (w == null) {
-                        w = mapWorkflowId(opt.get().workflowId());
+                        w = mapWorkflowId(optOrder.workflowId());
                         orders.put(mainOrderId, w);
                     }
                     addEvent(createWorkflowEventOfOrder(eventId, w));
@@ -377,7 +377,7 @@ public class EventService {
                             addEvent(createLockEvent(eventId, lock.string()));
                         });
                     } else if (evt instanceof OrderNoticeEvent) {
-                        orderPositionToBoardPath(opt, currentState).ifPresent(boardPath -> addEvent(createBoardEvent(eventId,
+                        orderPositionToBoardPath(optOrder, currentState).ifPresent(boardPath -> addEvent(createBoardEvent(eventId,
                                 boardPath.string())));
                     }
                 } else {
@@ -460,8 +460,9 @@ public class EventService {
         }
     };
     
-    private static Optional<BoardPath> orderPositionToBoardPath(Optional<JOrder> orderOpt, JControllerState controllerState) {
-        return orderOpt.map(order -> controllerState.asScala().instruction(order.asScala().workflowPosition())).flatMap(instruction -> tryCast(
+    private static Optional<BoardPath> orderPositionToBoardPath(JOrder order, JControllerState controllerState) {
+        Optional<JOrder> orderOpt = order == null ? Optional.empty() : Optional.of(order);
+        return orderOpt.map(o -> controllerState.asScala().instruction(o.asScala().workflowPosition())).flatMap(instruction -> tryCast(
                 BoardInstruction.class, instruction)).map(postNotice -> postNotice.boardPath());
     }
 

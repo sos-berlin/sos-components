@@ -200,8 +200,8 @@ public class ProxyTest {
             LOGGER.info(controllerState.eventId() + "");
 
             // Variante 1
-            Map<String, Long> map1 = controllerState.orderIds().stream().map(o -> controllerState.idToOrder(o).get()).collect(Collectors.groupingBy(
-                    jOrder -> groupStatesMap.get(jOrder.asScala().state().getClass()), Collectors.counting()));
+            Map<String, Long> map1 = controllerState.idToOrder().values().stream().collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder
+                    .asScala().state().getClass()), Collectors.counting()));
             LOGGER.info(map1.toString());
 
             // Variante 2 (preferred if you need predicates, e.g 'o -> true')

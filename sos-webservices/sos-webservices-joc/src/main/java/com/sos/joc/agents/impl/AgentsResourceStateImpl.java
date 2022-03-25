@@ -148,14 +148,14 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                     }
                     
                     agentsList.addAll(dbAgents.stream().map(dbAgent -> {
-                        Either<Problem, JAgentRefState> either = currentState.pathToAgentRefState(AgentPath.of(dbAgent.getAgentId()));
+                        JAgentRefState jAgentRefState = currentState.pathToAgentRefState().get(AgentPath.of(dbAgent.getAgentId()));
                         AgentV agent = mapDbAgentToAgentV(dbAgent);
                         AgentStateText stateText = AgentStateText.UNKNOWN;
                         if (Proxies.isCoupled(controllerId)) {
                         //if (!olderThan30sec || Proxies.isCoupled(controllerId)) {
-                            if (either.isRight()) {
-                                LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  state = " + either.get().toJson());
-                                AgentRefState agentRefState = either.get().asScala();
+                            if (jAgentRefState != null) {
+                                LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  state = " + jAgentRefState.toJson());
+                                AgentRefState agentRefState = jAgentRefState.asScala();
                                 DelegateCouplingState couplingState = agentRefState.couplingState();
                                 Optional<Problem> optProblem = OptionConverters.toJava(agentRefState.problem());
                                 if (optProblem.isPresent()) {
@@ -172,9 +172,6 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                 } else if (couplingState instanceof DelegateCouplingState.Reset$) {
                                     stateText = AgentStateText.RESET;
                                 }
-                            } else {
-                                LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  problem = " + either.getLeft().messageWithCause());
-                                agent.setErrorMessage(ProblemHelper.getErrorMessage(either.getLeft()));
                             }
                         }
                         if (withStateFilter && !agentsParam.getStates().contains(stateText)) {

@@ -76,10 +76,9 @@ public class LockEntryHelper {
         JLockState jLockState = null;
         if (controllerState != null) {
             stateText = SyncStateText.NOT_IN_SYNC;
-            Either<Problem, JLockState> lockV = controllerState.pathToLockState(LockPath.of(lockId));
-            if (lockV != null && lockV.isRight()) {
+            jLockState = controllerState.pathToLockState().get(LockPath.of(lockId));
+            if (jLockState != null) {
                 stateText = SyncStateText.IN_SYNC;
-                jLockState = lockV.get();
             }
         }
         

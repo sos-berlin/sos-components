@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.ws.rs.Path;
@@ -48,10 +47,9 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
 
             JControllerState currentState = Proxy.of(orderFilter.getControllerId()).currentState();
             Instant surveyDateInstant = currentState.instant();
-            Optional<JOrder> optional = currentState.idToOrder(OrderId.of(orderFilter.getOrderId()));
+            JOrder jOrder = currentState.idToOrder().get(OrderId.of(orderFilter.getOrderId()));
 
-            if (optional.isPresent()) {
-                JOrder jOrder = optional.get();
+            if (jOrder != null) {
                 Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(Collections.singleton(jOrder.id()), currentState);
                 OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, currentState, orderFilter.getCompact(), folderPermissions.getListOfFolders(),
                         waitingOrders, Collections.singletonMap(jOrder.workflowId(), OrdersHelper.getFinalParameters(jOrder.workflowId(),

@@ -37,7 +37,7 @@ import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUpdateItemOperation;
-import js7.data_for_java.subagent.JSubagentRef;
+import js7.data_for_java.subagent.JSubagentItem;
 import reactor.core.publisher.Flux;
 
 @Path("agents")
@@ -92,8 +92,8 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
                     updateItems.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(agentPath, directors)));
                     updateAgentIds.add(agentId);
 
-                    updateItems.addAll(subAgents.stream().map(s -> JSubagentRef.of(SubagentId.of(s.getSubAgentId()), agentPath, Uri.of(s.getUri())))
-                            .map(JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
+                    updateItems.addAll(subAgents.stream().map(s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), agentPath, Uri.of(s.getUri()), s
+                            .getDisabled())).map(JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
                     updateSubagentIds.addAll(subAgents.stream().map(DBItemInventorySubAgentInstance::getSubAgentId).collect(Collectors.toList()));
                 }
             }

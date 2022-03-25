@@ -64,7 +64,7 @@ public class SubAgentCommandResourceImpl extends JOCResourceImpl implements ISub
 
             JControllerProxy proxy = Proxy.of(controllerId);
 
-            Set<String> subAgentIdsOnController = proxy.currentState().idToSubagentRef().keySet().stream().map(SubagentId::string).filter(
+            Set<String> subAgentIdsOnController = proxy.currentState().idToSubagentItem().keySet().stream().map(SubagentId::string).filter(
                     s -> subAgentCommand.getSubagentIds().contains(s)).collect(Collectors.toSet());
 
             final Map<Boolean, List<String>> subAgentsMap = subAgentCommand.getSubagentIds().stream().collect(Collectors.groupingBy(

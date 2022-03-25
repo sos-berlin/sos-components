@@ -29,7 +29,6 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
-import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
 import js7.data.controller.ControllerCommand;
 import js7.data.subagent.SubagentId;
@@ -37,7 +36,7 @@ import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
-import js7.data_for_java.subagent.JSubagentRef;
+import js7.data_for_java.subagent.JSubagentItem;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
@@ -102,15 +101,15 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             JControllerProxy proxy = Proxy.of(controllerId);
             JControllerState currentState = proxy.currentState();
             
-            Map<SubagentId, JSubagentRef> subAgentsOnController = currentState.idToSubagentRef();
+            Map<SubagentId, JSubagentItem> subAgentsOnController = currentState.idToSubagentItem();
 
             Set<JUpdateItemOperation> subAgentIdsOnController = subAgentsOnController.values().stream().filter(s -> s.agentPath().string().equals(
-                    agentId)).map(JSubagentRef::id).map(JUpdateItemOperation::deleteSimple).collect(Collectors.toSet());
+                    agentId)).map(JSubagentItem::id).map(JUpdateItemOperation::deleteSimple).collect(Collectors.toSet());
 
             // add agent
-            Either<Problem, JAgentRef> agentOnController = currentState.pathToAgentRef(AgentPath.of(agentId));
-            if (agentOnController.isRight()) {
-                subAgentIdsOnController.add(JUpdateItemOperation.deleteSimple(agentOnController.get().path()));
+            JAgentRef agentOnController = currentState.pathToAgentRef().get(AgentPath.of(agentId));
+            if (agentOnController != null) {
+                subAgentIdsOnController.add(JUpdateItemOperation.deleteSimple(agentOnController.path()));
             }
             // TODO consider to delete selection
             if (!subAgentIdsOnController.isEmpty()) {

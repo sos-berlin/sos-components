@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -625,8 +626,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     private static Stream<JOrder> cyclicFreshOrderIds(Collection<String> orderIds, JControllerState currentState) {
         Stream<JOrder> cyclicOrderStream = Stream.empty();
         // determine cyclic ids
-        Set<String> freshCyclicIds = orderIds.stream().filter(s -> OrdersHelper.isCyclicOrderId(s)).map(s -> currentState.idToOrder(OrderId.of(s)))
-                .filter(Optional::isPresent).map(Optional::get).filter(o -> Order.Fresh$.class.isInstance(o.asScala().state())).map(o -> OrdersHelper
+        Map<OrderId, JOrder> knownOrders = currentState.idToOrder();
+        Set<String> freshCyclicIds = orderIds.stream().filter(s -> OrdersHelper.isCyclicOrderId(s)).map(s -> knownOrders.get(OrderId.of(s)))
+                .filter(Objects::nonNull).filter(o -> Order.Fresh$.class.isInstance(o.asScala().state())).map(o -> OrdersHelper
                         .getCyclicOrderIdMainPart(o.id().string())).collect(Collectors.toSet());
         if (!freshCyclicIds.isEmpty()) {
             cyclicOrderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> freshCyclicIds

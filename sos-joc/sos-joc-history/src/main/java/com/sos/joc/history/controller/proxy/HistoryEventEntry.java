@@ -51,7 +51,7 @@ import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrder.Forked;
 import js7.data_for_java.order.JOrderEvent;
 import js7.data_for_java.order.JOrderEvent.JOrderForked;
-import js7.data_for_java.subagent.JSubagentRef;
+import js7.data_for_java.subagent.JSubagentItem;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
@@ -288,12 +288,12 @@ public class HistoryEventEntry {
             Collection<OrderId> orderIds = null;
             List<OrderId> queuedOrderIds = null;
             if (checkState) {
-                JLockState jl = getFromEither(state.pathToLockState(lockPath));
+                JLockState jl = getFromMap(state.pathToLockState().get(lockPath), lockPath.string());
                 l = jl.lock();
                 orderIds = jl.orderIds();
                 queuedOrderIds = jl.queuedOrderIds();
             } else {
-                JLock jl = getFromEither(state.pathToLock(lockPath));
+                JLock jl = getFromMap(state.pathToLock().get(lockPath), lockPath.string());
                 l = jl.asScala();
             }
             return new OrderLock(l.path().string(), l.limit(), count == null ? null : OptionConverters.toJava(count), orderIds, queuedOrderIds);
@@ -773,8 +773,7 @@ public class HistoryEventEntry {
             id = arp.string();
 
             // subAgents = new HashMap<>();
-            Either<Problem, JAgentRef> pa = eventAndState.state().pathToAgentRef(arp);
-            JAgentRef ar = getFromEither(pa);
+            JAgentRef ar = getFromMap(eventAndState.state().pathToAgentRef().get(arp), id);
             if (ar != null) {
                 if (ar.uri().isPresent()) {// single agent
                     uri = ar.uri().get().string();
@@ -782,8 +781,8 @@ public class HistoryEventEntry {
                     Optional<SubagentId> director = ar.director();// ar.directors();
                     if (director.isPresent()) {
                         SubagentId directorId = director.get();
-                        Map<SubagentId, JSubagentRef> map = eventAndState.state().idToSubagentRef();
-                        JSubagentRef sar = map.get(directorId);
+                        Map<SubagentId, JSubagentItem> map = eventAndState.state().idToSubagentItem();
+                        JSubagentItem sar = map.get(directorId);
                         if (sar != null) {
                             uri = sar.uri().string();
                         }
@@ -821,6 +820,13 @@ public class HistoryEventEntry {
             throw new FatEventProblemException(either.getLeft());
         }
         return either.get();
+    }
+    
+    private <T> T getFromMap(T o, String name) throws FatEventProblemException {
+        if (o == null) {
+            throw new FatEventProblemException(Problem.of("Object '" + name + "' doesn't exist."));
+        }
+        return o;
     }
 
     private Duration getDuration(FiniteDuration fd) {

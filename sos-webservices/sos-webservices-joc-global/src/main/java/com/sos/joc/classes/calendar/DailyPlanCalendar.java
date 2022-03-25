@@ -3,6 +3,7 @@ package com.sos.joc.classes.calendar;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,10 +20,11 @@ import com.sos.joc.event.bean.dailyplan.DailyPlanCalendarEvent;
 import com.sos.joc.exceptions.JocError;
 
 import io.vavr.control.Either;
-import js7.base.problem.Problem;
 import js7.data.calendar.CalendarPath;
 import js7.data_for_java.calendar.JCalendar;
+import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
+import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
@@ -49,7 +51,7 @@ public class DailyPlanCalendar {
     public void initDailyPlanCalendar(DailyPlanCalendarEvent evt) {
         if (!initIsCalled) {
             initIsCalled = true;
-            updateDailyPlanCalendar(null, null, null);
+            updateDailyPlanCalendar((String) null, (String) null, (JocError) null);
         }
     }
     
@@ -74,12 +76,13 @@ public class DailyPlanCalendar {
 //    }
     
     // this method is called directly in onProxyCoupled so that we don't need longer to listen ProxyCoupled event
-    public void updateDailyPlanCalendar(JControllerProxy proxy, String controller) {
+    public void updateDailyPlanCalendar(JControllerApi controllerApi, JControllerState currentState, String controller) {
         if (initIsCalled) {
             try {
                 JCalendar calendar = getDailyPlanCalendar(Globals.getConfigurationGlobalsDailyPlan());
-                if (!dailyPlanCalendarIsAlreadySubmitted(proxy, calendar)) {
-                    proxy.api().updateItems(Flux.just(JUpdateItemOperation.addOrChangeSimple(calendar))).thenAccept(e -> {
+                Map<CalendarPath, JCalendar> knownCalendars = currentState.pathToCalendar();
+                if (!dailyPlanCalendarIsAlreadySubmitted(knownCalendars, calendar)) {
+                    controllerApi.updateItems(Flux.just(JUpdateItemOperation.addOrChangeSimple(calendar))).thenAccept(e -> {
                         if (e.isRight()) {
                             LOGGER.info("DailyPlanCalendar submitted to " + controller);
                         } else {
@@ -125,7 +128,8 @@ public class DailyPlanCalendar {
         for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
             try {
                 JControllerProxy proxy = Proxy.of(controllerId);
-                if (!dailyPlanCalendarIsAlreadySubmitted(proxy, calendar)) {
+                Map<CalendarPath, JCalendar> knownCalendars = proxy.currentState().pathToCalendar();
+                if (!dailyPlanCalendarIsAlreadySubmitted(knownCalendars, calendar)) {
                     proxy.api().updateItems(itemOperation).thenAccept(e -> {
                         if (curControllerId != null && controllerId.equals(curControllerId)) {
                             ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, controllerId);
@@ -145,10 +149,9 @@ public class DailyPlanCalendar {
         };
     }
     
-    private static boolean dailyPlanCalendarIsAlreadySubmitted(JControllerProxy proxy, JCalendar newCalendar) {
-        Either<Problem, JCalendar> oldCalendarE = proxy.currentState().pathToCalendar(dailyPlanCalendarPath);
-        if (oldCalendarE.isRight()) {
-            JCalendar oldCalendar = oldCalendarE.get();
+    private static boolean dailyPlanCalendarIsAlreadySubmitted(Map<CalendarPath, JCalendar> knownCalendars, JCalendar newCalendar) {
+        JCalendar oldCalendar = knownCalendars.get(dailyPlanCalendarPath);
+        if (oldCalendar != null) {
             if (oldCalendar.timezone().equals(newCalendar.timezone()) && oldCalendar.dateOffset().equals(newCalendar.dateOffset())) {
                 return true;
             }

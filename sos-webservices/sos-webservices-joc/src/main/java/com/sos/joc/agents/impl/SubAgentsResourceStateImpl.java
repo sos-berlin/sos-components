@@ -51,7 +51,7 @@ import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
-import js7.data_for_java.subagent.JSubagentRefState;
+import js7.data_for_java.subagent.JSubagentItemState;
 import js7.proxy.javaapi.JControllerProxy;
 import scala.compat.java8.OptionConverters;
 
@@ -144,7 +144,7 @@ public class SubAgentsResourceStateImpl extends JOCResourceImpl implements ISubA
                         }).filter(Objects::nonNull).collect(Collectors.groupingBy(OrderV::getAgentId)));
                     }
                     
-                    Map<SubagentId, JSubagentRefState> m = currentState.idToSubagentRefState();
+                    Map<SubagentId, JSubagentItemState> m = currentState.idToSubagentItemState();
                     //m.get("").asScala().
                     //JSubagentRefState.asScala().couplingState();
                     

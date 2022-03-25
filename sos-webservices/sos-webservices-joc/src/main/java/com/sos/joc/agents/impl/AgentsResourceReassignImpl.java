@@ -28,15 +28,13 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
-import js7.data_for_java.subagent.JSubagentRef;
+import js7.data_for_java.subagent.JSubagentItem;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
@@ -76,22 +74,24 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             if (dbAvailableAgents != null) {
                 JControllerProxy proxy = Proxy.of(controllerId);
                 JControllerState currentState = proxy.currentState();
-                Map<JAgentRef, List<JSubagentRef>> agents = new LinkedHashMap<>(dbAvailableAgents.size());
+                Map<JAgentRef, List<JSubagentItem>> agents = new LinkedHashMap<>(dbAvailableAgents.size());
                 
                 Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                         controllerId), false, true);
+                Map<AgentPath, JAgentRef> knownAgents = currentState.pathToAgentRef();
+                
                 for (DBItemInventoryAgentInstance agent : dbAvailableAgents) {
                     boolean versionBefore220beta20211201 = false;
                     List<DBItemInventorySubAgentInstance> subs = subAgents.get(agent.getAgentId());
                     if (subs == null || subs.isEmpty()) { // single agent
-                        Either<Problem, JAgentRef> agentE = currentState.pathToAgentRef(AgentPath.of(agent.getAgentId()));
-                        if (agentE.isRight() && (!agentE.get().director().isPresent() || agentE.get().directors().isEmpty())) {
+                        JAgentRef agentE = knownAgents.get(AgentPath.of(agent.getAgentId()));
+                        if (agentE != null && (!agentE.director().isPresent() || agentE.directors().isEmpty())) {
                             versionBefore220beta20211201 = true;
                         }
                         subs = Collections.singletonList(dbLayer.solveAgentWithoutSubAgent(agent));
                     }
-                    List<JSubagentRef> subRefs = subs.stream().map(s -> JSubagentRef.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s
-                            .getAgentId()), Uri.of(s.getUri()))).collect(Collectors.toList());
+                    List<JSubagentItem> subRefs = subs.stream().map(s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s
+                            .getAgentId()), Uri.of(s.getUri()), s.getDisabled())).collect(Collectors.toList());
                     Set<SubagentId> directors = subs.stream().filter(s -> s.getIsDirector() > SubagentDirectorType.NO_DIRECTOR.intValue()).sorted()
                             .map(s -> SubagentId.of(s.getSubAgentId())).collect(Collectors.toSet());
                     if (versionBefore220beta20211201) {

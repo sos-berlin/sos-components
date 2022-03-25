@@ -50,7 +50,7 @@ import js7.data.cluster.ClusterSetting.Watch;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.auth.JHttpsConfig;
-import js7.data_for_java.subagent.JSubagentRef;
+import js7.data_for_java.subagent.JSubagentItem;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
@@ -476,29 +476,34 @@ public class Proxies {
         }
     }
     
-    public static Map<JAgentRef, List<JSubagentRef>> getAgents(String controllerId, InventoryAgentInstancesDBLayer dbLayer) throws JocException,
-            DBConnectionRefusedException {
+    public static Map<JAgentRef, List<JSubagentItem>> getUnknownAgents(String controllerId, InventoryAgentInstancesDBLayer dbLayer,
+            Map<AgentPath, JAgentRef> controllerKnownAgents) throws JocException, DBConnectionRefusedException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             if (dbLayer == null) {
-                sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetAgents");
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetUnknownAgents");
                 dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
             }
+            // TODO consider deployed flag
             List<DBItemInventoryAgentInstance> dbAvailableAgents = dbLayer.getAgentsByControllerIds(Collections.singleton(controllerId), false, true);
             if (dbAvailableAgents != null) {
-                Map<JAgentRef, List<JSubagentRef>> result = new LinkedHashMap<>(dbAvailableAgents.size());
+                Map<JAgentRef, List<JSubagentItem>> result = new LinkedHashMap<>(dbAvailableAgents.size());
                 Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                         controllerId), false, true);
                 for (DBItemInventoryAgentInstance agent : dbAvailableAgents) {
+                    AgentPath agentPath = AgentPath.of(agent.getAgentId());
+                    if (controllerKnownAgents.containsKey(agentPath)) {
+                        continue;
+                    }
                     List<DBItemInventorySubAgentInstance> subs = subAgents.get(agent.getAgentId());
                     if (subs == null || subs.isEmpty()) { // single agent
                         subs = Collections.singletonList(dbLayer.solveAgentWithoutSubAgent(agent));
                     }
-                    List<JSubagentRef> subRefs = subs.stream().map(s -> JSubagentRef.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s
-                            .getAgentId()), Uri.of(s.getUri()))).collect(Collectors.toList());
+                    List<JSubagentItem> subRefs = subs.stream().map(s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s
+                            .getAgentId()), Uri.of(s.getUri()), s.getDisabled())).collect(Collectors.toList());
                     Set<SubagentId> directors = subs.stream().filter(s -> s.getIsDirector() > SubagentDirectorType.NO_DIRECTOR.intValue()).sorted()
                             .map(s -> SubagentId.of(s.getSubAgentId())).collect(Collectors.toSet());
-                    result.put(JAgentRef.of(AgentPath.of(agent.getAgentId()), directors), subRefs);
+                    result.put(JAgentRef.of(agentPath, directors), subRefs);
                 }
                 return result;
             }
