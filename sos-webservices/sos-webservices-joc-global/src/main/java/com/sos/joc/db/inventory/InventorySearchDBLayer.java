@@ -257,7 +257,7 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append("select workflowName from ").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" subt ");
                 if (!advanced.getSchedule().equals(FIND_ALL)) {
                     schedule = advanced.getSchedule();
-                    hql.append("and lower(subt.scheduleName) like :schedule ");
+                    hql.append("where lower(subt.scheduleName) like :schedule ");
                 }
                 hql.append(") ");
             }
@@ -603,7 +603,7 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append("select workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
                 if (!advanced.getSchedule().equals(FIND_ALL)) {
                     schedule = advanced.getSchedule();
-                    hql.append("and lower(subt.scheduleName) like :schedule ");
+                    hql.append("where lower(subt.scheduleName) like :schedule ");
                 }
                 hql.append(") ");
             }
