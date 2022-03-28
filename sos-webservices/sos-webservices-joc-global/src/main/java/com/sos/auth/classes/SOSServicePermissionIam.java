@@ -82,8 +82,6 @@ public class SOSServicePermissionIam {
     @Context
     UriInfo uriInfo;
 
-   
-
     @POST
     @Path("/joc_cockpit_permissions")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -504,7 +502,7 @@ public class SOSServicePermissionIam {
         sosLogin.login(currentAccount.getAccountname(), password, currentAccount.getHttpServletRequest());
 
         ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
-        
+
         currentAccount.setCurrentSubject(sosAuthSubject);
         currentAccount.setIdentityServices(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
                 identityServiceType));
@@ -639,18 +637,7 @@ public class SOSServicePermissionIam {
                     if (listOfIdentityServices.size() == 0) {
                         listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
                         if (listOfIdentityServices.size() == 0) {
-                            LOGGER.info("No Identity Service is configured. Using SHIRO as the default identity service");
-                            DBItemIamIdentityService dbItemIamIdentityService = new DBItemIamIdentityService();
-                            dbItemIamIdentityService.setDisabled(false);
-                            dbItemIamIdentityService.setAuthenticationScheme("SINGLE");
-                            dbItemIamIdentityService.setSingleFactorCert(false);
-                            dbItemIamIdentityService.setSingleFactorPwd(true);
-                            dbItemIamIdentityService.setIdentityServiceName("shiro");
-                            dbItemIamIdentityService.setIdentityServiceType("SHIRO");
-                            dbItemIamIdentityService.setOrdering(1);
-                            dbItemIamIdentityService.setRequired(false);
-                            sosHibernateSession.save(dbItemIamIdentityService);
-                            listOfIdentityServices.add(dbItemIamIdentityService);
+                            LOGGER.info("No enabled Identity Service is configured.");
                         }
                     }
 
@@ -679,12 +666,14 @@ public class SOSServicePermissionIam {
 
                 }
 
-                currentAccount.getCurrentSubject().getListOfAccountPermissions().addAll(setOfAccountPermissions);
-                SecurityConfiguration securityConfigurationEntry = sosPermissionMerger.mergePermissions();
-                SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
-                Permissions sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(
-                        securityConfigurationEntry);
-                currentAccount.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
+                if (currentAccount.getCurrentSubject() != null) {
+                    currentAccount.getCurrentSubject().getListOfAccountPermissions().addAll(setOfAccountPermissions);
+                    SecurityConfiguration securityConfigurationEntry = sosPermissionMerger.mergePermissions();
+                    SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
+                    Permissions sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(
+                            securityConfigurationEntry);
+                    currentAccount.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
+                }
 
             } catch (JocAuthenticationException e) {
                 msg = e.getMessage();
@@ -702,8 +691,7 @@ public class SOSServicePermissionIam {
                     sosAuthCurrentUserAnswer.setIdentityService("");
                 }
 
-                sosAuthCurrentUserAnswer.setMessage(String.format("%s: Could not login with account: %s password:*******", msg, currentAccount
-                        .getAccountname()));
+                sosAuthCurrentUserAnswer.setMessage(String.format("%s: Could not login with account/password", msg));
                 throw new JocAuthenticationException(sosAuthCurrentUserAnswer);
             }
 
