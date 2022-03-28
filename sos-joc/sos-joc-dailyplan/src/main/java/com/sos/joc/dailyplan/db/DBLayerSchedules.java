@@ -12,8 +12,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.inventory.model.deploy.DeployType;
-import com.sos.joc.dailyplan.common.DailyPlanHelper;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.model.common.Folder;
@@ -27,32 +26,44 @@ public class DBLayerSchedules extends DBLayer {
         super(session);
     }
 
-    public List<DBItemInventoryReleasedConfiguration> getAllSchedules() throws SOSHibernateException {
-        return getAllSchedules(null);
-    }
-
-    public List<DBItemInventoryReleasedConfiguration> getAllSchedules(Set<Folder> scheduleFolders) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
-        hql.append("where type=:type ");
+    public List<DBBeanReleasedSchedule2DeployedWorkflow> getReleasedSchedule2DeployedWorkflows(String controllerId, Set<Folder> folders)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select ");
+        hql.append("dc.controllerId     as controllerId");
+        hql.append(",sw.schedulePath    as schedulePath");
+        hql.append(",sw.scheduleFolder  as scheduleFolder");
+        hql.append(",sw.scheduleName    as scheduleName");
+        hql.append(",sw.scheduleContent as scheduleContent ");
+        hql.append(",dc.path            as workflowPath");
+        hql.append(",dc.folder          as workflowFolder");
+        hql.append(",dc.name            as workflowName");
+        hql.append(",dc.content         as workflowContent ");
+        hql.append("from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" sw ");
+        hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc ");
+        hql.append("where dc.name=sw.workflowName ");
+        hql.append("and dc.type=:workflowType ");
+        if (!SOSString.isEmpty(controllerId)) {
+            hql.append("and dc.controllerId=:controllerId ");
+        }
 
         // folders
-        boolean hasFolders = scheduleFolders != null && scheduleFolders.size() > 0;
+        boolean hasFolders = folders != null && folders.size() > 0;
         Map<String, String> paramsFolder = new HashMap<>();
         Map<String, String> paramsLikeFolder = new HashMap<>();
         if (hasFolders) {
             hql.append("and (");
             int i = 0;
-            for (Folder folder : scheduleFolders) {
+            for (Folder folder : folders) {
                 if (i > 0) {
                     hql.append(" or ");
                 }
                 String paramNameFolder = "folder" + i;
                 if (folder.getRecursive()) {
                     String paramNameLikeFolder = "likeFolder" + i;
-                    hql.append("(folder=:").append(paramNameFolder).append(" or folder like :").append(paramNameLikeFolder).append(") ");
+                    hql.append("(sw.scheduleFolder=:").append(paramNameFolder).append(" or folder like :").append(paramNameLikeFolder).append(") ");
                     paramsLikeFolder.put(paramNameLikeFolder, (folder.getFolder() + "/%").replaceAll("//+", "/"));
                 } else {
-                    hql.append("folder=:").append(paramNameFolder).append(" ");
+                    hql.append("sw.scheduleFolder=:").append(paramNameFolder).append(" ");
                 }
                 paramsFolder.put(paramNameFolder, folder.getFolder());
                 i++;
@@ -60,8 +71,12 @@ public class DBLayerSchedules extends DBLayer {
             hql.append(") ");
         }
 
-        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        Query<DBBeanReleasedSchedule2DeployedWorkflow> query = getSession().createQuery(hql.toString(),
+                DBBeanReleasedSchedule2DeployedWorkflow.class);
+        query.setParameter("workflowType", ConfigurationType.WORKFLOW.intValue());
+        if (!SOSString.isEmpty(controllerId)) {
+            query.setParameter("controllerId", controllerId);
+        }
         if (hasFolders) {
             paramsFolder.entrySet().stream().forEach(e -> {
                 query.setParameter(e.getKey(), e.getValue());
@@ -73,17 +88,39 @@ public class DBLayerSchedules extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<DBItemInventoryReleasedConfiguration> getSchedules(Set<Folder> scheduleFolders, Set<String> scheduleSingles)
-            throws SOSHibernateException {
-        boolean hasFolders = scheduleFolders != null && scheduleFolders.size() > 0;
-        boolean hasSingles = scheduleSingles != null && scheduleSingles.size() > 0;
+    public List<DBBeanReleasedSchedule2DeployedWorkflow> getReleasedSchedule2DeployedWorkflows(String controllerId, Set<Folder> folders,
+            Set<String> singlePaths, boolean checkForSchedule) throws SOSHibernateException {
+        boolean hasFolders = folders != null && folders.size() > 0;
+        boolean hasSingles = singlePaths != null && singlePaths.size() > 0;
 
-        if (!hasFolders && !hasSingles) {
-            return getAllSchedules(scheduleFolders);
+        String folderField = "sw.scheduleFolder";
+        String pathField = "sw.schedulePath";
+        if (!checkForSchedule) {
+            folderField = "dc.folder";
+            pathField = "dc.path";
         }
 
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
-        hql.append("where type=:type ");
+        if (!hasFolders && !hasSingles) {
+            return getReleasedSchedule2DeployedWorkflows(controllerId, folders);
+        }
+
+        StringBuilder hql = new StringBuilder("select ");
+        hql.append("dc.controllerId    as controllerId");
+        hql.append(",sw.schedulePath   as schedulePath");
+        hql.append(",sw.scheduleFolder as scheduleFolder");
+        hql.append(",sw.scheduleName   as scheduleName");
+        hql.append(",sw.scheduleContent as scheduleContent ");
+        hql.append(",dc.path           as workflowPath");
+        hql.append(",dc.folder         as workflowFolder");
+        hql.append(",dc.name           as workflowName");
+        hql.append(",dc.content        as workflowContent ");
+        hql.append("from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" sw ");
+        hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc ");
+        hql.append("where dc.name=sw.workflowName ");
+        hql.append("and dc.type=:workflowType ");
+        if (!SOSString.isEmpty(controllerId)) {
+            hql.append("and dc.controllerId=:controllerId ");
+        }
 
         // folders
         Map<String, String> paramsFolder = new HashMap<>();
@@ -91,17 +128,18 @@ public class DBLayerSchedules extends DBLayer {
         if (hasFolders) {
             hql.append("and (");
             int i = 0;
-            for (Folder folder : scheduleFolders) {
+            for (Folder folder : folders) {
                 if (i > 0) {
                     hql.append(" or ");
                 }
                 String paramNameFolder = "folder" + i;
                 if (folder.getRecursive()) {
                     String paramNameLikeFolder = "likeFolder" + i;
-                    hql.append("(folder=:").append(paramNameFolder).append(" or folder like :").append(paramNameLikeFolder).append(") ");
+                    hql.append("(").append(folderField).append("=:").append(paramNameFolder).append(" or folder like :").append(paramNameLikeFolder)
+                            .append(") ");
                     paramsLikeFolder.put(paramNameLikeFolder, (folder.getFolder() + "/%").replaceAll("//+", "/"));
                 } else {
-                    hql.append("folder=:").append(paramNameFolder).append(" ");
+                    hql.append(folderField).append("=:").append(paramNameFolder).append(" ");
                 }
                 paramsFolder.put(paramNameFolder, folder.getFolder());
                 i++;
@@ -114,20 +152,24 @@ public class DBLayerSchedules extends DBLayer {
         if (hasSingles) {
             hql.append("and (");
             int i = 0;
-            for (String single : scheduleSingles) {
+            for (String path : singlePaths) {
                 if (i > 0) {
                     hql.append(" or ");
                 }
                 String paramName = "path" + i;
-                hql.append("path=:").append(paramName).append(" ");
-                paramsPaths.put(paramName, single);
+                hql.append(pathField).append("=:").append(paramName).append(" ");
+                paramsPaths.put(paramName, path);
                 i++;
             }
             hql.append(") ");
         }
 
-        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        Query<DBBeanReleasedSchedule2DeployedWorkflow> query = getSession().createQuery(hql.toString(),
+                DBBeanReleasedSchedule2DeployedWorkflow.class);
+        query.setParameter("workflowType", ConfigurationType.WORKFLOW.intValue());
+        if (!SOSString.isEmpty(controllerId)) {
+            query.setParameter("controllerId", controllerId);
+        }
         if (hasFolders) {
             paramsFolder.entrySet().stream().forEach(e -> {
                 query.setParameter(e.getKey(), e.getValue());
@@ -138,78 +180,6 @@ public class DBLayerSchedules extends DBLayer {
         }
         if (hasSingles) {
             paramsPaths.entrySet().stream().forEach(e -> {
-                query.setParameter(e.getKey(), e.getValue());
-            });
-        }
-        return getSession().getResultList(query);
-    }
-
-    public List<String> getWorkflowNames(String controllerId, Set<Folder> workflowFolders, Set<String> workflowSingles) throws SOSHibernateException {
-        boolean hasFolders = workflowFolders != null && workflowFolders.size() > 0;
-        boolean hasSingles = workflowSingles != null && workflowSingles.size() > 0;
-
-        if (!hasFolders && !hasSingles) {
-            return null; // getAllWorkflowNames(controllerId);
-        }
-
-        StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" ");
-        hql.append("where type=:type ");
-        hql.append("and controllerId=:controllerId ");
-
-        // folders
-        Map<String, String> paramsFolder = new HashMap<>();
-        Map<String, String> paramsLikeFolder = new HashMap<>();
-        if (hasFolders) {
-            hql.append("and (");
-            int i = 0;
-            for (Folder folder : workflowFolders) {
-                if (i > 0) {
-                    hql.append(" or ");
-                }
-                String paramNameFolder = "folder" + i;
-                if (folder.getRecursive()) {
-                    String paramNameLikeFolder = "likeFolder" + i;
-                    hql.append("(folder=:").append(paramNameFolder).append(" or folder like :").append(paramNameLikeFolder).append(") ");
-                    paramsLikeFolder.put(paramNameLikeFolder, (folder.getFolder() + "/%").replaceAll("//+", "/"));
-                } else {
-                    hql.append("folder=:").append(paramNameFolder).append(" ");
-                }
-                paramsFolder.put(paramNameFolder, folder.getFolder());
-                i++;
-            }
-            hql.append(") ");
-        }
-
-        // single paths
-        Map<String, String> paramsName = new HashMap<>();
-        if (hasSingles) {
-            hql.append("and (");
-            int i = 0;
-            for (String single : workflowSingles) {
-                if (i > 0) {
-                    hql.append(" or ");
-                }
-                String paramName = "name" + i;
-                hql.append("name=:").append(paramName).append(" ");
-                paramsName.put(paramName, DailyPlanHelper.getBasenameFromPath(single));
-                i++;
-            }
-            hql.append(") ");
-        }
-
-        Query<String> query = getSession().createQuery(hql.toString());
-        query.setParameter("type", DeployType.WORKFLOW.intValue());
-        query.setParameter("controllerId", controllerId);
-        if (hasFolders) {
-            paramsFolder.entrySet().stream().forEach(e -> {
-                query.setParameter(e.getKey(), e.getValue());
-            });
-            paramsLikeFolder.entrySet().stream().forEach(e -> {
-                query.setParameter(e.getKey(), e.getValue());
-            });
-        }
-        if (hasSingles) {
-            paramsName.entrySet().stream().forEach(e -> {
                 query.setParameter(e.getKey(), e.getValue());
             });
         }

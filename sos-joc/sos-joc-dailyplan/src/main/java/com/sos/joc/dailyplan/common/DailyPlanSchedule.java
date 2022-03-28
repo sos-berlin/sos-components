@@ -2,7 +2,6 @@ package com.sos.joc.dailyplan.common;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.inventory.model.schedule.Schedule;
@@ -13,25 +12,15 @@ public class DailyPlanSchedule {
     public static final boolean SCHEDULE_CONSIDER_WORKFLOW_NAME = true;
 
     private final Schedule schedule;
-
     private final List<DailyPlanScheduleWorkflow> workflows;
+
+    public DailyPlanSchedule(Schedule schedule) {
+        this(schedule, null);
+    }
 
     public DailyPlanSchedule(Schedule schedule, List<DailyPlanScheduleWorkflow> workflows) {
         this.schedule = schedule;
         this.workflows = workflows == null ? new ArrayList<>() : workflows;
-
-        // TODO - check if not used ...
-        if (this.workflows.size() == 0) {
-            if (schedule.getWorkflowName() != null) {
-                workflows.add(new DailyPlanScheduleWorkflow(schedule.getWorkflowName(), null));
-            } else {
-                if (schedule.getWorkflowNames() != null) {
-                    for (String w : schedule.getWorkflowNames()) {
-                        workflows.add(new DailyPlanScheduleWorkflow(w, null));
-                    }
-                }
-            }
-        }
     }
 
     public String getWorkflowsAsString() {
@@ -40,21 +29,18 @@ public class DailyPlanSchedule {
         }).collect(Collectors.toList()));
     }
 
-    @SuppressWarnings("unused")
-    private DailyPlanScheduleWorkflow getWorkflow(String name) {
-        return workflows.stream().filter(e -> e.getName().equals(name)).findAny().orElse(null);
+    public void addWorkflow(DailyPlanScheduleWorkflow newW) {
+        if (newW == null || newW.getName() == null) {
+            return;
+        }
+        DailyPlanScheduleWorkflow oldW = getWorkflow(newW.getName());
+        if (oldW == null) {
+            workflows.add(newW);
+        }
     }
 
-    public boolean hasMinimumOneOfWorkflows(Set<String> workflowNames) {
-        if (workflowNames == null || workflowNames.size() == 0) {
-            return false;
-        }
-        for (DailyPlanScheduleWorkflow w : workflows) {
-            if (workflowNames.contains(w.getName())) {
-                return true;
-            }
-        }
-        return false;
+    public DailyPlanScheduleWorkflow getWorkflow(String name) {
+        return workflows.stream().filter(e -> e.getName().equals(name)).findAny().orElse(null);
     }
 
     public Schedule getSchedule() {

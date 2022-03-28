@@ -17,15 +17,29 @@ public class DBItemInventoryReleasedSchedule2Workflow extends DBItem {
     private static final long serialVersionUID = 1L;
 
     @Id
+    @Column(name = "[WORKFLOW_NAME]", nullable = false)
+    private String workflowName;
+
+    @Id
     @Column(name = "[SCHEDULE_NAME]", nullable = false)
     private String scheduleName;
 
     @Column(name = "[SCHEDULE_PATH]", nullable = false)
     private String schedulePath;
 
-    @Id
-    @Column(name = "[WORKFLOW_NAME]", nullable = false)
-    private String workflowName;
+    @Column(name = "[SCHEDULE_FOLDER]", nullable = false)
+    private String scheduleFolder;
+
+    @Column(name = "[SCHEDULE_CONTENT]", nullable = false)
+    private String scheduleContent;
+
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    public void setWorkflowName(String val) {
+        workflowName = val;
+    }
 
     public String getScheduleName() {
         return scheduleName;
@@ -43,12 +57,19 @@ public class DBItemInventoryReleasedSchedule2Workflow extends DBItem {
         schedulePath = val;
     }
 
-    public String getWorkflowName() {
-        return workflowName;
+    public String getScheduleFolder() {
+        return scheduleFolder;
     }
 
-    public void setWorkflowName(String val) {
-        workflowName = val;
+    public void setScheduleFolder(String val) {
+        scheduleFolder = val;
     }
 
+    public String getScheduleContent() {
+        return scheduleContent;
+    }
+
+    public void setScheduleContent(String val) {
+        scheduleContent = val;
+    }
 }

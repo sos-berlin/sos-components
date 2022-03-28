@@ -34,7 +34,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.deployment.DBItemDepConfiguration;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
@@ -1358,44 +1357,6 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    public List<DBItemInventoryReleasedConfiguration> getUsedReleasedSchedulesByWorkflowNames(List<String> workflowNames)
-            throws SOSHibernateException {
-        if (workflowNames == null) {
-            workflowNames = Collections.emptyList();
-        }
-        int size = workflowNames.size();
-        if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
-            List<DBItemInventoryReleasedConfiguration> result = new ArrayList<>();
-            for (int i = 0; i < workflowNames.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
-                result.addAll(getUsedReleasedSchedulesByWorkflowNames(SOSHibernate.getInClausePartition(i, workflowNames)));
-            }
-            return result;
-        } else {
-            StringBuilder hql = null;
-            if (size > 0) {
-                hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" c ");
-                hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" sw ");
-                hql.append("where c.type = :type ");
-                hql.append("and sw.scheduleName = c.name ");
-                hql.append("and sw.workflowName in (:workflowNames) ");
-            } else {
-                hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
-                hql.append("where type=:type ");
-            }
-
-            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
-            query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
-            if (size > 0) {
-                query.setParameterList("workflowNames", workflowNames);
-            }
-            List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
-            if (result == null) {
-                return Collections.emptyList();
-            }
-            return result;
-        }
-    }
-
     public List<DBItemInventoryConfiguration> getUsedFileOrderSourcesByWorkflowName(String workflowName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
@@ -1507,8 +1468,16 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     // TODO controller?
-    public DBItemDepConfiguration getDeployedConfigurationByName(String name, ConfigurationType type) {
-        List<DBItemDepConfiguration> result = getConfigurationByName(name, type.intValue(), DBLayer.DBITEM_DEP_CONFIGURATIONS);
+    public String getDeployedJsonByConfigurationName(ConfigurationType type, String name) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select content from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" ");
+        hql.append("where lower(name)=:name ");
+        hql.append("and type=:type");
+
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("name", name.toLowerCase());
+        query.setParameter("type", type);
+
+        List<String> result = getSession().getResultList(query);
         return result == null || result.size() == 0 ? null : result.get(0);
     }
 

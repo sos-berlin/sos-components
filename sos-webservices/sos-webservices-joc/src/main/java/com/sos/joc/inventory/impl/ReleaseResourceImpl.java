@@ -25,7 +25,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.db.deployment.DBItemDepConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -350,17 +349,18 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     try {
                         Workflow w = cachedWorkflows.get(name);
                         if (w == null) {
-                            DBItemDepConfiguration wd = dbLayer.getDeployedConfigurationByName(name, ConfigurationType.WORKFLOW);
-                            if (wd == null) {
-                                throw new Exception(workflowMsg + "deployment to found");
+                            String wj = dbLayer.getDeployedJsonByConfigurationName(ConfigurationType.WORKFLOW, name);
+                            if (wj == null) {
+                                throw new Exception(workflowMsg + "workflow deployment not found");
                             }
-                            w = Globals.objectMapper.readValue(wd.getContent(), Workflow.class);
+                            w = Globals.objectMapper.readValue(wj, Workflow.class);
                             cachedWorkflows.put(name, w);
                         }
                         if (w.getOrderPreparation() != null && w.getOrderPreparation().getParameters() != null && w.getOrderPreparation()
                                 .getParameters().getAdditionalProperties() != null && w.getOrderPreparation().getParameters()
                                         .getAdditionalProperties().size() > 0) {
-                            throw new Exception(workflowMsg + "release of multiple workflows with parameters are not allowed");
+                            throw new Exception(workflowMsg + "[" + w.getOrderPreparation().getParameters().getAdditionalProperties().size()
+                                    + " order variables]release of multiple workflows with order variables is not allowed");
                         }
                     } catch (Throwable e) {
                         errors.add(new BulkError().get(new JocReleaseException(ConfigurationType.SCHEDULE, item.getPath(), e), new JocError(

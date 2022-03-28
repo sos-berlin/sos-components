@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -39,10 +38,9 @@ import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.common.PlannedOrder;
 import com.sos.joc.dailyplan.common.PlannedOrderKey;
+import com.sos.joc.dailyplan.db.DBBeanReleasedSchedule2DeployedWorkflow;
 import com.sos.joc.dailyplan.db.DBLayerSchedules;
 import com.sos.joc.dailyplan.resource.IDailyPlanOrdersGenerateResource;
-import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
-import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -175,42 +173,29 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             DBLayerSchedules dbLayer = new DBLayerSchedules(session);
 
             // selected schedules
-            List<DBItemInventoryReleasedConfiguration> scheduleItems = null;
+            List<DBBeanReleasedSchedule2DeployedWorkflow> scheduleItems = null;
             if (!hasSelectedSchedules && !hasSelectedWorkflows) {// ALL
-                scheduleItems = dbLayer.getAllSchedules();
+                scheduleItems = dbLayer.getReleasedSchedule2DeployedWorkflows(controllerId, null);
             } else {
                 // selected schedules
                 if (hasSelectedSchedules) {
-                    scheduleItems = dbLayer.getSchedules(scheduleFolders, scheduleSingles);
+                    scheduleItems = dbLayer.getReleasedSchedule2DeployedWorkflows(controllerId, scheduleFolders, scheduleSingles, true);
                     if (isDebugEnabled && scheduleItems != null) {
                         List<String> l = scheduleItems.stream().map(item -> {
-                            return item.getPath();
-                        }).collect(Collectors.toList());
+                            return item.getSchedulePath();
+                        }).distinct().collect(Collectors.toList());
                         LOGGER.debug(String.format("[%s][getSchedules][%s]schedules=%s", IMPL_PATH, controllerId, String.join(",", l)));
                     }
                 }
                 // selected workflows
                 if (hasSelectedWorkflows) {
-                    List<String> workflowNames = dbLayer.getWorkflowNames(controllerId, workflowFolders, workflowSingles);
-                    if (workflowNames != null && workflowNames.size() > 0) {
-                        InventoryDBLayer dbLayerINV = new InventoryDBLayer(session);
-                        List<DBItemInventoryReleasedConfiguration> result = dbLayerINV.getUsedReleasedSchedulesByWorkflowNames(workflowNames);
-                        if ((result != null && result.size() > 0)) {
-                            if (isDebugEnabled) {
-                                List<String> l = result.stream().map(item -> {
-                                    return item.getPath();
-                                }).collect(Collectors.toList());
-                                LOGGER.debug(String.format("[%s][getSchedules][%s][workflowNames=%s]schedules=%s", IMPL_PATH, controllerId, String
-                                        .join(",", workflowNames), String.join(",", l)));
-                            }
-
-                            if (scheduleItems == null || scheduleItems.size() == 0) {
-                                scheduleItems = result;
-                            } else {
-                                scheduleItems.addAll(result);
-                                scheduleItems = scheduleItems.stream().filter(SOSCollection.distinctByKey(
-                                        DBItemInventoryReleasedConfiguration::getId)).collect(Collectors.toList());
-                            }
+                    List<DBBeanReleasedSchedule2DeployedWorkflow> workflowItems = dbLayer.getReleasedSchedule2DeployedWorkflows(controllerId,
+                            workflowFolders, workflowSingles, false);
+                    if (workflowItems != null && workflowItems.size() > 0) {
+                        if (scheduleItems == null || scheduleItems.size() == 0) {
+                            scheduleItems = workflowItems;
+                        } else {
+                            scheduleItems.addAll(workflowItems);
                         }
                     }
                 }
@@ -222,8 +207,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 return new ArrayList<DailyPlanSchedule>();
             }
 
-            Set<String> deployedWorkflowNames = runner.getDeployedWorkflowsNames(controllerId);
-            return runner.convert(scheduleItems, permittedFolders, checkedFolders, true, deployedWorkflowNames);
+            return runner.convert(scheduleItems, permittedFolders, checkedFolders, true);
         } finally {
             Globals.disconnect(session);
         }

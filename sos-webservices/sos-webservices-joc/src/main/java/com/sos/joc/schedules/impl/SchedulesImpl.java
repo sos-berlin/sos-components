@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSCollection;
-import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -27,9 +25,8 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.DailyPlanRunner;
 import com.sos.joc.dailyplan.common.DailyPlanSchedule;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
+import com.sos.joc.dailyplan.db.DBBeanReleasedSchedule2DeployedWorkflow;
 import com.sos.joc.dailyplan.db.DBLayerSchedules;
-import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
-import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.schedules.resource.ISchedulesResource;
@@ -125,28 +122,23 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             DBLayerSchedules dbLayer = new DBLayerSchedules(session);
 
             // selected schedules
-            List<DBItemInventoryReleasedConfiguration> scheduleItems = null;
+            List<DBBeanReleasedSchedule2DeployedWorkflow> scheduleItems = null;
             if (!hasSelectedSchedules && !hasSelectedWorkflows) {
-                scheduleItems = dbLayer.getAllSchedules(permittedFolders);
+                scheduleItems = dbLayer.getReleasedSchedule2DeployedWorkflows(controllerId, permittedFolders);
             } else {
                 // selected schedules
                 if (hasSelectedSchedules) {
-                    scheduleItems = dbLayer.getSchedules(permittedFolders, scheduleSingles);
+                    scheduleItems = dbLayer.getReleasedSchedule2DeployedWorkflows(controllerId, permittedFolders, scheduleSingles, true);
                 }
                 // selected workflows
                 if (hasSelectedWorkflows) {
-                    List<String> workflowNames = dbLayer.getWorkflowNames(controllerId, permittedFolders, workflowSingles);
-                    if (workflowNames != null && workflowNames.size() > 0) {
-                        InventoryDBLayer dbLayerINV = new InventoryDBLayer(session);
-                        List<DBItemInventoryReleasedConfiguration> result = dbLayerINV.getUsedReleasedSchedulesByWorkflowNames(workflowNames);
-                        if ((result != null && result.size() > 0)) {
-                            if (scheduleItems == null || scheduleItems.size() == 0) {
-                                scheduleItems = result;
-                            } else {
-                                scheduleItems.addAll(result);
-                                scheduleItems = scheduleItems.stream().filter(SOSCollection.distinctByKey(
-                                        DBItemInventoryReleasedConfiguration::getId)).collect(Collectors.toList());
-                            }
+                    List<DBBeanReleasedSchedule2DeployedWorkflow> workflowItems = dbLayer.getReleasedSchedule2DeployedWorkflows(controllerId,
+                            permittedFolders, workflowSingles, false);
+                    if (workflowItems != null && workflowItems.size() > 0) {
+                        if (scheduleItems == null || scheduleItems.size() == 0) {
+                            scheduleItems = workflowItems;
+                        } else {
+                            scheduleItems.addAll(workflowItems);
                         }
                     }
                 }
@@ -158,12 +150,7 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
                 return new ArrayList<DailyPlanSchedule>();
             }
 
-            DailyPlanRunner runner = new DailyPlanRunner(null);
-            Set<String> allowedWorkflowNames = null;
-            if (!SOSString.isEmpty(controllerId)) {
-                allowedWorkflowNames = runner.getDeployedWorkflowsNames(controllerId);
-            }
-            return runner.convert(scheduleItems, permittedFolders, checkedFolders, false, allowedWorkflowNames);
+            return new DailyPlanRunner(null).convert(scheduleItems, permittedFolders, checkedFolders, false);
         } finally {
             Globals.disconnect(session);
         }

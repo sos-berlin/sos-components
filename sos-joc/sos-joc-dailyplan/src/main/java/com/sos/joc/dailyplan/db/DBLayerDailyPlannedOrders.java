@@ -19,7 +19,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.order.OrdersHelper;
@@ -1136,16 +1135,4 @@ public class DBLayerDailyPlannedOrders {
         query.setParameter("severity", HistorySeverity.SUCCESSFUL);
         return session.getSingleValue(query);
     }
-
-    public List<String> getDeployedWorkflowsNames(String controllerId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" ");
-        hql.append("where type=:type ");
-        hql.append("and controllerId=:controllerId ");
-
-        Query<String> query = session.createQuery(hql.toString());
-        query.setParameter("type", DeployType.WORKFLOW.intValue());
-        query.setParameter("controllerId", controllerId);
-        return session.getResultList(query);
-    }
-
 }

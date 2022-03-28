@@ -700,11 +700,10 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             Schedule schedule = new Schedule();
             schedule.setVersion("");
             schedule.setPath(mainItem.getSchedulePath());
-            if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
-                schedule.setWorkflowName(null);
-            }
             schedule.setWorkflowNames(Arrays.asList(mainItem.getWorkflowName()));
-            schedule.setWorkflowName(mainItem.getWorkflowName());
+            if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
+                schedule.setWorkflowName(mainItem.getWorkflowName());
+            }
             schedule.setTitle("");
             schedule.setDocumentationName("");
             schedule.setSubmitOrderToControllerWhenPlanned(mainItem.getSubmitted());
@@ -736,7 +735,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             DailyPlanRunner runner = new DailyPlanRunner(settings);
 
-            DailyPlanScheduleWorkflow w = new DailyPlanScheduleWorkflow(mainItem.getWorkflowName(), mainItem.getWorkflowPath());
+            DailyPlanScheduleWorkflow w = new DailyPlanScheduleWorkflow(mainItem.getWorkflowName(), mainItem.getWorkflowPath(), null);
             DailyPlanSchedule dailyPlanSchedule = new DailyPlanSchedule(schedule, Arrays.asList(w));
 
             generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, Arrays.asList(dailyPlanSchedule), mainItem.getDailyPlanDate(
