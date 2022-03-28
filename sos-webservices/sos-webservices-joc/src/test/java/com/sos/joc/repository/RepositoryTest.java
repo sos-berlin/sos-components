@@ -126,7 +126,7 @@ public class RepositoryTest {
         LOGGER.debug("**************************  Test 04 - get parent finished  **************************");
    }
     
-//    @Ignore
+    @Ignore
     @Test
     public void test05Resolve() throws IOException, URISyntaxException {
         LOGGER.debug("**************************  Test 05 - resolve started  ******************************");
