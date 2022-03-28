@@ -84,34 +84,38 @@ public class SubAgentCommandResourceImpl extends JOCResourceImpl implements ISub
                     throw new JocBadRequestException("A primary director ('" + s.getSubAgentId()
                             + "') cannot be deleted. Change the primary director or remove the whole Agent cluster.");
                 });
+                
+                List<JUpdateItemOperation> deleteSubagents = subAgentsMap.get(true).stream().distinct().map(SubagentId::of).map(
+                        JUpdateItemOperation::deleteSimple).collect(Collectors.toList());
 
-                final Stream<JUpdateItemOperation> updateAgentRef = directors.stream().collect(Collectors.groupingBy(SubAgentItem::getAgentId))
-                        .values().stream().filter(l -> l.size() == 2).flatMap(l -> l.stream()).filter(SubAgentItem::isPrimaryDirector).map(
+                // if secondary director will be deleted then change the AgentRef settings in that way that only the primary is specified.
+                // and add to delete command
+                deleteSubagents.addAll(directors.stream().collect(Collectors.groupingBy(SubAgentItem::getAgentId))
+                        .values().stream().filter(l -> l.size() == 2).flatMap(List::stream).filter(SubAgentItem::isPrimaryDirector).map(
                                 s -> JAgentRef.of(AgentPath.of(s.getAgentId()), SubagentId.of(s.getSubAgentId()))).map(
-                                        JUpdateItemOperation::addOrChangeSimple);
+                                        JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
 
-                final Stream<JUpdateItemOperation> subAgents = subAgentCommand.getSubagentIds().stream().distinct().map(SubagentId::of).map(
-                        JUpdateItemOperation::deleteSimple);
-
-                proxy.api().updateItems(Flux.concat(Flux.fromStream(subAgents), Flux.fromStream(updateAgentRef))).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
-                    if (e.isRight()) {
-                        SOSHibernateSession connection1 = null;
-                        try {
-                            connection1 = Globals.createSosHibernateStatelessConnection(API_CALL_REMOVE);
-                            connection1.setAutoCommit(false);
-                            Globals.beginTransaction(connection1);
-                            InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
-                            dbLayer1.deleteSubAgents(controllerId, subAgentsMap.get(true));
-                            Globals.commit(connection1);
-                        } catch (Exception e1) {
-                            Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
-                        } finally {
-                            Globals.disconnect(connection1);
+                if (!deleteSubagents.isEmpty()) {
+                    proxy.api().updateItems(Flux.fromIterable(deleteSubagents)).thenAccept(e -> {
+                        ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                        if (e.isRight()) {
+                            SOSHibernateSession connection1 = null;
+                            try {
+                                connection1 = Globals.createSosHibernateStatelessConnection(API_CALL_REMOVE);
+                                connection1.setAutoCommit(false);
+                                Globals.beginTransaction(connection1);
+                                InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
+                                dbLayer1.deleteSubAgents(controllerId, subAgentsMap.get(true));
+                                Globals.commit(connection1);
+                            } catch (Exception e1) {
+                                Globals.rollback(connection1);
+                                ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
+                            } finally {
+                                Globals.disconnect(connection1);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
             
             Globals.commit(connection);
