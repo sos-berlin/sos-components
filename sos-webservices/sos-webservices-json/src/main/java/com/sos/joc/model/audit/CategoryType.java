@@ -18,7 +18,8 @@ public enum CategoryType {
     //OTHERS(8),
     DOCUMENTATIONS(9),
     CERTIFICATES(10),
-    IDENTITY(11);
+    IDENTITY(11),
+    SETTINGS(12);
     private final Integer intValue;
     private final static Map<String, CategoryType> CONSTANTS = new HashMap<String, CategoryType>();
     private final static Map<Integer, CategoryType> INTCONSTANTS = new HashMap<Integer, CategoryType>();
