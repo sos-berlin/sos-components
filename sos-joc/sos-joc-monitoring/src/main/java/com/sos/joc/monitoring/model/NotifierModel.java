@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,7 @@ public class NotifierModel {
 
     private final SOSHibernateFactory factory;
     private DBLayerMonitoring dbLayer;
+    private AtomicBoolean closed = new AtomicBoolean();
     private String serviceIdentifier;
 
     private ExecutorService threadPool;
@@ -73,12 +75,16 @@ public class NotifierModel {
             @Override
             public void run() {
                 AJocClusterService.setLogger(serviceIdentifier);
-                notifySteps(conf, toNotifyPayloads.getSteps());
-                notifyOrders(conf, toNotifyPayloads.getErrorOrders(), toNotifyPayloads.getSuccessOrders());
-                notifyStepsLongerThan(conf, toNotifyLongerThan.getSteps());
+                if (!closed.get()) {
+                    notifySteps(conf, toNotifyPayloads.getSteps());
+                    notifyOrders(conf, toNotifyPayloads.getErrorOrders(), toNotifyPayloads.getSuccessOrders());
+                    notifyStepsLongerThan(conf, toNotifyLongerThan.getSteps());
+                }
             }
         };
-        threadPool.submit(task);
+        if (!closed.get()) {
+            threadPool.submit(task);
+        }
     }
 
     private void notifySteps(Configuration conf, List<HistoryOrderStepResult> steps) {
@@ -295,6 +301,7 @@ public class NotifierModel {
 
     protected JocClusterAnswer close(StartupMode mode) {
         AJocClusterService.setLogger(serviceIdentifier);
+        closed.set(true);
 
         if (threadPool != null) {
             JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);

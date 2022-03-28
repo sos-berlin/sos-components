@@ -192,10 +192,14 @@ public class HistoryMonitoringModel implements Serializable {
                     AJocClusterService.setLogger(serviceIdentifier);
                     boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
-                    ToNotify toNotifyPayloads = handlePayloads(isDebugEnabled);
-                    ToNotify toNotifyLongerThan = handleLongerThan(calculateEventId(toNotifyPayloads.getLastEventId(), lastDuration));
+                    if (!closed.get()) {
+                        ToNotify toNotifyPayloads = handlePayloads(isDebugEnabled);
+                        ToNotify toNotifyLongerThan = handleLongerThan(calculateEventId(toNotifyPayloads.getLastEventId(), lastDuration));
+                        if (!closed.get()) {
+                            notifier.notify(configuration, toNotifyPayloads, toNotifyLongerThan);
+                        }
+                    }
 
-                    notifier.notify(configuration, toNotifyPayloads, toNotifyLongerThan);
                 } catch (Throwable e) {
                     AJocClusterService.setLogger(serviceIdentifier);
                     LOGGER.error(e.toString(), e);
