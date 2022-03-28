@@ -260,6 +260,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             if (updateControllerCalendar) {
                 DailyPlanCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
             }
+            
+            storeAuditLog(configuration.getAuditLog(), CategoryType.SETTINGS);
+
+            
             ConfigurationOk ok = new ConfigurationOk();
             ok.setId(dbItem.getId());
             ok.setDeliveryDate(now);
