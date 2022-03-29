@@ -58,7 +58,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
     public JOCDefaultResponse delete(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_DISABLE, filterBytes, accessToken);
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_REMOVE, filterBytes, accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

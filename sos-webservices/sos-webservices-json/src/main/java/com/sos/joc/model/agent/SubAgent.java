@@ -28,6 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "disabled",
     "deployed",
     "isClusterWatcher",
+    "withGenerateSubagentCluster",
     "ordering"
 })
 public class SubAgent {
@@ -89,6 +90,8 @@ public class SubAgent {
     private Boolean deployed = false;
     @JsonProperty("isClusterWatcher")
     private Boolean isClusterWatcher = false;
+    @JsonProperty("withGenerateSubagentCluster")
+    private Boolean withGenerateSubagentCluster = false;
     @JsonProperty("ordering")
     @JsonAlias({
         "position"
@@ -263,6 +266,16 @@ public class SubAgent {
         this.isClusterWatcher = isClusterWatcher;
     }
 
+    @JsonProperty("withGenerateSubagentCluster")
+    public Boolean getWithGenerateSubagentCluster() {
+        return withGenerateSubagentCluster;
+    }
+
+    @JsonProperty("withGenerateSubagentCluster")
+    public void setWithGenerateSubagentCluster(Boolean withGenerateSubagentCluster) {
+        this.withGenerateSubagentCluster = withGenerateSubagentCluster;
+    }
+
     @JsonProperty("ordering")
     public Integer getOrdering() {
         return ordering;
@@ -275,12 +288,12 @@ public class SubAgent {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("subagentId", subagentId).append("url", url).append("isDirector", isDirector).append("title", title).append("syncState", syncState).append("disabled", disabled).append("deployed", deployed).append("isClusterWatcher", isClusterWatcher).append("ordering", ordering).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("subagentId", subagentId).append("url", url).append("isDirector", isDirector).append("title", title).append("syncState", syncState).append("disabled", disabled).append("deployed", deployed).append("isClusterWatcher", isClusterWatcher).append("withGenerateSubagentCluster", withGenerateSubagentCluster).append("ordering", ordering).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(ordering).append(isDirector).append(syncState).append(deployed).append(subagentId).append(disabled).append(isClusterWatcher).append(title).append(url).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(ordering).append(isDirector).append(syncState).append(deployed).append(withGenerateSubagentCluster).append(subagentId).append(disabled).append(isClusterWatcher).append(title).append(url).toHashCode();
     }
 
     @Override
@@ -292,7 +305,7 @@ public class SubAgent {
             return false;
         }
         SubAgent rhs = ((SubAgent) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(ordering, rhs.ordering).append(isDirector, rhs.isDirector).append(syncState, rhs.syncState).append(deployed, rhs.deployed).append(subagentId, rhs.subagentId).append(disabled, rhs.disabled).append(isClusterWatcher, rhs.isClusterWatcher).append(title, rhs.title).append(url, rhs.url).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(ordering, rhs.ordering).append(isDirector, rhs.isDirector).append(syncState, rhs.syncState).append(deployed, rhs.deployed).append(withGenerateSubagentCluster, rhs.withGenerateSubagentCluster).append(subagentId, rhs.subagentId).append(disabled, rhs.disabled).append(isClusterWatcher, rhs.isClusterWatcher).append(title, rhs.title).append(url, rhs.url).isEquals();
     }
 
 }

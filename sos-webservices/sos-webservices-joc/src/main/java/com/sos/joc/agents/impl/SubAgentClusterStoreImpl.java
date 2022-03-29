@@ -167,20 +167,25 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
                     ? "twice" : e.getValue() + " times"));
         });
         
+        Map<String, SubAgentId> subagentMap = subAgents.stream().collect(Collectors.toMap(SubAgentId::getSubagentId, Function.identity()));
+        
         // update member
         for (DBItemInventorySubAgentClusterMember member : members) {
-            if (subAgents.isEmpty()) {
+            if (subagentMap.isEmpty()) {
                 connection.delete(member);
             } else {
-                SubAgentId subAgent = subAgents.remove(0);
-                member.setModified(now);
-                member.setPriority(subAgent.getPriority());
-                member.setSubAgentId(subAgent.getSubagentId());
-                connection.update(member);
+                SubAgentId subAgent = subagentMap.remove(member.getSubAgentId());
+                if (subAgent == null) {
+                    connection.delete(member);
+                } else {
+                    member.setModified(now);
+                    member.setPriority(subAgent.getPriority());
+                    connection.update(member);
+                }
             }
         }
         // insert member
-        for (SubAgentId subAgent : subAgents) {
+        for (SubAgentId subAgent : subagentMap.values()) {
             DBItemInventorySubAgentClusterMember member = new DBItemInventorySubAgentClusterMember();
             member.setId(null);
             member.setModified(now);

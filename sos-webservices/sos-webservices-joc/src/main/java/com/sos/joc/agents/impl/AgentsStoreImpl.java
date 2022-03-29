@@ -15,7 +15,7 @@ import javax.ws.rs.Path;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
-import com.sos.joc.agent.impl.SubAgentStoreResourceImpl;
+import com.sos.joc.agents.impl.SubAgentStoreResourceImpl;
 import com.sos.joc.agents.resource.IAgentsResourceStore;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -25,6 +25,7 @@ import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
@@ -203,12 +204,12 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsResourceS
             connection.setAutoCommit(false);
             connection.beginTransaction();
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
+            InventorySubagentClustersDBLayer subagentClusterDBLayer = new InventorySubagentClustersDBLayer(connection);
 
             Map<String, ClusterAgent> agentMap = agentStoreParameter.getClusterAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function
                     .identity()));
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(null);
             Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds.keySet());
-            //List<JUpdateItemOperation> subAgentsToController = new ArrayList<>();
 
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
@@ -228,9 +229,8 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsResourceS
 
                     List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                             controllerId));
-//                    subAgentsToController.addAll(SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, dbAgent, dbSubAgents, agent.getSubagents()));
-                    SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
-                    
+                    SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
+
                     updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
                 }
             }
@@ -254,8 +254,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsResourceS
 
                 List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                         controllerId));
-//                subAgentsToController.addAll(SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, dbAgent, dbSubAgents, agent.getSubagents()));
-                SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
+                SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
                 
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
             }

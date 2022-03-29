@@ -143,6 +143,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
         subagent.setDisabled(dbSubagent.getDisabled());
         subagent.setTitle(dbSubagent.getTitle());
         subagent.setDeployed(dbSubagent.getDeployed());
+        subagent.setWithGenerateSubagentCluster(null);
         return subagent;
     }
     
