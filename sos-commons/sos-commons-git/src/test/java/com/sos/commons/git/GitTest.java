@@ -327,15 +327,17 @@ public class GitTest {
         LOGGER.debug("StdErr: " + result.getStdErr());
         LOGGER.debug("StdOut parsed - results:");
         LOGGER.debug("  child folder " + result.getClonedInto() + " with git entries created in " + repositoryParent.toString() + " !");
-        Assert.assertTrue(Files.exists(repositoryParent.resolve(result.getClonedInto())));
-        try {
-            deleteFolderRecursively(repositoryParent.resolve(result.getClonedInto()));
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+//        Assert.assertTrue(Files.exists(repositoryParent.resolve(result.getClonedInto())));
+        if(Files.exists(repositoryParent.resolve(result.getClonedInto()))) {
+            try {
+                deleteFolderRecursively(repositoryParent.resolve(result.getClonedInto()));
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            LOGGER.debug("target folder cleanup");
+            Assert.assertTrue(!Files.exists(repositoryParent.resolve(result.getClonedInto())));
         }
-        LOGGER.debug("target folder cleanup");
-        Assert.assertTrue(!Files.exists(repositoryParent.resolve(result.getClonedInto())));
         LOGGER.debug("**************************  Test 09 - git clone finished   **************************");
     }
 
