@@ -23,6 +23,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
+import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.items.SubAgentItem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -207,6 +208,86 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     public Set<String> getEnabledAgentNames(Collection<String> controllerIds, boolean withClusterLicense) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
         return getAgentNames(controllerIds, true, withClusterLicense);
+    }
+    
+    public Map<String, List<String>> getAgentNamesPerAgentId(Collection<String> controllerIds, boolean onlyEnabledAgents)
+            throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+        try {
+            List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(controllerIds, false, onlyEnabledAgents);
+            if (agents == null || agents.isEmpty()) {
+                return Collections.emptyMap();
+            }
+            
+            Map<String, List<String>> namesPerAgentId = agents.stream().collect(Collectors.groupingBy(DBItemInventoryAgentInstance::getAgentId, Collectors.mapping(
+                    DBItemInventoryAgentInstance::getAgentName, Collectors.toList())));
+
+            StringBuilder hql = new StringBuilder();
+            hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
+            if ((controllerIds != null && !controllerIds.isEmpty()) || onlyEnabledAgents) {
+                List<String> clauses = new ArrayList<>(2);
+                hql.append(" where agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+                if (controllerIds != null && !controllerIds.isEmpty()) {
+                    if (controllerIds.size() == 1) {
+                        clauses.add("controllerId = :controllerId");
+                    } else {
+                        clauses.add("controllerId in (:controllerIds)");
+                    }
+                }
+                if (onlyEnabledAgents) {
+                    clauses.add("disabled = 0");
+                }
+                if (!clauses.isEmpty()) {
+                    hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
+                }
+                hql.append(")");
+            }
+            Query<DBItemInventoryAgentName> query = getSession().createQuery(hql.toString());
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                if (controllerIds.size() == 1) {
+                    query.setParameter("controllerId", controllerIds.iterator().next());
+                } else {
+                    query.setParameterList("controllerIds", controllerIds);
+                }
+            }
+            
+            List<DBItemInventoryAgentName> result = query.getResultList();
+            if (result != null) {
+                result.stream().collect(Collectors.groupingBy(DBItemInventoryAgentName::getAgentId, Collectors.mapping(
+                        DBItemInventoryAgentName::getAgentName, Collectors.toList()))).forEach((agentId, agentNames) -> namesPerAgentId.get(agentId)
+                                .addAll(agentNames));
+            }
+            
+            return namesPerAgentId;
+            
+//            Map<String, List<String>> subAgentIdsPerAgentId = getSubagentClusters(controllerIds).stream().collect(Collectors.groupingBy(
+//                    DBItemInventorySubAgentCluster::getAgentId, Collectors.mapping(DBItemInventorySubAgentCluster::getSubAgentClusterId, Collectors
+//                            .toList())));
+//
+//            // determine subagentClusterIds
+//            
+//            if (!withClusterLicense) {
+//                List<String> clusterAgentIds = getClusterAgentIds(controllerIds, onlyEnabledAgents);
+//                agents = agents.stream().filter(a -> !clusterAgentIds.contains(a.getAgentId())).collect(Collectors.toList());
+//            }
+//            Set<String> agentNames = agents.stream().map(DBItemInventoryAgentInstance::getAgentName).filter(Objects::nonNull).collect(Collectors
+//                    .toSet());
+//            StringBuilder hql = new StringBuilder();
+//            hql.append("select agentName from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
+//            hql.append(" where agentId in (:agentIds)");
+//            Query<String> query = getSession().createQuery(hql.toString());
+//            query.setParameterList("agentIds", agents.stream().map(DBItemInventoryAgentInstance::getAgentId).collect(Collectors.toSet()));
+//            List<String> aliases = getSession().getResultList(query);
+//            if (aliases != null && !aliases.isEmpty()) {
+//                agentNames.addAll(aliases);
+//            }
+//            return agentNames.stream().sorted().collect(Collectors.toSet());
+        } catch (DBMissingDataException ex) {
+            throw ex;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
     }
 
     public Set<String> getAgentNames(Collection<String> controllerIds, boolean onlyEnabledAgents, boolean withClusterLicense)

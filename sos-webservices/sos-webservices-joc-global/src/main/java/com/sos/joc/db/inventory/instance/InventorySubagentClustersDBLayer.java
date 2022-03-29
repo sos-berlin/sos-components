@@ -59,7 +59,11 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
                         query.setParameterList("subagentClusterIds", subagentClusterIds);
                     }
                 }
-                return getSession().getResultList(query);
+                List<DBItemInventorySubAgentCluster> result = getSession().getResultList(query);
+                if (result == null) {
+                    return Collections.emptyList();
+                }
+                return result;
             } catch (DBMissingDataException ex) {
                 throw ex;
             } catch (SOSHibernateInvalidSessionException ex) {
@@ -113,7 +117,11 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
                         query.setParameterList("subagentClusterIds", subagentClusterIds);
                     }
                 }
-                return getSession().getResultList(query);
+                List<DBItemInventorySubAgentCluster> result = getSession().getResultList(query);
+                if (result == null) {
+                    return Collections.emptyList();
+                }
+                return result;
             } catch (DBMissingDataException ex) {
                 throw ex;
             } catch (SOSHibernateInvalidSessionException ex) {

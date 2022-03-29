@@ -1,8 +1,11 @@
 package com.sos.joc.agents.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -19,12 +22,16 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
+import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
+import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.AgentNames;
 import com.sos.joc.model.agent.Agents;
 import com.sos.joc.model.agent.ReadAgents;
+import com.sos.joc.model.agent.SelectionIdsPerAgentName;
 import com.sos.joc.model.controller.ControllerId;
 import com.sos.schema.JsonValidator;
 
@@ -138,15 +145,61 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                 return jocDefaultResponse;
             }
             
-            boolean withClusterLicense = JocClusterService.getInstance().getCluster() != null && JocClusterService.getInstance().getCluster()
-                    .getConfig().getClusterMode();
+            boolean withClusterLicense = true; //JocClusterService.getInstance().getCluster() != null && JocClusterService.getInstance().getCluster()
+                   // .getConfig().getClusterMode();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_NAMES);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
+            InventorySubagentClustersDBLayer dbLayerCluster = new InventorySubagentClustersDBLayer(connection);
             AgentNames agentNames = new AgentNames();
-            agentNames.setAgentNames(dbLayer.getEnabledAgentNames(allowedControllers, withClusterLicense));
+            //agentNames.setAgentNames(dbLayer.getEnabledAgentNames(allowedControllers, withClusterLicense));
+            List<DBItemInventorySubAgentInstance> subagents = dbLayer.getSubAgentInstancesByControllerIds(allowedControllers);
+            Map<String, List<String>> subagentIdsPerAgentId = subagents.stream().collect(Collectors.groupingBy(DBItemInventorySubAgentInstance::getAgentId, Collectors.mapping(DBItemInventorySubAgentInstance::getSubAgentId, Collectors.toList())));
+            Comparator<String> comparator = Comparator.comparing(String::toLowerCase);
+            if (withClusterLicense) {
+                List<DBItemInventorySubAgentCluster> subagentClusters = dbLayerCluster.getSubagentClusters(allowedControllers, null);
+                Map<String, List<String>> subagentClusterIdsPerAgentId = subagentClusters.stream().collect(Collectors.groupingBy(
+                        DBItemInventorySubAgentCluster::getAgentId, Collectors.mapping(DBItemInventorySubAgentCluster::getSubAgentClusterId,
+                                Collectors.toList())));
+                subagentIdsPerAgentId.forEach((agentId, subagentIds) -> {
+                    List<String> subagentClusterIds = subagentClusterIdsPerAgentId.get(agentId);
+                    if (subagentClusterIds != null) {
+                        subagentIds.addAll(subagentClusterIds);
+                        subagentIds.sort(comparator);
+                    }
+                });
+            }
+            
+            Set<String> clusterAgentIds = subagentIdsPerAgentId.keySet();
+            Map<String, List<String>> agentNamesPerAgentId = dbLayer.getAgentNamesPerAgentId(allowedControllers, true);
+            
+            //Set<String> clusterAgentNames = agentNamesPerAgentId.entrySet().stream().filter(e -> clusterAgentIds.contains(e.getKey())).map(Map.Entry::getValue).flatMap(List::stream).collect(Collectors.toSet());
+            //agentNames.setClusterAgentNames(clusterAgentNames);
+            //agentNames.setAgentNames(agentNamesPerAgentId.entrySet().stream().filter(e -> !clusterAgentIds.contains(e.getKey())).map(Map.Entry::getValue).flatMap(List::stream).collect(Collectors.toSet()));
+            SelectionIdsPerAgentName s = new SelectionIdsPerAgentName();
+            List<String> standaloneAgentNames = new ArrayList<>();
+            List<String> clusterAgentNames = new ArrayList<>();
+            
+            for (Map.Entry<String, List<String>> entry : agentNamesPerAgentId.entrySet()) {
+                String agentId = entry.getKey();
+                if (clusterAgentIds.contains(agentId)) {
+                    if (withClusterLicense) {
+                        clusterAgentNames.addAll(entry.getValue());
+                        for (String agentName : entry.getValue()) {
+                            s.setAdditionalProperty(agentName, subagentIdsPerAgentId.get(agentId));
+                        }
+                    }
+                } else {
+                    standaloneAgentNames.addAll(entry.getValue());
+                }
+            }
+            agentNames.setAgentNames(standaloneAgentNames.stream().sorted(comparator).collect(Collectors.toCollection(LinkedHashSet::new)));
+            if (withClusterLicense) {
+                agentNames.setClusterAgentNames(clusterAgentNames.stream().sorted(comparator).collect(Collectors.toCollection(LinkedHashSet::new)));
+                agentNames.setSubagentClusterIds(s);
+            }
             agentNames.setDeliveryDate(Date.from(Instant.now()));
             
-            return JOCDefaultResponse.responseStatus200(agentNames);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(agentNames));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
