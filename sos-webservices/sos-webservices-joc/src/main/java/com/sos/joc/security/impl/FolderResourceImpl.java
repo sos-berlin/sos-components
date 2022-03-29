@@ -267,7 +267,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            FolderListFilter permissionFilter = Globals.objectMapper.readValue(body, FolderListFilter.class);
+            FolderListFilter folderListFilter = Globals.objectMapper.readValue(body, FolderListFilter.class);
             JsonValidator.validateFailFast(body, FolderListFilter.class);
 
             initLogging(API_CALL_FOLDERS, body, accessToken);
@@ -277,21 +277,21 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             }
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_FOLDERS);
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, permissionFilter
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, folderListFilter
                     .getIdentityServiceName());
-            DBItemIamRole dbItemIamRole = SecurityHelper.getRole(sosHibernateSession, dbItemIamIdentityService.getId(), permissionFilter
+            DBItemIamRole dbItemIamRole = SecurityHelper.getRole(sosHibernateSession, dbItemIamIdentityService.getId(), folderListFilter
                     .getRoleName());
 
             IamPermissionFilter iamPermissionFilter = new IamPermissionFilter();
             iamPermissionFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
-            iamPermissionFilter.setControllerId(permissionFilter.getControllerId());
+            iamPermissionFilter.setControllerId(folderListFilter.getControllerId());
             iamPermissionFilter.setRoleId(dbItemIamRole.getId());
 
             Folders folders = new Folders();
             folders.setFolders(new ArrayList<Folder>());
-            folders.setControllerId(permissionFilter.getControllerId());
-            folders.setRoleName(permissionFilter.getRoleName());
-            folders.setIdentityServiceName(permissionFilter.getIdentityServiceName());
+            folders.setControllerId(folderListFilter.getControllerId());
+            folders.setRoleName(folderListFilter.getRoleName());
+            folders.setIdentityServiceName(folderListFilter.getIdentityServiceName());
 
             IamPermissionDBLayer iamPermissionDBLayer = new IamPermissionDBLayer(sosHibernateSession);
 

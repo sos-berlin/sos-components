@@ -422,7 +422,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
             AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
             JsonValidator.validateFailFast(body, AccountFilter.class);
- 
+
             initLogging(API_CALL_ACCOUNT_PERMISSIONS, body, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
@@ -600,6 +600,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
                 if (sosInitialPasswordSetting.getInitialPassword().equals(password)) {
                     dbItemIamAccount.setForcePasswordChange(true);
+                } else {
+                    dbItemIamAccount.setForcePasswordChange(account.getForcePasswordChange());
                 }
 
                 dbItemIamAccount.setAccountPassword(SOSPasswordHasher.hash(password));
