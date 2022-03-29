@@ -40,15 +40,12 @@ import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamAccount2RoleWithName;
 import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
-import com.sos.joc.db.authentication.DBItemIamPermission;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
-import com.sos.joc.db.security.IamPermissionDBLayer;
-import com.sos.joc.db.security.IamPermissionFilter;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInfoException;
@@ -61,9 +58,6 @@ import com.sos.joc.model.security.accounts.AccountRename;
 import com.sos.joc.model.security.accounts.Accounts;
 import com.sos.joc.model.security.accounts.AccountsFilter;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
-import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
-import com.sos.joc.model.security.configuration.permissions.Controllers;
-import com.sos.joc.model.security.configuration.permissions.JocPermissions;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.security.classes.SecurityHelper;
@@ -426,10 +420,9 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            AccountListFilter accountFilter = Globals.objectMapper.readValue(body, AccountListFilter.class);
-            JsonValidator.validateFailFast(body, AccountListFilter.class);
-            this.checkRequiredParameter("accountName", accountFilter.getAccountName());
-
+            AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
+            JsonValidator.validateFailFast(body, AccountFilter.class);
+ 
             initLogging(API_CALL_ACCOUNT_PERMISSIONS, body, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
