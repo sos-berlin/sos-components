@@ -321,7 +321,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                         return Arrays.asList(JUpdateItemOperation.addOrChangeSimple(createNewAgent(a)), JUpdateItemOperation.addOrChangeSimple(
                                 createSubagentDirector(a)));
                     }
-                }).flatMap(s -> s.stream()))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), cId));
+                }).flatMap(List::stream))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), cId));
             }
             
             if (firstController) { // GUI needs permissions directly for the first controller(s)

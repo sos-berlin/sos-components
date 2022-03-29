@@ -22,6 +22,7 @@ import com.sos.joc.agents.resource.ISubAgentCommand;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -30,6 +31,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocMissingLicenseException;
 import com.sos.joc.model.agent.SubAgentsCommand;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
@@ -92,6 +94,13 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
 
                 final Stream<JUpdateItemOperation> subAgents = subAgentsMap.get(true).stream().map(SubagentId::of).map(
                         JUpdateItemOperation::deleteSimple);
+                
+                // if secondary director will be deleted then change the AgentRef settings in that way that only the primary is specified.
+                // and add to delete command
+//                subAgents.addAll(directors.stream().collect(Collectors.groupingBy(SubAgentItem::getAgentId))
+//                        .values().stream().filter(l -> l.size() == 2).flatMap(List::stream).filter(SubAgentItem::isPrimaryDirector).map(
+//                                s -> JAgentRef.of(AgentPath.of(s.getAgentId()), SubagentId.of(s.getSubAgentId()))).map(
+//                                        JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
 
                 proxy.api().updateItems(Flux.fromStream(subAgents)).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
@@ -142,7 +151,8 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
     public JOCDefaultResponse disOrEnable(String accessToken, byte[] filterBytes, boolean disabled) {
         SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_DISABLE, filterBytes, accessToken);
+            String apiCall = disabled ? API_CALL_DISABLE : API_CALL_ENABLE;
+            JOCDefaultResponse jocDefaultResponse = init(apiCall, filterBytes, accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -152,7 +162,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
 
             storeAuditLog(subAgentCommand.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL_DISABLE);
+            connection = Globals.createSosHibernateStatelessConnection(apiCall);
             connection.setAutoCommit(false);
             Globals.beginTransaction(connection);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
@@ -180,7 +190,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
                         try {
-                            connection1 = Globals.createSosHibernateStatelessConnection(API_CALL_DISABLE);
+                            connection1 = Globals.createSosHibernateStatelessConnection(apiCall);
                             connection1.setAutoCommit(false);
                             Globals.beginTransaction(connection1);
                             InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
@@ -211,13 +221,13 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
         }
     }
     
-    private JOCDefaultResponse init(String api_call, byte[] filterBytes, String accessToken) throws InvalidSessionException, JsonParseException,
+    private JOCDefaultResponse init(String apiCall, byte[] filterBytes, String accessToken) throws InvalidSessionException, JsonParseException,
             JsonMappingException, JocException, IOException {
-        initLogging(API_CALL_ENABLE, filterBytes, accessToken);
+        initLogging(apiCall, filterBytes, accessToken);
 
-//        if (JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
-//            throw new JocMissingLicenseException("missing license for Agent cluster");
-//        }
+        if (JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
+            throw new JocMissingLicenseException("missing license for Agent cluster");
+        }
 
         return initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers().getManage());
     }

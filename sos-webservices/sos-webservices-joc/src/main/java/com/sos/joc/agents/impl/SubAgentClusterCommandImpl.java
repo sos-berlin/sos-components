@@ -67,17 +67,17 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_REVOKE);
             InventorySubagentClustersDBLayer dbLayer = new InventorySubagentClustersDBLayer(connection);
             Set<String> subagentClusterIds = agentParameter.getSubagentClusterIds();
-            List<DBItemInventorySubAgentCluster> subAgentClusters = dbLayer.getSubagentClusters(Collections.singleton(controllerId),
+            List<DBItemInventorySubAgentCluster> dbSubAgentClusters = dbLayer.getSubagentClusters(Collections.singleton(controllerId),
                     subagentClusterIds.stream().collect(Collectors.toList()));
 
-            final List<String> dbSubagentClusterIds = subAgentClusters.stream().map(DBItemInventorySubAgentCluster::getSubAgentClusterId).distinct()
+            final List<String> dbSubagentClusterIds = dbSubAgentClusters.stream().map(DBItemInventorySubAgentCluster::getSubAgentClusterId).distinct()
                     .collect(Collectors.toList());
             
-            final List<String> dbAgentIds = subAgentClusters.stream().map(DBItemInventorySubAgentCluster::getAgentId).distinct().collect(Collectors
+            final List<String> dbAgentIds = dbSubAgentClusters.stream().map(DBItemInventorySubAgentCluster::getAgentId).distinct().collect(Collectors
                     .toList());
 
             // check that controllerId corresponds to subagentClusterIds
-            if (subAgentClusters.size() != subagentClusterIds.size()) {
+            if (dbSubAgentClusters.size() != subagentClusterIds.size()) {
                 subagentClusterIds.removeAll(dbSubagentClusterIds);
                 throw new JocBadRequestException(String.format("The Subagent Clusters %s are not assigned to Controller '%s'", subagentClusterIds
                         .toString(), controllerId));
@@ -87,27 +87,31 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
             final List<String> knownSubagentSelectionIds = proxy.currentState().idToSubagentSelection().keySet().stream().map(
                     SubagentSelectionId::string).collect(Collectors.toList());
             Predicate<String> knownInController = s -> knownSubagentSelectionIds.contains(s);
-            proxy.api().updateItems(Flux.fromStream(subagentClusterIds.stream().filter(knownInController).map(SubagentSelectionId::of).map(
-                    JUpdateItemOperation::deleteSimple))).thenAccept(e -> {
-                        ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
-                        if (e.isRight()) {
-                            SOSHibernateSession connection1 = null;
-                            try {
-                                connection1 = Globals.createSosHibernateStatelessConnection(API_CALL_REVOKE);
-                                connection1.setAutoCommit(false);
-                                Globals.beginTransaction(connection1);
-                                InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
-                                dbLayer1.setSubAgentClustersDeployed(subagentClusterIds.stream().collect(Collectors.toList()), false);
-                                Globals.commit(connection1);
-                                EventBus.getInstance().post(new AgentInventoryEvent(controllerId, dbAgentIds));
-                            } catch (Exception e1) {
-                                Globals.rollback(connection1);
-                                ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
-                            } finally {
-                                Globals.disconnect(connection1);
-                            }
+            List<JUpdateItemOperation> s = subagentClusterIds.stream().filter(knownInController).map(SubagentSelectionId::of).map(
+                    JUpdateItemOperation::deleteSimple).collect(Collectors.toList());
+            
+            if (!s.isEmpty()) {
+                proxy.api().updateItems(Flux.fromIterable(s)).thenAccept(e -> {
+                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                    if (e.isRight()) {
+                        SOSHibernateSession connection1 = null;
+                        try {
+                            connection1 = Globals.createSosHibernateStatelessConnection(API_CALL_REVOKE);
+                            connection1.setAutoCommit(false);
+                            Globals.beginTransaction(connection1);
+                            InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
+                            dbLayer1.setSubAgentClustersDeployed(subagentClusterIds.stream().collect(Collectors.toList()), false);
+                            Globals.commit(connection1);
+                            EventBus.getInstance().post(new AgentInventoryEvent(controllerId, dbAgentIds));
+                        } catch (Exception e1) {
+                            Globals.rollback(connection1);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
+                        } finally {
+                            Globals.disconnect(connection1);
                         }
-                    });
+                    }
+                });
+            }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

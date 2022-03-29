@@ -37,7 +37,7 @@ import reactor.core.publisher.Flux;
 @Path("agent")
 public class SubAgentCommandResourceImpl extends JOCResourceImpl implements ISubAgentCommandResource {
 
-    private static final String API_CALL_REMOVE = "./agent/subagents/remove";
+    private static final String API_CALL_REMOVE = "./agent/subagents/delete";
 
     @Override
     public JOCDefaultResponse remove(String accessToken, byte[] filterBytes) {

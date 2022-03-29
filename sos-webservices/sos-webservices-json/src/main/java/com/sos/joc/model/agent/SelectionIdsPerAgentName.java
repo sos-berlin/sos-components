@@ -15,9 +15,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * selection ids per agent name
- * <p>
- * 
+ * Subagent Cluster IDs of Agent clusters
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
