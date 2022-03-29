@@ -239,6 +239,7 @@ public class RepositoryTest {
         LOGGER.debug("**************************  Test 06 - JOC and Repo paths finished  ******************");
     }
 
+    @Ignore
     @Test
     public void test07JocAndRepoPaths() throws IOException, URISyntaxException {
         LOGGER.debug("**************************  Test 07 - JOC and Repo paths started  *******************");
