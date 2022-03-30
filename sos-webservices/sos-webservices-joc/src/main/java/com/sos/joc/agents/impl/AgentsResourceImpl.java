@@ -19,6 +19,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
@@ -84,6 +85,8 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
             if (dbAgents != null) {
                 Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).collect(Collectors.toSet());
                 Map<String, Set<String>> allAliases = dbLayer.getAgentNamesByAgentIds(controllerIds);
+                Map<String, Set<String>> agentsOnController = AgentHelper.getAgents(controllerIds, AgentHelper.getCurrentStates(controllerIds));
+                
                 agents.setAgents(dbAgents.stream().map(a -> {
                     if (dbClusterAgentIds.contains(a.getAgentId())) {
                         return null;
@@ -94,7 +97,8 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                     agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
                     agent.setTitle(a.getTitle());
                     agent.setDisabled(a.getDisabled());
-                    agent.setDeployed(a.getDeployed());
+                    agent.setDeployed(null); // deployed is obsolete, now part of syncState
+                    agent.setSyncState(AgentHelper.getSyncState(agentsOnController.get(a.getControllerId()), a));
                     agent.setIsClusterWatcher(a.getIsWatcher());
                     agent.setControllerId(a.getControllerId());
                     agent.setUrl(a.getUri());
@@ -143,16 +147,10 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                 return jocDefaultResponse;
             }
             
-            boolean withClusterLicense = true; //JocClusterService.getInstance().getCluster() != null && JocClusterService.getInstance().getCluster()
-                   // .getConfig().getClusterMode();
+            boolean withClusterLicense = AgentHelper.hasClusterLicense();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_NAMES);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             InventorySubagentClustersDBLayer dbLayerCluster = new InventorySubagentClustersDBLayer(connection);
-            AgentNames agentNames = new AgentNames();
-            //agentNames.setAgentNames(dbLayer.getEnabledAgentNames(allowedControllers, withClusterLicense));
-            // no implicit subagentCLuster by subagentId
-//            List<DBItemInventorySubAgentInstance> subagents = dbLayer.getSubAgentInstancesByControllerIds(allowedControllers);
-//            Map<String, List<String>> subagentIdsPerAgentId = subagents.stream().collect(Collectors.groupingBy(DBItemInventorySubAgentInstance::getAgentId, Collectors.mapping(DBItemInventorySubAgentInstance::getSubAgentId, Collectors.toList())));
             Map<String, List<String>> subagentClusterIdsPerAgentId = Collections.emptyMap();
             Comparator<String> comparator = Comparator.comparing(String::toLowerCase);
             if (withClusterLicense) {
@@ -160,23 +158,11 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                 subagentClusterIdsPerAgentId = subagentClusters.stream().sorted(Comparator.comparing(DBItemInventorySubAgentCluster::getSubAgentClusterId)).collect(Collectors.groupingBy(
                         DBItemInventorySubAgentCluster::getAgentId, Collectors.mapping(DBItemInventorySubAgentCluster::getSubAgentClusterId,
                                 Collectors.toList())));
-             // no implicit subagentCLuster by subagentId
-//                subagentIdsPerAgentId.forEach((agentId, subagentIds) -> {
-//                    List<String> subagentClusterIds = subagentClusterIdsPerAgentId.get(agentId);
-//                    if (subagentClusterIds != null) {
-//                        subagentIds.addAll(subagentClusterIds);
-//                        subagentIds.sort(comparator);
-//                    }
-//                });
             }
             
-//            Set<String> clusterAgentIds = subagentIdsPerAgentId.keySet();
             List<String> clusterAgentIds = dbLayer.getClusterAgentIds(allowedControllers, false);
             Map<String, List<String>> agentNamesPerAgentId = dbLayer.getAgentNamesPerAgentId(allowedControllers, true);
             
-            //Set<String> clusterAgentNames = agentNamesPerAgentId.entrySet().stream().filter(e -> clusterAgentIds.contains(e.getKey())).map(Map.Entry::getValue).flatMap(List::stream).collect(Collectors.toSet());
-            //agentNames.setClusterAgentNames(clusterAgentNames);
-            //agentNames.setAgentNames(agentNamesPerAgentId.entrySet().stream().filter(e -> !clusterAgentIds.contains(e.getKey())).map(Map.Entry::getValue).flatMap(List::stream).collect(Collectors.toSet()));
             SelectionIdsPerAgentName s = new SelectionIdsPerAgentName();
             List<String> standaloneAgentNames = new ArrayList<>();
             List<String> clusterAgentNames = new ArrayList<>();
@@ -187,7 +173,6 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                     if (withClusterLicense) {
                         clusterAgentNames.addAll(entry.getValue());
                         for (String agentName : entry.getValue()) {
-                            //s.setAdditionalProperty(agentName, subagentIdsPerAgentId.get(agentId));
                             s.setAdditionalProperty(agentName, subagentClusterIdsPerAgentId.get(agentId));
                         }
                     }
@@ -195,6 +180,8 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                     standaloneAgentNames.addAll(entry.getValue());
                 }
             }
+            
+            AgentNames agentNames = new AgentNames();
             agentNames.setAgentNames(standaloneAgentNames.stream().sorted(comparator).collect(Collectors.toCollection(LinkedHashSet::new)));
             if (withClusterLicense) {
                 agentNames.setClusterAgentNames(clusterAgentNames.stream().sorted(comparator).collect(Collectors.toCollection(LinkedHashSet::new)));

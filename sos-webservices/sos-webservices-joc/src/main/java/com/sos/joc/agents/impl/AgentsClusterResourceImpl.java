@@ -17,6 +17,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsClusterResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
@@ -28,6 +29,8 @@ import com.sos.joc.model.agent.ReadAgents;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.schema.JsonValidator;
 
+import js7.data_for_java.controller.JControllerState;
+
 @Path("agents")
 public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgentsClusterResource {
 
@@ -38,13 +41,6 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            
-//            if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
-//                ClusterAgents agents = new ClusterAgents();
-//                agents.setDeliveryDate(Date.from(Instant.now()));
-//                
-//                return JOCDefaultResponse.responseStatus200(agents);
-//            }
             
             JsonValidator.validateFailFast(filterBytes, ReadAgents.class);
             ReadAgents agentParameter = Globals.objectMapper.readValue(filterBytes, ReadAgents.class);
@@ -76,11 +72,16 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(allowedControllers, agentParameter
                     .getAgentIds(), false, false);
+            
             Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(allowedControllers, false,
                     false);
             ClusterAgents agents = new ClusterAgents();
             if (dbAgents != null) {
-                Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).collect(Collectors.toSet());
+                Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).filter(Objects::nonNull).collect(
+                        Collectors.toSet());
+                Map<String, JControllerState> currentStates = AgentHelper.getCurrentStates(controllerIds);
+                Map<String, Set<String>> agentsOnController = AgentHelper.getAgents(controllerIds, currentStates);
+                Map<String, Set<String>> subagentsOnController = AgentHelper.getSubagents(controllerIds, currentStates);
                 Map<String, Set<String>> allAliases = dbLayer.getAgentNamesByAgentIds(controllerIds);
                 agents.setAgents(dbAgents.stream().map(a -> {
                     if (!subAgents.containsKey(a.getAgentId())) { // solo agent
@@ -93,9 +94,10 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                     //agent.setDisabled(a.getDisabled());
                     agent.setControllerId(a.getControllerId());
                     agent.setUrl(a.getUri());
-                    agent.setDeployed(a.getDeployed());
+                    agent.setDeployed(null); // deployed is obsolete, now part of syncState
+                    agent.setSyncState(AgentHelper.getSyncState(agentsOnController.get(a.getControllerId()), a));
                     agent.setTitle(a.getTitle());
-                    agent.setSubagents(mapDBSubAgentsToSubAgents(subAgents.get(a.getAgentId())));
+                    agent.setSubagents(mapDBSubAgentsToSubAgents(subAgents.get(a.getAgentId()), subagentsOnController.get(a.getControllerId())));
                     return agent;
                 }).filter(Objects::nonNull).collect(Collectors.toList()));
             }
@@ -118,7 +120,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
         return postCluster(accessToken, filterBytes);
     }
     
-    private static List<SubAgent> mapDBSubAgentsToSubAgents(List<DBItemInventorySubAgentInstance> dbSubagents) {
+    private static List<SubAgent> mapDBSubAgentsToSubAgents(List<DBItemInventorySubAgentInstance> dbSubagents, Set<String> subagentsOnController) {
         if (dbSubagents == null) {
             return null;
         }
@@ -127,10 +129,10 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
         for (DBItemInventorySubAgentInstance item : dbSubagents) {
             item.setOrdering(++index);
         }
-        return dbSubagents.stream().map(dbSubagent -> toSubAgentMapper(dbSubagent)).filter(Objects::nonNull).collect(Collectors.toList());
+        return dbSubagents.stream().map(dbSubagent -> toSubAgentMapper(dbSubagent, subagentsOnController)).filter(Objects::nonNull).collect(Collectors.toList());
     }
     
-    private static SubAgent toSubAgentMapper(DBItemInventorySubAgentInstance dbSubagent) {
+    private static SubAgent toSubAgentMapper(DBItemInventorySubAgentInstance dbSubagent, Set<String> subagentsOnController) {
         if (dbSubagent == null) {
             return null;
         }
@@ -142,7 +144,8 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
         subagent.setOrdering(dbSubagent.getOrdering());
         subagent.setDisabled(dbSubagent.getDisabled());
         subagent.setTitle(dbSubagent.getTitle());
-        subagent.setDeployed(dbSubagent.getDeployed());
+        subagent.setDeployed(null); // deployed is obsolete, now part of syncState
+        subagent.setSyncState(AgentHelper.getSyncState(subagentsOnController, dbSubagent));
         subagent.setWithGenerateSubagentCluster(null);
         return subagent;
     }

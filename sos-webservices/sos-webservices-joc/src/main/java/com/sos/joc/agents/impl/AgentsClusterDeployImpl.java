@@ -17,7 +17,7 @@ import com.sos.joc.agents.resource.IAgentsClusterDeploy;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -25,7 +25,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingLicenseException;
 import com.sos.joc.model.agent.DeployClusterAgents;
 import com.sos.joc.model.agent.SubagentDirectorType;
 import com.sos.joc.model.audit.CategoryType;
@@ -51,9 +50,7 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             
-            if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
-                throw new JocMissingLicenseException("missing license for Agent cluster");
-            }
+            AgentHelper.throwJocMissingLicenseException();
             
             JsonValidator.validateFailFast(filterBytes, DeployClusterAgents.class);
             DeployClusterAgents agentParameter = Globals.objectMapper.readValue(filterBytes, DeployClusterAgents.class);

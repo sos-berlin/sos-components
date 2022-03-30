@@ -22,7 +22,7 @@ import com.sos.joc.agents.resource.ISubAgentStoreResource;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentClusterMember;
@@ -33,7 +33,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingLicenseException;
 import com.sos.joc.model.agent.StoreSubAgents;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubagentDirectorType;
@@ -53,10 +52,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
         try {
             initLogging(API_CALL_REMOVE, filterBytes, accessToken);
 
-            if (JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
-                throw new JocMissingLicenseException("missing license for Agent cluster");
-            }
-            
+            AgentHelper.throwJocMissingLicenseException();
 
             JsonValidator.validateFailFast(filterBytes, StoreSubAgents.class);
             StoreSubAgents subAgentsParam = Globals.objectMapper.readValue(filterBytes, StoreSubAgents.class);

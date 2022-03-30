@@ -22,7 +22,7 @@ import com.sos.joc.agents.resource.ISubAgentCommand;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -31,7 +31,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingLicenseException;
 import com.sos.joc.model.agent.SubAgentsCommand;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
@@ -225,9 +224,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
             JsonMappingException, JocException, IOException {
         initLogging(apiCall, filterBytes, accessToken);
 
-        if (JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
-            throw new JocMissingLicenseException("missing license for Agent cluster");
-        }
+        AgentHelper.throwJocMissingLicenseException();
 
         return initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers().getManage());
     }

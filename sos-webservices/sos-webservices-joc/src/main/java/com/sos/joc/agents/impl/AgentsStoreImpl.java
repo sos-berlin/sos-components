@@ -15,12 +15,11 @@ import javax.ws.rs.Path;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
-import com.sos.joc.agents.impl.SubAgentStoreResourceImpl;
 import com.sos.joc.agents.resource.IAgentsResourceStore;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
@@ -30,7 +29,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingLicenseException;
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.StoreAgents;
@@ -163,9 +161,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsResourceS
         try {
             initLogging(API_CLUSTER_INVENTORY_STORE, filterBytes, accessToken);
 
-            if (JocClusterService.getInstance().getCluster() == null || !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
-                throw new JocMissingLicenseException("missing license for Agent cluster");
-            }
+            AgentHelper.throwJocMissingLicenseException();
 
             JsonValidator.validateFailFast(filterBytes, StoreClusterAgents.class);
             StoreClusterAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreClusterAgents.class);
