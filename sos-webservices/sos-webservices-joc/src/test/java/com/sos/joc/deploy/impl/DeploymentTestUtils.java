@@ -966,16 +966,16 @@ public class DeploymentTestUtils {
         return cred;
     }
 
-    public static GetCredentialsFilter createExampleGetGitCredentialsFilter() {
-        GetCredentialsFilter getCredFilter = new GetCredentialsFilter();
-        getCredFilter.setAccount("root");
-        return getCredFilter;
-    }
-
-    public static StoreCredentialsFilter createExampleStoreGitCredentialsFilter() {
-        StoreCredentialsFilter setCredFilter = new StoreCredentialsFilter();
-        setCredFilter.setAccount("root");
-        setCredFilter.setCredentials(createExampleGitCredentialsKeyfilePath());
-        return setCredFilter;
-    }
+//    public static GetCredentialsFilter createExampleGetGitCredentialsFilter() {
+//        GetCredentialsFilter getCredFilter = new GetCredentialsFilter();
+//        getCredFilter.setAccount("root");
+//        return getCredFilter;
+//    }
+//
+//    public static StoreCredentialsFilter createExampleStoreGitCredentialsFilter() {
+//        StoreCredentialsFilter setCredFilter = new StoreCredentialsFilter();
+//        setCredFilter.setAccount("root");
+//        setCredFilter.setCredentials(createExampleGitCredentialsKeyfilePath());
+//        return setCredFilter;
+//    }
 }
