@@ -24,6 +24,7 @@ public interface IConvertCronResource {
             @FormDataParam("folder") String targetFolder,
             @FormDataParam("calendarName") String calendarName,
             @FormDataParam("agentName") String agentName,
+            @FormDataParam("subagentClusterId") String subagentClusterId,
             @FormDataParam("systemCrontab") Boolean systemCrontab,
             @FormDataParam("timeSpent") String timeSpent,
             @FormDataParam("ticketLink") String ticketLink,

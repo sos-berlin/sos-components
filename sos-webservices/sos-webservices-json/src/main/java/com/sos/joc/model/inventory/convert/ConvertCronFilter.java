@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "folder",
     "calendarName",
     "agentName",
+    "subagentClusterId",
     "systemCrontab",
     "auditLog"
 })
@@ -46,6 +47,14 @@ public class ConvertCronFilter {
      */
     @JsonProperty("agentName")
     private String agentName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("subagentClusterId")
+    private String subagentClusterId;
     @JsonProperty("systemCrontab")
     private Boolean systemCrontab = false;
     /**
@@ -115,6 +124,28 @@ public class ConvertCronFilter {
         this.agentName = agentName;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("subagentClusterId")
+    public String getSubagentClusterId() {
+        return subagentClusterId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("subagentClusterId")
+    public void setSubagentClusterId(String subagentClusterId) {
+        this.subagentClusterId = subagentClusterId;
+    }
+
     @JsonProperty("systemCrontab")
     public Boolean getSystemCrontab() {
         return systemCrontab;
@@ -149,12 +180,12 @@ public class ConvertCronFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("folder", folder).append("calendarName", calendarName).append("agentName", agentName).append("systemCrontab", systemCrontab).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("folder", folder).append("calendarName", calendarName).append("agentName", agentName).append("subagentClusterId", subagentClusterId).append("systemCrontab", systemCrontab).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(systemCrontab).append(calendarName).append(agentName).append(folder).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(calendarName).append(folder).append(auditLog).append(systemCrontab).append(agentName).append(subagentClusterId).toHashCode();
     }
 
     @Override
@@ -166,7 +197,7 @@ public class ConvertCronFilter {
             return false;
         }
         ConvertCronFilter rhs = ((ConvertCronFilter) other);
-        return new EqualsBuilder().append(systemCrontab, rhs.systemCrontab).append(calendarName, rhs.calendarName).append(agentName, rhs.agentName).append(folder, rhs.folder).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(calendarName, rhs.calendarName).append(folder, rhs.folder).append(auditLog, rhs.auditLog).append(systemCrontab, rhs.systemCrontab).append(agentName, rhs.agentName).append(subagentClusterId, rhs.subagentClusterId).isEquals();
     }
 
 }

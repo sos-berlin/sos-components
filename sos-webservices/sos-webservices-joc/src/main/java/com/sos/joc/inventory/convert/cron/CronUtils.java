@@ -57,7 +57,7 @@ public class CronUtils {
     private static final String JOBTITLE = "cron job";
 
     public static Map<WorkflowEdit, ScheduleEdit> cronFile2Workflows(InventoryDBLayer dbLayer, final BufferedReader in, Calendar calendar, String agentName,
-            String timezone, boolean isSystemCrontab) throws Exception {
+            String subagentClusterId, String timezone, boolean isSystemCrontab) throws Exception {
         String workflowBaseName = "workflow_cron-";
         String scheduleBaseName = "schedule_cron-";
         Integer workflowNumber = dbLayer.getSuffixNumber("", "workflow_cron", ConfigurationType.WORKFLOW.intValue());
@@ -113,7 +113,7 @@ public class CronUtils {
                             }
                             ExecutableScript script = new ExecutableScript(command, env, false, null, null);
                             script.setTYPE(ExecutableType.ShellScriptExecutable);
-                            Jobs jobs = createJob(script, calendar, agentName, timezone);
+                            Jobs jobs = createJob(script, calendar, agentName, subagentClusterId, timezone);
                             workflow.setJobs(jobs);
                             List<Instruction> instructions = new ArrayList<Instruction>();
                             NamedJob instruction = new NamedJob(JOBNAME);
@@ -152,7 +152,7 @@ public class CronUtils {
         return scheduledWorkflows;
     }
 
-    private static Jobs createJob(ExecutableScript script, Calendar calendar, String agentName, String timezone) throws Exception {
+    private static Jobs createJob(ExecutableScript script, Calendar calendar, String agentName, String subagentClusterId, String timezone) throws Exception {
         Jobs jobs = new Jobs();
         Job job = new Job();
         jobs.getAdditionalProperties().put(JOBNAME, job);
@@ -160,6 +160,7 @@ public class CronUtils {
         job.setTimeout(0);
         job.setExecutable(script);
         job.setAgentName(agentName);
+        job.setSubagentClusterId(subagentClusterId);
         return jobs;
     }
 

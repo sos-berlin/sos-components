@@ -68,6 +68,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
 			String folder,
             String calendarName,
             String agentName, 
+            String subagentClusterId, 
             Boolean systemCrontab,
 			String timeSpent,
 			String ticketLink,
@@ -83,6 +84,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         filter.setFolder(folder);
         filter.setCalendarName(calendarName);
         filter.setAgentName(agentName);
+        filter.setSubagentClusterId(subagentClusterId);
         filter.setSystemCrontab(systemCrontab);
 		return postConvertCron(xAccessToken, body, filter, auditLog);
 	}
@@ -116,8 +118,8 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
             Calendar cal = Globals.objectMapper.readValue(calDbItem.getContent(), Calendar.class);
             cal.setName(calDbItem.getName());
             cal.setPath(calDbItem.getPath());
-            Map<WorkflowEdit, ScheduleEdit> scheduledWorkflows = CronUtils.cronFile2Workflows(invDbLayer, bufferedReader, cal, filter.getAgentName(), timezone,
-                    filter.getSystemCrontab());
+            Map<WorkflowEdit, ScheduleEdit> scheduledWorkflows = CronUtils.cronFile2Workflows(invDbLayer, bufferedReader, cal, filter.getAgentName(),
+                    filter.getSubagentClusterId(), timezone, filter.getSystemCrontab());
             Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
             for (Map.Entry<WorkflowEdit, ScheduleEdit> entry : scheduledWorkflows.entrySet()) {
                 entry.getKey().setPath(Paths.get(filter.getFolder()).resolve(entry.getKey().getName()).toString().replace('\\', '/'));
