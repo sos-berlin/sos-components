@@ -47,10 +47,10 @@ public class DBLayerSchedules extends DBLayer {
         }
 
         // folders
-        boolean hasFolders = folders != null && folders.size() > 0;
+        boolean useFolders = useFolders(folders);
         Map<String, String> paramsFolder = new HashMap<>();
         Map<String, String> paramsLikeFolder = new HashMap<>();
-        if (hasFolders) {
+        if (useFolders) {
             hql.append("and (");
             int i = 0;
             for (Folder folder : folders) {
@@ -78,7 +78,7 @@ public class DBLayerSchedules extends DBLayer {
         if (!SOSString.isEmpty(controllerId)) {
             query.setParameter("controllerId", controllerId);
         }
-        if (hasFolders) {
+        if (useFolders) {
             paramsFolder.entrySet().stream().forEach(e -> {
                 query.setParameter(e.getKey(), e.getValue());
             });
@@ -91,7 +91,7 @@ public class DBLayerSchedules extends DBLayer {
 
     public List<DBBeanReleasedSchedule2DeployedWorkflow> getReleasedSchedule2DeployedWorkflows(String controllerId, Set<Folder> folders,
             Set<String> singlePaths, boolean checkForSchedule) throws SOSHibernateException {
-        boolean hasFolders = folders != null && folders.size() > 0;
+        boolean useFolders = useFolders(folders);
         boolean hasSingles = singlePaths != null && singlePaths.size() > 0;
 
         String folderField = "sw.scheduleFolder";
@@ -101,7 +101,7 @@ public class DBLayerSchedules extends DBLayer {
             pathField = "dc.path";
         }
 
-        if (!hasFolders && !hasSingles) {
+        if (!useFolders && !hasSingles) {
             return getReleasedSchedule2DeployedWorkflows(controllerId, folders);
         }
 
@@ -126,7 +126,7 @@ public class DBLayerSchedules extends DBLayer {
         // folders
         Map<String, String> paramsFolder = new HashMap<>();
         Map<String, String> paramsLikeFolder = new HashMap<>();
-        if (hasFolders) {
+        if (useFolders) {
             hql.append("and (");
             int i = 0;
             for (Folder folder : folders) {
@@ -171,7 +171,7 @@ public class DBLayerSchedules extends DBLayer {
         if (!SOSString.isEmpty(controllerId)) {
             query.setParameter("controllerId", controllerId);
         }
-        if (hasFolders) {
+        if (useFolders) {
             paramsFolder.entrySet().stream().forEach(e -> {
                 query.setParameter(e.getKey(), e.getValue());
             });
@@ -234,6 +234,23 @@ public class DBLayerSchedules extends DBLayer {
             return resultset.stream().distinct().collect(Collectors.toMap(DBItemInventoryReleasedConfiguration::getPath,
                     DBItemInventoryReleasedConfiguration::getName));
         }
+    }
+
+    private boolean useFolders(Set<Folder> folders) {
+        if (folders != null && folders.size() > 0) {
+            if (folders.size() == 1) {
+                Folder f = folders.iterator().next();
+                if (f == null) {
+                    return false;
+                }
+                boolean recursive = f.getRecursive() == null ? true : f.getRecursive().booleanValue();
+                if (f.getFolder().equals("/") && recursive) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
 }
