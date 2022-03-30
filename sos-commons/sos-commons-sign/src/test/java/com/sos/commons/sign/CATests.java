@@ -62,123 +62,123 @@ public class CATests {
 
     @BeforeClass
     public static void logTestsStarted() {
-        LOGGER.info("************************************  CA Tests started  ***********************************************");
+        LOGGER.trace("************************************  CA Tests started  ***********************************************");
     }
 
     @AfterClass
     public static void logTestsFinished() {
-        LOGGER.info("************************************  CA Tests finished  **********************************************");
+        LOGGER.trace("************************************  CA Tests finished  **********************************************");
     }
 
     @Test
     public void test01RSACreateRootCertificateCSRAndUserCertificateAndExport() 
             throws NoSuchAlgorithmException, NoSuchProviderException, OperatorCreationException, CertificateException, IOException, CertException, 
             InvalidKeyException, InvalidKeySpecException, SignatureException {
-        LOGGER.info("************************************  Test RSA: create rootCertificate, CSR and userCertificate  ******");
+        LOGGER.trace("************************************  Test RSA: create rootCertificate, CSR and userCertificate  ******");
         // create a KeyPair for the root CA
         KeyPair rootKeyPair = KeyUtil.createRSAKeyPair();
         String rootSubjectDN = CAUtils.createRootSubjectDN("SOS root CA", "SOS root CA", "www.sos-berlin.com", "SOS GmbH", "DE");
-        LOGGER.info("issuerDN: " + rootSubjectDN);
+        LOGGER.trace("issuerDN: " + rootSubjectDN);
         // create a root certificate for the root CA
         Certificate rootCertificate = CAUtils.createSelfSignedRootCertificate(SOSKeyConstants.RSA_SIGNER_ALGORITHM, rootKeyPair, rootSubjectDN, true, false);
         assertNotNull(rootCertificate);
         String rootCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootCertificate.getEncoded()), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
-        LOGGER.info("************************************  root Certificate:  **********************************************");
-        LOGGER.info("\n" + rootCert);
+        LOGGER.trace("************************************  root Certificate:  **********************************************");
+        LOGGER.trace("\n" + rootCert);
         try {
-            LOGGER.info("************************************  verify root Certificate:  ***************************************");
+            LOGGER.trace("************************************  verify root Certificate:  ***************************************");
             rootCertificate.verify(rootKeyPair.getPublic());
-            LOGGER.info("root certificate was successfully verified.");
-            LOGGER.info("\nCertificate cerdentials :\n" + ((X509Certificate)rootCertificate).toString());
+            LOGGER.trace("root certificate was successfully verified.");
+            LOGGER.trace("\nCertificate cerdentials :\n" + ((X509Certificate)rootCertificate).toString());
             List<String> usages = ((X509Certificate)rootCertificate).getExtendedKeyUsage();
-            LOGGER.info("IssuerDN: " + ((X509Certificate)rootCertificate).getIssuerDN().toString());
-            LOGGER.info("SubjectDN: " + ((X509Certificate)rootCertificate).getSubjectDN().toString());
+            LOGGER.trace("IssuerDN: " + ((X509Certificate)rootCertificate).getIssuerDN().toString());
+            LOGGER.trace("SubjectDN: " + ((X509Certificate)rootCertificate).getSubjectDN().toString());
             if (usages != null) {
                 for (String usage : usages) {
-                    LOGGER.info("Usage: " + usage);
+                    LOGGER.trace("Usage: " + usage);
                 } 
             }
         } catch (CertificateException e) {
             // on encoding errors
-            LOGGER.info("CertificateException ocurred. (on encoding errors)");
+            LOGGER.trace("CertificateException ocurred. (on encoding errors)");
         } catch (NoSuchAlgorithmException e) {
             // on unsupported signature algorithms
-            LOGGER.info("NoSuchAlgorithmException ocurred. (on unsupported signature algorithms)");
+            LOGGER.trace("NoSuchAlgorithmException ocurred. (on unsupported signature algorithms)");
         } catch (InvalidKeyException e) {
             // on incorrect key
-            LOGGER.info("InvalidKeyException ocurred. (on incorrect key)");
+            LOGGER.trace("InvalidKeyException ocurred. (on incorrect key)");
         } catch (NoSuchProviderException e) {
             // if there's no default provider
-            LOGGER.info("NoSuchProviderException ocurred. (if there's no default provider)");
+            LOGGER.trace("NoSuchProviderException ocurred. (if there's no default provider)");
         } catch (SignatureException e) {
             // on signature errors
-            LOGGER.info("SignatureException ocurred. (on signature errors)");
+            LOGGER.trace("SignatureException ocurred. (on signature errors)");
         } 
         // create a user KeyPair
         KeyPair userKeyPair = KeyUtil.createRSAKeyPair();
         String userSubjectDN = CAUtils.createUserSubjectDN("SOS root CA", "SP", "www.sos-berlin.com", "SOS GmbH", "Berlin", "Berlin", "DE"); 
-        LOGGER.info("user subjectDN: " + userSubjectDN);
+        LOGGER.trace("user subjectDN: " + userSubjectDN);
         // create a CSR based on the users KeyPair
         PKCS10CertificationRequest csr = CAUtils.createCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, userKeyPair, userSubjectDN);
         assertNotNull(csr);
         String csrAsString = KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
-        LOGGER.info("************************************  CSR:  ***********************************************************");
-        LOGGER.info("\n" + csrAsString);
+        LOGGER.trace("************************************  CSR:  ***********************************************************");
+        LOGGER.trace("\n" + csrAsString);
         X509Certificate userCertificate = 
                 CAUtils.signCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, userKeyPair.getPrivate(), csr, (X509Certificate)rootCertificate, "sp.sos");
         assertNotNull(userCertificate);
         String userCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(userCertificate.getEncoded()), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
-        LOGGER.info("************************************  User Certificate:  **********************************************");
-        LOGGER.info("\n" + userCert);
+        LOGGER.trace("************************************  User Certificate:  **********************************************");
+        LOGGER.trace("\n" + userCert);
         try {
-            LOGGER.info("************************************  verify user Certificate:  ***************************************");
+            LOGGER.trace("************************************  verify user Certificate:  ***************************************");
             userCertificate.verify(userKeyPair.getPublic());
-            LOGGER.info("user certificate was successfully verified.");
-            LOGGER.info("\nUser certificate credentials:\n" + userCertificate.toString());
+            LOGGER.trace("user certificate was successfully verified.");
+            LOGGER.trace("\nUser certificate credentials:\n" + userCertificate.toString());
             List<String> usages = ((X509Certificate)userCertificate).getExtendedKeyUsage();
-            LOGGER.info("IssuerDN: " + ((X509Certificate)userCertificate).getIssuerDN().toString());
-            LOGGER.info("SubjectDN: " + ((X509Certificate)userCertificate).getSubjectDN().toString());
+            LOGGER.trace("IssuerDN: " + ((X509Certificate)userCertificate).getIssuerDN().toString());
+            LOGGER.trace("SubjectDN: " + ((X509Certificate)userCertificate).getSubjectDN().toString());
             if (usages != null) {
                 for (String usage : usages) {
-                    LOGGER.info("Usage: " + usage);
+                    LOGGER.trace("Usage: " + usage);
                 } 
             }
         } catch (CertificateException e) {
             // on encoding errors
-            LOGGER.info("CertificateException ocurred. (on encoding errors)");
+            LOGGER.trace("CertificateException ocurred. (on encoding errors)");
         } catch (NoSuchAlgorithmException e) {
             // on unsupported signature algorithms
-            LOGGER.info("NoSuchAlgorithmException ocurred. (on unsupported signature algorithms)");
+            LOGGER.trace("NoSuchAlgorithmException ocurred. (on unsupported signature algorithms)");
         } catch (InvalidKeyException e) {
             // on incorrect key
-            LOGGER.info("InvalidKeyException ocurred. (on incorrect key)");
+            LOGGER.trace("InvalidKeyException ocurred. (on incorrect key)");
         } catch (NoSuchProviderException e) {
             // if there's no default provider
-            LOGGER.info("NoSuchProviderException ocurred. (if there's no default provider)");
+            LOGGER.trace("NoSuchProviderException ocurred. (if there's no default provider)");
         } catch (SignatureException e) {
             // on signature errors
-            LOGGER.info("SignatureException ocurred. (on signature errors)");
+            LOGGER.trace("SignatureException ocurred. (on signature errors)");
         } 
-        LOGGER.info("**************  check if PublicKey from KeyPair and Public Key from user certificate are the same  ****");
+        LOGGER.trace("**************  check if PublicKey from KeyPair and Public Key from user certificate are the same  ****");
         if (userKeyPair.getPublic().equals(userCertificate.getPublicKey())) {
-            LOGGER.info("Users PublicKey from Key Pair and Public Key from user certificate are the same!");
+            LOGGER.trace("Users PublicKey from Key Pair and Public Key from user certificate are the same!");
         } else {
-            LOGGER.info("Users PublicKey from Key Pair and Public Key from user certificate are not the same!");
+            LOGGER.trace("Users PublicKey from Key Pair and Public Key from user certificate are not the same!");
         }
         String testStringToSign = "Test String to Sign";
-        LOGGER.info("************************************  Sign String with users Private Key:******************************");
+        LOGGER.trace("************************************  Sign String with users Private Key:******************************");
         String signature = SignObject.signX509(userKeyPair.getPrivate(), testStringToSign);
-        LOGGER.info("************************************  Signature:  *****************************************************");
-        LOGGER.info("\n" + signature);
-        LOGGER.info("************************************  Signature verification with user certificate:  ******************");
+        LOGGER.trace("************************************  Signature:  *****************************************************");
+        LOGGER.trace("\n" + signature);
+        LOGGER.trace("************************************  Signature verification with user certificate:  ******************");
         boolean verify = VerifySignature.verifyX509BC(userCertificate, testStringToSign, signature);
-        LOGGER.info("Signature verification with method \"VerifySignature.verifyX509BC\" successful: " + verify);
+        LOGGER.trace("Signature verification with method \"VerifySignature.verifyX509BC\" successful: " + verify);
         verify = VerifySignature.verifyX509WithCertifcateString(userCert, testStringToSign, signature);
-        LOGGER.info("Signature verification with method \"VerifySignature.verifyX509WithCertifcateString\" successful: " + verify);
+        LOGGER.trace("Signature verification with method \"VerifySignature.verifyX509WithCertifcateString\" successful: " + verify);
         verify = VerifySignature.verifyX509(userCertificate.getPublicKey(), testStringToSign, signature);
-        LOGGER.info("Signature verification with method \"VerifySignature.verifyX509 (PublicKey from Certificate)\" successful: " + verify);
+        LOGGER.trace("Signature verification with method \"VerifySignature.verifyX509 (PublicKey from Certificate)\" successful: " + verify);
         assertTrue(verify);
         String filename = "X.509.RSA.certificate_bundle.zip";
         exportCertificateBundle( 
@@ -189,128 +189,128 @@ public class CATests {
                 userCert, 
                 filename);
         assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(filename)));
-        LOGGER.info("************************************  Test create rootCertificate, CSR and userCertificate finished ***");
+        LOGGER.trace("************************************  Test create rootCertificate, CSR and userCertificate finished ***");
     }
 
     @Test
     public void test02ECDSACreateRootCertificateCSRAndUserCertificateAndExport() 
             throws NoSuchAlgorithmException, NoSuchProviderException, OperatorCreationException, CertificateException, IOException, CertException, 
             InvalidKeyException, InvalidKeySpecException, SignatureException, InvalidAlgorithmParameterException {
-        LOGGER.info("");
-        LOGGER.info("************************************  Test ECDSA: create rootCertificate, CSR and userCertificate  ****");
+        LOGGER.trace("");
+        LOGGER.trace("************************************  Test ECDSA: create rootCertificate, CSR and userCertificate  ****");
         // create a KeyPair for the root CA
         KeyPair rootKeyPair = KeyUtil.createECDSAKeyPair();
         String rootPrivateKeyString = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootKeyPair.getPrivate().getEncoded()),
                 SOSKeyConstants.PRIVATE_EC_KEY_HEADER, SOSKeyConstants.PRIVATE_EC_KEY_FOOTER);
-        LOGGER.info("************************************  Root Private Key:  **********************************************");
-        LOGGER.info("root private key - algorithm: " + rootKeyPair.getPrivate().getAlgorithm());
-        LOGGER.info("root private key - format: " + rootKeyPair.getPrivate().getFormat());
-        LOGGER.info("\n" + rootPrivateKeyString);
+        LOGGER.trace("************************************  Root Private Key:  **********************************************");
+        LOGGER.trace("root private key - algorithm: " + rootKeyPair.getPrivate().getAlgorithm());
+        LOGGER.trace("root private key - format: " + rootKeyPair.getPrivate().getFormat());
+        LOGGER.trace("\n" + rootPrivateKeyString);
         String rootSubjectDN = CAUtils.createRootSubjectDN("SOS root CA", "SOS root CA", "www.sos-berlin.com", "SOS GmbH", "DE");
-        LOGGER.info("************************************  Root SubjectDN  *************************************************");
-        LOGGER.info("issuerDN: " + rootSubjectDN);
+        LOGGER.trace("************************************  Root SubjectDN  *************************************************");
+        LOGGER.trace("issuerDN: " + rootSubjectDN);
         // create a root certificate for the root CA
         Certificate rootCertificate = CAUtils.createSelfSignedRootCertificate(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, rootKeyPair, rootSubjectDN, true, false);
         assertNotNull(rootCertificate);
         String rootCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootCertificate.getEncoded()), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
-        LOGGER.info("************************************  Root Certificate:  **********************************************");
-        LOGGER.info("\n" + rootCert);
+        LOGGER.trace("************************************  Root Certificate:  **********************************************");
+        LOGGER.trace("\n" + rootCert);
         try {
-            LOGGER.info("************************************  Verify root Certificate:  ***************************************");
+            LOGGER.trace("************************************  Verify root Certificate:  ***************************************");
             rootCertificate.verify(rootKeyPair.getPublic());
-            LOGGER.info("root certificate was successfully verified.");
-            LOGGER.info("\nCertificate cerdentials :\n" + ((X509Certificate)rootCertificate).toString());
+            LOGGER.trace("root certificate was successfully verified.");
+            LOGGER.trace("\nCertificate cerdentials :\n" + ((X509Certificate)rootCertificate).toString());
             List<String> usages = ((X509Certificate)rootCertificate).getExtendedKeyUsage();
             if (usages != null) {
                 for (String usage : usages) {
-                    LOGGER.info("Usage: " + usage);
+                    LOGGER.trace("Usage: " + usage);
                 } 
             }
         } catch (CertificateException e) {
             // on encoding errors
-            LOGGER.info("CertificateException ocurred. (on encoding errors)");
+            LOGGER.trace("CertificateException ocurred. (on encoding errors)");
         } catch (NoSuchAlgorithmException e) {
             // on unsupported signature algorithms
-            LOGGER.info("NoSuchAlgorithmException ocurred. (on unsupported signature algorithms)");
+            LOGGER.trace("NoSuchAlgorithmException ocurred. (on unsupported signature algorithms)");
         } catch (InvalidKeyException e) {
             // on incorrect key
-            LOGGER.info("InvalidKeyException ocurred. (on incorrect key)");
+            LOGGER.trace("InvalidKeyException ocurred. (on incorrect key)");
         } catch (NoSuchProviderException e) {
             // if there's no default provider
-            LOGGER.info("NoSuchProviderException ocurred. (if there's no default provider)");
+            LOGGER.trace("NoSuchProviderException ocurred. (if there's no default provider)");
         } catch (SignatureException e) {
             // on signature errors
-            LOGGER.info("SignatureException ocurred. (on signature errors)");
+            LOGGER.trace("SignatureException ocurred. (on signature errors)");
         } 
         // create a user KeyPair
         KeyPair userKeyPair = KeyUtil.createECDSAKeyPair();
         String userPrivateKeyString = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(userKeyPair.getPrivate().getEncoded()),
                 SOSKeyConstants.PRIVATE_EC_KEY_HEADER, SOSKeyConstants.PRIVATE_EC_KEY_FOOTER);
-        LOGGER.info("************************************  User Private Key:  **********************************************");
-        LOGGER.info("\n" + userPrivateKeyString);
+        LOGGER.trace("************************************  User Private Key:  **********************************************");
+        LOGGER.trace("\n" + userPrivateKeyString);
         String userSubjectDN = CAUtils.createUserSubjectDN("SOS root CA", "SP", "www.sos-berlin.com", "SOS GmbH", "Berlin", "Berlin", "DE"); 
-        LOGGER.info("************************************  User SubjectDN  *************************************************");
-        LOGGER.info("user subjectDN: " + userSubjectDN);
+        LOGGER.trace("************************************  User SubjectDN  *************************************************");
+        LOGGER.trace("user subjectDN: " + userSubjectDN);
         // create a CSR based on the users KeyPair
         PKCS10CertificationRequest csr = CAUtils.createCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, userKeyPair, userSubjectDN);
         assertNotNull(csr);
         String csrAsString= KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
-        LOGGER.info("************************************  CSR:  ***********************************************************");
-        LOGGER.info("\n" + csrAsString);
+        LOGGER.trace("************************************  CSR:  ***********************************************************");
+        LOGGER.trace("\n" + csrAsString);
         X509Certificate userCertificate = 
                 CAUtils.signCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, userKeyPair.getPrivate(), csr, (X509Certificate)rootCertificate, "sp.sos");
         assertNotNull(userCertificate);
         String userCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(userCertificate.getEncoded()), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
-        LOGGER.info("************************************  User Certificate:  **********************************************");
-        LOGGER.info("\n" + userCert);
+        LOGGER.trace("************************************  User Certificate:  **********************************************");
+        LOGGER.trace("\n" + userCert);
 //        logCertificateProperties(userCertificate);
         try {
-            LOGGER.info("************************************  Verify user Certificate:  ***************************************");
+            LOGGER.trace("************************************  Verify user Certificate:  ***************************************");
             userCertificate.verify(userKeyPair.getPublic());
-            LOGGER.info("user certificate was successfully verified.");
-            LOGGER.info("\nUser certificate credentials:\n" + userCertificate.toString());
+            LOGGER.trace("user certificate was successfully verified.");
+            LOGGER.trace("\nUser certificate credentials:\n" + userCertificate.toString());
             List<String> usages = ((X509Certificate)userCertificate).getExtendedKeyUsage();
             if (usages != null) {
                 for (String usage : usages) {
-                    LOGGER.info("Usage: " + usage);
+                    LOGGER.trace("Usage: " + usage);
                 } 
             }
         } catch (CertificateException e) {
             // on encoding errors
-            LOGGER.info("CertificateException ocurred. (on encoding errors)");
+            LOGGER.trace("CertificateException ocurred. (on encoding errors)");
         } catch (NoSuchAlgorithmException e) {
             // on unsupported signature algorithms
-            LOGGER.info("NoSuchAlgorithmException ocurred. (on unsupported signature algorithms)");
+            LOGGER.trace("NoSuchAlgorithmException ocurred. (on unsupported signature algorithms)");
         } catch (InvalidKeyException e) {
             // on incorrect key
-            LOGGER.info("InvalidKeyException ocurred. (on incorrect key)");
+            LOGGER.trace("InvalidKeyException ocurred. (on incorrect key)");
         } catch (NoSuchProviderException e) {
             // if there's no default provider
-            LOGGER.info("NoSuchProviderException ocurred. (if there's no default provider)");
+            LOGGER.trace("NoSuchProviderException ocurred. (if there's no default provider)");
         } catch (SignatureException e) {
             // on signature errors
-            LOGGER.info("SignatureException ocurred. (on signature errors)");
+            LOGGER.trace("SignatureException ocurred. (on signature errors)");
         } 
-        LOGGER.info("**************  check if PublicKey from KeyPair and Public Key from user certificate are the same  ****");
+        LOGGER.trace("**************  check if PublicKey from KeyPair and Public Key from user certificate are the same  ****");
         if (userKeyPair.getPublic().equals(userCertificate.getPublicKey())) {
-            LOGGER.info("Users PublicKey from Key Pair and Public Key from user certificate are the same!");
+            LOGGER.trace("Users PublicKey from Key Pair and Public Key from user certificate are the same!");
         } else {
-            LOGGER.info("Users PublicKey from Key Pair and Public Key from user certificate are not the same!");
+            LOGGER.trace("Users PublicKey from Key Pair and Public Key from user certificate are not the same!");
         }
         String testStringToSign = "Test String to Sign";
-        LOGGER.info("************************************  Sign String with users Private Key:******************************");
+        LOGGER.trace("************************************  Sign String with users Private Key:******************************");
         String signature = SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, userKeyPair.getPrivate(), testStringToSign);
-        LOGGER.info("************************************  Signature:  *****************************************************");
-        LOGGER.info("\n" + signature);
-        LOGGER.info("************************************  Signature verification with user certificate:  ******************");
+        LOGGER.trace("************************************  Signature:  *****************************************************");
+        LOGGER.trace("\n" + signature);
+        LOGGER.trace("************************************  Signature verification with user certificate:  ******************");
         boolean verify = VerifySignature.verifyX509BC(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, userCertificate, testStringToSign, signature);
-        LOGGER.info("Signature verification with method \"VerifySignature.verifyX509BC\" successful: " + verify);
+        LOGGER.trace("Signature verification with method \"VerifySignature.verifyX509BC\" successful: " + verify);
         verify = VerifySignature.verifyX509WithCertifcateString(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, userCert, testStringToSign, signature);
-        LOGGER.info("Signature verification with method \"VerifySignature.verifyX509WithCertifcateString\" successful: " + verify);
+        LOGGER.trace("Signature verification with method \"VerifySignature.verifyX509WithCertifcateString\" successful: " + verify);
         verify = VerifySignature.verifyX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, userCertificate.getPublicKey(), testStringToSign, signature);
-        LOGGER.info("Signature verification with method \"VerifySignature.verifyX509 (PublicKey from Certificate)\" successful: " + verify);
+        LOGGER.trace("Signature verification with method \"VerifySignature.verifyX509 (PublicKey from Certificate)\" successful: " + verify);
         assertTrue(verify);
         String filename = "X.509.ECDSA.certificate_bundle.zip";
         exportCertificateBundle(
@@ -321,15 +321,15 @@ public class CATests {
                 userCert, 
                 filename);
         assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(filename)));
-        LOGGER.info("************************************  Test create rootCertificate, CSR and userCertificate finished ***");
+        LOGGER.trace("************************************  Test create rootCertificate, CSR and userCertificate finished ***");
     }
     
     
     @Ignore
     @Test 
     public void test03CheckCA () throws CertificateException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        LOGGER.info("");
-        LOGGER.info("************************************  Test ECDSA: check certificates  *********************************");
+        LOGGER.trace("");
+        LOGGER.trace("************************************  Test ECDSA: check certificates  *********************************");
     	String rootCaCrtPath = "C:/sp/devel/js7/keys/sosCa/root-ca.crt";
     	String intermediateCaCrtPath = "C:/sp/devel/js7/keys/sosCa/intermediate-ca.crt";
     	String intermediateCaKeyPath = "C:/sp/devel/js7/keys/sosCa/intermediate-ca.key";
@@ -340,10 +340,10 @@ public class CATests {
 		try {
 			intermediateCaCert.verify(rootCaCert.getPublicKey());
 			intermediateCaCrtValid = true;
-			LOGGER.info("intermediate CA certificate succesfully validated against root ca certificate.");
+			LOGGER.trace("intermediate CA certificate succesfully validated against root ca certificate.");
 		} catch (InvalidKeyException | CertificateException | NoSuchAlgorithmException | NoSuchProviderException
 				| SignatureException e) {
-			LOGGER.info("intermediate CA certificate not valid.");
+			LOGGER.trace("intermediate CA certificate not valid.");
 		}
 		InputStream in = Files.newInputStream(Paths.get(intermediateCaKeyPath));
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
@@ -354,14 +354,14 @@ public class CATests {
         String key = outStream.toString();
 
 		PrivateKey intermediateCaKey = KeyUtil.getPrivateEncryptedRSAKeyFromString(key ,"the brawlers fibs far from an unsteady muralist");
-        LOGGER.info("************************************  Test ECDSA: check certificates  finished ************************");
+        LOGGER.trace("************************************  Test ECDSA: check certificates  finished ************************");
     }
     
     @Ignore
     @Test
     public void testECNames () {
         if (ECNamedCurveTable.getNames().hasMoreElements()) {
-            LOGGER.info(ECNamedCurveTable.getNames().nextElement().toString());
+            LOGGER.trace(ECNamedCurveTable.getNames().nextElement().toString());
         }
 
     }
@@ -371,7 +371,7 @@ public class CATests {
         String dn = "CN=HOSTNAME , OU=devel, OU= Büro hinten, O=SOS, L=Area 51, C=DE";
         LdapName ldapNameDN = new LdapName(dn);
         for (Rdn rdn : ldapNameDN.getRdns()) {
-            LOGGER.info(rdn.getType() + " : " + rdn.getValue());
+            LOGGER.trace(rdn.getType() + " : " + rdn.getValue());
         }
     }
 
@@ -380,25 +380,25 @@ public class CATests {
         String dn = "CN=HOSTNAME , OU=devel, OU= Büro hinten, O=SOS, L=Area 51, C=DE";
         String certificateString = new String(Files.readAllBytes(Paths.get("src/test/resources/sp_root_ca.cer")), StandardCharsets.UTF_8);
         X509Certificate certificate =  KeyUtil.getX509Certificate(certificateString);
-        LOGGER.info("************************************  full DN");
-        LOGGER.info(CAUtils.createUserSubjectDN(dn, certificate, "MyAgent"));
+        LOGGER.trace("************************************  full DN");
+        LOGGER.trace(CAUtils.createUserSubjectDN(dn, certificate, "MyAgent"));
         dn = "OU=Büro hinten, L=Area 51";
-        LOGGER.info("************************************  partial DN");
-        LOGGER.info(CAUtils.createUserSubjectDN(dn, certificate, "MyAgent"));
-        LOGGER.info("************************************  empty DN");
-        LOGGER.info(CAUtils.createUserSubjectDN("", certificate, "MyAgent"));
-        LOGGER.info("************************************  null DN");
-        LOGGER.info(CAUtils.createUserSubjectDN(null, certificate, "MyAgent"));
+        LOGGER.trace("************************************  partial DN");
+        LOGGER.trace(CAUtils.createUserSubjectDN(dn, certificate, "MyAgent"));
+        LOGGER.trace("************************************  empty DN");
+        LOGGER.trace(CAUtils.createUserSubjectDN("", certificate, "MyAgent"));
+        LOGGER.trace("************************************  null DN");
+        LOGGER.trace(CAUtils.createUserSubjectDN(null, certificate, "MyAgent"));
         dn = "CN=HOSTNAME , OU=devel, OU= Büro hinten, O=SOS, L=Area 51, C=DE";
-        LOGGER.info("************************************  full DN alt cert null");
-        LOGGER.info(CAUtils.createUserSubjectDN(dn, null, "MyAgent"));
+        LOGGER.trace("************************************  full DN alt cert null");
+        LOGGER.trace(CAUtils.createUserSubjectDN(dn, null, "MyAgent"));
         dn = "OU=Büro hinten, L=Area 51";
-        LOGGER.info("************************************  partial DN alt cert null");
-        LOGGER.info(CAUtils.createUserSubjectDN(dn, null, "MyAgent"));
-        LOGGER.info("************************************  empty DN alt cert null");
-        LOGGER.info(CAUtils.createUserSubjectDN("", null, "MyAgent"));
-        LOGGER.info("************************************  null DN alt cert null");
-        LOGGER.info(CAUtils.createUserSubjectDN(null, null, "MyAgent"));
+        LOGGER.trace("************************************  partial DN alt cert null");
+        LOGGER.trace(CAUtils.createUserSubjectDN(dn, null, "MyAgent"));
+        LOGGER.trace("************************************  empty DN alt cert null");
+        LOGGER.trace(CAUtils.createUserSubjectDN("", null, "MyAgent"));
+        LOGGER.trace("************************************  null DN alt cert null");
+        LOGGER.trace(CAUtils.createUserSubjectDN(null, null, "MyAgent"));
     }
 
     private void exportCertificateBundle(String rootKey, String rootCert, String userCertificateRequest, String userKey, String userCert, String filename)
@@ -408,7 +408,7 @@ public class CATests {
         Boolean notExists = Files.notExists(Paths.get("target").resolve("created_test_files"));
         if (notExists) {
             Files.createDirectory(Paths.get("target").resolve("created_test_files"));
-            LOGGER.info("subfolder \"created_test_files\" created in target folder.");
+            LOGGER.trace("subfolder \"created_test_files\" created in target folder.");
         }
         out = Files.newOutputStream(Paths.get("target").resolve("created_test_files").resolve(filename));
         zipOut = new ZipOutputStream(new BufferedOutputStream(out), StandardCharsets.UTF_8);

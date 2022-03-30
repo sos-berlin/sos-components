@@ -66,7 +66,7 @@ public class ExecuteRollOutTest {
     }
 
     @Test
-//    @Ignore
+    @Ignore
     public void testMainWithMinArgumentsForController() throws Exception {
         System.setProperty("js7.config-directory", "C:/sp/devel/js7/testing/CLI/controller");
         ExecuteRollOut.main(createMinimalControllerArgsHttp());
