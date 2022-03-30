@@ -45,7 +45,7 @@ public class CronConvertTest {
             factory.build();
             session = factory.openStatelessSession("parseFile_test");
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            Map<WorkflowEdit, ScheduleEdit> scheduledWorkflows = CronUtils.cronFile2Workflows(dbLayer, bufferedReader, cal, "agentRC3", "Europe/Berlin" ,true);
+            Map<WorkflowEdit, ScheduleEdit> scheduledWorkflows = CronUtils.cronFile2Workflows(dbLayer, bufferedReader, cal, "agentRC3", null, "Europe/Berlin" ,true);
             Comparator<Map.Entry<WorkflowEdit,ScheduleEdit>> wfComp = new Comparator<Map.Entry<WorkflowEdit,ScheduleEdit>>() {
 
                 @Override

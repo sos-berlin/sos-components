@@ -388,9 +388,9 @@ public class MappingTest {
         LOGGER.trace("GitCredentials - with path to key file (ssh)");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGitCredentialsKeyfilePath()));
         LOGGER.trace("GetCredentialsFilter");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGetGitCredentialsFilter()));
+//        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGetGitCredentialsFilter()));
         LOGGER.trace("SetCredentialsFilter");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleStoreGitCredentialsFilter()));
+//        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleStoreGitCredentialsFilter()));
     }
     
 }
