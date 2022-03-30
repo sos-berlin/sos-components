@@ -106,7 +106,7 @@ public class MappingTest {
 
             Assert.assertNotNull(ifElseWorkflow);
             Assert.assertNotNull(forkJoinWorkflow);
-            LOGGER.info("Workflow JSONs mapped to java object and children checked successfully!");
+            LOGGER.trace("Workflow JSONs mapped to java object and children checked successfully!");
         } catch (ClassCastException e) {
             e.printStackTrace();
             Assert.fail(e.toString());
@@ -377,6 +377,20 @@ public class MappingTest {
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilterFilesRolloutExample()));
         LOGGER.trace("Repository - UpdateFromFilter Files local Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilterFilesLocalExample()));
+    }
+    
+    @Test
+    public void test25GitCredentials () throws JsonProcessingException {
+        LOGGER.trace("GitCredentials - with password");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGitCredentialsPassword()));
+        LOGGER.trace("GitCredentials - with personal access token (pat)");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGitCredentialsAccessToken()));
+        LOGGER.trace("GitCredentials - with path to key file (ssh)");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGitCredentialsKeyfilePath()));
+        LOGGER.trace("GetCredentialsFilter");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGetGitCredentialsFilter()));
+        LOGGER.trace("SetCredentialsFilter");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleStoreGitCredentialsFilter()));
     }
     
 }

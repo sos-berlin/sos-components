@@ -48,6 +48,10 @@ import com.sos.joc.model.publish.SetRootCaFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
+import com.sos.joc.model.publish.git.GetCredentialsFilter;
+import com.sos.joc.model.publish.git.GitCredentials;
+import com.sos.joc.model.publish.git.SetCredentialsFilter;
+import com.sos.joc.model.publish.git.StoreCredentialsFilter;
 import com.sos.joc.model.publish.repository.Category;
 import com.sos.joc.model.publish.repository.Configurations;
 import com.sos.joc.model.publish.repository.CopyToFilter;
@@ -937,5 +941,41 @@ public class DeploymentTestUtils {
 
         return filter;
     }
+    
+    public static GitCredentials createExampleGitCredentialsPassword() {
+        GitCredentials cred = new GitCredentials();
+        cred.setGitAccount("sp");
+        cred.setPassword("myPasswd");
+        cred.setGitServer("my-remote.git-host.net");
+        return cred;
+    }
 
+    public static GitCredentials createExampleGitCredentialsAccessToken() {
+        GitCredentials cred = new GitCredentials();
+        cred.setGitAccount("sp");
+        cred.setPersonalAccessToken("AinZ29ro4dvLx9ebhWzo");
+        cred.setGitServer("my-remote.git-host.net");
+        return cred;
+    }
+
+    public static GitCredentials createExampleGitCredentialsKeyfilePath() {
+        GitCredentials cred = new GitCredentials();
+        cred.setGitAccount("sp");
+        cred.setKeyfilePath("/path/to/keyfile");
+        cred.setGitServer("my-remote.git-host.net");
+        return cred;
+    }
+
+    public static GetCredentialsFilter createExampleGetGitCredentialsFilter() {
+        GetCredentialsFilter getCredFilter = new GetCredentialsFilter();
+        getCredFilter.setAccount("root");
+        return getCredFilter;
+    }
+
+    public static StoreCredentialsFilter createExampleStoreGitCredentialsFilter() {
+        StoreCredentialsFilter setCredFilter = new StoreCredentialsFilter();
+        setCredFilter.setAccount("root");
+        setCredFilter.setCredentials(createExampleGitCredentialsKeyfilePath());
+        return setCredFilter;
+    }
 }
