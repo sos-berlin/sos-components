@@ -284,8 +284,13 @@ public class LogOrderContent {
             if (!SOSString.isEmpty(item.getAgentUrl())) {
                 info.add("url=" + item.getAgentUrl());
             }
-            if (!SOSString.isEmpty(item.getAgentId())) {
+            if (!SOSString.isEmpty(item.getAgentName())) {
+                info.add("name=" + item.getAgentName());
+            } else if (!SOSString.isEmpty(item.getAgentId())) {
                 info.add("id=" + item.getAgentId());
+            }
+            if (!SOSString.isEmpty(item.getSubagentClusterId())) {
+                info.add("clusterId=" + item.getSubagentClusterId());
             }
             if (!SOSString.isEmpty(item.getAgentDatetime())) {
                 info.add("time=" + item.getAgentDatetime());
