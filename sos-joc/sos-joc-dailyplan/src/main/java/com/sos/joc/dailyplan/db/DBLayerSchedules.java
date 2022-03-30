@@ -60,7 +60,8 @@ public class DBLayerSchedules extends DBLayer {
                 String paramNameFolder = "folder" + i;
                 if (folder.getRecursive()) {
                     String paramNameLikeFolder = "likeFolder" + i;
-                    hql.append("(sw.scheduleFolder=:").append(paramNameFolder).append(" or folder like :").append(paramNameLikeFolder).append(") ");
+                    hql.append("(sw.scheduleFolder=:").append(paramNameFolder).append(" or sw.scheduleFolder like :").append(paramNameLikeFolder)
+                            .append(") ");
                     paramsLikeFolder.put(paramNameLikeFolder, (folder.getFolder() + "/%").replaceAll("//+", "/"));
                 } else {
                     hql.append("sw.scheduleFolder=:").append(paramNameFolder).append(" ");
@@ -135,8 +136,8 @@ public class DBLayerSchedules extends DBLayer {
                 String paramNameFolder = "folder" + i;
                 if (folder.getRecursive()) {
                     String paramNameLikeFolder = "likeFolder" + i;
-                    hql.append("(").append(folderField).append("=:").append(paramNameFolder).append(" or folder like :").append(paramNameLikeFolder)
-                            .append(") ");
+                    hql.append("(").append(folderField).append("=:").append(paramNameFolder).append(" or ").append(folderField).append(" like :")
+                            .append(paramNameLikeFolder).append(") ");
                     paramsLikeFolder.put(paramNameLikeFolder, (folder.getFolder() + "/%").replaceAll("//+", "/"));
                 } else {
                     hql.append(folderField).append("=:").append(paramNameFolder).append(" ");
