@@ -875,15 +875,19 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     }
     
     public int setAgentsDeployed(List<String> agentIds) throws SOSHibernateException {
+        return setAgentsDeployed(agentIds, true);
+    }
+    
+    public int setAgentsDeployed(List<String> agentIds, boolean deployed) throws SOSHibernateException {
         if (agentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             int j = 0;
             for (int i = 0; i < agentIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
-                j += setAgentsDeployed(SOSHibernate.getInClausePartition(i, agentIds));
+                j += setAgentsDeployed(SOSHibernate.getInClausePartition(i, agentIds), deployed);
             }
             return j;
         } else {
             StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(
-                    " set deployed = 1 where agentId in (:agentIds)");
+                    " set deployed = ").append(deployed ? 1 : 0).append(" where agentId in (:agentIds)");
             Query<?> query = getSession().createQuery(hql.toString());
             query.setParameterList("agentIds", agentIds);
             return getSession().executeUpdate(query);
@@ -891,15 +895,19 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     }
     
     public int setSubAgentsDeployed(List<String> subagentIds) throws SOSHibernateException {
+        return setSubAgentsDeployed(subagentIds, true);
+    }
+    
+    public int setSubAgentsDeployed(List<String> subagentIds, boolean deployed) throws SOSHibernateException {
         if (subagentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             int j = 0;
             for (int i = 0; i < subagentIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
-                j += setSubAgentsDeployed(SOSHibernate.getInClausePartition(i, subagentIds));
+                j += setSubAgentsDeployed(SOSHibernate.getInClausePartition(i, subagentIds), deployed);
             }
             return j;
         } else {
             StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(
-                    " set deployed = 1 where subAgentId in (:subagentIds)");
+                    " set deployed = ").append(deployed ? 1 : 0).append(" where subAgentId in (:subagentIds)");
             Query<?> query = getSession().createQuery(hql.toString());
             query.setParameterList("subagentIds", subagentIds);
             return getSession().executeUpdate(query);

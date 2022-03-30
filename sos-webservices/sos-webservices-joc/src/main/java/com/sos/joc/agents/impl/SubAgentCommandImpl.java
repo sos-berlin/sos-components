@@ -52,6 +52,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
     private static final String API_CALL_REMOVE = "./agents/inventory/cluster/subagents/delete";
     private static final String API_CALL_ENABLE = "./agents/inventory/cluster/subagents/enable";
     private static final String API_CALL_DISABLE = "./agents/inventory/cluster/subagents/disable";
+    private static final String API_CALL_REVOKE = "./agents/inventory/cluster/subagents/revoke";
 
     @Override
     public JOCDefaultResponse delete(String accessToken, byte[] filterBytes) {
@@ -88,7 +89,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
 
                 directors.parallelStream().filter(SubAgentItem::isPrimaryDirector).findAny().ifPresent(s -> {
                     throw new JocBadRequestException("A primary director ('" + s.getSubAgentId()
-                            + "') cannot be deleted. Change the primary director or remove the whole Agent cluster.");
+                            + "') cannot be deleted. Change the primary director or delete the whole Agent cluster.");
                 });
 
                 final Stream<JUpdateItemOperation> subAgents = subAgentsMap.get(true).stream().map(SubagentId::of).map(
@@ -111,6 +112,83 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                             Globals.beginTransaction(connection1);
                             InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
                             dbLayer1.deleteSubAgents(controllerId, subAgentsMap.get(true));
+                            Globals.commit(connection1);
+                            EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
+                        } catch (Exception e1) {
+                            Globals.rollback(connection1);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
+                        } finally {
+                            Globals.disconnect(connection1);
+                        }
+                    }
+                });
+            }
+            
+            Globals.commit(connection);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            Globals.rollback(connection);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            Globals.rollback(connection);
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(connection);
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse revoke(String accessToken, byte[] filterBytes) {
+        SOSHibernateSession connection = null;
+        try {
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_REVOKE, filterBytes, accessToken);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            SubAgentsCommand subAgentCommand = getSubAgentsCommand(filterBytes);
+
+            String controllerId = subAgentCommand.getControllerId();
+
+            storeAuditLog(subAgentCommand.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL_REVOKE);
+            connection.setAutoCommit(false);
+            Globals.beginTransaction(connection);
+            InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
+            List<DBItemInventorySubAgentInstance> dbSubAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(subAgentCommand
+                    .getControllerId()));
+
+            checkSubAgentsBelongToController(subAgentCommand, dbSubAgents);
+
+            JControllerProxy proxy = Proxy.of(controllerId);
+            final Map<Boolean, List<String>> subAgentsMap = getKnownSubAgentsOnController(subAgentCommand, proxy.currentState());
+
+            if (subAgentsMap.containsKey(false)) {
+                dbLayer.deleteSubAgents(controllerId, subAgentsMap.get(false));
+                EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
+            }
+            if (subAgentsMap.containsKey(true)) {
+                List<SubAgentItem> directors = dbLayer.getDirectorSubAgentIdsByControllerId(controllerId, subAgentsMap.get(true));
+
+                directors.parallelStream().filter(SubAgentItem::isPrimaryDirector).findAny().ifPresent(s -> {
+                    throw new JocBadRequestException("A primary director ('" + s.getSubAgentId()
+                            + "') cannot be revoked. Change the primary director or revoke the whole Agent cluster.");
+                });
+
+                final Stream<JUpdateItemOperation> subAgents = subAgentsMap.get(true).stream().map(SubagentId::of).map(
+                        JUpdateItemOperation::deleteSimple);
+                
+                proxy.api().updateItems(Flux.fromStream(subAgents)).thenAccept(e -> {
+                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                    if (e.isRight()) {
+                        SOSHibernateSession connection1 = null;
+                        try {
+                            connection1 = Globals.createSosHibernateStatelessConnection(API_CALL_REVOKE);
+                            connection1.setAutoCommit(false);
+                            Globals.beginTransaction(connection1);
+                            InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
+                            dbLayer1.setSubAgentsDeployed(subAgentsMap.get(true), false);
                             Globals.commit(connection1);
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
                         } catch (Exception e1) {
