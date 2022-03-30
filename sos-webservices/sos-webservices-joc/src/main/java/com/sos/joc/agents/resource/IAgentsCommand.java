@@ -11,7 +11,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface IAgentsCommand {
 
     @POST
-    @Path("inventory/deploy")
+    @Path("inventory/revoke")
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse postRevoke(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
