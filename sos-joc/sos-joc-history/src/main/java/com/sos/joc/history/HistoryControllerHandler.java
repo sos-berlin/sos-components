@@ -27,6 +27,7 @@ import com.sos.joc.history.controller.configuration.HistoryConfiguration;
 import com.sos.joc.history.controller.model.HistoryModel;
 import com.sos.joc.history.controller.proxy.EventFluxStopper;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry;
+import com.sos.joc.history.controller.proxy.HistoryEventEntry.AgentInfo;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentCouplingFailed;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentReady;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentShutDown;
@@ -377,11 +378,12 @@ public class HistoryControllerHandler {
 
             case OrderStepStarted:
                 order = entry.getCheckedOrder();
+                AgentInfo ai = order.getStepInfo().getAgentInfo();
 
                 event = new FatEventOrderStepStarted(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
-                        .getPosition(), order.getArguments(), order.getStepInfo().getAgentId(), order.getStepInfo().getJobName(), order.getStepInfo()
-                                .getJobLabel());
+                        .getPosition(), order.getArguments(), ai.getAgentId(), ai.getAgentUri(), ai.getSubagentId(), order.getStepInfo().getJobName(),
+                        order.getStepInfo().getJobLabel());
                 break;
 
             case OrderStepProcessed:

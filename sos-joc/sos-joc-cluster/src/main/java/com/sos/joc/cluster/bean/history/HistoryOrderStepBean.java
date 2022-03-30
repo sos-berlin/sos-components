@@ -20,7 +20,9 @@ public class HistoryOrderStepBean extends AHistoryBean {
     private String jobTitle;
     private Integer criticality;
     private String agentId;
+    private String agentName;
     private String agentUri;
+    private String subagentClusterId;
     private String startCause;
     private Date startTime;
     private String startVariables;
@@ -38,7 +40,7 @@ public class HistoryOrderStepBean extends AHistoryBean {
     private String warnIfLonger;
     private String warnIfShorter;
     private Long warnIfLongerAvgSeconds;
-    
+
     private String notification;
 
     public HistoryOrderStepBean(EventType eventType, Long eventId, String controllerId, Long historyId) {
@@ -60,7 +62,9 @@ public class HistoryOrderStepBean extends AHistoryBean {
         this.jobTitle = item.getJobTitle();
         this.criticality = item.getCriticality();
         this.agentId = item.getAgentId();
+        this.agentName = item.getAgentName();
         this.agentUri = item.getAgentUri();
+        this.subagentClusterId = item.getSubagentClusterId();
         this.startCause = item.getStartCause();
         this.startTime = item.getStartTime();
         this.startVariables = item.getStartVariables();
@@ -170,12 +174,28 @@ public class HistoryOrderStepBean extends AHistoryBean {
         agentId = val;
     }
 
+    public String getAgentName() {
+        return agentName;
+    }
+
+    public void setAgentName(String val) {
+        agentName = val;
+    }
+
     public String getAgentUri() {
         return agentUri;
     }
 
     public void setAgentUri(String val) {
         agentUri = val;
+    }
+
+    public String getSubagentClusterId() {
+        return subagentClusterId;
+    }
+
+    public void setSubagentClusterId(String val) {
+        subagentClusterId = val;
     }
 
     public String getStartCause() {
@@ -297,7 +317,7 @@ public class HistoryOrderStepBean extends AHistoryBean {
     public String getWarnIfShorter() {
         return warnIfShorter;
     }
-    
+
     public void setWarnIfLongerAvgSeconds(Long val) {
         warnIfLongerAvgSeconds = val;
     }

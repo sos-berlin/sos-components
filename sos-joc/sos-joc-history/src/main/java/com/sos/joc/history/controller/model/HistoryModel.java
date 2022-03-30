@@ -1329,7 +1329,9 @@ public class HistoryModel {
             item.setJobNotification(job.getNotification());
 
             item.setAgentId(entry.getAgentId());
-            item.setAgentUri(ca.getUri());
+            item.setAgentName(job.getAgentName());
+            item.setAgentUri(entry.getAgentUri() == null ? ca.getUri() : entry.getAgentUri());
+            item.setSubagentClusterId(job.getSubagentClusterId());
 
             item.setStartCause(OrderStepStartCause.order.name());// TODO
             item.setStartTime(agentStartTime);
@@ -1770,8 +1772,8 @@ public class HistoryModel {
                     LOGGER.error(String.format("[workflow=%s][job=%s][error on read notification]%s", workflowName, job.getName(), e.toString()), e);
                 }
             }
-            map.put(job.getName(), new CachedWorkflowJob(job.getJob().getCriticality(), job.getJob().getTitle(), job.getJob().getWarnIfLonger(), job
-                    .getJob().getWarnIfShorter(), notification));
+            map.put(job.getName(), new CachedWorkflowJob(job.getJob().getCriticality(), job.getJob().getTitle(), job.getJob().getAgentName(), job
+                    .getJob().getSubagentClusterId(), job.getJob().getWarnIfLonger(), job.getJob().getWarnIfShorter(), notification));
         }
         return map;
     }
@@ -1934,7 +1936,9 @@ public class HistoryModel {
             orderEntry.setControllerDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
             orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
             orderEntry.setAgentId(entry.getAgentId());
+            orderEntry.setAgentName(entry.getAgentName());
             orderEntry.setAgentUrl(entry.getAgentUri());
+            orderEntry.setSubagentClusterId(entry.getSubagentClusterId());
             orderEntry.setJob(entry.getJobName());
             orderEntry.setTaskId(entry.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder(HistoryUtil.json2String(orderEntry));

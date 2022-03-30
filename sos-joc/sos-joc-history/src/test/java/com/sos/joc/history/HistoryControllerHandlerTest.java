@@ -18,6 +18,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.history.controller.proxy.EventFluxStopper;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry;
+import com.sos.joc.history.controller.proxy.HistoryEventEntry.AgentInfo;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentCouplingFailed;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentReady;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentShutDown;
@@ -89,7 +90,7 @@ public class HistoryControllerHandlerTest {
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 10; // seconds
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
-    private static final Long START_EVENT_ID = 1639996632849003L;
+    private static final Long START_EVENT_ID = 0L;
 
     private EventFluxStopper stopper;
     private AtomicBoolean closed;
@@ -315,11 +316,12 @@ public class HistoryControllerHandlerTest {
 
             case OrderStepStarted:
                 order = entry.getCheckedOrder();
+                AgentInfo ai = order.getStepInfo().getAgentInfo();
 
                 event = new FatEventOrderStepStarted(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
-                        .getPosition(), order.getArguments(), order.getStepInfo().getAgentId(), order.getStepInfo().getJobName(), order.getStepInfo()
-                                .getJobLabel());
+                        .getPosition(), order.getArguments(), ai.getAgentId(), ai.getAgentUri(), ai.getSubagentId(), order.getStepInfo().getJobName(),
+                        order.getStepInfo().getJobLabel());
                 break;
 
             case OrderStepProcessed:

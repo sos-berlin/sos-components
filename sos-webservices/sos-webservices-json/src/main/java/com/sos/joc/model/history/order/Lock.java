@@ -24,7 +24,10 @@ public class Lock {
      * 
      */
     @JsonProperty("lockName")
-    @JsonAlias({ "lockPath", "lockId" })
+    @JsonAlias({
+        "lockId",
+        "lockPath"
+    })
     private String lockName;
     /**
      * 

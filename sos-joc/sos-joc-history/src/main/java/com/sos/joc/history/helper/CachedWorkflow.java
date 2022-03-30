@@ -26,13 +26,13 @@ public class CachedWorkflow {
 
     public CachedWorkflowJob getJob(String name) {
         if (jobs == null || jobs.isEmpty()) {
-            return defaultJob(name);
+            return defaultJob();
         }
         CachedWorkflowJob wj = jobs.get(name);
-        return wj == null ? defaultJob(name) : wj;
+        return wj == null ? defaultJob() : wj;
     }
 
-    private CachedWorkflowJob defaultJob(String name) {
-        return new CachedWorkflowJob(JobCriticality.NORMAL, null, null, null, null);
+    private CachedWorkflowJob defaultJob() {
+        return new CachedWorkflowJob(JobCriticality.NORMAL, null, null, null, null, null, null);
     }
 }

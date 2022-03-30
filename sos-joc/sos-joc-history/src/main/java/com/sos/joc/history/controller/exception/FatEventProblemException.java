@@ -10,6 +10,10 @@ public class FatEventProblemException extends SOSException {
 
     private String message = null;
 
+    public FatEventProblemException(String message) {
+        this.message = message;
+    }
+
     public FatEventProblemException(Problem problem) {
         if (problem == null) {
             message = "unknown problem";

@@ -85,8 +85,15 @@ public class DBItemHistoryOrderStep extends DBItem {
     @Column(name = "[AGENT_ID]", nullable = false)
     private String agentId;// event
 
+    /* is nullable - only because was introduced subsequently ... */
+    @Column(name = "[AGENT_NAME]", nullable = true)
+    private String agentName;// history
+
     @Column(name = "[AGENT_URI]", nullable = false)
     private String agentUri;// event
+
+    @Column(name = "[SUBAGENT_CLUSTER_ID]", nullable = true)
+    private String subagentClusterId;// history
 
     @Column(name = "[START_CAUSE]", nullable = false)
     private String startCause;// event
@@ -297,12 +304,28 @@ public class DBItemHistoryOrderStep extends DBItem {
         agentId = val;
     }
 
+    public String getAgentName() {
+        return agentName;
+    }
+
+    public void setAgentName(String val) {
+        agentName = val;
+    }
+
     public String getAgentUri() {
         return agentUri;
     }
 
     public void setAgentUri(String val) {
         agentUri = val;
+    }
+
+    public String getSubagentClusterId() {
+        return subagentClusterId;
+    }
+
+    public void setSubagentClusterId(String val) {
+        subagentClusterId = val;
     }
 
     public String getStartCause() {

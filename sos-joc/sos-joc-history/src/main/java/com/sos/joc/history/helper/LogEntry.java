@@ -30,7 +30,9 @@ public class LogEntry {
     private String jobName = ".";
     private String agentTimezone = null;
     private String agentId = ".";
+    private String agentName = ".";
     private String agentUri = ".";
+    private String subagentClusterId = null;
     private String chunk;
     private Integer state;
     private boolean error;
@@ -108,11 +110,14 @@ public class LogEntry {
         jobName = orderStep.getJobName();
         agentTimezone = orderStep.getAgentTimezone();
         agentId = orderStep.getAgentId();
+        agentName = orderStep.getAgentName();
         agentUri = orderStep.getAgentUri();
+        subagentClusterId = orderStep.getSubagentClusterId();
         StringBuilder sb;
         switch (eventType) {
         case OrderProcessingStarted:
-            chunk = String.format("[Start] Job=%s, Agent (url=%s, id=%s)", jobName, agentUri, agentId);
+            String add = subagentClusterId == null ? "" : ", subagentClusterId=" + subagentClusterId;
+            chunk = String.format("[Start] Job=%s, Agent (url=%s, id=%s, name=%s%s)", jobName, agentUri, agentId, agentName, add);
             return;
         case OrderProcessed:
             returnCode = orderStep.getReturnCode();
@@ -203,6 +208,14 @@ public class LogEntry {
 
     public String getAgentId() {
         return agentId;
+    }
+
+    public String getAgentName() {
+        return agentName;
+    }
+
+    public String getSubagentClusterId() {
+        return subagentClusterId;
     }
 
     public Date getControllerDatetime() {

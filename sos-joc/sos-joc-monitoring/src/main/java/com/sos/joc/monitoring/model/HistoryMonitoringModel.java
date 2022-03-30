@@ -528,7 +528,9 @@ public class HistoryMonitoringModel implements Serializable {
         item.setSeverity(hosb.getSeverity());
 
         item.setAgentId(hosb.getAgentId());
+        item.setAgentName(hosb.getAgentName());
         item.setAgentUri(hosb.getAgentUri());
+        item.setSubagentClusterId(hosb.getSubagentClusterId());
 
         item.setStartCause(hosb.getStartCause());
         item.setStartTime(hosb.getStartTime());

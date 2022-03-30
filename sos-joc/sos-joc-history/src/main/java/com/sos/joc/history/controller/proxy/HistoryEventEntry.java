@@ -29,6 +29,7 @@ import js7.data.event.Stamped;
 import js7.data.lock.Lock;
 import js7.data.lock.LockPath;
 import js7.data.node.NodeId;
+import js7.data.order.Order;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderLockAcquired;
 import js7.data.order.OrderEvent.OrderLockQueued;
@@ -167,8 +168,12 @@ public class HistoryEventEntry {
             orderId = (OrderId) keyedEvent.key();
             if (controllerState != null) {
                 state = controllerState;
-                Either<Problem, JOrder> po = state.idToCheckedOrder(orderId);
-                order = getFromEither(po);
+                // Either<Problem, JOrder> po = state.idToCheckedOrder(orderId);
+                // order = getFromEither(po);
+                order = state.idToOrder().get(orderId);
+                if (order == null) {
+                    throw new FatEventProblemException(String.format("Unknown OrderId in JControllerState:%s", orderId.string()));
+                }
             }
         }
 
@@ -554,7 +559,7 @@ public class HistoryEventEntry {
             private final WorkflowInfo workflowInfo;
             private final JOrder order;
             private JWorkflow workflow;
-            private String agentId;
+            private AgentInfo agentInfo;
             private String jobName;
             private String jobLabel;
 
@@ -563,16 +568,14 @@ public class HistoryEventEntry {
                 this.order = order;
             }
 
-            public String getAgentId() throws Exception {
-                if (agentId == null) {
+            public AgentInfo getAgentInfo() throws Exception {
+                if (agentInfo == null) {
                     if (order == null) {
                         throw new Exception(String.format("[%s][%s]missing JOrder", eventId, orderId));
                     }
-                    Either<Problem, AgentPath> pap = order.attached();
-                    AgentPath ap = getFromEither(pap);
-                    agentId = ap.string();
+                    agentInfo = new AgentInfo(state, order);
                 }
-                return agentId;
+                return agentInfo;
             }
 
             public String getJobName() throws Exception {
@@ -604,7 +607,7 @@ public class HistoryEventEntry {
                     if (workflowInfo == null) {
                         throw new Exception(String.format("[%s][%s]missing WorkflowInfo", eventId, orderId));
                     }
-                    return getFromEither(state.repo().idToWorkflow(workflowInfo.getWorkflowId()));
+                    return getFromEither(state.repo().idToCheckedWorkflow(workflowInfo.getWorkflowId()));
                 }
                 return workflow;
             }
@@ -786,14 +789,14 @@ public class HistoryEventEntry {
                         if (sar != null) {
                             uri = sar.uri().string();
                         }
-//                        if (map != null) {
-//                            map.entrySet().stream().forEach(e -> {
-//                                // subAgents.put(e.getKey().string(), e.getValue().uri().string());
-//                                if (e.getKey().equals(directorId)) {
-//                                    uri = e.getValue().uri().string();
-//                                }
-//                            });
-//                        }
+                        // if (map != null) {
+                        // map.entrySet().stream().forEach(e -> {
+                        // // subAgents.put(e.getKey().string(), e.getValue().uri().string());
+                        // if (e.getKey().equals(directorId)) {
+                        // uri = e.getValue().uri().string();
+                        // }
+                        // });
+                        // }
                     }
                 }
             }
@@ -815,13 +818,60 @@ public class HistoryEventEntry {
         }
     }
 
+    public class AgentInfo {
+
+        private String agentId;
+        private String agentUri;
+        private String subagentId;
+
+        public AgentInfo(JControllerState state, JOrder order) {
+            if (order != null) {
+                try {
+                    Either<Problem, AgentPath> pap = order.attached();
+                    AgentPath ap = getFromEither(pap);
+                    agentId = ap.string();
+                } catch (Throwable e) {
+                    LOGGER.error(String.format("[order id=%s][evaluate agentId]%s", order.id(), e.toString()), e);
+                }
+                try {
+                    Optional<SubagentId> sid = OptionConverters.toJava(((Order.Processing) order.asScala().state()).subagentId());
+                    if (sid.isPresent()) {
+                        subagentId = sid.get().string();
+                        JSubagentItem si = state.idToSubagentItem().get(sid.get());
+                        if (si != null) {
+                            agentUri = si.uri().string();
+                        }
+                    }
+                } catch (Throwable e) {
+                    LOGGER.error(String.format("[order id=%s][evaluate subAgentId]%s", order.id(), e.toString()), e);
+                }
+
+                if (subagentId == null) {
+                    subagentId = agentId;
+                }
+            }
+        }
+
+        public String getAgentId() {
+            return agentId;
+        }
+
+        public String getAgentUri() {
+            return agentUri;
+        }
+
+        public String getSubagentId() {
+            return subagentId;
+        }
+    }
+
     private <T> T getFromEither(Either<Problem, T> either) throws FatEventProblemException {
         if (either.isLeft()) {
             throw new FatEventProblemException(either.getLeft());
         }
         return either.get();
     }
-    
+
     private <T> T getFromMap(T o, String name) throws FatEventProblemException {
         if (o == null) {
             throw new FatEventProblemException(Problem.of("Object '" + name + "' doesn't exist."));

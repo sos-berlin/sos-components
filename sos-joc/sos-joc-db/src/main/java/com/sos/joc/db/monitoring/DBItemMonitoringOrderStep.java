@@ -59,8 +59,14 @@ public class DBItemMonitoringOrderStep extends DBItem {
     @Column(name = "[AGENT_ID]", nullable = false)
     private String agentId;
 
+    @Column(name = "[AGENT_NAME]", nullable = true)
+    private String agentName;
+
     @Column(name = "[AGENT_URI]", nullable = false)
     private String agentUri;
+
+    @Column(name = "[SUBAGENT_CLUSTER_ID]", nullable = true)
+    private String subagentClusterId;
 
     @Column(name = "[START_CAUSE]", nullable = false)
     private String startCause;
@@ -212,12 +218,28 @@ public class DBItemMonitoringOrderStep extends DBItem {
         agentId = val;
     }
 
+    public String getAgentName() {
+        return agentName;
+    }
+
+    public void setAgentName(String val) {
+        agentName = val;
+    }
+
     public String getAgentUri() {
         return agentUri;
     }
 
     public void setAgentUri(String val) {
         agentUri = val;
+    }
+
+    public String getSubagentClusterId() {
+        return subagentClusterId;
+    }
+
+    public void setSubagentClusterId(String val) {
+        subagentClusterId = val;
     }
 
     public String getStartCause() {

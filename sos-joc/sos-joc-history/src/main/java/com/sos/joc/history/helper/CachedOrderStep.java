@@ -17,7 +17,9 @@ public class CachedOrderStep {
     private final String jobName;
     private final String agentTimezone;
     private final String agentId;
+    private final String agentName;
     private final String agentUri;
+    private final String subagentClusterId;
     private final String workflowPosition;
     private Integer severity;
     private Integer returnCode;
@@ -28,19 +30,21 @@ public class CachedOrderStep {
     private StringBuilder stdError;
 
     public CachedOrderStep(DBItemHistoryOrderStep item, String timezone) {
-        id = item.getId();
-        historyOrderMainParentId = item.getHistoryOrderMainParentId();
-        historyOrderId = item.getHistoryOrderId();
-        orderId = item.getOrderId();
-        jobName = item.getJobName();
-        agentTimezone = timezone;
-        agentId = item.getAgentId();
-        agentUri = item.getAgentUri();
-        workflowPosition = item.getWorkflowPosition();
-        severity = item.getSeverity();
-        returnCode = item.getReturnCode();
-        startTime = item.getStartTime();
-        endTime = item.getEndTime();
+        this.id = item.getId();
+        this.historyOrderMainParentId = item.getHistoryOrderMainParentId();
+        this.historyOrderId = item.getHistoryOrderId();
+        this.orderId = item.getOrderId();
+        this.jobName = item.getJobName();
+        this.agentTimezone = timezone;
+        this.agentId = item.getAgentId();
+        this.agentName = item.getAgentName();
+        this.agentUri = item.getAgentUri();
+        this.subagentClusterId = item.getSubagentClusterId();
+        this.workflowPosition = item.getWorkflowPosition();
+        this.severity = item.getSeverity();
+        this.returnCode = item.getReturnCode();
+        this.startTime = item.getStartTime();
+        this.endTime = item.getEndTime();
     }
 
     public HistoryOrderStepBean convert(EventType eventType, Long eventId, String controllerId, String workflowPath) {
@@ -50,7 +54,9 @@ public class CachedOrderStep {
         b.setOrderId(orderId);
         b.setJobName(jobName);
         b.setAgentId(agentId);
+        b.setAgentName(agentName);
         b.setAgentUri(agentUri);
+        b.setSubagentClusterId(subagentClusterId);
         b.setWorkflowPosition(workflowPosition);
         b.setWorkflowPath(workflowPath);
         b.setSeverity(severity);
@@ -88,8 +94,16 @@ public class CachedOrderStep {
         return agentId;
     }
 
+    public String getAgentName() {
+        return agentName;
+    }
+
     public String getAgentUri() {
         return agentUri;
+    }
+
+    public String getSubagentClusterId() {
+        return subagentClusterId;
     }
 
     public String getWorkflowPosition() {
