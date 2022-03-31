@@ -48,9 +48,9 @@ import com.sos.joc.model.publish.SetRootCaFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
+import com.sos.joc.model.publish.git.AddCredentialsFilter;
 import com.sos.joc.model.publish.git.GetCredentialsFilter;
 import com.sos.joc.model.publish.git.GitCredentials;
-import com.sos.joc.model.publish.git.StoreCredentialsFilter;
 import com.sos.joc.model.publish.repository.Category;
 import com.sos.joc.model.publish.repository.Configurations;
 import com.sos.joc.model.publish.repository.CopyToFilter;
@@ -943,25 +943,25 @@ public class DeploymentTestUtils {
     
     public static GitCredentials createExampleGitCredentialsPassword() {
         GitCredentials cred = new GitCredentials();
-        cred.setGitAccount("sp");
-        cred.setPassword("myPasswd");
-        cred.setGitServer("my-remote.git-host.net");
+        cred.setGitAccount("myExampleGitAccount");
+        cred.setPassword("myExamplePasswd");
+        cred.setGitServer("my-example-remote.git-host.net");
         return cred;
     }
 
     public static GitCredentials createExampleGitCredentialsAccessToken() {
         GitCredentials cred = new GitCredentials();
-        cred.setGitAccount("sp");
-        cred.setPersonalAccessToken("AinZ29ro4dvLx9ebhWzo");
-        cred.setGitServer("my-remote.git-host.net");
+        cred.setGitAccount("myExampleGitAccount");
+        cred.setPersonalAccessToken("ExaM29pl4evLx9ebhWzo");
+        cred.setGitServer("my-example-remote.git-host.net");
         return cred;
     }
 
     public static GitCredentials createExampleGitCredentialsKeyfilePath() {
         GitCredentials cred = new GitCredentials();
-        cred.setGitAccount("sp");
-        cred.setKeyfilePath("/path/to/keyfile");
-        cred.setGitServer("my-remote.git-host.net");
+        cred.setGitAccount("myExampleGitAccount");
+        cred.setKeyfilePath("/example/path/to/keyfile");
+        cred.setGitServer("my-example-remote.git-host.net");
         return cred;
     }
 
@@ -970,9 +970,11 @@ public class DeploymentTestUtils {
         return getCredFilter;
     }
 
-    public static StoreCredentialsFilter createExampleStoreGitCredentialsFilter() {
-        StoreCredentialsFilter setCredFilter = new StoreCredentialsFilter();
-        setCredFilter.setCredentials(createExampleGitCredentialsKeyfilePath());
-        return setCredFilter;
+    public static AddCredentialsFilter createExampleAddGitCredentialsFilter() {
+        AddCredentialsFilter addCredFilter = new AddCredentialsFilter();
+        List<GitCredentials> credentials = new ArrayList<GitCredentials>();
+        credentials.add(createExampleGitCredentialsKeyfilePath());
+        addCredFilter.setCredentials(credentials);
+        return addCredFilter;
     }
 }

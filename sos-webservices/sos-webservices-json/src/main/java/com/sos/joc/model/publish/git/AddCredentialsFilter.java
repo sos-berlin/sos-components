@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.publish.git;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -11,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Filter To store Git credentials for a specific JOC account
+ * Filter To add Git credentials to a specific JOC account
  * <p>
  * 
  * 
@@ -21,17 +23,15 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "credentials",
     "auditLog"
 })
-public class StoreCredentialsFilter {
+public class AddCredentialsFilter {
 
     /**
-     * GitCredentials
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("credentials")
-    private GitCredentials credentials;
+    private List<GitCredentials> credentials = new ArrayList<GitCredentials>();
     /**
      * auditParams
      * <p>
@@ -42,26 +42,22 @@ public class StoreCredentialsFilter {
     private AuditParams auditLog;
 
     /**
-     * GitCredentials
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("credentials")
-    public GitCredentials getCredentials() {
+    public List<GitCredentials> getCredentials() {
         return credentials;
     }
 
     /**
-     * GitCredentials
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("credentials")
-    public void setCredentials(GitCredentials credentials) {
+    public void setCredentials(List<GitCredentials> credentials) {
         this.credentials = credentials;
     }
 
@@ -102,10 +98,10 @@ public class StoreCredentialsFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof StoreCredentialsFilter) == false) {
+        if ((other instanceof AddCredentialsFilter) == false) {
             return false;
         }
-        StoreCredentialsFilter rhs = ((StoreCredentialsFilter) other);
+        AddCredentialsFilter rhs = ((AddCredentialsFilter) other);
         return new EqualsBuilder().append(auditLog, rhs.auditLog).append(credentials, rhs.credentials).isEquals();
     }
 

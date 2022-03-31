@@ -171,7 +171,7 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.RevokeFilter", "publish/revoke-schema.json");
             put("com.sos.joc.model.publish.git.GetCredentialsFilter", "publish/git/getCredentialsFilter-schema.json");
             put("com.sos.joc.model.publish.git.GitCredentials", "publish/git/gitCredentials-schema.json");
-            put("com.sos.joc.model.publish.git.StoreCredentialsFilter", "publish/git/storeCredentialsFilter-schema.json");
+            put("com.sos.joc.model.publish.git.AddCredentialsFilter", "publish/git/addCredentialsFilter-schema.json");
             put("com.sos.joc.model.publish.repository.CopyToFilter", "publish/repository/copyToRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.DeleteFromFilter", "publish/repository/deleteFromRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.ReadFromFilter", "publish/repository/readFromRepositoryFilter-schema.json");
