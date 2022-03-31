@@ -2,6 +2,7 @@ package com.sos.joc.classes.agent;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -26,19 +27,18 @@ public class AgentHelper {
 
     public static boolean testMode = false;
     private static String errMsg = "missing license for Agent cluster";
-    
+
     public static boolean hasClusterLicense() {
         if (testMode) {
-           return true; 
+            return true;
         }
-        return JocClusterService.getInstance().getCluster() != null && JocClusterService.getInstance().getCluster()
-                .getConfig().getClusterMode();
+        return JocClusterService.getInstance().getCluster() != null && JocClusterService.getInstance().getCluster().getConfig().getClusterMode();
     }
-    
+
     public static void throwJocMissingLicenseException() throws JocMissingLicenseException {
         throwJocMissingLicenseException(errMsg);
     }
-    
+
     public static void throwJocMissingLicenseException(String message) throws JocMissingLicenseException {
         if (!hasClusterLicense()) {
             if (message == null || message.isEmpty()) {
@@ -47,12 +47,14 @@ public class AgentHelper {
             throw new JocMissingLicenseException(message);
         }
     }
-    
+
     public static Map<String, JControllerState> getCurrentStates(Collection<String> controllerIds) {
         if (controllerIds == null) {
             return Collections.emptyMap();
         }
-        return controllerIds.stream().filter(Objects::nonNull).distinct().collect(Collectors.toMap(s -> s, s -> getCurrentState(s)));
+        Map<String, JControllerState> result = new HashMap<>(controllerIds.size());
+        controllerIds.stream().filter(Objects::nonNull).distinct().forEach(s -> result.put(s, getCurrentState(s)));
+        return result;
     }
 
     private static JControllerState getCurrentState(String controllerId) {
@@ -67,8 +69,9 @@ public class AgentHelper {
         if (controllerIds == null) {
             return Collections.emptyMap();
         }
-        return controllerIds.stream().filter(Objects::nonNull).distinct().collect(Collectors.toMap(s -> s, s -> getSubagents(s, currentStates.get(
-                s))));
+        Map<String, Set<String>> result = new HashMap<>(controllerIds.size());
+        controllerIds.stream().filter(Objects::nonNull).distinct().forEach(s -> result.put(s, getSubagents(s, currentStates.get(s))));
+        return result;
     }
 
     private static Set<String> getSubagents(String controllerId, JControllerState currentState) {
@@ -86,7 +89,9 @@ public class AgentHelper {
         if (controllerIds == null) {
             return Collections.emptyMap();
         }
-        return controllerIds.stream().filter(Objects::nonNull).distinct().collect(Collectors.toMap(s -> s, s -> getAgents(s, currentStates.get(s))));
+        Map<String, Set<String>> result = new HashMap<>(controllerIds.size());
+        controllerIds.stream().filter(Objects::nonNull).distinct().forEach(s -> result.put(s, getAgents(s, currentStates.get(s))));
+        return result;
     }
 
     private static Set<String> getAgents(String controllerId, JControllerState currentState) {
@@ -99,14 +104,16 @@ public class AgentHelper {
             return null;
         }
     }
-    
+
     public static Map<String, Set<String>> getSubagentSelections(Collection<String> controllerIds, Map<String, JControllerState> currentStates) {
         if (controllerIds == null) {
             return Collections.emptyMap();
         }
-        return controllerIds.stream().filter(Objects::nonNull).distinct().collect(Collectors.toMap(s -> s, s -> getSubagentSelections(s, currentStates.get(s))));
+        Map<String, Set<String>> result = new HashMap<>(controllerIds.size());
+        controllerIds.stream().filter(Objects::nonNull).distinct().forEach(s -> result.put(s, getSubagentSelections(s, currentStates.get(s))));
+        return result;
     }
-    
+
     private static Set<String> getSubagentSelections(String controllerId, JControllerState currentState) {
         if (currentState == null) {
             return null;
@@ -129,7 +136,7 @@ public class AgentHelper {
     public static SyncState getSyncState(Set<String> subagentSelections, DBItemInventorySubAgentCluster dbSubAgent) {
         return getSyncState(subagentSelections, dbSubAgent.getSubAgentClusterId(), dbSubAgent.getDeployed());
     }
-    
+
     private static SyncState getSyncState(Set<String> objects, String identifier, Boolean deployed) {
         if (objects == null) {
             return SyncStateHelper.getState(SyncStateText.UNKNOWN);
