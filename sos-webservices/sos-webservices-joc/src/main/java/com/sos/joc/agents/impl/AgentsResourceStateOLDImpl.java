@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
-import com.sos.joc.agents.resource.ISubAgentsResourceState;
+import com.sos.joc.agents.resource.IAgentsResourceStateOLD;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
@@ -30,7 +30,6 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
-import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
@@ -46,25 +45,23 @@ import com.sos.schema.JsonValidator;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
+import js7.data.agent.AgentRefState;
 import js7.data.controller.ControllerCommand;
 import js7.data.delegate.DelegateCouplingState;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
-import js7.data.subagent.SubagentId;
-import js7.data.subagent.SubagentItemState;
 import js7.data_for_java.agent.JAgentRefState;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
-import js7.data_for_java.subagent.JSubagentItemState;
 import js7.proxy.javaapi.JControllerProxy;
 import scala.compat.java8.OptionConverters;
 
-@Path("subagents")
-public class SubAgentsResourceStateImpl extends JOCResourceImpl implements ISubAgentsResourceState {
+@Path("agents2")
+public class AgentsResourceStateOLDImpl extends JOCResourceImpl implements IAgentsResourceStateOLD {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SubAgentsResourceStateImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AgentsResourceStateOLDImpl.class);
     private static final String API_CALL = "./agents";
     private static final Map<AgentStateText, Integer> agentStates = Collections.unmodifiableMap(new HashMap<AgentStateText, Integer>() {
 
@@ -97,19 +94,18 @@ public class SubAgentsResourceStateImpl extends JOCResourceImpl implements ISubA
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-            List<DBItemInventorySubAgentInstance> dbSubAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(controllerId));
+            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(Collections.singleton(controllerId),
+                    agentsParam.getAgentIds(), false, agentsParam.getOnlyEnabledAgents());
 
             List<AgentV> agentsList = new ArrayList<>();
 
             boolean withStateFilter = agentsParam.getStates() != null && !agentsParam.getStates().isEmpty();
             AgentsV agents = new AgentsV();
 
-            if (dbSubAgents != null) {
+            if (dbAgents != null) {
 
-//                Map<String, Integer> ordersCountPerAgent = new HashMap<>();
-                Map<String, Integer> ordersCountPerSubagent = new HashMap<>();
-//                Map<String, List<OrderV>> ordersPerAgent = new HashMap<>();
-                Map<String, List<OrderV>> ordersPerSubagent = new HashMap<>();
+                Map<String, Integer> ordersCountPerAgent = new HashMap<>();
+                Map<String, List<OrderV>> ordersPerAgent = new HashMap<>();
                 try {
                     JControllerProxy proxy = Proxy.of(controllerId);
                     JControllerState currentState = proxy.currentState();
@@ -131,33 +127,17 @@ public class SubAgentsResourceStateImpl extends JOCResourceImpl implements ISubA
                     }
                     agents.setSurveyDate(Date.from(currentStateMoment));
                     
-//                    Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing.class)).filter(o -> o
-//                            .attached() != null && o.attached().isRight());
-                    
-                    Stream<JOrder> processingOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing.class)).filter(o -> 
-                        !((Order.Processing) o.asScala().state()).subagentId().isEmpty());
-
+                    Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing.class)).filter(o -> o
+                            .attached() != null && o.attached().isRight());
                     if (agentsParam.getCompact() == Boolean.TRUE) {
-//                        ordersCountPerAgent.putAll(jOrderStream.collect(Collectors.groupingBy(o -> o.attached().get().string(), Collectors.reducing(0,
-//                                o -> 1, Integer::sum))));
-
-                        ordersCountPerSubagent.putAll(processingOrderStream.collect(Collectors.groupingBy(o -> ((Order.Processing) o.asScala()
-                                .state()).subagentId().get().string(), Collectors.reducing(0, o -> 1, Integer::sum))));
+                        ordersCountPerAgent.putAll(jOrderStream.collect(Collectors.groupingBy(o -> o.attached().get().string(), Collectors.reducing(0,
+                                o -> 1, Integer::sum))));
                     } else {
                         Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-//                        List<JOrder> jOrders = jOrderStream.collect(Collectors.toList());
-                        List<JOrder> jOrders = processingOrderStream.collect(Collectors.toList());
+                        List<JOrder> jOrders = jOrderStream.collect(Collectors.toList());
                         Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(jOrders.stream().map(JOrder::id).collect(Collectors
                                 .toSet()), currentState);
-//                        ordersPerAgent.putAll(jOrders.stream().map(o -> {
-//                            try {
-//                                // TODO remove final Parameters 
-//                                return OrdersHelper.mapJOrderToOrderV(o, currentState, true, permittedFolders, waitingOrders, null, surveyDateMillis);
-//                            } catch (Exception e) {
-//                                return null;
-//                            }
-//                        }).filter(Objects::nonNull).collect(Collectors.groupingBy(OrderV::getAgentId)));
-                        ordersPerSubagent.putAll(jOrders.stream().map(o -> {
+                        ordersPerAgent.putAll(jOrders.stream().map(o -> {
                             try {
                                 // TODO remove final Parameters 
                                 return OrdersHelper.mapJOrderToOrderV(o, currentState, true, permittedFolders, waitingOrders, null, surveyDateMillis);
@@ -167,21 +147,17 @@ public class SubAgentsResourceStateImpl extends JOCResourceImpl implements ISubA
                         }).filter(Objects::nonNull).collect(Collectors.groupingBy(OrderV::getAgentId)));
                     }
                     
-                    Map<SubagentId, JSubagentItemState> m = currentState.idToSubagentItemState();
-                    //m.get("").asScala().
-                    //JSubagentRefState.asScala().couplingState();
-                    
-                    agentsList.addAll(dbSubAgents.stream().map(dbSubAgent -> {
-                        JSubagentItemState jSubagentItemState = currentState.idToSubagentItemState().get(SubagentId.of(dbSubAgent.getSubAgentId()));
-                        AgentV agent = mapDbSubagentToAgentV(dbSubAgent);
+                    agentsList.addAll(dbAgents.stream().map(dbAgent -> {
+                        JAgentRefState jAgentRefState = currentState.pathToAgentRefState().get(AgentPath.of(dbAgent.getAgentId()));
+                        AgentV agent = mapDbAgentToAgentV(dbAgent);
                         AgentStateText stateText = AgentStateText.UNKNOWN;
                         if (Proxies.isCoupled(controllerId)) {
                         //if (!olderThan30sec || Proxies.isCoupled(controllerId)) {
-                            if (jSubagentItemState != null) {
-                                LOGGER.debug("Subagent '" + dbSubAgent.getSubAgentId() + "',  state = " + jSubagentItemState.toJson());
-                                SubagentItemState subagentItemState = jSubagentItemState.asScala();
-                                DelegateCouplingState couplingState = subagentItemState.couplingState();
-                                Optional<Problem> optProblem = OptionConverters.toJava(subagentItemState.problem());
+                            if (jAgentRefState != null) {
+                                LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  state = " + jAgentRefState.toJson());
+                                AgentRefState agentRefState = jAgentRefState.asScala();
+                                DelegateCouplingState couplingState = agentRefState.couplingState();
+                                Optional<Problem> optProblem = OptionConverters.toJava(agentRefState.problem());
                                 if (optProblem.isPresent()) {
                                     agent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
                                 }
@@ -202,11 +178,11 @@ public class SubAgentsResourceStateImpl extends JOCResourceImpl implements ISubA
                             return null;
                         }
                         if (agentsParam.getCompact() == Boolean.TRUE) {
-                            agent.setRunningTasks(ordersCountPerSubagent.getOrDefault(dbSubAgent.getSubAgentId(), 0));
+                            agent.setRunningTasks(ordersCountPerAgent.getOrDefault(dbAgent.getAgentId(), 0));
                             agent.setOrders(null);
                         } else {
-                            if (ordersPerSubagent.containsKey(dbSubAgent.getSubAgentId())) {
-                                agent.setOrders(ordersPerSubagent.get(dbSubAgent.getSubAgentId()));
+                            if (ordersPerAgent.containsKey(dbAgent.getAgentId())) {
+                                agent.setOrders(ordersPerAgent.get(dbAgent.getAgentId()));
                                 agent.setRunningTasks(agent.getOrders().size());
                             }
                         }
@@ -215,8 +191,8 @@ public class SubAgentsResourceStateImpl extends JOCResourceImpl implements ISubA
                     }).filter(Objects::nonNull).sorted(Comparator.comparingInt(AgentV::getRunningTasks).reversed()).collect(Collectors.toList()));
                     
                 } catch (ControllerConnectionRefusedException e1) {
-                    agentsList.addAll(dbSubAgents.stream().map(dbsubagent -> {
-                        AgentV agent = mapDbSubagentToAgentV(dbsubagent);
+                    agentsList.addAll(dbAgents.stream().map(dbAgent -> {
+                        AgentV agent = mapDbAgentToAgentV(dbAgent);
                         if (withStateFilter && !agentsParam.getStates().contains(AgentStateText.UNKNOWN)) {
                             return null;
                         }
@@ -246,16 +222,15 @@ public class SubAgentsResourceStateImpl extends JOCResourceImpl implements ISubA
         return s;
     }
     
-    private static AgentV mapDbSubagentToAgentV(DBItemInventorySubAgentInstance dbSubagent) {
+    private static AgentV mapDbAgentToAgentV(DBItemInventoryAgentInstance dbAgent) {
         AgentV agent = new AgentV();
         agent.setRunningTasks(0);
         agent.setOrders(null);
-        agent.setAgentId(dbSubagent.getAgentId());
-        //agent.setSubagentId(dbSubagent.getSubAgentId());
-        //agent.setAgentName(dbSubagent.getAgentName());
-        agent.setUrl(dbSubagent.getUri());
-        //agent.setControllerId(dbSubagent.getControllerId());
-        agent.setIsClusterWatcher(dbSubagent.getIsWatcher());
+        agent.setAgentId(dbAgent.getAgentId());
+        agent.setAgentName(dbAgent.getAgentName());
+        agent.setUrl(dbAgent.getUri());
+        agent.setControllerId(dbAgent.getControllerId());
+        agent.setIsClusterWatcher(dbAgent.getIsWatcher());
         agent.setState(getState(AgentStateText.UNKNOWN));
         return agent;
     }

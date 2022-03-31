@@ -14,34 +14,23 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * agent
+ * subagent
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "agentId",
-    "agentName",
+    "subagentId",
     "url",
     "state",
     "errorMessage",
     "orders",
-    "runningTasks",
-    "isClusterWatcher",
-    "subagents"
+    "runningTasks"
 })
-public class AgentV {
+public class SubagentV {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * string without < and >
      * <p>
@@ -58,8 +47,8 @@ public class AgentV {
      * (Required)
      * 
      */
-    @JsonProperty("agentName")
-    private String agentName;
+    @JsonProperty("subagentId")
+    private String subagentId;
     /**
      * string without < and >
      * <p>
@@ -93,32 +82,6 @@ public class AgentV {
      */
     @JsonProperty("runningTasks")
     private Integer runningTasks;
-    @JsonProperty("isClusterWatcher")
-    private Boolean isClusterWatcher = false;
-    @JsonProperty("subagents")
-    private List<SubagentV> subagents = new ArrayList<SubagentV>();
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     /**
      * string without < and >
@@ -151,9 +114,9 @@ public class AgentV {
      * (Required)
      * 
      */
-    @JsonProperty("agentName")
-    public String getAgentName() {
-        return agentName;
+    @JsonProperty("subagentId")
+    public String getSubagentId() {
+        return subagentId;
     }
 
     /**
@@ -163,9 +126,9 @@ public class AgentV {
      * (Required)
      * 
      */
-    @JsonProperty("agentName")
-    public void setAgentName(String agentName) {
-        this.agentName = agentName;
+    @JsonProperty("subagentId")
+    public void setSubagentId(String subagentId) {
+        this.subagentId = subagentId;
     }
 
     /**
@@ -262,34 +225,14 @@ public class AgentV {
         this.runningTasks = runningTasks;
     }
 
-    @JsonProperty("isClusterWatcher")
-    public Boolean getIsClusterWatcher() {
-        return isClusterWatcher;
-    }
-
-    @JsonProperty("isClusterWatcher")
-    public void setIsClusterWatcher(Boolean isClusterWatcher) {
-        this.isClusterWatcher = isClusterWatcher;
-    }
-
-    @JsonProperty("subagents")
-    public List<SubagentV> getSubagents() {
-        return subagents;
-    }
-
-    @JsonProperty("subagents")
-    public void setSubagents(List<SubagentV> subagents) {
-        this.subagents = subagents;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("url", url).append("state", state).append("errorMessage", errorMessage).append("orders", orders).append("runningTasks", runningTasks).append("isClusterWatcher", isClusterWatcher).append("subagents", subagents).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("subagentId", subagentId).append("url", url).append("state", state).append("errorMessage", errorMessage).append("orders", orders).append("runningTasks", runningTasks).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(subagents).append(errorMessage).append(agentName).append(orders).append(isClusterWatcher).append(state).append(url).append(runningTasks).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(errorMessage).append(subagentId).append(orders).append(state).append(url).append(runningTasks).toHashCode();
     }
 
     @Override
@@ -297,11 +240,11 @@ public class AgentV {
         if (other == this) {
             return true;
         }
-        if ((other instanceof AgentV) == false) {
+        if ((other instanceof SubagentV) == false) {
             return false;
         }
-        AgentV rhs = ((AgentV) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(subagents, rhs.subagents).append(errorMessage, rhs.errorMessage).append(agentName, rhs.agentName).append(orders, rhs.orders).append(isClusterWatcher, rhs.isClusterWatcher).append(state, rhs.state).append(url, rhs.url).append(runningTasks, rhs.runningTasks).isEquals();
+        SubagentV rhs = ((SubagentV) other);
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(errorMessage, rhs.errorMessage).append(subagentId, rhs.subagentId).append(orders, rhs.orders).append(state, rhs.state).append(url, rhs.url).append(runningTasks, rhs.runningTasks).isEquals();
     }
 
 }
