@@ -57,7 +57,7 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
 		}
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		try {
-			if (csArgs.getFile() != null) {
+			if (csArgs.getFile().getValue() != null) {
 				SOSCredentialStoreResolver r = csArgs.newResolver();
 
 				args.setDbUrl(r.resolve(args.getDbUrl()));

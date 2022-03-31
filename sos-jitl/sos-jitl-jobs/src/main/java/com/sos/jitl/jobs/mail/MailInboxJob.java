@@ -82,7 +82,7 @@ public class MailInboxJob extends ABlockingInternalJob<MailInboxArguments> {
             Map<String, Object> variables = new HashMap<>();
             if (step != null) {
                 SOSCredentialStoreArguments csArgs = step.getAppArguments(SOSCredentialStoreArguments.class);
-                if (csArgs.getFile() != null) {
+                if (csArgs.getFile().getValue() != null) {
                     SOSCredentialStoreResolver r = csArgs.newResolver();
 
                     args.getMailUser().setValue(r.resolve(args.getMailUser().getValue()));

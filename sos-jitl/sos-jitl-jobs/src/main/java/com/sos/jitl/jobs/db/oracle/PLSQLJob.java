@@ -103,7 +103,7 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
                     args.setDbPassword(s);
                 }
             }
-            if (csArgs.getFile() != null) {
+            if (csArgs.getFile().getValue() != null) {
                 SOSCredentialStoreResolver r = csArgs.newResolver();
 
                 args.setDbUrl(r.resolve(args.getDbUrl()));

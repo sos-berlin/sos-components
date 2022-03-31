@@ -591,7 +591,7 @@ public class SOSMail {
     }
 
     private void useCredentialStoreArguments() throws SOSCredentialStoreException {
-        if (credentialStoreArguments != null && credentialStoreArguments.getFile() != null) {
+        if (credentialStoreArguments != null && credentialStoreArguments.getFile().getValue() != null) {
             SOSCredentialStoreResolver r = credentialStoreArguments.newResolver();
 
             addMailProperty(PROPERTY_NAME_SMTP_HOST, r.resolve(getHost()));

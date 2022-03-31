@@ -59,15 +59,17 @@ public class SOSCredentialStoreArguments extends ASOSArguments {
 
     public class SOSCredentialStoreResolver {
 
-        private SOSKeePassResolver resolver;
+        private SOSKeePassResolver resolver = null;
 
         private SOSCredentialStoreResolver() {
-            resolver = new SOSKeePassResolver(file.getValue(), keyFile.getValue(), password.getValue());
-            resolver.setEntryPath(entryPath.getValue());
+            if (file.getValue() != null) {
+                resolver = new SOSKeePassResolver(file.getValue(), keyFile.getValue(), password.getValue());
+                resolver.setEntryPath(entryPath.getValue());
+            }
         }
 
         public String resolve(String cs) throws SOSCredentialStoreException {
-            return resolver.resolve(cs);
+            return resolver == null ? cs : resolver.resolve(cs);
         }
     }
 
