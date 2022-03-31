@@ -20,7 +20,10 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentClusterMember;
+import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.StoreSubagentClusters;
@@ -69,12 +72,12 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
             connection = Globals.createSosHibernateStatelessConnection(API_STORE);
             connection.setAutoCommit(false);
             connection.beginTransaction();
-            InventorySubagentClustersDBLayer agentDBLayer = new InventorySubagentClustersDBLayer(connection);
+            InventorySubagentClustersDBLayer agentClusterDBLayer = new InventorySubagentClustersDBLayer(connection);
 
             // Check if all subagents in the inventory
             List<String> subagentIds = agentStoreParameter.getSubagentClusters().stream().map(SubagentCluster::getSubagentIds).flatMap(List::stream).map(
                     SubAgentId::getSubagentId).distinct().collect(Collectors.toList());
-            String missingSubagentId = agentDBLayer.getFirstSubagentIdThatNotExists(subagentIds);
+            String missingSubagentId = agentClusterDBLayer.getFirstSubagentIdThatNotExists(subagentIds);
             if (!missingSubagentId.isEmpty()) {
                 throw new JocBadRequestException(String.format("At least one Subagent doesn't exist: '%s'", missingSubagentId));
             }
@@ -82,8 +85,11 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
             Map<String, SubagentCluster> subagentMap = agentStoreParameter.getSubagentClusters().stream().collect(Collectors.toMap(
                     SubagentCluster::getSubagentClusterId, Function.identity()));
             List<String> subagentClusterIds2 = subagentMap.keySet().stream().collect(Collectors.toList());
-            List<DBItemInventorySubAgentCluster> dbsubagentClusters = agentDBLayer.getSubagentClusters(subagentClusterIds2);
-            List<DBItemInventorySubAgentClusterMember> dbsubagentClusterMembers = agentDBLayer.getSubagentClusterMembers(subagentClusterIds2);
+            List<DBItemInventorySubAgentCluster> dbsubagentClusters = agentClusterDBLayer.getSubagentClusters(subagentClusterIds2);
+            List<DBItemInventorySubAgentClusterMember> dbsubagentClusterMembers = agentClusterDBLayer.getSubagentClusterMembers(subagentClusterIds2);
+            
+            List<String> controllerIds = agentClusterDBLayer.getControllerIds(dbsubagentClusters.stream().map(
+                    DBItemInventorySubAgentCluster::getAgentId).distinct().collect(Collectors.toList()));
 
             Map<String, List<DBItemInventorySubAgentClusterMember>> dbsubagentClusterMembersMap = Collections.emptyMap();
             if (dbsubagentClusterMembers != null) {
@@ -124,9 +130,9 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
             
             Globals.commit(connection);
             
-            // TODO event determine controller Ids
-//            Set<String> agentIds = agentStoreParameter.getSubagentClusters().stream().map(SubagentCluster::getAgentId).collect(Collectors.toSet());
-//            EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
+            for (String controllerId : controllerIds) {
+                EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
+            }
 
             return JOCDefaultResponse.responseStatusJSOk(now);
         } catch (JocException e) {

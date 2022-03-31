@@ -8,12 +8,11 @@ import javax.ws.rs.Produces;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface ISubAgentStoreResource {
+public interface IAgentsStandaloneDeploy {
 
     @POST
-    @Path("inventory/cluster/subagents/store")
+    @Path("inventory/deploy")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse store(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
-    
+    public JOCDefaultResponse postDeploy(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

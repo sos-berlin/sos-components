@@ -8,24 +8,23 @@ import javax.ws.rs.Produces;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IAgentsResource {
+public interface IAgentsStore {
 
-    //old
     @POST
-    @Path("p")
+    @Path("store")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse post2(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse store(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
     @POST
-    @Path("inventory")
+    @Path("inventory/store")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse post(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse inventoryStore(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
     @POST
-    @Path("names")
+    @Path("inventory/cluster/store")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse postNames(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse clusterInventoryStore(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

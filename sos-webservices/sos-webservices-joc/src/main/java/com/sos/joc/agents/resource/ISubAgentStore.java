@@ -8,11 +8,12 @@ import javax.ws.rs.Produces;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IAgentsCommand {
+public interface ISubAgentStore {
 
     @POST
-    @Path("inventory/revoke")
+    @Path("inventory/cluster/subagents/store")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse postRevoke(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse store(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
 }

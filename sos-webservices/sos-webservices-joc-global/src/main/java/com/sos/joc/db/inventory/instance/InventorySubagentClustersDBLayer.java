@@ -349,5 +349,44 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
             return getSession().executeUpdate(query2) + getSession().executeUpdate(query);
         }
     }
+    
+    public List<String> getControllerIds(List<String> agentIds) {
+        if (agentIds == null || agentIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (agentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<String> r = new ArrayList<>();
+            for (int i = 0; i < agentIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                r.addAll(getControllerIds(SOSHibernate.getInClausePartition(i, agentIds)));
+            }
+            return r;
+        } else {
+            try {
+                StringBuilder hql = new StringBuilder("select controllerId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+                if (agentIds.size() == 1) {
+                    hql.append(" where agentId = :agentId");
+                } else {
+                    hql.append(" where agentId in (:agentIds)");
+                }
+                Query<String> query = getSession().createQuery(hql.toString());
+                if (agentIds.size() == 1) {
+                    query.setParameter("agentId", agentIds.get(0));
+                } else {
+                    query.setParameterList("agentIds", agentIds);
+                }
+                List<String> result = getSession().getResultList(query);
+                if (result == null) {
+                    return Collections.emptyList();
+                }
+                return result;
+            } catch (DBMissingDataException ex) {
+                throw ex;
+            } catch (SOSHibernateInvalidSessionException ex) {
+                throw new DBConnectionRefusedException(ex);
+            } catch (Exception ex) {
+                throw new DBInvalidDataException(ex);
+            }
+        }
+    }
 
 }

@@ -15,7 +15,7 @@ import javax.ws.rs.Path;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
-import com.sos.joc.agents.resource.IAgentsResourceStore;
+import com.sos.joc.agents.resource.IAgentsStore;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -38,7 +38,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 @Path("agents")
-public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsResourceStore {
+public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
     private static final String API_INVENTORY_STORE = "./agents/inventory/store";
     private static final String API_CLUSTER_INVENTORY_STORE = "./agents/inventory/cluster/store";
@@ -225,7 +225,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsResourceS
 
                     List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                             controllerId));
-                    SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
+                    SubAgentStoreImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
 
                     updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
                 }
@@ -250,7 +250,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsResourceS
 
                 List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                         controllerId));
-                SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
+                SubAgentStoreImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
                 
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
             }
@@ -278,7 +278,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsResourceS
         }
     }
 
-    public static void updateAliases(InventoryAgentInstancesDBLayer agentDBLayer, Agent agent, Collection<DBItemInventoryAgentName> dbAliases)
+    private static void updateAliases(InventoryAgentInstancesDBLayer agentDBLayer, Agent agent, Collection<DBItemInventoryAgentName> dbAliases)
             throws SOSHibernateException {
         if (dbAliases != null) {
             for (DBItemInventoryAgentName dbAlias : dbAliases) {

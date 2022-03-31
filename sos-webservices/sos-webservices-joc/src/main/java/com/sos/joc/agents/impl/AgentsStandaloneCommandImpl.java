@@ -12,7 +12,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
-import com.sos.joc.agents.resource.IAgentsDeploy;
+import com.sos.joc.agents.resource.IAgentsStandaloneCommand;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
@@ -28,23 +28,21 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
-import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
-import js7.data_for_java.subagent.JSubagentItem;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
 @Path("agents")
-public class AgentsDeployImpl extends JOCResourceImpl implements IAgentsDeploy {
+public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAgentsStandaloneCommand {
 
-    private static final String API_CALL = "./agents/inventory/deploy";
+    private static final String API_CALL = "./agents/inventory/revoke";
 
     @Override
-    public JOCDefaultResponse postDeploy(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse postRevoke(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
@@ -86,10 +84,10 @@ public class AgentsDeployImpl extends JOCResourceImpl implements IAgentsDeploy {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     JAgentRef agentRef = knownAgents.get(AgentPath.of(dbAgent.getAgentId()));
                     if (agentRef != null && (!agentRef.director().isPresent() || agentRef.directors().isEmpty())) {
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createOldAgent(dbAgent)));
+                        agentRefs.add(JUpdateItemOperation.deleteSimple(AgentPath.of(dbAgent.getAgentId())));
                     } else {
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createNewAgent(dbAgent)));
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createSubagentDirector(dbAgent)));
+                        agentRefs.add(JUpdateItemOperation.deleteSimple(AgentPath.of(dbAgent.getAgentId())));
+                        agentRefs.add(JUpdateItemOperation.deleteSimple(SubagentId.of(dbAgent.getAgentId())));
                     }
                     updateAgentIds.add(dbAgent.getAgentId());
                 }
@@ -105,7 +103,7 @@ public class AgentsDeployImpl extends JOCResourceImpl implements IAgentsDeploy {
                             connection1.setAutoCommit(false);
                             Globals.beginTransaction(connection1);
                             InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
-                            dbLayer1.setAgentsDeployed(updateAgentIds);
+                            dbLayer1.setAgentsDeployed(updateAgentIds, false);
                             Globals.commit(connection1);
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, updateAgentIds));
                         } catch (Exception e1) {
@@ -129,17 +127,5 @@ public class AgentsDeployImpl extends JOCResourceImpl implements IAgentsDeploy {
         } finally {
             Globals.disconnect(connection);
         }
-    }
-    
-    private static JAgentRef createOldAgent(DBItemInventoryAgentInstance a) {
-        return JAgentRef.of(AgentPath.of(a.getAgentId()), Uri.of(a.getUri()));
-    }
-    
-    private static JAgentRef createNewAgent(DBItemInventoryAgentInstance a) {
-        return JAgentRef.of(AgentPath.of(a.getAgentId()), SubagentId.of((a.getAgentId())));
-    }
-    
-    private static JSubagentItem createSubagentDirector(DBItemInventoryAgentInstance a) {
-        return JSubagentItem.of(SubagentId.of(a.getAgentId()), AgentPath.of(a.getAgentId()), Uri.of(a.getUri()), true);
     }
 }

@@ -8,11 +8,11 @@ import javax.ws.rs.Produces;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IAgentsDeploy {
+public interface IAgentsNames {
 
     @POST
-    @Path("inventory/deploy")
+    @Path("names")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse postDeploy(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse postNames(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

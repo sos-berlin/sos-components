@@ -18,7 +18,7 @@ import javax.ws.rs.Path;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
-import com.sos.joc.agents.resource.ISubAgentStoreResource;
+import com.sos.joc.agents.resource.ISubAgentStore;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -42,7 +42,7 @@ import com.sos.schema.JsonValidator;
 import js7.data_for_java.item.JUpdateItemOperation;
 
 @Path("agents")
-public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAgentStoreResource {
+public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore {
 
     private static final String API_CALL_REMOVE = "./agents/inventory/cluster/subagents/store";
     
