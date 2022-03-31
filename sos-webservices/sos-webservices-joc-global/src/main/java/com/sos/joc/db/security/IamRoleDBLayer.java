@@ -119,7 +119,7 @@ public class IamRoleDBLayer {
     public List<String> getIamControllersForRole(IamRoleFilter filter) throws SOSHibernateException {
         filter.setRoleName(null);
         Query<String> query = sosHibernateSession.createQuery("select DISTINCT controllerId from " + DBItemIamPermission + getWhere(filter)
-                + " and  controller_id is not null ");
+                + " and  controllerId is not null ");
         bindParameters(filter, query);
 
         List<String> iamRoleList = query.getResultList();
