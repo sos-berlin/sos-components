@@ -35,58 +35,58 @@ public class RepositoryTest {
     
     @BeforeClass
     public static void logTestsStarted() {
-        LOGGER.debug("**************************  Repository Tests started  *******************************");
-        LOGGER.debug("");
+        LOGGER.trace("**************************  Repository Tests started  *******************************");
+        LOGGER.trace("");
     }
 
     @AfterClass
     public static void logTestsFinished() {
-        LOGGER.debug("**************************  Deployment Tests finished  ******************************");
+        LOGGER.trace("**************************  Deployment Tests finished  ******************************");
     }
 
     @Ignore
     @Test
     public void test01SubPath() throws IOException, URISyntaxException {
-        LOGGER.debug("**************************  Test 01 - subpath started  ******************************");
+        LOGGER.trace("**************************  Test 01 - subpath started  ******************************");
         Path oldRoot = Paths.get(getClass().getResource("/joc/repositories/ProductDemo").toURI());
         Path newRoot = Paths.get(getClass().getResource("/joc/repositories/ProductDemo/ScriptIncludes").toURI());
-        LOGGER.debug("old root Path: " + oldRoot.toString().replace('\\', '/'));
-        LOGGER.debug("new root Path: " + newRoot.toString().replace('\\', '/'));
-        LOGGER.debug("relative new root Path: " + "/" + newRoot.subpath(oldRoot.getNameCount() -1, newRoot.getNameCount()).toString().replace('\\', '/'));
-        LOGGER.debug("**************************  Test 01 - subpath finished  *****************************");
+        LOGGER.trace("old root Path: " + oldRoot.toString().replace('\\', '/'));
+        LOGGER.trace("new root Path: " + newRoot.toString().replace('\\', '/'));
+        LOGGER.trace("relative new root Path: " + "/" + newRoot.subpath(oldRoot.getNameCount() -1, newRoot.getNameCount()).toString().replace('\\', '/'));
+        LOGGER.trace("**************************  Test 01 - subpath finished  *****************************");
     }
 
     @Ignore
     @Test
     public void test02relativize() throws IOException, URISyntaxException {
-        LOGGER.debug("**************************  Test 02 - relativize started  ***************************");
+        LOGGER.trace("**************************  Test 02 - relativize started  ***************************");
         Path oldRoot = Paths.get(getClass().getResource("/joc/repositories/ProductDemo").toURI());
         Path newRoot = Paths.get(getClass().getResource("/joc/repositories/ProductDemo/ScriptIncludes").toURI());
 
         Path newNewRoot = Paths.get("/apple");
-        LOGGER.debug(newRoot.relativize(oldRoot).toString());
-        LOGGER.debug(oldRoot.relativize(newRoot).toString());
+        LOGGER.trace(newRoot.relativize(oldRoot).toString());
+        LOGGER.trace(oldRoot.relativize(newRoot).toString());
         try {
-            LOGGER.debug(newNewRoot.relativize(oldRoot).toString());
+            LOGGER.trace(newNewRoot.relativize(oldRoot).toString());
         } catch (Exception e) {
-            LOGGER.debug("error: " + e.getMessage());
-            LOGGER.debug(String.format("detail: 'this' -> %1$s", newNewRoot.toString()));
-            LOGGER.debug(String.format("detail: 'other' -> %1$s", oldRoot.toString()));
+            LOGGER.trace("error: " + e.getMessage());
+            LOGGER.trace(String.format("detail: 'this' -> %1$s", newNewRoot.toString()));
+            LOGGER.trace(String.format("detail: 'other' -> %1$s", oldRoot.toString()));
         }
         try {
-            LOGGER.debug(oldRoot.relativize(newNewRoot).toString());
+            LOGGER.trace(oldRoot.relativize(newNewRoot).toString());
         } catch (Exception e) {
-            LOGGER.debug("error: " + e.getMessage());
-            LOGGER.debug(String.format("detail: 'this' -> %1$s", oldRoot.toString()));
-            LOGGER.debug(String.format("detail: 'other' -> %1$s", newNewRoot.toString()));
+            LOGGER.trace("error: " + e.getMessage());
+            LOGGER.trace(String.format("detail: 'this' -> %1$s", oldRoot.toString()));
+            LOGGER.trace(String.format("detail: 'other' -> %1$s", newNewRoot.toString()));
         }
-        LOGGER.debug("**************************  Test 02 - relativize finished  **************************");
+        LOGGER.trace("**************************  Test 02 - relativize finished  **************************");
     }
 
     @Ignore
     @Test
     public void test03readRepoRecursive() throws Exception {
-        LOGGER.debug("***************  Test 03 - read repository with recursion started  ******************");
+        LOGGER.trace("***************  Test 03 - read repository with recursion started  ******************");
         Path repositories = Paths.get(getClass().getResource("/joc/repositories").toURI());
         Path repository = Paths.get(getClass().getResource("/joc/repositories/ProductDemo").toURI());
         Date start = Date.from(Instant.now());
@@ -109,27 +109,27 @@ public class RepositoryTest {
             LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(result));
         }
         Date stop = Date.from(Instant.now());
-        LOGGER.debug(String.format("took %1$d ms", stop.getTime() - start.getTime()));
-        LOGGER.debug("***************  Test 03 - read repository with recursion finished  *****************");
+        LOGGER.trace(String.format("took %1$d ms", stop.getTime() - start.getTime()));
+        LOGGER.trace("***************  Test 03 - read repository with recursion finished  *****************");
     }
 
     @Ignore
     @Test
     public void test04GetParent() throws IOException {
-        LOGGER.debug("**************************  Test 04 - get parent started  ***************************");
+        LOGGER.trace("**************************  Test 04 - get parent started  ***************************");
         Path path = Paths.get("/apple");
         if(path.getParent() != null) {
-            LOGGER.debug(String.format("path: %1$s - has parent: %2$s", path.toString(), path.getParent().toString()));
+            LOGGER.trace(String.format("path: %1$s - has parent: %2$s", path.toString(), path.getParent().toString()));
         } else {
-            LOGGER.debug(String.format("path: %1$s - has no parent", path.toString()));
+            LOGGER.trace(String.format("path: %1$s - has no parent", path.toString()));
         }
-        LOGGER.debug("**************************  Test 04 - get parent finished  **************************");
+        LOGGER.trace("**************************  Test 04 - get parent finished  **************************");
    }
     
     @Ignore
     @Test
     public void test05Resolve() throws IOException, URISyntaxException {
-        LOGGER.debug("**************************  Test 05 - resolve started  ******************************");
+        LOGGER.trace("**************************  Test 05 - resolve started  ******************************");
         Path repositoriesAbsolute = Paths.get(getClass().getResource("/joc/repositories").toURI());
         Path repositoriesRelative = Paths.get("/repositories");
         Path pathStartsWithSlash = Paths.get("/ProductDemo");
@@ -137,29 +137,29 @@ public class RepositoryTest {
         Path oldPath = Paths.get("/aditi");
         Path newPath = Paths.get("/");
         Path oldItemPath = Paths.get("/aditi/TEST-JOC-1242/workflow");
-        LOGGER.debug("old Path: " + oldPath.toString());
-        LOGGER.debug("old item Path: " + oldItemPath.toString());
-        LOGGER.debug("new Path: " + newPath.toString());
+        LOGGER.trace("old Path: " + oldPath.toString());
+        LOGGER.trace("old item Path: " + oldItemPath.toString());
+        LOGGER.trace("new Path: " + newPath.toString());
 //        pWithoutFix.resolve(oldItemPath.relativize(oldItemPath))
-        LOGGER.debug("new path relativized: " + newPath.resolve(oldPath.relativize(oldItemPath)).toString());
-        LOGGER.debug("resolved path: " + oldPath.resolve(newPath).toString());        
-        LOGGER.debug("absolute Path of repositories: " + repositoriesAbsolute.toString());
-        LOGGER.debug("relative Path of repositories: " + repositoriesRelative.toString());
-        LOGGER.debug("Sub Path starting with slash: " + pathStartsWithSlash.toString());
-        LOGGER.debug("Sub Path not starting with slash: " + pathNotStartsWithSlash.toString());
-        LOGGER.debug("resolved path with slash:");
-        LOGGER.debug("absolute: " + repositoriesAbsolute.resolve(pathStartsWithSlash).toString());
-        LOGGER.debug("relative: " + repositoriesRelative.resolve(pathStartsWithSlash).toString());
-        LOGGER.debug("resolved path without slash:");
-        LOGGER.debug("absolute: " + repositoriesAbsolute.resolve(pathNotStartsWithSlash).toString());
-        LOGGER.debug("relative: " + repositoriesRelative.resolve(pathNotStartsWithSlash).toString());
-        LOGGER.debug("**************************  Test 05 - resolve finished  *****************************");
+        LOGGER.trace("new path relativized: " + newPath.resolve(oldPath.relativize(oldItemPath)).toString());
+        LOGGER.trace("resolved path: " + oldPath.resolve(newPath).toString());        
+        LOGGER.trace("absolute Path of repositories: " + repositoriesAbsolute.toString());
+        LOGGER.trace("relative Path of repositories: " + repositoriesRelative.toString());
+        LOGGER.trace("Sub Path starting with slash: " + pathStartsWithSlash.toString());
+        LOGGER.trace("Sub Path not starting with slash: " + pathNotStartsWithSlash.toString());
+        LOGGER.trace("resolved path with slash:");
+        LOGGER.trace("absolute: " + repositoriesAbsolute.resolve(pathStartsWithSlash).toString());
+        LOGGER.trace("relative: " + repositoriesRelative.resolve(pathStartsWithSlash).toString());
+        LOGGER.trace("resolved path without slash:");
+        LOGGER.trace("absolute: " + repositoriesAbsolute.resolve(pathNotStartsWithSlash).toString());
+        LOGGER.trace("relative: " + repositoriesRelative.resolve(pathNotStartsWithSlash).toString());
+        LOGGER.trace("**************************  Test 05 - resolve finished  *****************************");
    }
     
 //    @Ignore
     @Test
     public void test06JocAndRepoPaths() throws IOException, URISyntaxException {
-        LOGGER.debug("**************************  Test 06 - JOC and Repo paths started  *******************");
+        LOGGER.trace("**************************  Test 06 - JOC and Repo paths started  *******************");
         Path repositoryRolloutBaseAbsolute = Paths.get("C:/ProgramData/sos-berlin.com/js7/joc/jetty_base/resources/joc/repositories/rollout");
         Path repositoryLocalBaseAbsolute = Paths.get("C:/ProgramData/sos-berlin.com/js7/joc/jetty_base/resources/joc/repositories/local");
         Path oldPathJoc = Paths.get("/aditi");
@@ -172,16 +172,16 @@ public class RepositoryTest {
         Path newPathRolloutAbsolute = repositoryRolloutBaseAbsolute.resolve(newPathRelative);
         Path newPathLocalAbsolute = repositoryLocalBaseAbsolute.resolve(newPathRelative);
 
-        LOGGER.debug("repositoryRolloutBaseAbsolute: " + repositoryRolloutBaseAbsolute.toString().replace('\\', '/'));
-        LOGGER.debug("repositoryLocalBaseAbsolute: " + repositoryLocalBaseAbsolute.toString().replace('\\', '/'));
-        LOGGER.debug("oldPathJoc: " + oldPathJoc.toString().replace('\\', '/'));
-        LOGGER.debug("newPathJoc: " + newPathWithFolderJoc.toString().replace('\\', '/'));
-        LOGGER.debug("pathBaseJoc: " + pathBaseJoc.toString().replace('\\', '/'));
-        LOGGER.debug("oldPathRelative: " + oldPathRelative.toString().replace('\\', '/'));
-        LOGGER.debug("newPathRelative: " + newPathRelative.toString().replace('\\', '/'));
-        LOGGER.debug("newPathJocResolved: " + newPathJocResolved.toString().replace('\\', '/'));
-        LOGGER.debug("newPathRolloutAbsolute: " + newPathRolloutAbsolute.toString().replace('\\', '/'));
-        LOGGER.debug("newPathLocalAbsolute: " + newPathLocalAbsolute.toString().replace('\\', '/'));
+        LOGGER.trace("repositoryRolloutBaseAbsolute: " + repositoryRolloutBaseAbsolute.toString().replace('\\', '/'));
+        LOGGER.trace("repositoryLocalBaseAbsolute: " + repositoryLocalBaseAbsolute.toString().replace('\\', '/'));
+        LOGGER.trace("oldPathJoc: " + oldPathJoc.toString().replace('\\', '/'));
+        LOGGER.trace("newPathJoc: " + newPathWithFolderJoc.toString().replace('\\', '/'));
+        LOGGER.trace("pathBaseJoc: " + pathBaseJoc.toString().replace('\\', '/'));
+        LOGGER.trace("oldPathRelative: " + oldPathRelative.toString().replace('\\', '/'));
+        LOGGER.trace("newPathRelative: " + newPathRelative.toString().replace('\\', '/'));
+        LOGGER.trace("newPathJocResolved: " + newPathJocResolved.toString().replace('\\', '/'));
+        LOGGER.trace("newPathRolloutAbsolute: " + newPathRolloutAbsolute.toString().replace('\\', '/'));
+        LOGGER.trace("newPathLocalAbsolute: " + newPathLocalAbsolute.toString().replace('\\', '/'));
 
         Path wf1 = Paths.get("/aditi/TEST-JOC-1242/a-aditi");
         Path wf2 = Paths.get("/aditi/TEST-JOC-1242/b-aditi");
@@ -205,21 +205,21 @@ public class RepositoryTest {
         Path wf3NewPathWithoutFolderResolved = newPathWithoutFolderJoc.resolve(wf3Relativized);
         Path wf4NewPathWithoutFolderResolved = newPathWithoutFolderJoc.resolve(wf4Relativized);
         Path wf5NewPathWithoutFolderResolved = newPathWithoutFolderJoc.resolve(wf5Relativized);
-        LOGGER.debug("wf1Relativized: " + wf1Relativized.toString().replace('\\', '/'));
-        LOGGER.debug("wf2Relativized: " + wf2Relativized.toString().replace('\\', '/'));
-        LOGGER.debug("wf3Relativized: " + wf3Relativized.toString().replace('\\', '/'));
-        LOGGER.debug("wf4Relativized: " + wf4Relativized.toString().replace('\\', '/'));
-        LOGGER.debug("wf5Relativized: " + wf5Relativized.toString().replace('\\', '/'));
-        LOGGER.debug("wf1NewPathWithFolderResolved: " + wf1NewPathWithFolderResolved.toString().replace('\\', '/'));
-        LOGGER.debug("wf2NewPathWithFolderResolved: " + wf2NewPathWithFolderResolved.toString().replace('\\', '/'));
-        LOGGER.debug("wf3NewPathWithFolderResolved: " + wf3NewPathWithFolderResolved.toString().replace('\\', '/'));
-        LOGGER.debug("wf4NewPathWithFolderResolved: " + wf4NewPathWithFolderResolved.toString().replace('\\', '/'));
-        LOGGER.debug("wf5NewPathWithFolderResolved: " + wf5NewPathWithFolderResolved.toString().replace('\\', '/'));
-        LOGGER.debug("wf1NewPathWithoutFolderResolved: " + wf1NewPathWithoutFolderResolved.toString().replace('\\', '/'));
-        LOGGER.debug("wf2NewPathWithoutFolderResolved: " + wf2NewPathWithoutFolderResolved.toString().replace('\\', '/'));
-        LOGGER.debug("wf3NewPathWithoutFolderResolved: " + wf3NewPathWithoutFolderResolved.toString().replace('\\', '/'));
-        LOGGER.debug("wf4NewPathWithoutFolderResolved: " + wf4NewPathWithoutFolderResolved.toString().replace('\\', '/'));
-        LOGGER.debug("wf5NewPathWithoutFolderResolved: " + wf5NewPathWithoutFolderResolved.toString().replace('\\', '/'));
+        LOGGER.trace("wf1Relativized: " + wf1Relativized.toString().replace('\\', '/'));
+        LOGGER.trace("wf2Relativized: " + wf2Relativized.toString().replace('\\', '/'));
+        LOGGER.trace("wf3Relativized: " + wf3Relativized.toString().replace('\\', '/'));
+        LOGGER.trace("wf4Relativized: " + wf4Relativized.toString().replace('\\', '/'));
+        LOGGER.trace("wf5Relativized: " + wf5Relativized.toString().replace('\\', '/'));
+        LOGGER.trace("wf1NewPathWithFolderResolved: " + wf1NewPathWithFolderResolved.toString().replace('\\', '/'));
+        LOGGER.trace("wf2NewPathWithFolderResolved: " + wf2NewPathWithFolderResolved.toString().replace('\\', '/'));
+        LOGGER.trace("wf3NewPathWithFolderResolved: " + wf3NewPathWithFolderResolved.toString().replace('\\', '/'));
+        LOGGER.trace("wf4NewPathWithFolderResolved: " + wf4NewPathWithFolderResolved.toString().replace('\\', '/'));
+        LOGGER.trace("wf5NewPathWithFolderResolved: " + wf5NewPathWithFolderResolved.toString().replace('\\', '/'));
+        LOGGER.trace("wf1NewPathWithoutFolderResolved: " + wf1NewPathWithoutFolderResolved.toString().replace('\\', '/'));
+        LOGGER.trace("wf2NewPathWithoutFolderResolved: " + wf2NewPathWithoutFolderResolved.toString().replace('\\', '/'));
+        LOGGER.trace("wf3NewPathWithoutFolderResolved: " + wf3NewPathWithoutFolderResolved.toString().replace('\\', '/'));
+        LOGGER.trace("wf4NewPathWithoutFolderResolved: " + wf4NewPathWithoutFolderResolved.toString().replace('\\', '/'));
+        LOGGER.trace("wf5NewPathWithoutFolderResolved: " + wf5NewPathWithoutFolderResolved.toString().replace('\\', '/'));
         
         Path oldPathJoc2 = Paths.get("/Examples.Unix");
         Path newPathWithFolderJoc2 = Paths.get("/sp/2022-03-09/Examples.Unix");
@@ -228,21 +228,21 @@ public class RepositoryTest {
         Path oldItemPathRelativized = oldPathJoc2.relativize(oldItemPath);
         Path newPathWithFolderJoc2Resolved = newPathWithFolderJoc2.resolve(oldItemPathRelativized);
         Path newPathWithoutFolderJoc2Resolved = newPathWithoutFolderJoc2.resolve(oldItemPathRelativized);
-        LOGGER.debug("oldPathJoc 2: ", oldPathJoc2.toString().replace('\\', '/'));
-        LOGGER.debug("newPathWithFolderJoc 2: ", newPathWithFolderJoc2.toString().replace('\\', '/'));
-//        LOGGER.debug(": ", .toString().replace('\\', '/'));
-//        LOGGER.debug(": ", .toString().replace('\\', '/'));
-//        LOGGER.debug(": ", .toString().replace('\\', '/'));
-//        LOGGER.debug(": ", .toString().replace('\\', '/'));
-//        LOGGER.debug(": ", .toString().replace('\\', '/'));
+        LOGGER.trace("oldPathJoc 2: ", oldPathJoc2.toString().replace('\\', '/'));
+        LOGGER.trace("newPathWithFolderJoc 2: ", newPathWithFolderJoc2.toString().replace('\\', '/'));
+//        LOGGER.trace(": ", .toString().replace('\\', '/'));
+//        LOGGER.trace(": ", .toString().replace('\\', '/'));
+//        LOGGER.trace(": ", .toString().replace('\\', '/'));
+//        LOGGER.trace(": ", .toString().replace('\\', '/'));
+//        LOGGER.trace(": ", .toString().replace('\\', '/'));
         
-        LOGGER.debug("**************************  Test 06 - JOC and Repo paths finished  ******************");
+        LOGGER.trace("**************************  Test 06 - JOC and Repo paths finished  ******************");
     }
 
     @Ignore
     @Test
     public void test07JocAndRepoPaths() throws IOException, URISyntaxException {
-        LOGGER.debug("**************************  Test 07 - JOC and Repo paths started  *******************");
+        LOGGER.trace("**************************  Test 07 - JOC and Repo paths started  *******************");
         Path root = Paths.get("/");
         Path localBase = Paths.get(getClass().getResource("/joc/repositories/local").toURI());
         Path rolloutBase = Paths.get(getClass().getResource("/joc/repositories/rollout").toURI());
@@ -252,25 +252,25 @@ public class RepositoryTest {
         Path rolloutFolderRel  = root.relativize(rolloutFolder);
         Path localAbs = localBase.resolve(localFolderRel);
         Path rolloutAbs = rolloutBase.resolve(rolloutFolderRel);
-        LOGGER.debug("from local repository:");
+        LOGGER.trace("from local repository:");
         TreeSet<Path> entries = RepositoryUtil.readRepositoryAsTreeSet(localAbs);
         if(entries.contains(localAbs)) {
             entries.remove(localAbs);
         }
         for(Path path: entries) {
             Path rel = localBase.relativize(path);
-            LOGGER.debug("path: " + localFolder.resolve(rel));
+            LOGGER.trace("path: " + localFolder.resolve(rel));
         }
-        LOGGER.debug("from remote repository:");
+        LOGGER.trace("from remote repository:");
         entries = RepositoryUtil.readRepositoryAsTreeSet(rolloutAbs);
         if(entries.contains(rolloutAbs)) {
             entries.remove(rolloutAbs);
         }
         for(Path path: entries) {
             Path rel = rolloutBase.relativize(path);
-            LOGGER.debug("path: " + localFolder.resolve(rel));
+            LOGGER.trace("path: " + localFolder.resolve(rel));
         }
-        LOGGER.debug("**************************  Test 07 - JOC and Repo paths finished  ******************");
+        LOGGER.trace("**************************  Test 07 - JOC and Repo paths finished  ******************");
     }
 
 }

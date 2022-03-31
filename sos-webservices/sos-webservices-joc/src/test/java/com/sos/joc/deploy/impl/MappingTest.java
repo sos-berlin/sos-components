@@ -28,6 +28,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
@@ -73,22 +74,21 @@ public class MappingTest {
         }
     }
 
-//    @Test
-//    public void test02WorkflowToControllerObject() {
-//        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-//        Workflow ifElseWorkflow = null;
-//        try {
-//            ifElseWorkflow = om.readValue(IF_ELSE_JSON, Workflow.class);
-//        } catch (JsonParseException | JsonMappingException e) {
-//            Assert.fail(e.toString());
-//        } catch (IOException e) {
-//            Assert.fail(e.toString());
-//        }
-//        ControllerObject jsObject = new ControllerObject();
-//        jsObject.setContent(ifElseWorkflow);
-//        Assert.assertEquals("/test/IfElseWorkflow", ((com.sos.sign.model.workflow.Workflow) jsObject.getContent()).getPath());
-//        LOGGER.info("IfElse Workflow JSON mapped to java object successfully!");
-//    }
+    @Test
+    public void test02WorkflowToControllerObject() {
+        Workflow ifElseWorkflow = null;
+        try {
+            ifElseWorkflow = Globals.objectMapper.readValue(IF_ELSE_JSON, Workflow.class);
+        } catch (JsonParseException | JsonMappingException e) {
+            Assert.fail(e.toString());
+        } catch (IOException e) {
+            Assert.fail(e.toString());
+        }
+        ControllerObject jsObject = new ControllerObject();
+        jsObject.setContent(ifElseWorkflow);
+        Assert.assertEquals("/test/IfElseWorkflow", ((com.sos.sign.model.workflow.Workflow) jsObject.getContent()).getPath());
+        LOGGER.trace("IfElse Workflow JSON mapped to java object successfully!");
+    }
 
     @Test
     public void test04JsonStringToWorkflow() {
@@ -388,9 +388,9 @@ public class MappingTest {
         LOGGER.trace("GitCredentials - with path to key file (ssh)");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGitCredentialsKeyfilePath()));
         LOGGER.trace("GetCredentialsFilter");
-//        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGetGitCredentialsFilter()));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGetGitCredentialsFilter()));
         LOGGER.trace("SetCredentialsFilter");
-//        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleStoreGitCredentialsFilter()));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleStoreGitCredentialsFilter()));
     }
     
 }
