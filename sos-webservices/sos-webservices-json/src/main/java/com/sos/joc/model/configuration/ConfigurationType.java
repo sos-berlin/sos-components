@@ -13,7 +13,8 @@ public enum ConfigurationType {
     PROFILE("PROFILE"),
     SETTING("SETTING"),
     GLOBALS("GLOBALS"),
-    IAM("IAM");
+    IAM("IAM"),
+    GIT("GIT");
     private final String value;
     private final static Map<String, ConfigurationType> CONSTANTS = new HashMap<String, ConfigurationType>();
 
