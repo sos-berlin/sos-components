@@ -19,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "credentials"
+    "credentials",
+    "remoteUris"
 })
 public class GitCredentialsList {
 
@@ -30,6 +31,8 @@ public class GitCredentialsList {
      */
     @JsonProperty("credentials")
     private List<GitCredentials> credentials = new ArrayList<GitCredentials>();
+    @JsonProperty("remoteUris")
+    private List<String> remoteUris = new ArrayList<String>();
 
     /**
      * 
@@ -51,14 +54,24 @@ public class GitCredentialsList {
         this.credentials = credentials;
     }
 
+    @JsonProperty("remoteUris")
+    public List<String> getRemoteUris() {
+        return remoteUris;
+    }
+
+    @JsonProperty("remoteUris")
+    public void setRemoteUris(List<String> remoteUris) {
+        this.remoteUris = remoteUris;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("credentials", credentials).toString();
+        return new ToStringBuilder(this).append("credentials", credentials).append("remoteUris", remoteUris).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(credentials).toHashCode();
+        return new HashCodeBuilder().append(remoteUris).append(credentials).toHashCode();
     }
 
     @Override
@@ -70,7 +83,7 @@ public class GitCredentialsList {
             return false;
         }
         GitCredentialsList rhs = ((GitCredentialsList) other);
-        return new EqualsBuilder().append(credentials, rhs.credentials).isEquals();
+        return new EqualsBuilder().append(remoteUris, rhs.remoteUris).append(credentials, rhs.credentials).isEquals();
     }
 
 }

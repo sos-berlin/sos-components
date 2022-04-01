@@ -207,19 +207,41 @@ public class GitCommand {
     }
     
     public static GitCommandResult executeGitClone(String remoteRepositoryUri) {
-        return executeGitClone(remoteRepositoryUri, null, null);
+        return executeGitClone(remoteRepositoryUri, null, null, null);
+    }
+    
+    public static GitCommandResult executeGitClone(String remoteRepositoryUri, String targetFolder) {
+        return executeGitClone(remoteRepositoryUri, targetFolder, null, null);
     }
     
     public static GitCommandResult executeGitClone(String remoteRepositoryUri, Path repository) {
-        return executeGitClone(remoteRepositoryUri, repository, null);
+        return executeGitClone(remoteRepositoryUri, null, repository, null);
+    }
+    
+    public static GitCommandResult executeGitClone(String remoteRepositoryUri, String targetFolder, Path repository) {
+        return executeGitClone(remoteRepositoryUri, targetFolder, repository, null);
     }
     
     public static GitCommandResult executeGitClone(String remoteRepositoryUri, Path repository, Path workingDir) {
+        return executeGitClone(remoteRepositoryUri, null, repository, workingDir);
+    }
+    
+    public static GitCommandResult executeGitClone(String remoteRepositoryUri, String targetFolder, Path repository, Path workingDir) {
         if (repository == null) {
+            if (targetFolder != null) {
+                return GitUtil.createGitCloneCommandResult(SOSShell.executeCommand(
+                        String.format("%1$s%2$s %3$s", GitCommandConstants.CMD_GIT_CLONE, remoteRepositoryUri, targetFolder)));
+            }
             return GitUtil.createGitCloneCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri));
         } else {
-            GitCommandResult result = GitUtil.createGitCloneCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri)),
+            String pathifiedCommand = null;
+            if (targetFolder != null) {
+                pathifiedCommand = getPathifiedCommand(repository, workingDir, 
+                        String.format("%1$s%2$s %3$s", GitCommandConstants.CMD_GIT_CLONE, remoteRepositoryUri, targetFolder));
+            } else {
+                pathifiedCommand = getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri);
+            }
+            GitCommandResult result = GitUtil.createGitCloneCommandResult(SOSShell.executeCommand(pathifiedCommand),
                     GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri);
             if(workingDir != null) {
                 SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
