@@ -532,7 +532,7 @@ public class DailyPlanRunner extends TimerTask {
                     }
                     continue;
                 } else {
-                    if (namesSize > 0) {
+                    if (namesSize > 1) {
                         if (dpw.getContent() != null) {
                             try {
                                 Workflow w = objectMapper.readValue(dpw.getContent(), Workflow.class);
