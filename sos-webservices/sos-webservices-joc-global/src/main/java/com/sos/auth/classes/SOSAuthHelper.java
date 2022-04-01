@@ -118,6 +118,10 @@ public class SOSAuthHelper {
 
 	public static SOSInitialPasswordSetting getInitialPasswordSettings(SOSHibernateSession sosHibernateSession)
 			throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
+	    
+	    if (sosHibernateSession == null){
+	            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSAuthHelper");
+	    }
 		SOSInitialPasswordSetting sosInitialPasswordSetting = new SOSInitialPasswordSetting();
 		JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
 		JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();

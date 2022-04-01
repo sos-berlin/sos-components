@@ -16,7 +16,11 @@ import org.apache.shiro.mgt.SecurityManager;
 import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Profile;
 import org.ini4j.Wini;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthHelper;
+import com.sos.auth.classes.SOSInitialPasswordSetting;
 import com.sos.auth.interfaces.ISOSSecurityConfiguration;
 import com.sos.auth.shiro.classes.SOSShiroIniShare;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -28,7 +32,6 @@ import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.security.configuration.permissions.IniPermissions;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.SecurityConfigurationAccount;
 import com.sos.joc.model.security.configuration.SecurityConfigurationMainEntry;
@@ -37,10 +40,13 @@ import com.sos.joc.model.security.configuration.SecurityConfigurationRoles;
 import com.sos.joc.model.security.configuration.permissions.ControllerFolders;
 import com.sos.joc.model.security.configuration.permissions.IniControllers;
 import com.sos.joc.model.security.configuration.permissions.IniPermission;
+import com.sos.joc.model.security.configuration.permissions.IniPermissions;
 import com.sos.joc.model.security.configuration.permissions.SecurityConfigurationFolders;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecurityConfiguration.class);
 
     private static final String SECTION_USERS = "users";
     private static final String SECTION_ROLES = "roles";
@@ -242,6 +248,17 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
             accounts.stream().distinct().forEachOrdered(securityConfigurationAccount -> {
                 SOSSecurityConfigurationAccountEntry sosSecurityConfigurationAccountEntry = new SOSSecurityConfigurationAccountEntry(
                         securityConfigurationAccount, oldSection, sosSecurityHashSettings);
+                if ((securityConfigurationAccount.getPassword() == null || securityConfigurationAccount.getPassword().isEmpty())) {
+                    SOSInitialPasswordSetting sosInitialPasswordSetting;
+                    try {
+                        sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(null);
+                        String initialPassword = sosInitialPasswordSetting.getInitialPassword();
+                        securityConfigurationAccount.setPassword(initialPassword);
+                    } catch (SOSHibernateException | IOException e) {
+                        LOGGER.error("",e);
+                    }
+
+                }
                 if ((securityConfigurationAccount.getPassword() != null && !securityConfigurationAccount.getPassword().isEmpty())
                         || !securityConfigurationAccount.getRoles().isEmpty()) {
                     s.put(securityConfigurationAccount.getAccountName(), sosSecurityConfigurationAccountEntry.getIniWriteString());
