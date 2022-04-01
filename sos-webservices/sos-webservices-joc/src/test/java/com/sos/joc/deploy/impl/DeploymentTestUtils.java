@@ -53,6 +53,18 @@ import com.sos.joc.model.publish.git.GetCredentialsFilter;
 import com.sos.joc.model.publish.git.GitCredentials;
 import com.sos.joc.model.publish.git.RemoveCredentials;
 import com.sos.joc.model.publish.git.RemoveCredentialsFilter;
+import com.sos.joc.model.publish.git.commands.AddAllFilter;
+import com.sos.joc.model.publish.git.commands.CheckoutFilter;
+import com.sos.joc.model.publish.git.commands.CloneFilter;
+import com.sos.joc.model.publish.git.commands.CommitFilter;
+import com.sos.joc.model.publish.git.commands.CommonFilter;
+import com.sos.joc.model.publish.git.commands.LogFilter;
+import com.sos.joc.model.publish.git.commands.PullFilter;
+import com.sos.joc.model.publish.git.commands.PushFilter;
+import com.sos.joc.model.publish.git.commands.ResetFilter;
+import com.sos.joc.model.publish.git.commands.RestoreFilter;
+import com.sos.joc.model.publish.git.commands.StatusFilter;
+import com.sos.joc.model.publish.git.commands.TagFilter;
 import com.sos.joc.model.publish.repository.Category;
 import com.sos.joc.model.publish.repository.Configurations;
 import com.sos.joc.model.publish.repository.CopyToFilter;
@@ -989,6 +1001,97 @@ public class DeploymentTestUtils {
         toRemove.add(cred);
         removeCredFilter.setCredentials(toRemove);
         return removeCredFilter;
+    }
+    
+    public static CommonFilter createExampleAddAllFilter () {
+        CommonFilter addAllFilter = new CommonFilter();
+        addAllFilter.setFolder("/JSDemo");
+        addAllFilter.setCategory(Category.ROLLOUT);
+        return addAllFilter;
+    }
+
+    public static CheckoutFilter createExampleCheckoutBranchFilter () {
+        CheckoutFilter checkoutFilter = new CheckoutFilter();
+        checkoutFilter.setBranch("master");
+        checkoutFilter.setFolder("/JSDemo");
+        checkoutFilter.setCategory(Category.ROLLOUT);
+        return checkoutFilter;
+    }
+
+    public static CheckoutFilter createExampleCheckoutTagFilter () {
+        CheckoutFilter checkoutFilter = new CheckoutFilter();
+        checkoutFilter.setTag("v1.0.0");
+        checkoutFilter.setFolder("/JSDemo");
+        checkoutFilter.setCategory(Category.ROLLOUT);
+        return checkoutFilter;
+    }
+
+    public static CloneFilter createExampleCloneFilter () {
+        CloneFilter cloneFilter = new CloneFilter();
+        cloneFilter.setRemoteUri("git@github.com:sos-berlin/JS7Demo.git");
+        cloneFilter.setFolder("/JSDemo");
+        cloneFilter.setCategory(Category.ROLLOUT);
+        return cloneFilter;
+    }
+
+    public static CommitFilter createExampleCommitFilter () {
+        CommitFilter commitFilter = new CommitFilter();
+        commitFilter.setFolder("/JSDemo");
+        commitFilter.setCategory(Category.ROLLOUT);
+        commitFilter.setMessage("This is a commit message.");
+        return commitFilter;
+    }
+
+    public static CommonFilter createExampleLogFilter () {
+        CommonFilter logFilter = new CommonFilter();
+        logFilter.setFolder("/JSDemo");
+        logFilter.setCategory(Category.ROLLOUT);
+        return logFilter;
+    }
+
+    public static CommonFilter createExamplePullFilter () {
+        CommonFilter pullFilter = new CommonFilter();
+        pullFilter.setFolder("/JSDemo");
+        pullFilter.setCategory(Category.ROLLOUT);
+        return pullFilter;
+    }
+
+    public static CommonFilter createExamplePushFilter () {
+        CommonFilter pushFilter = new CommonFilter();
+        pushFilter.setFolder("/JSDemo");
+        pushFilter.setCategory(Category.ROLLOUT);
+        return pushFilter;
+    }
+
+    public static CommonFilter createExampleResetAllFilter () {
+        CommonFilter resetFilter = new CommonFilter();
+        resetFilter.setFolder("/JSDemo");
+        resetFilter.setCategory(Category.ROLLOUT);
+        
+        return resetFilter;
+    }
+
+    public static CommonFilter createExampleRestoreAllFilter () {
+        CommonFilter restoreFilter = new CommonFilter();
+        restoreFilter.setFolder("/JSDemo");
+        restoreFilter.setCategory(Category.ROLLOUT);
+        return restoreFilter;
+    }
+
+    public static CommonFilter createExampleStatusFilter () {
+        CommonFilter statusFilter = new CommonFilter();
+        statusFilter.setFolder("/JSDemo");
+        statusFilter.setCategory(Category.ROLLOUT);
+        return statusFilter;
+    }
+
+    public static TagFilter createExampleTagFilter () {
+        TagFilter tagFilter = new TagFilter();
+        tagFilter.setFolder("/JSDemo");
+        tagFilter.setCommitHash("e58abc37caee531d6f791e0b976a4baf39185186");
+        tagFilter.setName("v1.0.0");
+        tagFilter.setCategory(Category.ROLLOUT);
+        return tagFilter;
     }
 
 }

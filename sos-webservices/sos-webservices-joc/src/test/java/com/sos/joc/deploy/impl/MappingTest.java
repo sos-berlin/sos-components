@@ -395,4 +395,31 @@ public class MappingTest {
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleRemoveGitCredentialsFilter()));
     }
     
+    @Test
+    public void test26GitCommandsFilter () throws JsonProcessingException {
+        LOGGER.trace("Git Commands - Add all");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleAddAllFilter()));
+        LOGGER.trace("Git Commands - commit");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleCommitFilter()));
+        LOGGER.trace("Git Commands - checkout (branch)");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleCheckoutBranchFilter()));
+        LOGGER.trace("Git Commands - checkout (tag)");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleCheckoutTagFilter()));
+        LOGGER.trace("Git Commands - clone");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleCloneFilter()));
+        LOGGER.trace("Git Commands - pull");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExamplePullFilter()));
+        LOGGER.trace("Git Commands - push");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExamplePushFilter()));
+        LOGGER.trace("Git Commands - tag");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleTagFilter()));
+        LOGGER.trace("Git Commands - reset");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleResetAllFilter()));
+        LOGGER.trace("Git Commands - restore");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleRestoreAllFilter()));
+        LOGGER.trace("Git Commands - log");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleLogFilter()));
+        LOGGER.trace("Git Commands - status");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleStatusFilter()));
+    }
 }
