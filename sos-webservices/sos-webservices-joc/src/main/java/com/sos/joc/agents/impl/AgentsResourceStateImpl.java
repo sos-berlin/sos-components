@@ -36,8 +36,10 @@ import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentState;
 import com.sos.joc.model.agent.AgentStateText;
+import com.sos.joc.model.agent.AgentStateV;
 import com.sos.joc.model.agent.AgentV;
 import com.sos.joc.model.agent.AgentsV;
+import com.sos.joc.model.agent.AgentsVFlat;
 import com.sos.joc.model.agent.ReadAgentsV;
 import com.sos.joc.model.agent.SubagentV;
 import com.sos.joc.model.common.Folder;
@@ -108,7 +110,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             Map<String, List<SubagentV>> subagentsPerAgentId = new HashMap<>();
 
             boolean withStateFilter = agentsParam.getStates() != null && !agentsParam.getStates().isEmpty();
-            AgentsV agents = new AgentsV();
+            Instant currentStateMoment = null;
 
             if (dbAgents != null) {
 
@@ -118,7 +120,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 try {
                     JControllerProxy proxy = Proxy.of(controllerId);
                     JControllerState currentState = proxy.currentState();
-                    Instant currentStateMoment = currentState.instant();
+                    currentStateMoment = currentState.instant();
                     Long surveyDateMillis = currentStateMoment.toEpochMilli();
                     boolean olderThan30sec = currentStateMoment.isBefore(Instant.now().minusSeconds(30));
                     LOGGER.debug("current state older than 30sec? " + olderThan30sec + ",  Proxies.isCoupled? " + Proxies.isCoupled(controllerId));
@@ -135,7 +137,6 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         } catch (Exception e) {
                         }
                     }
-                    agents.setSurveyDate(Date.from(currentStateMoment));
 
                     List<JOrder> jOrders = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing.class)).filter(o -> o
                             .attached() != null && o.attached().isRight()).collect(Collectors.toList());
@@ -233,6 +234,9 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                             }
                             agent.setState(getState(stateText));
                         } else { // cluster agents (subagents are already filtered)
+                            if (agentsParam.getFlat() == Boolean.TRUE) {
+                                return null;
+                            }
                             if (withStateFilter && agent.getSubagents().isEmpty()) {
                                 return null;
                             }
@@ -267,11 +271,22 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                     }).filter(Objects::nonNull).collect(Collectors.toList()));
                 }
             }
+            if (agentsParam.getFlat() == Boolean.TRUE) {
+                AgentsVFlat agents = new AgentsVFlat();
+                agents.setSurveyDate(Date.from(currentStateMoment));
+                agents.setDeliveryDate(Date.from(Instant.now()));
+                agents.setAgents(Stream.concat(agentsList.stream(), subagentsPerAgentId.values().stream().flatMap(List::stream)).sorted(Comparator
+                        .comparingInt(AgentStateV::getRunningTasks).reversed()).collect(Collectors.toList()));
 
-            agents.setDeliveryDate(Date.from(Instant.now()));
-            agents.setAgents(agentsList);
+                return JOCDefaultResponse.responseStatus200(agents);
+            } else {
+                AgentsV agents = new AgentsV();
+                agents.setSurveyDate(Date.from(currentStateMoment));
+                agents.setDeliveryDate(Date.from(Instant.now()));
+                agents.setAgents(agentsList);
 
-            return JOCDefaultResponse.responseStatus200(agents);
+                return JOCDefaultResponse.responseStatus200(agents);
+            }
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

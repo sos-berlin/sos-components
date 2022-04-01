@@ -24,7 +24,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "agentIds",
     "states",
     "onlyEnabledAgents",
-    "compact"
+    "compact",
+    "flat"
 })
 public class ReadAgentsV {
 
@@ -52,6 +53,8 @@ public class ReadAgentsV {
     @JsonProperty("compact")
     @JsonPropertyDescription("controls if the object's data is compact or detailed")
     private Boolean compact = false;
+    @JsonProperty("flat")
+    private Boolean flat = false;
 
     /**
      * controllerId
@@ -129,14 +132,24 @@ public class ReadAgentsV {
         this.compact = compact;
     }
 
+    @JsonProperty("flat")
+    public Boolean getFlat() {
+        return flat;
+    }
+
+    @JsonProperty("flat")
+    public void setFlat(Boolean flat) {
+        this.flat = flat;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("states", states).append("onlyEnabledAgents", onlyEnabledAgents).append("compact", compact).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("states", states).append("onlyEnabledAgents", onlyEnabledAgents).append("compact", compact).append("flat", flat).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentIds).append(controllerId).append(onlyEnabledAgents).append(compact).append(states).toHashCode();
+        return new HashCodeBuilder().append(agentIds).append(controllerId).append(compact).append(flat).append(onlyEnabledAgents).append(states).toHashCode();
     }
 
     @Override
@@ -148,7 +161,7 @@ public class ReadAgentsV {
             return false;
         }
         ReadAgentsV rhs = ((ReadAgentsV) other);
-        return new EqualsBuilder().append(agentIds, rhs.agentIds).append(controllerId, rhs.controllerId).append(onlyEnabledAgents, rhs.onlyEnabledAgents).append(compact, rhs.compact).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(agentIds, rhs.agentIds).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(flat, rhs.flat).append(onlyEnabledAgents, rhs.onlyEnabledAgents).append(states, rhs.states).isEquals();
     }
 
 }
