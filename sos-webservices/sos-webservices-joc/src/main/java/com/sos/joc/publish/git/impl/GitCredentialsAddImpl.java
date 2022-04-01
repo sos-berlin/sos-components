@@ -15,7 +15,6 @@ import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
@@ -25,7 +24,6 @@ import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.publish.git.AddCredentialsFilter;
 import com.sos.joc.model.publish.git.GitCredentials;
 import com.sos.joc.model.publish.git.GitCredentialsList;
-import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.publish.git.resource.IGitCredentialsAdd;
 import com.sos.schema.JsonValidator;
 
@@ -39,7 +37,8 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
     public JOCDefaultResponse postAddCredentials(String xAccessToken, byte[] addCredentialsFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            LOGGER.trace("*** add credentials started ***" + Date.from(Instant.now()));
+            Date started = Date.from(Instant.now());
+            LOGGER.info("*** add credentials started ***" + started);
             initLogging(API_CALL, addCredentialsFilter, xAccessToken);
             JsonValidator.validate(addCredentialsFilter, AddCredentialsFilter.class);
             AddCredentialsFilter filter = Globals.objectMapper.readValue(addCredentialsFilter, AddCredentialsFilter.class);
@@ -48,7 +47,7 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
                 return jocDefaultResponse;
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBItemJocAuditLog dbAudit = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
             String account = null;
             
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
@@ -90,6 +89,9 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
             }
             dbItem.setConfigurationItem(Globals.objectMapper.writeValueAsString(credList));
             dbLayer.saveOrUpdateConfiguration(dbItem);
+            Date finished = Date.from(Instant.now());
+            LOGGER.info("*** add credentials finished ***" + finished);
+            LOGGER.info(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

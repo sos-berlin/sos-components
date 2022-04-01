@@ -51,6 +51,8 @@ import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.model.publish.git.AddCredentialsFilter;
 import com.sos.joc.model.publish.git.GetCredentialsFilter;
 import com.sos.joc.model.publish.git.GitCredentials;
+import com.sos.joc.model.publish.git.RemoveCredentials;
+import com.sos.joc.model.publish.git.RemoveCredentialsFilter;
 import com.sos.joc.model.publish.repository.Category;
 import com.sos.joc.model.publish.repository.Configurations;
 import com.sos.joc.model.publish.repository.CopyToFilter;
@@ -977,4 +979,16 @@ public class DeploymentTestUtils {
         addCredFilter.setCredentials(credentials);
         return addCredFilter;
     }
+
+    public static RemoveCredentialsFilter createExampleRemoveGitCredentialsFilter() {
+        RemoveCredentialsFilter removeCredFilter = new RemoveCredentialsFilter();
+        List<RemoveCredentials> toRemove = new ArrayList<RemoveCredentials>();
+        RemoveCredentials cred = new RemoveCredentials();
+        cred.setGitAccount("myExampleGitAccount");
+        cred.setGitServer("my-example-remote.git-host.net");
+        toRemove.add(cred);
+        removeCredFilter.setCredentials(toRemove);
+        return removeCredFilter;
+    }
+
 }

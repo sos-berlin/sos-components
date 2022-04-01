@@ -1,5 +1,8 @@
 package com.sos.joc.repository;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -12,6 +15,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.junit.AfterClass;
@@ -273,4 +278,50 @@ public class RepositoryTest {
         LOGGER.trace("**************************  Test 07 - JOC and Repo paths finished  ******************");
     }
 
+    @Test
+    public void test08ParsePaths() throws IOException, URISyntaxException {
+        String regex = "^[a-zA-Z]:?([\\\\|[^/\\\\<>?:\\\"\\n,!|*]][^/\\\\<>?:\\\"\\n,!|*]+)+\\\\?$|^([/|[^/\\\\<>?:\\\"\\n,!|*]][^/\\\\<>?:\\\"\\n,!|*]+)+$";
+        Pattern pat = Pattern.compile(regex);
+        // absolute path, relative path
+        Path linux_path_abs = Paths.get("/some/absolute/path/test");
+        Path linux_path_abs_with_spaces = Paths.get("/some/absolute/path/with spaces/test");
+        Path linux_path_rel = Paths.get("some/relative/path/test");
+        Path linux_path_rel_with_spaces = Paths.get("some/relative/path/with spaces/test");
+        Path win_path_abs = Paths.get("C:\\some\\absolute\\path\\test");
+        Path win_path_abs_with_spaces = Paths.get("C:\\some\\absolute\\path\\with spaces\\test");
+        Path win_path_rel = Paths.get("some\\relative\\path\\test");
+        Path win_path_rel_with_spaces = Paths.get("some\\relative\\path\\with spaces\\test");
+        Matcher linAbs = pat.matcher(linux_path_abs.toString().replace('\\', '/'));
+        Matcher linAbsWithSpaces = pat.matcher(linux_path_abs_with_spaces.toString().replace('\\', '/'));
+        Matcher linRel = pat.matcher(linux_path_rel.toString().replace('\\', '/'));
+        Matcher linRelWithSpaces = pat.matcher(linux_path_rel_with_spaces.toString().replace('\\', '/'));
+        Matcher winAbs = pat.matcher(win_path_abs.toString());
+        Matcher winAbsWithSpaces = pat.matcher(win_path_abs_with_spaces.toString());
+        Matcher winRel = pat.matcher(win_path_rel.toString());
+        Matcher winRelWithSpaces = pat.matcher(win_path_rel_with_spaces.toString());
+        assertTrue(linAbs.matches());
+        assertTrue(linAbsWithSpaces.matches());
+        assertTrue(linRel.matches());
+        assertTrue(linRelWithSpaces.matches());
+        assertTrue(winAbs.matches());
+        assertTrue(winAbsWithSpaces.matches());
+        assertTrue(winRel.matches());
+        assertTrue(winRelWithSpaces.matches());
+        // filename
+        Matcher filename = pat.matcher("linux_filename");
+        Matcher filenameWithSpace = pat.matcher("win filename with spaces.txt");
+        assertTrue(filename.matches());
+        assertTrue(filenameWithSpace.matches());
+        // no path
+        String noPath1 = "not a path!";
+        String noPath2 = "also, not a path.";
+        String noPath3 = "and just another <> so path";
+        Matcher not1 = pat.matcher(noPath1);
+        Matcher not2 = pat.matcher(noPath2);
+        Matcher not3 = pat.matcher(noPath3);
+        assertFalse(not1.matches());
+        assertFalse(not2.matches());
+        assertFalse(not3.matches());
+    }
+    
 }
