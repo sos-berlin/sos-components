@@ -43,6 +43,7 @@ import com.sos.joc.model.agent.AgentsVFlat;
 import com.sos.joc.model.agent.ReadAgentsV;
 import com.sos.joc.model.agent.SubagentV;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.inventory.deploy.ResponseDeployableTreeItem;
 import com.sos.joc.model.order.OrderV;
 import com.sos.schema.JsonValidator;
 
@@ -180,7 +181,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                     if (optProblem.isPresent()) {
                                         subagent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
                                     }
-                                    stateText = getAgentStateText(couplingState, optProblem);
+                                    stateText = getAgentStateText(couplingState, optProblem, dbSubAgent.getIsDirector() == 1);
                                 }
                             }
                             if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
@@ -195,7 +196,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                     subagent.setRunningTasks(subagent.getOrders().size());
                                 }
                             }
-                            subagent.setState(getState(stateText));
+                            subagent.setState(getState(stateText)); 
+                            //Comparator.comparing(SubagentV::getIsDirector).thenComparingInt(SubagentV::getRunningTasks).reversed();
                             return subagent;
                         }).filter(Objects::nonNull).sorted(Comparator.comparingInt(SubagentV::getRunningTasks).reversed()).collect(Collectors
                                 .toList()));
@@ -217,7 +219,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                     if (optProblem.isPresent()) {
                                         agent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
                                     }
-                                    stateText = getAgentStateText(couplingState, optProblem);
+                                    stateText = getAgentStateText(couplingState, optProblem, false);
                                 }
                             }
                             if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
@@ -335,7 +337,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         return agent;
     }
 
-    private static AgentStateText getAgentStateText(DelegateCouplingState couplingState, Optional<Problem> optProblem) {
+    private static AgentStateText getAgentStateText(DelegateCouplingState couplingState, Optional<Problem> optProblem, boolean isDirector) {
         if (couplingState instanceof DelegateCouplingState.ShutDown$) {
             return AgentStateText.SHUTDOWN;
         } else if (optProblem.isPresent()) {
@@ -345,7 +347,10 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         } else if (couplingState instanceof DelegateCouplingState.Resetting$) {
             return AgentStateText.RESETTING;
         } else if (couplingState instanceof DelegateCouplingState.Reset$) {
-            return AgentStateText.RESET;
+            if (!isDirector) {
+                return AgentStateText.RESET;
+            }
+            return AgentStateText.COUPLED;
         }
         return AgentStateText.UNKNOWN;
     }
