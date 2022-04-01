@@ -261,7 +261,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 DailyPlanCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
             }
 
-            if (configuration.getConfigurationType() != ConfigurationType.CUSTOMIZATION) {
+            if (configuration.getConfigurationType() != ConfigurationType.CUSTOMIZATION && configuration.getConfigurationType() != ConfigurationType.PROFILE ) {
                 storeAuditLog(configuration.getAuditLog(), CategoryType.SETTINGS);
             }
 
