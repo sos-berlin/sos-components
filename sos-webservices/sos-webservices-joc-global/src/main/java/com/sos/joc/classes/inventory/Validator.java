@@ -158,12 +158,25 @@ public class Validator {
                     validateAgentRefs(json, agentDBLayer, enabledAgentNames);
                 } else if (ConfigurationType.SCHEDULE.equals(type)) {
                     Schedule schedule = (Schedule) config;
-                    //String json = validateWorkflowRef(schedule.getWorkflowName(), dbLayer, "$.workflowName");
                     validateCalendarRefs(schedule, dbLayer);
-                    //if (json != null) {
-                    //    Workflow workflowOfSchedule = Globals.objectMapper.readValue(json, Workflow.class);
-                    //    validateVariableSets(schedule.getVariableSets(), workflowOfSchedule.getOrderPreparation(), "$.variableSets");
-                    //}
+
+                    schedule = JocInventory.setWorkflowNames(schedule);
+                    int namesSize = schedule.getWorkflowNames().size();
+                    String position = "$.workflowNames";
+                    for (String workflowName : schedule.getWorkflowNames()) {
+                        String json = validateWorkflowRef(workflowName, dbLayer, position);
+                        Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
+                        Requirements r = w.getOrderPreparation();
+                        if (namesSize >= JocInventory.SCHEDULE_MIN_MULTIPLE_WORKFLOWS_SIZE) {// check only multiple workflows
+                            if (r != null && r.getParameters() != null && r.getParameters().getAdditionalProperties() != null && r.getParameters()
+                                    .getAdditionalProperties().size() > 0) {
+                                throw new JocConfigurationException(String.format(
+                                        "%s: Multiple workflows with order variables are not permitted: schedule=%s, workflowName=%s, %s order variables",
+                                        position, schedule.getPath(), workflowName, r.getParameters().getAdditionalProperties().size()));
+                            }
+                        }
+                        validateVariableSets(schedule.getVariableSets(), r, "$.variableSets");
+                    }
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
                     validateWorkflowRef(fileOrderSource.getWorkflowName(), dbLayer, "$.workflowName");
@@ -593,6 +606,7 @@ public class Validator {
         args.keySet().forEach(key -> validateKey(key, position));
     }
 
+    @SuppressWarnings("unused")
     private static void validateArguments(Environment arguments, Requirements orderPreparation, String position) throws JocConfigurationException {
         final Map<String, Parameter> params = (orderPreparation != null && orderPreparation.getParameters() != null) ? orderPreparation
                 .getParameters().getAdditionalProperties() : Collections.emptyMap();
@@ -645,6 +659,7 @@ public class Validator {
         }
     }
 
+    @SuppressWarnings("unused")
     private static void validateVariableSets(List<VariableSet> variableSets, Requirements orderPreparation, String position)
             throws JocConfigurationException {
         if (variableSets != null) {
@@ -661,6 +676,7 @@ public class Validator {
         }
     }
 
+    @SuppressWarnings("unused")
     private static void validateJobArguments(Jobs jobs, Requirements orderPreparation) {
         if (jobs != null) {
             jobs.getAdditionalProperties().forEach((key, value) -> {

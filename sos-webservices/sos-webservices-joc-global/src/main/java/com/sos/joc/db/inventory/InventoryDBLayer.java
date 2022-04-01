@@ -1475,7 +1475,7 @@ public class InventoryDBLayer extends DBLayer {
 
         Query<String> query = getSession().createQuery(hql.toString());
         query.setParameter("name", name.toLowerCase());
-        query.setParameter("type", type);
+        query.setParameter("type", type.intValue());
 
         List<String> result = getSession().getResultList(query);
         return result == null || result.size() == 0 ? null : result.get(0);

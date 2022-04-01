@@ -85,6 +85,8 @@ public class JocInventory {
     public static final String DEFAULT_IMPORT_SUFFIX = "imported";
     // introduced with 2.3.0 - compatibility with scheduler.workflowName (deprecated, scheduler.workflowNames will be used)
     public static final boolean SCHEDULE_CONSIDER_WORKFLOW_NAME = true;
+    // introduced with 2.3.0 - to find the code to handle the schedule workflows
+    public static final int SCHEDULE_MIN_MULTIPLE_WORKFLOWS_SIZE = 2;
 
     public static final Map<ConfigurationType, String> SCHEMA_LOCATION = Collections.unmodifiableMap(new HashMap<ConfigurationType, String>() {
 
@@ -961,9 +963,9 @@ public class JocInventory {
                         }
                     }
                     s.setWorkflowNames(wn);
-                    
-                    //tmp
-                    if(s.getWorkflowNames().size() > 0) {
+
+                    // tmp
+                    if (s.getWorkflowNames().size() > 0) {
                         s.setWorkflowName(s.getWorkflowNames().get(0));
                     }
 
@@ -1129,5 +1131,26 @@ public class JocInventory {
         return suffixPrefix.getSuffix().isEmpty() ? Arrays.asList("^(" + suffixPrefix.getPrefix().replaceFirst("[0-9]*$", "") + "[0-9]*-)?(.*)$",
                 suffixPrefix.getPrefix() + "-$2") : Arrays.asList("(.*?)(-" + suffixPrefix.getSuffix().replaceFirst("[0-9]*$", "") + "[0-9]*)?$",
                         "$1-" + suffixPrefix.getSuffix());
+    }
+
+    public static Schedule setWorkflowNames(Schedule schedule) {
+        if (schedule != null) {
+            if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
+                List<String> wn = new ArrayList<>();
+                if (schedule.getWorkflowName() == null) {
+                    if (schedule.getWorkflowNames() != null) {
+                        wn.addAll(schedule.getWorkflowNames());
+                    }
+                } else {
+                    if (schedule.getWorkflowNames() == null) {
+                        wn.add(schedule.getWorkflowName());
+                    } else {
+                        wn.addAll(schedule.getWorkflowNames());
+                    }
+                }
+                schedule.setWorkflowNames(wn);
+            }
+        }
+        return schedule;
     }
 }

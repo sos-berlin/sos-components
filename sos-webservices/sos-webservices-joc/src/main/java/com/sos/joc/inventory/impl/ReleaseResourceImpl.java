@@ -18,6 +18,7 @@ import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -333,17 +334,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         List<Err419> errors = new ArrayList<>();
         try {
             Schedule s = Globals.objectMapper.readValue(item.getContent(), Schedule.class);
-            if (s.getWorkflowNames() == null) {
-                s.setWorkflowNames(new ArrayList<>());
-            }
-            if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
-                if (s.getWorkflowName() != null) {
-                    if (s.getWorkflowNames().size() == 0) {
-                        s.getWorkflowNames().add(s.getWorkflowName());
-                    }
-                }
-            }
-            if (s.getWorkflowNames().size() > 1) {// check only multiple workflows
+            s = JocInventory.setWorkflowNames(s);
+            if (s.getWorkflowNames().size() >= JocInventory.SCHEDULE_MIN_MULTIPLE_WORKFLOWS_SIZE) {// check only multiple workflows
                 for (String name : s.getWorkflowNames()) {
                     String workflowMsg = "[workflow=" + name + "]";
                     try {
@@ -356,10 +348,10 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                             w = Globals.objectMapper.readValue(wj, Workflow.class);
                             cachedWorkflows.put(name, w);
                         }
-                        if (w.getOrderPreparation() != null && w.getOrderPreparation().getParameters() != null && w.getOrderPreparation()
-                                .getParameters().getAdditionalProperties() != null && w.getOrderPreparation().getParameters()
-                                        .getAdditionalProperties().size() > 0) {
-                            throw new Exception(workflowMsg + "[" + w.getOrderPreparation().getParameters().getAdditionalProperties().size()
+                        Requirements r = w.getOrderPreparation();
+                        if (r != null && r.getParameters() != null && r.getParameters().getAdditionalProperties() != null && r.getParameters()
+                                .getAdditionalProperties().size() > 0) {
+                            throw new Exception(workflowMsg + "[" + r.getParameters().getAdditionalProperties().size()
                                     + " order variables]release of multiple workflows with order variables is not allowed");
                         }
                     } catch (Throwable e) {

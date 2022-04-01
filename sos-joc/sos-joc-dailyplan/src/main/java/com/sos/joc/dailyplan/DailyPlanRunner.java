@@ -44,6 +44,7 @@ import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.schedule.VariableSet;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -504,22 +505,7 @@ public class DailyPlanRunner extends TimerTask {
                 continue;
             }
 
-            if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
-                List<String> wn = new ArrayList<>();
-                if (schedule.getWorkflowName() == null) {
-                    if (schedule.getWorkflowNames() != null) {
-                        wn.addAll(schedule.getWorkflowNames());
-                    }
-                } else {
-                    if (schedule.getWorkflowNames() == null) {
-                        wn.add(schedule.getWorkflowName());
-                    } else {
-                        wn.addAll(schedule.getWorkflowNames());
-                    }
-                }
-                schedule.setWorkflowNames(wn);
-            }
-
+            schedule = JocInventory.setWorkflowNames(schedule);
             List<DailyPlanScheduleWorkflow> scheduleWorkflows = new ArrayList<>();
             boolean clear = false;
             int namesSize = schedule.getWorkflowNames().size();
@@ -532,18 +518,17 @@ public class DailyPlanRunner extends TimerTask {
                     }
                     continue;
                 } else {
-                    if (namesSize > 1) {// check only multiple workflows
+                    if (namesSize >= JocInventory.SCHEDULE_MIN_MULTIPLE_WORKFLOWS_SIZE) {// check only multiple workflows
                         if (dpw.getContent() != null) {
                             try {
                                 Workflow w = objectMapper.readValue(dpw.getContent(), Workflow.class);
-                                if (w.getOrderPreparation() != null && w.getOrderPreparation().getParameters() != null && w.getOrderPreparation()
-                                        .getParameters().getAdditionalProperties() != null && w.getOrderPreparation().getParameters()
-                                                .getAdditionalProperties().size() > 0) {
-
+                                Requirements r = w.getOrderPreparation();
+                                if (r != null && r.getParameters() != null && r.getParameters().getAdditionalProperties() != null && r.getParameters()
+                                        .getAdditionalProperties().size() > 0) {
                                     LOGGER.warn(String.format(
                                             "[%s][skip][schedule=%s][%s workflows=%s][workflow=%s][%s order variables]multiple workflows with order variables are not permitted",
-                                            method, schedule.getPath(), namesSize, String.join(",", schedule.getWorkflowNames()), dpw.getName(), w
-                                                    .getOrderPreparation().getParameters().getAdditionalProperties().size()));
+                                            method, schedule.getPath(), namesSize, String.join(",", schedule.getWorkflowNames()), dpw.getName(), r
+                                                    .getParameters().getAdditionalProperties().size()));
                                     clear = true;
                                 }
                             } catch (Throwable e) {
