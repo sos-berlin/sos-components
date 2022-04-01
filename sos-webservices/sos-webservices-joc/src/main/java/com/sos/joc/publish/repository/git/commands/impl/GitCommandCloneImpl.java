@@ -32,7 +32,7 @@ public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandC
         SOSHibernateSession hibernateSession = null;
         try {
             Date started = Date.from(Instant.now());
-            LOGGER.info("*** clone started ***" + started);
+            LOGGER.trace("*** clone started ***" + started);
             initLogging(API_CALL, cloneFilter, xAccessToken);
             JsonValidator.validate(cloneFilter, CloneFilter.class);
             CloneFilter filter = Globals.objectMapper.readValue(cloneFilter, CloneFilter.class);
@@ -55,8 +55,8 @@ public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandC
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
             GitCommandUtils.cloneGitRepository(filter, account, dbLayer);
             Date finished = Date.from(Instant.now());
-            LOGGER.info("*** clone finished ***" + finished);
-            LOGGER.info(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));
+            LOGGER.trace("*** clone finished ***" + finished);
+            LOGGER.trace(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
