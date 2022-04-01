@@ -158,12 +158,12 @@ public class Validator {
                     validateAgentRefs(json, agentDBLayer, enabledAgentNames);
                 } else if (ConfigurationType.SCHEDULE.equals(type)) {
                     Schedule schedule = (Schedule) config;
-                    String json = validateWorkflowRef(schedule.getWorkflowName(), dbLayer, "$.workflowName");
+                    //String json = validateWorkflowRef(schedule.getWorkflowName(), dbLayer, "$.workflowName");
                     validateCalendarRefs(schedule, dbLayer);
-                    if (json != null) {
-                        Workflow workflowOfSchedule = Globals.objectMapper.readValue(json, Workflow.class);
-                        validateVariableSets(schedule.getVariableSets(), workflowOfSchedule.getOrderPreparation(), "$.variableSets");
-                    }
+                    //if (json != null) {
+                    //    Workflow workflowOfSchedule = Globals.objectMapper.readValue(json, Workflow.class);
+                    //    validateVariableSets(schedule.getVariableSets(), workflowOfSchedule.getOrderPreparation(), "$.variableSets");
+                    //}
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
                     validateWorkflowRef(fileOrderSource.getWorkflowName(), dbLayer, "$.workflowName");
