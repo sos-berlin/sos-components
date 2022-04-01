@@ -1,9 +1,8 @@
-package com.sos.joc.publish.git.impl;
+package com.sos.joc.publish.repository.git.credentials.impl;
 
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,35 +20,33 @@ import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.configuration.ConfigurationType;
+import com.sos.joc.model.publish.git.GetCredentialsFilter;
 import com.sos.joc.model.publish.git.GitCredentialsList;
-import com.sos.joc.model.publish.git.RemoveCredentials;
-import com.sos.joc.model.publish.git.RemoveCredentialsFilter;
-import com.sos.joc.publish.git.resource.IGitCredentialsRemove;
+import com.sos.joc.publish.repository.git.credentials.resource.IGitCredentialsGet;
 import com.sos.schema.JsonValidator;
 
 @javax.ws.rs.Path("inventory/repository/git")
-public class GitCredentialsRemoveImpl extends JOCResourceImpl implements IGitCredentialsRemove {
+public class GitCredentialsGetImpl extends JOCResourceImpl implements IGitCredentialsGet {
 
-    private static final String API_CALL = "./inventory/repository/git/credentials/remove";
-    private static final Logger LOGGER = LoggerFactory.getLogger(GitCredentialsRemoveImpl.class);
+    private static final String API_CALL = "./inventory/repository/git/credentials";
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitCredentialsGetImpl.class);
 
     @Override
-    public JOCDefaultResponse postRemoveCredentials(String xAccessToken, byte[] removeCredentialsFilter) throws Exception {
+    public JOCDefaultResponse postGetCredentials(String xAccessToken, byte[] getCredentialsFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
             Date started = Date.from(Instant.now());
-            LOGGER.info("*** remove credentials started ***" + started);
-            initLogging(API_CALL, removeCredentialsFilter, xAccessToken);
-            JsonValidator.validate(removeCredentialsFilter, RemoveCredentialsFilter.class);
-            RemoveCredentialsFilter filter = Globals.objectMapper.readValue(removeCredentialsFilter, RemoveCredentialsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getManage());
+            LOGGER.trace("*** get credentials started ***" + started);
+            initLogging(API_CALL, getCredentialsFilter, xAccessToken);
+            JsonValidator.validate(getCredentialsFilter, GetCredentialsFilter.class);
+            GetCredentialsFilter filter = Globals.objectMapper.readValue(getCredentialsFilter, GetCredentialsFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
             String account = null;
-            
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             } else if (JocSecurityLevel.MEDIUM.equals(Globals.getJocSecurityLevel())) {
@@ -57,6 +54,7 @@ public class GitCredentialsRemoveImpl extends JOCResourceImpl implements IGitCre
             } else {
                 throw new JocNotImplementedException("The web service is not available for Security Level HIGH.");
             }
+
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
             JocConfigurationFilter dbFilter = new JocConfigurationFilter();
             dbFilter.setAccount(account);
@@ -68,17 +66,10 @@ public class GitCredentialsRemoveImpl extends JOCResourceImpl implements IGitCre
                 dbItem = existing.get(0);
                 credList =  Globals.objectMapper.readValue(dbItem.getConfigurationItem(), GitCredentialsList.class);
             }
-            if(filter.getCredentials() != null && !filter.getCredentials().isEmpty()) {
-                for(RemoveCredentials credentials : filter.getCredentials()) {
-                    deleteIfExists(credentials, credList);
-                }
-            }
-            dbItem.setConfigurationItem(Globals.objectMapper.writeValueAsString(credList));
-            dbLayer.saveOrUpdateConfiguration(dbItem);
             Date finished = Date.from(Instant.now());
-            LOGGER.info("*** remove credentials finished ***" + finished);
-            LOGGER.info(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            LOGGER.trace("*** get credentials finished ***" + finished);
+            LOGGER.trace(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));
+            return JOCDefaultResponse.responseStatus200(credList);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -89,11 +80,4 @@ public class GitCredentialsRemoveImpl extends JOCResourceImpl implements IGitCre
         }
     }
 
-    private void deleteIfExists(RemoveCredentials credentials, GitCredentialsList existing) {
-        existing.setCredentials(existing.getCredentials().stream()
-                .filter(item -> !(item.getGitAccount().equals(credentials.getGitAccount()) 
-                        && item.getGitServer().equals(credentials.getGitServer())))
-                .collect(Collectors.toList()));
-    }
-    
 }

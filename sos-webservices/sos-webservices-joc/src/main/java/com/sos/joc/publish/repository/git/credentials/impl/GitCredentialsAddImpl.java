@@ -1,4 +1,4 @@
-package com.sos.joc.publish.git.impl;
+package com.sos.joc.publish.repository.git.credentials.impl;
 
 import java.time.Instant;
 import java.util.Date;
@@ -24,7 +24,7 @@ import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.publish.git.AddCredentialsFilter;
 import com.sos.joc.model.publish.git.GitCredentials;
 import com.sos.joc.model.publish.git.GitCredentialsList;
-import com.sos.joc.publish.git.resource.IGitCredentialsAdd;
+import com.sos.joc.publish.repository.git.credentials.resource.IGitCredentialsAdd;
 import com.sos.schema.JsonValidator;
 
 @javax.ws.rs.Path("inventory/repository/git")
@@ -38,7 +38,7 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
         SOSHibernateSession hibernateSession = null;
         try {
             Date started = Date.from(Instant.now());
-            LOGGER.info("*** add credentials started ***" + started);
+            LOGGER.trace("*** add credentials started ***" + started);
             initLogging(API_CALL, addCredentialsFilter, xAccessToken);
             JsonValidator.validate(addCredentialsFilter, AddCredentialsFilter.class);
             AddCredentialsFilter filter = Globals.objectMapper.readValue(addCredentialsFilter, AddCredentialsFilter.class);
@@ -90,8 +90,8 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
             dbItem.setConfigurationItem(Globals.objectMapper.writeValueAsString(credList));
             dbLayer.saveOrUpdateConfiguration(dbItem);
             Date finished = Date.from(Instant.now());
-            LOGGER.info("*** add credentials finished ***" + finished);
-            LOGGER.info(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));
+            LOGGER.trace("*** add credentials finished ***" + finished);
+            LOGGER.trace(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

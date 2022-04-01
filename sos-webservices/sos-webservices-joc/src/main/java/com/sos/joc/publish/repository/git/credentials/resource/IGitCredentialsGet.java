@@ -1,4 +1,4 @@
-package com.sos.joc.publish.git.resource;
+package com.sos.joc.publish.repository.git.credentials.resource;
 
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
