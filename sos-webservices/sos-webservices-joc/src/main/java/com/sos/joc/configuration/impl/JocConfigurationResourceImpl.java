@@ -187,7 +187,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             case IAM:
                 dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
                 account = ConfigurationGlobals.ACCOUNT;
-                storeAuditLog(configuration.getAuditLog(), CategoryType.IDENTITY); 
+                storeAuditLog(configuration.getAuditLog(), CategoryType.IDENTITY);
 
             case CUSTOMIZATION:
                 if (isNew && !configuration.getConfigurationType().equals(ConfigurationType.IAM)) {
@@ -260,10 +260,11 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             if (updateControllerCalendar) {
                 DailyPlanCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
             }
-            
-            storeAuditLog(configuration.getAuditLog(), CategoryType.SETTINGS);
 
-            
+            if (configuration.getConfigurationType() != ConfigurationType.CUSTOMIZATION) {
+                storeAuditLog(configuration.getAuditLog(), CategoryType.SETTINGS);
+            }
+
             ConfigurationOk ok = new ConfigurationOk();
             ok.setId(dbItem.getId());
             ok.setDeliveryDate(now);
