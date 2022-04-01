@@ -523,7 +523,7 @@ public class DailyPlanRunner extends TimerTask {
             List<DailyPlanScheduleWorkflow> scheduleWorkflows = new ArrayList<>();
             boolean clear = false;
             int namesSize = schedule.getWorkflowNames().size();
-            for (String wn : schedule.getWorkflowNames()) {
+            wn: for (String wn : schedule.getWorkflowNames()) {
                 DailyPlanScheduleWorkflow dpw = dailyPlanSchedule.getWorkflow(wn);
                 if (dpw == null) {
                     if (isDebugEnabled) {
@@ -532,7 +532,7 @@ public class DailyPlanRunner extends TimerTask {
                     }
                     continue;
                 } else {
-                    if (namesSize > 1) {
+                    if (namesSize > 1) {// check only multiple workflows
                         if (dpw.getContent() != null) {
                             try {
                                 Workflow w = objectMapper.readValue(dpw.getContent(), Workflow.class);
@@ -541,20 +541,18 @@ public class DailyPlanRunner extends TimerTask {
                                                 .getAdditionalProperties().size() > 0) {
 
                                     LOGGER.warn(String.format(
-                                            "[%s][skip][schedule=%s][%s workflows][workflow=%s][%s order variables]multiple workflows with order variables are not permitted",
-                                            method, schedule.getPath(), namesSize, dpw.getName(), w.getOrderPreparation().getParameters()
-                                                    .getAdditionalProperties().size()));
+                                            "[%s][skip][schedule=%s][%s workflows=%s][workflow=%s][%s order variables]multiple workflows with order variables are not permitted",
+                                            method, schedule.getPath(), namesSize, String.join(",", schedule.getWorkflowNames()), dpw.getName(), w
+                                                    .getOrderPreparation().getParameters().getAdditionalProperties().size()));
                                     clear = true;
-                                    continue;
                                 }
                             } catch (Throwable e) {
-                                LOGGER.error(String.format("[%s][skip][schedule=%s][%s workflows][workflow=%s]%s", method, schedule.getPath(),
-                                        namesSize, dpw.getName(), e.toString()), e);
+                                LOGGER.error(String.format("[%s][skip][schedule=%s][%s workflows=%s][workflow=%s]%s", method, schedule.getPath(),
+                                        namesSize, String.join(",", schedule.getWorkflowNames()), dpw.getName(), e.toString()), e);
                                 clear = true;
                             }
                         }
                     }
-
                     if (!clear) {
                         if (!isWorkflowPermitted(dpw.getPath(), permittedFolders, checkedFolders)) {
                             if (isDebugEnabled) {
@@ -565,7 +563,9 @@ public class DailyPlanRunner extends TimerTask {
                         }
                     }
                 }
-                if (!clear) {
+                if (clear) {
+                    break wn;
+                } else {
                     scheduleWorkflows.add(dpw);
                 }
             }
@@ -597,6 +597,9 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     private boolean isWorkflowPermitted(String workflowPath, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
+        if (checkedFolders == null) {// from service
+            return true;
+        }
         String folder = DailyPlanHelper.getFolderFromPath(workflowPath);
         Boolean result = checkedFolders.get(folder);
         if (result == null) {

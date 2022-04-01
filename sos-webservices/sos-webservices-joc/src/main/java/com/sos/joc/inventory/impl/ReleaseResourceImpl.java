@@ -343,7 +343,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     }
                 }
             }
-            if (s.getWorkflowNames().size() > 1) {// check only if more as 1
+            if (s.getWorkflowNames().size() > 1) {// check only multiple workflows
                 for (String name : s.getWorkflowNames()) {
                     String workflowMsg = "[workflow=" + name + "]";
                     try {
