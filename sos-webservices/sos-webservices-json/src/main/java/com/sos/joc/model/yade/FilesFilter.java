@@ -26,6 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "targetFiles",
     "sourceFile",
     "targetFile",
+    "integrityHash",
     "limit"
 })
 public class FilesFilter {
@@ -56,6 +57,15 @@ public class FilesFilter {
     @JsonProperty("targetFile")
     @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
     private String targetFile;
+    /**
+     * glob pattern
+     * <p>
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
+     */
+    @JsonProperty("integrityHash")
+    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
+    private String integrityHash;
     /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
@@ -149,6 +159,28 @@ public class FilesFilter {
     }
 
     /**
+     * glob pattern
+     * <p>
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
+     */
+    @JsonProperty("integrityHash")
+    public String getIntegrityHash() {
+        return integrityHash;
+    }
+
+    /**
+     * glob pattern
+     * <p>
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
+     */
+    @JsonProperty("integrityHash")
+    public void setIntegrityHash(String integrityHash) {
+        this.integrityHash = integrityHash;
+    }
+
+    /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
      */
@@ -168,12 +200,12 @@ public class FilesFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("transferIds", transferIds).append("states", states).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("sourceFile", sourceFile).append("targetFile", targetFile).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("transferIds", transferIds).append("states", states).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("sourceFile", sourceFile).append("targetFile", targetFile).append("integrityHash", integrityHash).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(sourceFiles).append(targetFile).append(limit).append(targetFiles).append(sourceFile).append(transferIds).append(states).toHashCode();
+        return new HashCodeBuilder().append(sourceFiles).append(targetFile).append(limit).append(targetFiles).append(integrityHash).append(sourceFile).append(transferIds).append(states).toHashCode();
     }
 
     @Override
@@ -185,7 +217,7 @@ public class FilesFilter {
             return false;
         }
         FilesFilter rhs = ((FilesFilter) other);
-        return new EqualsBuilder().append(sourceFiles, rhs.sourceFiles).append(targetFile, rhs.targetFile).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).append(sourceFile, rhs.sourceFile).append(transferIds, rhs.transferIds).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(sourceFiles, rhs.sourceFiles).append(targetFile, rhs.targetFile).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).append(integrityHash, rhs.integrityHash).append(sourceFile, rhs.sourceFile).append(transferIds, rhs.transferIds).append(states, rhs.states).isEquals();
     }
 
 }

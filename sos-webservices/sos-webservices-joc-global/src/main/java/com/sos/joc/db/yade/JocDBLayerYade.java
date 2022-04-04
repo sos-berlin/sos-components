@@ -15,6 +15,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.model.common.Folder;
@@ -300,6 +301,7 @@ public class JocDBLayerYade {
         boolean withSourcePattern = filter.getSourceFile() != null && !filter.getSourceFile().isEmpty();
         boolean withTargetPattern = filter.getTargetFile() != null && !filter.getTargetFile().isEmpty();
         boolean withStates = filter.getStates() != null && !filter.getStates().isEmpty();
+        boolean withIntegrityHash = !SOSString.isEmpty(filter.getIntegrityHash());
 
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_YADE_FILES);
         List<String> clauses = new ArrayList<>();
@@ -327,6 +329,9 @@ public class JocDBLayerYade {
                 clauses.add("targetPath = :target");
             }
         }
+        if (withIntegrityHash) {
+            clauses.add("integrityHash = :integrityHash");
+        }
         if (!clauses.isEmpty()) {
             hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
         }
@@ -350,6 +355,9 @@ public class JocDBLayerYade {
             query.setParameterList("targets", filter.getTargetFiles());
         } else if (withTargetPattern) {
             query.setParameter("target", SearchStringHelper.globToSqlPattern(filter.getTargetFile()));
+        }
+        if (withIntegrityHash) {
+            query.setParameter("integrityHash", SearchStringHelper.globToSqlPattern(filter.getIntegrityHash()));
         }
         return session.getResultList(query);
     }
