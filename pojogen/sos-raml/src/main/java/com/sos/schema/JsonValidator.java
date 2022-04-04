@@ -174,6 +174,11 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.git.AddCredentialsFilter", "publish/git/addCredentialsFilter-schema.json");
             put("com.sos.joc.model.publish.git.RemoveCredentials", "publish/git/removeCredentials-schema.json");
             put("com.sos.joc.model.publish.git.RemoveCredentialsFilter", "publish/git/removeCredentialsFilter-schema.json");
+            put("com.sos.joc.model.publish.git.commands.CheckoutFilter", "publish/git/commands/checkoutFilter-schema.json");
+            put("com.sos.joc.model.publish.git.commands.CloneFilter", "publish/git/commands/cloneFilter-schema.json");
+            put("com.sos.joc.model.publish.git.commands.CommitFilter", "publish/git/commands/commitFilter-schema.json");
+            put("com.sos.joc.model.publish.git.commands.CommonFilter", "publish/git/commands/commonFilter-schema.json");
+            put("com.sos.joc.model.publish.git.commands.TagFilter", "publish/git/commands/tagFilter-schema.json");
             put("com.sos.joc.model.publish.repository.CopyToFilter", "publish/repository/copyToRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.DeleteFromFilter", "publish/repository/deleteFromRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.ReadFromFilter", "publish/repository/readFromRepositoryFilter-schema.json");

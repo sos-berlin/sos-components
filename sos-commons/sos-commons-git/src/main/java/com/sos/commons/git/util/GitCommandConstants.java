@@ -28,6 +28,10 @@ public class GitCommandConstants {
     public static final String CMD_GIT_COMMIT_FORMAT = "git commit -m \"%1$s\"";
     public static final String CMD_GIT_ADD_AND_COMMIT = "git commit -am ";
     public static final String CMD_GIT_ADD_AND_COMMIT_FORMAT = "git commit -am \"%1$s\"";
+    // git checkout -B <branch>
+    public static final String CMD_GIT_CHECKOUT_BRANCH = "git checkout -B ";
+    // git checkout <tagname>
+    public static final String CMD_GIT_CHECKOUT_TAG = "git checkout ";
     // git remote -v
     public static final String CMD_GIT_REMOTE_V = "git remote -v";
     // git remote add

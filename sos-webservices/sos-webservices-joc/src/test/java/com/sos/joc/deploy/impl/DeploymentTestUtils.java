@@ -57,6 +57,7 @@ import com.sos.joc.model.publish.git.commands.CheckoutFilter;
 import com.sos.joc.model.publish.git.commands.CloneFilter;
 import com.sos.joc.model.publish.git.commands.CommitFilter;
 import com.sos.joc.model.publish.git.commands.CommonFilter;
+import com.sos.joc.model.publish.git.commands.GitCommandResponse;
 import com.sos.joc.model.publish.git.commands.TagFilter;
 import com.sos.joc.model.publish.repository.Category;
 import com.sos.joc.model.publish.repository.Configurations;
@@ -1085,6 +1086,15 @@ public class DeploymentTestUtils {
         tagFilter.setName("v1.0.0");
         tagFilter.setCategory(Category.ROLLOUT);
         return tagFilter;
+    }
+
+    public static GitCommandResponse createGitCommandResponse () {
+        GitCommandResponse response = new GitCommandResponse();
+        response.setCommand("git status -s");
+        response.setStdOut(" M sp_git_test.txt");
+        response.setStdErr(null);
+        response.setExitCode(0);
+        return response;
     }
 
 }

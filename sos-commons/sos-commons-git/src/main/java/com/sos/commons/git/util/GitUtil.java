@@ -7,6 +7,7 @@ import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.git.enums.GitConfigType;
 import com.sos.commons.git.enums.GitConfigAction;
 import com.sos.commons.git.results.GitAddCommandResult;
+import com.sos.commons.git.results.GitCheckoutCommandResult;
 import com.sos.commons.git.results.GitCherryPickCommandResult;
 import com.sos.commons.git.results.GitCloneCommandResult;
 import com.sos.commons.git.results.GitCommandResult;
@@ -97,6 +98,25 @@ public class GitUtil {
             result = GitCommitCommandResult.getInstance(commandResult, original);
         } else {
             result = GitCommitCommandResult.getInstance(commandResult);
+        }
+        if (commandResult.hasError()) {
+            StringBuilder info = new StringBuilder();
+            info.append(commandResult);
+            result.setError(info.toString());
+        }
+        return result;
+    }
+
+    public static final GitCommandResult createGitCheckoutCommandResult(SOSCommandResult commandResult) {
+        return createGitCheckoutCommandResult(commandResult, null);
+    }
+    
+    public static final GitCommandResult createGitCheckoutCommandResult(SOSCommandResult commandResult, String original) {
+        GitCommandResult result;
+        if (original != null) {
+            result = GitCheckoutCommandResult.getInstance(commandResult, original);
+        } else {
+            result = GitCheckoutCommandResult.getInstance(commandResult);
         }
         if (commandResult.hasError()) {
             StringBuilder info = new StringBuilder();

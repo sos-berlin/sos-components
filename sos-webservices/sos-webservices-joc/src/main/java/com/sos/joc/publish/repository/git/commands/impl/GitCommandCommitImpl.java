@@ -6,7 +6,7 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.git.results.GitCloneCommandResult;
+import com.sos.commons.git.results.GitCommitCommandResult;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -17,27 +17,27 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.publish.git.commands.CloneFilter;
+import com.sos.joc.model.publish.git.commands.CommitFilter;
 import com.sos.joc.model.publish.git.commands.GitCommandResponse;
 import com.sos.joc.publish.repository.git.commands.GitCommandUtils;
-import com.sos.joc.publish.repository.git.commands.resource.IGitCommandClone;
+import com.sos.joc.publish.repository.git.commands.resource.IGitCommandCommit;
 import com.sos.schema.JsonValidator;
 
 @javax.ws.rs.Path("inventory/repository/git")
-public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandClone {
+public class GitCommandCommitImpl extends JOCResourceImpl implements IGitCommandCommit {
 
-    private static final String API_CALL = "./inventory/repository/git/clone";
-    private static final Logger LOGGER = LoggerFactory.getLogger(GitCommandCloneImpl.class);
+    private static final String API_CALL = "./inventory/repository/git/commit";
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitCommandCommitImpl.class);
 
     @Override
-    public JOCDefaultResponse postCommandClone(String xAccessToken, byte[] cloneFilter) throws Exception {
+    public JOCDefaultResponse postCommandCommit(String xAccessToken, byte[] commitFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
             Date started = Date.from(Instant.now());
-            LOGGER.trace("*** clone started ***" + started);
-            initLogging(API_CALL, cloneFilter, xAccessToken);
-            JsonValidator.validate(cloneFilter, CloneFilter.class);
-            CloneFilter filter = Globals.objectMapper.readValue(cloneFilter, CloneFilter.class);
+            LOGGER.trace("*** commit started ***" + started);
+            initLogging(API_CALL, commitFilter, xAccessToken);
+            JsonValidator.validate(commitFilter, CommitFilter.class);
+            CommitFilter filter = Globals.objectMapper.readValue(commitFilter, CommitFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -55,16 +55,16 @@ public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandC
             }
             
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
-            GitCloneCommandResult result = GitCommandUtils.cloneGitRepository(filter, account, dbLayer);
+            GitCommitCommandResult result = GitCommandUtils.commitAllStagedChanges(filter, account, dbLayer);
 
             GitCommandResponse response = new GitCommandResponse();
             response.setCommand(result.getOriginalCommand());
             response.setExitCode(result.getExitCode());
             response.setStdOut(result.getStdOut());
             response.setStdErr(result.getStdErr());
-
+            
             Date finished = Date.from(Instant.now());
-            LOGGER.trace("*** clone finished ***" + finished);
+            LOGGER.trace("*** commit finished ***" + finished);
             LOGGER.trace(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));
             return JOCDefaultResponse.responseStatus200(response);
         } catch (JocException e) {

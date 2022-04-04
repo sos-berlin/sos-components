@@ -142,6 +142,47 @@ public class GitCommand {
         }
     }
     
+    public static GitCommandResult executeGitCheckout(String branchOrTag, boolean isBranch) {
+        if(isBranch) {
+            return executeGitCheckout(branchOrTag, null, null, null);
+        } else {
+            return executeGitCheckout(null, branchOrTag, null, null);
+        }
+    }
+    
+    public static GitCommandResult executeGitCheckout(String branchOrTag, boolean isBranch, Path repository) {
+        if(isBranch) {
+            return executeGitCheckout(branchOrTag, null, repository, null);
+        } else {
+            return executeGitCheckout(null, branchOrTag, repository, null);
+        }
+    }
+    
+    public static GitCommandResult executeGitCheckout(String branch, String tagname, Path repository, Path workingDir) {
+        if (repository == null) {
+            if(branch != null) {
+                return GitUtil.createGitCheckoutCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CHECKOUT_BRANCH + branch));
+            } else { // tagname != null
+                return GitUtil.createGitCheckoutCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CHECKOUT_TAG + tagname));
+            }
+        } else {
+            GitCommandResult result = null;
+            if(branch != null) {
+                result = GitUtil.createGitCheckoutCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                        repository, workingDir, GitCommandConstants.CMD_GIT_CHECKOUT_BRANCH + branch)), 
+                        GitCommandConstants.CMD_GIT_CHECKOUT_BRANCH + branch);
+            } else { // tagname != null
+                result = GitUtil.createGitCheckoutCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                        repository, workingDir, GitCommandConstants.CMD_GIT_CHECKOUT_TAG + tagname)), 
+                        GitCommandConstants.CMD_GIT_CHECKOUT_TAG + tagname);
+            }
+            if(workingDir != null) {
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+            }
+            return result;
+        }
+    }
+    
     public static GitCommandResult executeGitAddAndCommitExisting() {
         return executeGitAddAndCommitExisting(null, null);
     }

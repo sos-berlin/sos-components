@@ -224,9 +224,53 @@ public class GitTest {
         LOGGER.debug("**************************  Test 04 - git commit finished            ****************");
     }
     
+    @Ignore
     @Test
-    public void test05GitPush() {
-        LOGGER.debug("**************************  Test 04 - git push started              *****************");
+    public void test05GitCheckout() {
+        LOGGER.debug("**************************  Test 05 - git checkout started          *****************");
+        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir);
+        if (result.getExitCode() == 0) {
+            Path repository = repositoryParent.resolve(result.getClonedInto());
+            String testfileName = "sp_git_test.txt";
+            try {
+                if (!Files.exists(repository.resolve(testfileName))) {
+                    createFile(repository.resolve(testfileName));
+                }
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            GitStatusShortCommandResult statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            LOGGER.debug("Status before ADD");
+            LOGGER.debug("StdOut:\n" + statusResult.getStdOut());
+            Assert.assertTrue(!statusResult.getToAdd().isEmpty());
+            GitCommandResult addAllResult = GitCommand.executeGitAddAll(repository, workingDir);
+            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            LOGGER.debug("Status after first ADD");
+            LOGGER.debug("StdOut:\n" + statusResult.getStdOut());
+            Assert.assertTrue(!statusResult.getAdded().isEmpty());
+            try {
+                addEntryToFile(repository.resolve(testfileName));
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            Assert.assertTrue(!statusResult.getAddedAndModified().isEmpty());
+            addAllResult = GitCommand.executeGitAddAll(repository, workingDir);
+            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            Assert.assertTrue(!statusResult.getAdded().isEmpty());
+            Assert.assertTrue(statusResult.getAddedAndModified().isEmpty());
+            GitCommitCommandResult commitResult = (GitCommitCommandResult)GitCommand.executeGitCommitFormatted("from Junit commit test",repository, workingDir);
+            LOGGER.debug("ExitCode: " + commitResult.getExitCode());
+            LOGGER.debug("StdOut:\n" + commitResult.getStdOut());
+        }
+        LOGGER.debug("**************************  Test 05 - git checkout finished          ****************");
+    }
+    
+    @Test
+    public void test06GitPush() {
+        LOGGER.debug("**************************  Test 06 - git push started              *****************");
         GitCloneCommandResult cloneResult = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir);
         if (cloneResult.getExitCode() == 0) {
             Path repository = repositoryParent.resolve(cloneResult.getClonedInto());
@@ -248,25 +292,25 @@ public class GitTest {
             LOGGER.debug("StdOut:\n" + result.getStdOut());
             Assert.assertTrue(result.getExitCode() == 0);
         }
-        LOGGER.debug("**************************  Test 04 - git commit finished            ****************");
+        LOGGER.debug("**************************  Test 06 - git commit finished            ****************");
     }
 
     @Ignore
     @Test
-    public void test05GitRestoreStagedSuccessful() {
-        LOGGER.debug("**************************  Test 05 - git restore --staged started  *****************");
+    public void test07GitRestoreStagedSuccessful() {
+        LOGGER.debug("**************************  Test 07 - git restore --staged started  *****************");
         LOGGER.debug("**************************                 successful               *****************");
         LOGGER.debug("Repository path: " + repository.toString());
         GitCommandResult result = GitCommand.executeGitRestore(repository, workingDir);
         LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
-        LOGGER.debug("**************************  Test 04 - git restore --staged finished  ****************");
+        LOGGER.debug("**************************  Test 07 - git restore --staged finished  ****************");
     }
     
     @Test
-    public void test06GitRestoreStagedFailed() {
-        LOGGER.debug("**************************  Test 06 - git restore --staged started  *****************");
+    public void test08GitRestoreStagedFailed() {
+        LOGGER.debug("**************************  Test 08 - git restore --staged started  *****************");
         LOGGER.debug("**************************                   failed                 *****************");
         GitCommandResult result = GitCommand.executeGitRestore();
         LOGGER.debug("ExitCode: " + result.getExitCode());
@@ -274,12 +318,12 @@ public class GitTest {
         LOGGER.debug("error: " + result.getError());
         Assert.assertTrue(result.getExitCode() != 0);
         Assert.assertTrue(!result.getStdErr().isEmpty());
-        LOGGER.debug("**************************  Test 06 - git restore --staged finished  ****************");
+        LOGGER.debug("**************************  Test 08 - git restore --staged finished  ****************");
     }
     
     @Test
-    public void test07GitRemoteV() {
-        LOGGER.debug("**************************  Test 07 - git remote started   **************************");
+    public void test09GitRemoteV() {
+        LOGGER.debug("**************************  Test 09 - git remote started   **************************");
         GitRemoteCommandResult result = (GitRemoteCommandResult)GitCommand.executeGitRemoteRead();
         LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
@@ -295,12 +339,12 @@ public class GitTest {
         });
         Assert.assertTrue(!result.getRemoteFetchRepositories().isEmpty());
         Assert.assertTrue(!result.getRemotePushRepositories().isEmpty());
-        LOGGER.debug("**************************  Test 07 - git remote finished  **************************");
+        LOGGER.debug("**************************  Test 09 - git remote finished  **************************");
     }
 
     @Test
-    public void test08GitLog() {
-        LOGGER.debug("**************************  Test 08 - git log started      **************************");
+    public void test10GitLog() {
+        LOGGER.debug("**************************  Test 10 - git log started      **************************");
         GitLogCommandResult result = (GitLogCommandResult)GitCommand.executeGitLogParseable();
         LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
@@ -314,12 +358,12 @@ public class GitTest {
         }
         LOGGER.debug("commit count: " + result.getCommits().keySet().size());
         Assert.assertTrue(!result.getCommits().isEmpty());
-        LOGGER.debug("**************************  Test 08 - git log finished  *****************************");
+        LOGGER.debug("**************************  Test 10 - git log finished  *****************************");
     }
 
     @Test
-    public void test09Clone() {
-        LOGGER.debug("**************************  Test 09 - git clone started    **************************");
+    public void test11Clone() {
+        LOGGER.debug("**************************  Test 11 - git clone started    **************************");
         GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir);
         LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
@@ -338,12 +382,12 @@ public class GitTest {
             LOGGER.debug("target folder cleanup");
             Assert.assertTrue(!Files.exists(repositoryParent.resolve(result.getClonedInto())));
         }
-        LOGGER.debug("**************************  Test 09 - git clone finished   **************************");
+        LOGGER.debug("**************************  Test 11 - git clone finished   **************************");
     }
 
     @Test
-    public void test10ChangeSSHConfigThenClone() throws SOSException {
-        LOGGER.debug("**************************  Test 10 - git config started   **************************");
+    public void test12ChangeSSHConfigThenClone() throws SOSException {
+        LOGGER.debug("**************************  Test 12 - git config started   **************************");
         LOGGER.debug("**************************         specific directory      **************************");
         LOGGER.debug("**************************  Step 1: read current config    **************************");
         GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshGet(GitConfigType.GLOBAL);
@@ -396,13 +440,13 @@ public class GitTest {
             LOGGER.debug("StdOut:\n" + configResult.getStdOut());
             LOGGER.debug("StdErr: " + configResult.getStdErr());
         }
-        LOGGER.debug("**************************  Test 10 - git config finished  **************************");
+        LOGGER.debug("**************************  Test 12 - git config finished  **************************");
     }
 
     @Ignore
     @Test
-    public void test11GitRemoteAddUpdateRemoveChain() {
-        LOGGER.debug("**************************  Test 11 - git remote started  ***************************");
+    public void test13GitRemoteAddUpdateRemoveChain() {
+        LOGGER.debug("**************************  Test 13 - git remote started  ***************************");
         Path repository = Paths.get("C:/sp/devel/js7/testing/git/local_repos/sp");
         LOGGER.debug("Repository path: " + repository.toString());
         LOGGER.debug("**************************  Step 1: read current state     **************************");
@@ -490,7 +534,7 @@ public class GitTest {
         SOSCommandResult r = SOSShell.executeCommand(cdTo + " && FOR /f \"tokens=*\" %a in ('git tag') DO git tag -d %a");
         SOSShell.executeCommand(cdBack);
         Assert.assertTrue(r.getExitCode() == 0);
-        LOGGER.debug("**************************  Test 11 - git remote finished  **************************");
+        LOGGER.debug("**************************  Test 13 - git remote finished  **************************");
     }
 
     @Ignore

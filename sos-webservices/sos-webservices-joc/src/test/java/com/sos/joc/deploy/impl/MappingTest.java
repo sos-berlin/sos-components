@@ -421,5 +421,7 @@ public class MappingTest {
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleLogFilter()));
         LOGGER.trace("Git Commands - status");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleStatusFilter()));
+        LOGGER.trace("Git Command Response - status");
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createGitCommandResponse()));
     }
 }
