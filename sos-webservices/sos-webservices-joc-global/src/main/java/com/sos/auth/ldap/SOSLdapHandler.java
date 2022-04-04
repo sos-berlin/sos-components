@@ -89,16 +89,16 @@ public class SOSLdapHandler {
 
         SOSAuthAccessToken sosAuthAccessToken = null;
         try {
-            if (identityServiceType == IdentityServiceTypes.LDAP && sosLdapWebserviceCredentials.getSearchBase().isEmpty() && "memberOf".equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
+            if (identityServiceType == IdentityServiceTypes.LDAP && sosLdapWebserviceCredentials.getSearchBaseNotNull().isEmpty() && "memberOf".equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
                 msg = "LDAP configuration is not valid: Missing setting 'searchBase'";
             }
-            if (sosLdapWebserviceCredentials.getGroupSearchBase().isEmpty() && !sosLdapWebserviceCredentials.getGroupSearchFilter().isEmpty()) {
+            if (sosLdapWebserviceCredentials.getGroupSearchBaseNotNull().isEmpty() && !sosLdapWebserviceCredentials.getGroupSearchFilterNotNull().isEmpty()) {
                 msg = "LDAP configuration is not valid: Missing setting 'groupSearchBase'";
             }
-            if (sosLdapWebserviceCredentials.getUserDnTemplate().isEmpty()) {
+            if (sosLdapWebserviceCredentials.getUserDnTemplateNotNull().isEmpty()) {
                 msg = "LDAP configuration is not valid: Missing setting 'userDnTemplate'";
             }
-            if (sosLdapWebserviceCredentials.getLdapServerUrl().isEmpty()) {
+            if (sosLdapWebserviceCredentials.getLdapServerUrlNotNull().isEmpty()) {
                 msg = ("LDAP configuration is not valid: Missing setting ldapUrl");
             }
             if (password.isEmpty()) {

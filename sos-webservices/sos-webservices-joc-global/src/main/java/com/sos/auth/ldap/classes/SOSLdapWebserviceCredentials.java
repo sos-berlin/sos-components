@@ -291,4 +291,39 @@ public class SOSLdapWebserviceCredentials {
         return "on".equalsIgnoreCase(hostnameVerification);
     }
 
+    public String getGroupSearchBaseNotNull() {
+        if (this.groupSearchBase == null){
+            return "";
+        }
+        return this.groupSearchBase;
+    }
+
+    public String getGroupSearchFilterNotNull() {
+        if (this.groupSearchFilter == null){
+            return "";
+        }
+        return this.groupSearchFilter;
+    }
+
+    public String getSearchBaseNotNull() {
+        if (this.searchBase == null){
+            return "";
+        }
+        return this.searchBase;
+    }
+
+    public String getUserDnTemplateNotNull() {
+        if (this.userDnTemplate == null){
+            return "";
+        }
+        return this.userDnTemplate;
+    }
+
+    public String getLdapServerUrlNotNull() {
+        if (this.ldapServerUrl == null){
+            return "";
+        }
+        return this.ldapServerUrl;
+    }
+
 }
