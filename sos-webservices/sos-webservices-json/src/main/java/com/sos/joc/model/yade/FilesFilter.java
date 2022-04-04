@@ -58,13 +58,12 @@ public class FilesFilter {
     @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
     private String targetFile;
     /**
-     * glob pattern
+     * string without < and >
      * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
      * 
      */
     @JsonProperty("integrityHash")
-    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
     private String integrityHash;
     /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
@@ -159,9 +158,9 @@ public class FilesFilter {
     }
 
     /**
-     * glob pattern
+     * string without < and >
      * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
      * 
      */
     @JsonProperty("integrityHash")
@@ -170,9 +169,9 @@ public class FilesFilter {
     }
 
     /**
-     * glob pattern
+     * string without < and >
      * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
      * 
      */
     @JsonProperty("integrityHash")

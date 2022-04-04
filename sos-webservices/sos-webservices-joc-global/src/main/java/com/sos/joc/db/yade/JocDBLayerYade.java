@@ -357,7 +357,7 @@ public class JocDBLayerYade {
             query.setParameter("target", SearchStringHelper.globToSqlPattern(filter.getTargetFile()));
         }
         if (withIntegrityHash) {
-            query.setParameter("integrityHash", SearchStringHelper.globToSqlPattern(filter.getIntegrityHash()));
+            query.setParameter("integrityHash", filter.getIntegrityHash());
         }
         return session.getResultList(query);
     }
