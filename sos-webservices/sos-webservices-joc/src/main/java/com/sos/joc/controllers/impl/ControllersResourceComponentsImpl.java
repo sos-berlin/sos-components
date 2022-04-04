@@ -295,6 +295,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         return db;
     }
 
+    // TODO move to the SOSHibernate classes
     private static void setOracleConnectionVersion(SOSHibernateSession session) {
         try {
             List<String> result = session.getResultListNativeQuery("select version from dba_registry_history");
