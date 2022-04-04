@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * parameter
  * <p>
- * parameters only for parameter type 'List'
+ * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -21,7 +21,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "type",
     "default",
     "final",
-    "listParameters"
+    "listParameters",
+    "facet",
+    "message"
 })
 public class Parameter {
 
@@ -46,11 +48,26 @@ public class Parameter {
     /**
      * list parameters
      * <p>
-     * 
+     * parameters only for parameter type 'List'
      * 
      */
     @JsonProperty("listParameters")
+    @JsonPropertyDescription("parameters only for parameter type 'List'")
     private ListParameters listParameters;
+    /**
+     * a regular expression to check the value of the parameter
+     * 
+     */
+    @JsonProperty("facet")
+    @JsonPropertyDescription("a regular expression to check the value of the parameter")
+    private String facet;
+    /**
+     * a message if the value doesn't match the facet
+     * 
+     */
+    @JsonProperty("message")
+    @JsonPropertyDescription("a message if the value doesn't match the facet")
+    private String message;
 
     /**
      * No args constructor for use in serialization
@@ -64,14 +81,18 @@ public class Parameter {
      * @param _default
      * @param type
      * @param _final
+     * @param message
+     * @param facet
      * @param listParameters
      */
-    public Parameter(ParameterType type, Object _default, String _final, ListParameters listParameters) {
+    public Parameter(ParameterType type, Object _default, String _final, ListParameters listParameters, String facet, String message) {
         super();
         this.type = type;
         this._default = _default;
         this._final = _final;
         this.listParameters = listParameters;
+        this.facet = facet;
+        this.message = message;
     }
 
     /**
@@ -129,7 +150,7 @@ public class Parameter {
     /**
      * list parameters
      * <p>
-     * 
+     * parameters only for parameter type 'List'
      * 
      */
     @JsonProperty("listParameters")
@@ -140,7 +161,7 @@ public class Parameter {
     /**
      * list parameters
      * <p>
-     * 
+     * parameters only for parameter type 'List'
      * 
      */
     @JsonProperty("listParameters")
@@ -148,14 +169,50 @@ public class Parameter {
         this.listParameters = listParameters;
     }
 
+    /**
+     * a regular expression to check the value of the parameter
+     * 
+     */
+    @JsonProperty("facet")
+    public String getFacet() {
+        return facet;
+    }
+
+    /**
+     * a regular expression to check the value of the parameter
+     * 
+     */
+    @JsonProperty("facet")
+    public void setFacet(String facet) {
+        this.facet = facet;
+    }
+
+    /**
+     * a message if the value doesn't match the facet
+     * 
+     */
+    @JsonProperty("message")
+    public String getMessage() {
+        return message;
+    }
+
+    /**
+     * a message if the value doesn't match the facet
+     * 
+     */
+    @JsonProperty("message")
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("type", type).append("_default", _default).append("_final", _final).append("listParameters", listParameters).toString();
+        return new ToStringBuilder(this).append("type", type).append("_default", _default).append("_final", _final).append("listParameters", listParameters).append("facet", facet).append("message", message).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(_default).append(type).append(_final).append(listParameters).toHashCode();
+        return new HashCodeBuilder().append(_default).append(type).append(_final).append(message).append(facet).append(listParameters).toHashCode();
     }
 
     @Override
@@ -167,7 +224,7 @@ public class Parameter {
             return false;
         }
         Parameter rhs = ((Parameter) other);
-        return new EqualsBuilder().append(_default, rhs._default).append(type, rhs.type).append(_final, rhs._final).append(listParameters, rhs.listParameters).isEquals();
+        return new EqualsBuilder().append(_default, rhs._default).append(type, rhs.type).append(_final, rhs._final).append(message, rhs.message).append(facet, rhs.facet).append(listParameters, rhs.listParameters).isEquals();
     }
 
 }

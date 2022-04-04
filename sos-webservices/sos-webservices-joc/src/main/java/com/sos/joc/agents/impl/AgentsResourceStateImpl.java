@@ -168,39 +168,39 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                 .stream().filter(o -> o.getSubagentId() != null && !o.getSubagentId().isEmpty()).collect(Collectors.groupingBy(
                                         OrderV::getSubagentId));
 
-                        subagentsPerAgentId.put(dbSubagents.getKey(), dbSubagents.getValue().stream().map(dbSubAgent -> {
-                            JSubagentItemState jSubagentItemState = subagentItemStates.get(SubagentId.of(dbSubAgent.getSubAgentId()));
-                            SubagentV subagent = mapDbSubagentToAgentV(dbSubAgent);
-                            AgentStateText stateText = AgentStateText.UNKNOWN;
-                            if (Proxies.isCoupled(controllerId)) {
-                                if (jSubagentItemState != null) {
-                                    LOGGER.debug("Subagent '" + dbSubAgent.getSubAgentId() + "',  state = " + jSubagentItemState.toJson());
-                                    SubagentItemState subagentItemState = jSubagentItemState.asScala();
-                                    DelegateCouplingState couplingState = subagentItemState.couplingState();
-                                    Optional<Problem> optProblem = OptionConverters.toJava(subagentItemState.problem());
-                                    if (optProblem.isPresent()) {
-                                        subagent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
+                        subagentsPerAgentId.put(dbSubagents.getKey(), dbSubagents.getValue().stream().sorted(Comparator.comparingInt(
+                                DBItemInventorySubAgentInstance::getOrdering)).map(dbSubAgent -> {
+                                    JSubagentItemState jSubagentItemState = subagentItemStates.get(SubagentId.of(dbSubAgent.getSubAgentId()));
+                                    SubagentV subagent = mapDbSubagentToAgentV(dbSubAgent);
+                                    AgentStateText stateText = AgentStateText.UNKNOWN;
+                                    if (Proxies.isCoupled(controllerId)) {
+                                        if (jSubagentItemState != null) {
+                                            LOGGER.debug("Subagent '" + dbSubAgent.getSubAgentId() + "',  state = " + jSubagentItemState.toJson());
+                                            SubagentItemState subagentItemState = jSubagentItemState.asScala();
+                                            DelegateCouplingState couplingState = subagentItemState.couplingState();
+                                            Optional<Problem> optProblem = OptionConverters.toJava(subagentItemState.problem());
+                                            if (optProblem.isPresent()) {
+                                                subagent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
+                                            }
+                                            stateText = getAgentStateText(couplingState, optProblem, dbSubAgent.getIsDirector() == 1);
+                                        }
                                     }
-                                    stateText = getAgentStateText(couplingState, optProblem, dbSubAgent.getIsDirector() == 1);
-                                }
-                            }
-                            if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
-                                return null;
-                            }
-                            if (agentsParam.getCompact() == Boolean.TRUE) {
-                                subagent.setRunningTasks(ordersCountPerSubagent.getOrDefault(dbSubAgent.getSubAgentId(), 0));
-                                subagent.setOrders(null);
-                            } else {
-                                if (ordersPerSubagent.containsKey(dbSubAgent.getSubAgentId())) {
-                                    subagent.setOrders(ordersPerSubagent.get(dbSubAgent.getSubAgentId()));
-                                    subagent.setRunningTasks(subagent.getOrders().size());
-                                }
-                            }
-                            subagent.setState(getState(stateText)); 
-                            //Comparator.comparing(SubagentV::getIsDirector).thenComparingInt(SubagentV::getRunningTasks).reversed();
-                            return subagent;
-                        }).filter(Objects::nonNull).sorted(Comparator.comparingInt(SubagentV::getRunningTasks).reversed()).collect(Collectors
-                                .toList()));
+                                    if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
+                                        return null;
+                                    }
+                                    if (agentsParam.getCompact() == Boolean.TRUE) {
+                                        subagent.setRunningTasks(ordersCountPerSubagent.getOrDefault(dbSubAgent.getSubAgentId(), 0));
+                                        subagent.setOrders(null);
+                                    } else {
+                                        if (ordersPerSubagent.containsKey(dbSubAgent.getSubAgentId())) {
+                                            subagent.setOrders(ordersPerSubagent.get(dbSubAgent.getSubAgentId()));
+                                            subagent.setRunningTasks(subagent.getOrders().size());
+                                        }
+                                    }
+                                    subagent.setState(getState(stateText));
+                                    // Comparator.comparingInt(SubagentV::getRunningTasks).reversed()
+                                    return subagent;
+                                }).filter(Objects::nonNull).collect(Collectors.toList()));
                     }
 
                     Map<AgentPath, JAgentRefState> agentRefStates = currentState.pathToAgentRefState();
@@ -347,7 +347,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         } else if (couplingState instanceof DelegateCouplingState.Resetting$) {
             return AgentStateText.RESETTING;
         } else if (couplingState instanceof DelegateCouplingState.Reset$) {
-            if (!isDirector) {
+            if (!isDirector) {  // TODO cosmetic until Joacim has chande the API
                 return AgentStateText.RESET;
             }
             return AgentStateText.COUPLED;
