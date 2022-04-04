@@ -150,7 +150,7 @@ public class SOSShiroSubject implements ISOSAuthSubject {
                 if (dbItemSOSPermissionWithName.getAccountPermission() != null && !dbItemSOSPermissionWithName.getAccountPermission().isEmpty()) {
                     String permission = "";
                     if (dbItemSOSPermissionWithName.getControllerId() != null && !dbItemSOSPermissionWithName.getControllerId().isEmpty()) {
-                        permission = dbItemSOSPermissionWithName.getControllerId() + ":";
+                        permission = dbItemSOSPermissionWithName.getControllerId() + ":" + dbItemSOSPermissionWithName.getAccountPermission();
                     } else {
                         permission = dbItemSOSPermissionWithName.getAccountPermission();
                     }
