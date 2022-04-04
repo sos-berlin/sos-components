@@ -53,12 +53,29 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
                 return extract;
             }
         case MSSQL:
-        case ORACLE:
             returnType = argument2ReturnType(arguments.get(0).toString());
             if (returnType.equals(ReturnType.SCALAR)) {
                 return "JSON_VALUE(" + property + "," + path + ")";
             } else {
                 return "JSON_QUERY(" + property + "," + path + ")";
+            }
+        case ORACLE:
+            // TODO
+            // returning clob
+            // ---- SELECT json_value(j, '$.bar' returning clob) FROM j
+            // -------- available from 18c? 12c - ORA-40444 error ..;
+            // ERROR ON ERROR
+            // ---- SELECT json_value(j, '$.bar' returning varchar2(32000) ERROR ON ERROR) FROM j;
+            returnType = argument2ReturnType(arguments.get(0).toString());
+            if (returnType.equals(ReturnType.SCALAR)) {
+                // testsed with 18c - not support RETURNING CLOB - gets empty value - use VARCHAR2(32000)?
+                return "JSON_VALUE(" + property + "," + path + ")";
+            } else {
+                if (this.factory.getSupportJsonReturningClob()) {
+                    return "JSON_QUERY(" + property + "," + path + " RETURNING CLOB)";
+                } else {
+                    return "JSON_QUERY(" + property + "," + path + ")";
+                }
             }
         case PGSQL:
             // path = '$.ports.usb' -> 'ports'->>'usb'

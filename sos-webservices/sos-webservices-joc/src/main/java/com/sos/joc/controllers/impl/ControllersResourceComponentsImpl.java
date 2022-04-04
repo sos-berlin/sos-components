@@ -255,6 +255,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             stmt = "select version()";
             break;
         case ORACLE:
+            setOracleConnectionVersion(connection);
             db.setDbms("Oracle");
             stmt = "select BANNER from v$version";
             break;
@@ -292,6 +293,16 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         db.setVersion(version);
 
         return db;
+    }
+
+    private static void setOracleConnectionVersion(SOSHibernateSession session) {
+        try {
+            List<String> result = session.getResultListNativeQuery("select version from dba_registry_history");
+            if (result != null && result.size() > 0) {
+                session.getFactory().setDbmsVersion(result.get(0));
+            }
+        } catch (Throwable e) {
+        }
     }
 
     private static ClusterType getClusterType(List<ControllerAnswer> masters) {
