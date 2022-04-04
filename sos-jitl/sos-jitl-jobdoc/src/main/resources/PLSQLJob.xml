@@ -17,6 +17,9 @@
     <configuration>
      
         <params id="job_parameter">
+        
+            <xi:include href="./includes/common/params/param_hibernate_configuration_file.xml" parse="xml" />
+
     
             <param name="command" required="one of command or command_script_file">
                 <note>
@@ -49,7 +52,8 @@
                     	argument with the same name.
                   	</p>
                 </note>
-            </param>
+            </param>                     
+
 
             <param name="db_url" required="true">
                 <note>
