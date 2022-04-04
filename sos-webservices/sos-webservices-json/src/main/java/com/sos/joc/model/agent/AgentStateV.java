@@ -27,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "subagentId",
     "url",
     "state",
+    "healthState",
     "errorMessage",
     "orders",
     "runningTasks",
@@ -83,6 +84,14 @@ public class AgentStateV {
      */
     @JsonProperty("state")
     private AgentState state;
+    /**
+     * cluster agent state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("healthState")
+    private AgentClusterState healthState;
     /**
      * if state == couplngFailed or unknown
      * 
@@ -238,6 +247,28 @@ public class AgentStateV {
     }
 
     /**
+     * cluster agent state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("healthState")
+    public AgentClusterState getHealthState() {
+        return healthState;
+    }
+
+    /**
+     * cluster agent state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("healthState")
+    public void setHealthState(AgentClusterState healthState) {
+        this.healthState = healthState;
+    }
+
+    /**
      * if state == couplngFailed or unknown
      * 
      */
@@ -299,12 +330,12 @@ public class AgentStateV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("subagentId", subagentId).append("url", url).append("state", state).append("errorMessage", errorMessage).append("orders", orders).append("runningTasks", runningTasks).append("isClusterWatcher", isClusterWatcher).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("subagentId", subagentId).append("url", url).append("state", state).append("healthState", healthState).append("errorMessage", errorMessage).append("orders", orders).append("runningTasks", runningTasks).append("isClusterWatcher", isClusterWatcher).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(errorMessage).append(agentName).append(subagentId).append(orders).append(isClusterWatcher).append(state).append(url).append(runningTasks).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(controllerId).append(healthState).append(errorMessage).append(agentName).append(subagentId).append(orders).append(isClusterWatcher).append(state).append(url).append(runningTasks).toHashCode();
     }
 
     @Override
@@ -316,7 +347,7 @@ public class AgentStateV {
             return false;
         }
         AgentStateV rhs = ((AgentStateV) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(errorMessage, rhs.errorMessage).append(agentName, rhs.agentName).append(subagentId, rhs.subagentId).append(orders, rhs.orders).append(isClusterWatcher, rhs.isClusterWatcher).append(state, rhs.state).append(url, rhs.url).append(runningTasks, rhs.runningTasks).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(healthState, rhs.healthState).append(errorMessage, rhs.errorMessage).append(agentName, rhs.agentName).append(subagentId, rhs.subagentId).append(orders, rhs.orders).append(isClusterWatcher, rhs.isClusterWatcher).append(state, rhs.state).append(url, rhs.url).append(runningTasks, rhs.runningTasks).isEquals();
     }
 
 }

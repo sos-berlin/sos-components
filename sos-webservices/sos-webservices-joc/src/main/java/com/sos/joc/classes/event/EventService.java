@@ -92,6 +92,8 @@ import js7.data.order.OrderEvent.OrderSuspended$;
 import js7.data.order.OrderEvent.OrderSuspensionMarked;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
+import js7.data.subagent.SubagentId;
+import js7.data.subagent.SubagentItemStateEvent;
 import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.instructions.BoardInstruction;
 import js7.data_for_java.controller.JControllerState;
@@ -114,7 +116,7 @@ public class EventService {
             OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, 
             OrderPrompted.class, OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, 
             VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, ItemDeleted.class, BoardEvent.class,
-            OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class, OrderNoticeEvent.class);
+            OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class, OrderNoticeEvent.class, SubagentItemStateEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
@@ -413,7 +415,7 @@ public class EventService {
                 // UnsignedSimpleItemAdded SimpleItemAddedAndChanged and SimpleItemChanged etc.
                 String eventType = evt.getClass().getSimpleName().replaceFirst(".*Simple", "");
                 SimpleItemPath itemId = ((UnsignedSimpleItemEvent) evt).key();
-                if (itemId instanceof AgentPath) {
+                if (itemId instanceof AgentPath || itemId instanceof SubagentId) {
                     //eventType = evt.getClass().getSimpleName().replaceFirst(".*SimpleItem", "Agent");
                     addEvent(createAgentEvent(eventId, itemId.string(), eventType));
                 } else if (itemId instanceof LockPath) {
@@ -438,7 +440,7 @@ public class EventService {
             } else if (evt instanceof ItemDeleted) {
                 InventoryItemKey itemId = ((ItemDeleted) evt).key();
                 String eventType = "ItemDeleted";
-                if (itemId instanceof AgentPath) {
+                if (itemId instanceof AgentPath || itemId instanceof SubagentId) {
                     addEvent(createAgentEvent(eventId, itemId.path().string(), eventType));
                 } else if (itemId instanceof LockPath) {
                     addEvent(createLockEvent(eventId, itemId.path().string(), eventType));
@@ -450,6 +452,9 @@ public class EventService {
                 
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
                 addEvent(createAgentEvent(eventId, ((AgentPath) key).string()));
+                
+            } else if (evt instanceof SubagentItemStateEvent && !(evt instanceof SubagentItemStateEvent.SubagentEventsObserved$)) {
+                addEvent(createAgentEvent(eventId, ((SubagentId) key).string()));
                 
             } else if (evt instanceof BoardEvent) {
                 addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
