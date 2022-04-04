@@ -55,6 +55,9 @@ public class GitCommandCommitImpl extends JOCResourceImpl implements IGitCommand
             }
             
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
+            if (filter.getMessage() == null || filter.getMessage().isEmpty()) {
+                filter.setMessage("[gen msg] automated commit with JOC api");
+            }
             GitCommitCommandResult result = GitCommandUtils.commitAllStagedChanges(filter, account, dbLayer);
 
             GitCommandResponse response = new GitCommandResponse();
