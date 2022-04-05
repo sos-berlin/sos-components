@@ -17,6 +17,7 @@ import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgement;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.monitoring.NotificationAcknowledgeAnswer;
 import com.sos.joc.model.monitoring.NotificationAcknowledgeFilter;
 import com.sos.joc.model.monitoring.NotificationItemAcknowledgementItem;
@@ -39,6 +40,8 @@ public class NotificationAcknowledgeImpl extends JOCResourceImpl implements INot
             if (response != null) {
                 return response;
             }
+
+            storeAuditLog(in.getAuditLog(), CategoryType.MONITORING);
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
