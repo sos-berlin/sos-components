@@ -2,6 +2,7 @@ package com.sos.commons.hibernate;
 
 import java.io.Serializable;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
 import java.util.HashMap;
@@ -22,6 +23,7 @@ import org.hibernate.StaleStateException;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
@@ -1211,7 +1213,7 @@ public class SOSHibernateSession implements Serializable {
                 // currently only for Oracle because the returningClob issue
                 // should be later activated for all Dbms
                 if (Dbms.ORACLE.equals(getFactory().getDbms())) {
-                    getFactory().getDatabaseMetaData().set(this);
+                    getFactory().getDatabaseMetaData().set(getDatabaseMetaData());
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug(String.format("%s[databaseMetaData]%s", method, getFactory().getDatabaseMetaData()));
                     }
@@ -1296,5 +1298,26 @@ public class SOSHibernateSession implements Serializable {
             LOGGER.error(e.toString(), e);
         }
         return null;
+    }
+
+    public DatabaseMetaData getDatabaseMetaData() throws SOSHibernateException {
+        if (currentSession == null) {
+            throw new SOSHibernateInvalidSessionException("currentSession is NULL");
+        }
+
+        DatabaseMetaData metaData = null;
+        try {
+            if (isStatelessSession) {
+                StatelessSessionImpl s = (StatelessSessionImpl) currentSession;
+                metaData = s.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection().getMetaData();
+            } else {
+                Session s = (Session) currentSession;
+                metaData = s.unwrap(SharedSessionContractImplementor.class).getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
+                        .getMetaData();
+            }
+        } catch (SQLException e) {
+            throw new SOSHibernateException(e);
+        }
+        return metaData;
     }
 }

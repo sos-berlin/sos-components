@@ -2,9 +2,6 @@ package com.sos.commons.hibernate;
 
 import java.sql.DatabaseMetaData;
 
-import org.hibernate.Session;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.StatelessSessionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,37 +21,26 @@ public class SOSHibernateDatabaseMetaData {
     private boolean supportJsonReturningClob;
     private boolean isSet;
 
-    public SOSHibernateDatabaseMetaData(Dbms dbms) {
+    protected SOSHibernateDatabaseMetaData(Dbms dbms) {
         this.dbms = dbms == null ? Dbms.UNKNOWN : dbms;
         setSupportJsonReturningClob();
     }
 
-    protected void set(SOSHibernateSession session) {
-        if (session == null || isSet) {
+    protected void set(DatabaseMetaData metaData) {
+        if (metaData == null || isSet) {
+            isSet = true;// ??? when metaData null
             return;
         }
-        doSet(session);
+        doSet(metaData);
     }
 
-    private void doSet(SOSHibernateSession session) {
+    private void doSet(DatabaseMetaData metaData) {
         isSet = true;
         try {
-            DatabaseMetaData metaData = null;
-            if (session.isStatelessSession()) {
-                StatelessSessionImpl s = (StatelessSessionImpl) session.getCurrentSession();
-                metaData = s.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection().getMetaData();
-            } else {
-                Session s = (Session) session.getCurrentSession();
-                metaData = s.unwrap(SharedSessionContractImplementor.class).getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
-                        .getMetaData();
-            }
-
-            if (metaData != null) {
-                productName = metaData.getDatabaseProductName();
-                productVersion = metaData.getDatabaseProductVersion();
-                majorVersion = metaData.getDatabaseMajorVersion();
-                minorVersion = metaData.getDatabaseMinorVersion();
-            }
+            productName = metaData.getDatabaseProductName();
+            productVersion = metaData.getDatabaseProductVersion();
+            majorVersion = metaData.getDatabaseMajorVersion();
+            minorVersion = metaData.getDatabaseMinorVersion();
         } catch (Throwable e) {
             LOGGER.warn(String.format("[doSet]%s", e.toString()), e);
         }
