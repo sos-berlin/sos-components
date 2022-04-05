@@ -315,7 +315,7 @@ public class SOSManageIdentityService {
                         throw new FileNotFoundException(iniFile.toString());
                     }
 
-                    if (args.length > 1) {
+                    if (args.length > 2) {
                         hibernateConf = Paths.get(args[2]);
                     }
 
