@@ -20,6 +20,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.ModifyNotice;
 import com.sos.joc.model.security.configuration.permissions.controller.NoticeBoards;
 import com.sos.schema.JsonValidator;
@@ -35,6 +36,7 @@ import js7.proxy.javaapi.JControllerApi;
 public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResource {
 
     private static final String API_CALL = "./notice/";
+
     private enum Action {
         DELETE, POST
     }
@@ -65,7 +67,7 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
 
     private JOCDefaultResponse modifyNotice(String accessToken, byte[] filterBytes, Action action) throws InvalidSessionException, JsonParseException,
             JsonMappingException, JocException, IOException, SOSJsonSchemaException {
-        
+
         initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validateFailFast(filterBytes, ModifyNotice.class);
         ModifyNotice filter = Globals.objectMapper.readValue(filterBytes, ModifyNotice.class);
@@ -77,17 +79,19 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
             return response;
         }
 
+        storeAuditLog(filter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+
         JControllerApi controllerApi = ControllerApi.of(controllerId);
         BoardPath board = BoardPath.of(JocInventory.pathToName(filter.getNoticeBoardPath()));
         NoticeId notice = NoticeId.of(filter.getNoticeId());
         Instant now = Instant.now();
-        
-        switch(action) {
+
+        switch (action) {
         case DELETE:
             controllerApi.executeCommand(JControllerCommand.apply(new ControllerCommand.DeleteNotice(board, notice))).thenAccept(e -> ProblemHelper
                     .postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             break;
-            
+
         case POST:
             // JobSchedulerDate.getScheduledForInUTC(filter.getEndOfLife(), filter.getTimeZone())
             // JobSchedulerDate.getDateTo(filter.getEndOfLife(), filter.getTimeZone())
@@ -102,7 +106,7 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
                     controllerId));
             break;
         }
-        
+
         return JOCDefaultResponse.responseStatusJSOk(Date.from(now));
     }
 

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,7 +23,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "noticeBoardPath",
     "noticeId",
     "endOfLife",
-    "timeZone"
+    "timeZone",
+    "auditLog"
 })
 public class ModifyNotice {
 
@@ -68,6 +70,14 @@ public class ModifyNotice {
      */
     @JsonProperty("timeZone")
     private String timeZone;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     /**
      * controllerId
@@ -181,14 +191,36 @@ public class ModifyNotice {
         this.timeZone = timeZone;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("noticeBoardPath", noticeBoardPath).append("noticeId", noticeId).append("endOfLife", endOfLife).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("noticeBoardPath", noticeBoardPath).append("noticeId", noticeId).append("endOfLife", endOfLife).append("timeZone", timeZone).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(noticeBoardPath).append(timeZone).append(controllerId).append(noticeId).append(endOfLife).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(auditLog).append(noticeBoardPath).append(timeZone).append(noticeId).append(endOfLife).toHashCode();
     }
 
     @Override
@@ -200,7 +232,7 @@ public class ModifyNotice {
             return false;
         }
         ModifyNotice rhs = ((ModifyNotice) other);
-        return new EqualsBuilder().append(noticeBoardPath, rhs.noticeBoardPath).append(timeZone, rhs.timeZone).append(controllerId, rhs.controllerId).append(noticeId, rhs.noticeId).append(endOfLife, rhs.endOfLife).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(noticeBoardPath, rhs.noticeBoardPath).append(timeZone, rhs.timeZone).append(noticeId, rhs.noticeId).append(endOfLife, rhs.endOfLife).isEquals();
     }
 
 }
