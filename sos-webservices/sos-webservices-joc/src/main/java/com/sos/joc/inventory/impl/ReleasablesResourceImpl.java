@@ -103,6 +103,17 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
     private ResponseReleasables releasables(ReleasablesFilter in, boolean withTree) throws Exception {
         SOSHibernateSession session = null;
         try {
+            if (in.getWithoutReleased() == Boolean.TRUE && in.getWithoutDrafts() == Boolean.TRUE) {
+                ResponseReleasables result = new ResponseReleasables();
+                result.setDeliveryDate(Date.from(Instant.now()));
+                result.setFolders(Collections.emptyList());
+                result.setReleasables(Collections.emptySet());
+                Path folderPath = Paths.get(in.getFolder());
+                result.setName(folderPath.getFileName() == null ? "" : folderPath.getFileName().toString());
+                result.setPath(in.getFolder());
+                return result;
+            }
+            
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -161,7 +172,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
 
                 ResponseReleasables result = getTree(responseReleasablesFolder, folderPath, in.getRecursive());
                 result.setDeliveryDate(Date.from(Instant.now()));
-                result.setName(in.getFolder());
+                result.setName(folderPath.getFileName() == null ? "" : folderPath.getFileName().toString());
                 return result;
             } else {
                 ResponseReleasables result = new ResponseReleasables();

@@ -110,6 +110,17 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     private ResponseDeployables deployables(DeployablesFilter in, boolean withTree) throws Exception {
         SOSHibernateSession session = null;
         try {
+            if (in.getWithoutDeployed() == Boolean.TRUE && in.getWithoutDrafts() == Boolean.TRUE) {
+                ResponseDeployables result = new ResponseDeployables();
+                result.setDeliveryDate(Date.from(Instant.now()));
+                result.setFolders(Collections.emptyList());
+                result.setDeployables(Collections.emptySet());
+                Path folderPath = Paths.get(in.getFolder());
+                result.setName(folderPath.getFileName() == null ? "" : folderPath.getFileName().toString());
+                result.setPath(in.getFolder());
+                return result;
+            }
+            
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -175,7 +186,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
 
                 ResponseDeployables result = getTree(responseDeployablesFolder, folderPath, in.getRecursive());
                 result.setDeliveryDate(Date.from(Instant.now()));
-                result.setName(in.getFolder());
+                result.setName(folderPath.getFileName() == null ? "" : folderPath.getFileName().toString());
                 return result;
             } else {
                 ResponseDeployables result = new ResponseDeployables();
