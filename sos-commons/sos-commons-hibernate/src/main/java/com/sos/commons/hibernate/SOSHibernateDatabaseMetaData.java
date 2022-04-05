@@ -11,14 +11,19 @@ public class SOSHibernateDatabaseMetaData {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateDatabaseMetaData.class);
 
-    // TODO declare and use the Dbms here instead of SOSHibernateFactory.Dbms
+    // TODO declare the Dbms enum here instead of SOSHibernateFactory.Dbms
+    /** not null - evaluated from the hibernate configuration */
     private final Dbms dbms;
 
+    /** can be null/0
+     * 
+     * dependent of SOSHibernateFactory.build(readDatabaseMetaData) */
     private String productName;
     private String productVersion;
     private int majorVersion;
     private int minorVersion;
     private boolean supportJsonReturningClob;
+
     private boolean isSet;
 
     protected SOSHibernateDatabaseMetaData(Dbms dbms) {

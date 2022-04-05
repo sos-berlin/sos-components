@@ -1222,7 +1222,7 @@ public class SOSHibernateSession implements Serializable {
         } catch (SOSHibernateConnectionException e) {
             throw new SOSHibernateOpenSessionException(String.format("%s%s", method, e.getMessage()), e);
         } catch (Exception e) {
-            LOGGER.warn(String.format("%s%s", method, e.toString()));
+            LOGGER.warn(String.format("%s%s", method, e.toString()), e);
         }
     }
 
