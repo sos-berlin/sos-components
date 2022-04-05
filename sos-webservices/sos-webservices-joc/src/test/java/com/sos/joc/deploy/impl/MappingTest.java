@@ -1,6 +1,7 @@
 package com.sos.joc.deploy.impl;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -31,7 +32,11 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
+import com.sos.joc.model.publish.git.AddCredentialsFilter;
+import com.sos.joc.model.publish.git.commands.CloneFilter;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
+import com.sos.schema.JsonValidator;
+import com.sos.schema.exception.SOSJsonSchemaException;
 import com.sos.sign.model.instruction.IfElse;
 import com.sos.sign.model.instruction.NamedJob;
 import com.sos.sign.model.workflow.Workflow;
@@ -423,5 +428,30 @@ public class MappingTest {
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleStatusFilter()));
         LOGGER.trace("Git Command Response - status");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createGitCommandResponse()));
+    }
+
+    @Test
+    public void test27ValidateWithRegex() {
+        CloneFilter cloneFilter = DeploymentTestUtils.createExampleCloneFilter();
+        boolean validatedSuccessfully = false;
+        try {
+            LOGGER.trace(Globals.objectMapper.writeValueAsString(cloneFilter));
+            JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(cloneFilter), CloneFilter.class);
+            validatedSuccessfully = true;
+        } catch (SOSJsonSchemaException | IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        assertTrue(validatedSuccessfully);
+        AddCredentialsFilter addCredFilter = DeploymentTestUtils.createExampleAddGitCredentialsFilter();
+        try {
+            LOGGER.trace(Globals.objectMapper.writeValueAsString(addCredFilter));
+            JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(addCredFilter), AddCredentialsFilter.class);
+            validatedSuccessfully = true;
+        } catch (SOSJsonSchemaException | IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        assertTrue(validatedSuccessfully);
     }
 }

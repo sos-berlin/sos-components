@@ -17,6 +17,7 @@ import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocGitException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -83,7 +84,7 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
                     if(!exists) {
                         credList.getCredentials().add(credentials);
                     } else {
-                        overwriteExisting(credentials, credList);
+                        throw new JocGitException(String.format("credentials for server %1$s already exist.", credentials.getGitServer()));
                     }
                 }
             }
@@ -106,7 +107,7 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
     private boolean checkExists(GitCredentials credentials, GitCredentialsList existing) {
         if (!existing.getCredentials().isEmpty()) {
             for (GitCredentials cred : existing.getCredentials()) {
-                if (cred.getGitAccount().equals(credentials.getGitAccount()) && cred.getGitServer().equals(credentials.getGitServer())) {
+                if (cred.getGitServer().equals(credentials.getGitServer())) {
                     return true;
                 }
             } 
@@ -114,15 +115,4 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
         return false;
     }
 
-    private void overwriteExisting(GitCredentials credentials, GitCredentialsList existing) {
-        for (GitCredentials cred : existing.getCredentials()) {
-            if(cred.getGitAccount().equals(credentials.getGitAccount()) && cred.getGitServer().equals(credentials.getGitServer())) {
-                cred.setKeyfilePath(credentials.getKeyfilePath());
-                cred.setPassword(credentials.getPassword());
-                cred.setPersonalAccessToken(credentials.getPersonalAccessToken());
-                break;
-            }
-        }
-    }
-    
 }
