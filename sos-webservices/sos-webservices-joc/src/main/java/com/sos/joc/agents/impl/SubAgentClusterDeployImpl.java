@@ -106,7 +106,8 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
                         subAgentCluster.getValue().stream().collect(Collectors.toMap(s -> SubagentId.of(s.getSubagentId()),
                                 SubAgentId::getPriority)));
                 
-                if (!updateAgentIds.contains(key.getAgentId()) && knownAgents.get(AgentPath.of(key.getAgentId())) != null) {
+                // if the cluster agent of the subagent cluster is unknown in Controller then deploy the cluster agent too
+                if (!updateAgentIds.contains(key.getAgentId()) && knownAgents.get(AgentPath.of(key.getAgentId())) == null) {
                     updateAgentIds.add(key.getAgentId());
                 }
                 
