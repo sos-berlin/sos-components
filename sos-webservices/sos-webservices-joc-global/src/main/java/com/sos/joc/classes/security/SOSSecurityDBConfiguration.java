@@ -48,7 +48,7 @@ import com.sos.joc.model.security.configuration.permissions.IniPermission;
 import com.sos.joc.model.security.configuration.permissions.IniPermissions;
 import com.sos.joc.model.security.configuration.permissions.SecurityConfigurationFolders;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
-  
+
 public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecurityDBConfiguration.class);
@@ -186,126 +186,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         }
     }
 
-    private void deleteAccounts(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
-            DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
-
-        IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-        IamAccountFilter iamAccountFilter = new IamAccountFilter();
-        iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
-
-        for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-            iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
-            iamAccountFilter.setAccountName(securityConfigurationAccount.getAccountName());
-            int count = iamAccountDBLayer.deleteCascading(iamAccountFilter);
-            if (count == 0) {
-                throw new JocObjectNotExistException("Object <" + securityConfigurationAccount.getAccountName() + "> not found");
-            }
-        }
-    }
-
-    private void changePasswordAccounts(SOSHibernateSession sosHibernateSession, boolean withPasswordCheck,
-            SecurityConfiguration securityConfiguration, DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
-
-        SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
-        IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-        IamAccountFilter iamAccountFilter = new IamAccountFilter();
-
-        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.JOC
-                .toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-            SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                webserviceCredentials.setValuesFromProfile(sosIdentityService);
-            }
-
-            String initialPassword = null;
-            SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
-
-            for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-                if (securityConfigurationAccount.getPassword() != null && securityConfigurationAccount.getPassword().equals(
-                        securityConfigurationAccount.getRepeatedPassword())) {
-                    iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
-                    iamAccountFilter.setAccountName(securityConfigurationAccount.getAccountName());
-
-                    List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
-                    if (listOfAccounts.size() == 1) {
-
-                        if (withPasswordCheck) {
-                            if (!SOSPasswordHasher.verify(securityConfigurationAccount.getOldPassword(), listOfAccounts.get(0)
-                                    .getAccountPassword())) {
-                                continue;
-                            }
-                        }
-
-                        String password;
-                        if (securityConfigurationAccount.getPassword() == null || securityConfigurationAccount.getPassword().isEmpty()) {
-                            if (initialPassword == null) {
-                                initialPassword = sosInitialPasswordSetting.getInitialPassword();
-                            }
-                            password = initialPassword;
-                            listOfAccounts.get(0).setForcePasswordChange(true);
-
-                        } else {
-                            password = securityConfigurationAccount.getPassword();
-                            listOfAccounts.get(0).setForcePasswordChange(false);
-                        }
-                        listOfAccounts.get(0).setAccountPassword(SOSPasswordHasher.hash(password));
-                        if (!sosInitialPasswordSetting.isMininumPasswordLength(password)) {
-                            JocError error = new JocError();
-                            error.setMessage("Password is too short");
-                            throw new JocInfoException(error);
-                        }
-
-                        if (sosInitialPasswordSetting.getInitialPassword().equals(password)) {
-                            listOfAccounts.get(0).setForcePasswordChange(true);
-                        }
-
-                        sosHibernateSession.update(listOfAccounts.get(0));
-
-                        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                            storeInVault(webserviceCredentials, securityConfigurationAccount, password, IdentityServiceTypes.fromValue(
-                                    dbItemIamIdentityService.getIdentityServiceType()));
-                        }
-                    } else {
-                        JocError error = new JocError();
-                        error.setMessage("Unknown account or password is wrong");
-                        throw new JocInfoException(error);
-                    }
-
-                } else {
-                    JocError error = new JocError();
-                    error.setMessage("Password does not match repeated password");
-                    throw new JocInfoException(error);
-                }
-            }
-        }
-
-    }
-
-    private void forcePasswordChangeAccounts(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
-            DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
-
-        IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-        IamAccountFilter iamAccountFilter = new IamAccountFilter();
-
-        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.JOC
-                .toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-
-            for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-                iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
-                iamAccountFilter.setAccountName(securityConfigurationAccount.getAccountName());
-                List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
-                if (listOfAccounts.size() == 1) {
-                    listOfAccounts.get(0).setForcePasswordChange(true);
-                    sosHibernateSession.update(listOfAccounts.get(0));
-                } else {
-                    JocError error = new JocError();
-                    error.setMessage("Unknown account:" + securityConfigurationAccount.getAccountName());
-                    throw new JocInfoException(error);
-                }
-            }
-        }
-    }
-
     private void storeRoles(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService) throws SOSHibernateException {
         if (securityConfiguration.getRoles() != null) {
@@ -322,16 +202,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         }
     }
 
-    private void deleteRoles(SOSHibernateSession sosHibernateSession, Roles roles, DBItemIamIdentityService dbItemIamIdentityService)
-            throws SOSHibernateException {
-        IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-        for (Role role : roles.getRoles()) {
-            if (!iamAccountDBLayer.deleteRoleCascading(role.getRole(), dbItemIamIdentityService.getId())) {
-                throw new JocObjectNotExistException("Object <" + role.getRole() + " not found");
-            }
-
-        }
-    }
 
     private void storePermissions(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService) throws SOSHibernateException {
@@ -429,8 +299,8 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
     }
 
     @Override
-    public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration,
-            DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
+    public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration, DBItemIamIdentityService dbItemIamIdentityService)
+            throws Exception {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
@@ -451,24 +321,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
     }
 
-   
-
-    public void deleteRoles(Roles roles, DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
-            sosHibernateSession.setAutoCommit(false);
-            Globals.beginTransaction(sosHibernateSession);
-            deleteRoles(sosHibernateSession, roles, dbItemIamIdentityService);
-            Globals.commit(sosHibernateSession);
-        } catch (Exception e) {
-            Globals.rollback(sosHibernateSession);
-            throw e;
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-
-    }
 
     public SecurityConfiguration importConfiguration(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
@@ -610,46 +462,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         }
 
         return secConfig;
-    }
-
-    public void changePassword(boolean withPasswordCheck, SecurityConfiguration securityConfiguration,
-            DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
-            sosHibernateSession.setAutoCommit(false);
-            Globals.beginTransaction(sosHibernateSession);
-            changePasswordAccounts(sosHibernateSession, withPasswordCheck, securityConfiguration, dbItemIamIdentityService);
-            Globals.commit(sosHibernateSession);
-        } catch (JocInfoException e) {
-            Globals.rollback(sosHibernateSession);
-            LOGGER.info(e.getError().getMessage());
-        } catch (Exception e) {
-            Globals.rollback(sosHibernateSession);
-            throw e;
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-
-    }
-
-    public void forcePasswordChange(SecurityConfiguration securityConfiguration, DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
-            sosHibernateSession.setAutoCommit(false);
-            Globals.beginTransaction(sosHibernateSession);
-            forcePasswordChangeAccounts(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
-            Globals.commit(sosHibernateSession);
-        } catch (JocInfoException e) {
-            Globals.rollback(sosHibernateSession);
-            LOGGER.info(e.getError().getMessage());
-        } catch (Exception e) {
-            Globals.rollback(sosHibernateSession);
-            throw e;
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
     }
 
 }

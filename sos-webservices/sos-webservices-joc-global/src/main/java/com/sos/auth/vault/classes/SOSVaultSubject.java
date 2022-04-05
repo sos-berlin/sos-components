@@ -31,7 +31,6 @@ public class SOSVaultSubject implements ISOSAuthSubject {
     private Map<String, List<String>> mapOfFolderPermissions;
     private Set<String> setOfAccountPermissions;
     private Set<String> setOfRoles;
-    private Set<DBItemIamPermissionWithName> setOfPermissions;
     private SOSIdentityService identityService;
     private String account;
 
@@ -103,39 +102,11 @@ public class SOSVaultSubject implements ISOSAuthSubject {
                 setOfRoles.addAll(listOfTokenRoles);
             }
 
-            setOfAccountPermissions = new HashSet<String>();
-
             List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, identityService
                     .getIdentityServiceId());
-            mapOfFolderPermissions = new HashMap<String, List<String>>();
-            setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
-            for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
-                setOfPermissions.add(dbItemSOSPermissionWithName);
-                if (dbItemSOSPermissionWithName.getAccountPermission() != null && !dbItemSOSPermissionWithName.getAccountPermission().isEmpty()) {
-                    String permission = "";
-                    if (dbItemSOSPermissionWithName.getControllerId() != null && !dbItemSOSPermissionWithName.getControllerId().isEmpty()) {
-                        permission = dbItemSOSPermissionWithName.getControllerId() + ":" + dbItemSOSPermissionWithName.getAccountPermission();
-                    } else {
-                        permission = dbItemSOSPermissionWithName.getAccountPermission();
-                    }
-                    if (dbItemSOSPermissionWithName.getExcluded()) {
-                        permission = "-" + permission;
-                    }
-                    setOfAccountPermissions.add(permission);
-                }
-                if (dbItemSOSPermissionWithName.getFolderPermission() != null && !dbItemSOSPermissionWithName.getFolderPermission().isEmpty()) {
-                    if (mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()) == null) {
-                        mapOfFolderPermissions.put(dbItemSOSPermissionWithName.getRoleName(), new ArrayList<String>());
-                    }
-                    if (dbItemSOSPermissionWithName.getRecursive()) {
-                        mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()).add(dbItemSOSPermissionWithName.getFolderPermission()
-                                + "/*");
-                    } else {
-                        mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()).add(dbItemSOSPermissionWithName.getFolderPermission());
-                    }
-                }
-            }
-
+            mapOfFolderPermissions = SOSAuthHelper.getMapOfFolderPermissions(listOfPermissions);
+            setOfAccountPermissions = SOSAuthHelper.getSetOfPermissions(listOfPermissions);
+           
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

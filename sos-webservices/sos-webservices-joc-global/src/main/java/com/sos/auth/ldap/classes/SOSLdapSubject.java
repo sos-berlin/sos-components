@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSSession;
@@ -24,14 +25,12 @@ public class SOSLdapSubject implements ISOSAuthSubject {
     private Boolean authenticated;
     private Map<String, List<String>> mapOfFolderPermissions;
     private Set<String> setOfAccountPermissions;
-    private Set<DBItemIamPermissionWithName> setOfPermissions;
     private Set<String> setOfRoles;
 
     public SOSLdapSubject() {
         super();
         authenticated = false;
         setOfRoles = new HashSet<String>();
-        setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
         setOfAccountPermissions = new HashSet<String>();
     }
 
@@ -102,34 +101,8 @@ public class SOSLdapSubject implements ISOSAuthSubject {
 
             List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, identityService
                     .getIdentityServiceId());
-            mapOfFolderPermissions = new HashMap<String, List<String>>();
-            setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
-            for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
-                setOfPermissions.add(dbItemSOSPermissionWithName);
-                if (dbItemSOSPermissionWithName.getAccountPermission() != null && !dbItemSOSPermissionWithName.getAccountPermission().isEmpty()) {
-                    String permission = "";
-                    if (dbItemSOSPermissionWithName.getControllerId() != null && !dbItemSOSPermissionWithName.getControllerId().isEmpty()) {
-                        permission = dbItemSOSPermissionWithName.getControllerId() + ":" + dbItemSOSPermissionWithName.getAccountPermission();
-                    } else {
-                        permission = dbItemSOSPermissionWithName.getAccountPermission();
-                    }
-                    if (dbItemSOSPermissionWithName.getExcluded()) {
-                        permission = "-" + permission;
-                    }
-                    setOfAccountPermissions.add(permission);
-                }
-                if (dbItemSOSPermissionWithName.getFolderPermission() != null && !dbItemSOSPermissionWithName.getFolderPermission().isEmpty()) {
-                    if (mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()) == null) {
-                        mapOfFolderPermissions.put(dbItemSOSPermissionWithName.getRoleName(), new ArrayList<String>());
-                    }
-                    if (dbItemSOSPermissionWithName.getRecursive()) {
-                        mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()).add(dbItemSOSPermissionWithName.getFolderPermission()
-                                + "/*");
-                    } else {
-                        mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()).add(dbItemSOSPermissionWithName.getFolderPermission());
-                    }
-                }
-            }
+            mapOfFolderPermissions = SOSAuthHelper.getMapOfFolderPermissions(listOfPermissions);
+            setOfAccountPermissions = SOSAuthHelper.getSetOfPermissions(listOfPermissions);
 
         } finally {
             Globals.disconnect(sosHibernateSession);
