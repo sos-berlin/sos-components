@@ -1206,6 +1206,17 @@ public class SOSHibernateSession implements Serializable {
                     getSQLExecutor().execute("set LOCK_TIMEOUT " + value);
                 }
             }
+            if (getFactory().readDatabaseMetaData() && !getFactory().getDatabaseMetaData().isSet()) {
+                // TODO
+                // currently only for Oracle because the returningClob issue
+                // should be later activated for all Dbms
+                if (Dbms.ORACLE.equals(getFactory().getDbms())) {
+                    getFactory().getDatabaseMetaData().set(this);
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(String.format("%s[databaseMetaData]%s", method, getFactory().getDatabaseMetaData()));
+                    }
+                }
+            }
         } catch (SOSHibernateConnectionException e) {
             throw new SOSHibernateOpenSessionException(String.format("%s%s", method, e.getMessage()), e);
         } catch (Exception e) {

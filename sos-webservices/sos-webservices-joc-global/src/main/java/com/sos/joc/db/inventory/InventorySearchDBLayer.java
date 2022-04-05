@@ -893,7 +893,7 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append(operator).append(" ");// and,or ..
             }
             String jsonFunc = null;
-            if (!getSession().getFactory().getSupportJsonReturningClob() && jsonAttribute.equals("$.scripts")) {
+            if (!getSession().getFactory().getDatabaseMetaData().supportJsonReturningClob() && jsonAttribute.equals("$.scripts")) {
                 jsonFunc = columnName;
             } else {
                 jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, columnName, jsonAttribute);

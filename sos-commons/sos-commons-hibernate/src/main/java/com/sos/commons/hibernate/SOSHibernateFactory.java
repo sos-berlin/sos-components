@@ -54,6 +54,7 @@ public class SOSHibernateFactory implements Serializable {
     private static final Logger CONNECTION_POOL_LOGGER = LoggerFactory.getLogger("ConnectionPool");
     private static final long serialVersionUID = 1L;
 
+    private SOSHibernateDatabaseMetaData databaseMetaData;
     private SOSClassList classMapping;
     private Configuration configuration;
     private SessionFactory sessionFactory;
@@ -66,9 +67,8 @@ public class SOSHibernateFactory implements Serializable {
 
     private String identifier;
     private String logIdentifier;
-    private String dbmsVersion;
-    private Boolean supportJsonReturningClob;
     private boolean useDefaultConfigurationProperties = true;
+    private boolean readDatabaseMetaData;
 
     public SOSHibernateFactory() throws SOSHibernateConfigurationException {
         this((String) null);
@@ -114,7 +114,14 @@ public class SOSHibernateFactory implements Serializable {
     }
 
     public void build() throws SOSHibernateFactoryBuildException {
+        build(false);
+    }
+
+    public void build(boolean readDatabaseMetaData) throws SOSHibernateFactoryBuildException {
         try {
+            // see SOSHibernateSession.onOpenSession
+            this.readDatabaseMetaData = readDatabaseMetaData;
+
             initConfiguration();
             adjustConfiguration(configuration);
             showConfigurationProperties();
@@ -391,6 +398,7 @@ public class SOSHibernateFactory implements Serializable {
 
             }
             setDbms(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT));
+            databaseMetaData = new SOSHibernateDatabaseMetaData(dbms);
         } catch (MalformedURLException e) {
             throw new SOSHibernateConfigurationException(String.format("exception on get configFile %s as url", configFile), e);
         } catch (PersistenceException e) {
@@ -618,43 +626,11 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
 
-    public void setDbmsVersion(String val) {
-        dbmsVersion = val;
+    public SOSHibernateDatabaseMetaData getDatabaseMetaData() {
+        return databaseMetaData;
     }
 
-    public String getDbmsVersion() {
-        return dbmsVersion;
-    }
-
-    public boolean getSupportJsonReturningClob() {
-        String method = SOSHibernate.getMethodName(logIdentifier, "getSupportJsonReturningClob");
-        if (supportJsonReturningClob == null) {
-            supportJsonReturningClob = true;
-            if (dbms != null && dbms.equals(Dbms.ORACLE)) {
-                supportJsonReturningClob = false;
-                if (dbmsVersion != null) {
-                    // 12.2.0.1
-                    // 18
-                    try {
-                        int major = -1;
-                        int idx = dbmsVersion.indexOf(".");
-                        if (idx > -1) {
-                            major = Integer.parseInt(dbmsVersion.substring(0, idx));
-                        } else {
-                            major = Integer.parseInt(dbmsVersion);
-                        }
-                        if (major >= 18) {
-                            supportJsonReturningClob = true;
-                        }
-                    } catch (Throwable e) {
-                        LOGGER.warn(String.format("[%s][dbmsVersion=%s]%s", method, dbmsVersion, e.toString()), e);
-                    }
-                }
-            }
-        }
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[%s][%s][dbmsVersion=%s]supportJsonReturningClob=%s", method, dbms, dbmsVersion, supportJsonReturningClob));
-        }
-        return supportJsonReturningClob.booleanValue();
+    protected boolean readDatabaseMetaData() {
+        return readDatabaseMetaData;
     }
 }

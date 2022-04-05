@@ -68,10 +68,10 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
             // ---- SELECT json_value(j, '$.bar' returning varchar2(32000) ERROR ON ERROR) FROM j;
             returnType = argument2ReturnType(arguments.get(0).toString());
             if (returnType.equals(ReturnType.SCALAR)) {
-                // testsed with 18c - not support RETURNING CLOB - gets empty value - use VARCHAR2(32000)?
+                // tested with 18c - not support RETURNING CLOB - gets empty value - use VARCHAR2(32000)?
                 return "JSON_VALUE(" + property + "," + path + ")";
             } else {
-                if (this.factory.getSupportJsonReturningClob()) {
+                if (this.factory.getDatabaseMetaData().supportJsonReturningClob()) {
                     return "JSON_QUERY(" + property + "," + path + " RETURNING CLOB)";
                 } else {
                     return "JSON_QUERY(" + property + "," + path + ")";
