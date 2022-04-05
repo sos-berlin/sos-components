@@ -443,6 +443,7 @@ public class TreePermanent {
         if (folder.getLockedSince() != null) {
             tree.setLockedSince(folder.getLockedSince());
         }
+        tree.setRepoControlled(folder.getRepoControlled());
         tree.setPermitted(isPermitted);
         return tree;
     }

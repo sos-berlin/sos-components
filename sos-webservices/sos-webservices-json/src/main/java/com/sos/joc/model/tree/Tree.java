@@ -25,6 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "name",
     "deleted",
     "permitted",
+    "repoControlled",
     "lockedBy",
     "lockedSince",
     "folders"
@@ -52,6 +53,8 @@ public class Tree {
     private Boolean deleted;
     @JsonProperty("permitted")
     private Boolean permitted = true;
+    @JsonProperty("repoControlled")
+    private Boolean repoControlled;
     @JsonProperty("lockedBy")
     private String lockedBy;
     /**
@@ -128,6 +131,16 @@ public class Tree {
     @JsonProperty("permitted")
     public void setPermitted(Boolean permitted) {
         this.permitted = permitted;
+    }
+
+    @JsonProperty("repoControlled")
+    public Boolean getRepoControlled() {
+        return repoControlled;
+    }
+
+    @JsonProperty("repoControlled")
+    public void setRepoControlled(Boolean permitted) {
+        this.repoControlled = permitted;
     }
 
     @JsonProperty("lockedBy")

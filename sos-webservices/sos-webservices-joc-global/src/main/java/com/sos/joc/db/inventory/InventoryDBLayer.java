@@ -34,6 +34,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.items.FolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
@@ -1180,36 +1181,28 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     private Set<Tree> getFoldersByFolder(List<String> folders) throws SOSHibernateException {
-        List<Object[]> result = _getFoldersByFolder(folders);
-        if (result != null && !result.isEmpty()) {
-            return result.stream().map(s -> {
-                Tree tree = new Tree();
-                tree.setPath((String) s[0]);
-                tree.setDeleted((Boolean) s[1]);
-                return tree;
-            }).collect(Collectors.toSet());
-        }
-        return new HashSet<>();
+        return _getFoldersByFolder(folders).stream().collect(Collectors.toSet());
     }
 
-    private List<Object[]> _getFoldersByFolder(List<String> folders) throws SOSHibernateException {
+    private List<FolderItem> _getFoldersByFolder(List<String> folders) throws SOSHibernateException {
         if (folders == null) {
             folders = Collections.emptyList();
         }
         if (folders.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
-            List<Object[]> result = new ArrayList<>();
+            List<FolderItem> result = new ArrayList<>();
             for (int i = 0; i < folders.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
                 result.addAll(_getFoldersByFolder(SOSHibernate.getInClausePartition(i, folders)));
             }
             return result;
         } else if (!folders.isEmpty()) {
             StringBuilder sql = new StringBuilder();
-            sql.append("select path, deleted from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            //sql.append("select new ").append(FolderItem.class.getName()).append("(path, deleted, repoControlled) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append("select new ").append(FolderItem.class.getName()).append("(path, deleted) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             sql.append(" where path in (:folders) and type=:type");
-            Query<Object[]> query = getSession().createQuery(sql.toString());
+            Query<FolderItem> query = getSession().createQuery(sql.toString());
             query.setParameterList("folders", folders);
             query.setParameter("type", ConfigurationType.FOLDER.intValue());
-            List<Object[]> result = getSession().getResultList(query);
+            List<FolderItem> result = getSession().getResultList(query);
             if (result != null) {
                 return result;
             }

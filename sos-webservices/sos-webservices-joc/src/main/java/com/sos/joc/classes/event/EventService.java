@@ -93,6 +93,7 @@ import js7.data.order.OrderEvent.OrderSuspensionMarked;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
 import js7.data.subagent.SubagentId;
+import js7.data.subagent.SubagentSelectionId;
 import js7.data.subagent.SubagentItemStateEvent;
 import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.instructions.BoardInstruction;
@@ -415,7 +416,7 @@ public class EventService {
                 // UnsignedSimpleItemAdded SimpleItemAddedAndChanged and SimpleItemChanged etc.
                 String eventType = evt.getClass().getSimpleName().replaceFirst(".*Simple", "");
                 SimpleItemPath itemId = ((UnsignedSimpleItemEvent) evt).key();
-                if (itemId instanceof AgentPath || itemId instanceof SubagentId) {
+                if (itemId instanceof AgentPath || itemId instanceof SubagentId || itemId instanceof SubagentSelectionId) {
                     //eventType = evt.getClass().getSimpleName().replaceFirst(".*SimpleItem", "Agent");
                     addEvent(createAgentEvent(eventId, itemId.string(), eventType));
                 } else if (itemId instanceof LockPath) {
@@ -440,7 +441,7 @@ public class EventService {
             } else if (evt instanceof ItemDeleted) {
                 InventoryItemKey itemId = ((ItemDeleted) evt).key();
                 String eventType = "ItemDeleted";
-                if (itemId instanceof AgentPath || itemId instanceof SubagentId) {
+                if (itemId instanceof AgentPath || itemId instanceof SubagentId || itemId instanceof SubagentSelectionId) {
                     addEvent(createAgentEvent(eventId, itemId.path().string(), eventType));
                 } else if (itemId instanceof LockPath) {
                     addEvent(createLockEvent(eventId, itemId.path().string(), eventType));
