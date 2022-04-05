@@ -66,6 +66,10 @@ public class GitCredentialsGetImpl extends JOCResourceImpl implements IGitCreden
                 dbItem = existing.get(0);
                 credList =  Globals.objectMapper.readValue(dbItem.getConfigurationItem(), GitCredentialsList.class);
             }
+            if(!credList.getRemoteUris().isEmpty()) {
+                // remove from response as uris are not part of the credentials
+                credList.setRemoteUris(null);
+            }
             Date finished = Date.from(Instant.now());
             LOGGER.trace("*** get credentials finished ***" + finished);
             LOGGER.trace(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));

@@ -17,7 +17,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "gitAccount",
     "gitServer"
 })
 public class RemoveCredentials {
@@ -29,41 +28,8 @@ public class RemoveCredentials {
      * (Required)
      * 
      */
-    @JsonProperty("gitAccount")
-    private String gitAccount;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("gitServer")
     private String gitServer;
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("gitAccount")
-    public String getGitAccount() {
-        return gitAccount;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("gitAccount")
-    public void setGitAccount(String gitAccount) {
-        this.gitAccount = gitAccount;
-    }
 
     /**
      * string without < and >
@@ -91,12 +57,12 @@ public class RemoveCredentials {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("gitAccount", gitAccount).append("gitServer", gitServer).toString();
+        return new ToStringBuilder(this).append("gitServer", gitServer).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(gitAccount).append(gitServer).toHashCode();
+        return new HashCodeBuilder().append(gitServer).toHashCode();
     }
 
     @Override
@@ -108,7 +74,7 @@ public class RemoveCredentials {
             return false;
         }
         RemoveCredentials rhs = ((RemoveCredentials) other);
-        return new EqualsBuilder().append(gitAccount, rhs.gitAccount).append(gitServer, rhs.gitServer).isEquals();
+        return new EqualsBuilder().append(gitServer, rhs.gitServer).isEquals();
     }
 
 }

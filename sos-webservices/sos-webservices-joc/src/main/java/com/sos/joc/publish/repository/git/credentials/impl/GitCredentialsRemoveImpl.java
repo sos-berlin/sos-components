@@ -22,7 +22,6 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.publish.git.GitCredentialsList;
-import com.sos.joc.model.publish.git.RemoveCredentials;
 import com.sos.joc.model.publish.git.RemoveCredentialsFilter;
 import com.sos.joc.publish.repository.git.credentials.resource.IGitCredentialsRemove;
 import com.sos.schema.JsonValidator;
@@ -68,9 +67,9 @@ public class GitCredentialsRemoveImpl extends JOCResourceImpl implements IGitCre
                 dbItem = existing.get(0);
                 credList =  Globals.objectMapper.readValue(dbItem.getConfigurationItem(), GitCredentialsList.class);
             }
-            if(filter.getCredentials() != null && !filter.getCredentials().isEmpty()) {
-                for(RemoveCredentials credentials : filter.getCredentials()) {
-                    deleteIfExists(credentials, credList);
+            if(filter.getGitServers() != null && !filter.getGitServers().isEmpty()) {
+                for(String gitServer : filter.getGitServers()) {
+                    deleteIfExists(gitServer, credList);
                 }
             }
             dbItem.setConfigurationItem(Globals.objectMapper.writeValueAsString(credList));
@@ -89,10 +88,9 @@ public class GitCredentialsRemoveImpl extends JOCResourceImpl implements IGitCre
         }
     }
 
-    private void deleteIfExists(RemoveCredentials credentials, GitCredentialsList existing) {
+    private void deleteIfExists(String gitServer, GitCredentialsList existing) {
         existing.setCredentials(existing.getCredentials().stream()
-                .filter(item -> !(item.getGitAccount().equals(credentials.getGitAccount()) 
-                        && item.getGitServer().equals(credentials.getGitServer())))
+                .filter(item -> !item.getGitServer().equals(gitServer))
                 .collect(Collectors.toList()));
     }
     

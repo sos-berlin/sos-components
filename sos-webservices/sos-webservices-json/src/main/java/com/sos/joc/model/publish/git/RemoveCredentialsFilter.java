@@ -20,18 +20,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "credentials",
+    "gitServers",
     "auditLog"
 })
 public class RemoveCredentialsFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("credentials")
-    private List<RemoveCredentials> credentials = new ArrayList<RemoveCredentials>();
+    @JsonProperty("gitServers")
+    private List<String> gitServers = new ArrayList<String>();
     /**
      * auditParams
      * <p>
@@ -41,24 +36,14 @@ public class RemoveCredentialsFilter {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("credentials")
-    public List<RemoveCredentials> getCredentials() {
-        return credentials;
+    @JsonProperty("gitServers")
+    public List<String> getGitServers() {
+        return gitServers;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("credentials")
-    public void setCredentials(List<RemoveCredentials> credentials) {
-        this.credentials = credentials;
+    @JsonProperty("gitServers")
+    public void setGitServers(List<String> gitServers) {
+        this.gitServers = gitServers;
     }
 
     /**
@@ -85,12 +70,12 @@ public class RemoveCredentialsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("credentials", credentials).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("gitServers", gitServers).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(credentials).toHashCode();
+        return new HashCodeBuilder().append(gitServers).append(auditLog).toHashCode();
     }
 
     @Override
@@ -102,7 +87,7 @@ public class RemoveCredentialsFilter {
             return false;
         }
         RemoveCredentialsFilter rhs = ((RemoveCredentialsFilter) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(credentials, rhs.credentials).isEquals();
+        return new EqualsBuilder().append(gitServers, rhs.gitServers).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

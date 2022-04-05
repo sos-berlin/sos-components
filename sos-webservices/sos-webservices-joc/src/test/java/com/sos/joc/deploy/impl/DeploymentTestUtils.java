@@ -988,12 +988,7 @@ public class DeploymentTestUtils {
 
     public static RemoveCredentialsFilter createExampleRemoveGitCredentialsFilter() {
         RemoveCredentialsFilter removeCredFilter = new RemoveCredentialsFilter();
-        List<RemoveCredentials> toRemove = new ArrayList<RemoveCredentials>();
-        RemoveCredentials cred = new RemoveCredentials();
-        cred.setGitAccount("myExampleGitAccount");
-        cred.setGitServer("my-example-remote.git-host.net");
-        toRemove.add(cred);
-        removeCredFilter.setCredentials(toRemove);
+        removeCredFilter.getGitServers().add("github.com");
         return removeCredFilter;
     }
     

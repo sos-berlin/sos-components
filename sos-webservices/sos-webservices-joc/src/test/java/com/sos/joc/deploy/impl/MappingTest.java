@@ -397,7 +397,7 @@ public class MappingTest {
         LOGGER.trace("AddCredentialsFilter");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleAddGitCredentialsFilter()));
         LOGGER.trace("RemoveCredentialsFilter");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleRemoveGitCredentialsFilter()));
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleRemoveGitCredentialsFilter()));
     }
     
     @Test
