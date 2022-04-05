@@ -15,7 +15,7 @@ public class SOSHibernateDatabaseMetaData {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateDatabaseMetaData.class);
 
     // TODO declare and use the Dbms here instead of SOSHibernateFactory.Dbms
-    private Dbms dbms = Dbms.UNKNOWN;
+    private final Dbms dbms;
 
     private String productName;
     private String productVersion;
@@ -25,11 +25,11 @@ public class SOSHibernateDatabaseMetaData {
     private boolean isSet;
 
     public SOSHibernateDatabaseMetaData(Dbms dbms) {
-        this.dbms = dbms;
+        this.dbms = dbms == null ? Dbms.UNKNOWN : dbms;
         setSupportJsonReturningClob();
     }
 
-    public void set(SOSHibernateSession session) {
+    protected void set(SOSHibernateSession session) {
         if (session == null || isSet) {
             return;
         }
@@ -64,7 +64,7 @@ public class SOSHibernateDatabaseMetaData {
     private void setSupportJsonReturningClob() {
         supportJsonReturningClob = true;
 
-        if (dbms != null && dbms.equals(Dbms.ORACLE)) {
+        if (dbms.equals(Dbms.ORACLE)) {
             supportJsonReturningClob = false;
             if (majorVersion >= 18) {
                 supportJsonReturningClob = true;
