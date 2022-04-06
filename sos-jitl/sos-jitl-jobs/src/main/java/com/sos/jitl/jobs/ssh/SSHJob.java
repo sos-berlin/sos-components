@@ -147,7 +147,6 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             if (resolvedReturnValuesFileName != null) {
                 executePostCommand(jobArgs, provider);
             }
-            deleteTempFiles(jobArgs, provider);
         } catch (Throwable e) {
             if (jobArgs.getRaiseExceptionOnError().getValue()) {
                 if (jobArgs.getIgnoreError().getValue()) {
@@ -177,6 +176,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             throw e;
         } finally {
             if (provider != null) {
+                deleteTempFiles(jobArgs, provider);
                 provider.disconnect();
                 logger.info("[disconnected]%s:%s", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());
             }
