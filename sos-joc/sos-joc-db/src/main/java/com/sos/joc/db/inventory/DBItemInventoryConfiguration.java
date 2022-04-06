@@ -76,6 +76,10 @@ public class DBItemInventoryConfiguration extends DBItem {
     @Type(type = "numeric_boolean")
     private boolean released;
 
+    @Column(name = "[REPO_CTRL]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean repoControlled = false;
+
     @Column(name = "[AUDIT_LOG_ID]", nullable = false)
     private Long auditLogId;
 
@@ -196,6 +200,14 @@ public class DBItemInventoryConfiguration extends DBItem {
 
     public void setReleased(boolean val) {
         released = val;
+    }
+
+    public boolean isRepoControlled() {
+        return repoControlled;
+    }
+
+    public void setRepoControlled(boolean repoControlled) {
+        this.repoControlled = repoControlled;
     }
 
     public Long getAuditLogId() {
