@@ -11,6 +11,8 @@ public class SOSHibernateDatabaseMetaData {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateDatabaseMetaData.class);
 
+    private static final int MAX_SET_RETRY = 5;
+
     // TODO declare the Dbms enum here instead of SOSHibernateFactory.Dbms
     /** not null - evaluated from the hibernate configuration */
     private final Dbms dbms;
@@ -25,15 +27,23 @@ public class SOSHibernateDatabaseMetaData {
     private boolean supportJsonReturningClob;
 
     private boolean isSet;
+    private int setRetryCounter;
 
     protected SOSHibernateDatabaseMetaData(Dbms dbms) {
         this.dbms = dbms == null ? Dbms.UNKNOWN : dbms;
+        this.setRetryCounter = 0;
         setSupportJsonReturningClob();
     }
 
     protected void set(DatabaseMetaData metaData) {
-        if (metaData == null || isSet) {
-            isSet = true;// ??? when metaData null
+        if (isSet) {
+            return;
+        }
+        if (metaData == null) {
+            setRetryCounter++;
+            if (setRetryCounter >= MAX_SET_RETRY) {
+                isSet = true;
+            }
             return;
         }
         doSet(metaData);
