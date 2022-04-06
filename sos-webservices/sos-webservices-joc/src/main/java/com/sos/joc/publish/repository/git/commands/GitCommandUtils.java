@@ -90,7 +90,11 @@ public class GitCommandUtils {
                 Path gitKeyfilePath = null;
                 for(GitCredentials credentials : credList.getCredentials()) {
                     if(credentials.getGitServer().equals(hostPort)) {
-                        if(credentials.getKeyfilePath().isEmpty()) {
+                        if (credentials.getKeyfilePath() == null) {
+                            throw new JocGitException(String.format(
+                                    "remote Uri '%1$s' needs ssh authentication. Missing keyfilePath in credentials for server '%2$s' and account '%3$s'.",
+                                    filter.getRemoteUri(), hostPort, credentials.getGitAccount()));
+                        } else if(credentials.getKeyfilePath().isEmpty()) {
                             // use ~/.ssh/id_rsa from home directory
                             // use Path homeDir = Paths.get(System.getProperty("user.home")); for windows and linux
                             gitKeyfilePath = Paths.get(System.getProperty("user.home")).resolve(".ssh/id_rsa");
