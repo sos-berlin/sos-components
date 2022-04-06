@@ -92,6 +92,15 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             if (!jobArgs.getCommand().isEmpty()) {
                 logger.info("[execute command] %s", jobArgs.getCommand().getDisplayValue());
                 commands = splitCommands(jobArgs);
+                // new feature 2022-04-05, SP
+                if(!jobArgs.getCommandScriptFile().isEmpty()) {
+                    String remoteCmdScriptFilepath = createRemoteCommandScript(provider, jobArgs);
+                    envVars.getLocalEnvs().put("JS7_SSH_TMP_SCRIPT_FILE", remoteCmdScriptFilepath);
+                    if (jobArgs.getCommandScriptParam().isDirty() && !jobArgs.getCommandScriptParam().isEmpty()) {
+                        String cmdScriptParams = jobArgs.getCommandScriptParam().getValue();
+                        envVars.getLocalEnvs().put("JS7_SSH_SCRIPT_PARAMS", cmdScriptParams);
+                    }
+                }
             } else {
                 commands = new String[1];
                 commands[0] = createRemoteCommandScript(provider, jobArgs);

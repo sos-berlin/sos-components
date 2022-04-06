@@ -12,7 +12,12 @@
 		<br/>
 		<p>
 			The parameters <paramref>command</paramref>, <paramref>command_script</paramref> and <paramref>command_script_file</paramref>
-			 are optional by themself, but it is required to set one of the three.
+			are optional by themself, but it is required to set one of the three. The parameter <paramref>command</paramref> is the leading parameter. 
+      If set, commands from this parameter will be executed. If parameter <paramref>command_script_file</paramref> is also set, the script file 
+      will be transferred, but not executed.
+      Instead an environment variable JS7_SSH_TMP_SCRIPT_FILE with the path to the remote temporary script file will be provided. 
+      If additionally parameter <paramref>command_script_param</paramref> is set, these will not be automatically appended.
+      Instead an environment variable JS7_SSH_SCRIPT_PARAMS will be provided to use dynamically within the <paramref>command</paramref> parameter.
 		</p>
 	</note>
 </param>
