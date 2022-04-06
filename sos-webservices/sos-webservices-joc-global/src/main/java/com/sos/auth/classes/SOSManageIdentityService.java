@@ -164,11 +164,12 @@ public class SOSManageIdentityService {
     private void createLdapSettings(SOSHibernateSession sosHibernateSession, String ldapName, Map<String, List<String>> mainSection)
             throws SOSHibernateException {
         DBItemJocConfiguration dbItem = new DBItemJocConfiguration();
-        if (mainSection.get(ldapName + ".groupRolesMap") != null) {
+        if (mainSection.get(ldapName + ".groupRolesMap") == null) {
             dbItem.setObjectType("LDAP-JOC");
-        }else {
+        } else {
             dbItem.setObjectType("LDAP");
-        }        dbItem.setConfigurationType("IAM");
+        }
+        dbItem.setConfigurationType("IAM");
         dbItem.setName("LDAP_" + ldapName);
         dbItem.setControllerId(ConfigurationGlobals.CONTROLLER_ID);
         dbItem.setInstanceId(ConfigurationGlobals.INSTANCE_ID);
