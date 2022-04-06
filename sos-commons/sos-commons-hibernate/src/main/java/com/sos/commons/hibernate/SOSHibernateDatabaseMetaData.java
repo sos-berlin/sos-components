@@ -12,6 +12,7 @@ public class SOSHibernateDatabaseMetaData {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateDatabaseMetaData.class);
 
     private static final int MAX_SET_RETRY = 5;
+    private static final int ORACLE_MIN_VERSION_SUPPORT_JSON_RETURNING_CLOB = 18;
 
     // TODO declare the Dbms enum here instead of SOSHibernateFactory.Dbms
     /** not null - evaluated from the hibernate configuration */
@@ -67,7 +68,7 @@ public class SOSHibernateDatabaseMetaData {
 
         if (dbms.equals(Dbms.ORACLE)) {
             supportJsonReturningClob = false;
-            if (majorVersion >= 18) {
+            if (majorVersion >= ORACLE_MIN_VERSION_SUPPORT_JSON_RETURNING_CLOB) {
                 supportJsonReturningClob = true;
             }
         }
