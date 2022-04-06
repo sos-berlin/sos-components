@@ -29,14 +29,14 @@ public class SOSPermissionMapTable {
 
         addMapEntry("sos:products:joc_cockpit:joc:view:log", "sos:products:joc:get_log");
         
-        addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view", "sos:products:joc:adminstration:controllers:view");
+        addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view", "sos:products:controller:view");
 
-        addMapEntry("sos:products:joc_cockpit:jobscheduler_master", "sos:products:joc:adminstration:controllers:view");
+        addMapEntry("sos:products:joc_cockpit:jobscheduler_master", "sos:products:controller:view");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master", "sos:products:controller:terminate");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master", "sos:products:controller:restart");
         
-        addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view:status", "sos:products:joc:adminstration:controllers:view");
-        addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view:parameter", "sos:products:joc:adminstration:controllers:view");
+        addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view:status", "sos:products:controller:view");
+        addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view:parameter", "sos:products:controller:view");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view:mainlog", "sos:products:controller:get_log");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:execute:restart:terminate", "sos:products:controller:terminate");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:execute:restart", "sos:products:controller:restart");
