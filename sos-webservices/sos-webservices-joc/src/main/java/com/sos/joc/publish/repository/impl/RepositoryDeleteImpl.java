@@ -1,9 +1,12 @@
 package com.sos.joc.publish.repository.impl;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
@@ -102,11 +105,34 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
                 Path relFolder = Paths.get("/").relativize(Paths.get(folder.getPath()));
                 Path pathToDelete = repositoriesBase.resolve(relFolder);
                 LOGGER.info("resolved path: " + pathToDelete.toString());
-                boolean deleted = Files.deleteIfExists(pathToDelete);
-                LOGGER.debug(String.format("Folder %1$s has been deleted: %2$s", folder.getPath(), deleted));
+                deleteFolders(pathToDelete);
+                LOGGER.debug(String.format("Folder %1$s has been deleted.", folder.getPath()));
             } catch (IOException e) {
                 LOGGER.debug(String.format("Folder - %1$s - could not be deleted!", folder.getPath()), e);
             }
         });
+    }
+    
+    private static void deleteFolders(Path path) throws IOException {
+        Files.walkFileTree(path, new FileVisitor<Path>() {
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+              });
     }
 }
