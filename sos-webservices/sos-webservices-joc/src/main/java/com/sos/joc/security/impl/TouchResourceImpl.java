@@ -20,11 +20,11 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
     private static final String API_CALL = "./touch";
 
     @Override
-    public JOCDefaultResponse postTouch(String xAccessToken, String accessToken) throws Exception {
+    public JOCDefaultResponse postTouch(String xAccessToken, String accessToken) {
         return postTouch(getAccessToken(xAccessToken, accessToken));
     }
 
-    public JOCDefaultResponse postTouch(String accessToken) throws Exception {
+    public JOCDefaultResponse postTouch(String accessToken) {
         try {
             initLogging(API_CALL, null, accessToken);
             if (!jobschedulerUser.isAuthenticated()) {
@@ -36,7 +36,7 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
                 LOGGER.info(e.getMessage());
             }
             return JOCDefaultResponse.responseStatusJSOk(null);
-        }catch (DBConnectionRefusedException e) {
+        } catch (DBConnectionRefusedException e) {
         	LOGGER.info(e.getMessage());
         	return JOCDefaultResponse.responseStatusJSOk(null);
         } catch (JocException e) {
@@ -57,7 +57,7 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
                 Globals.sosCockpitProperties.touchLog4JConfiguration();
             }
             return JOCDefaultResponse.responseStatusJSOk(null);
-        }catch (DBConnectionRefusedException e) {
+        } catch (DBConnectionRefusedException e) {
             LOGGER.info(e.getMessage());
             return JOCDefaultResponse.responseStatusJSOk(null);
         } catch (JocException e) {

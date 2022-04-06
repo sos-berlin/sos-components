@@ -31,6 +31,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.agent.SubAgentsCommand;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
@@ -53,6 +54,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
     private static final String API_CALL_ENABLE = "./agents/inventory/cluster/subagents/enable";
     private static final String API_CALL_DISABLE = "./agents/inventory/cluster/subagents/disable";
     private static final String API_CALL_REVOKE = "./agents/inventory/cluster/subagents/revoke";
+    private static final String API_CALL_RESET = "./agents/inventory/cluster/subagents/reset";
 
     @Override
     public JOCDefaultResponse delete(String accessToken, byte[] filterBytes) {
@@ -212,6 +214,31 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(connection);
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse reset(String accessToken, byte[] filterBytes) {
+        try {
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_RESET, filterBytes, accessToken);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            SubAgentsCommand subAgentCommand = getSubAgentsCommand(filterBytes);
+
+            String controllerId = subAgentCommand.getControllerId();
+
+            storeAuditLog(subAgentCommand.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            
+            // TODO
+            throw new JocNotImplementedException("The API " + API_CALL_RESET + " is not yet implemented!");
+            
+            //return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
     

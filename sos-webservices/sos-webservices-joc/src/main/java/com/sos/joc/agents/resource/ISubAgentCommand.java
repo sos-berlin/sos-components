@@ -34,4 +34,10 @@ public interface ISubAgentCommand {
     @Produces({ "application/json" })
     public JOCDefaultResponse disable(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
+    @POST
+    @Path("inventory/cluster/subagents/reset")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse reset(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
 }
