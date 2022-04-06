@@ -235,6 +235,7 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
                 dbSubAgent.setIsDirector(subAgent.getIsDirector());
                 dbSubAgent.setUri(subAgent.getUrl());
                 dbSubAgent.setTitle(subAgent.getTitle());
+                dbSubAgent.setDeployed(false);
                 dbSubAgent.setTransaction("update");
                 if (subAgent.getOrdering() != Integer.MIN_VALUE) {
                     dbSubAgent.setOrdering(subAgent.getOrdering());
@@ -260,6 +261,7 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
                 primaryDirector = curDbSubAgents.get(i);
                 primaryDirector.setIsDirector(SubagentDirectorType.NO_DIRECTOR.intValue());
                 primaryDirector.setTransaction("update");
+                primaryDirector.setDeployed(false);
                 curDbSubAgents.set(i, primaryDirector);
             }
             if (standbyDirectorIsChanged && standbyDirector != null) {
@@ -267,6 +269,7 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
                 standbyDirector = curDbSubAgents.get(i);
                 standbyDirector.setIsDirector(SubagentDirectorType.NO_DIRECTOR.intValue());
                 standbyDirector.setTransaction("update");
+                standbyDirector.setDeployed(false);
                 curDbSubAgents.set(i, standbyDirector);
             }
             // List<SubagentId> directors = dbLayer.getDirectorSubAgentIds(agentId).stream().map(id -> SubagentId.of(id)).collect(Collectors.toList());

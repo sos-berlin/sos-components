@@ -1196,8 +1196,8 @@ public class InventoryDBLayer extends DBLayer {
             return result;
         } else if (!folders.isEmpty()) {
             StringBuilder sql = new StringBuilder();
-            //sql.append("select new ").append(FolderItem.class.getName()).append("(path, deleted, repoControlled) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-            sql.append("select new ").append(FolderItem.class.getName()).append("(path, deleted) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append("select new ").append(FolderItem.class.getName()).append("(path, deleted, repoControlled) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            //sql.append("select new ").append(FolderItem.class.getName()).append("(path, deleted) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             sql.append(" where path in (:folders) and type=:type");
             Query<FolderItem> query = getSession().createQuery(sql.toString());
             query.setParameterList("folders", folders);

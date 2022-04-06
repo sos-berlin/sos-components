@@ -325,14 +325,12 @@ public class EventService {
     
     @Subscribe({ AgentInventoryEvent.class })
     public void createEvent(AgentInventoryEvent evt) {
-        if (controllerId.equals(evt.getControllerId())) {
-            EventSnapshot eventSnapshot = new EventSnapshot();
-            eventSnapshot.setEventId(evt.getEventId() / 1000);
-            eventSnapshot.setEventType(evt.getKey());
-            eventSnapshot.setObjectType(EventType.AGENT);
-            eventSnapshot.setMessage(evt.getAgentId());
-            addEvent(eventSnapshot);
-        }
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId() / 1000);
+        eventSnapshot.setEventType(evt.getKey());
+        eventSnapshot.setObjectType(EventType.AGENT);
+        eventSnapshot.setMessage(evt.getAgentId());
+        addEvent(eventSnapshot);
     }
     
     @Subscribe({ ProxyCoupled.class })

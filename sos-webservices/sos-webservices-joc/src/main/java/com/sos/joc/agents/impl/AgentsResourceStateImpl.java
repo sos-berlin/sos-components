@@ -44,6 +44,7 @@ import com.sos.joc.model.agent.AgentV;
 import com.sos.joc.model.agent.AgentsV;
 import com.sos.joc.model.agent.AgentsVFlat;
 import com.sos.joc.model.agent.ReadAgentsV;
+import com.sos.joc.model.agent.SubagentDirectorType;
 import com.sos.joc.model.agent.SubagentV;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderV;
@@ -192,6 +193,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         }).filter(Objects::nonNull).collect(Collectors.groupingBy(OrderV::getAgentId)));
                     }
 
+                    Map<AgentPath, JAgentRefState> agentRefStates = currentState.pathToAgentRefState();
                     Map<SubagentId, JSubagentItemState> subagentItemStates = currentState.idToSubagentItemState();
 
                     for (Map.Entry<String, List<DBItemInventorySubAgentInstance>> dbSubagents : dbSubagentsPerAgent.entrySet()) {
@@ -206,20 +208,34 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
 
                             subagentsPerAgentId.put(dbSubagents.getKey(), dbSubagents.getValue().stream().sorted(Comparator.comparingInt(
                                     DBItemInventorySubAgentInstance::getOrdering)).map(dbSubAgent -> {
-                                        JSubagentItemState jSubagentItemState = subagentItemStates.get(SubagentId.of(dbSubAgent.getSubAgentId()));
                                         SubagentV subagent = mapDbSubagentToAgentV(dbSubAgent);
                                         AgentStateText stateText = AgentStateText.UNKNOWN;
                                         if (Proxies.isCoupled(controllerId)) {
-                                            if (jSubagentItemState != null) {
-                                                LOGGER.debug("Subagent '" + dbSubAgent.getSubAgentId() + "',  state = " + jSubagentItemState
-                                                        .toJson());
-                                                SubagentItemState subagentItemState = jSubagentItemState.asScala();
-                                                DelegateCouplingState couplingState = subagentItemState.couplingState();
-                                                Optional<Problem> optProblem = OptionConverters.toJava(subagentItemState.problem());
-                                                if (optProblem.isPresent()) {
-                                                    subagent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
+                                            if (SubagentDirectorType.NO_DIRECTOR.equals(dbSubAgent.getDirectorAsEnum())) {
+                                                JSubagentItemState jSubagentItemState = subagentItemStates.get(SubagentId.of(dbSubAgent.getSubAgentId()));
+                                                if (jSubagentItemState != null) {
+                                                    LOGGER.debug("Subagent '" + dbSubAgent.getSubAgentId() + "',  state = " + jSubagentItemState
+                                                            .toJson());
+                                                    SubagentItemState subagentItemState = jSubagentItemState.asScala();
+                                                    DelegateCouplingState couplingState = subagentItemState.couplingState();
+                                                    Optional<Problem> optProblem = OptionConverters.toJava(subagentItemState.problem());
+                                                    if (optProblem.isPresent()) {
+                                                        subagent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
+                                                    }
+                                                    stateText = getAgentStateText(couplingState, optProblem);
                                                 }
-                                                stateText = getAgentStateText(couplingState, optProblem, dbSubAgent.getIsDirector() == 1);
+                                            } else {
+                                                JAgentRefState jAgentRefState = agentRefStates.get(AgentPath.of(dbSubAgent.getAgentId()));
+                                                if (jAgentRefState != null) {
+                                                    LOGGER.debug("Agent '" + dbSubAgent.getAgentId() + "',  state = " + jAgentRefState.toJson());
+                                                    AgentRefState agentRefState = jAgentRefState.asScala();
+                                                    DelegateCouplingState couplingState = agentRefState.couplingState();
+                                                    Optional<Problem> optProblem = OptionConverters.toJava(agentRefState.problem());
+                                                    if (optProblem.isPresent()) {
+                                                        subagent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
+                                                    }
+                                                    stateText = getAgentStateText(couplingState, optProblem);
+                                                }
                                             }
                                         }
                                         if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
@@ -241,7 +257,6 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         }
                     }
 
-                    Map<AgentPath, JAgentRefState> agentRefStates = currentState.pathToAgentRefState();
 
                     agentsList.addAll(dbAgents.stream().map(dbAgent -> {
                         JAgentRefState jAgentRefState = agentRefStates.get(AgentPath.of(dbAgent.getAgentId()));
@@ -257,7 +272,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                     if (optProblem.isPresent()) {
                                         agent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
                                     }
-                                    stateText = getAgentStateText(couplingState, optProblem, false);
+                                    stateText = getAgentStateText(couplingState, optProblem);
                                 }
                             }
                             if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
@@ -413,10 +428,12 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         agent.setSubagentId(dbSubagent.getSubAgentId());
         agent.setUrl(dbSubagent.getUri());
         agent.setState(getState(AgentStateText.UNKNOWN));
+        agent.setDisabled(dbSubagent.getDisabled());
+        agent.setIsDirector(dbSubagent.getDirectorAsEnum());
         return agent;
     }
 
-    private static AgentStateText getAgentStateText(DelegateCouplingState couplingState, Optional<Problem> optProblem, boolean isDirector) {
+    private static AgentStateText getAgentStateText(DelegateCouplingState couplingState, Optional<Problem> optProblem) {
         if (couplingState instanceof DelegateCouplingState.ShutDown$) {
             return AgentStateText.SHUTDOWN;
         } else if (optProblem.isPresent()) {
@@ -426,10 +443,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         } else if (couplingState instanceof DelegateCouplingState.Resetting$) {
             return AgentStateText.RESETTING;
         } else if (couplingState instanceof DelegateCouplingState.Reset$) {
-            if (!isDirector) {  // TODO cosmetic until Joacim has chande the API
-                return AgentStateText.RESET;
-            }
-            return AgentStateText.COUPLED;
+            return AgentStateText.RESET;
         }
         return AgentStateText.UNKNOWN;
     }

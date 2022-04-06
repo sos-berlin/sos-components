@@ -70,11 +70,11 @@ public class AgentHelper {
             return Collections.emptyMap();
         }
         Map<String, Set<String>> result = new HashMap<>(controllerIds.size());
-        controllerIds.stream().filter(Objects::nonNull).distinct().forEach(s -> result.put(s, getSubagents(s, currentStates.get(s))));
+        controllerIds.stream().filter(Objects::nonNull).distinct().forEach(s -> result.put(s, getSubagents(currentStates.get(s))));
         return result;
     }
 
-    private static Set<String> getSubagents(String controllerId, JControllerState currentState) {
+    private static Set<String> getSubagents(JControllerState currentState) {
         if (currentState == null) {
             return null;
         }
@@ -90,11 +90,11 @@ public class AgentHelper {
             return Collections.emptyMap();
         }
         Map<String, Set<String>> result = new HashMap<>(controllerIds.size());
-        controllerIds.stream().filter(Objects::nonNull).distinct().forEach(s -> result.put(s, getAgents(s, currentStates.get(s))));
+        controllerIds.stream().filter(Objects::nonNull).distinct().forEach(s -> result.put(s, getAgents(currentStates.get(s))));
         return result;
     }
 
-    private static Set<String> getAgents(String controllerId, JControllerState currentState) {
+    private static Set<String> getAgents(JControllerState currentState) {
         if (currentState == null) {
             return null;
         }
@@ -110,11 +110,11 @@ public class AgentHelper {
             return Collections.emptyMap();
         }
         Map<String, Set<String>> result = new HashMap<>(controllerIds.size());
-        controllerIds.stream().filter(Objects::nonNull).distinct().forEach(s -> result.put(s, getSubagentSelections(s, currentStates.get(s))));
+        controllerIds.stream().filter(Objects::nonNull).distinct().forEach(s -> result.put(s, getSubagentSelections(currentStates.get(s))));
         return result;
     }
 
-    private static Set<String> getSubagentSelections(String controllerId, JControllerState currentState) {
+    private static Set<String> getSubagentSelections(JControllerState currentState) {
         if (currentState == null) {
             return null;
         }
