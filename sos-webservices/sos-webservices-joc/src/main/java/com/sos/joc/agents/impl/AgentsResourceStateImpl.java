@@ -317,7 +317,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             }
             if (agentsParam.getFlat() == Boolean.TRUE) {
                 AgentsVFlat agents = new AgentsVFlat();
-                agents.setSurveyDate(Date.from(currentStateMoment));
+                agents.setSurveyDate(currentStateMoment == null ? null : Date.from(currentStateMoment));
                 agents.setDeliveryDate(Date.from(Instant.now()));
                 agents.setAgents(Stream.concat(agentsList.stream(), subagentsPerAgentId.values().stream().flatMap(List::stream)).sorted(Comparator
                         .comparingInt(AgentStateV::getRunningTasks).reversed()).collect(Collectors.toList()));
@@ -325,7 +325,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 return JOCDefaultResponse.responseStatus200(agents);
             } else {
                 AgentsV agents = new AgentsV();
-                agents.setSurveyDate(Date.from(currentStateMoment));
+                agents.setSurveyDate(currentStateMoment == null ? null : Date.from(currentStateMoment));
                 agents.setDeliveryDate(Date.from(Instant.now()));
                 agents.setAgents(agentsList);
 
