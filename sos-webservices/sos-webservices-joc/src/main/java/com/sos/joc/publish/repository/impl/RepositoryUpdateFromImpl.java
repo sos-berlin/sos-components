@@ -61,12 +61,14 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
             
             dbItemsToUpdate.stream().forEach(item -> {
                 try {
+                    item.setRepoControlled(true);
                     dbLayer.getSession().update(item);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
             });
             newDbItems.stream().forEach(item -> {
+                item.setRepoControlled(true);
                 try {
                     if (item.getId() == null || item.getId() == 0L) {
                         dbLayer.getSession().save(item);
