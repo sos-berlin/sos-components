@@ -12,23 +12,29 @@ public class SOSPermissionMapTable {
     public SOSPermissionMapTable() {
         super();
     }
-    
-    private void addMapEntry(String key,String value) {
-        if (permMap.get(key) == null){
+
+    private void addMapEntry(String key, String value) {
+        if (permMap.get(key) == null) {
             permMap.put(key, new ArrayList<String>());
         }
         permMap.get(key).add(value);
-  
+
     }
 
     private void initMap() {
- 
+
         permMap = new HashMap<String, List<String>>();
         addMapEntry("sos:products:joc_cockpit:joc", "sos:products:joc");
         addMapEntry("sos:products:joc_cockpit", "sos:products:joc");
 
-        
         addMapEntry("sos:products:joc_cockpit:joc:view:log", "sos:products:joc:get_log");
+        
+        addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view", "sos:products:joc:adminstration:controllers:view");
+
+        addMapEntry("sos:products:joc_cockpit:jobscheduler_master", "sos:products:joc:adminstration:controllers:view");
+        addMapEntry("sos:products:joc_cockpit:jobscheduler_master", "sos:products:controller:terminate");
+        addMapEntry("sos:products:joc_cockpit:jobscheduler_master", "sos:products:controller:restart");
+        
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view:status", "sos:products:joc:adminstration:controllers:view");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view:parameter", "sos:products:joc:adminstration:controllers:view");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view:mainlog", "sos:products:controller:get_log");
@@ -56,8 +62,7 @@ public class SOSPermissionMapTable {
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:administration:configurations", "sos:products:joc:others:view");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:administration:configurations", "sos:products:joc:inventory:view");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:administration:configurations", "sos:products:joc:notification:view");
-        
-        
+
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:administration:configurations:deploy:job", "sos:products:controller:deployment");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:administration:configurations:deploy:job_chain",
                 "sos:products:controller:deployment");
@@ -134,13 +139,24 @@ public class SOSPermissionMapTable {
         if (permMap == null) {
             initMap();
         }
+        boolean excluded;
         for (String perm : perms) {
+            if (perm.startsWith("-")) {
+                perm = perm.substring(1);
+                excluded = true;
+            } else {
+                excluded = false;
+            }
             if (permMap.get(perm) != null) {
-                for (String entry:permMap.get(perm)) {
-                mappedPerms.add(entry);
+                for (String entry : permMap.get(perm)) {
+                    if (excluded) {
+                        mappedPerms.add("-" + entry);
+                    } else {
+                        mappedPerms.add(entry);
+                    }
                 }
             } else {
-                if (perm.startsWith("sos:products:joc") || perm.length() < 17) {
+                if (perm.startsWith("sos:products:joc:") || perm.length() < 17) {
                     mappedPerms.add(perm);
                 }
             }
