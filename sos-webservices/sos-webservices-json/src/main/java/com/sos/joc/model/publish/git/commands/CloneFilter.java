@@ -39,6 +39,7 @@ public class CloneFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("folder")
@@ -85,6 +86,7 @@ public class CloneFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("folder")
@@ -96,6 +98,7 @@ public class CloneFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("folder")
