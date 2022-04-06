@@ -150,7 +150,7 @@ public class GitCommandUtils {
                     }
                 }
                 if(gitAccount == null || pwopat == null) {
-                    throw new JocGitException(String.format("No credentials found for Git Server %1$s", hostPort));
+                    throw new JocGitException(String.format("No credentials found for Git Server '%1$s'.", hostPort));
                 }
                 // prepare Uri
                 String updatedUri = String.format("%1$s://%2$s:%3$s@%4$s:%5$s", protocol, gitAccount, pwopat, hostPort, path);
