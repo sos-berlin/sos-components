@@ -49,9 +49,7 @@ import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.model.publish.git.AddCredentialsFilter;
-import com.sos.joc.model.publish.git.GetCredentialsFilter;
 import com.sos.joc.model.publish.git.GitCredentials;
-import com.sos.joc.model.publish.git.RemoveCredentials;
 import com.sos.joc.model.publish.git.RemoveCredentialsFilter;
 import com.sos.joc.model.publish.git.commands.CheckoutFilter;
 import com.sos.joc.model.publish.git.commands.CloneFilter;
@@ -971,11 +969,6 @@ public class DeploymentTestUtils {
         cred.setKeyfilePath("/example/path/to/keyfile");
         cred.setGitServer("my-example-remote.git-host.net");
         return cred;
-    }
-
-    public static GetCredentialsFilter createExampleGetGitCredentialsFilter() {
-        GetCredentialsFilter getCredFilter = new GetCredentialsFilter();
-        return getCredFilter;
     }
 
     public static AddCredentialsFilter createExampleAddGitCredentialsFilter() {

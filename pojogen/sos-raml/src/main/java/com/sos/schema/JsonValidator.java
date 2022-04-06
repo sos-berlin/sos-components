@@ -169,7 +169,6 @@ public class JsonValidator {
             put("com.sos.joc.model.auth.CreateOnetimeTokenFilter", "auth/createOnetimeTokenFilter-schema.json");
             put("com.sos.joc.model.auth.ShowOnetimeTokenFilter", "auth/showOnetimeTokenFilter-schema.json");
             put("com.sos.joc.model.publish.RevokeFilter", "publish/revoke-schema.json");
-            put("com.sos.joc.model.publish.git.GetCredentialsFilter", "publish/git/getCredentialsFilter-schema.json");
             put("com.sos.joc.model.publish.git.GitCredentials", "publish/git/gitCredentials-schema.json");
             put("com.sos.joc.model.publish.git.AddCredentialsFilter", "publish/git/addCredentialsFilter-schema.json");
             put("com.sos.joc.model.publish.git.RemoveCredentials", "publish/git/removeCredentials-schema.json");

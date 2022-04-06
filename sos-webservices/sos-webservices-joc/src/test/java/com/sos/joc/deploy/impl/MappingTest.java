@@ -392,8 +392,6 @@ public class MappingTest {
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGitCredentialsAccessToken()));
         LOGGER.trace("GitCredentials - with path to key file (ssh)");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGitCredentialsKeyfilePath()));
-        LOGGER.trace("GetCredentialsFilter");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGetGitCredentialsFilter()));
         LOGGER.trace("AddCredentialsFilter");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleAddGitCredentialsFilter()));
         LOGGER.trace("RemoveCredentialsFilter");
