@@ -29,6 +29,7 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.items.SubAgentItem;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
+import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
@@ -279,8 +280,10 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
             final Map<Boolean, List<String>> subAgentsMap = getKnownSubAgentsOnController(subAgentCommand, proxy.currentState());
 
             if (subAgentsMap.containsKey(false)) {
-                dbLayer.setSubAgentsDisabled(subAgentsMap.get(false), disabled);
-                EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
+                // dbLayer.setSubAgentsDisabled(subAgentsMap.get(false), disabled);
+                // EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
+                ProblemHelper.postExceptionEventAsHintIfExist(Either.left(new ControllerObjectNotExistException("Subagents " + subAgentsMap.get(false)
+                        .toString() + "not exist.")), accessToken, getJocError(), null);
             }
             if (subAgentsMap.containsKey(true)) {
                 

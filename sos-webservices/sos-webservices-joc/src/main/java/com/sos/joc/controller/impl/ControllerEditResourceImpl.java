@@ -35,6 +35,8 @@ import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -55,6 +57,7 @@ import com.sos.joc.model.controller.TestConnect;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
+import io.vavr.control.Either;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
@@ -253,6 +256,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                             updateAgentRequired = true;
                             watcherIsChanged = true;
                             dbAgent.setUri(clusterWatcher.getUrl());
+                            dbAgent.setDeployed(false);
                         }
                         if (watcherIsChanged) {
                             agentDBLayer.updateAgent(dbAgent);
@@ -275,13 +279,13 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     dbAgent.setAgentName(clusterWatcher.getAgentName());
                     dbAgent.setControllerId(controllerId);
                     dbAgent.setDisabled(false);
+                    dbAgent.setDeployed(false);
                     dbAgent.setIsWatcher(true);
                     dbAgent.setOsId(0L);
                     dbAgent.setStartedAt(null);
                     dbAgent.setUri(clusterWatcher.getUrl());
                     dbAgent.setVersion(null);
-                    dbAgent.setTitle(null); // TODO
-                    // dbAgent.setDeployed(null); // TODO
+                    dbAgent.setTitle(null);
                     agentDBLayer.saveAgent(dbAgent);
                 }
                 if (updateAgentRequired) {
@@ -321,7 +325,27 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                         return Arrays.asList(JUpdateItemOperation.addOrChangeSimple(createNewAgent(a)), JUpdateItemOperation.addOrChangeSimple(
                                 createSubagentDirector(a)));
                     }
-                }).flatMap(List::stream))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), cId));
+                }).flatMap(List::stream))).thenAccept(e -> {
+                    ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), cId);
+                    if (e.isRight()) {
+                        SOSHibernateSession connection1 = null;
+                        try {
+                            connection1 = Globals.createSosHibernateStatelessConnection(API_CALL_REGISTER);
+                            connection1.setAutoCommit(false);
+                            Globals.beginTransaction(connection1);
+                            InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
+                            List<String> agentIds = agentWatchers.stream().map(a -> a.getAgentId()).distinct().collect(Collectors.toList());
+                            dbLayer1.setAgentsDeployed(agentIds);
+                            Globals.commit(connection1);
+                            EventBus.getInstance().post(new AgentInventoryEvent(cId, agentIds));
+                        } catch (Exception e1) {
+                            Globals.rollback(connection1);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), cId);
+                        } finally {
+                            Globals.disconnect(connection1);
+                        }
+                    }
+                });
             }
             
             if (firstController) { // GUI needs permissions directly for the first controller(s)

@@ -104,7 +104,7 @@ public enum ProxyUser {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("", e);
+            LOGGER.warn(e.toString());
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

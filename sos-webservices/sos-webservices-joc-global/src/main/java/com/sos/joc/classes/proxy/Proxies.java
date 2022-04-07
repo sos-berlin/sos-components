@@ -484,7 +484,6 @@ public class Proxies {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetUnknownAgents");
                 dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
             }
-            // TODO consider deployed flag
             List<DBItemInventoryAgentInstance> dbAvailableAgents = dbLayer.getAgentsByControllerIds(Collections.singleton(controllerId), false, true);
             if (dbAvailableAgents != null) {
                 Map<JAgentRef, List<JSubagentItem>> result = new LinkedHashMap<>(dbAvailableAgents.size());
@@ -494,6 +493,9 @@ public class Proxies {
                     AgentPath agentPath = AgentPath.of(agent.getAgentId());
                     if (controllerKnownAgents.containsKey(agentPath)) {
                         continue;
+                    }
+                    if (!agent.getDeployed() && !agent.getIsWatcher()) {
+                        continue; 
                     }
                     List<DBItemInventorySubAgentInstance> subs = subAgents.get(agent.getAgentId());
                     if (subs == null || subs.isEmpty()) { // single agent

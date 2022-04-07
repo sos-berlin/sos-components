@@ -20,7 +20,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.exceptions.ControllerAuthorizationException;
