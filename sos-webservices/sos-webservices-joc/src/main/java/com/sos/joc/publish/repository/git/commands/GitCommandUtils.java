@@ -22,6 +22,7 @@ import com.sos.commons.git.results.GitCheckoutCommandResult;
 import com.sos.commons.git.results.GitCloneCommandResult;
 import com.sos.commons.git.results.GitCommitCommandResult;
 import com.sos.commons.git.results.GitConfigCommandResult;
+import com.sos.commons.git.results.GitLsRemoteCommandResult;
 import com.sos.commons.git.results.GitPullCommandResult;
 import com.sos.commons.git.results.GitPushCommandResult;
 import com.sos.commons.git.results.GitRemoteCommandResult;
@@ -123,8 +124,12 @@ public class GitCommandUtils {
             Path repositoryBase = Globals.sosCockpitProperties.resolvePath("repositories").resolve(getSubrepositoryFromFilter(filter));
             if(protocol.equals(DEFAULT_PROTOCOL)) {
                 Path gitKeyfilePath = null;
+                String username = null;
+                String email = null;
                 for(GitCredentials credentials : credList.getCredentials()) {
                     if(credentials.getGitServer().equals(hostPort)) {
+                        username = credentials.getUsername();
+                        email = credentials.getEmail();
                         if (credentials.getKeyfilePath() == null) {
                             throw new JocGitException(String.format(
                                     "remote Uri '%1$s' needs ssh authentication. Missing keyfilePath in credentials for server '%2$s' and account '%3$s'.",
@@ -143,11 +148,34 @@ public class GitCommandUtils {
                         break;
                     }
                 }
+                // check remote connectivity
+                GitLsRemoteCommandResult lsRemoteResult = (GitLsRemoteCommandResult)GitCommand.executeGitCheckRemoteConnection(filter.getRemoteUri());
+                // TODO: rest of check when timeout available from SOSShell
+                
                 // prepare git config environment
+                // remember old values
                 GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshGet(GitConfigType.GLOBAL);
-                String oldValue = configResult.getCurrentValue();
+                String oldSshCommandValue = configResult.getCurrentValue();
+                configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUsernameGet(GitConfigType.GLOBAL);
+                String oldUsernameValue = configResult.getCurrentValue();
+                configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailGet(GitConfigType.GLOBAL);
+                String oldEmailValue = configResult.getCurrentValue();
+                // unset old values
                 configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshUnset(GitConfigType.GLOBAL);
+                configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUsernameUnset(GitConfigType.GLOBAL);
+                configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailUnset(GitConfigType.GLOBAL);
+                // add new values
                 configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(GitConfigType.GLOBAL, gitKeyfilePath);
+                if(configResult.getExitCode() != 0) {
+                    throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
+                            configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+                }
+                configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUsernameAdd(GitConfigType.GLOBAL, username);
+                if(configResult.getExitCode() != 0) {
+                    throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
+                            configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+                }
+                configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailAdd(GitConfigType.GLOBAL, email);
                 if(configResult.getExitCode() != 0) {
                     throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
                             configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
@@ -162,8 +190,24 @@ public class GitCommandUtils {
                 }
                 // cleanup git config environment
                 configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshUnset(GitConfigType.GLOBAL);
-                if(!oldValue.isEmpty()) {
-                    configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAddCustom(GitConfigType.GLOBAL, oldValue);
+                configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUsernameUnset(GitConfigType.GLOBAL);
+                configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailUnset(GitConfigType.GLOBAL);
+                if(!oldSshCommandValue.isEmpty()) {
+                    configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAddCustom(GitConfigType.GLOBAL, oldSshCommandValue);
+                    if(configResult.getExitCode() != 0) {
+                        LOGGER.warn(String.format("update config command exit code <%1$d> with message: %2$s", 
+                                configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+                    }
+                }
+                if(!oldUsernameValue.isEmpty()) {
+                    configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUsernameAdd(GitConfigType.GLOBAL, oldUsernameValue);
+                    if(configResult.getExitCode() != 0) {
+                        LOGGER.warn(String.format("update config command exit code <%1$d> with message: %2$s", 
+                                configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+                    }
+                }
+                if(!oldEmailValue.isEmpty()) {
+                    configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailAdd(GitConfigType.GLOBAL, oldEmailValue);
                     if(configResult.getExitCode() != 0) {
                         LOGGER.warn(String.format("update config command exit code <%1$d> with message: %2$s", 
                                 configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
@@ -238,12 +282,8 @@ public class GitCommandUtils {
             if(!hasRemoteRepositoryAccess(localRepo, workingDir, credList)) {
                 throw new JocGitException("remote Repository not configured for the account: <%2$s>" + account);
             }
-            GitPullCommandResult pullResult = (GitPullCommandResult)GitCommand.executeGitPull(localRepo, workingDir);
-            if(pullResult.getExitCode() != 0) {
-                throw new JocGitException(String.format("pull command exit code <%1$d> with message: %2$s", 
-                        pullResult.getExitCode(), pullResult.getStdErr()), pullResult.getException());
-            }
-            GitCommitCommandResult result = (GitCommitCommandResult)GitCommand.executeGitCommitFormatted(filter.getMessage() ,localRepo, workingDir);
+            GitCommitCommandResult result = (GitCommitCommandResult)GitCommand.executeGitCommitFormatted(filter.getMessage() ,localRepo,
+                    workingDir);
             if(result.getExitCode() != 0 && result.getExitCode() != 1) {
                 throw new JocGitException(String.format("commit command exit code <%1$d> with message: %2$s", 
                         result.getExitCode(), result.getStdErr()), result.getException());

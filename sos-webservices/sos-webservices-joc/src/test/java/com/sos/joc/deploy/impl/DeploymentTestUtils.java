@@ -950,6 +950,8 @@ public class DeploymentTestUtils {
     public static GitCredentials createExampleGitCredentialsPassword() {
         GitCredentials cred = new GitCredentials();
         cred.setGitAccount("myExampleGitAccount");
+        cred.setUsername("sp");
+        cred.setEmail("sp@test.example.com");
         cred.setPassword("myExamplePasswd");
         cred.setGitServer("my-example-remote.git-host.net");
         return cred;
@@ -958,6 +960,8 @@ public class DeploymentTestUtils {
     public static GitCredentials createExampleGitCredentialsAccessToken() {
         GitCredentials cred = new GitCredentials();
         cred.setGitAccount("myExampleGitAccount");
+        cred.setUsername("sp");
+        cred.setEmail("sp@test.example.com");
         cred.setPersonalAccessToken("ExaM29pl4evLx9ebhWzo");
         cred.setGitServer("my-example-remote.git-host.net");
         return cred;
@@ -966,6 +970,8 @@ public class DeploymentTestUtils {
     public static GitCredentials createExampleGitCredentialsKeyfilePath() {
         GitCredentials cred = new GitCredentials();
         cred.setGitAccount("myExampleGitAccount");
+        cred.setUsername("sp");
+        cred.setEmail("sp@test.example.com");
         cred.setKeyfilePath("/example/path/to/keyfile");
         cred.setGitServer("my-example-remote.git-host.net");
         return cred;

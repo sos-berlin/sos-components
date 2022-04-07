@@ -40,6 +40,8 @@ public class GitCommandConstants {
     public static final String CMD_GIT_REMOTE_REMOVE = "git remote remove ";
     // git remote update
     public static final String CMD_GIT_REMOTE_UPDATE = "git remote update";
+    // git ls-remote - used to check connection
+    public static final String CMD_GIT_LS_REMOTE = "git ls-remote ";
     // git log
     public static final String CMD_GIT_LOG = "git log";
     // git log --oneline
@@ -55,23 +57,51 @@ public class GitCommandConstants {
     // git config
     public static final String CMD_GIT_CONFIG = "git config ";
     // git config command - usage to get key file setting from global config
-    public static final String CMD_GIT_CONFIG_SSH_GET_GLOBAL = "git config --get --global core.sshCommand";
+    public static final String CMD_GIT_CONFIG_GET_GLOBAL_SSH_COMMAND = "git config --get --global core.sshCommand";
+    // git config command - usage to get user.name setting from global config
+    public static final String CMD_GIT_CONFIG_GET_GLOBAL_USER_NAME = "git config --get --global user.name";
+    // git config command - usage to get user.email setting from global config
+    public static final String CMD_GIT_CONFIG_GET_GLOBAL_USER_EMAIL = "git config --get --global user.email";
     // git config command - usage to unset key file from global config
-    public static final String CMD_GIT_CONFIG_SSH_UNSET_GLOBAL = "git config --global --unset core.sshCommand";
+    public static final String CMD_GIT_CONFIG_UNSET_GLOBAL_SSH_COMMAND = "git config --global --unset core.sshCommand";
+    // git config command - usage to unset user.name from global config
+    public static final String CMD_GIT_CONFIG_UNSET_GLOBAL_USER_NAME = "git config --global --unset user.name";
+    // git config command - usage to unset user.email from global config
+    public static final String CMD_GIT_CONFIG_UNSET_GLOBAL_USER_EMAIL = "git config --global --unset user.email";
     // git config command - usage to set different key file for global config
-    public static final String CMD_GIT_CONFIG_SSH_ADD_GLOBAL_PREFORMAT_WIN = "git config --global --add core.sshCommand \"ssh -i %1$s\"";
-    public static final String CMD_GIT_CONFIG_SSH_ADD_GLOBAL_PREFORMAT_LINUX = "git config --global --add core.sshCommand 'ssh -i %1$s'";
-    public static final String CMD_GIT_CONFIG_SSH_ADD_GLOBAL_FORMAT_WIN = "git config --local --add core.sshCommand \"%1$s\"";
-    public static final String CMD_GIT_CONFIG_SSH_ADD_GLOBAL_FORMAT_LINUX = "git config --local --add core.sshCommand '%1$s'";
-    // git config command - usage to get key file setting from local config
-    public static final String CMD_GIT_CONFIG_SSH_GET_LOCAL = "git config --get --local core.sshCommand";
-    // git config command - usage to unset key file from local config
-    public static final String CMD_GIT_CONFIG_SSH_UNSET_LOCAL = "git config --local --unset core.sshCommand";
-    // git config command  -usage to set different key file for local config
-    public static final String CMD_GIT_CONFIG_SSH_ADD_LOCAL_PREFORMAT_WIN = "git config --local --add core.sshCommand \"ssh -i %1$s\"";
-    public static final String CMD_GIT_CONFIG_SSH_ADD_LOCAL_PREFORMAT_LINUX = "git config --local --add core.sshCommand 'ssh -i %1$s'";
-    public static final String CMD_GIT_CONFIG_SSH_ADD_LOCAL_FORMAT_WIN = "git config --local --add core.sshCommand \"%1$s\"";
-    public static final String CMD_GIT_CONFIG_SSH_ADD_LOCAL_FORMAT_LINUX = "git config --local --add core.sshCommand '%1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SSH_COMMAND_PREFORMAT_WIN = "git config --global --add core.sshCommand \"ssh -o StrictHostKeyChecking=no -i %1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SSH_COMMAND_PREFORMAT_LINUX = "git config --global --add core.sshCommand 'ssh -o StrictHostKeyChecking=no -i %1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SSH_COMMAND_FORMAT_WIN = "git config --local --add core.sshCommand \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SSH_COMMAND_FORMAT_LINUX = "git config --local --add core.sshCommand '%1$s'";
+    // git config command - usage to set different user.name for global config
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_NAME_FORMAT_WIN = "git config --global --add user.name \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_NAME_FORMAT_LINUX = "git config --global --add user.name '%1$s'";
+    // git config command - usage to set different user.email for global config
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_EMAIL_FORMAT_WIN = "git config --global --add user.email \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_EMAIL_FORMAT_LINUX = "git config --global --add user.email '%1$s'";
+    // git config command - usage to get key file setting from global config
+    public static final String CMD_GIT_CONFIG_GET_LOCAL_SSH_COMMAND = "git config --get --local core.sshCommand";
+    // git config command - usage to get user.name setting from global config
+    public static final String CMD_GIT_CONFIG_GET_LOCAL_USER_NAME = "git config --get --local user.name";
+    // git config command - usage to get user.email setting from global config
+    public static final String CMD_GIT_CONFIG_GET_LOCAL_USER_EMAIL = "git config --get --local user.email";
+    // git config command - usage to unset key file from global config
+    public static final String CMD_GIT_CONFIG_UNSET_LOCAL_SSH_COMMAND = "git config --local --unset core.sshCommand";
+    // git config command - usage to unset user.name from global config
+    public static final String CMD_GIT_CONFIG_UNSET_LOCAL_USER_NAME = "git config --local --unset user.name";
+    // git config command - usage to unset user.email from global config
+    public static final String CMD_GIT_CONFIG_UNSET_LOCAL_USER_EMAIL = "git config --local --unset user.email";
+    // git config command - usage to set different key file for global config
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SSH_COMMAND_PREFORMAT_WIN = "git config --local --add core.sshCommand \"ssh -o StrictHostKeyChecking=no -i %1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SSH_COMMAND_PREFORMAT_LINUX = "git config --local --add core.sshCommand 'ssh -o StrictHostKeyChecking=no -i %1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SSH_COMMAND_FORMAT_WIN = "git config --local --add core.sshCommand \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SSH_COMMAND_FORMAT_LINUX = "git config --local --add core.sshCommand '%1$s'";
+    // git config command - usage to set different user.name for global config
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_NAME_FORMAT_WIN = "git config --local --add user.name \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_NAME_FORMAT_LINUX = "git config --local --add user.name '%1$s'";
+    // git config command - usage to set different user.email for global config
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_EMAIL_FORMAT_WIN = "git config --local --add user.email \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_EMAIL_FORMAT_LINUX = "git config --local --add user.email '%1$s'";
 
     public static final String CMD_SHELL_CD = "cd ";
     public static final String REGEX_CHANGES_COUNT = "\\s(\\d)\\s[a-z]{4}\\s[a-z]{1,},\\s(\\d)\\s[a-z]{1,}\\(\\+\\),\\s(\\d).*";
