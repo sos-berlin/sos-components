@@ -24,17 +24,18 @@ public class SOSPermissionMapTable {
     private void initMap() {
 
         permMap = new HashMap<String, List<String>>();
+
         addMapEntry("sos:products:joc_cockpit:joc", "sos:products:joc");
         addMapEntry("sos:products:joc_cockpit", "sos:products:joc");
 
         addMapEntry("sos:products:joc_cockpit:joc:view:log", "sos:products:joc:get_log");
-        
+
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view", "sos:products:controller:view");
 
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master", "sos:products:controller:view");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master", "sos:products:controller:terminate");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master", "sos:products:controller:restart");
-        
+
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view:status", "sos:products:controller:view");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view:parameter", "sos:products:controller:view");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:view:mainlog", "sos:products:controller:get_log");
@@ -156,8 +157,12 @@ public class SOSPermissionMapTable {
                     }
                 }
             } else {
-                if (perm.startsWith("sos:products:joc:") || perm.length() < 17) {
-                    mappedPerms.add(perm);
+                if (perm.startsWith("sos:products:joc:") || perm.contains("sos:products:controller") || perm.length() < 17) {
+                    if (excluded) {
+                        mappedPerms.add("-" + perm);
+                    } else {
+                        mappedPerms.add(perm);
+                    }
                 }
             }
         }
