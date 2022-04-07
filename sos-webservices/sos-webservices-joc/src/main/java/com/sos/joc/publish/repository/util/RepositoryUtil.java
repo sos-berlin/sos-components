@@ -299,7 +299,9 @@ public abstract class RepositoryUtil {
         Files.walkFileTree(repository, new FileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                paths.add(dir);
+                if(!".git".equals(dir.getFileName().toString())) {
+                    paths.add(dir);
+                }
                 return FileVisitResult.CONTINUE;
             }
             @Override
