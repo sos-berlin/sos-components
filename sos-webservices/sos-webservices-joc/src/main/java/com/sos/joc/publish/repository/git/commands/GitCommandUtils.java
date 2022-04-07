@@ -1,5 +1,7 @@
 package com.sos.joc.publish.repository.git.commands;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -43,8 +45,11 @@ public class GitCommandUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GitCommandUtils.class);
     private static final String REGEX_GIT_URI_SSH = "^\\S*@(\\S*):(\\S*)$";
-    private static final String REGEX_GIT_URI_HTTP = "^(\\S*)://(\\S*):(\\S*)$";
+    private static final String REGEX_GIT_URI_PROTOCOL = "^([a-z]{2,5})://.*$";
+    private static final String REGEX_GIT_URI_HOST = "^[a-z]{2,5}://([^/]*)/.*$";
     private static final String DEFAULT_PROTOCOL = "ssh";
+    private static final String HTTP_PROTOCOL = "http";
+    private static final String HTTPS_PROTOCOL = "https";
     
     public static final GitCloneCommandResult cloneGitRepository (CloneFilter filter, String account, JocConfigurationDbLayer dbLayer)
             throws JsonMappingException, JsonProcessingException, SOSException {
@@ -60,12 +65,42 @@ public class GitCommandUtils {
                 path = sshGitUriMatcher.group(2);
             }
         } else {
-            Pattern httpGitUriPattern = Pattern.compile(REGEX_GIT_URI_HTTP);
-            Matcher httpGitUriMatcher = httpGitUriPattern.matcher(filter.getRemoteUri());
-            if(httpGitUriMatcher.matches()) {
-                protocol = httpGitUriMatcher.group(1);
-                hostPort = httpGitUriMatcher.group(2);
-                path = httpGitUriMatcher.group(3);
+            URI remoteUri = null;
+            try {
+                remoteUri = new URI(filter.getRemoteUri());
+                hostPort = remoteUri.getHost();
+            } catch (URISyntaxException e) {
+                throw new JocBadRequestException(String.format("%1$s is not a Git Uri.", filter.getRemoteUri()), e);
+            }
+            
+            Pattern protocolUriPattern = Pattern.compile(REGEX_GIT_URI_PROTOCOL);
+            Matcher protocolUriMatcher = protocolUriPattern.matcher(filter.getRemoteUri());
+            if(protocolUriMatcher.matches()) {
+                protocol = protocolUriMatcher.group(1);
+                if (!HTTP_PROTOCOL.equals(protocol) && !HTTPS_PROTOCOL.equals(protocol)) {
+                    throw new JocBadRequestException(String.format("%1$s is not a Git Uri.", filter.getRemoteUri()));
+                }
+                String hostPortWithCreds = "";
+                if(hostPort == null || hostPort.isEmpty()) {
+                    Pattern hostUriPattern = Pattern.compile(REGEX_GIT_URI_HOST);
+                    Matcher hostUriMatcher = hostUriPattern.matcher(filter.getRemoteUri());
+                    if(hostUriMatcher.matches()) {
+                        hostPortWithCreds = hostUriMatcher.group(1);
+                        if (hostPortWithCreds.contains("@")) {
+                            hostPort = hostPortWithCreds.split("@")[1];
+                        } else {
+                            hostPort = hostPortWithCreds;
+                        }
+                    }
+                }
+                if(!hostPort.contains(":") && remoteUri.getPort() != -1) {
+                    hostPort += ":" + remoteUri.getPort();
+                }
+                if(remoteUri.getPath() != null && !remoteUri.getPath().isEmpty()) {
+                    path = remoteUri.getPath();
+                } else if (!hostPortWithCreds.isEmpty()) {
+                    path = filter.getRemoteUri().replace(protocol + "://" + hostPortWithCreds, "");
+                }
             }
         }
         if (hostPort.isEmpty() || path.isEmpty() || protocol.isEmpty()) {
@@ -310,21 +345,51 @@ public class GitCommandUtils {
                         return true;
                     }
                 } else {
-                    // http(s)
-                    Pattern httpGitUriPattern = Pattern.compile(REGEX_GIT_URI_HTTP);
-                    Matcher httpGitUriMatcher = httpGitUriPattern.matcher(remoteUri);
-                    if(httpGitUriMatcher.matches()) {
-                        String protocol = httpGitUriMatcher.group(1);
-                        String hostPort = httpGitUriMatcher.group(2);
-                        String path = httpGitUriMatcher.group(3);
-                        if(hostPort.contains("@")) {
-                            hostPort = hostPort.split("@")[1];
+                    URI uri = null;
+                    String hostPort = "";
+                    String protocol = "";
+                    String path = "";
+                    try {
+                        uri = new URI(remoteUri);
+                        hostPort = uri.getHost();
+                    } catch (URISyntaxException e) {
+                        throw new JocBadRequestException(String.format("%1$s is not a Git Uri.", remoteUri), e);
+                    }
+                    
+                    Pattern protocolUriPattern = Pattern.compile(REGEX_GIT_URI_PROTOCOL);
+                    Matcher protocolUriMatcher = protocolUriPattern.matcher(remoteUri);
+                    if(protocolUriMatcher.matches()) {
+                        protocol = protocolUriMatcher.group(1);
+                        if (!HTTP_PROTOCOL.equals(protocol) && !HTTPS_PROTOCOL.equals(protocol)) {
+                            throw new JocBadRequestException(String.format("%1$s is not a Git Uri.", remoteUri));
                         }
-                        String adjustedRemoteUri = String.format("%1$s://%2$s:%3$s", protocol, hostPort, path);
-                        if(credList.getRemoteUris().contains(adjustedRemoteUri)) {
-                            remoteUri = adjustedRemoteUri;
-                            return true;
+                        String hostPortWithCreds = "";
+                        if(hostPort == null || hostPort.isEmpty()) {
+                            Pattern hostUriPattern = Pattern.compile(REGEX_GIT_URI_HOST);
+                            Matcher hostUriMatcher = hostUriPattern.matcher(remoteUri);
+                            if(hostUriMatcher.matches()) {
+                                hostPortWithCreds = hostUriMatcher.group(1);
+                                if (hostPortWithCreds.contains("@")) {
+                                    hostPort = hostPortWithCreds.split("@")[1];
+                                } else {
+                                    hostPort = hostPortWithCreds;
+                                }
+                            }
                         }
+                        if(!hostPort.contains(":") && uri.getPort() != -1) {
+                            hostPort += ":" + uri.getPort();
+                        }
+                        if(uri.getPath() != null && !uri.getPath().isEmpty()) {
+                            path = uri.getPath();
+                        } else if (!hostPortWithCreds.isEmpty()) {
+                            path = remoteUri.replace(protocol + "://" + hostPortWithCreds, "");
+                        }
+                    }
+                    String adjustedRemoteUri = String.format(
+                            "%1$s://%2$s%3$s", protocol, hostPort, (path.startsWith("/") ? path : "/" + path));
+                    if(credList.getRemoteUris().contains(adjustedRemoteUri)) {
+                        remoteUri = adjustedRemoteUri;
+                        return true;
                     }
                 }
             }
