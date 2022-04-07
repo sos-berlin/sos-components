@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "agentIds",
-    "onlyEnabledAgents"
+    "onlyVisibleAgents"
 })
 public class ReadAgents {
 
@@ -35,8 +35,8 @@ public class ReadAgents {
     private String controllerId;
     @JsonProperty("agentIds")
     private List<String> agentIds = new ArrayList<String>();
-    @JsonProperty("onlyEnabledAgents")
-    private Boolean onlyEnabledAgents = false;
+    @JsonProperty("onlyVisibleAgents")
+    private Boolean onlyVisibleAgents = false;
 
     /**
      * controllerId
@@ -70,24 +70,24 @@ public class ReadAgents {
         this.agentIds = agentIds;
     }
 
-    @JsonProperty("onlyEnabledAgents")
-    public Boolean getOnlyEnabledAgents() {
-        return onlyEnabledAgents;
+    @JsonProperty("onlyVisibleAgents")
+    public Boolean getOnlyVisibleAgents() {
+        return onlyVisibleAgents;
     }
 
-    @JsonProperty("onlyEnabledAgents")
-    public void setOnlyEnabledAgents(Boolean onlyEnabledAgents) {
-        this.onlyEnabledAgents = onlyEnabledAgents;
+    @JsonProperty("onlyVisibleAgents")
+    public void setOnlyVisibleAgents(Boolean onlyVisibleAgents) {
+        this.onlyVisibleAgents = onlyVisibleAgents;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("onlyEnabledAgents", onlyEnabledAgents).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("onlyVisibleAgents", onlyVisibleAgents).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentIds).append(controllerId).append(onlyEnabledAgents).toHashCode();
+        return new HashCodeBuilder().append(agentIds).append(controllerId).append(onlyVisibleAgents).toHashCode();
     }
 
     @Override
@@ -99,7 +99,7 @@ public class ReadAgents {
             return false;
         }
         ReadAgents rhs = ((ReadAgents) other);
-        return new EqualsBuilder().append(agentIds, rhs.agentIds).append(controllerId, rhs.controllerId).append(onlyEnabledAgents, rhs.onlyEnabledAgents).isEquals();
+        return new EqualsBuilder().append(agentIds, rhs.agentIds).append(controllerId, rhs.controllerId).append(onlyVisibleAgents, rhs.onlyVisibleAgents).isEquals();
     }
 
 }

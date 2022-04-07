@@ -70,8 +70,8 @@ public class AgentsStandaloneResourceImpl extends JOCResourceImpl implements IAg
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(allowedControllers, agentParameter
-                    .getAgentIds(), false, agentParameter.getOnlyEnabledAgents());
-            List<String> dbClusterAgentIds = dbLayer.getClusterAgentIds(allowedControllers, agentParameter.getOnlyEnabledAgents());
+                    .getAgentIds(), false, agentParameter.getOnlyVisibleAgents());
+            List<String> dbClusterAgentIds = dbLayer.getClusterAgentIds(allowedControllers, agentParameter.getOnlyVisibleAgents());
             Agents agents = new Agents();
             if (dbAgents != null) {
                 Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).collect(Collectors.toSet());
@@ -87,7 +87,7 @@ public class AgentsStandaloneResourceImpl extends JOCResourceImpl implements IAg
                     agent.setAgentName(a.getAgentName());
                     agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
                     agent.setTitle(a.getTitle());
-                    agent.setDisabled(a.getDisabled());
+                    agent.setHidden(a.getDisabled());
                     agent.setDeployed(null); // deployed is obsolete, now part of syncState
                     agent.setSyncState(AgentHelper.getSyncState(agentsOnController.get(a.getControllerId()), a));
                     agent.setIsClusterWatcher(a.getIsWatcher());

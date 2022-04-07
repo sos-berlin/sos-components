@@ -23,7 +23,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
-import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.items.SubAgentItem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -83,17 +82,17 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     }
 
     public List<DBItemInventoryAgentInstance> getAgentsByControllerIds(Collection<String> controllerIds, boolean onlyWatcher,
-            boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
-        return getAgentsByControllerIdAndAgentIds(controllerIds, null, onlyWatcher, onlyEnabledAgents);
+            boolean onlyVisibleAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+        return getAgentsByControllerIdAndAgentIds(controllerIds, null, onlyWatcher, onlyVisibleAgents);
     }
 
     public List<DBItemInventoryAgentInstance> getAgentsByControllerIdAndAgentIds(Collection<String> controllerIds, List<String> agentIds,
-            boolean onlyWatcher, boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+            boolean onlyWatcher, boolean onlyVisibleAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         if (agentIds != null && agentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             List<DBItemInventoryAgentInstance> r = new ArrayList<>();
             for (int i = 0; i < agentIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
                 r.addAll(getAgentsByControllerIdAndAgentIds(controllerIds, SOSHibernate.getInClausePartition(i, agentIds), onlyWatcher,
-                        onlyEnabledAgents));
+                        onlyVisibleAgents));
             }
             return r;
         } else {
@@ -114,7 +113,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 if (onlyWatcher) {
                     clauses.add("isWatcher = 1");
                 }
-                if (onlyEnabledAgents) {
+                if (onlyVisibleAgents) {
                     clauses.add("disabled = 0");
                 }
                 if (!clauses.isEmpty()) {
@@ -144,7 +143,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     }
 
     public List<DBItemInventoryAgentInstance> getAgentsByControllerIdAndAgentIdsAndUrls(Collection<String> controllerIds, Collection<String> agentIds,
-            Collection<String> agentUrls, boolean onlyWatcher, boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException,
+            Collection<String> agentUrls, boolean onlyWatcher, boolean onlyVisibleAgents) throws DBInvalidDataException, DBMissingDataException,
             DBConnectionRefusedException {
         boolean withAgentIds = agentIds != null && !agentIds.isEmpty();
         boolean withAgentUrls = agentUrls != null && !agentUrls.isEmpty();
@@ -171,7 +170,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             if (onlyWatcher) {
                 clauses.add("isWatcher = 1");
             }
-            if (onlyEnabledAgents) {
+            if (onlyVisibleAgents) {
                 clauses.add("disabled = 0");
             }
             if (!clauses.isEmpty()) {
@@ -210,10 +209,10 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         return getAgentNames(controllerIds, true, withClusterLicense);
     }
     
-    public Map<String, List<String>> getAgentNamesPerAgentId(Collection<String> controllerIds, boolean onlyEnabledAgents)
+    public Map<String, List<String>> getAgentNamesPerAgentId(Collection<String> controllerIds, boolean onlyVisibleAgents)
             throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         try {
-            List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(controllerIds, false, onlyEnabledAgents);
+            List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(controllerIds, false, onlyVisibleAgents);
             if (agents == null || agents.isEmpty()) {
                 return Collections.emptyMap();
             }
@@ -223,7 +222,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
 
             StringBuilder hql = new StringBuilder();
             hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
-            if ((controllerIds != null && !controllerIds.isEmpty()) || onlyEnabledAgents) {
+            if ((controllerIds != null && !controllerIds.isEmpty()) || onlyVisibleAgents) {
                 List<String> clauses = new ArrayList<>(2);
                 hql.append(" where agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
                 if (controllerIds != null && !controllerIds.isEmpty()) {
@@ -233,7 +232,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                         clauses.add("controllerId in (:controllerIds)");
                     }
                 }
-                if (onlyEnabledAgents) {
+                if (onlyVisibleAgents) {
                     clauses.add("disabled = 0");
                 }
                 if (!clauses.isEmpty()) {
@@ -266,7 +265,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
 //            // determine subagentClusterIds
 //            
 //            if (!withClusterLicense) {
-//                List<String> clusterAgentIds = getClusterAgentIds(controllerIds, onlyEnabledAgents);
+//                List<String> clusterAgentIds = getClusterAgentIds(controllerIds, onlyVisibleAgents);
 //                agents = agents.stream().filter(a -> !clusterAgentIds.contains(a.getAgentId())).collect(Collectors.toList());
 //            }
 //            Set<String> agentNames = agents.stream().map(DBItemInventoryAgentInstance::getAgentName).filter(Objects::nonNull).collect(Collectors
@@ -290,15 +289,15 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
 
-    public Set<String> getAgentNames(Collection<String> controllerIds, boolean onlyEnabledAgents, boolean withClusterLicense)
+    public Set<String> getAgentNames(Collection<String> controllerIds, boolean onlyVisibleAgents, boolean withClusterLicense)
             throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         try {
-            List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(controllerIds, false, onlyEnabledAgents);
+            List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(controllerIds, false, onlyVisibleAgents);
             if (agents == null || agents.isEmpty()) {
                 return Collections.emptySet();
             }
             if (!withClusterLicense) {
-                List<String> clusterAgentIds = getClusterAgentIds(controllerIds, onlyEnabledAgents);
+                List<String> clusterAgentIds = getClusterAgentIds(controllerIds, onlyVisibleAgents);
                 agents = agents.stream().filter(a -> !clusterAgentIds.contains(a.getAgentId())).collect(Collectors.toList());
             }
             Set<String> agentNames = agents.stream().map(DBItemInventoryAgentInstance::getAgentName).filter(Objects::nonNull).collect(Collectors
@@ -701,10 +700,10 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     }
 
     public Map<String, List<DBItemInventorySubAgentInstance>> getSubAgentInstancesByControllerIds(Collection<String> controllerIds,
-            boolean onlyWatcher, boolean onlyEnabledAgents) {
+            boolean onlyWatcher, boolean onlyVisibleAgents) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
-            if ((controllerIds != null && !controllerIds.isEmpty()) || onlyWatcher || onlyEnabledAgents) {
+            if ((controllerIds != null && !controllerIds.isEmpty()) || onlyWatcher || onlyVisibleAgents) {
                 List<String> clauses = new ArrayList<>(3);
                 hql.append(" where agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
                 if (controllerIds != null && !controllerIds.isEmpty()) {
@@ -717,7 +716,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 if (onlyWatcher) {
                     clauses.add("isWatcher = 1");
                 }
-                if (onlyEnabledAgents) {
+                if (onlyVisibleAgents) {
                     clauses.add("disabled = 0");
                 }
                 if (!clauses.isEmpty()) {
@@ -745,10 +744,10 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
 
-    public List<String> getClusterAgentIds(Collection<String> controllerIds, boolean onlyEnabledAgents) {
+    public List<String> getClusterAgentIds(Collection<String> controllerIds, boolean onlyVisibleAgents) {
         try {
             StringBuilder hql = new StringBuilder("select agentId from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
-            if ((controllerIds != null && !controllerIds.isEmpty()) || onlyEnabledAgents) {
+            if ((controllerIds != null && !controllerIds.isEmpty()) || onlyVisibleAgents) {
                 List<String> clauses = new ArrayList<>(3);
                 hql.append(" where agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
                 if (controllerIds != null && !controllerIds.isEmpty()) {
@@ -758,7 +757,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                         clauses.add("controllerId in (:controllerIds)");
                     }
                 }
-                if (onlyEnabledAgents) {
+                if (onlyVisibleAgents) {
                     clauses.add("disabled = 0");
                 }
                 if (!clauses.isEmpty()) {

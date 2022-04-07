@@ -92,11 +92,9 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         private static final long serialVersionUID = 1L;
 
         {
-            put(AgentClusterStateText.ALL_SUBAGENTS_ARE_COUPLED, 0);
-            put(AgentClusterStateText.ONLY_SOME_SUBAGENTS_ARE_COUPLED, 1);
-            put(AgentClusterStateText.ALL_SUBAGENTS_ARE_RESET, 1);
-            put(AgentClusterStateText.ONLY_SOME_SUBAGENTS_ARE_RESET, 1);
-            put(AgentClusterStateText.SUBAGENTS_ARE_NOT_COUPLED, 2);
+            put(AgentClusterStateText.ALL_SUBAGENTS_ARE_COUPLED_AND_ENABLED, 0);
+            put(AgentClusterStateText.ONLY_SOME_SUBAGENTS_ARE_COUPLED_AND_ENABLED, 1);
+            put(AgentClusterStateText.NO_SUBAGENTS_ARE_COUPLED_AND_ENABLED, 2);
             put(AgentClusterStateText.UNKNOWN, 2);
         }
             });
@@ -106,11 +104,11 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 private static final long serialVersionUID = 1L;
 
                 {
-                    put(AgentStateText.COUPLED, AgentClusterStateText.ALL_SUBAGENTS_ARE_COUPLED);
-                    put(AgentStateText.RESETTING, AgentClusterStateText.ALL_SUBAGENTS_ARE_RESET);
-                    put(AgentStateText.RESET, AgentClusterStateText.ALL_SUBAGENTS_ARE_RESET);
-                    put(AgentStateText.COUPLINGFAILED, AgentClusterStateText.SUBAGENTS_ARE_NOT_COUPLED);
-                    put(AgentStateText.SHUTDOWN, AgentClusterStateText.SUBAGENTS_ARE_NOT_COUPLED);
+                    put(AgentStateText.COUPLED, AgentClusterStateText.ALL_SUBAGENTS_ARE_COUPLED_AND_ENABLED);
+                    put(AgentStateText.RESETTING, AgentClusterStateText.ONLY_SOME_SUBAGENTS_ARE_COUPLED_AND_ENABLED);
+                    put(AgentStateText.RESET, AgentClusterStateText.ONLY_SOME_SUBAGENTS_ARE_COUPLED_AND_ENABLED);
+                    put(AgentStateText.COUPLINGFAILED, AgentClusterStateText.NO_SUBAGENTS_ARE_COUPLED_AND_ENABLED);
+                    put(AgentStateText.SHUTDOWN, AgentClusterStateText.NO_SUBAGENTS_ARE_COUPLED_AND_ENABLED);
                     put(AgentStateText.UNKNOWN, AgentClusterStateText.UNKNOWN);
                 }
             });
@@ -134,9 +132,9 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(Collections.singleton(controllerId), agentsParam
-                    .getAgentIds(), false, agentsParam.getOnlyEnabledAgents());
+                    .getAgentIds(), false, agentsParam.getOnlyVisibleAgents());
             Map<String, List<DBItemInventorySubAgentInstance>> dbSubagentsPerAgent = dbLayer.getSubAgentInstancesByControllerIds(Collections
-                    .singleton(controllerId), false, agentsParam.getOnlyEnabledAgents());
+                    .singleton(controllerId), false, agentsParam.getOnlyVisibleAgents());
 
             List<AgentV> agentsList = new ArrayList<>();
             Map<String, List<SubagentV>> subagentsPerAgentId = new HashMap<>();
@@ -238,9 +236,10 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                                 }
                                             }
                                         }
-                                        if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
-                                            return null;
-                                        }
+                                        // filtering later otherwise the healthstate doesn't consider all subagents
+//                                        if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
+//                                            return null;
+//                                        }
                                         if (agentsParam.getCompact() == Boolean.TRUE) {
                                             subagent.setRunningTasks(ordersCountPerSubagent.getOrDefault(dbSubAgent.getSubAgentId(), 0));
                                             subagent.setOrders(null);
@@ -260,7 +259,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
 
                     agentsList.addAll(dbAgents.stream().map(dbAgent -> {
                         JAgentRefState jAgentRefState = agentRefStates.get(AgentPath.of(dbAgent.getAgentId()));
-                        AgentV agent = mapDbAgentToAgentV(dbAgent, subagentsPerAgentId.get(dbAgent.getAgentId()));
+                        AgentV agent = mapDbAgentToAgentV(dbAgent, subagentsPerAgentId.get(dbAgent.getAgentId()), withStateFilter, agentsParam.getStates());
                         if (agent.getSubagents() == null) { // only for standalone agent, cluster agents has no state (but its subagents)
                             AgentStateText stateText = AgentStateText.UNKNOWN;
                             if (Proxies.isCoupled(controllerId)) {
@@ -316,7 +315,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         }).filter(Objects::nonNull).collect(Collectors.toList()));
                     }
                     agentsList.addAll(dbAgents.stream().map(dbAgent -> {
-                        AgentV agent = mapDbAgentToAgentV(dbAgent, subagentsPerAgentId.get(dbAgent.getAgentId()));
+                        AgentV agent = mapDbAgentToAgentV(dbAgent, subagentsPerAgentId.get(dbAgent.getAgentId()), withStateFilter, agentsParam.getStates());
                         if (agent.getSubagents() == null) { // only for standalone agent, cluster agents has no state (but its subagents)
                             if (withStateFilter && !agentsParam.getStates().contains(AgentStateText.UNKNOWN)) {
                                 return null;
@@ -380,38 +379,47 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
     private static AgentClusterState getHealthState(List<SubagentV> subagents) {
         AgentClusterStateText healthstate = AgentClusterStateText.UNKNOWN;
         if (subagents != null) {
-            Set<AgentStateText> stateSeverities = subagents.stream().map(SubagentV::getState).map(AgentState::get_text).collect(Collectors.toSet());
-            if (stateSeverities.contains(AgentStateText.COUPLED)) {
-                healthstate = AgentClusterStateText.ALL_SUBAGENTS_ARE_COUPLED;
-                if (stateSeverities.size() > 1) {
-                    healthstate = AgentClusterStateText.ONLY_SOME_SUBAGENTS_ARE_COUPLED;
+            Set<Integer> stateSeverities = subagents.stream().map(SubagentV::getState).map(AgentState::getSeverity).collect(Collectors.toSet());
+            if (subagents.stream().map(SubagentV::getState).map(AgentState::get_text).allMatch(i -> i == AgentStateText.UNKNOWN)) {
+                healthstate = AgentClusterStateText.UNKNOWN;
+            } else if (stateSeverities.stream().allMatch(i -> i == 2)) { // severity 2 means SHUTDOWN, COUPLING_FAILD OR UNKNOWN
+                healthstate = AgentClusterStateText.NO_SUBAGENTS_ARE_COUPLED_AND_ENABLED;
+            } else if (stateSeverities.stream().allMatch(i -> i == 0)) { // severity 0 means COUPLED
+                int numOfDisabledSubagents = subagents.stream().filter(SubagentV::getDisabled).mapToInt(e -> 1).sum();
+                if (numOfDisabledSubagents == 0) {
+                    healthstate = AgentClusterStateText.ALL_SUBAGENTS_ARE_COUPLED_AND_ENABLED; 
+                } else if (subagents.size() == numOfDisabledSubagents) {
+                    healthstate = AgentClusterStateText.NO_SUBAGENTS_ARE_COUPLED_AND_ENABLED;
+                } else {
+                    healthstate = AgentClusterStateText.ONLY_SOME_SUBAGENTS_ARE_COUPLED_AND_ENABLED;
                 }
-            } else if (stateSeverities.contains(AgentStateText.RESET) || stateSeverities.contains(AgentStateText.RESETTING)) {
-                healthstate = AgentClusterStateText.ALL_SUBAGENTS_ARE_RESET;
-                if (stateSeverities.size() > 1) {
-                    healthstate = AgentClusterStateText.ONLY_SOME_SUBAGENTS_ARE_RESET;
-                }
-            } else if (stateSeverities.contains(AgentStateText.COUPLINGFAILED) || stateSeverities.contains(AgentStateText.SHUTDOWN)) {
-                healthstate = AgentClusterStateText.SUBAGENTS_ARE_NOT_COUPLED;
+            } else {
+                healthstate = AgentClusterStateText.ONLY_SOME_SUBAGENTS_ARE_COUPLED_AND_ENABLED;
             }
         }
         return getHealthState(healthstate);
     }
 
-    private static AgentV mapDbAgentToAgentV(DBItemInventoryAgentInstance dbAgent, List<SubagentV> subagents) {
+    private static AgentV mapDbAgentToAgentV(DBItemInventoryAgentInstance dbAgent, List<SubagentV> subagents, boolean withStateFilter,
+            List<AgentStateText> stateFilter) {
         AgentV agent = new AgentV();
         agent.setRunningTasks(0);
         agent.setOrders(null);
         agent.setAgentId(dbAgent.getAgentId());
         agent.setAgentName(dbAgent.getAgentName());
         agent.setControllerId(dbAgent.getControllerId());
-        agent.setSubagents(subagents);
         if (subagents == null) {
+            agent.setSubagents(null);
             agent.setIsClusterWatcher(dbAgent.getIsWatcher());
             agent.setUrl(dbAgent.getUri());
             agent.setState(getState(AgentStateText.UNKNOWN));
-            agent.setHealthState(null);
+            agent.setHealthState(null); //will be set later for standalone agents
         } else {
+            if (withStateFilter) {
+                agent.setSubagents(subagents.stream().filter(s -> stateFilter.contains(s.getState().get_text())).collect(Collectors.toList()));
+            } else {
+                agent.setSubagents(subagents);
+            }
             agent.setIsClusterWatcher(null);
             agent.setUrl(null);
             agent.setState(null);

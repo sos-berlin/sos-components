@@ -202,7 +202,7 @@ public class DBItemInventoryConfiguration extends DBItem {
         released = val;
     }
 
-    public boolean isRepoControlled() {
+    public boolean getRepoControlled() {
         return repoControlled;
     }
 

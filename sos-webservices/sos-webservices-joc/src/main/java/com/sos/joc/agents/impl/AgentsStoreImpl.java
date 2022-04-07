@@ -106,7 +106,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                         throw new JocBadRequestException(String.format("Agent '%s' is already assigned for Controller '%s'", dbAgent.getAgentId(),
                                 dbAgent.getControllerId()));
                     }
-                    dbAgent.setDisabled(agent.getDisabled());
+                    dbAgent.setDisabled(agent.getHidden());
                     dbAgent.setAgentName(agent.getAgentName());
                     dbAgent.setTitle(agent.getTitle());
                     
@@ -126,7 +126,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 dbAgent.setAgentId(agent.getAgentId());
                 dbAgent.setAgentName(agent.getAgentName());
                 dbAgent.setControllerId(controllerId);
-                dbAgent.setDisabled(agent.getDisabled());
+                dbAgent.setDisabled(agent.getHidden());
                 dbAgent.setIsWatcher(false);
                 dbAgent.setOsId(0L);
                 dbAgent.setStartedAt(null);
@@ -237,7 +237,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 dbAgent.setAgentId(agent.getAgentId());
                 dbAgent.setAgentName(agent.getAgentName());
                 dbAgent.setControllerId(controllerId);
-                dbAgent.setDisabled(agent.getDisabled());
+                dbAgent.setDisabled(agent.getHidden());
                 dbAgent.setIsWatcher(false);
                 dbAgent.setOsId(0L);
                 dbAgent.setUri(agent.getSubagents().get(0).getUrl());
