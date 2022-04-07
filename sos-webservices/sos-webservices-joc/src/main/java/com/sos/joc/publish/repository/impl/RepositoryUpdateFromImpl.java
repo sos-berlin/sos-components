@@ -77,7 +77,9 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
                     } else {
                         dbLayer.getSession().update(item);
                     }
-                    JocInventory.makeParentDirs(new InventoryDBLayer(dbLayer.getSession()), Paths.get(item.getFolder()));
+                    if(item.getFolder() != null && !item.getFolder().isEmpty() && !"/".equals(item.getFolder())) {
+                        JocInventory.makeParentDirs(new InventoryDBLayer(dbLayer.getSession()), Paths.get(item.getFolder()));
+                    }
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
