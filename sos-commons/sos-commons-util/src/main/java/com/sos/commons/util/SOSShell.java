@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
+import com.sos.commons.util.common.SOSTimeout;
 
 public class SOSShell {
 
@@ -36,10 +37,18 @@ public class SOSShell {
     private static String hostname;
 
     public static SOSCommandResult executeCommand(String script) {
-        return executeCommand(script, null);
+        return executeCommand(script, null, null);
+    }
+
+    public static SOSCommandResult executeCommand(String script, SOSTimeout timeout) {
+        return executeCommand(script, timeout, null);
     }
 
     public static SOSCommandResult executeCommand(String script, SOSEnv env) {
+        return executeCommand(script, null, env);
+    }
+
+    public static SOSCommandResult executeCommand(String script, SOSTimeout timeout, SOSEnv env) {
         SOSCommandResult result = new SOSCommandResult(script);
         try {
             ProcessBuilder pb = new ProcessBuilder(getCommand(script));
@@ -51,7 +60,14 @@ public class SOSShell {
             CompletableFuture<Boolean> out = redirect(p.getInputStream(), result::setStdOut);
             CompletableFuture<Boolean> err = redirect(p.getErrorStream(), result::setStdErr);
 
-            result.setExitCode(p.waitFor());
+            if (timeout == null) {
+                result.setExitCode(p.waitFor());
+            } else {
+                if (!p.waitFor(timeout.getInterval(), timeout.getTimeUnit())) {
+                    result.setTimeoutExeeded(true);
+                }
+                result.setExitCode(p.exitValue());
+            }
             result.setCommand(pb.command().get(pb.command().size() - 1));
             out.join();
             err.join();

@@ -8,6 +8,7 @@ public class SOSCommandResult {
     private String command;
     private Integer exitCode;
     private Throwable exception;
+    private boolean timeoutExeeded;
 
     public SOSCommandResult(String cmd) {
         command = cmd;
@@ -29,6 +30,14 @@ public class SOSCommandResult {
 
     public void setExitCode(Integer val) {
         exitCode = val;
+    }
+
+    public boolean isTimeoutExeeded() {
+        return timeoutExeeded;
+    }
+
+    public void setTimeoutExeeded(boolean val) {
+        timeoutExeeded = val;
     }
 
     public String getStdOut() {
@@ -88,6 +97,9 @@ public class SOSCommandResult {
         sb.append("[std:err=").append(stdErr.toString().trim()).append("]");
         if (exception != null) {
             sb.append("[exception=").append(exception.toString()).append("]");
+        }
+        if (timeoutExeeded) {
+            sb.append("[timeoutExeeded=true]");
         }
         return sb.toString();
     }
