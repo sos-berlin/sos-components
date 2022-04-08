@@ -1,6 +1,7 @@
 package com.sos.commons.git;
 
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.git.enums.GitConfigType;
@@ -9,12 +10,13 @@ import com.sos.commons.git.results.GitCommandResult;
 import com.sos.commons.git.util.GitCommandConstants;
 import com.sos.commons.git.util.GitUtil;
 import com.sos.commons.util.SOSShell;
+import com.sos.commons.util.common.SOSTimeout;
 
 public class GitCommand {
     private static final String DELIMITER_WINDOWS = " && ";
     private static final String DELIMITER_LINUX = " ; ";
-    private static final int TIMEMOUT_SHORT = 30;
-    private static final int TIMEMOUT_LONG = 300;
+    private static final SOSTimeout TIMEMOUT_SHORT = new SOSTimeout(30, TimeUnit.SECONDS);
+    private static final SOSTimeout TIMEMOUT_LONG = new SOSTimeout(5, TimeUnit.MINUTES);
     
     
     // TODO: add the timeouts when available from SOSShell class
@@ -28,13 +30,13 @@ public class GitCommand {
 
     public static GitCommandResult executeGitStatusShort(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitStatusShortCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_STATUS_SHORT));
+            return GitUtil.createGitStatusShortCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_STATUS_SHORT, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitStatusShortCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_STATUS_SHORT)),
+                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_STATUS_SHORT), TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_STATUS_SHORT);
             if (workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -50,12 +52,12 @@ public class GitCommand {
     
     public static GitCommandResult executeGitPull(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitPullCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_PULL));
+            return GitUtil.createGitPullCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_PULL, TIMEMOUT_LONG));
         } else {
-            GitCommandResult result = GitUtil.createGitPullCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_PULL)), GitCommandConstants.CMD_GIT_PULL);
+            GitCommandResult result = GitUtil.createGitPullCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, GitCommandConstants.CMD_GIT_PULL), TIMEMOUT_LONG), GitCommandConstants.CMD_GIT_PULL);
             if (workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -72,12 +74,13 @@ public class GitCommand {
     
     public static GitCommandResult executeGitAdd(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitAddCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_ADD));
+            return GitUtil.createGitAddCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_ADD, TIMEMOUT_SHORT));
         } else {
-            GitCommandResult result = GitUtil.createGitAddCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_ADD)), GitCommandConstants.CMD_GIT_ADD);
+            GitCommandResult result = GitUtil.createGitAddCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, GitCommandConstants.CMD_GIT_ADD), TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_ADD);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -93,12 +96,13 @@ public class GitCommand {
     
     public static GitCommandResult executeGitAddAll(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitAddAllCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_ADD_ALL));
+            return GitUtil.createGitAddAllCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_ADD_ALL, TIMEMOUT_SHORT));
         } else {
-            GitCommandResult result = GitUtil.createGitAddAllCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_ADD_ALL)), GitCommandConstants.CMD_GIT_ADD_ALL);
+            GitCommandResult result = GitUtil.createGitAddAllCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, GitCommandConstants.CMD_GIT_ADD_ALL), TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_ADD_ALL);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -114,12 +118,13 @@ public class GitCommand {
     
     public static GitCommandResult executeGitCommit(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_COMMIT));
+            return GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_COMMIT, TIMEMOUT_SHORT));
         } else {
-            GitCommandResult result = GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_COMMIT)), GitCommandConstants.CMD_GIT_COMMIT);
+            GitCommandResult result = GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, GitCommandConstants.CMD_GIT_COMMIT), TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_COMMIT);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -136,13 +141,13 @@ public class GitCommand {
     public static GitCommandResult executeGitCommitFormatted(String message, Path repository, Path workingDir) {
         if (repository == null) {
             return GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(String.format(
-                    GitCommandConstants.CMD_GIT_COMMIT_FORMAT, message)));
+                    GitCommandConstants.CMD_GIT_COMMIT_FORMAT, message), TIMEMOUT_SHORT));
         } else {
-            GitCommandResult result = GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, String.format(GitCommandConstants.CMD_GIT_COMMIT_FORMAT, message))), 
+            GitCommandResult result = GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, String.format(GitCommandConstants.CMD_GIT_COMMIT_FORMAT, message)), TIMEMOUT_SHORT), 
                     String.format(GitCommandConstants.CMD_GIT_COMMIT_FORMAT, message));
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -167,23 +172,25 @@ public class GitCommand {
     public static GitCommandResult executeGitCheckout(String branch, String tagname, Path repository, Path workingDir) {
         if (repository == null) {
             if(branch != null) {
-                return GitUtil.createGitCheckoutCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CHECKOUT_BRANCH + branch));
+                return GitUtil.createGitCheckoutCommandResult(
+                        SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CHECKOUT_BRANCH + branch, TIMEMOUT_SHORT));
             } else { // tagname != null
-                return GitUtil.createGitCheckoutCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CHECKOUT_TAG + tagname));
+                return GitUtil.createGitCheckoutCommandResult(
+                        SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CHECKOUT_TAG + tagname, TIMEMOUT_SHORT));
             }
         } else {
             GitCommandResult result = null;
             if(branch != null) {
                 result = GitUtil.createGitCheckoutCommandResult(SOSShell.executeCommand(getPathifiedCommand(
-                        repository, workingDir, GitCommandConstants.CMD_GIT_CHECKOUT_BRANCH + branch)), 
+                        repository, workingDir, GitCommandConstants.CMD_GIT_CHECKOUT_BRANCH + branch), TIMEMOUT_SHORT), 
                         GitCommandConstants.CMD_GIT_CHECKOUT_BRANCH + branch);
             } else { // tagname != null
                 result = GitUtil.createGitCheckoutCommandResult(SOSShell.executeCommand(getPathifiedCommand(
-                        repository, workingDir, GitCommandConstants.CMD_GIT_CHECKOUT_TAG + tagname)), 
+                        repository, workingDir, GitCommandConstants.CMD_GIT_CHECKOUT_TAG + tagname), TIMEMOUT_SHORT), 
                         GitCommandConstants.CMD_GIT_CHECKOUT_TAG + tagname);
             }
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -199,13 +206,13 @@ public class GitCommand {
     
     public static GitCommandResult executeGitAddAndCommitExisting(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_ADD_AND_COMMIT));
+            return GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_ADD_AND_COMMIT, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_ADD_AND_COMMIT)),
+                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_ADD_AND_COMMIT), TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_ADD_AND_COMMIT);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -222,13 +229,13 @@ public class GitCommand {
     public static GitCommandResult executeGitAddAndCommitExistingFormatted(String message, Path repository, Path workingDir) {
         if (repository == null) {
             return GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(String.format(
-                    GitCommandConstants.CMD_GIT_ADD_AND_COMMIT_FORMAT, message)));
+                    GitCommandConstants.CMD_GIT_ADD_AND_COMMIT_FORMAT, message), TIMEMOUT_SHORT));
         } else {
-            GitCommandResult result = GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, String.format(GitCommandConstants.CMD_GIT_ADD_AND_COMMIT_FORMAT, message))), 
+            GitCommandResult result = GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, String.format(GitCommandConstants.CMD_GIT_ADD_AND_COMMIT_FORMAT, message)), TIMEMOUT_SHORT), 
                     String.format(GitCommandConstants.CMD_GIT_ADD_AND_COMMIT_FORMAT, message));
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -244,12 +251,12 @@ public class GitCommand {
     
     public static GitCommandResult executeGitPush(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitPushCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_PUSH));
+            return GitUtil.createGitPushCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_PUSH, TIMEMOUT_LONG));
         } else {
-            GitCommandResult result = GitUtil.createGitPushCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_PUSH)), GitCommandConstants.CMD_GIT_PUSH);
+            GitCommandResult result = GitUtil.createGitPushCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, GitCommandConstants.CMD_GIT_PUSH), TIMEMOUT_LONG), GitCommandConstants.CMD_GIT_PUSH);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -279,9 +286,10 @@ public class GitCommand {
         if (repository == null) {
             if (targetFolder != null) {
                 return GitUtil.createGitCloneCommandResult(SOSShell.executeCommand(
-                        String.format("%1$s%2$s %3$s", GitCommandConstants.CMD_GIT_CLONE, remoteRepositoryUri, targetFolder)));
+                        String.format("%1$s%2$s %3$s", GitCommandConstants.CMD_GIT_CLONE, remoteRepositoryUri, targetFolder), TIMEMOUT_LONG));
             }
-            return GitUtil.createGitCloneCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri));
+            return GitUtil.createGitCloneCommandResult(
+                    SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri, TIMEMOUT_LONG));
         } else {
             String pathifiedCommand = null;
             if (targetFolder != null) {
@@ -290,10 +298,10 @@ public class GitCommand {
             } else {
                 pathifiedCommand = getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri);
             }
-            GitCommandResult result = GitUtil.createGitCloneCommandResult(SOSShell.executeCommand(pathifiedCommand),
+            GitCommandResult result = GitUtil.createGitCloneCommandResult(SOSShell.executeCommand(pathifiedCommand, TIMEMOUT_LONG),
                     GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -309,12 +317,12 @@ public class GitCommand {
     
     public static GitCommandResult executeGitTag(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitTagCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_TAG));
+            return GitUtil.createGitTagCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_TAG, TIMEMOUT_SHORT));
         } else {
-            GitCommandResult result = GitUtil.createGitTagCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_TAG)), GitCommandConstants.CMD_GIT_TAG);
+            GitCommandResult result = GitUtil.createGitTagCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, GitCommandConstants.CMD_GIT_TAG), TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_TAG);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -330,12 +338,12 @@ public class GitCommand {
     
     public static GitCommandResult executeGitRemoteRead(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_REMOTE_V));
+            return GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_REMOTE_V, TIMEMOUT_SHORT));
         } else {
-            GitCommandResult result = GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_REMOTE_V)), GitCommandConstants.CMD_GIT_REMOTE_V);
+            GitCommandResult result = GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, GitCommandConstants.CMD_GIT_REMOTE_V), TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_REMOTE_V);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -352,13 +360,13 @@ public class GitCommand {
     public static GitCommandResult executeGitRemoteAdd(String shortName, String remoteURI, Path repository, Path workingDir) {
         if (repository == null) {
             return GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(
-                    GitCommandConstants.CMD_GIT_REMOTE_ADD + shortName + " " + remoteURI));
+                    GitCommandConstants.CMD_GIT_REMOTE_ADD + shortName + " " + remoteURI, TIMEMOUT_SHORT));
         } else {
-            GitCommandResult result = GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_REMOTE_ADD + shortName + " " + remoteURI)),
+            GitCommandResult result = GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, GitCommandConstants.CMD_GIT_REMOTE_ADD + shortName + " " + remoteURI), TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_REMOTE_ADD + shortName + " " + remoteURI);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -374,13 +382,14 @@ public class GitCommand {
     
     public static GitCommandResult executeGitRemoteRemove(String shortName, Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_REMOTE_REMOVE + shortName));
+            return GitUtil.createGitRemoteCommandResult(
+                    SOSShell.executeCommand(GitCommandConstants.CMD_GIT_REMOTE_REMOVE + shortName, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_REMOTE_REMOVE + shortName)),
+                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_REMOTE_REMOVE + shortName), TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_REMOTE_REMOVE + shortName);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -396,13 +405,13 @@ public class GitCommand {
     
     public static GitCommandResult executeGitRemoteUpdate(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_REMOTE_UPDATE));
+            return GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_REMOTE_UPDATE, TIMEMOUT_LONG));
         } else {
             GitCommandResult result = GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_REMOTE_UPDATE)), 
+                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_REMOTE_UPDATE), TIMEMOUT_LONG),
                     GitCommandConstants.CMD_GIT_REMOTE_UPDATE);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -418,13 +427,14 @@ public class GitCommand {
     
     public static GitCommandResult executeGitCheckRemoteConnection(String repositoryUri, Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitLsRemoteCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_LS_REMOTE + repositoryUri));
+            return GitUtil.createGitLsRemoteCommandResult(
+                    SOSShell.executeCommand(GitCommandConstants.CMD_GIT_LS_REMOTE + repositoryUri, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitLsRemoteCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_LS_REMOTE + repositoryUri)), 
+                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_LS_REMOTE + repositoryUri), TIMEMOUT_SHORT), 
                     GitCommandConstants.CMD_GIT_LS_REMOTE + repositoryUri);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -440,12 +450,12 @@ public class GitCommand {
     
     public static GitCommandResult executeGitLog(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitLogCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_LOG));
+            return GitUtil.createGitLogCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_LOG, TIMEMOUT_SHORT));
         } else {
-            GitCommandResult result = GitUtil.createGitLogCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_LOG)), GitCommandConstants.CMD_GIT_LOG);
+            GitCommandResult result = GitUtil.createGitLogCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, GitCommandConstants.CMD_GIT_LOG), TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_LOG);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -461,13 +471,13 @@ public class GitCommand {
     
     public static GitCommandResult executeGitLogParseable(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitLogCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_LOG_ONE_LINE));
+            return GitUtil.createGitLogCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_LOG_ONE_LINE, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitLogCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_LOG_ONE_LINE)),
+                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_LOG_ONE_LINE), TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_LOG_ONE_LINE);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -483,13 +493,13 @@ public class GitCommand {
     
     public static GitCommandResult executeGitCherryPick(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitCherryPickCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CHERRY_PICK));
+            return GitUtil.createGitCherryPickCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CHERRY_PICK, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitCherryPickCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_CHERRY_PICK)),
+                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_CHERRY_PICK), TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_CHERRY_PICK);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -506,12 +516,12 @@ public class GitCommand {
     public static GitCommandResult executeGitRestore(Path repository, Path workingDir) {
         // use "git restore <file>..." to discard changes in working directory
         if (repository == null) {
-            return GitUtil.createGitRestoreCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_RESTORE));
+            return GitUtil.createGitRestoreCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_RESTORE, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitRestoreCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_RESTORE)), GitCommandConstants.CMD_GIT_RESTORE);
+                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_RESTORE), TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_RESTORE);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -528,12 +538,12 @@ public class GitCommand {
     public static GitCommandResult executeGitRestoreStaged(Path repository, Path workingDir) {
         // use "git restore --staged <file>..." to unstage
         if (repository == null) {
-            return GitUtil.createGitRestoreCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_RESTORE));
+            return GitUtil.createGitRestoreCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_RESTORE, TIMEMOUT_SHORT));
         } else {
-            GitCommandResult result = GitUtil.createGitRestoreCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_RESTORE)), GitCommandConstants.CMD_GIT_RESTORE);
+            GitCommandResult result = GitUtil.createGitRestoreCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, GitCommandConstants.CMD_GIT_RESTORE), TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_RESTORE);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -549,12 +559,13 @@ public class GitCommand {
     
     public static GitCommandResult executeGitConfig(String params, Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CONFIG + params));
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CONFIG + params, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
-                    repository, workingDir, GitCommandConstants.CMD_GIT_CONFIG + params)), GitCommandConstants.CMD_GIT_CONFIG + params);
+                    repository, workingDir, GitCommandConstants.CMD_GIT_CONFIG + params), TIMEMOUT_SHORT),
+                    GitCommandConstants.CMD_GIT_CONFIG + params);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -571,12 +582,12 @@ public class GitCommand {
     public static GitCommandResult executeGitConfigSshGet(GitConfigType configType, Path repository, Path workingDir) throws SOSException {
         String command = GitUtil.getConfigSshCommand(configType, GitConfigAction.GET);
         if (repository == null) {
-            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
-                    repository, workingDir, command)), command);
+                    repository, workingDir, command), TIMEMOUT_SHORT), command);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -595,12 +606,12 @@ public class GitCommand {
             throws SOSException {
         String command = GitUtil.getConfigUsername(configType, GitConfigAction.GET, null);
         if (repository == null) {
-            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
-                    repository, workingDir, command)), command);
+                    repository, workingDir, command), TIMEMOUT_SHORT), command);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -619,12 +630,12 @@ public class GitCommand {
             throws SOSException {
         String command = GitUtil.getConfigUserEmail(configType, GitConfigAction.GET, null);
         if (repository == null) {
-            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
-                    repository, workingDir, command)), command);
+                    repository, workingDir, command), TIMEMOUT_SHORT), command);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -641,12 +652,12 @@ public class GitCommand {
     public static GitCommandResult executeGitConfigSshUnset(GitConfigType configType, Path repository, Path workingDir) throws SOSException {
         String command = GitUtil.getConfigSshCommand(configType, GitConfigAction.UNSET);
         if (repository == null) {
-            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
-                    repository, workingDir, command)), command);
+                    repository, workingDir, command), TIMEMOUT_SHORT), command);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -664,12 +675,12 @@ public class GitCommand {
             throws SOSException {
         String command = GitUtil.getConfigUsername(configType, GitConfigAction.UNSET, null);
         if (repository == null) {
-            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
-                    repository, workingDir, command)), command);
+                    repository, workingDir, command), TIMEMOUT_SHORT), command);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -687,12 +698,12 @@ public class GitCommand {
             throws SOSException {
         String command = GitUtil.getConfigUserEmail(configType, GitConfigAction.UNSET, null);
         if (repository == null) {
-            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
-                    repository, workingDir, command)), command);
+                    repository, workingDir, command), TIMEMOUT_SHORT), command);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -710,12 +721,12 @@ public class GitCommand {
             throws SOSException {
         String command = GitUtil.getConfigSshCommand(configType, GitConfigAction.ADD, keyFilePath);
         if (repository == null) {
-            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
-                    repository, workingDir, command)), command);
+                    repository, workingDir, command), TIMEMOUT_SHORT), command);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -733,12 +744,12 @@ public class GitCommand {
             throws SOSException {
         String command = GitUtil.getConfigUsername(configType, GitConfigAction.ADD, username);
         if (repository == null) {
-            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
-                    repository, workingDir, command)), command);
+                    repository, workingDir, command), TIMEMOUT_SHORT), command);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -756,12 +767,12 @@ public class GitCommand {
             throws SOSException {
         String command = GitUtil.getConfigUserEmail(configType, GitConfigAction.ADD, email);
         if (repository == null) {
-            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
-                    repository, workingDir, command)), command);
+                    repository, workingDir, command), TIMEMOUT_SHORT), command);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -779,12 +790,12 @@ public class GitCommand {
             throws SOSException {
         String command = GitUtil.getConfigSshCommand(configType, GitConfigAction.ADD, value);
         if (repository == null) {
-            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command));
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
-                    repository, workingDir, command)), command);
+                    repository, workingDir, command), TIMEMOUT_SHORT), command);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -802,12 +813,12 @@ public class GitCommand {
     @SuppressWarnings("unused")
     private static GitCommandResult executeGitDiff(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitDiffCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_DIFF));
+            return GitUtil.createGitDiffCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_DIFF, TIMEMOUT_LONG));
         } else {
-            GitCommandResult result = GitUtil.createGitDiffCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_DIFF)), GitCommandConstants.CMD_GIT_DIFF);
+            GitCommandResult result = GitUtil.createGitDiffCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, GitCommandConstants.CMD_GIT_DIFF), TIMEMOUT_LONG), GitCommandConstants.CMD_GIT_DIFF);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
@@ -824,12 +835,12 @@ public class GitCommand {
     @SuppressWarnings("unused")
     private static GitCommandResult executeGitDiffStaged(Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitDiffCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_DIFF_STAGED));
+            return GitUtil.createGitDiffCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_DIFF_STAGED, TIMEMOUT_LONG));
         } else {
-            GitCommandResult result = GitUtil.createGitDiffCommandResult(SOSShell.executeCommand(
-                    getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_DIFF_STAGED)), GitCommandConstants.CMD_GIT_DIFF_STAGED);
+            GitCommandResult result = GitUtil.createGitDiffCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, GitCommandConstants.CMD_GIT_DIFF_STAGED), TIMEMOUT_LONG), GitCommandConstants.CMD_GIT_DIFF_STAGED);
             if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/')); // fire and forget
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), TIMEMOUT_SHORT);
             }
             return result;
         }
