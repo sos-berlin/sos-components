@@ -305,7 +305,7 @@ public class InventorySearchDBLayer extends DBLayer {
                         hql.append("select scheduleName from ").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" subt ");
                         hql.append("where mt.name=subt.scheduleName ");
                         hql.append("and lower(subt.workflowName) like :workflow ");
-                        hql.append(")");
+                        hql.append(") ");
                         break;
                     default:
                         break;
@@ -360,7 +360,7 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append("    where ic.name in(");
                 hql.append("         select workflowName from ").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" subt ");
                 hql.append("         where mt.name=subt.scheduleName ");
-                hql.append("    )");
+                hql.append("    ) ");
                 break;
             default:
                 break;
@@ -651,7 +651,7 @@ public class InventorySearchDBLayer extends DBLayer {
                         hql.append("select scheduleName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
                         hql.append("where mt.name=subt.scheduleName ");
                         hql.append("and lower(subt.workflowName) like :workflow ");
-                        hql.append(")");
+                        hql.append(") ");
                         break;
                     default:
                         break;
@@ -711,7 +711,7 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append("    where dc.name in(");
                 hql.append("         select workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
                 hql.append("         where mt.name=subt.scheduleName ");
-                hql.append("    )");
+                hql.append("    ) ");
                 break;
             default:
                 break;
