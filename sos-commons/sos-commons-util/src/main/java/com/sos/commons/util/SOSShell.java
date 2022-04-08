@@ -112,6 +112,9 @@ public class SOSShell {
                 name = Charset.defaultCharset().name();
             }
         }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[getWindowsCharsetName]codepage=%s, charsetName=%s", cp, name));
+        }
         return name;
     }
 
