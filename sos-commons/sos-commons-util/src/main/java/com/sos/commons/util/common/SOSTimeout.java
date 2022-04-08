@@ -2,10 +2,16 @@ package com.sos.commons.util.common;
 
 import java.util.concurrent.TimeUnit;
 
+import com.sos.commons.util.SOSString;
+
 public class SOSTimeout {
 
-    private final long interval;
-    private final TimeUnit timeUnit;
+    private long interval;
+    private TimeUnit timeUnit;
+
+    public SOSTimeout(String timeout) throws Exception {
+        resolve(timeout);
+    }
 
     public SOSTimeout(long interval, TimeUnit timeUnit) {
         this.interval = interval;
@@ -18,6 +24,22 @@ public class SOSTimeout {
 
     public TimeUnit getTimeUnit() {
         return timeUnit;
+    }
+
+    /** n NANOSECONDS|MICROSECONDS|MILLISECONDS|SECONDS|MINUTES|HOURS|DAYS
+     * 
+     * @param val */
+    private void resolve(String val) throws Exception {
+        if (SOSString.isEmpty(val)) {
+            throw new Exception("missing input");
+        }
+        String[] v = val.split(" ");
+        interval = Long.parseLong(v[0].trim());
+        if (v.length == 1) {
+            timeUnit = TimeUnit.SECONDS;
+        } else {
+            timeUnit = TimeUnit.valueOf(v[1].trim().toUpperCase());
+        }
     }
 
     @Override

@@ -6,20 +6,30 @@ public class SOSCommandResult {
 
     private final StringBuilder stdOut;
     private final StringBuilder stdErr;
+    private final Charset charset;
+    private final SOSTimeout timeout;
 
     private Throwable exception;
     private String command;
-    private Charset charset;
     private Integer exitCode;
     private boolean timeoutExeeded;
 
     public SOSCommandResult(String cmd) {
-        this(cmd, null);
+        this(cmd, null, null);
     }
 
     public SOSCommandResult(String cmd, Charset charset) {
+        this(cmd, charset, null);
+    }
+
+    public SOSCommandResult(String cmd, SOSTimeout timeout) {
+        this(cmd, null, timeout);
+    }
+
+    public SOSCommandResult(String cmd, Charset charset, SOSTimeout timeout) {
         this.command = cmd;
         this.charset = charset;
+        this.timeout = timeout;
         this.stdOut = new StringBuilder();
         this.stdErr = new StringBuilder();
     }
@@ -34,6 +44,10 @@ public class SOSCommandResult {
 
     public Charset getCharset() {
         return charset;
+    }
+
+    public SOSTimeout getTimeout() {
+        return timeout;
     }
 
     public Integer getExitCode() {
@@ -105,16 +119,20 @@ public class SOSCommandResult {
     public String toString() {
         StringBuilder sb = new StringBuilder("[").append(command).append("]");
         sb.append("[exitCode=").append(exitCode).append("]");
-        sb.append("[std:out=").append(stdOut.toString().trim()).append("]");
-        sb.append("[std:err=").append(stdErr.toString().trim()).append("]");
         if (charset != null) {
             sb.append("[charset=").append(charset).append("]");
         }
+        if (timeout != null) {
+            sb.append("[timeout=").append(timeout);
+            if (timeoutExeeded) {
+                sb.append(",timeoutExeeded=true");
+            }
+            sb.append("]");
+        }
+        sb.append("[std:out=").append(stdOut.toString().trim()).append("]");
+        sb.append("[std:err=").append(stdErr.toString().trim()).append("]");
         if (exception != null) {
             sb.append("[exception=").append(exception.toString()).append("]");
-        }
-        if (timeoutExeeded) {
-            sb.append("[timeoutExeeded=true]");
         }
         return sb.toString();
     }
