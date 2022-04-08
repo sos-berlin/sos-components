@@ -39,19 +39,35 @@ public class SOSShell {
     private static String hostname;
 
     public static SOSCommandResult executeCommand(String script) {
-        return executeCommand(script, null, null);
+        return executeCommand(script, null, null, null);
+    }
+
+    public static SOSCommandResult executeCommand(String script, Charset charset) {
+        return executeCommand(script, charset, null, null);
     }
 
     public static SOSCommandResult executeCommand(String script, SOSTimeout timeout) {
-        return executeCommand(script, timeout, null);
+        return executeCommand(script, null, timeout, null);
+    }
+
+    public static SOSCommandResult executeCommand(String script, Charset charset, SOSTimeout timeout) {
+        return executeCommand(script, charset, timeout, null);
     }
 
     public static SOSCommandResult executeCommand(String script, SOSEnv env) {
-        return executeCommand(script, null, env);
+        return executeCommand(script, null, null, env);
+    }
+
+    public static SOSCommandResult executeCommand(String script, Charset charset, SOSEnv env) {
+        return executeCommand(script, charset, null, env);
     }
 
     public static SOSCommandResult executeCommand(String script, SOSTimeout timeout, SOSEnv env) {
-        SOSCommandResult result = new SOSCommandResult(script, getCharset());
+        return executeCommand(script, null, timeout, env);
+    }
+
+    public static SOSCommandResult executeCommand(String script, Charset charset, SOSTimeout timeout, SOSEnv env) {
+        SOSCommandResult result = new SOSCommandResult(script, getCharset(charset));
         try {
             ProcessBuilder pb = new ProcessBuilder(getCommand(script));
             if (env != null && env.getLocalEnvs().size() > 0) {
@@ -96,7 +112,14 @@ public class SOSShell {
         });
     }
 
-    public static Charset getCharset() {
+    public static Charset getSystemCharset() {
+        return getCharset(null);
+    }
+
+    private static Charset getCharset(Charset defaultCharset) {
+        if (defaultCharset != null) {
+            return defaultCharset;
+        }
         if (IS_WINDOWS) {
             return Charset.forName(getWindowsCharsetName());
         }
@@ -105,6 +128,15 @@ public class SOSShell {
 
     private static String getWindowsCharsetName() {
         int cp = Kernel32.INSTANCE.GetConsoleCP();
+        if (cp == 0) {
+            String name = Charset.defaultCharset().name();
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[getWindowsCharsetName]codepage=%s(lastError=%s),default charsetName=%s", cp, Kernel32.INSTANCE
+                        .GetLastError(), name));
+            }
+            return name;
+        }
+
         String name = "cp" + cp;
         if (!Charset.isSupported(name)) {
             name = "CP" + cp;
@@ -113,7 +145,7 @@ public class SOSShell {
             }
         }
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[getWindowsCharsetName]codepage=%s, charsetName=%s", cp, name));
+            LOGGER.debug(String.format("[getWindowsCharsetName]codepage=%s,charsetName=%s", cp, name));
         }
         return name;
     }
