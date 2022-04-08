@@ -244,15 +244,15 @@ public class Agent {
         this.hidden = hidden;
     }
 
-//    @JsonProperty("disabled")
-//    public Boolean getDisabled() {
-//        return disabled;
-//    }
-//
-//    @JsonProperty("disabled")
-//    public void setDisabled(Boolean disabled) {
-//        this.disabled = disabled;
-//    }
+    @JsonProperty("disabled")
+    public Boolean getDisabled() {
+        return disabled;
+    }
+
+    @JsonProperty("disabled")
+    public void setDisabled(Boolean disabled) {
+        this.disabled = disabled;
+    }
 
     /**
      * sync state

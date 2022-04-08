@@ -64,17 +64,22 @@ public class DBItemInventoryAgentInstance extends DBItem {
     /* 0=no, 1=yes */
     @Column(name = "[IS_WATCHER]", nullable = false)
     @Type(type = "numeric_boolean")
-    private boolean isWatcher;
+    private boolean isWatcher = false;
 
     /* 0=no, 1=yes */
     @Column(name = "[DISABLED]", nullable = false)
     @Type(type = "numeric_boolean")
-    private boolean disabled;
+    private boolean disabled = false;
+
+    /* 0=no, 1=yes */
+    @Column(name = "[HIDDEN]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean hidden = false;
 
     /* 0=no, 1=yes */
     @Column(name = "[DEPLOYED]", nullable = false)
     @Type(type = "numeric_boolean")
-    private boolean deployed;
+    private boolean deployed = false;
 
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -171,6 +176,14 @@ public class DBItemInventoryAgentInstance extends DBItem {
         isWatcher = val;
     }
 
+    public boolean getHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean val) {
+        hidden = val;
+    }
+    
     public boolean getDisabled() {
         return disabled;
     }

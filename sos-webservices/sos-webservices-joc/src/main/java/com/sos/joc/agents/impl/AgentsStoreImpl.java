@@ -106,7 +106,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                         throw new JocBadRequestException(String.format("Agent '%s' is already assigned for Controller '%s'", dbAgent.getAgentId(),
                                 dbAgent.getControllerId()));
                     }
-                    dbAgent.setDisabled(agent.getHidden());
+                    dbAgent.setHidden(agent.getHidden());
                     dbAgent.setAgentName(agent.getAgentName());
                     dbAgent.setTitle(agent.getTitle());
                     
@@ -126,7 +126,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 dbAgent.setAgentId(agent.getAgentId());
                 dbAgent.setAgentName(agent.getAgentName());
                 dbAgent.setControllerId(controllerId);
-                dbAgent.setDisabled(agent.getHidden());
+                dbAgent.setHidden(agent.getHidden());
                 dbAgent.setIsWatcher(false);
                 dbAgent.setOsId(0L);
                 dbAgent.setStartedAt(null);
@@ -218,7 +218,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                         throw new JocBadRequestException(String.format("Agent '%s' is already assigned for Controller '%s'", dbAgent.getAgentId(),
                                 dbAgent.getControllerId()));
                     }
-                    dbAgent.setDisabled(false);
+                    dbAgent.setHidden(agent.getHidden());
                     dbAgent.setAgentName(agent.getAgentName());
                     dbAgent.setTitle(agent.getTitle());
                     agentDBLayer.updateAgent(dbAgent);
@@ -237,7 +237,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 dbAgent.setAgentId(agent.getAgentId());
                 dbAgent.setAgentName(agent.getAgentName());
                 dbAgent.setControllerId(controllerId);
-                dbAgent.setDisabled(agent.getHidden());
+                dbAgent.setHidden(agent.getHidden());
                 dbAgent.setIsWatcher(false);
                 dbAgent.setOsId(0L);
                 dbAgent.setUri(agent.getSubagents().get(0).getUrl());
@@ -245,7 +245,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 dbAgent.setVersion(null);
                 dbAgent.setTitle(agent.getTitle());
                 dbAgent.setDeployed(false);
-                dbAgent.setDisabled(false);
+                dbAgent.setHidden(false);
                 agentDBLayer.saveAgent(dbAgent);
 
                 List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(

@@ -87,7 +87,8 @@ public class AgentsStandaloneResourceImpl extends JOCResourceImpl implements IAg
                     agent.setAgentName(a.getAgentName());
                     agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
                     agent.setTitle(a.getTitle());
-                    agent.setHidden(a.getDisabled());
+                    agent.setHidden(a.getHidden());
+                    agent.setDisabled(a.getDisabled());
                     agent.setDeployed(null); // deployed is obsolete, now part of syncState
                     agent.setSyncState(AgentHelper.getSyncState(agentsOnController.get(a.getControllerId()), a));
                     agent.setIsClusterWatcher(a.getIsWatcher());
