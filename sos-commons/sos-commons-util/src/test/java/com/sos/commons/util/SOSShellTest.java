@@ -1,5 +1,6 @@
 package com.sos.commons.util;
 
+import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
@@ -31,11 +32,34 @@ public class SOSShellTest {
 
     @Ignore
     @Test
-    public void testCharset() {
+    public void testSystemCharset() {
         String command = "dir D:";
+        command = "echo ÄÜ-ЩЪ-日本語";
 
         LOGGER.info("Start...");
         SOSCommandResult result = SOSShell.executeCommand(command);
+
+        LOGGER.info(String.format("[command]%s", result.getCommand()));
+        LOGGER.info(String.format("[stdOut]%s", result.getStdOut()));
+        LOGGER.info(String.format("[stdErr]%s", result.getStdErr()));
+        LOGGER.info(String.format("[exitCode]%s", result.getExitCode()));
+        LOGGER.info(String.format("[exception]%s", result.getException()));
+        LOGGER.info(String.format("[charset]%s", result.getCharset()));
+
+        LOGGER.info("---");
+        // Cp1252
+        LOGGER.info("System.getProperty(\"sun.jnu.encoding\")=" + System.getProperty("sun.jnu.encoding"));
+        // US-ASCII
+        LOGGER.info("Charset.forName(\"default\")=" + Charset.forName("default"));
+    }
+
+    @Ignore
+    @Test
+    public void testCharset() {
+        String command = "echo ÄÜ-ЩЪ-日本語";
+
+        LOGGER.info("Start...");
+        SOSCommandResult result = SOSShell.executeCommand(command, Charset.forName("CP850"));
 
         LOGGER.info(String.format("[command]%s", result.getCommand()));
         LOGGER.info(String.format("[stdOut]%s", result.getStdOut()));

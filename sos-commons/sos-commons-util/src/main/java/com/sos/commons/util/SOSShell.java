@@ -6,10 +6,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.Modifier;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -26,6 +28,7 @@ import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sun.jna.platform.win32.Kernel32;
+import com.sun.jna.platform.win32.WinError;
 
 public class SOSShell {
 
@@ -132,7 +135,7 @@ public class SOSShell {
         if (cp == 0) {
             String name = Charset.defaultCharset().name();
             LOGGER.warn(String.format("[getWindowsCharsetName][codepage=%s(Kernel32.INSTANCE.GetLastError=%s)]use default charset=%s", cp,
-                    Kernel32.INSTANCE.GetLastError(), name));
+                    getKernel32LastError(), name));
             return name;
         }
 
@@ -141,7 +144,7 @@ public class SOSShell {
             name = "CP" + cp;
             if (!Charset.isSupported(name)) {
                 String defaultName = Charset.defaultCharset().name();
-                LOGGER.warn(String.format("[getWindowsCharsetName][codepage=%s(charset cp|CP%s not supported)]use default charset=%s", cp, name,
+                LOGGER.warn(String.format("[getWindowsCharsetName][codepage=%s(charset cp|%s not supported)]use default charset=%s", cp, name,
                         defaultName));
                 name = defaultName;
             }
@@ -150,6 +153,18 @@ public class SOSShell {
             LOGGER.debug(String.format("[getWindowsCharsetName]codepage=%s,charsetName=%s", cp, name));
         }
         return name;
+    }
+
+    private static String getKernel32LastError() {
+        int lastError = Kernel32.INSTANCE.GetLastError();
+        return Arrays.stream(WinError.class.getDeclaredFields()).filter(field -> {
+            try {
+                return Modifier.isStatic(field.getModifiers()) && field.getType() == int.class && field.getName().startsWith("ERROR") && (int) field
+                        .get(null) == lastError;
+            } catch (IllegalAccessException e) {
+                return false;
+            }
+        }).map(field -> field.getName() + "(" + lastError + ")").findFirst().orElse(Integer.toString(lastError));
     }
 
     public static String getHostname() throws UnknownHostException {
