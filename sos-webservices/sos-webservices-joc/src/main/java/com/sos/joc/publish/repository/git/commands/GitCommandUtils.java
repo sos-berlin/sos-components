@@ -430,7 +430,7 @@ public class GitCommandUtils {
                     }
                     String adjustedRemoteUri = String.format(
                             "%1$s://%2$s%3$s", protocol, hostPort, (path.startsWith("/") ? path : "/" + path));
-                    if(credList.getRemoteUris().contains(adjustedRemoteUri)) {
+                    if(credList != null && credList.getRemoteUris().contains(adjustedRemoteUri)) {
                         remoteUri = adjustedRemoteUri;
                         return true;
                     }
