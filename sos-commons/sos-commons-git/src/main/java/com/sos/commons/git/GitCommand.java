@@ -418,9 +418,9 @@ public class GitCommand {
     
     public static GitCommandResult executeGitCheckRemoteConnection(String repositoryUri, Path repository, Path workingDir) {
         if (repository == null) {
-            return GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_LS_REMOTE + repositoryUri));
+            return GitUtil.createGitLsRemoteCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_LS_REMOTE + repositoryUri));
         } else {
-            GitCommandResult result = GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(
+            GitCommandResult result = GitUtil.createGitLsRemoteCommandResult(SOSShell.executeCommand(
                     getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_LS_REMOTE + repositoryUri)), 
                     GitCommandConstants.CMD_GIT_LS_REMOTE + repositoryUri);
             if(workingDir != null) {

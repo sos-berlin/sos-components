@@ -15,6 +15,7 @@ import com.sos.commons.git.results.GitCommitCommandResult;
 import com.sos.commons.git.results.GitConfigCommandResult;
 import com.sos.commons.git.results.GitDiffCommandResult;
 import com.sos.commons.git.results.GitLogCommandResult;
+import com.sos.commons.git.results.GitLsRemoteCommandResult;
 import com.sos.commons.git.results.GitPullCommandResult;
 import com.sos.commons.git.results.GitPushCommandResult;
 import com.sos.commons.git.results.GitRemoteCommandResult;
@@ -214,6 +215,25 @@ public class GitUtil {
             result = GitRemoteCommandResult.getInstance(commandResult, original);
         } else {
             result = GitRemoteCommandResult.getInstance(commandResult);
+        }
+        if (commandResult.hasError()) {
+            StringBuilder info = new StringBuilder();
+            info.append(commandResult);
+            result.setError(info.toString());
+        }
+        return result;
+    }
+
+    public static final GitCommandResult createGitLsRemoteCommandResult(SOSCommandResult commandResult) {
+        return createGitLsRemoteCommandResult(commandResult, null);
+    }
+
+    public static final GitCommandResult createGitLsRemoteCommandResult(SOSCommandResult commandResult, String original) {
+        GitCommandResult result;
+        if (original != null) {
+            result = GitLsRemoteCommandResult.getInstance(commandResult, original);
+        } else {
+            result = GitLsRemoteCommandResult.getInstance(commandResult);
         }
         if (commandResult.hasError()) {
             StringBuilder info = new StringBuilder();
