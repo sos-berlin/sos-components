@@ -36,7 +36,8 @@ public class SOSShell {
     public static final String OS_ARCHITECTURE = System.getProperty("os.arch");
     public static final boolean IS_WINDOWS = OS_NAME.startsWith("Windows");
 
-    private static String hostname;
+    private static Charset SYSTEM_CHARSET;
+    private static String HOSTNAME;
 
     public static SOSCommandResult executeCommand(String script) {
         return executeCommand(script, null, null, null);
@@ -120,10 +121,10 @@ public class SOSShell {
         if (defaultCharset != null) {
             return defaultCharset;
         }
-        if (IS_WINDOWS) {
-            return Charset.forName(getWindowsCharsetName());
+        if (SYSTEM_CHARSET == null) {
+            SYSTEM_CHARSET = IS_WINDOWS ? Charset.forName(getWindowsCharsetName()) : Charset.forName("UTF-8");
         }
-        return Charset.forName("UTF-8");
+        return SYSTEM_CHARSET;
     }
 
     private static String getWindowsCharsetName() {
@@ -151,11 +152,11 @@ public class SOSShell {
     }
 
     public static String getHostname() throws UnknownHostException {
-        if (hostname == null) {
+        if (HOSTNAME == null) {
             String env = System.getenv(IS_WINDOWS ? "COMPUTERNAME" : "HOSTNAME");
-            hostname = SOSString.isEmpty(env) ? InetAddress.getLocalHost().getHostName() : env;
+            HOSTNAME = SOSString.isEmpty(env) ? InetAddress.getLocalHost().getHostName() : env;
         }
-        return hostname;
+        return HOSTNAME;
     }
 
     public static void printSystemInfos() {
