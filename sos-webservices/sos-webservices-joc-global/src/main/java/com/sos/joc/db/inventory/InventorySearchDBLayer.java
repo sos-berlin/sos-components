@@ -366,7 +366,7 @@ public class InventorySearchDBLayer extends DBLayer {
                 break;
             }
             hql.append("    and ic.type=").append(ConfigurationType.WORKFLOW.intValue()).append(" ");
-            hql.append("  )");
+            hql.append("  ) ");
 
             if (advanced.getJobCountFrom() != null) {
                 jobCountFrom = advanced.getJobCountFrom();
@@ -708,7 +708,7 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append("    where dc.name=").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.content", "$.workflowName"));
                 break;
             case SCHEDULE:
-                hql.append("    where ic.name in(");
+                hql.append("    where dc.name in(");
                 hql.append("         select workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
                 hql.append("         where mt.name=subt.scheduleName ");
                 hql.append("    )");
@@ -720,7 +720,7 @@ public class InventorySearchDBLayer extends DBLayer {
             if (controllerId != null) {
                 hql.append("and dc.controllerId=:controllerId ");
             }
-            hql.append("  )");
+            hql.append("  ) ");
             if (advanced.getJobCountFrom() != null) {
                 jobCountFrom = advanced.getJobCountFrom();
                 hql.append("and sw.jobsCount >= :jobCountFrom ");
