@@ -80,6 +80,15 @@
                 </note>
             </param>
 
+           <param name="timeout" required="false" default_value="30">
+                <note>
+                    <title>Timeout for the command to be executed by the SQL*Plus Client</title>
+                    <p>
+                        The argument specifies the timeout for the command to be executed by the SQL*Plus Client. The default is 30 minutes.
+					</p>
+                </note>
+            </param>
+
             <xi:include href="./includes/com.sos.jitl.jobs.sql/param_variable_parser_reg_expr.xml" parse="xml"/>
 
             <param name="ignore_ora_messages" required="false" default_value="" DataType="SOSOptionStringValueList" Category="sql,pl/sql,sql*plus">

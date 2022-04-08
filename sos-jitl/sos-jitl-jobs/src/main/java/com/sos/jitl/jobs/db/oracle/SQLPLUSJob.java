@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCre
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.util.common.SOSTimeout;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobArgument.Type;
@@ -79,7 +81,8 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
 			String tempFileName = tempFile.getAbsolutePath();
 			sqlPlusCommandHandler.createSqlFile(args, tempFileName);
 
-			SOSCommandResult sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName));
+			SOSTimeout sosTimeout = new SOSTimeout(args.getTimeout(),TimeUnit.MINUTES);
+			SOSCommandResult sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName),sosTimeout);
 			final String conNL = System.getProperty("line.separator");
 			String stdOut = sosCommandResult.getStdOut();
 			log(logger, String.format("[stdout]%s", stdOut));
