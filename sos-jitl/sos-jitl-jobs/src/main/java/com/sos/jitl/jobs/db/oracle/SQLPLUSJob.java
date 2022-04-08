@@ -80,11 +80,11 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
             String tempFileName = tempFile.getAbsolutePath();
             sqlPlusCommandHandler.createSqlFile(args, tempFileName);
 
-            SOSTimeout sosTimeout = new SOSTimeout(args.getTimeout(), TimeUnit.MINUTES);
             SOSCommandResult sosCommandResult = null;
             if (args.getTimeout() == 0) {
                 sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName));
             } else {
+                SOSTimeout sosTimeout = new SOSTimeout(args.getTimeout(), TimeUnit.MINUTES);
                 sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName), sosTimeout);
             }
 
