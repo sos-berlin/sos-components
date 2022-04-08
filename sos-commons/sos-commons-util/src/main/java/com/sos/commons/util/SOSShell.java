@@ -131,10 +131,8 @@ public class SOSShell {
         int cp = Kernel32.INSTANCE.GetConsoleCP();
         if (cp == 0) {
             String name = Charset.defaultCharset().name();
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[getWindowsCharsetName]codepage=%s(lastError=%s),default charsetName=%s", cp, Kernel32.INSTANCE
-                        .GetLastError(), name));
-            }
+            LOGGER.warn(String.format("[getWindowsCharsetName][codepage=%s(Kernel32.INSTANCE.GetLastError=%s)]use default charset=%s", cp,
+                    Kernel32.INSTANCE.GetLastError(), name));
             return name;
         }
 
@@ -142,7 +140,10 @@ public class SOSShell {
         if (!Charset.isSupported(name)) {
             name = "CP" + cp;
             if (!Charset.isSupported(name)) {
-                name = Charset.defaultCharset().name();
+                String defaultName = Charset.defaultCharset().name();
+                LOGGER.warn(String.format("[getWindowsCharsetName][codepage=%s(charset cp|CP%s not supported)]use default charset=%s", cp, name,
+                        defaultName));
+                name = defaultName;
             }
         }
         if (LOGGER.isDebugEnabled()) {
