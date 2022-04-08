@@ -84,7 +84,7 @@
                 <note>
                     <title>Timeout for the command to be executed by the SQL*Plus Client</title>
                     <p>
-                        The argument specifies the timeout for the command to be executed by the SQL*Plus Client. The default is 30 minutes.
+                        The argument specifies the timeout for the command to be executed by the SQL*Plus Client. The default is unlimitted.
 					</p>
                 </note>
             </param>

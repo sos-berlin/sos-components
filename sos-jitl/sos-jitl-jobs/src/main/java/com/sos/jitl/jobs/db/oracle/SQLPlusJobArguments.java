@@ -14,7 +14,7 @@ public class SQLPlusJobArguments extends JobArguments {
     private JobArgument<String> ignoreSp2Messages = new JobArgument<String>("ignore_sp2_messages", false, "");
     private JobArgument<String> commandScriptFile = new JobArgument<String>("command_script_file", false, "");
     private JobArgument<String> command = new JobArgument<String>("command", false, "");
-    private JobArgument<Integer> timeout = new JobArgument<Integer>("timeout", false,30);
+    private JobArgument<Integer> timeout = new JobArgument<Integer>("timeout", false,0);
     private JobArgument<String> commandLineOptions = new JobArgument<String>("command_line_options", false, "");
     private JobArgument<String> includeFiles = new JobArgument<String>("include_files", false, "");
     private JobArgument<String> sqlError = new JobArgument<String>("sql_error", false);
