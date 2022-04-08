@@ -2,6 +2,7 @@ package com.sos.joc.monitoring.notification.notifier;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
+import com.sos.commons.util.common.SOSTimeout;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
@@ -20,6 +22,7 @@ public class NotifierCommand extends ANotifier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NotifierCommand.class);
 
+    private static final SOSTimeout TIMEOUT = new SOSTimeout(5, TimeUnit.MINUTES);
     private static final String VAR_COMMAND = "MON_COMMAND";
 
     private final MonitorCommand monitor;
@@ -41,7 +44,7 @@ public class NotifierCommand extends ANotifier {
         String cmd = resolve(monitor.getCommand(), false);
         LOGGER.info(getInfo4execute(true, mo, mos, type, cmd));
 
-        SOSCommandResult commandResult = SOSShell.executeCommand(cmd, getEnvVariables(cmd));
+        SOSCommandResult commandResult = SOSShell.executeCommand(cmd, TIMEOUT, getEnvVariables(cmd));
         NotifyResult result = new NotifyResult(commandResult.getCommand(), getSendInfo());
         if (commandResult.hasError()) {
             StringBuilder info = new StringBuilder();

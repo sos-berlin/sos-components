@@ -19,4 +19,11 @@ public class SOSTimeout {
     public TimeUnit getTimeUnit() {
         return timeUnit;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(interval + "");
+        sb.append(" ").append(timeUnit == null ? "" : timeUnit.toString());
+        return sb.toString();
+    }
 }

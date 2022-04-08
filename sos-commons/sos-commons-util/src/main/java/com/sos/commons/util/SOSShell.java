@@ -8,6 +8,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -20,9 +21,11 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
+import com.sun.jna.platform.win32.Kernel32;
 
 public class SOSShell {
 
@@ -32,7 +35,6 @@ public class SOSShell {
     public static final String OS_VERSION = System.getProperty("os.version");
     public static final String OS_ARCHITECTURE = System.getProperty("os.arch");
     public static final boolean IS_WINDOWS = OS_NAME.startsWith("Windows");
-    public static final String CODEPAGE = IS_WINDOWS ? "CP850" : "UTF-8";
 
     private static String hostname;
 
@@ -49,16 +51,15 @@ public class SOSShell {
     }
 
     public static SOSCommandResult executeCommand(String script, SOSTimeout timeout, SOSEnv env) {
-        SOSCommandResult result = new SOSCommandResult(script);
+        SOSCommandResult result = new SOSCommandResult(script, getCharset());
         try {
             ProcessBuilder pb = new ProcessBuilder(getCommand(script));
             if (env != null && env.getLocalEnvs().size() > 0) {
                 pb.environment().putAll(env.getLocalEnvs());
             }
             final Process p = pb.start();
-
-            CompletableFuture<Boolean> out = redirect(p.getInputStream(), result::setStdOut);
-            CompletableFuture<Boolean> err = redirect(p.getErrorStream(), result::setStdErr);
+            CompletableFuture<Boolean> out = redirect(p.getInputStream(), result::setStdOut, result.getCharset());
+            CompletableFuture<Boolean> err = redirect(p.getErrorStream(), result::setStdErr, result.getCharset());
 
             if (timeout == null) {
                 result.setExitCode(p.waitFor());
@@ -72,14 +73,18 @@ public class SOSShell {
             out.join();
             err.join();
         } catch (Throwable e) {
-            result.setException(e);
+            if (result.isTimeoutExeeded() && timeout != null) {
+                result.setException(new SOSException(String.format("[timeout=%s]%s", timeout.toString(), e.toString()), e));
+            } else {
+                result.setException(e);
+            }
         }
         return result;
     }
 
-    private static CompletableFuture<Boolean> redirect(final InputStream is, final Consumer<String> consumer) {
+    private static CompletableFuture<Boolean> redirect(final InputStream is, final Consumer<String> consumer, final Charset charset) {
         return CompletableFuture.supplyAsync(() -> {
-            try (InputStreamReader isr = new InputStreamReader(is, CODEPAGE); BufferedReader br = new BufferedReader(isr);) {
+            try (InputStreamReader isr = new InputStreamReader(is, charset); BufferedReader br = new BufferedReader(isr);) {
                 String line = null;
                 while ((line = br.readLine()) != null) {
                     consumer.accept(line + System.lineSeparator());
@@ -89,6 +94,25 @@ public class SOSShell {
                 return false;
             }
         });
+    }
+
+    public static Charset getCharset() {
+        if (IS_WINDOWS) {
+            return Charset.forName(getWindowsCharsetName());
+        }
+        return Charset.forName("UTF-8");
+    }
+
+    private static String getWindowsCharsetName() {
+        int cp = Kernel32.INSTANCE.GetConsoleCP();
+        String name = "cp" + cp;
+        if (!Charset.isSupported(name)) {
+            name = "CP" + cp;
+            if (!Charset.isSupported(name)) {
+                name = Charset.defaultCharset().name();
+            }
+        }
+        return name;
     }
 
     public static String getHostname() throws UnknownHostException {

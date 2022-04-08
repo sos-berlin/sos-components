@@ -1,19 +1,27 @@
 package com.sos.commons.util.common;
 
+import java.nio.charset.Charset;
+
 public class SOSCommandResult {
 
     private final StringBuilder stdOut;
     private final StringBuilder stdErr;
 
-    private String command;
-    private Integer exitCode;
     private Throwable exception;
+    private String command;
+    private Charset charset;
+    private Integer exitCode;
     private boolean timeoutExeeded;
 
     public SOSCommandResult(String cmd) {
-        command = cmd;
-        stdOut = new StringBuilder();
-        stdErr = new StringBuilder();
+        this(cmd, null);
+    }
+
+    public SOSCommandResult(String cmd, Charset charset) {
+        this.command = cmd;
+        this.charset = charset;
+        this.stdOut = new StringBuilder();
+        this.stdErr = new StringBuilder();
     }
 
     public void setCommand(String val) {
@@ -22,6 +30,10 @@ public class SOSCommandResult {
 
     public String getCommand() {
         return command;
+    }
+
+    public Charset getCharset() {
+        return charset;
     }
 
     public Integer getExitCode() {
@@ -77,7 +89,7 @@ public class SOSCommandResult {
     }
 
     public boolean hasError(boolean checkStdError) {
-        if (exception != null) {
+        if (exception != null || timeoutExeeded) {
             return true;
         }
         if (exitCode != null && exitCode > 0) {
@@ -95,6 +107,9 @@ public class SOSCommandResult {
         sb.append("[exitCode=").append(exitCode).append("]");
         sb.append("[std:out=").append(stdOut.toString().trim()).append("]");
         sb.append("[std:err=").append(stdErr.toString().trim()).append("]");
+        if (charset != null) {
+            sb.append("[charset=").append(charset).append("]");
+        }
         if (exception != null) {
             sb.append("[exception=").append(exception.toString()).append("]");
         }
