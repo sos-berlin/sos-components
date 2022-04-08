@@ -13,6 +13,8 @@ import java.util.stream.Stream;
 import javax.ws.rs.Path;
 
 import org.apache.shiro.session.InvalidSessionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -23,6 +25,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.agent.AgentHelper;
+import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -32,7 +35,7 @@ import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocNotImplementedException;
+import com.sos.joc.model.agent.SubAgentCommand;
 import com.sos.joc.model.agent.SubAgentsCommand;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
@@ -41,7 +44,9 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 import io.vavr.control.Either;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
+import js7.data.controller.ControllerCommand;
 import js7.data.subagent.SubagentId;
+import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.subagent.JSubagentItem;
@@ -55,7 +60,8 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
     private static final String API_CALL_ENABLE = "./agents/inventory/cluster/subagents/enable";
     private static final String API_CALL_DISABLE = "./agents/inventory/cluster/subagents/disable";
     private static final String API_CALL_REVOKE = "./agents/inventory/cluster/subagents/revoke";
-    private static final String API_CALL_RESET = "./agents/inventory/cluster/subagents/reset";
+    private static final String API_CALL_RESET = "./agents/inventory/cluster/subagent/reset";
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubAgentCommandImpl.class);
 
     @Override
     public JOCDefaultResponse delete(String accessToken, byte[] filterBytes) {
@@ -225,16 +231,20 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            SubAgentsCommand subAgentCommand = getSubAgentsCommand(filterBytes);
+            JsonValidator.validateFailFast(filterBytes, SubAgentCommand.class);
+            SubAgentCommand subAgentCommand = Globals.objectMapper.readValue(filterBytes, SubAgentCommand.class);
 
             String controllerId = subAgentCommand.getControllerId();
 
             storeAuditLog(subAgentCommand.getAuditLog(), controllerId, CategoryType.CONTROLLER);
-            
-            // TODO
-            throw new JocNotImplementedException("The API " + API_CALL_RESET + " is not yet implemented!");
-            
-            //return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            JControllerCommand resetSubagentCommand = JControllerCommand.apply(new ControllerCommand.ResetSubagent(SubagentId.of(subAgentCommand
+                    .getSubagentId()), subAgentCommand.getForce() == Boolean.TRUE));
+            LOGGER.debug("Reset Subagent: " + resetSubagentCommand.toJson());
+            ControllerApi.of(controllerId).executeCommand(resetSubagentCommand).thenAccept(e -> {
+                ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+            });
+
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
