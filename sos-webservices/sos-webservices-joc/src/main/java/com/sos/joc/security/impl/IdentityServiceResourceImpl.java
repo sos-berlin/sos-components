@@ -121,10 +121,13 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             if (dbItemIamIdentityService == null) {
                 dbItemIamIdentityService = new DBItemIamIdentityService();
                 dbItemIamIdentityService.setIdentityServiceName(identityService.getIdentityServiceName());
+                dbItemIamIdentityService.setOrdering(0);
             }
             dbItemIamIdentityService.setDisabled(identityService.getDisabled());
             dbItemIamIdentityService.setIdentityServiceType(identityService.getIdentityServiceType().value());
-            dbItemIamIdentityService.setOrdering(identityService.getOrdering());
+            if (identityService.getOrdering() != null) {
+                dbItemIamIdentityService.setOrdering(identityService.getOrdering());
+            }
             dbItemIamIdentityService.setRequired(identityService.getRequired());
             if (identityService.getServiceAuthenticationScheme() != null) {
                 dbItemIamIdentityService.setAuthenticationScheme(identityService.getServiceAuthenticationScheme().value());
