@@ -31,7 +31,6 @@ public class PermissionItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("identityServiceName")
@@ -40,7 +39,6 @@ public class PermissionItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -49,7 +47,6 @@ public class PermissionItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("roleName")
@@ -103,7 +100,6 @@ public class PermissionItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("identityServiceName")
@@ -115,7 +111,6 @@ public class PermissionItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("identityServiceName")
@@ -127,7 +122,6 @@ public class PermissionItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -139,7 +133,6 @@ public class PermissionItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -151,7 +144,6 @@ public class PermissionItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("roleName")
@@ -163,7 +155,6 @@ public class PermissionItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("roleName")

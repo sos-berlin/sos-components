@@ -32,7 +32,6 @@ public class FolderItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("identityServiceName")
@@ -41,7 +40,6 @@ public class FolderItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -50,7 +48,6 @@ public class FolderItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("roleName")
@@ -59,7 +56,6 @@ public class FolderItem {
      * folders
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("folder")
@@ -105,7 +101,6 @@ public class FolderItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("identityServiceName")
@@ -117,7 +112,6 @@ public class FolderItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("identityServiceName")
@@ -129,7 +123,6 @@ public class FolderItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -141,7 +134,6 @@ public class FolderItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -153,7 +145,6 @@ public class FolderItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("roleName")
@@ -165,7 +156,6 @@ public class FolderItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("roleName")
@@ -177,7 +167,6 @@ public class FolderItem {
      * folders
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("folder")
@@ -189,7 +178,6 @@ public class FolderItem {
      * folders
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("folder")
