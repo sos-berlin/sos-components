@@ -278,8 +278,6 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
             storeAuditLog(subAgentCommand.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
             connection = Globals.createSosHibernateStatelessConnection(apiCall);
-            connection.setAutoCommit(false);
-            Globals.beginTransaction(connection);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventorySubAgentInstance> dbSubAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(subAgentCommand
                     .getControllerId()));
@@ -290,16 +288,19 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
             final Map<Boolean, List<String>> subAgentsMap = getKnownSubAgentsOnController(subAgentCommand, proxy.currentState());
 
             if (subAgentsMap.containsKey(false)) {
-                // dbLayer.setSubAgentsDisabled(subAgentsMap.get(false), disabled);
-                // EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
-                ProblemHelper.postExceptionEventAsHintIfExist(Either.left(new ControllerObjectNotExistException("Subagents " + subAgentsMap.get(false)
-                        .toString() + "not exist.")), accessToken, getJocError(), null);
+                boolean isBulk = subAgentCommand.getSubagentIds().stream().distinct().count() > 1L;
+                if (isBulk) {
+                    ProblemHelper.postExceptionEventAsHintIfExist(Either.left(new ControllerObjectNotExistException("Subagents " + subAgentsMap.get(
+                            false).toString() + "not exist.")), accessToken, getJocError(), null);
+                } else {
+                    throw new ControllerObjectNotExistException("Subagent " + subAgentsMap.get(false).toString() + "not exist.");
+                }
             }
             if (subAgentsMap.containsKey(true)) {
                 
                 final List<String> subagentIds = subAgentsMap.get(true);
-                final Stream<JUpdateItemOperation> subAgents = dbSubAgents.stream().filter(s -> subagentIds.contains(s.getSubAgentId())).map(s -> JSubagentItem.of(
-                        SubagentId.of(s.getSubAgentId()), AgentPath.of(s.getAgentId()), Uri.of(s.getUri()), disabled)).map(
+                final Stream<JUpdateItemOperation> subAgents = dbSubAgents.stream().filter(s -> subagentIds.contains(s.getSubAgentId())).map(
+                        s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s.getAgentId()), Uri.of(s.getUri()), disabled)).map(
                                 JUpdateItemOperation::addOrChangeSimple);
 
                 proxy.api().updateItems(Flux.fromStream(subAgents)).thenAccept(e -> {
@@ -324,14 +325,11 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                 });
             }
             
-            Globals.commit(connection);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
-            Globals.rollback(connection);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            Globals.rollback(connection);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(connection);

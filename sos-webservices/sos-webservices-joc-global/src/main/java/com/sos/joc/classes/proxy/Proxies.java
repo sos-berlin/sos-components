@@ -463,7 +463,7 @@ public class Proxies {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetClusterWatchers");
                 dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
             }
-            List<String> w = dbLayer.getUrisOfEnabledClusterWatcherByControllerId(controllerId);
+            List<String> w = dbLayer.getUrisOfVisibleClusterWatcherByControllerId(controllerId);
             List<Watch> watchers = w.stream().map(item -> new Watch(Uri.of(item))).collect(Collectors.toList());
             if (watchers == null || watchers.isEmpty()) {
                 throw new DBMissingDataException("No Cluster Watcher is configured for Controller '" + controllerId + "'");

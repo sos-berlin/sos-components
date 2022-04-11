@@ -135,7 +135,7 @@ public class InventoryDBLayer extends DBLayer {
     public Map<Long, List<DBItemInventoryReleasedConfiguration>> getReleasedItemsByConfigurationIds(Collection<Integer> types, String folder,
             boolean recursive, Collection<String> deletedFolders) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
-        hql.append("where irc.id in (").append(getNotDeletedConfigurationsHQL(types, folder, recursive, deletedFolders)).append(")");
+        hql.append("where irc.cid in (").append(getNotDeletedConfigurationsHQL(types, folder, recursive, deletedFolders)).append(")");
         Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
         if (types != null && !types.isEmpty()) {
             query.setParameterList("types", types);

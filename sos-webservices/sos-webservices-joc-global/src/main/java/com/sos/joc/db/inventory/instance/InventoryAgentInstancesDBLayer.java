@@ -52,7 +52,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
 
-    public List<String> getUrisOfEnabledClusterWatcherByControllerId(String controllerId) throws DBInvalidDataException, DBMissingDataException,
+    public List<String> getUrisOfVisibleClusterWatcherByControllerId(String controllerId) throws DBInvalidDataException, DBMissingDataException,
             DBConnectionRefusedException {
         if (controllerId == null || controllerId.isEmpty()) {
             return null;
@@ -62,7 +62,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             hql.append("select uri from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
             hql.append(" where controllerId = :controllerId");
             hql.append(" and isWatcher = 1");
-            hql.append(" and disabled = 0");
+            hql.append(" and hidden = 0");
 
             Query<String> query = getSession().createQuery(hql.toString());
             query.setParameter("controllerId", controllerId);
@@ -114,7 +114,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                     clauses.add("isWatcher = 1");
                 }
                 if (onlyVisibleAgents) {
-                    clauses.add("disabled = 0");
+                    clauses.add("hidden = 0");
                 }
                 if (!clauses.isEmpty()) {
                     hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -171,7 +171,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 clauses.add("isWatcher = 1");
             }
             if (onlyVisibleAgents) {
-                clauses.add("disabled = 0");
+                clauses.add("hidden = 0");
             }
             if (!clauses.isEmpty()) {
                 hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -233,7 +233,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                     }
                 }
                 if (onlyVisibleAgents) {
-                    clauses.add("disabled = 0");
+                    clauses.add("hidden = 0");
                 }
                 if (!clauses.isEmpty()) {
                     hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -717,7 +717,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                     clauses.add("isWatcher = 1");
                 }
                 if (onlyVisibleAgents) {
-                    clauses.add("disabled = 0");
+                    clauses.add("hidden = 0");
                 }
                 if (!clauses.isEmpty()) {
                     hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -758,12 +758,12 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                     }
                 }
                 if (onlyVisibleAgents) {
-                    clauses.add("disabled = 0");
+                    clauses.add("hidden = 0");
                 }
                 if (!clauses.isEmpty()) {
                     hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
                 }
-                hql.append(")");
+                hql.append(") group by agentId");
             }
             Query<String> query = getSession().createQuery(hql.toString());
             if (controllerIds != null && !controllerIds.isEmpty()) {
@@ -869,6 +869,26 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                     " set disabled = ").append(disabled ? 1 : 0).append(" where subAgentId in (:subagentIds)");
             Query<?> query = getSession().createQuery(hql.toString());
             query.setParameterList("subagentIds", subagentIds);
+            return getSession().executeUpdate(query);
+        }
+    }
+    
+    public int setStandaloneAgentsDisabled(List<String> agentIds) throws SOSHibernateException {
+        return setStandaloneAgentsDisabled(agentIds, true);
+    }
+    
+    public int setStandaloneAgentsDisabled(List<String> agentIds, boolean disabled) throws SOSHibernateException {
+        if (agentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            int j = 0;
+            for (int i = 0; i < agentIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                j += setStandaloneAgentsDisabled(SOSHibernate.getInClausePartition(i, agentIds), disabled);
+            }
+            return j;
+        } else {
+            StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(
+                    " set disabled = ").append(disabled ? 1 : 0).append(" where agentId in (:agentIds)");
+            Query<?> query = getSession().createQuery(hql.toString());
+            query.setParameterList("agentIds", agentIds);
             return getSession().executeUpdate(query);
         }
     }
