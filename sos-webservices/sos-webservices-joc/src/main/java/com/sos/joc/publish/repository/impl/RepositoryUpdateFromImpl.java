@@ -69,6 +69,7 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
                 }
             });
             updateTopLevelFolder(dbItemsToUpdate, dbLayer);
+            InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
             newDbItems.stream().forEach(item -> {
                 item.setRepoControlled(true);
                 try {
@@ -78,7 +79,7 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
                         dbLayer.getSession().update(item);
                     }
                     if(item.getFolder() != null && !item.getFolder().isEmpty() && !"/".equals(item.getFolder())) {
-                        JocInventory.makeParentDirs(new InventoryDBLayer(dbLayer.getSession()), Paths.get(item.getFolder()));
+                        JocInventory.makeParentDirs(invDbLayer, Paths.get(item.getFolder()));
                     }
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);

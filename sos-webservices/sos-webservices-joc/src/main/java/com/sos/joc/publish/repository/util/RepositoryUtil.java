@@ -1364,7 +1364,7 @@ public abstract class RepositoryUtil {
         DBItemInventoryConfiguration item = new DBItemInventoryConfiguration();
         item.setId(null);
         item.setPath(newItem.getConfiguration().getPath());
-        item.setFolder(Paths.get(newItem.getConfiguration().getPath()).getParent().toString().replace('\\', '/'));
+        item.setFolder(newItemPath.getParent().toString().replace('\\', '/'));
         item.setName(newItemPath.getFileName().toString());
         item.setDeployed(false);
         item.setReleased(false);
