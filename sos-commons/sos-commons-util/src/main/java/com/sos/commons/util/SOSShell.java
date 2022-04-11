@@ -121,22 +121,30 @@ public class SOSShell {
     }
 
     private static Charset getCharset(Charset defaultCharset) {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         if (defaultCharset != null) {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[getCharset][default]%s", defaultCharset.name()));
+            }
             return defaultCharset;
         }
         if (SYSTEM_CHARSET == null) {
-            SYSTEM_CHARSET = IS_WINDOWS ? Charset.forName(getWindowsCharsetName()) : Charset.forName("UTF-8");
+            SYSTEM_CHARSET = IS_WINDOWS ? getWindowsCharset() : Charset.forName("UTF-8");
+        }
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[getCharset]%s", SYSTEM_CHARSET.name()));
         }
         return SYSTEM_CHARSET;
     }
 
-    private static String getWindowsCharsetName() {
+    private static Charset getWindowsCharset() {
+        String method = "getWindowsCharset";
         int cp = Kernel32.INSTANCE.GetConsoleCP();
         if (cp == 0) {
-            String name = Charset.defaultCharset().name();
-            LOGGER.warn(String.format("[getWindowsCharsetName][codepage=%s(Kernel32.INSTANCE.GetLastError=%s)]use default charset=%s", cp,
-                    getKernel32LastError(), name));
-            return name;
+            Charset defaultCharset = Charset.defaultCharset();
+            LOGGER.warn(String.format("[%s][codepage=%s(Kernel32.INSTANCE.GetLastError=%s)]use default charset=%s", method, cp,
+                    getKernel32LastError(), defaultCharset.name()));
+            return defaultCharset;
         }
 
         String name = "cp" + cp;
@@ -144,15 +152,15 @@ public class SOSShell {
             name = "CP" + cp;
             if (!Charset.isSupported(name)) {
                 String defaultName = Charset.defaultCharset().name();
-                LOGGER.warn(String.format("[getWindowsCharsetName][codepage=%s(charset cp|%s not supported)]use default charset=%s", cp, name,
-                        defaultName));
+                LOGGER.warn(String.format("[%s][codepage=%s(charset cp|%s not supported)]use default charset=%s", method, cp, name, defaultName));
                 name = defaultName;
             }
         }
+        Charset charset = Charset.forName(name);
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[getWindowsCharsetName]codepage=%s,charsetName=%s", cp, name));
+            LOGGER.debug(String.format("[%s]codepage=%s(charsetName=%s),charset=%s", method, cp, name, charset.name()));
         }
-        return name;
+        return charset;
     }
 
     private static String getKernel32LastError() {

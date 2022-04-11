@@ -1,10 +1,12 @@
 package com.sos.joc.cluster.configuration.globals;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
@@ -36,7 +38,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     private ConfigurationEntry importSuffix = new ConfigurationEntry("import_suffix", "imported", GlobalSettingsSectionValueType.STRING);
     private ConfigurationEntry importPrefix = new ConfigurationEntry("import_prefix", "imported", GlobalSettingsSectionValueType.STRING);
-    
+
     // controller pwds
     private ConfigurationEntry jocPwd = new ConfigurationEntry("controller_connection_joc_password", "JS7-JOC",
             GlobalSettingsSectionValueType.PASSWORD);
@@ -58,6 +60,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     // private Map<ShowViewName, ConfigurationEntry> showViews = EnumSet.allOf(ShowViewName.class).stream().collect(Collectors.toMap(s -> s,
     // s -> new ConfigurationEntry("show_view_" + s.name(), null, GlobalSettingsSectionValueType.BOOLEAN)));
+
+    private ConfigurationEntry encoding = new ConfigurationEntry("encoding", null, GlobalSettingsSectionValueType.STRING);
+    private Charset encodingCharset = null;
+    private boolean encodingCharsetReaded = false;
 
     public ConfigurationGlobalsJoc() {
         int index = -1;
@@ -86,9 +92,11 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         showViewFiletransfer.setOrdering(++index);
         showViewMonitor.setOrdering(++index);
         // showViewJobstreams.setOrdering(++index);
-        
+
         jocPwd.setOrdering(++index);
         historyPwd.setOrdering(++index);
+
+        encoding.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -135,6 +143,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         return importPrefix;
     }
 
+    public ConfigurationEntry getEncoding() {
+        return encoding;
+    }
+
     public Map<ShowViewName, Boolean> getShowViews() {
         Map<ShowViewName, Boolean> showViews = new HashMap<>();
         showViews.put(ShowViewName.auditlog, getBoolean(showViewAuditlog));
@@ -149,13 +161,26 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         showViews.put(ShowViewName.workflows, getBoolean(showViewWorkflows));
         return showViews;
     }
-    
+
     public ConfigurationEntry getJOCPwd() {
         return jocPwd;
     }
-    
+
     public ConfigurationEntry getHistoryPwd() {
         return historyPwd;
+    }
+
+    public Charset getEncodingCharset() {
+        if (encodingCharsetReaded) {
+            return encodingCharset;
+        }
+        encodingCharsetReaded = true;
+        encodingCharset = null;
+        if (SOSString.isEmpty(encoding.getValue()) || !Charset.isSupported(encoding.getValue())) {
+            return null;
+        }
+        encodingCharset = Charset.forName(encoding.getValue());
+        return encodingCharset;
     }
 
     private static Boolean getBoolean(ConfigurationEntry c) {
