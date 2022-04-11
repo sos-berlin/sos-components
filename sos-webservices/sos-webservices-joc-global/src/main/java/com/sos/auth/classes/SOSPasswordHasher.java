@@ -133,6 +133,10 @@ public class SOSPasswordHasher {
 
 		String s = hashedPassword;
 		boolean verified = false;
+		
+		if (pwd == null) {
+		    return false;
+		}
 
 		String[] hashParts = s.split("\\$");
 		if (hashParts.length > 3 && HASH_PREFIX.equals("$" + hashParts[1])) {
