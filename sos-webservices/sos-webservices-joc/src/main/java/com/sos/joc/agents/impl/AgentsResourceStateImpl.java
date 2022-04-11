@@ -87,29 +87,16 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             put(AgentStateText.UNKNOWN, 2);
         }
     });
-    private static final Map<AgentClusterStateText, Integer> agentHealthStates = Collections.unmodifiableMap(new HashMap<AgentClusterStateText, Integer>() {
-
-        private static final long serialVersionUID = 1L;
-
-        {
-            put(AgentClusterStateText.ALL_SUBAGENTS_ARE_COUPLED_AND_ENABLED, 0);
-            put(AgentClusterStateText.ONLY_SOME_SUBAGENTS_ARE_COUPLED_AND_ENABLED, 1);
-            put(AgentClusterStateText.NO_SUBAGENTS_ARE_COUPLED_AND_ENABLED, 2);
-            put(AgentClusterStateText.UNKNOWN, 2);
-        }
-            });
-    private static final Map<AgentStateText, AgentClusterStateText> agentStatesToHealthStates = Collections.unmodifiableMap(
-            new HashMap<AgentStateText, AgentClusterStateText>() {
+    private static final Map<AgentClusterStateText, Integer> agentHealthStates = Collections.unmodifiableMap(
+            new HashMap<AgentClusterStateText, Integer>() {
 
                 private static final long serialVersionUID = 1L;
 
                 {
-                    put(AgentStateText.COUPLED, AgentClusterStateText.ALL_SUBAGENTS_ARE_COUPLED_AND_ENABLED);
-                    put(AgentStateText.RESETTING, AgentClusterStateText.ONLY_SOME_SUBAGENTS_ARE_COUPLED_AND_ENABLED);
-                    put(AgentStateText.RESET, AgentClusterStateText.ONLY_SOME_SUBAGENTS_ARE_COUPLED_AND_ENABLED);
-                    put(AgentStateText.COUPLINGFAILED, AgentClusterStateText.NO_SUBAGENTS_ARE_COUPLED_AND_ENABLED);
-                    put(AgentStateText.SHUTDOWN, AgentClusterStateText.NO_SUBAGENTS_ARE_COUPLED_AND_ENABLED);
-                    put(AgentStateText.UNKNOWN, AgentClusterStateText.UNKNOWN);
+                    put(AgentClusterStateText.ALL_SUBAGENTS_ARE_COUPLED_AND_ENABLED, 0);
+                    put(AgentClusterStateText.ONLY_SOME_SUBAGENTS_ARE_COUPLED_AND_ENABLED, 1);
+                    put(AgentClusterStateText.NO_SUBAGENTS_ARE_COUPLED_AND_ENABLED, 2);
+                    put(AgentClusterStateText.UNKNOWN, 2);
                 }
             });
 
@@ -288,7 +275,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                             }
                             agent.setState(getState(stateText));
                             if (withClusterLicense) {
-                                agent.setHealthState(getHealthState(stateText));
+                                agent.setHealthState(getHealthState(stateText, dbAgent.getDisabled() == Boolean.TRUE));
                             }
                         } else { // cluster agents (subagents are already filtered)
                             
@@ -369,9 +356,15 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         return s;
     }
     
-    private static AgentClusterState getHealthState(AgentStateText state) {
+    private static AgentClusterState getHealthState(AgentStateText state, boolean disabled) {
         AgentClusterState s = new AgentClusterState();
-        s.set_text(agentStatesToHealthStates.get(state));
+        if (AgentStateText.COUPLED.equals(state) && !disabled) {
+            s.set_text(AgentClusterStateText.ALL_SUBAGENTS_ARE_COUPLED_AND_ENABLED);
+        } else if (AgentStateText.UNKNOWN.equals(state) && !disabled) {
+            s.set_text(AgentClusterStateText.UNKNOWN);
+        } else {
+            s.set_text(AgentClusterStateText.NO_SUBAGENTS_ARE_COUPLED_AND_ENABLED);
+        }
         s.setSeverity(agentStates.get(state));
         return s;
     }
@@ -414,6 +407,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             agent.setUrl(dbAgent.getUri());
             agent.setState(getState(AgentStateText.UNKNOWN));
             agent.setHealthState(null); //will be set later for standalone agents
+            agent.setDisabled(dbAgent.getDisabled());
         } else {
             if (withStateFilter) {
                 agent.setSubagents(subagents.stream().filter(s -> stateFilter.contains(s.getState().get_text())).collect(Collectors.toList()));
@@ -424,6 +418,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             agent.setUrl(null);
             agent.setState(null);
             agent.setHealthState(getHealthState(subagents));
+            agent.setDisabled(null);
         }
         return agent;
     }
