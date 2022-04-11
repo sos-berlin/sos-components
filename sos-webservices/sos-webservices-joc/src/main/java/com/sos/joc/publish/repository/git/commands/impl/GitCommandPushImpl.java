@@ -55,7 +55,8 @@ public class GitCommandPushImpl extends JOCResourceImpl implements IGitCommandPu
             }
 
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
-            GitPushCommandResult result = GitCommandUtils.pushCommitedChanges(filter, account, dbLayer);
+            GitPushCommandResult result = GitCommandUtils.pushCommitedChanges(
+                    filter, account, dbLayer, Globals.getConfigurationGlobalsJoc().getEncodingCharset());
 
             GitCommandResponse response = new GitCommandResponse();
             response.setCommand(result.getOriginalCommand());

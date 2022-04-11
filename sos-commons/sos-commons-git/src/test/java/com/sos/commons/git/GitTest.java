@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -89,7 +90,7 @@ public class GitTest {
     @Test
     public void test01GitStatusShort() {
         LOGGER.debug(" **************************  Test 01 - git status short started   ********************");
-        GitStatusShortCommandResult result = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort();
+        GitStatusShortCommandResult result = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(Charset.defaultCharset());
         LOGGER.debug(" command: " + result.getOriginalCommand());
         LOGGER.debug(" ExitCode: " + result.getExitCode());
         LOGGER.debug(" StdOut:\n" + result.getStdOut());
@@ -115,10 +116,10 @@ public class GitTest {
     @Test
     public void test02GitPull() {
         LOGGER.debug("**************************  Test 02 - git pull started  *****************************");
-        GitCloneCommandResult cloneResult = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir);
+        GitCloneCommandResult cloneResult = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
         Path repository = repositoryParent.resolve(cloneResult.getClonedInto());
         LOGGER.debug("Repository path: " + repository.toString());
-        GitPullCommandResult pullResult = (GitPullCommandResult)GitCommand.executeGitPull(repository, workingDir);
+        GitPullCommandResult pullResult = (GitPullCommandResult)GitCommand.executeGitPull(repository, workingDir, Charset.defaultCharset());
         LOGGER.debug("command: " + pullResult.getOriginalCommand());
         LOGGER.debug("ExitCode: " + pullResult.getExitCode());
         LOGGER.debug("StdOut:\n" + pullResult.getStdOut());
@@ -144,7 +145,7 @@ public class GitTest {
     @Test
     public void test03GitAddAll() {
         LOGGER.debug("**************************  Test 03 - git add all started  **************************");
-        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir);
+        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
         if (result.getExitCode() == 0) {
             Path repository = repositoryParent.resolve(result.getClonedInto());
             String testfileName = "sp_git_test%1$d.txt";
@@ -157,20 +158,20 @@ public class GitTest {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
-            GitStatusShortCommandResult statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            GitStatusShortCommandResult statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository, Charset.defaultCharset());
             LOGGER.debug("Status before ADD");
             LOGGER.debug("command: " + statusResult.getOriginalCommand());
             LOGGER.debug("StdOut:\n" + statusResult.getStdOut());
             Assert.assertTrue(!statusResult.getToAdd().isEmpty());
             Assert.assertTrue(statusResult.getModified().isEmpty());
             Assert.assertTrue(statusResult.getAdded().isEmpty());
-            GitCommandResult addAllResult = GitCommand.executeGitAddAll(repository, workingDir);
+            GitCommandResult addAllResult = GitCommand.executeGitAddAll(repository, workingDir, Charset.defaultCharset());
             LOGGER.debug("command: " + addAllResult.getOriginalCommand());
             LOGGER.debug("ExitCode: " + addAllResult.getExitCode());
             LOGGER.debug("StdOut: " + addAllResult.getStdOut());
             LOGGER.debug("StdErr: " + addAllResult.getStdErr());
             LOGGER.debug("Status after ADD");
-            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository, Charset.defaultCharset());
             LOGGER.debug("command: " + statusResult.getOriginalCommand());
             LOGGER.debug("StdOut:\n" + statusResult.getStdOut());
             Assert.assertTrue(statusResult.getToAdd().isEmpty());
@@ -184,7 +185,7 @@ public class GitTest {
     @Test
     public void test04GitCommit() {
         LOGGER.debug("**************************  Test 04 - git commit started            *****************");
-        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir);
+        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
         if (result.getExitCode() == 0) {
             Path repository = repositoryParent.resolve(result.getClonedInto());
             String testfileName = "sp_git_test.txt";
@@ -196,12 +197,12 @@ public class GitTest {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            GitStatusShortCommandResult statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            GitStatusShortCommandResult statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository, Charset.defaultCharset());
             LOGGER.debug("Status before ADD");
             LOGGER.debug("StdOut:\n" + statusResult.getStdOut());
             Assert.assertTrue(!statusResult.getToAdd().isEmpty());
-            GitCommandResult addAllResult = GitCommand.executeGitAddAll(repository, workingDir);
-            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            GitCommandResult addAllResult = GitCommand.executeGitAddAll(repository, workingDir, Charset.defaultCharset());
+            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository, Charset.defaultCharset());
             LOGGER.debug("Status after first ADD");
             LOGGER.debug("StdOut:\n" + statusResult.getStdOut());
             Assert.assertTrue(!statusResult.getAdded().isEmpty());
@@ -211,13 +212,13 @@ public class GitTest {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository, Charset.defaultCharset());
             Assert.assertTrue(!statusResult.getAddedAndModified().isEmpty());
-            addAllResult = GitCommand.executeGitAddAll(repository, workingDir);
-            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            addAllResult = GitCommand.executeGitAddAll(repository, workingDir, Charset.defaultCharset());
+            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository, Charset.defaultCharset());
             Assert.assertTrue(!statusResult.getAdded().isEmpty());
             Assert.assertTrue(statusResult.getAddedAndModified().isEmpty());
-            GitCommitCommandResult commitResult = (GitCommitCommandResult)GitCommand.executeGitCommitFormatted("from Junit commit test",repository, workingDir);
+            GitCommitCommandResult commitResult = (GitCommitCommandResult)GitCommand.executeGitCommitFormatted("from Junit commit test",repository, workingDir, Charset.defaultCharset());
             LOGGER.debug("ExitCode: " + commitResult.getExitCode());
             LOGGER.debug("StdOut:\n" + commitResult.getStdOut());
         }
@@ -228,7 +229,7 @@ public class GitTest {
     @Test
     public void test05GitCheckout() {
         LOGGER.debug("**************************  Test 05 - git checkout started          *****************");
-        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir);
+        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
         if (result.getExitCode() == 0) {
             Path repository = repositoryParent.resolve(result.getClonedInto());
             String testfileName = "sp_git_test.txt";
@@ -240,12 +241,12 @@ public class GitTest {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            GitStatusShortCommandResult statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            GitStatusShortCommandResult statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository, Charset.defaultCharset());
             LOGGER.debug("Status before ADD");
             LOGGER.debug("StdOut:\n" + statusResult.getStdOut());
             Assert.assertTrue(!statusResult.getToAdd().isEmpty());
-            GitCommandResult addAllResult = GitCommand.executeGitAddAll(repository, workingDir);
-            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            GitCommandResult addAllResult = GitCommand.executeGitAddAll(repository, workingDir, Charset.defaultCharset());
+            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository, Charset.defaultCharset());
             LOGGER.debug("Status after first ADD");
             LOGGER.debug("StdOut:\n" + statusResult.getStdOut());
             Assert.assertTrue(!statusResult.getAdded().isEmpty());
@@ -255,13 +256,13 @@ public class GitTest {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository, Charset.defaultCharset());
             Assert.assertTrue(!statusResult.getAddedAndModified().isEmpty());
-            addAllResult = GitCommand.executeGitAddAll(repository, workingDir);
-            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository);
+            addAllResult = GitCommand.executeGitAddAll(repository, workingDir, Charset.defaultCharset());
+            statusResult = (GitStatusShortCommandResult) GitCommand.executeGitStatusShort(repository, Charset.defaultCharset());
             Assert.assertTrue(!statusResult.getAdded().isEmpty());
             Assert.assertTrue(statusResult.getAddedAndModified().isEmpty());
-            GitCommitCommandResult commitResult = (GitCommitCommandResult)GitCommand.executeGitCommitFormatted("from Junit commit test",repository, workingDir);
+            GitCommitCommandResult commitResult = (GitCommitCommandResult)GitCommand.executeGitCommitFormatted("from Junit commit test",repository, workingDir, Charset.defaultCharset());
             LOGGER.debug("ExitCode: " + commitResult.getExitCode());
             LOGGER.debug("StdOut:\n" + commitResult.getStdOut());
         }
@@ -271,7 +272,7 @@ public class GitTest {
     @Test
     public void test06GitPush() {
         LOGGER.debug("**************************  Test 06 - git push started              *****************");
-        GitCloneCommandResult cloneResult = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir);
+        GitCloneCommandResult cloneResult = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
         if (cloneResult.getExitCode() == 0) {
             Path repository = repositoryParent.resolve(cloneResult.getClonedInto());
             String testfileName = "sp_git_test.txt";
@@ -285,9 +286,9 @@ public class GitTest {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            GitCommandResult result = GitCommand.executeGitAddAll(repository, workingDir);
-            result = GitCommand.executeGitCommitFormatted("from Junit commit test",repository, workingDir);
-            result = GitCommand.executeGitPush(repository, workingDir);
+            GitCommandResult result = GitCommand.executeGitAddAll(repository, workingDir, Charset.defaultCharset());
+            result = GitCommand.executeGitCommitFormatted("from Junit commit test",repository, workingDir, Charset.defaultCharset());
+            result = GitCommand.executeGitPush(repository, workingDir, Charset.defaultCharset());
             LOGGER.debug("ExitCode: " + result.getExitCode());
             LOGGER.debug("StdOut:\n" + result.getStdOut());
             Assert.assertTrue(result.getExitCode() == 0);
@@ -301,7 +302,7 @@ public class GitTest {
         LOGGER.debug("**************************  Test 07 - git restore --staged started  *****************");
         LOGGER.debug("**************************                 successful               *****************");
         LOGGER.debug("Repository path: " + repository.toString());
-        GitCommandResult result = GitCommand.executeGitRestore(repository, workingDir);
+        GitCommandResult result = GitCommand.executeGitRestore(repository, workingDir, Charset.defaultCharset());
         LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
@@ -312,7 +313,7 @@ public class GitTest {
     public void test08GitRestoreStagedFailed() {
         LOGGER.debug("**************************  Test 08 - git restore --staged started  *****************");
         LOGGER.debug("**************************                   failed                 *****************");
-        GitCommandResult result = GitCommand.executeGitRestore();
+        GitCommandResult result = GitCommand.executeGitRestore(Charset.defaultCharset());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdErr: " + result.getStdErr());
         LOGGER.debug("error: " + result.getError());
@@ -324,7 +325,7 @@ public class GitTest {
     @Test
     public void test09GitRemoteV() {
         LOGGER.debug("**************************  Test 09 - git remote started   **************************");
-        GitRemoteCommandResult result = (GitRemoteCommandResult)GitCommand.executeGitRemoteRead();
+        GitRemoteCommandResult result = (GitRemoteCommandResult)GitCommand.executeGitRemoteRead(Charset.defaultCharset());
         LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
@@ -345,7 +346,7 @@ public class GitTest {
     @Test
     public void test10GitLog() {
         LOGGER.debug("**************************  Test 10 - git log started      **************************");
-        GitLogCommandResult result = (GitLogCommandResult)GitCommand.executeGitLogParseable();
+        GitLogCommandResult result = (GitLogCommandResult)GitCommand.executeGitLogParseable(Charset.defaultCharset());
         LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut parsed - results:");
@@ -364,7 +365,7 @@ public class GitTest {
     @Test
     public void test11Clone() {
         LOGGER.debug("**************************  Test 11 - git clone started    **************************");
-        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir);
+        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
         LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
@@ -390,26 +391,26 @@ public class GitTest {
         LOGGER.debug("**************************  Test 12 - git config started   **************************");
         LOGGER.debug("**************************         specific directory      **************************");
         LOGGER.debug("**************************  Step 1: read current config    **************************");
-        GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshGet(GitConfigType.GLOBAL);
+        GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshGet(GitConfigType.GLOBAL, Charset.defaultCharset());
         LOGGER.debug("command: " + configResult.getCommand());
         LOGGER.debug("ExitCode: " + configResult.getExitCode());
         LOGGER.debug("StdOut:\n" + configResult.getStdOut());
         LOGGER.debug("StdErr: " + configResult.getStdErr());
         String oldValue = configResult.getCurrentValue();
         LOGGER.debug("**************************  Step 2: remove current config  **************************");
-        configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshUnset(GitConfigType.GLOBAL);
+        configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshUnset(GitConfigType.GLOBAL, Charset.defaultCharset());
         LOGGER.debug("command: " + configResult.getCommand());
         LOGGER.debug("ExitCode: " + configResult.getExitCode());
         LOGGER.debug("StdOut:\n" + configResult.getStdOut());
         LOGGER.debug("StdErr: " + configResult.getStdErr());
         LOGGER.debug("**************************  Step 3: add new config         **************************");
-        configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(GitConfigType.GLOBAL, gitKeyfilePath);
+        configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(GitConfigType.GLOBAL, gitKeyfilePath, Charset.defaultCharset());
         LOGGER.debug("command: " + configResult.getCommand());
         LOGGER.debug("ExitCode: " + configResult.getExitCode());
         LOGGER.debug("StdOut:\n" + configResult.getStdOut());
         LOGGER.debug("StdErr: " + configResult.getStdErr());
         LOGGER.debug("**************************  Step 4: clone                  **************************");
-        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir);
+        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
         LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
@@ -427,14 +428,14 @@ public class GitTest {
         LOGGER.debug("target folder cleanup");
         Assert.assertTrue(!Files.exists(repositoryParent.resolve(result.getClonedInto())));
         LOGGER.debug("**************************  Step 5: remove new config      **************************");
-        configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshUnset(GitConfigType.GLOBAL);
+        configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshUnset(GitConfigType.GLOBAL, Charset.defaultCharset());
         LOGGER.debug("command: " + configResult.getCommand());
         LOGGER.debug("ExitCode: " + configResult.getExitCode());
         LOGGER.debug("StdOut:\n" + configResult.getStdOut());
         LOGGER.debug("StdErr: " + configResult.getStdErr());
         LOGGER.debug("**************************  Step 6: restore current config **************************");
         if(!oldValue.isEmpty()) {
-            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAddCustom(GitConfigType.GLOBAL, oldValue);
+            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAddCustom(GitConfigType.GLOBAL, oldValue, Charset.defaultCharset());
             LOGGER.debug("command: " + configResult.getCommand());
             LOGGER.debug("ExitCode: " + configResult.getExitCode());
             LOGGER.debug("StdOut:\n" + configResult.getStdOut());
@@ -450,7 +451,7 @@ public class GitTest {
         Path repository = Paths.get("C:/sp/devel/js7/testing/git/local_repos/sp");
         LOGGER.debug("Repository path: " + repository.toString());
         LOGGER.debug("**************************  Step 1: read current state     **************************");
-        GitRemoteCommandResult result = (GitRemoteCommandResult)GitCommand.executeGitRemoteRead(repository, workingDir);
+        GitRemoteCommandResult result = (GitRemoteCommandResult)GitCommand.executeGitRemoteRead(repository, workingDir, Charset.defaultCharset());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
         LOGGER.debug("StdOut parsed - results:");
         LOGGER.debug("fetch repositories: ");
@@ -464,10 +465,10 @@ public class GitTest {
         LOGGER.debug("**************************  Step 2: add other remote repo  **************************");
         String shortName = "other";
         String remoteUri = "git@github.com:sos-berlin/sos-components.git";
-        result = (GitRemoteCommandResult)GitCommand.executeGitRemoteAdd(shortName, remoteUri, repository, workingDir);
+        result = (GitRemoteCommandResult)GitCommand.executeGitRemoteAdd(shortName, remoteUri, repository, workingDir, Charset.defaultCharset());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
         LOGGER.debug("**************************  Step 3: read state again       **************************");
-        result = (GitRemoteCommandResult)GitCommand.executeGitRemoteRead(repository, workingDir);
+        result = (GitRemoteCommandResult)GitCommand.executeGitRemoteRead(repository, workingDir, Charset.defaultCharset());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
         LOGGER.debug("StdOut parsed - results:");
         LOGGER.debug("fetch repositories: ");
@@ -480,7 +481,7 @@ public class GitTest {
             LOGGER.debug("short name: " + k + "\tURI: " + v);
         });
         LOGGER.debug("**************************  Step 4: update from added repo **************************");
-        result = (GitRemoteCommandResult)GitCommand.executeGitRemoteUpdate(repository, workingDir);
+        result = (GitRemoteCommandResult)GitCommand.executeGitRemoteUpdate(repository, workingDir, Charset.defaultCharset());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
 //        LOGGER.debug("StdErr:\n" + result.getStdErr());
@@ -525,7 +526,7 @@ public class GitTest {
             });
         });
         LOGGER.debug("**************************  Step 5: remove added repo      **************************");
-        result = (GitRemoteCommandResult)GitCommand.executeGitRemoteRemove(shortName, repository, workingDir);
+        result = (GitRemoteCommandResult)GitCommand.executeGitRemoteRemove(shortName, repository, workingDir, Charset.defaultCharset());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
         LOGGER.debug("**************************  Step 6: cleanup                **************************");
         LOGGER.debug("cleanup detached but still fetched tags from removed repo");

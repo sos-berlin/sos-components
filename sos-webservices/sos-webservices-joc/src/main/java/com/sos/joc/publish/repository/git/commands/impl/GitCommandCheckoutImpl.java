@@ -56,7 +56,8 @@ public class GitCommandCheckoutImpl extends JOCResourceImpl implements IGitComma
             }
 
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
-            GitCheckoutCommandResult result = GitCommandUtils.checkout(filter, account, dbLayer);
+            GitCheckoutCommandResult result = GitCommandUtils.checkout(
+                    filter, account, dbLayer, Globals.getConfigurationGlobalsJoc().getEncodingCharset());
 
             GitCommandResponse response = new GitCommandResponse();
             response.setCommand(result.getOriginalCommand());

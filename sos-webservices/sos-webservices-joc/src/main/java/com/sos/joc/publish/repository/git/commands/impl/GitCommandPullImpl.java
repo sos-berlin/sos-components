@@ -55,7 +55,8 @@ public class GitCommandPullImpl extends JOCResourceImpl implements IGitCommandPu
             }
 
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
-            GitPullCommandResult result = GitCommandUtils.pullChanges(filter, account, dbLayer);
+            GitPullCommandResult result = GitCommandUtils.pullChanges(
+                    filter, account, dbLayer, Globals.getConfigurationGlobalsJoc().getEncodingCharset());
 
             GitCommandResponse response = new GitCommandResponse();
             response.setCommand(result.getOriginalCommand());

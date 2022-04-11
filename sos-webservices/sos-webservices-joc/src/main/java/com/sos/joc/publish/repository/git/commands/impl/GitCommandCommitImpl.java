@@ -58,7 +58,8 @@ public class GitCommandCommitImpl extends JOCResourceImpl implements IGitCommand
             if (filter.getMessage() == null || filter.getMessage().isEmpty()) {
                 filter.setMessage("[gen msg] automated commit with JOC api");
             }
-            GitCommitCommandResult result = GitCommandUtils.commitAllStagedChanges(filter, account, dbLayer);
+            GitCommitCommandResult result = GitCommandUtils.commitAllStagedChanges(
+                    filter, account, dbLayer, Globals.getConfigurationGlobalsJoc().getEncodingCharset());
 
             GitCommandResponse response = new GitCommandResponse();
             response.setCommand(result.getOriginalCommand());

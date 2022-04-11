@@ -55,7 +55,8 @@ public class GitCommandAddAllImpl extends JOCResourceImpl implements IGitCommand
             }
 
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
-            GitAddCommandResult result = GitCommandUtils.addAllChanges(filter, account, dbLayer);
+            GitAddCommandResult result = GitCommandUtils.addAllChanges(
+                    filter, account, dbLayer, Globals.getConfigurationGlobalsJoc().getEncodingCharset());
             GitCommandResponse response = new GitCommandResponse();
             response.setCommand(result.getOriginalCommand());
             response.setExitCode(result.getExitCode());

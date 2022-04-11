@@ -55,7 +55,8 @@ public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandC
             }
             
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
-            GitCloneCommandResult result = GitCommandUtils.cloneGitRepository(filter, account, dbLayer);
+            GitCloneCommandResult result = GitCommandUtils.cloneGitRepository(
+                    filter, account, dbLayer, Globals.getConfigurationGlobalsJoc().getEncodingCharset());
 
             GitCommandResponse response = new GitCommandResponse();
             response.setCommand(result.getOriginalCommand());
