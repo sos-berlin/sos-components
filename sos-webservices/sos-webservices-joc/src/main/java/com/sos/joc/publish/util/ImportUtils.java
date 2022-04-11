@@ -37,6 +37,7 @@ import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -67,6 +68,7 @@ import com.sos.joc.model.inventory.jobresource.JobResourceEdit;
 import com.sos.joc.model.inventory.jobresource.JobResourcePublish;
 import com.sos.joc.model.inventory.lock.LockEdit;
 import com.sos.joc.model.inventory.lock.LockPublish;
+import com.sos.joc.model.inventory.script.ScriptEdit;
 import com.sos.joc.model.inventory.workflow.WorkflowEdit;
 import com.sos.joc.model.inventory.workflow.WorkflowPublish;
 import com.sos.joc.model.joc.JocMetaInfo;
@@ -662,6 +664,24 @@ public class ImportUtils {
             scheduleEdit.setPath(normalizedPath);
             scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
             return scheduleEdit;
+        } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.value(),
+                    ""));
+            if (normalizedPath.startsWith("//")) {
+                normalizedPath = normalizedPath.substring(1);
+            }
+            ScriptEdit scriptEdit = new ScriptEdit();
+            Script script = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Script.class);
+            if (checkObjectNotEmpty(script)) {
+                scriptEdit.setConfiguration(script);
+            } else {
+                throw new JocImportException(String.format("Script with path %1$s not imported. Object values could not be mapped.",
+                        normalizedPath));
+            }
+            scriptEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+            scriptEdit.setPath(normalizedPath);
+            scriptEdit.setObjectType(ConfigurationType.SCHEDULE);
+            return scriptEdit;
         } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
             String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(),
                     ""));
@@ -695,6 +715,14 @@ public class ImportUtils {
 
     private static boolean checkObjectNotEmpty(Workflow workflow) {
         if (workflow != null && workflow.getInstructions() == null && workflow.getJobs() == null && workflow.getTYPE() == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private static boolean checkObjectNotEmpty(Script script) {
+        if (script != null && script.getScript() == null) {
             return false;
         } else {
             return true;
