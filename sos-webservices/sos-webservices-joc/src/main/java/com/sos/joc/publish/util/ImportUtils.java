@@ -680,7 +680,7 @@ public class ImportUtils {
             }
             scriptEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             scriptEdit.setPath(normalizedPath);
-            scriptEdit.setObjectType(ConfigurationType.SCHEDULE);
+            scriptEdit.setObjectType(ConfigurationType.INCLUDESCRIPT);
             return scriptEdit;
         } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
             String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(),
