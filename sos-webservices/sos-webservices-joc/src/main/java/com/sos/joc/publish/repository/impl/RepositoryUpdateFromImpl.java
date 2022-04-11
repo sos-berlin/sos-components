@@ -68,7 +68,7 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
                     throw new JocSosHibernateException(e);
                 }
             });
-            updateToLevelFolder(dbItemsToUpdate, dbLayer);
+            updateTopLevelFolder(dbItemsToUpdate, dbLayer);
             newDbItems.stream().forEach(item -> {
                 item.setRepoControlled(true);
                 try {
@@ -84,7 +84,7 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
                     throw new JocSosHibernateException(e);
                 }
             });
-            updateToLevelFolder(newDbItems, dbLayer);
+            updateTopLevelFolder(newDbItems, dbLayer);
             CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(dbItemsToUpdate.stream().map(item -> new AuditLogDetail(item.getPath(), 
                     item.getType())), dbAuditlog.getId(), dbAuditlog.getCreated()));
             CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(newDbItems.stream().map(item -> new AuditLogDetail(item.getPath(), 
@@ -103,14 +103,16 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
         }
     }
 
-    private void updateToLevelFolder(Set<DBItemInventoryConfiguration> items, DBLayerDeploy dbLayer) throws SOSHibernateException {
+    private void updateTopLevelFolder(Set<DBItemInventoryConfiguration> items, DBLayerDeploy dbLayer) throws SOSHibernateException {
         String topLevelFolder = "";
         for(DBItemInventoryConfiguration cfg : items) {
             topLevelFolder = Paths.get(cfg.getPath()).subpath(0, 1).toString();
             DBItemInventoryConfiguration topLevelFolderDBitem = dbLayer.getConfigurationByPath("/" + topLevelFolder, ConfigurationType.FOLDER);
-            topLevelFolderDBitem.setRepoControlled(true);
-            dbLayer.getSession().update(topLevelFolderDBitem);
-            return;
+            if(topLevelFolderDBitem != null) {
+                topLevelFolderDBitem.setRepoControlled(true);
+                dbLayer.getSession().update(topLevelFolderDBitem);
+                break;
+            }
         }
     }
 }
