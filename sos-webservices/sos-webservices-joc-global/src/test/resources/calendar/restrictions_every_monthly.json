@@ -1,0 +1,11 @@
+{
+	"includes": {
+		"repetitions": [
+			{
+				"from": "2022-03-30",
+				"repetition": "MONTHLY",
+				"step": 2
+			}
+		]
+	}
+}

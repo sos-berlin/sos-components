@@ -1,0 +1,13 @@
+{
+	"includes": {
+		"repetitions": [
+			{
+				"from": "2022-03-30",
+				"repetition": "MONTHLY",
+				"step": 1
+			}
+		]
+	},
+	"type": "WORKINGDAYSCALENDAR",
+	"version": "1.1.0"
+}

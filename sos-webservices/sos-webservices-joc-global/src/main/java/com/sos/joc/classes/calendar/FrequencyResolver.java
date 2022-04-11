@@ -1,8 +1,10 @@
 package com.sos.joc.classes.calendar;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -12,10 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -23,6 +21,9 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
@@ -1370,14 +1371,14 @@ public class FrequencyResolver {
             case DAILY:
                 calFrom.add(Calendar.DATE, step);
                 break;
+            case WEEKLY:
+                calFrom.add(Calendar.DATE, (step * 7));
+                break;
             case MONTHLY:
                 calFrom.add(Calendar.MONTH, step);
                 if (dayOfMonth > calFrom.get(Calendar.DAY_OF_MONTH) && calFrom.getActualMaximum(Calendar.DAY_OF_MONTH) >= dayOfMonth) {
                     calFrom.set(Calendar.DAY_OF_MONTH, dayOfMonth);
                 }
-                break;
-            case WEEKLY:
-                calFrom.add(Calendar.DATE, (step * 7));
                 break;
             case YEARLY:
                 calFrom.add(Calendar.YEAR, step);
@@ -1391,89 +1392,140 @@ public class FrequencyResolver {
         return dates;
     }
 
+    /** TODO calFrom, from seems to be equal ... */
     private Set<String> resolveBasedOnRepetitions(RepetitionText repetition, Integer step, Calendar calFrom, Calendar from, Calendar to)
             throws SOSInvalidDataException {
         if (repetition == null) {
             throw new SOSInvalidDataException("json field 'repetition' in 'repetitions' is undefined.");
         }
+
+        String method = "resolveBasedOnRepetitions";
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+
         if (step == null) {
             step = 1;
         }
         Set<String> dates = new HashSet<String>();
-        int refDayOfMonth = -1;
-        int refWeekDay = -1;
-        int refMonth = -1;
-        int curStep = 0;
+        Map<String, Integer> monthMaximums = new HashMap<>();
+        LocalDate fromAsLocalDate = toLocalDate(from);
+        boolean fromDayIsMonthMaxDay = from.getActualMaximum(Calendar.DAY_OF_MONTH) == from.get(Calendar.DAY_OF_MONTH);
+        int fromMonth = from.get(Calendar.MONTH);
 
+        if (isDebugEnabled) {
+            LOGGER.info(String.format("[%s][calFrom=%s][from=%s][to=%s]fromDayIsMonthMaxDay=%s", method, SOSDate.getDateTimeAsString(calFrom), SOSDate
+                    .getDateTimeAsString(from), SOSDate.getDateTimeAsString(to), fromDayIsMonthMaxDay));
+        }
         for (Entry<String, Calendar> date : this.dates.entrySet()) {
             if (date == null || date.getValue() == null) {
                 continue;
             }
             if (date.getValue().after(to)) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][%s][break]is after to=%s", method, SOSDate.getDateTimeAsString(date.getValue()), SOSDate
+                            .getDateTimeAsString(to)));
+                }
                 break;
             }
             Calendar curDate = date.getValue();
             if (curDate.before(calFrom)) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][%s][skip]is before calFrom=%s", method, SOSDate.getDateTimeAsString(curDate), SOSDate
+                            .getDateTimeAsString(calFrom)));
+                }
                 continue;
-            } else if (refDayOfMonth == -1) {
-                refDayOfMonth = curDate.get(Calendar.DAY_OF_MONTH);
-                refWeekDay = curDate.get(Calendar.DAY_OF_WEEK);
-                refMonth = curDate.get(Calendar.MONTH);
             }
             if (curDate.before(from)) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][%s][skip]is before from=%s", method, SOSDate.getDateTimeAsString(curDate), SOSDate
+                            .getDateTimeAsString(from)));
+                }
                 continue;
             }
+
+            Integer currDateMonthMaximum = null;
+            long periodBetween = 0;
             switch (repetition) {
             case DAILY:
-                if (curStep % step == 0) {
+                periodBetween = daysBetween(fromAsLocalDate, curDate);
+                if (periodBetween % step == 0) {
                     dates.add(date.getKey());
-                }
-                curStep++;
-                break;
-            case MONTHLY:
-                if (refDayOfMonth > -1) {
-                    int curDayOfMonth = curDate.get(Calendar.DAY_OF_MONTH);
-                    if (refDayOfMonth == curDayOfMonth) {
-                        if (curStep % step == 0) {
-                            dates.add(date.getKey());
-                        }
-                        curStep++;
-                    } else if (refDayOfMonth > curDate.getActualMaximum(Calendar.DAY_OF_MONTH) && curDayOfMonth == curDate.getActualMaximum(
-                            Calendar.DAY_OF_MONTH)) {
-                        if (curStep % step == 0) {
-                            dates.add(date.getKey());
-                        }
-                        curStep++;
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][added][DAILY step=%s]daysBetween=%s", method, SOSDate.getDateTimeAsString(curDate), step,
+                                periodBetween));
+                    }
+                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][skip][DAILY step=%s]daysBetween=%s", method, SOSDate.getDateTimeAsString(curDate), step,
+                                periodBetween));
                     }
                 }
                 break;
             case WEEKLY:
-                if (refWeekDay > -1) {
-                    int curWeekDay = curDate.get(Calendar.DAY_OF_WEEK);
-                    if (refWeekDay == curWeekDay) {
-                        if (curStep % step == 0) {
-                            dates.add(date.getKey());
-                        }
-                        curStep++;
+                periodBetween = daysBetween(fromAsLocalDate, curDate);
+                if (periodBetween % (step * 7) == 0) {
+                    dates.add(date.getKey());
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][added][WEEKLY step=%s]weeksBetween=%s(daysBetween=%s)", method, SOSDate
+                                .getDateTimeAsString(curDate), step, (periodBetween / 7), periodBetween));
+                    }
+                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][skip][WEEKLY step=%s]weeksBetween=%s(daysBetween=%s)", method, SOSDate
+                                .getDateTimeAsString(curDate), step, (periodBetween / 7), periodBetween));
+                    }
+                }
+                break;
+            case MONTHLY:
+                periodBetween = periodBetween(Calendar.MONTH, from, curDate);
+                if (fromDayIsMonthMaxDay) {
+                    String monthKey = curDate.get(Calendar.YEAR) + "_" + curDate.get(Calendar.MONTH);
+                    currDateMonthMaximum = monthMaximums.get(monthKey);
+                    if (currDateMonthMaximum == null) {
+                        currDateMonthMaximum = curDate.getActualMaximum(Calendar.DAY_OF_MONTH);
+                        monthMaximums.put(monthKey, currDateMonthMaximum);
+                    }
+                }
+
+                if (periodBetween % step == 0 && monthDayEquals(method, fromAsLocalDate, curDate, fromDayIsMonthMaxDay, currDateMonthMaximum)) {
+                    dates.add(date.getKey());
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][added][MONTHLY step=%s]monthsBetween=%s", method, SOSDate.getDateTimeAsString(curDate),
+                                step, periodBetween));
+                    }
+                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][skip][MONTHLY step=%s]monthsBetween=%s", method, SOSDate.getDateTimeAsString(curDate),
+                                step, periodBetween));
                     }
                 }
                 break;
             case YEARLY:
-                if (refDayOfMonth > -1) {
-                    int curDayOfMonth = curDate.get(Calendar.DAY_OF_MONTH);
-                    int curMonth = curDate.get(Calendar.MONTH);
-                    if (curMonth == refMonth) {
-                        if (curDayOfMonth == refDayOfMonth) {
-                            if (curStep % step == 0) {
-                                dates.add(date.getKey());
-                            }
-                            curStep++;
-                        } else if (refMonth == Calendar.FEBRUARY && refDayOfMonth == 29 && curDayOfMonth == 28) {
-                            if (curStep % step == 0) {
-                                dates.add(date.getKey());
-                            }
-                            curStep++;
-                        }
+                periodBetween = periodBetween(Calendar.YEAR, from, curDate);
+                int curDateMonth = curDate.get(Calendar.MONTH);
+                if (fromDayIsMonthMaxDay) {
+                    String monthKey = curDate.get(Calendar.YEAR) + "_" + curDateMonth;
+                    currDateMonthMaximum = monthMaximums.get(monthKey);
+                    if (currDateMonthMaximum == null) {
+                        currDateMonthMaximum = curDate.getActualMaximum(Calendar.DAY_OF_MONTH);
+                        monthMaximums.put(monthKey, currDateMonthMaximum);
+                    }
+                }
+
+                if (periodBetween % step == 0 && fromMonth == curDateMonth && monthDayEquals(method, fromAsLocalDate, curDate, fromDayIsMonthMaxDay,
+                        currDateMonthMaximum)) {
+                    dates.add(date.getKey());
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][added][YEARLY step=%s]yearsBetween=%s", method, SOSDate.getDateTimeAsString(curDate),
+                                step, periodBetween));
+                    }
+                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][skip][YEARLY step=%s]yearsBetween=%s", method, SOSDate.getDateTimeAsString(curDate),
+                                step, periodBetween));
                     }
                 }
                 break;
@@ -1487,6 +1539,77 @@ public class FrequencyResolver {
             datesWithoutRestrictions.remove(entry.getKey());
         }
         return dates;
+    }
+
+    private long daysBetween(LocalDate from, Calendar currentDay) {
+        if (from == null || currentDay == null) {
+            return -1;
+        }
+        try {
+            return ChronoUnit.DAYS.between(from, toLocalDate(currentDay));
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[daysBetween][from=%s][currentDay=%s]%s", from, currentDay, e.toString()), e);
+            return -1;
+        }
+    }
+
+    private long periodBetween(int unit, Calendar from, Calendar currentDay) {
+        if (from == null || currentDay == null) {
+            return -1;
+        }
+
+        long diff = 0;
+        Calendar f = (Calendar) from.clone();
+        while (f.before(currentDay)) {
+            int next = f.get(unit) + 1;
+            f.set(unit, next);
+            diff++;
+        }
+        return diff;
+    }
+
+    private boolean monthDayEquals(String caller, LocalDate from, Calendar currentDay, boolean fromDayIsMonthMaxDay, Integer currDateMonthMaximum) {
+        if (from == null || currentDay == null) {
+            return false;
+        }
+
+        String method = "monthDaysEquals";
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        int currentDayOfMonth = currentDay.get(Calendar.DAY_OF_MONTH);
+        if (fromDayIsMonthMaxDay) {
+            int currentMonthMaxDay = currDateMonthMaximum == null ? currentDay.getActualMaximum(Calendar.DAY_OF_MONTH) : currDateMonthMaximum;
+            try {
+                LOGGER.debug(String.format("[%s][%s][%s][currentMonthMaxDay=%s][currentDayOfMonth=%s]", caller, method, SOSDate.getDateAsString(
+                        currentDay), currentMonthMaxDay, currentDayOfMonth));
+            } catch (SOSInvalidDataException e) {
+
+            }
+            if (currentMonthMaxDay == currentDayOfMonth) {
+                return true;
+            }
+        }
+
+        int fromDayOfMonth = from.getDayOfMonth();
+        if (isDebugEnabled) {
+            try {
+                LOGGER.debug(String.format("[%s][%s][%s][fromDayOfMonth=%s][currentDayOfMonth=%s]", caller, method, SOSDate.getDateAsString(
+                        currentDay), fromDayOfMonth, currentDayOfMonth));
+            } catch (SOSInvalidDataException e) {
+
+            }
+        }
+
+        if (fromDayOfMonth == currentDayOfMonth) {
+            return true;
+        }
+        return false;
+    }
+
+    private LocalDate toLocalDate(Calendar cal) {
+        if (cal == null) {
+            return null;
+        }
+        return LocalDate.of(cal.get(Calendar.YEAR), (cal.get(Calendar.MONTH) + 1), cal.get(Calendar.DAY_OF_MONTH));
     }
 
     private Calendar getTodayCalendar() {
