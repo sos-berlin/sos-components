@@ -50,6 +50,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
                 }
             }
         } catch (Throwable e) {
+            state = JocServiceTaskAnswerState.UNCOMPLETED;
             getDbLayer().rollback();
             throw e;
         } finally {
