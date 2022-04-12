@@ -13,10 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.inventory.model.calendar.Calendar;
+import com.sos.joc.Globals;
 import com.sos.joc.model.calendar.Dates;
 
 public class FrequencyResolverTest {
@@ -137,8 +136,7 @@ public class FrequencyResolverTest {
     }
 
     private Calendar getCalendar(Path json) throws JsonParseException, JsonMappingException, IOException {
-        return new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).readValue(Files.readAllBytes(json),
-                Calendar.class);
+        return Globals.objectMapper.readValue(Files.readAllBytes(json), Calendar.class);
     }
 
 }
