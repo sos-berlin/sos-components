@@ -29,6 +29,7 @@ public class Repetition {
      * date
      * <p>
      * ISO date YYYY-MM-DD
+     * (Required)
      * 
      */
     @JsonProperty("from")
@@ -62,6 +63,7 @@ public class Repetition {
      * date
      * <p>
      * ISO date YYYY-MM-DD
+     * (Required)
      * 
      */
     @JsonProperty("from")
@@ -73,6 +75,7 @@ public class Repetition {
      * date
      * <p>
      * ISO date YYYY-MM-DD
+     * (Required)
      * 
      */
     @JsonProperty("from")
