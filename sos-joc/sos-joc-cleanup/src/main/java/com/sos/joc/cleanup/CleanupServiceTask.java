@@ -40,15 +40,15 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupServiceTask.class);
 
-    private final String MANUAL_TASK_IDENTIFIER_DEPLOYMENT = "deployment";
-    private final String MANUAL_TASK_IDENTIFIER_AUDITLOG = "auditlog";
-    private final String MANUAL_TASK_IDENTIFIER_YADE = "file_transfer";
+    private static final String MANUAL_TASK_IDENTIFIER_DEPLOYMENT = "deployment";
+    private static final String MANUAL_TASK_IDENTIFIER_AUDITLOG = "auditlog";
+    private static final String MANUAL_TASK_IDENTIFIER_YADE = "file_transfer";
     /** seconds */
-    private final int MAX_AWAIT_TERMINATION_TIMEOUT = 3 * 60;
-    private final int MAX_AWAIT_TERMINATION_TIMEOUT_ON_START_MODE_AUTOMATIC = 60;
-    private final int MAX_BATCH_SIZE_ORACLE = 1_000;
-    private final CleanupServiceSchedule schedule;
+    private static final int MAX_AWAIT_TERMINATION_TIMEOUT = 3 * 60;
+    private static final int MAX_AWAIT_TERMINATION_TIMEOUT_ON_START_MODE_AUTOMATIC = 60;
+    private static final int MAX_BATCH_SIZE_ORACLE = 1_000;
 
+    private final CleanupServiceSchedule schedule;
     private final String identifier;
     private final String logIdentifier;
 
@@ -280,7 +280,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         return tasks;
     }
 
-    public synchronized JocClusterAnswer stop() {
+    public synchronized JocClusterAnswer stop(int timeout) {
         if (cleanupTasks == null || cleanupTasks.size() == 0) {
             return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
         }
@@ -303,7 +303,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                     } else {
                         LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s]start...", logIdentifier, cleanupTask.getTypeName(), cleanupTask
                                 .getIdentifier(), cleanupTask.isCompleted()));
-                        answer = cleanupTask.stop(getMaxAwaitTimeout());
+                        answer = cleanupTask.stop(timeout > 0 ? timeout : getMaxAwaitTimeout());
                         LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s][end]%s", logIdentifier, cleanupTask.getTypeName(), cleanupTask
                                 .getIdentifier(), cleanupTask.isCompleted(), SOSString.toString(answer)));
                     }

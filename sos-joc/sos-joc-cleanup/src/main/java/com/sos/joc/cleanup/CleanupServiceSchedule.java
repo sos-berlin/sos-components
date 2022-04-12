@@ -42,6 +42,7 @@ public class CleanupServiceSchedule {
 
     private static final String DELIMITER = "->";
     private static final int FACTORY_MAX_POOL_SIZE = 10;// 5;
+    private static final int MAX_AWAIT_TERMINATION_TIMEOUT_ON_PERIOD_REACHED = 30 * 60;
 
     private final CleanupService service;
     private final CleanupServiceTask task;
@@ -83,7 +84,7 @@ public class CleanupServiceSchedule {
             }
         } catch (TimeoutException e) {
             LOGGER.info(String.format("[max end at %s reached]try stop..", end.toString()));
-            closeTasks();
+            closeTasks(MAX_AWAIT_TERMINATION_TIMEOUT_ON_PERIOD_REACHED);
         } catch (InterruptedException | ExecutionException e) {
             LOGGER.error(e.toString(), e);
             closeTasks();
@@ -402,7 +403,11 @@ public class CleanupServiceSchedule {
     }
 
     private void closeTasks() {
-        JocClusterAnswer answer = task.stop();
+        closeTasks(-1);
+    }
+
+    private void closeTasks(int timeout) {
+        JocClusterAnswer answer = task.stop(timeout);
         if (answer != null && answer.getState().equals(JocClusterAnswerState.UNCOMPLETED)) {
             try {
                 updateJocVariableOnResult(answer);
