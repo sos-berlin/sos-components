@@ -13,5 +13,5 @@ public interface IGitCredentialsAdd {
     @POST
     @Path("credentials/add")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postAddCredentials(@HeaderParam("X-Access-Token") String xAccessToken, byte[] addCredentialsFilter) throws Exception;
+    public JOCDefaultResponse postAddCredentials(@HeaderParam("X-Access-Token") String xAccessToken, byte[] addCredentialsFilter);
 }

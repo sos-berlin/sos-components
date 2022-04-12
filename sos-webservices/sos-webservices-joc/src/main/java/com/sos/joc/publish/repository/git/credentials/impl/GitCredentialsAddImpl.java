@@ -35,12 +35,23 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
     private static final Logger LOGGER = LoggerFactory.getLogger(GitCredentialsAddImpl.class);
 
     @Override
-    public JOCDefaultResponse postAddCredentials(String xAccessToken, byte[] addCredentialsFilter) throws Exception {
+    public JOCDefaultResponse postAddCredentials(String xAccessToken, byte[] addCredentialsFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** add credentials started ***" + started);
-            initLogging(API_CALL, addCredentialsFilter, xAccessToken);
+            // obscure security relevant data
+            AddCredentialsFilter filterForLogging = Globals.objectMapper.readValue(addCredentialsFilter, AddCredentialsFilter.class);
+            for(GitCredentials cred : filterForLogging.getCredentials()) {
+               if(cred.getPassword() != null && !cred.getPassword().isEmpty()) {
+                   cred.setPassword("********");
+               }
+               if(cred.getPersonalAccessToken() != null && !cred.getPersonalAccessToken().isEmpty()) {
+                   cred.setPersonalAccessToken("********");
+               }
+            }
+            byte[] filterForLog = Globals.objectMapper.writeValueAsBytes(filterForLogging);
+            initLogging(API_CALL, filterForLog, xAccessToken);
             JsonValidator.validate(addCredentialsFilter, AddCredentialsFilter.class);
             AddCredentialsFilter filter = Globals.objectMapper.readValue(addCredentialsFilter, AddCredentialsFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getManage());
