@@ -21,6 +21,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadConfigurationResource;
 import com.sos.joc.model.inventory.ConfigurationObject;
@@ -84,7 +85,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-
+            
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
             
@@ -102,6 +103,17 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             item.setDeployments(null);
             item.setHasDeployments(false);
             item.setHasReleases(false);
+            
+            if (in.getCommitId() != null && !in.getCommitId().isEmpty() && JocInventory.isDeployable(type)) {
+                String invContentFromDepHistory = dbLayer.getDeployedInventoryContent(config.getId(), in.getCommitId());
+                if (invContentFromDepHistory != null) {
+                    config.setContent(invContentFromDepHistory);
+                } else {
+                    throw new DBMissingDataException(String.format("deployed configuration not found: %s:%s (%s)", type.value().toLowerCase(), config
+                            .getPath(), in.getCommitId()));
+                }
+            }
+            
             if (config.getType().equals(ConfigurationType.WORKFLOW.intValue())) {
                 // temp. for compatibility PostNotice -> ExpectNotice
                 item.setConfiguration(JocInventory.content2IJSObject(config.getContent().replaceAll("(\"TYPE\"\\s*:\\s*)\"ReadNotice\"", "$1\"ExpectNotice\""), config.getType()));

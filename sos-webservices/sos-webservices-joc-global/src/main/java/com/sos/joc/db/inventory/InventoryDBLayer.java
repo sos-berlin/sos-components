@@ -34,6 +34,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.inventory.items.FolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
@@ -122,6 +123,26 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("configId", configId);
         query.setParameter("state", DeploymentState.DEPLOYED.value());
         return getSession().getResultList(query);
+    }
+    
+    public String getDeployedInventoryContent(Long configId, String commitId) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("select invContent from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where inventoryConfigurationId = :configId");
+            hql.append(" and commitId = :commitId");
+            hql.append(" and state = :state");
+            Query<String> query = getSession().createQuery(hql.toString());
+            query.setParameter("configId", configId);
+            query.setParameter("commitId", commitId);
+            query.setParameter("state", DeploymentState.DEPLOYED.value());
+            query.setMaxResults(1);
+            return getSession().getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
     }
 
     public DBItemInventoryReleasedConfiguration getReleasedItemByConfigurationId(Long configId) throws SOSHibernateException {
