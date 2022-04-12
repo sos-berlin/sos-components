@@ -162,6 +162,9 @@ public class Validator {
 
                     schedule = JocInventory.setWorkflowNames(schedule);
                     int namesSize = schedule.getWorkflowNames().size();
+                    if (namesSize == 0) {
+                        throw new JocConfigurationException("Missing assigned Workflows");
+                    }
                     String position = "$.workflowNames";
                     for (String workflowName : schedule.getWorkflowNames()) {
                         String json = validateWorkflowRef(workflowName, dbLayer, position);
