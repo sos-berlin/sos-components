@@ -26,6 +26,7 @@ import com.sos.joc.model.security.roles.Role;
 import com.sos.joc.model.security.roles.RoleFilter;
 import com.sos.joc.model.security.roles.RoleListFilter;
 import com.sos.joc.model.security.roles.RoleRename;
+import com.sos.joc.model.security.roles.RoleStore;
 import com.sos.joc.model.security.roles.Roles;
 import com.sos.joc.model.security.roles.RolesFilter;
 import com.sos.joc.security.classes.SecurityHelper;
@@ -96,11 +97,11 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            Role role = Globals.objectMapper.readValue(body, Role.class);
+            RoleStore roleStore = Globals.objectMapper.readValue(body, RoleStore.class);
 
             JsonValidator.validateFailFast(body, Role.class);
 
-            initLogging(API_CALL_ROLE_STORE, Globals.objectMapper.writeValueAsBytes(role), accessToken);
+            initLogging(API_CALL_ROLE_STORE, Globals.objectMapper.writeValueAsBytes(roleStore), accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -110,25 +111,35 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, role.getIdentityServiceName());
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, roleStore
+                    .getIdentityServiceName());
 
             IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);
 
             IamRoleFilter iamRoleFilter = new IamRoleFilter();
-            iamRoleFilter.setRoleName(role.getRoleName());
+            iamRoleFilter.setRoleName(roleStore.getRoleName());
             iamRoleFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
 
             DBItemIamRole dbItemIamRole = iamRoleDBLayer.getUniqueRole(iamRoleFilter);
 
             if (dbItemIamRole == null) {
                 dbItemIamRole = new DBItemIamRole();
-                dbItemIamRole.setRoleName(role.getRoleName());
+                dbItemIamRole.setRoleName(roleStore.getRoleName());
                 dbItemIamRole.setIdentityServiceId(dbItemIamIdentityService.getId());
-                dbItemIamRole.setOrdering(9999);
+                if (roleStore.getOrdering() != null) {
+                    dbItemIamRole.setOrdering(roleStore.getOrdering());
+                } else {
+                    dbItemIamRole.setOrdering(9999);
+                }
                 sosHibernateSession.save(dbItemIamRole);
+            } else {
+                if (roleStore.getOrdering() != null) {
+                    dbItemIamRole.setOrdering(roleStore.getOrdering());
+                    sosHibernateSession.update(dbItemIamRole);
+                }
             }
 
-            storeAuditLog(role.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(roleStore.getAuditLog(), CategoryType.IDENTITY);
             Globals.commit(sosHibernateSession);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

@@ -343,11 +343,12 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
             iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
+            iamAccountFilter.setDisabled(accountsFilter.getDisabled());
             for (String accountName : accountsFilter.getAccountNames()) {
                 iamAccountFilter.setAccountName(accountName);
                 int count = iamAccountDBLayer.deleteCascading(iamAccountFilter);
                 if (count == 0) {
-                    throw new JocObjectNotExistException("Object <" + accountName + "> not found");
+                    throw new JocObjectNotExistException("Object <" + accountName + "> disabled=" + iamAccountFilter.getDisabled() + " not found");
                 }
             }
             Globals.commit(sosHibernateSession);
@@ -388,6 +389,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter filter = new IamAccountFilter();
+            filter.setAccountName(accountFilter.getAccountName());
+            filter.setDisabled(accountFilter.getDisabled());
             filter.setIdentityServiceId(dbItemIamIdentityService.getId());
             List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(filter, 0);
             for (DBItemIamAccount dbItemIamAccount : listOfAccounts) {

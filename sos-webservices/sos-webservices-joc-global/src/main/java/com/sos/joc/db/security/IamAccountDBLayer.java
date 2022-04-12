@@ -49,6 +49,12 @@ public class IamAccountDBLayer {
 		if (filter.getRoleId() != null) {
 			query.setParameter("roleId", filter.getRoleId());
 		}
+        if (filter.getDisabled() != null) {
+            query.setParameter("disabled", filter.getDisabled());
+        }
+        if (filter.getAccountName() != null) {
+            query.setParameter("accountName", filter.getAccountName());
+        }
 
 		return query;
 
@@ -131,6 +137,10 @@ public class IamAccountDBLayer {
 			where += and + " accountName = :accountName";
 			and = " and ";
 		}
+        if (filter.getDisabled() != null) {
+            where += and + " disabled = :disabled";
+            and = " and ";
+        }
 		if (!where.trim().equals("")) {
 			where = " where " + where;
 		}

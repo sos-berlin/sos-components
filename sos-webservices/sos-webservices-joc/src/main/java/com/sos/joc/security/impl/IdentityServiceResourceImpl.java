@@ -121,7 +121,11 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             if (dbItemIamIdentityService == null) {
                 dbItemIamIdentityService = new DBItemIamIdentityService();
                 dbItemIamIdentityService.setIdentityServiceName(identityService.getIdentityServiceName());
-                dbItemIamIdentityService.setOrdering(0);
+                if (identityService.getOrdering() != null) {
+                    dbItemIamIdentityService.setOrdering(9999);
+                } else {
+                    dbItemIamIdentityService.setOrdering(identityService.getOrdering());
+                }
             }
             dbItemIamIdentityService.setDisabled(identityService.getDisabled());
             dbItemIamIdentityService.setIdentityServiceType(identityService.getIdentityServiceType().value());
@@ -203,7 +207,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             jocConfigurationFilter.setObjectType(dbItemIamIdentityService.getIdentityServiceType());
             jocConfigurationDBLayer.rename(jocConfigurationFilter, identityServiceRename.getIdentityServiceNewName());
 
-            DBItemJocAuditLog dbAuditLog = storeAuditLog(identityServiceRename.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(identityServiceRename.getAuditLog(), CategoryType.IDENTITY);
 
             Globals.commit(sosHibernateSession);
 
@@ -248,7 +252,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 throw new JocObjectNotExistException("Object Identity Service<" + identityServiceFilter.getIdentityServiceName() + "> not found");
             }
 
-            DBItemJocAuditLog dbAuditLog = storeAuditLog(identityServiceFilter.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(identityServiceFilter.getAuditLog(), CategoryType.IDENTITY);
 
             filter.setIdentityServiceName(null);
             if (iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0).size() == 0) {

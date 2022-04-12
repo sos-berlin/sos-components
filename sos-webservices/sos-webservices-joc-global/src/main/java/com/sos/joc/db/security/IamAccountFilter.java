@@ -5,7 +5,8 @@ public class IamAccountFilter extends SOSHibernateFilter {
     private Long id;
     private Long identityServiceId;
     private Long roleId;
-    private String accountName; 
+    private String accountName;
+    private Boolean disabled;
 
     
     public IamAccountFilter() {
@@ -46,6 +47,16 @@ public class IamAccountFilter extends SOSHibernateFilter {
     
     public void setRoleId(Long roleId) {
         this.roleId = roleId;
+    }
+
+    
+    public Boolean getDisabled() {
+        return disabled;
+    }
+
+    
+    public void setDisabled(Boolean disabled) {
+        this.disabled = disabled;
     }
 
 }

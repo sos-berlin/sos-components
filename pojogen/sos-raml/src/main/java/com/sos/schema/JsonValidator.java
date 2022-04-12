@@ -211,7 +211,7 @@ public class JsonValidator {
 
             // auth
             put("SecurityConfiguration", "security/securityConfiguration/security-configuration-schema.json");
-            put("SecurityConfigurationRole", "security/securityConfiguration/role-schema.json");
+            put("SecurityConfigurationRole", "security/securityConfiguration/role-schema.json");            
             put("Roles", "security/securityConfiguration/roles-schema.json");
 
             // iam
@@ -242,6 +242,7 @@ public class JsonValidator {
             put("com.sos.joc.model.security.roles.RoleFilter", "security/roles/roleFilter-schema.json");
             put("com.sos.joc.model.security.roles.RoleRename", "security/roles/roleRename-schema.json");
             put("com.sos.joc.model.security.roles.Role", "security/roles/role-schema.json");
+            put("com.sos.joc.model.security.roles.RoleStore", "security/roles/roleStore-schema.json");
 
             // TODO complete the map
         }
