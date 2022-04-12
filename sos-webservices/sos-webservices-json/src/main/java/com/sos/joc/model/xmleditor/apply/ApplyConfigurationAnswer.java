@@ -16,7 +16,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * xmleditor apply configuration answer
  * <p>
- * state,released,hasReleases only for notification
+ * state,released,hasReleases only for objectType=NOTIFICATION
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * xmleditor store configuration in
  * <p>
- * id, name and schemaIdentifier only for OTHER
+ * id, name and schemaIdentifier only for objectType=YADE,OTHER
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

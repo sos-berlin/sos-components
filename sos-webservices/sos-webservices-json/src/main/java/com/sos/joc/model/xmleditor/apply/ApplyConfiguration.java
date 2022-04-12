@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * xmleditor apply configuration in
  * <p>
- * id, name, schemaIdentifier only for OTHER
+ * id, name, schemaIdentifier only for objectType=YADE/OTHER
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -40,6 +40,7 @@ public class ApplyConfiguration {
      * xmleditor object type
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("objectType")
@@ -48,6 +49,7 @@ public class ApplyConfiguration {
      * disallow <script and <svg/on
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("configuration")
@@ -99,6 +101,7 @@ public class ApplyConfiguration {
      * xmleditor object type
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("objectType")
@@ -110,6 +113,7 @@ public class ApplyConfiguration {
      * xmleditor object type
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("objectType")
@@ -121,6 +125,7 @@ public class ApplyConfiguration {
      * disallow <script and <svg/on
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("configuration")
@@ -132,6 +137,7 @@ public class ApplyConfiguration {
      * disallow <script and <svg/on
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("configuration")
