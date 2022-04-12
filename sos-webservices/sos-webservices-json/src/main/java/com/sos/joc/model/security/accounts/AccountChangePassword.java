@@ -1,9 +1,7 @@
 
 package com.sos.joc.model.security.accounts;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -29,12 +27,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "identityServiceName",
     "accountName",
     "password",
+    "repeatedPassword",
+    "oldPassword",
     "forcePasswordChange",
-    "disabled",
-    "roles",
     "auditLog"
 })
-public class Account {
+public class AccountChangePassword {
 
     /**
      * string without < and >
@@ -56,6 +54,10 @@ public class Account {
     private String accountName;
     @JsonProperty("password")
     private String password;
+    @JsonProperty("repeatedPassword")
+    private String repeatedPassword;
+    @JsonProperty("oldPassword")
+    private String oldPassword;
     /**
      * forcePasswordChange parameter
      * <p>
@@ -65,17 +67,6 @@ public class Account {
     @JsonProperty("forcePasswordChange")
     @JsonPropertyDescription("controls if the account is forced to change the password")
     private Boolean forcePasswordChange = false;
-    /**
-     * disabled parameter
-     * <p>
-     * controls if the object is disabled
-     * 
-     */
-    @JsonProperty("disabled")
-    @JsonPropertyDescription("controls if the object is disabled")
-    private Boolean disabled = false;
-    @JsonProperty("roles")
-    private List<String> roles = new ArrayList<String>();
     /**
      * auditParams
      * <p>
@@ -91,7 +82,7 @@ public class Account {
      * No args constructor for use in serialization
      * 
      */
-    public Account() {
+    public AccountChangePassword() {
     }
 
     /**
@@ -100,18 +91,18 @@ public class Account {
      * @param password
      * @param auditLog
      * @param accountName
+     * @param oldPassword
      * @param forcePasswordChange
-     * @param roles
-     * @param disabled
+     * @param repeatedPassword
      */
-    public Account(String identityServiceName, String accountName, String password, Boolean forcePasswordChange, Boolean disabled, List<String> roles, AuditParams auditLog) {
+    public AccountChangePassword(String identityServiceName, String accountName, String password, String repeatedPassword, String oldPassword, Boolean forcePasswordChange, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.accountName = accountName;
         this.password = password;
+        this.repeatedPassword = repeatedPassword;
+        this.oldPassword = oldPassword;
         this.forcePasswordChange = forcePasswordChange;
-        this.disabled = disabled;
-        this.roles = roles;
         this.auditLog = auditLog;
     }
 
@@ -173,6 +164,26 @@ public class Account {
         this.password = password;
     }
 
+    @JsonProperty("repeatedPassword")
+    public String getRepeatedPassword() {
+        return repeatedPassword;
+    }
+
+    @JsonProperty("repeatedPassword")
+    public void setRepeatedPassword(String repeatedPassword) {
+        this.repeatedPassword = repeatedPassword;
+    }
+
+    @JsonProperty("oldPassword")
+    public String getOldPassword() {
+        return oldPassword;
+    }
+
+    @JsonProperty("oldPassword")
+    public void setOldPassword(String oldPassword) {
+        this.oldPassword = oldPassword;
+    }
+
     /**
      * forcePasswordChange parameter
      * <p>
@@ -193,38 +204,6 @@ public class Account {
     @JsonProperty("forcePasswordChange")
     public void setForcePasswordChange(Boolean forcePasswordChange) {
         this.forcePasswordChange = forcePasswordChange;
-    }
-
-    /**
-     * disabled parameter
-     * <p>
-     * controls if the object is disabled
-     * 
-     */
-    @JsonProperty("disabled")
-    public Boolean getDisabled() {
-        return disabled;
-    }
-
-    /**
-     * disabled parameter
-     * <p>
-     * controls if the object is disabled
-     * 
-     */
-    @JsonProperty("disabled")
-    public void setDisabled(Boolean disabled) {
-        this.disabled = disabled;
-    }
-
-    @JsonProperty("roles")
-    public List<String> getRoles() {
-        return roles;
-    }
-
-    @JsonProperty("roles")
-    public void setRoles(List<String> roles) {
-        this.roles = roles;
     }
 
     /**
@@ -261,12 +240,12 @@ public class Account {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("password", password).append("forcePasswordChange", forcePasswordChange).append("disabled", disabled).append("roles", roles).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("password", password).append("repeatedPassword", repeatedPassword).append("oldPassword", oldPassword).append("forcePasswordChange", forcePasswordChange).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(password).append(auditLog).append(accountName).append(forcePasswordChange).append(roles).append(disabled).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(password).append(auditLog).append(accountName).append(oldPassword).append(forcePasswordChange).append(additionalProperties).append(repeatedPassword).toHashCode();
     }
 
     @Override
@@ -274,11 +253,11 @@ public class Account {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Account) == false) {
+        if ((other instanceof AccountChangePassword) == false) {
             return false;
         }
-        Account rhs = ((Account) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(password, rhs.password).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(forcePasswordChange, rhs.forcePasswordChange).append(roles, rhs.roles).append(disabled, rhs.disabled).append(additionalProperties, rhs.additionalProperties).isEquals();
+        AccountChangePassword rhs = ((AccountChangePassword) other);
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(password, rhs.password).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(oldPassword, rhs.oldPassword).append(forcePasswordChange, rhs.forcePasswordChange).append(additionalProperties, rhs.additionalProperties).append(repeatedPassword, rhs.repeatedPassword).isEquals();
     }
 
 }

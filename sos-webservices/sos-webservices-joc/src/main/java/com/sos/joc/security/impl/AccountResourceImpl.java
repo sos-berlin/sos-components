@@ -52,8 +52,10 @@ import com.sos.joc.exceptions.JocInfoException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.accounts.Account;
+import com.sos.joc.model.security.accounts.AccountChangePassword;
 import com.sos.joc.model.security.accounts.AccountFilter;
 import com.sos.joc.model.security.accounts.AccountListFilter;
+import com.sos.joc.model.security.accounts.AccountNamesFilter;
 import com.sos.joc.model.security.accounts.AccountRename;
 import com.sos.joc.model.security.accounts.Accounts;
 import com.sos.joc.model.security.accounts.AccountsFilter;
@@ -138,10 +140,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             Account accountMasked = Globals.objectMapper.readValue(body, Account.class);
             Account account = Globals.objectMapper.readValue(body, Account.class);
 
-            accountMasked.setOldPassword("********");
             accountMasked.setPassword("********");
-            accountMasked.setRepeatedPassword("********");
-
             JsonValidator.validateFailFast(body, Account.class);
 
             initLogging(API_CALL_ACCOUNT_STORE, Globals.objectMapper.writeValueAsBytes(accountMasked), accessToken);
@@ -522,7 +521,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         }
     }
 
-    private void storeInVault(SOSVaultWebserviceCredentials webserviceCredentials, Account account, String password) throws Exception {
+    private void storeInVault(SOSVaultWebserviceCredentials webserviceCredentials, AccountChangePassword account, String password) throws Exception {
         KeyStore trustStore = null;
 
         if ((webserviceCredentials.getTruststorePath() != null) && (webserviceCredentials.getTrustStoreType() != null)) {
@@ -533,18 +532,10 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
             sosVaultAccountCredentials.setUsername(account.getAccountName());
 
-            List<String> tokenPolicies = new ArrayList<String>();
-            for (String role : account.getRoles()) {
-                tokenPolicies.add(role);
-            }
-
-            sosVaultAccountCredentials.setTokenPolicies(tokenPolicies);
-
             if (!"********".equals(password)) {
                 sosVaultHandler.storeAccountPassword(sosVaultAccountCredentials, password);
             }
 
-            sosVaultHandler.updateTokenPolicies(sosVaultAccountCredentials);
         } else {
             JocError error = new JocError();
             error.setMessage("Configuration for VAULT missing");
@@ -553,7 +544,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
     }
 
-    private void changePassword(SOSHibernateSession sosHibernateSession, boolean withPasswordCheck, Account account,
+    private void changePassword(SOSHibernateSession sosHibernateSession, boolean withPasswordCheck, AccountChangePassword account,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
 
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
@@ -624,10 +615,10 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
     @Override
     public JOCDefaultResponse changePassword(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
-        Account account = null;
+        AccountChangePassword account = null;
         try {
-            Account accountMasked = Globals.objectMapper.readValue(body, Account.class);
-            account = Globals.objectMapper.readValue(body, Account.class);
+            AccountChangePassword accountMasked = Globals.objectMapper.readValue(body, AccountChangePassword.class);
+            account = Globals.objectMapper.readValue(body, AccountChangePassword.class);
 
             accountMasked.setOldPassword("********");
             accountMasked.setPassword("********");
@@ -671,9 +662,9 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
     private JOCDefaultResponse changeFlage(String accessToken, byte[] body, Boolean disable, Boolean forcePasswordChange) {
         SOSHibernateSession sosHibernateSession = null;
-        AccountsFilter accountsFilter = null;
+        AccountNamesFilter accountsFilter = null;
         try {
-            accountsFilter = Globals.objectMapper.readValue(body, AccountsFilter.class);
+            accountsFilter = Globals.objectMapper.readValue(body, AccountNamesFilter.class);
 
             initLogging(API_CALL_FORCE_PASSWORD_CHANGE, Globals.objectMapper.writeValueAsBytes(accountsFilter), accessToken);
             JsonValidator.validate(body, AccountsFilter.class);
@@ -753,9 +744,9 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
     @Override
     public JOCDefaultResponse resetPassword(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
-        AccountsFilter accountsFilter = null;
+        AccountNamesFilter accountsFilter = null;
         try {
-            accountsFilter = Globals.objectMapper.readValue(body, AccountsFilter.class);
+            accountsFilter = Globals.objectMapper.readValue(body, AccountNamesFilter.class);
 
             initLogging(API_CALL_CHANGE_PASSWORD, Globals.objectMapper.writeValueAsBytes(accountsFilter), accessToken);
 
@@ -772,7 +763,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
             DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter
                     .getIdentityServiceName());
-            Account account = new Account();
+            AccountChangePassword account = new AccountChangePassword();
             account.setPassword(null);
             account.setIdentityServiceName(accountsFilter.getIdentityServiceName());
 

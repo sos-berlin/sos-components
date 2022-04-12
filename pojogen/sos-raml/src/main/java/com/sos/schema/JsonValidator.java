@@ -232,6 +232,8 @@ public class JsonValidator {
             put("com.sos.joc.model.security.permissions.PermissionListFilter", "security/permissions/permissionListFilter-schema.json");
 
             put("com.sos.joc.model.security.accounts.AccountListFilter", "security/accounts/accountListFilter-schema.json");
+            put("com.sos.joc.model.security.accounts.AccountNamesFilter", "security/accounts/accountNamesFilter-schema.json");
+            put("com.sos.joc.model.security.accounts.AccountChangePassword", "security/accounts/accountChangePassword-schema.json");
             put("com.sos.joc.model.security.accounts.AccountFilter", "security/accounts/accountFilter-schema.json");
             put("com.sos.joc.model.security.accounts.AccountsFilter", "security/accounts/accountsFilter-schema.json");
             put("com.sos.joc.model.security.accounts.AccountRename", "security/accounts/accountRename-schema.json");

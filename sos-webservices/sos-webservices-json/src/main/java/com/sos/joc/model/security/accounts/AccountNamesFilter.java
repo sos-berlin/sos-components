@@ -1,7 +1,9 @@
 
 package com.sos.joc.model.security.accounts;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -24,10 +26,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "identityServiceName",
-    "accountName",
+    "accountNames",
     "auditLog"
 })
-public class AccountFilter {
+public class AccountNamesFilter {
 
     /**
      * string without < and >
@@ -39,14 +41,12 @@ public class AccountFilter {
     @JsonProperty("identityServiceName")
     private String identityServiceName;
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("accountName")
-    private String accountName;
+    @JsonProperty("accountNames")
+    private List<String> accountNames = new ArrayList<String>();
     /**
      * auditParams
      * <p>
@@ -62,19 +62,19 @@ public class AccountFilter {
      * No args constructor for use in serialization
      * 
      */
-    public AccountFilter() {
+    public AccountNamesFilter() {
     }
 
     /**
      * 
      * @param identityServiceName
      * @param auditLog
-     * @param accountName
+     * @param accountNames
      */
-    public AccountFilter(String identityServiceName, String accountName, AuditParams auditLog) {
+    public AccountNamesFilter(String identityServiceName, List<String> accountNames, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
-        this.accountName = accountName;
+        this.accountNames = accountNames;
         this.auditLog = auditLog;
     }
 
@@ -103,27 +103,23 @@ public class AccountFilter {
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("accountName")
-    public String getAccountName() {
-        return accountName;
+    @JsonProperty("accountNames")
+    public List<String> getAccountNames() {
+        return accountNames;
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("accountName")
-    public void setAccountName(String accountName) {
-        this.accountName = accountName;
+    @JsonProperty("accountNames")
+    public void setAccountNames(List<String> accountNames) {
+        this.accountNames = accountNames;
     }
 
     /**
@@ -160,12 +156,12 @@ public class AccountFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountNames", accountNames).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(additionalProperties).append(auditLog).append(accountName).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(additionalProperties).append(auditLog).append(accountNames).toHashCode();
     }
 
     @Override
@@ -173,11 +169,11 @@ public class AccountFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof AccountFilter) == false) {
+        if ((other instanceof AccountNamesFilter) == false) {
             return false;
         }
-        AccountFilter rhs = ((AccountFilter) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(additionalProperties, rhs.additionalProperties).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).isEquals();
+        AccountNamesFilter rhs = ((AccountNamesFilter) other);
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(additionalProperties, rhs.additionalProperties).append(auditLog, rhs.auditLog).append(accountNames, rhs.accountNames).isEquals();
     }
 
 }
