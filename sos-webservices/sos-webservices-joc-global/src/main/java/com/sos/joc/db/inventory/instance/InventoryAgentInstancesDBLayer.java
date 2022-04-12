@@ -200,11 +200,11 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
 
-    public Set<String> getEnabledAgentNames() throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+    public Set<String> getVisibleAgentNames() throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         return getAgentNames(null, true, true);
     }
 
-    public Set<String> getEnabledAgentNames(Collection<String> controllerIds, boolean withClusterLicense) throws DBInvalidDataException,
+    public Set<String> getVisibleAgentNames(Collection<String> controllerIds, boolean withClusterLicense) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
         return getAgentNames(controllerIds, true, withClusterLicense);
     }

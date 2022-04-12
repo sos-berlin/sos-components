@@ -130,7 +130,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
-            Set<String> agentNames = agentDbLayer.getEnabledAgentNames();
+            Set<String> agentNames = agentDbLayer.getVisibleAgentNames();
             
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             Set<ConfigurationObject> filteredConfigurations = new HashSet<ConfigurationObject>();

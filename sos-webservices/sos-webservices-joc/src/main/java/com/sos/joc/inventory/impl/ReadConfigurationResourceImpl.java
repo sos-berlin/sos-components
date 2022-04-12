@@ -26,7 +26,7 @@ import com.sos.joc.inventory.resource.IReadConfigurationResource;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
-import com.sos.joc.model.inventory.common.RequestFilter;
+import com.sos.joc.model.inventory.read.RequestFilter;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;

@@ -79,28 +79,28 @@ public class Validator {
     /** @param type
      * @param configBytes
      * @param dbLayer
-     * @param enabledAgentNames
+     * @param visibleAgentNames
      * @throws SOSJsonSchemaException
      * @throws IOException
      * @throws SOSHibernateException
      * @throws JocConfigurationException */
-    public static void validate(ConfigurationType type, byte[] configBytes, InventoryDBLayer dbLayer, Set<String> enabledAgentNames)
+    public static void validate(ConfigurationType type, byte[] configBytes, InventoryDBLayer dbLayer, Set<String> visibleAgentNames)
             throws SOSJsonSchemaException, IOException, SOSHibernateException, JocConfigurationException {
         validate(type, configBytes, (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(type)), dbLayer,
-                enabledAgentNames);
+                visibleAgentNames);
     }
 
     /** @param type
      * @param config
      * @param dbLayer
-     * @param enabledAgentNames
+     * @param visibleAgentNames
      * @throws SOSJsonSchemaException
      * @throws IOException
      * @throws SOSHibernateException
      * @throws JocConfigurationException */
-    public static void validate(ConfigurationType type, IConfigurationObject config, InventoryDBLayer dbLayer, Set<String> enabledAgentNames)
+    public static void validate(ConfigurationType type, IConfigurationObject config, InventoryDBLayer dbLayer, Set<String> visibleAgentNames)
             throws SOSJsonSchemaException, IOException, SOSHibernateException, JocConfigurationException {
-        validate(type, Globals.objectMapper.writeValueAsBytes(config), config, dbLayer, enabledAgentNames);
+        validate(type, Globals.objectMapper.writeValueAsBytes(config), config, dbLayer, visibleAgentNames);
     }
 
     /** @param type
@@ -127,7 +127,7 @@ public class Validator {
     }
 
     private static void validate(ConfigurationType type, byte[] configBytes, IConfigurationObject config, InventoryDBLayer dbLayer,
-            Set<String> enabledAgentNames) throws SOSJsonSchemaException, IOException, SOSHibernateException, JocConfigurationException {
+            Set<String> visibleAgentNames) throws SOSJsonSchemaException, IOException, SOSHibernateException, JocConfigurationException {
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
         if (ConfigurationType.WORKFLOW.equals(type) || ConfigurationType.SCHEDULE.equals(type) || ConfigurationType.FILEORDERSOURCE.equals(type)) {
             SOSHibernateSession session = null;
@@ -139,7 +139,7 @@ public class Validator {
                 if (ConfigurationType.WORKFLOW.equals(type)) {
                     String json = new String(configBytes, StandardCharsets.UTF_8);
                     InventoryAgentInstancesDBLayer agentDBLayer = null;
-                    if (enabledAgentNames == null) {
+                    if (visibleAgentNames == null) {
                         agentDBLayer = new InventoryAgentInstancesDBLayer(dbLayer.getSession());
                     }
                     Workflow workflow = (Workflow) config;
@@ -155,7 +155,7 @@ public class Validator {
                     validateLockRefs(json, dbLayer);
                     validateBoardRefs(json, dbLayer);
                     validateJobResourceRefs(jobResources, dbLayer);
-                    validateAgentRefs(json, agentDBLayer, enabledAgentNames);
+                    validateAgentRefs(json, agentDBLayer, visibleAgentNames);
                 } else if (ConfigurationType.SCHEDULE.equals(type)) {
                     Schedule schedule = (Schedule) config;
                     validateCalendarRefs(schedule, dbLayer);
@@ -252,7 +252,7 @@ public class Validator {
 
     }
 
-    private static void validateAgentRefs(String json, InventoryAgentInstancesDBLayer dbLayer, Set<String> enabledAgentNames)
+    private static void validateAgentRefs(String json, InventoryAgentInstancesDBLayer dbLayer, Set<String> visibleAgentNames)
             throws SOSHibernateException, JocConfigurationException {
         Matcher m = Pattern.compile("\"agentName\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
         Set<String> agents = new HashSet<>();
@@ -262,10 +262,10 @@ public class Validator {
             }
         }
         if (!agents.isEmpty()) {
-            if (enabledAgentNames != null) {
-                agents.removeAll(enabledAgentNames);
+            if (visibleAgentNames != null) {
+                agents.removeAll(visibleAgentNames);
             } else {
-                agents.removeAll(dbLayer.getEnabledAgentNames());
+                agents.removeAll(dbLayer.getVisibleAgentNames());
             }
             if (!agents.isEmpty()) {
                 throw new JocConfigurationException("Missing assigned Agents: " + agents.toString());
