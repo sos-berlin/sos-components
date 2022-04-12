@@ -28,26 +28,22 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
 
     @Override
     public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
+        JocServiceTaskAnswerState state = JocServiceTaskAnswerState.COMPLETED;
         try {
             TaskDateTime datetime = datetimes.get(0);
             LOGGER.info(String.format("[%s][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime.getZonedDatetime()));
 
             boolean run = true;
             while (run) {
-                tryOpenSession();
-
-                List<Long> r = getSubmissionIds(datetime);
-                if (r == null || r.size() == 0) {
-                    return JocServiceTaskAnswerState.COMPLETED;
-                }
                 if (isStopped()) {
                     return JocServiceTaskAnswerState.UNCOMPLETED;
                 }
 
                 if (askService()) {
-                    getDbLayer().beginTransaction();
-                    cleanupEntries(datetime, r);
-                    getDbLayer().commit();
+                    tryOpenSession();
+
+                    state = cleanupEntries(datetime);
+                    run = false;
                 } else {
                     getDbLayer().close();
                     waitFor(WAIT_INTERVAL_ON_BUSY);
@@ -59,102 +55,87 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         } finally {
             close();
         }
-        return JocServiceTaskAnswerState.COMPLETED;
+        return state;
     }
 
-    private void cleanupEntries(TaskDateTime datetime, List<Long> ids) throws SOSHibernateException {
+    private JocServiceTaskAnswerState cleanupEntries(TaskDateTime datetime) throws SOSHibernateException {
+        StringBuilder submissionIdsStatement = getSubmissionIdsStatement();
+
         StringBuilder log = new StringBuilder();
         log.append("[").append(getIdentifier()).append("][deleted][").append(datetime.getAge().getConfigured()).append("]");
 
-        // getDbLayer().beginTransaction();
+        getDbLayer().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
         hql.append("where orderId in (");
         hql.append("    select orderId from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
-        hql.append("    where submissionHistoryId in (:ids)");
+        hql.append("    where submissionHistoryId in (").append(submissionIdsStatement).append(")");
         hql.append(")");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameterList("ids", ids);
+        query.setParameter("created", datetime.getDatetime());
         int r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().commit();
+        getDbLayer().commit();
         totalVariables += r;
         log.append(getDeleted(DBLayer.TABLE_DPL_ORDER_VARIABLES, r, totalVariables));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
-            return;
+            return JocServiceTaskAnswerState.UNCOMPLETED;
         }
 
-        // getDbLayer().beginTransaction();
+        getDbLayer().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DPL_HISTORY).append(" ");
         hql.append("where orderId in (");
         hql.append("    select orderId from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
-        hql.append("    where submissionHistoryId in (:ids)");
+        hql.append("    where submissionHistoryId in (").append(submissionIdsStatement).append(")");
         hql.append(")");
         query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameterList("ids", ids);
+        query.setParameter("created", datetime.getDatetime());
         r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().commit();
+        getDbLayer().commit();
         totalHistory += r;
         log.append(getDeleted(DBLayer.TABLE_DPL_HISTORY, r, totalHistory));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
-            return;
+            return JocServiceTaskAnswerState.UNCOMPLETED;
         }
 
-        // getDbLayer().beginTransaction();
+        getDbLayer().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
-        hql.append("where submissionHistoryId in (:ids)");
+        hql.append("where submissionHistoryId in (").append(submissionIdsStatement).append(")");
         query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameterList("ids", ids);
+        query.setParameter("created", datetime.getDatetime());
         r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().commit();
+        getDbLayer().commit();
         totalOrders += r;
         log.append(getDeleted(DBLayer.TABLE_DPL_ORDERS, r, totalOrders));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
-            return;
+            return JocServiceTaskAnswerState.UNCOMPLETED;
         }
 
-        // getDbLayer().beginTransaction();
+        getDbLayer().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
-        hql.append("where id in (:ids)");
+        hql.append("where created < :created ");
         query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameterList("ids", ids);
+        query.setParameter("created", datetime.getDatetime());
         r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().commit();
+        getDbLayer().commit();
         totalSubmissions += r;
         log.append(getDeleted(DBLayer.TABLE_DPL_SUBMISSIONS, r, totalSubmissions));
 
         LOGGER.info(log.toString());
+        return JocServiceTaskAnswerState.COMPLETED;
     }
 
-    private List<Long> getSubmissionIds(TaskDateTime datetime) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select id from ");
-        hql.append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
+    private StringBuilder getSubmissionIdsStatement() {
+        StringBuilder hql = new StringBuilder("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
         hql.append("where created < :created ");
-        Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("created", datetime.getDatetime());
-        query.setMaxResults(getBatchSize());
-        List<Long> r = getDbLayer().getSession().getResultList(query);
-
-        int size = r.size();
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_DPL_SUBMISSIONS,
-                    size));
-
-        } else {
-            if (size == 0) {
-                LOGGER.info(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_DPL_SUBMISSIONS,
-                        size));
-            }
-        }
-        return r;
+        return hql;
     }
-
 }
