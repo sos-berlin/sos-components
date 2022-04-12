@@ -22,8 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "identityServiceName",
-    "roleName"
+    "identityServiceName"
 })
 public class RoleListFilter {
 
@@ -36,14 +35,6 @@ public class RoleListFilter {
      */
     @JsonProperty("identityServiceName")
     private String identityServiceName;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("roleName")
-    private String roleName;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -57,12 +48,10 @@ public class RoleListFilter {
     /**
      * 
      * @param identityServiceName
-     * @param roleName
      */
-    public RoleListFilter(String identityServiceName, String roleName) {
+    public RoleListFilter(String identityServiceName) {
         super();
         this.identityServiceName = identityServiceName;
-        this.roleName = roleName;
     }
 
     /**
@@ -89,28 +78,6 @@ public class RoleListFilter {
         this.identityServiceName = identityServiceName;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("roleName")
-    public String getRoleName() {
-        return roleName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("roleName")
-    public void setRoleName(String roleName) {
-        this.roleName = roleName;
-    }
-
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
@@ -123,12 +90,12 @@ public class RoleListFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("roleName", roleName).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(roleName).append(identityServiceName).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -140,7 +107,7 @@ public class RoleListFilter {
             return false;
         }
         RoleListFilter rhs = ((RoleListFilter) other);
-        return new EqualsBuilder().append(roleName, rhs.roleName).append(identityServiceName, rhs.identityServiceName).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }

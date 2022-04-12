@@ -241,7 +241,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
                 SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
                 webserviceCredentials.setValuesFromProfile(sosIdentityService);
-                storeInVault(webserviceCredentials, account, password);
+                storeInVault(webserviceCredentials, account.getRoles(), account.getAccountName(), password);
             }
 
             storeAuditLog(account.getAuditLog(), CategoryType.IDENTITY);
@@ -521,7 +521,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         }
     }
 
-    private void storeInVault(SOSVaultWebserviceCredentials webserviceCredentials, AccountChangePassword account, String password) throws Exception {
+    private void storeInVault(SOSVaultWebserviceCredentials webserviceCredentials, List<String> roles, String account, String password)
+            throws Exception {
         KeyStore trustStore = null;
 
         if ((webserviceCredentials.getTruststorePath() != null) && (webserviceCredentials.getTrustStoreType() != null)) {
@@ -530,38 +531,16 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
             SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
             SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
-            sosVaultAccountCredentials.setUsername(account.getAccountName());
+            sosVaultAccountCredentials.setUsername(account);
 
-            if (!"********".equals(password)) {
-                sosVaultHandler.storeAccountPassword(sosVaultAccountCredentials, password);
+            if (roles != null) {
+                List<String> tokenPolicies = new ArrayList<String>();
+                for (String role : roles) {
+                    tokenPolicies.add(role);
+                }
+
+                sosVaultAccountCredentials.setTokenPolicies(tokenPolicies);
             }
-
-        } else {
-            JocError error = new JocError();
-            error.setMessage("Configuration for VAULT missing");
-            throw new JocException(error);
-        }
-
-    }
-
-    
-    private void storeInVault(SOSVaultWebserviceCredentials webserviceCredentials, Account account, String password) throws Exception {
-        KeyStore trustStore = null;
-
-        if ((webserviceCredentials.getTruststorePath() != null) && (webserviceCredentials.getTrustStoreType() != null)) {
-            trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
-                    webserviceCredentials.getTruststorePassword());
-
-            SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
-            SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
-            sosVaultAccountCredentials.setUsername(account.getAccountName());
-
-            List<String> tokenPolicies = new ArrayList<String>();
-            for (String role : account.getRoles()) {
-                tokenPolicies.add(role);
-            }
-
-            sosVaultAccountCredentials.setTokenPolicies(tokenPolicies);
 
             if (!"********".equals(password)) {
                 sosVaultHandler.storeAccountPassword(sosVaultAccountCredentials, password);
@@ -575,7 +554,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         }
 
     }
-    
+
     private void changePassword(SOSHibernateSession sosHibernateSession, boolean withPasswordCheck, AccountChangePassword account,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
 
@@ -634,7 +613,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 sosHibernateSession.update(dbItemIamAccount);
 
                 if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                    storeInVault(webserviceCredentials, account, password);
+                    storeInVault(webserviceCredentials, null, account.getAccountName(), password);
                 }
             } else {
                 JocError error = new JocError();
