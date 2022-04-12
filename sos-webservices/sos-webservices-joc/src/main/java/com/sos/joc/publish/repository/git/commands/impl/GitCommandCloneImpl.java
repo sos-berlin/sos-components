@@ -12,7 +12,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.settings.ClusterSettings;
-import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
@@ -54,9 +53,8 @@ public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandC
                 throw new JocNotImplementedException("The web service is not available for Security Level HIGH.");
             }
             
-            JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
             GitCloneCommandResult result = GitCommandUtils.cloneGitRepository(
-                    filter, account, dbLayer, Globals.getConfigurationGlobalsJoc().getEncodingCharset());
+                    filter, account, hibernateSession, Globals.getConfigurationGlobalsJoc().getEncodingCharset());
 
             GitCommandResponse response = new GitCommandResponse();
             response.setCommand(result.getOriginalCommand());
