@@ -544,6 +544,38 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
     }
 
+    
+    private void storeInVault(SOSVaultWebserviceCredentials webserviceCredentials, Account account, String password) throws Exception {
+        KeyStore trustStore = null;
+
+        if ((webserviceCredentials.getTruststorePath() != null) && (webserviceCredentials.getTrustStoreType() != null)) {
+            trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                    webserviceCredentials.getTruststorePassword());
+
+            SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
+            SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
+            sosVaultAccountCredentials.setUsername(account.getAccountName());
+
+            List<String> tokenPolicies = new ArrayList<String>();
+            for (String role : account.getRoles()) {
+                tokenPolicies.add(role);
+            }
+
+            sosVaultAccountCredentials.setTokenPolicies(tokenPolicies);
+
+            if (!"********".equals(password)) {
+                sosVaultHandler.storeAccountPassword(sosVaultAccountCredentials, password);
+            }
+
+            sosVaultHandler.updateTokenPolicies(sosVaultAccountCredentials);
+        } else {
+            JocError error = new JocError();
+            error.setMessage("Configuration for VAULT missing");
+            throw new JocException(error);
+        }
+
+    }
+    
     private void changePassword(SOSHibernateSession sosHibernateSession, boolean withPasswordCheck, AccountChangePassword account,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
 
