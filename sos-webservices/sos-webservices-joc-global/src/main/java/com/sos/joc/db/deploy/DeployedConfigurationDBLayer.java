@@ -26,6 +26,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.common.FolderPath;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deploy.items.Deployed;
@@ -118,9 +119,14 @@ public class DeployedConfigurationDBLayer {
 
     private Map<ConfigurationType, Long> getNumOfObjects(String tableName, String controllerId, Set<Folder> permittedFolders) {
         try {
+            boolean isReleasedObjects = DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS.equals(tableName);
+
             StringBuilder hql = new StringBuilder("select new ").append(NumOfDeployment.class.getName());
             hql.append("(type, count(id) as numof) from ").append(tableName);
             List<String> clauses = new ArrayList<>();
+            if (isReleasedObjects) {// TODO or read all and override later ?
+                clauses.add("type != :scheduleType");
+            }
             if (controllerId != null && !controllerId.isEmpty()) {
                 clauses.add("controllerId = :controllerId");
             }
@@ -142,15 +148,81 @@ public class DeployedConfigurationDBLayer {
             }
             hql.append(" group by type");
             Query<NumOfDeployment> query = session.createQuery(hql.toString());
+            if (isReleasedObjects) {
+                query.setParameter("scheduleType", ConfigurationType.SCHEDULE.intValue());
+            }
             if (controllerId != null && !controllerId.isEmpty()) {
                 query.setParameter("controllerId", controllerId);
             }
-            List<NumOfDeployment> result = session.getResultList(query);
-            if (result != null) {
-                return result.stream().filter(i -> i.getConfigurationType() != null).collect(Collectors.groupingBy(
-                        NumOfDeployment::getConfigurationType, Collectors.summingLong(NumOfDeployment::getNumOf)));
+
+            Map<ConfigurationType, Long> result = new HashMap<>();
+            List<NumOfDeployment> r = session.getResultList(query);
+            if (r != null) {
+                result = r.stream().filter(i -> i.getConfigurationType() != null).collect(Collectors.groupingBy(NumOfDeployment::getConfigurationType,
+                        Collectors.summingLong(NumOfDeployment::getNumOf)));
             }
-            return Collections.emptyMap();
+            if (isReleasedObjects) {
+                result.put(ConfigurationType.SCHEDULE, getNumOfReleasedSchedules(controllerId, permittedFolders));
+            }
+            return result;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public Long getNumOfReleasedSchedules(String controllerId, Set<Folder> permittedFolders) {
+        try {
+            StringBuilder hql = new StringBuilder("select count(distinct sw.scheduleName) ");
+            hql.append("from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" sw ");
+            hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc ");
+            hql.append("where dc.type=:workflowType ");
+            hql.append("and sw.workflowName=dc.name ");
+            if (!SOSString.isEmpty(controllerId)) {
+                hql.append("and controllerId=:controllerId ");
+            }
+            // folders
+            boolean useFolders = FolderPath.useFolders(permittedFolders);
+            Map<String, String> paramsFolder = new HashMap<>();
+            Map<String, String> paramsLikeFolder = new HashMap<>();
+            if (useFolders) {
+                hql.append("and (");
+                int i = 0;
+                for (Folder folder : permittedFolders) {
+                    if (i > 0) {
+                        hql.append(" or ");
+                    }
+                    String paramNameFolder = "folder" + i;
+                    if (folder.getRecursive()) {
+                        String paramNameLikeFolder = "likeFolder" + i;
+                        hql.append("(sw.scheduleFolder=:").append(paramNameFolder).append(" or sw.scheduleFolder like :").append(paramNameLikeFolder)
+                                .append(") ");
+                        paramsLikeFolder.put(paramNameLikeFolder, (folder.getFolder() + "/%").replaceAll("//+", "/"));
+                    } else {
+                        hql.append("sw.scheduleFolder=:").append(paramNameFolder).append(" ");
+                    }
+                    paramsFolder.put(paramNameFolder, folder.getFolder());
+                    i++;
+                }
+                hql.append(") ");
+            }
+
+            Query<Long> query = session.createQuery(hql);
+            query.setParameter("workflowType", DeployType.WORKFLOW.intValue());
+            if (!SOSString.isEmpty(controllerId)) {
+                query.setParameter("controllerId", controllerId);
+            }
+            if (useFolders) {
+                paramsFolder.entrySet().stream().forEach(e -> {
+                    query.setParameter(e.getKey(), e.getValue());
+                });
+                paramsLikeFolder.entrySet().stream().forEach(e -> {
+                    query.setParameter(e.getKey(), e.getValue());
+                });
+            }
+            Long result = session.getSingleResult(query);
+            return result == null ? 0L : result;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -229,7 +301,7 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public Map<Integer, Map<Long, String>> getDeployedNames(DeployedConfigurationFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
@@ -241,8 +313,8 @@ public class DeployedConfigurationDBLayer {
             if (result == null || result.isEmpty()) {
                 return Collections.emptyMap();
             } else {
-                return result.stream().collect(Collectors.groupingBy(Deployed::getObjectType, Collectors
-                        .toMap(Deployed::getInvCId, Deployed::getName, (k, v) -> v)));
+                return result.stream().collect(Collectors.groupingBy(Deployed::getObjectType, Collectors.toMap(Deployed::getInvCId, Deployed::getName,
+                        (k, v) -> v)));
             }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

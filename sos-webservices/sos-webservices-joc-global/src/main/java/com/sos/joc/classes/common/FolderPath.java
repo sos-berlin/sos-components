@@ -59,6 +59,23 @@ public class FolderPath {
         return filtered(folders, paths);
     }
 
+    public static boolean useFolders(Set<Folder> folders) {
+        if (folders != null && folders.size() > 0) {
+            if (folders.size() == 1) {
+                Folder f = folders.iterator().next();
+                if (f == null) {
+                    return false;
+                }
+                boolean recursive = f.getRecursive() == null ? true : f.getRecursive().booleanValue();
+                if (f.getFolder().equals("/") && recursive) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
     private static Set<Folder> filtered(List<Folder> folders) {
         if (folders == null || folders.size() == 0) {
             return null;

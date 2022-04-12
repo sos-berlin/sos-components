@@ -13,6 +13,7 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.classes.common.FolderPath;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.model.common.Folder;
@@ -47,7 +48,7 @@ public class DBLayerSchedules extends DBLayer {
         }
 
         // folders
-        boolean useFolders = useFolders(folders);
+        boolean useFolders = FolderPath.useFolders(folders);
         Map<String, String> paramsFolder = new HashMap<>();
         Map<String, String> paramsLikeFolder = new HashMap<>();
         if (useFolders) {
@@ -91,7 +92,7 @@ public class DBLayerSchedules extends DBLayer {
 
     public List<DBBeanReleasedSchedule2DeployedWorkflow> getReleasedSchedule2DeployedWorkflows(String controllerId, Set<Folder> folders,
             Set<String> singlePaths, boolean checkForSchedule) throws SOSHibernateException {
-        boolean useFolders = useFolders(folders);
+        boolean useFolders = FolderPath.useFolders(folders);
         boolean hasSingles = singlePaths != null && singlePaths.size() > 0;
 
         String folderField = "sw.scheduleFolder";
@@ -235,22 +236,4 @@ public class DBLayerSchedules extends DBLayer {
                     DBItemInventoryReleasedConfiguration::getName));
         }
     }
-
-    private boolean useFolders(Set<Folder> folders) {
-        if (folders != null && folders.size() > 0) {
-            if (folders.size() == 1) {
-                Folder f = folders.iterator().next();
-                if (f == null) {
-                    return false;
-                }
-                boolean recursive = f.getRecursive() == null ? true : f.getRecursive().booleanValue();
-                if (f.getFolder().equals("/") && recursive) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
 }
