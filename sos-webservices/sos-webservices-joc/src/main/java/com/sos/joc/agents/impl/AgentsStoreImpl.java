@@ -221,8 +221,12 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             Set<String> requestedSubagentUrls = requestedSubagents.stream().map(SubAgent::getUrl).collect(Collectors.toSet());
             dbSubAgents.stream().filter(s -> !requestedSubagentIds.contains(s.getSubAgentId())).filter(s -> requestedSubagentUrls.contains(s
                     .getUri())).findAny().ifPresent(s -> {
-                        throw new JocBadRequestException(String.format("Subagent url %s is already used by %s", s.getUri(), s.getSubAgentId()));
+                        throw new JocBadRequestException(String.format("Subagent url %s is already used by Subagent %s", s.getUri(), s.getSubAgentId()));
                     });
+            dbAgents.stream().filter(a -> a.getUri() != null && !a.getUri().isEmpty()).filter(a -> requestedSubagentUrls.contains(a
+                  .getUri())).findAny().ifPresent(s -> {
+                      throw new JocBadRequestException(String.format("Subagent url %s is already used by Agent %s", s.getUri(), s.getAgentId()));
+                  });
 
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {

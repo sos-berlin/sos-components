@@ -90,13 +90,18 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
                 CheckJavaVariableName.test("Subagent ID", subagentId);
             }
             
+            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(null);
             List<DBItemInventorySubAgentInstance> dbSubAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(controllerId));
             
             // check uniqueness of SubagentUrl with DB
             Set<String> requestedSubagentUrls = subAgentsParam.getSubagents().stream().map(SubAgent::getUrl).collect(Collectors.toSet());
             dbSubAgents.stream().filter(s -> !requestedSubagentIds.contains(s.getSubAgentId())).filter(s -> requestedSubagentUrls.contains(s
                     .getUri())).findAny().ifPresent(s -> {
-                        throw new JocBadRequestException(String.format("Subagent url %s is already used by %s", s.getUri(), s.getSubAgentId()));
+                        throw new JocBadRequestException(String.format("Subagent url %s is already used by Subagent %s", s.getUri(), s.getSubAgentId()));
+                    });
+            dbAgents.stream().filter(a -> a.getUri() != null && !a.getUri().isEmpty()).filter(a -> requestedSubagentUrls.contains(a
+                    .getUri())).findAny().ifPresent(a -> {
+                        throw new JocBadRequestException(String.format("Subagent url %s is already used by Agent %s", a.getUri(), a.getAgentId()));
                     });
             
 //            List<JUpdateItemOperation> subAgentsToController = saveOrUpdate(dbLayer, dbAgent, dbSubAgents, subAgentsMap);
