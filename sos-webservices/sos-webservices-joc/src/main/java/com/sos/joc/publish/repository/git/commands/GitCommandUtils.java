@@ -54,6 +54,7 @@ public class GitCommandUtils {
     private static final String REGEX_GIT_URI_SSH = "^\\S*@(\\S*):(\\S*)$";
     private static final String REGEX_GIT_URI_PROTOCOL = "^([a-z]{2,5})://.*$";
     private static final String REGEX_GIT_URI_HOST = "^[a-z]{2,5}://([^/]*)/.*$";
+    private static final String REGEX_HTTP_URI = "^(http.?)://([^/]*)(.*)$";
     private static final String DEFAULT_PROTOCOL = "ssh";
     private static final String HTTP_PROTOCOL = "http";
     private static final String HTTPS_PROTOCOL = "https";
@@ -517,46 +518,24 @@ public class GitCommandUtils {
                     String hostPort = "";
                     String protocol = "";
                     String path = "";
-                    try {
-                        uri = new URI(remoteUri);
-                        hostPort = uri.getHost();
-                    } catch (URISyntaxException e) {
-                        throw new JocBadRequestException(String.format("%1$s is not a Git Uri.", remoteUri), e);
+                    Pattern p = Pattern.compile(REGEX_HTTP_URI);
+                    Matcher m = p.matcher(knownRemoteUri);
+                    if(m.matches()) {
+                        protocol = m.group(1);
+                        hostPort = m.group(2);
+                        path = m.group(3);
                     }
-                    
-                    Pattern protocolUriPattern = Pattern.compile(REGEX_GIT_URI_PROTOCOL);
-                    Matcher protocolUriMatcher = protocolUriPattern.matcher(remoteUri);
-                    if(protocolUriMatcher.matches()) {
-                        protocol = protocolUriMatcher.group(1);
-                        if (!HTTP_PROTOCOL.equals(protocol) && !HTTPS_PROTOCOL.equals(protocol)) {
-                            throw new JocBadRequestException(String.format("%1$s is not a Git Uri.", remoteUri));
+                    if(hostPort.contains("@")) {
+                        String hp = hostPort.substring(hostPort.lastIndexOf("@") + 1);
+                        String adjustedRemoteUri = String.format(
+                                "%1$s://%2$s%3$s", protocol, hp, (path.startsWith("/") ? path : "/" + path));
+                        if(credList != null && credList.getRemoteUris().contains(adjustedRemoteUri)) {
+                            remoteUri = adjustedRemoteUri;
                         }
-                        String hostPortWithCreds = "";
-                        if(hostPort == null || hostPort.isEmpty()) {
-                            Pattern hostUriPattern = Pattern.compile(REGEX_GIT_URI_HOST);
-                            Matcher hostUriMatcher = hostUriPattern.matcher(remoteUri);
-                            if(hostUriMatcher.matches()) {
-                                hostPortWithCreds = hostUriMatcher.group(1);
-                                if (hostPortWithCreds.contains("@")) {
-                                    hostPort = hostPortWithCreds.substring(hostPortWithCreds.lastIndexOf("@") + 1);
-                                } else {
-                                    hostPort = hostPortWithCreds;
-                                }
-                            }
+                    } else {
+                        if(credList != null && credList.getRemoteUris().contains(knownRemoteUri)) {
+                            remoteUri = knownRemoteUri;
                         }
-                        if(!hostPort.contains(":") && uri.getPort() != -1) {
-                            hostPort += ":" + uri.getPort();
-                        }
-                        if(uri.getPath() != null && !uri.getPath().isEmpty()) {
-                            path = uri.getPath();
-                        } else if (!hostPortWithCreds.isEmpty()) {
-                            path = remoteUri.replace(protocol + "://" + hostPortWithCreds, "");
-                        }
-                    }
-                    String adjustedRemoteUri = String.format(
-                            "%1$s://%2$s%3$s", protocol, hostPort, (path.startsWith("/") ? path : "/" + path));
-                    if(credList != null && credList.getRemoteUris().contains(adjustedRemoteUri)) {
-                        remoteUri = adjustedRemoteUri;
                     }
                 }
             }
