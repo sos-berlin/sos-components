@@ -329,7 +329,9 @@ public abstract class RepositoryUtil {
             Files.walkFileTree(repository, new FileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    paths.add(dir);
+                    if(!".git".equals(dir.getFileName().toString())) {
+                        paths.add(dir);
+                    }
                     return FileVisitResult.CONTINUE;
                 }
                 @Override
@@ -352,7 +354,9 @@ public abstract class RepositoryUtil {
             Files.walkFileTree(repository, EnumSet.noneOf(FileVisitOption.class), 2, new FileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    paths.add(dir);
+                    if(!".git".equals(dir.getFileName().toString())) {
+                        paths.add(dir);
+                    }
                     return FileVisitResult.CONTINUE;
                 }
                 @Override
@@ -1369,7 +1373,7 @@ public abstract class RepositoryUtil {
         item.setDeployed(false);
         item.setReleased(false);
         item.setModified(Date.from(Instant.now()));
-        item.setCreated(Date.from(Instant.now()));
+        item.setCreated(item.getModified());
         item.setDeleted(false);
         item.setAuditLogId(0L);
         item.setType(newItem.getConfiguration().getObjectType());

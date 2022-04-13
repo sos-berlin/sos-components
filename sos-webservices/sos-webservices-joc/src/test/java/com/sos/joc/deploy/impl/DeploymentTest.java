@@ -477,8 +477,8 @@ public class DeploymentTest {
                         entry.getValue().stream().collect(Collectors.groupingBy(DBItemDeploymentHistory::getDeploymentDate));
                 
                 Set<Date> sortedDates = mapPerDate.keySet().stream().sorted(Comparator.comparing(Date::getTime)).collect(Collectors.toSet());
-                sortedDates.stream().sorted(Comparator.naturalOrder()).forEach(item -> LOGGER.trace("Nat. Order" + item.toLocaleString()));
-                sortedDates.stream().sorted(Comparator.reverseOrder()).forEach(item -> LOGGER.trace("Rev. Order" + item.toLocaleString()));
+                sortedDates.stream().sorted(Comparator.naturalOrder()).forEach(item -> LOGGER.trace("Nat. Order" + item.toString()));
+                sortedDates.stream().sorted(Comparator.reverseOrder()).forEach(item -> LOGGER.trace("Rev. Order" + item.toString()));
             }
         }
         LOGGER.trace("**************************** Determine Items For Cleanup Test finished **************");
