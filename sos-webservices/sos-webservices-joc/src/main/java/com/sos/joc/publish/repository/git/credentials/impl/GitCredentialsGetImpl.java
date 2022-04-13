@@ -63,7 +63,8 @@ public class GitCredentialsGetImpl extends JOCResourceImpl implements IGitCreden
             if(credList != null && !credList.getRemoteUris().isEmpty()) {
                 // remove from response as uris are not part of the credentials
                 credList.setRemoteUris(null);
-            } else {
+            }
+            if(credList == null) {
                 credList = new GitCredentialsList();
             }
             Date finished = Date.from(Instant.now());
