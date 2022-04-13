@@ -6,12 +6,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
-import java.lang.reflect.Modifier;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -28,7 +26,7 @@ import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.exception.SOSTimeoutExeededException;
 import com.sun.jna.platform.win32.Kernel32;
-import com.sun.jna.platform.win32.WinError;
+import com.sun.jna.platform.win32.Win32Exception;
 
 public class SOSShell {
 
@@ -142,8 +140,7 @@ public class SOSShell {
         int cp = Kernel32.INSTANCE.GetConsoleCP();
         if (cp == 0) {
             Charset defaultCharset = Charset.defaultCharset();
-            LOGGER.warn(String.format("[%s][codepage=%s(Kernel32.INSTANCE.GetLastError=%s)]use default charset=%s", method, cp,
-                    getKernel32LastError(), defaultCharset.name()));
+            LOGGER.warn(String.format("[%s][codepage=%s(%s)]use default charset=%s", method, cp, getKernel32LastError(), defaultCharset.name()));
             return defaultCharset;
         }
 
@@ -164,15 +161,12 @@ public class SOSShell {
     }
 
     private static String getKernel32LastError() {
-        int lastError = Kernel32.INSTANCE.GetLastError();
-        return Arrays.stream(WinError.class.getDeclaredFields()).filter(field -> {
-            try {
-                return Modifier.isStatic(field.getModifiers()) && field.getType() == int.class && field.getName().startsWith("ERROR") && (int) field
-                        .get(null) == lastError;
-            } catch (IllegalAccessException e) {
-                return false;
-            }
-        }).map(field -> field.getName() + "(" + lastError + ")").findFirst().orElse(Integer.toString(lastError));
+        try {
+            int err = Kernel32.INSTANCE.GetLastError();
+            return String.format("Kernel32.GetLastError:err=%s,msg=%s", err, new Win32Exception(err).getMessage());
+        } catch (Throwable e) {
+            return String.format("Exception on get Kernel32.GetLastError:%s", e.toString());
+        }
     }
 
     public static String getHostname() throws UnknownHostException {

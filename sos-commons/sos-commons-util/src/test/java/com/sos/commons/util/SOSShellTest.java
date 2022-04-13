@@ -32,7 +32,7 @@ public class SOSShellTest {
 
     @Ignore
     @Test
-    public void testSystemCharset() {
+    public void testSystemEncoding() {
         String command = "dir D:";
         command = "echo ÄÜ-ЩЪ-日本語";
 
@@ -55,7 +55,7 @@ public class SOSShellTest {
 
     @Ignore
     @Test
-    public void testCharset() {
+    public void testEncoding() {
         String command = "echo ÄÜ-ЩЪ-日本語";
 
         LOGGER.info("Start...");
