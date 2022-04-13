@@ -115,7 +115,9 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
                 Path relFolder = Paths.get("/").relativize(Paths.get(folder.getPath()));
                 Path pathToDelete = repositoriesBase.resolve(relFolder);
                 LOGGER.info("resolved path: " + pathToDelete.toString());
-                deleteFolders(pathToDelete);
+                if(Files.exists(pathToDelete)) {
+                    deleteFolders(pathToDelete);
+                }
                 LOGGER.debug(String.format("Folder %1$s has been deleted.", folder.getPath()));
             } catch (IOException e) {
                 LOGGER.debug(String.format("Folder - %1$s - could not be deleted!", folder.getPath()), e);
