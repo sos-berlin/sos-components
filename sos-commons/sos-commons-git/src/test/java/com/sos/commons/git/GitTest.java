@@ -109,7 +109,6 @@ public class GitTest {
             LOGGER.debug("   " + filename.toString());
             LOGGER.debug("   " + workingDir.resolve(filename).normalize().toString());
         }
-        Assert.assertTrue(result.getExitCode() == 0);
         LOGGER.debug(" **************************  Test 01a - git status short finished  *******************");
     }
 
