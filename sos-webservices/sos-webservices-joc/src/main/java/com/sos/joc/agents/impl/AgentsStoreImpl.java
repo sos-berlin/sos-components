@@ -176,22 +176,29 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             Map<String, Long> agentIds = agentStoreParameter.getClusterAgents().stream().collect(Collectors.groupingBy(ClusterAgent::getAgentId,
                     Collectors.counting()));
 
-            // check uniqueness of AgentId
+            // check uniqueness of AgentId in request
             agentIds.entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
                 throw new JocBadRequestException(getUniquenessMsg("AgentId", e));
             });
 
             checkUniquenessOfAgentNames(agentStoreParameter.getClusterAgents());
 
-            // check uniqueness of SubagentUrl
-            agentStoreParameter.getClusterAgents().stream().map(ClusterAgent::getSubagents).flatMap(List::stream).collect(Collectors.groupingBy(
-                    SubAgent::getUrl, Collectors.counting())).entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
+            // check uniqueness of SubagentUrl in request
+            Set<SubAgent> requestedSubagents = agentStoreParameter.getClusterAgents().stream().map(ClusterAgent::getSubagents).flatMap(List::stream)
+                    .collect(Collectors.toSet());
+            requestedSubagents.stream().collect(Collectors.groupingBy(SubAgent::getUrl, Collectors.counting())).entrySet().stream().filter(e -> e
+                    .getValue() > 1L).findAny().ifPresent(e -> {
                         throw new JocBadRequestException(getUniquenessMsg("Subagent url", e));
                     });
+            
+            Set<String> requestedSubagentIds = requestedSubagents.stream().map(SubAgent::getSubagentId).collect(Collectors.toSet());
 
             // check java name rules of AgentIds
             for (String agentId : agentIds.keySet()) {
                 CheckJavaVariableName.test("Agent ID", agentId);
+            }
+            for (String subagentId : requestedSubagentIds) {
+                CheckJavaVariableName.test("Subagent ID", subagentId);
             }
 
             storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
@@ -206,6 +213,16 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                     .identity()));
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(null);
             Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds.keySet());
+            
+            List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
+                    controllerId));
+            
+            // check uniqueness of SubagentUrl with DB
+            Set<String> requestedSubagentUrls = requestedSubagents.stream().map(SubAgent::getUrl).collect(Collectors.toSet());
+            dbSubAgents.stream().filter(s -> !requestedSubagentIds.contains(s.getSubAgentId())).filter(s -> requestedSubagentUrls.contains(s
+                    .getUri())).findAny().ifPresent(s -> {
+                        throw new JocBadRequestException(String.format("Subagent url %s is already used by %s", s.getUri(), s.getSubAgentId()));
+                    });
 
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
@@ -223,8 +240,6 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                     dbAgent.setTitle(agent.getTitle());
                     agentDBLayer.updateAgent(dbAgent);
 
-                    List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
-                            controllerId));
                     SubAgentStoreImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
 
                     updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
@@ -248,8 +263,6 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 dbAgent.setHidden(false);
                 agentDBLayer.saveAgent(dbAgent);
 
-                List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
-                        controllerId));
                 SubAgentStoreImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
                 
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
