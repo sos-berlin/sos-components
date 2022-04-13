@@ -160,14 +160,4 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
         
     }
 
-//    private static boolean isEmpty(Path path) {
-//        if (Files.isDirectory(path)) {
-//            try (Stream<Path> entries = Files.list(path)) {
-//                return !entries.findFirst().isPresent();
-//            } catch (IOException e) {
-//                return false;
-//            }
-//        }
-//        return false;
-//    }
 }
