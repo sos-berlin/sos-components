@@ -290,7 +290,9 @@ public class JocInventory {
                     newDbFolder.setType(ConfigurationType.FOLDER);
                     newDbFolder.setValid(true);
                     dbLayer.getSession().save(newDbFolder);
-                    makeParentDirs(dbLayer, parentFolder.getParent(), auditLogId);
+                    if(parentFolder.getParent() != null ) {
+                        makeParentDirs(dbLayer, parentFolder.getParent(), auditLogId);
+                    }
                 }
             }
         }
