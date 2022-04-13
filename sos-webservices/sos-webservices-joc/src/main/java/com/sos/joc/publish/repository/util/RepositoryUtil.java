@@ -299,7 +299,7 @@ public abstract class RepositoryUtil {
         Files.walkFileTree(repository, new FileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                if(!".git".equals(dir.getFileName().toString())) {
+                if(!".git".equals(dir.getFileName().toString()) && !dir.toString().contains(".git")) {
                     paths.add(dir);
                 }
                 return FileVisitResult.CONTINUE;
@@ -329,7 +329,7 @@ public abstract class RepositoryUtil {
             Files.walkFileTree(repository, new FileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    if(!".git".equals(dir.getFileName().toString())) {
+                    if(!".git".equals(dir.getFileName().toString()) && !dir.toString().contains(".git")) {
                         paths.add(dir);
                     }
                     return FileVisitResult.CONTINUE;
@@ -354,7 +354,7 @@ public abstract class RepositoryUtil {
             Files.walkFileTree(repository, EnumSet.noneOf(FileVisitOption.class), 2, new FileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    if(!".git".equals(dir.getFileName().toString())) {
+                    if(!".git".equals(dir.getFileName().toString()) && !dir.toString().contains(".git")) {
                         paths.add(dir);
                     }
                     return FileVisitResult.CONTINUE;

@@ -92,7 +92,7 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
                         r.getItems().addAll(groupedFolderItems.get(path));
                     }
                     return r;
-                }).collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(ResponseFolder::getPath).reversed())));
+                }).filter(folder -> !folder.getPath().contains(".git")).collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(ResponseFolder::getPath).reversed())));
         return RepositoryUtil.getTree(responseFolder, RepositoryUtil.subPath(repositoryBase, repository), 
                 RepositoryUtil.subPath(repositoryBase, repositoryBase), recursive);
     }
