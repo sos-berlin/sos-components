@@ -1,24 +1,27 @@
 package com.sos.joc.publish.repository.impl;
 
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -37,6 +40,7 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
 
     @Override
     public JOCDefaultResponse postDelete(String xAccessToken, byte[] deleteFromFilter) throws Exception {
+        SOSHibernateSession hibernateSession = null;
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** delete from repository started ***" + started);
@@ -47,6 +51,8 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            InventoryDBLayer dbLayer = new InventoryDBLayer(hibernateSession);
 
             storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
@@ -73,7 +79,10 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
                     LOGGER.debug(String.format("file - %1$s - could not be deleted!", Globals.normalizePath(path.toString())), e);
                 }
             });
-            deleteFolders(filter, repositoriesBase);
+            Set<Configuration> deletedFolders = deleteFolders(filter, repositoriesBase);
+            // check top level folders if containing any data and set back repoControlled flag in dbItem
+            updateRepoControlledFlag(deletedFolders, repositoriesBase, dbLayer);
+            
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** delete from repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
@@ -83,6 +92,8 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(hibernateSession);
         }
     }
 
@@ -96,7 +107,7 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
         return null;
     }
     
-    private static void deleteFolders(DeleteFromFilter filter, Path repositoriesBase) {
+    private static Set<Configuration> deleteFolders(DeleteFromFilter filter, Path repositoriesBase) {
         Set<Configuration> folders = filter.getConfigurations().stream()
                 .filter(cfg -> ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
                 .map(config -> config.getConfiguration()).collect(Collectors.toSet());
@@ -111,28 +122,52 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
                 LOGGER.debug(String.format("Folder - %1$s - could not be deleted!", folder.getPath()), e);
             }
         });
+        return folders;
     }
     
     private static void deleteFolders(Path path) throws IOException {
-        Files.walkFileTree(path, new FileVisitor<Path>() {
-                @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                    Files.delete(dir);
-                    return FileVisitResult.CONTINUE;
-                }
-                @Override
-                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    return FileVisitResult.CONTINUE;
-                }
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    Files.delete(file);
-                    return FileVisitResult.CONTINUE;
-                }
-                @Override
-                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-                    return FileVisitResult.CONTINUE;
-                }
-              });
+        Files.walk(path).sorted(Comparator.reverseOrder()).filter(currentPath -> !currentPath.equals(path)).map(Path::toFile)
+        .forEach(file -> {
+            try {
+                file.setWritable(true);
+                file.delete();
+            } catch (Exception e) {
+                LOGGER.debug("could not delete item with path: " + file.toString(), e);
+            }
+        });
     }
-}
+    
+    private static void updateRepoControlledFlag(Set<Configuration> deletedFolders, Path repositoriesBase, InventoryDBLayer dbLayer)
+            throws SOSHibernateException {
+        for (Configuration cfg : deletedFolders) {
+            if(!"/".equals(cfg.getPath())) {
+                Path folderPath = Paths.get(cfg.getPath()); 
+                if (folderPath.getParent() != null && folderPath.getParent().equals(Paths.get("/"))) {
+                    // top level folder
+                    Path relFolder = Paths.get("/").relativize(folderPath);
+                    Path pathToCheck = repositoriesBase.resolve(relFolder);
+//                    if(!Files.exists(pathToCheck.resolve(".git"))) {
+                    if(isEmpty(pathToCheck)) {
+                        DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(cfg.getPath(), ConfigurationType.FOLDER.intValue());
+                        if(dbFolder != null) {
+                            dbFolder.setRepoControlled(false);
+                            dbFolder.setModified(Date.from(Instant.now()));
+                            dbLayer.getSession().update(dbFolder);
+                        }
+                    }
+                }
+            }
+        }
+        
+    }
+
+    private static boolean isEmpty(Path path) {
+        if (Files.isDirectory(path)) {
+            try (Stream<Path> entries = Files.list(path)) {
+                return !entries.findFirst().isPresent();
+            } catch (IOException e) {
+                return false;
+            }
+        }
+        return false;
+    }}
