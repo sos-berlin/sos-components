@@ -72,6 +72,10 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         return jobContext;
     }
 
+    public Charset getAgentSystemEncoding() {
+        return jobContext == null ? null : jobContext.systemEncoding();
+    }
+
     /** engine methods */
     @Override
     public Either<Problem, Void> start() {

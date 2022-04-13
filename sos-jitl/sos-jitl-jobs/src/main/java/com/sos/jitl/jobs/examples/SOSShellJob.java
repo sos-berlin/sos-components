@@ -18,12 +18,11 @@ public class SOSShellJob extends ABlockingInternalJob<SOSShellJobArguments> {
 
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<SOSShellJobArguments> step) throws Exception {
+        step.getLogger().info("");
+        step.getLogger().info("[AGENT]systemEncoding=" + getAgentSystemEncoding());
+        step.getLogger().info("");
+
         SOSShellJobArguments args = step.getArguments();
-
-        step.getLogger().info("");
-        step.getLogger().info("[AGENT]systemEncoding=" + getJobContext().systemEncoding());
-        step.getLogger().info("");
-
         step.getLogger().info("----------USAGE-----------------");
         step.getLogger().info("declare and set order/step variables:");
         step.getLogger().info("     (String, required) \"%s\"=echo xyz", args.getCommand().getName());

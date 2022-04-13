@@ -82,14 +82,15 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
 
             SOSCommandResult sosCommandResult = null;
             if (args.getTimeout() == 0) {
-                sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName));
+                sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName), getAgentSystemEncoding());
             } else {
                 SOSTimeout sosTimeout = new SOSTimeout(args.getTimeout(), TimeUnit.MINUTES);
-                sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName), sosTimeout);
+                sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName), getAgentSystemEncoding(), sosTimeout);
             }
 
             final String conNL = System.getProperty("line.separator");
             String stdOut = sosCommandResult.getStdOut();
+            debug(logger, String.format("[command encoding]%s", sosCommandResult.getEncoding()));
             log(logger, String.format("[stdout]%s", stdOut));
             String[] stdOutStringArray = stdOut.split(conNL);
 
