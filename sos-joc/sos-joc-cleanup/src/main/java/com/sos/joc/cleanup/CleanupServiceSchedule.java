@@ -42,7 +42,8 @@ public class CleanupServiceSchedule {
 
     private static final String DELIMITER = "->";
     private static final int FACTORY_MAX_POOL_SIZE = 10;// 5;
-    private static final int MAX_AWAIT_TERMINATION_TIMEOUT_ON_PERIOD_REACHED = 30 * 60;
+    /** seconds */
+    private static final int MAX_AWAIT_TERMINATION_TIMEOUT_ON_PERIOD_REACHED = 5 * 60;
 
     private final CleanupService service;
     private final CleanupServiceTask task;
@@ -83,7 +84,8 @@ public class CleanupServiceSchedule {
                 throw new CleanupComputeException("delay can't be computed");
             }
         } catch (TimeoutException e) {
-            LOGGER.info(String.format("[max end at %s reached]try stop..", end.toString()));
+            LOGGER.info(String.format("[max end at %s reached][max await termination timeout=%ss]try stop..", end.toString(),
+                    MAX_AWAIT_TERMINATION_TIMEOUT_ON_PERIOD_REACHED));
             closeTasks(MAX_AWAIT_TERMINATION_TIMEOUT_ON_PERIOD_REACHED);
         } catch (InterruptedException | ExecutionException e) {
             LOGGER.error(e.toString(), e);
