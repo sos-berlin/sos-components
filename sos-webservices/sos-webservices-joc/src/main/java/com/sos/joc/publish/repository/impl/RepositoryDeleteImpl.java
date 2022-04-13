@@ -145,7 +145,6 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
                     // top level folder
                     Path relFolder = Paths.get("/").relativize(folderPath);
                     Path pathToCheck = repositoriesBase.resolve(relFolder);
-//                    if(!Files.exists(pathToCheck.resolve(".git"))) {
                     if(!Files.exists(pathToCheck)) {
                         DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(cfg.getPath(), ConfigurationType.FOLDER.intValue());
                         if(dbFolder != null) {
