@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,7 +125,7 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
     }
     
     private static void deleteFolders(Path path) throws IOException {
-        Files.walk(path).sorted(Comparator.reverseOrder()).filter(currentPath -> !currentPath.equals(path)).map(Path::toFile)
+        Files.walk(path).sorted(Comparator.reverseOrder()).map(Path::toFile)
         .forEach(file -> {
             try {
                 file.setWritable(true);
@@ -147,7 +146,7 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
                     Path relFolder = Paths.get("/").relativize(folderPath);
                     Path pathToCheck = repositoriesBase.resolve(relFolder);
 //                    if(!Files.exists(pathToCheck.resolve(".git"))) {
-                    if(isEmpty(pathToCheck)) {
+                    if(!Files.exists(pathToCheck)) {
                         DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(cfg.getPath(), ConfigurationType.FOLDER.intValue());
                         if(dbFolder != null) {
                             dbFolder.setRepoControlled(false);
@@ -161,13 +160,14 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
         
     }
 
-    private static boolean isEmpty(Path path) {
-        if (Files.isDirectory(path)) {
-            try (Stream<Path> entries = Files.list(path)) {
-                return !entries.findFirst().isPresent();
-            } catch (IOException e) {
-                return false;
-            }
-        }
-        return false;
-    }}
+//    private static boolean isEmpty(Path path) {
+//        if (Files.isDirectory(path)) {
+//            try (Stream<Path> entries = Files.list(path)) {
+//                return !entries.findFirst().isPresent();
+//            } catch (IOException e) {
+//                return false;
+//            }
+//        }
+//        return false;
+//    }
+}
