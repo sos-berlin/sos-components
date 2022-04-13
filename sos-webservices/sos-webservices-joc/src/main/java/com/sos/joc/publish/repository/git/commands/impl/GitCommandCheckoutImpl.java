@@ -68,7 +68,7 @@ public class GitCommandCheckoutImpl extends JOCResourceImpl implements IGitComma
             Date finished = Date.from(Instant.now());
             LOGGER.trace("*** checkout finished ***" + finished);
             LOGGER.trace(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return JOCDefaultResponse.responseStatus200(response);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
