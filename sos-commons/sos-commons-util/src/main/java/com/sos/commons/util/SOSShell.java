@@ -39,47 +39,47 @@ public class SOSShell {
     public static final String OS_ARCHITECTURE = System.getProperty("os.arch");
     public static final boolean IS_WINDOWS = OS_NAME.startsWith("Windows");
 
-    private static Charset SYSTEM_CHARSET;
+    private static Charset SYSTEM_ENCODING;
     private static String HOSTNAME;
 
     public static SOSCommandResult executeCommand(String script) {
         return executeCommand(script, null, null, null);
     }
 
-    public static SOSCommandResult executeCommand(String script, Charset charset) {
-        return executeCommand(script, charset, null, null);
+    public static SOSCommandResult executeCommand(String script, Charset encoding) {
+        return executeCommand(script, encoding, null, null);
     }
 
     public static SOSCommandResult executeCommand(String script, SOSTimeout timeout) {
         return executeCommand(script, null, timeout, null);
     }
 
-    public static SOSCommandResult executeCommand(String script, Charset charset, SOSTimeout timeout) {
-        return executeCommand(script, charset, timeout, null);
+    public static SOSCommandResult executeCommand(String script, Charset encoding, SOSTimeout timeout) {
+        return executeCommand(script, encoding, timeout, null);
     }
 
     public static SOSCommandResult executeCommand(String script, SOSEnv env) {
         return executeCommand(script, null, null, env);
     }
 
-    public static SOSCommandResult executeCommand(String script, Charset charset, SOSEnv env) {
-        return executeCommand(script, charset, null, env);
+    public static SOSCommandResult executeCommand(String script, Charset encoding, SOSEnv env) {
+        return executeCommand(script, encoding, null, env);
     }
 
     public static SOSCommandResult executeCommand(String script, SOSTimeout timeout, SOSEnv env) {
         return executeCommand(script, null, timeout, env);
     }
 
-    public static SOSCommandResult executeCommand(String script, Charset charset, SOSTimeout timeout, SOSEnv env) {
-        SOSCommandResult result = new SOSCommandResult(script, getCharset(charset));
+    public static SOSCommandResult executeCommand(String script, Charset encoding, SOSTimeout timeout, SOSEnv env) {
+        SOSCommandResult result = new SOSCommandResult(script, getEncoding(encoding));
         try {
             ProcessBuilder pb = new ProcessBuilder(getCommand(script));
             if (env != null && env.getLocalEnvs().size() > 0) {
                 pb.environment().putAll(env.getLocalEnvs());
             }
             final Process p = pb.start();
-            CompletableFuture<Boolean> out = redirect(p.getInputStream(), result::setStdOut, result.getCharset());
-            CompletableFuture<Boolean> err = redirect(p.getErrorStream(), result::setStdErr, result.getCharset());
+            CompletableFuture<Boolean> out = redirect(p.getInputStream(), result::setStdOut, result.getEncoding());
+            CompletableFuture<Boolean> err = redirect(p.getErrorStream(), result::setStdErr, result.getEncoding());
 
             if (timeout == null) {
                 result.setExitCode(p.waitFor());
@@ -116,29 +116,29 @@ public class SOSShell {
         });
     }
 
-    public static Charset getSystemCharset() {
-        return getCharset(null);
+    public static Charset getSystemEncoding() {
+        return getEncoding(null);
     }
 
-    private static Charset getCharset(Charset defaultCharset) {
+    private static Charset getEncoding(Charset defaultEncoding) {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        if (defaultCharset != null) {
+        if (defaultEncoding != null) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("[getCharset][default]%s", defaultCharset.name()));
+                LOGGER.debug(String.format("[getEncoding][default]%s", defaultEncoding.name()));
             }
-            return defaultCharset;
+            return defaultEncoding;
         }
-        if (SYSTEM_CHARSET == null) {
-            SYSTEM_CHARSET = IS_WINDOWS ? getWindowsCharset() : Charset.forName("UTF-8");
+        if (SYSTEM_ENCODING == null) {
+            SYSTEM_ENCODING = IS_WINDOWS ? getWindowsEncoding() : Charset.forName("UTF-8");
         }
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[getCharset]%s", SYSTEM_CHARSET.name()));
+            LOGGER.debug(String.format("[getEncoding]%s", SYSTEM_ENCODING.name()));
         }
-        return SYSTEM_CHARSET;
+        return SYSTEM_ENCODING;
     }
 
-    private static Charset getWindowsCharset() {
-        String method = "getWindowsCharset";
+    private static Charset getWindowsEncoding() {
+        String method = "getWindowsEncoding";
         int cp = Kernel32.INSTANCE.GetConsoleCP();
         if (cp == 0) {
             Charset defaultCharset = Charset.defaultCharset();

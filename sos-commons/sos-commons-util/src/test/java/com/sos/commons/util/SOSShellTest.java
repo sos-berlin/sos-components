@@ -44,7 +44,7 @@ public class SOSShellTest {
         LOGGER.info(String.format("[stdErr]%s", result.getStdErr()));
         LOGGER.info(String.format("[exitCode]%s", result.getExitCode()));
         LOGGER.info(String.format("[exception]%s", result.getException()));
-        LOGGER.info(String.format("[charset]%s", result.getCharset()));
+        LOGGER.info(String.format("[encoding]%s", result.getEncoding()));
 
         LOGGER.info("---");
         // Cp1252
@@ -66,7 +66,7 @@ public class SOSShellTest {
         LOGGER.info(String.format("[stdErr]%s", result.getStdErr()));
         LOGGER.info(String.format("[exitCode]%s", result.getExitCode()));
         LOGGER.info(String.format("[exception]%s", result.getException()));
-        LOGGER.info(String.format("[charset]%s", result.getCharset()));
+        LOGGER.info(String.format("[encoding]%s", result.getEncoding()));
     }
 
     @Ignore

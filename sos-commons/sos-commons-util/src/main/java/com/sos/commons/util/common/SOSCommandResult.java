@@ -6,7 +6,7 @@ public class SOSCommandResult {
 
     private final StringBuilder stdOut;
     private final StringBuilder stdErr;
-    private final Charset charset;
+    private final Charset encoding;
     private final SOSTimeout timeout;
 
     private Throwable exception;
@@ -26,9 +26,9 @@ public class SOSCommandResult {
         this(cmd, null, timeout);
     }
 
-    public SOSCommandResult(String cmd, Charset charset, SOSTimeout timeout) {
+    public SOSCommandResult(String cmd, Charset encoding, SOSTimeout timeout) {
         this.command = cmd;
-        this.charset = charset;
+        this.encoding = encoding;
         this.timeout = timeout;
         this.stdOut = new StringBuilder();
         this.stdErr = new StringBuilder();
@@ -42,8 +42,8 @@ public class SOSCommandResult {
         return command;
     }
 
-    public Charset getCharset() {
-        return charset;
+    public Charset getEncoding() {
+        return encoding;
     }
 
     public SOSTimeout getTimeout() {
@@ -119,8 +119,8 @@ public class SOSCommandResult {
     public String toString() {
         StringBuilder sb = new StringBuilder("[").append(command).append("]");
         sb.append("[exitCode=").append(exitCode).append("]");
-        if (charset != null) {
-            sb.append("[charset=").append(charset).append("]");
+        if (encoding != null) {
+            sb.append("[encoding=").append(encoding).append("]");
         }
         if (timeout != null) {
             sb.append("[timeout=").append(timeout);
