@@ -21,309 +21,274 @@ import org.slf4j.LoggerFactory;
 
 public class SOSLdapGroupRolesMapping {
 
-	private static final String DISTINGUISHED_NAME = "distinguishedName";
-	private static final String MEMBER_OF = "memberOf";
-	private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapLogin.class);
-	private SOSLdapWebserviceCredentials sosLdapWebserviceCredentials;
-	private InitialDirContext ldapContext;
-	private Map<String, Collection<String>> groupKeyCache;
+    private static final String DISTINGUISHED_NAME = "distinguishedName";
+    private static final String MEMBER_OF = "memberOf";
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapLogin.class);
+    private SOSLdapWebserviceCredentials sosLdapWebserviceCredentials;
+    private InitialDirContext ldapContext;
+    private Map<String, Collection<String>> groupKeyCache;
 
-	public SOSLdapGroupRolesMapping(InitialDirContext ldapContext,
-			SOSLdapWebserviceCredentials sosLdapWebserviceCredentials) {
-		super();
-		this.sosLdapWebserviceCredentials = sosLdapWebserviceCredentials;
-		this.ldapContext = ldapContext;
-	}
+    public SOSLdapGroupRolesMapping(InitialDirContext ldapContext, SOSLdapWebserviceCredentials sosLdapWebserviceCredentials) {
+        super();
+        this.sosLdapWebserviceCredentials = sosLdapWebserviceCredentials;
+        this.ldapContext = ldapContext;
+    }
 
-	private Collection<String> getGroupNamesByGroup() throws NamingException {
-		SearchControls searchCtls = new SearchControls();
-		searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+    private Collection<String> getGroupNamesByGroup() throws NamingException {
+        SearchControls searchCtls = new SearchControls();
+        searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
-		String searchFilter = substituteUserName(sosLdapWebserviceCredentials.getGroupSearchFilter());
-		LOGGER.debug(String.format("getting groups from ldap using group search filter %s with group search base %s",
-				searchFilter, sosLdapWebserviceCredentials.getGroupSearchBase()));
+        String searchFilter = substituteUserName(sosLdapWebserviceCredentials.getGroupSearchFilter());
+        LOGGER.debug(String.format("getting groups from ldap using group search filter %s with group search base %s", searchFilter,
+                sosLdapWebserviceCredentials.getGroupSearchBase()));
 
-		NamingEnumeration<SearchResult> answer = ldapContext.search(sosLdapWebserviceCredentials.getGroupSearchBase(),
-				searchFilter, searchCtls);
-		ArrayList<String> rolesForGroups = new ArrayList<String>();
+        NamingEnumeration<SearchResult> answer = ldapContext.search(sosLdapWebserviceCredentials.getGroupSearchBase(), searchFilter, searchCtls);
+        ArrayList<String> rolesForGroups = new ArrayList<String>();
 
-		while (answer.hasMoreElements()) {
-			SearchResult result = answer.next();
-			String groupNameAttribute = sosLdapWebserviceCredentials.getGroupNameAttribute();
-			LOGGER.debug(String.format("Groupname in attribute %s", groupNameAttribute));
+        while (answer.hasMoreElements()) {
+            SearchResult result = answer.next();
+            String groupNameAttribute = sosLdapWebserviceCredentials.getGroupNameAttribute();
+            LOGGER.debug(String.format("Groupname in attribute %s", groupNameAttribute));
 
-			Attribute g = result.getAttributes().get(groupNameAttribute);
-			if (g != null) {
-				String group = g.get().toString();
-				rolesForGroups.add(group);
-				LOGGER.debug(String.format("Account is member of group: %s", group));
-			} else {
-				LOGGER.warn("Could not find attribute " + groupNameAttribute);
-			}
+            Attribute g = result.getAttributes().get(groupNameAttribute);
+            if (g != null) {
+                String group = g.get().toString();
+                rolesForGroups.add(group);
+                LOGGER.debug(String.format("Account is member of group: %s", group));
+            } else {
+                LOGGER.warn("Could not find attribute " + groupNameAttribute);
+            }
 
-		}
-		return rolesForGroups;
-	}
+        }
+        return rolesForGroups;
+    }
 
-	private String substituteUserName(String source) {
-		String s = String.format(source, this.sosLdapWebserviceCredentials.getSosLdapLoginUserName().getUserName());
-		s = s.replaceAll("\\^s", "%s");
-		s = String.format(s, this.sosLdapWebserviceCredentials.getSosLdapLoginUserName().getLoginAccount());
-		return s;
-	}
+    private String substituteUserName(String source) {
+        String s = String.format(source, this.sosLdapWebserviceCredentials.getSosLdapLoginUserName().getUserName());
+        s = s.replaceAll("\\^s", "%s");
+        s = String.format(s, this.sosLdapWebserviceCredentials.getSosLdapLoginUserName().getLoginAccount());
+        return s;
+    }
 
-	private Attributes getUserAttributes() throws NamingException {
-		SearchControls searchCtls = new SearchControls();
-		searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-		Attributes user = null;
+    private Attributes getUserAttributes() throws NamingException {
+        SearchControls searchCtls = new SearchControls();
+        searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        Attributes user = null;
 
-		String searchFilter = "(" + sosLdapWebserviceCredentials.getUserNameAttribute() + "=%s)";
-		if (sosLdapWebserviceCredentials.getUserSearchFilter() == null) {
-			LOGGER.warn(String.format(
-					"You have specified a value for userNameAttribute but you have not defined the userSearchFilter. The default filter %s will be used",
-					searchFilter));
-		} else {
-			searchFilter = sosLdapWebserviceCredentials.getUserSearchFilter();
-		}
+        String searchFilter = "(" + sosLdapWebserviceCredentials.getUserNameAttribute() + "=%s)";
+        if (sosLdapWebserviceCredentials.getUserSearchFilter() == null) {
+            LOGGER.warn(String.format(
+                    "You have specified a value for userNameAttribute but you have not defined the userSearchFilter. The default filter %s will be used",
+                    searchFilter));
+        } else {
+            searchFilter = sosLdapWebserviceCredentials.getUserSearchFilter();
+        }
 
-		searchFilter = substituteUserName(searchFilter);
+        searchFilter = substituteUserName(searchFilter);
 
-		LOGGER.debug(String.format("getting user from ldap using search filter %s with search base %s",
-				sosLdapWebserviceCredentials.getSearchBase(), searchFilter));
+        LOGGER.debug(String.format("getting user from ldap using search filter %s with search base %s", sosLdapWebserviceCredentials.getSearchBase(),
+                searchFilter));
 
-		String searchBase = "";
-		if (sosLdapWebserviceCredentials.getSearchBase() == null) {
-			LOGGER.warn(String.format(
-					"You have specified a value for userNameAttribute but you have not defined the searchBase. The default empty search base will be used"));
-		} else {
-			searchBase = sosLdapWebserviceCredentials.getSearchBase();
-		}
+        String searchBase = "";
+        if (sosLdapWebserviceCredentials.getSearchBase() == null) {
+            LOGGER.warn(String.format(
+                    "You have specified a value for userNameAttribute but you have not defined the searchBase. The default empty search base will be used"));
+        } else {
+            searchBase = sosLdapWebserviceCredentials.getSearchBase();
+        }
 
-		NamingEnumeration<SearchResult> answer = ldapContext.search(searchBase, searchFilter, searchCtls);
+        NamingEnumeration<SearchResult> answer = ldapContext.search(searchBase, searchFilter, searchCtls);
 
-		if (!answer.hasMore()) {
-			LOGGER.warn(String.format("Cannot find user: %s with search filter %s and search base: %s ",
-					sosLdapWebserviceCredentials.getSosLdapLoginUserName().getLoginAccount(), searchFilter,
-					searchBase));
-		} else {
-			SearchResult result = answer.nextElement();
-			user = result.getAttributes();
-			LOGGER.debug("user found: " + user.toString());
-		}
-		return user;
+        if (!answer.hasMore()) {
+            LOGGER.warn(String.format("Cannot find user: %s with search filter %s and search base: %s ", sosLdapWebserviceCredentials
+                    .getSosLdapLoginUserName().getLoginAccount(), searchFilter, searchBase));
+        } else {
+            SearchResult result = answer.nextElement();
+            user = result.getAttributes();
+            LOGGER.debug("user found: " + user.toString());
+        }
+        return user;
 
-	}
+    }
 
-	private void closeEnumeration(NamingEnumeration<?> namingEnumeration) {
-		try {
-			if (namingEnumeration != null) {
-				namingEnumeration.close();
-			}
-		} catch (NamingException e) {
-			LOGGER.error("Exception while closing NamingEnumeration: ", e);
-		}
-	}
+    private void closeEnumeration(NamingEnumeration<?> namingEnumeration) {
+        try {
+            if (namingEnumeration != null) {
+                namingEnumeration.close();
+            }
+        } catch (NamingException e) {
+            LOGGER.error("Exception while closing NamingEnumeration: ", e);
+        }
+    }
 
-	private Collection<String> getAllAttributeValues(Attribute attribute) throws NamingException {
-		Set<String> values = new HashSet<String>();
-		NamingEnumeration<?> namingEnumeration = null;
-		try {
-			namingEnumeration = attribute.getAll();
-			while (namingEnumeration.hasMore()) {
-				String value = (String) namingEnumeration.next();
-				values.add(value);
-			}
-		} finally {
-			closeEnumeration(namingEnumeration);
-		}
-		return values;
-	}
+    private Collection<String> getAllAttributeValues(Attribute attribute) throws NamingException {
+        Set<String> values = new HashSet<String>();
+        NamingEnumeration<?> namingEnumeration = null;
+        try {
+            namingEnumeration = attribute.getAll();
+            while (namingEnumeration.hasMore()) {
+                String value = (String) namingEnumeration.next();
+                values.add(value);
+            }
+        } finally {
+            closeEnumeration(namingEnumeration);
+        }
+        return values;
+    }
 
-	private Collection<String> getGroupkeysFromNestedGroup(String group) throws NamingException {
-		LOGGER.debug(String.format("Get mapped groupkeys from nested group for child group  %s", group));
-		Collection<String> groupNames = new HashSet<String>();
+    private Collection<String> getGroupkeysFromNestedGroup(String userDistinguishedName) throws NamingException {
+        LOGGER.debug("Get mapped groupkeys from nested group for child member " + userDistinguishedName);
+        Collection<String> groupNames = new HashSet<String>();
 
-		for (String groupKey : sosLdapWebserviceCredentials.getGroupRolesMap().keySet()) {
-			LOGGER.debug("Get nested groups for: " + group);
-			Collection<String> nestedGroupNames = getNestedGroups(groupKey);
-			for (String nestedGroup : nestedGroupNames) {
-				if (nestedGroup.equals(group)) {
-					LOGGER.debug(String.format("% is child for %s.", group, groupKey));
-					groupNames.add(groupKey);
-				}
-			}
-		}
-		return groupNames;
-	}
+        for (String groupKey : sosLdapWebserviceCredentials.getGroupRolesMap().keySet()) {
+            LOGGER.debug("Get nested members for groupKey: " + groupKey);
+            Collection<String> members = getNestedMembers(groupKey);
+            for (String member : members) {
+                if (member.equals(userDistinguishedName)) {
+                    LOGGER.debug(userDistinguishedName + " is child of " + groupKey);
+                    groupNames.add(groupKey);
+                }
+            }
+        }
+        return groupNames;
+    }
 
-	private Collection<String> getNestedGroups(String group) throws NamingException {
+    private Collection<String> getNestedMembers(String group) throws NamingException {
 
-		if (groupKeyCache == null) {
-			groupKeyCache = new HashMap<String, Collection<String>>();
-		}
+        SearchControls searchCtls = new SearchControls();
+        searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        Collection<String> members = new HashSet<String>();
 
-		if (groupKeyCache.get(group) != null) {
-			return groupKeyCache.get(group);
-		}
+        String searchFilter = "memberOf:1.2.840.113556.1.4.1941:=" + group;
 
-		SearchControls searchCtls = new SearchControls();
-		searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-		Collection<String> groupNames = new HashSet<String>();
+        LOGGER.debug(String.format("getting members from ldap using user search filter %s with search base %s", searchFilter,
+                sosLdapWebserviceCredentials.getSearchBase()));
 
-		String groupNameAttribute = "CN";
-		String[] s = group.split("=");
-		if (s.length > 0) {
-			groupNameAttribute = s[0];
-		}
+        NamingEnumeration<SearchResult> answer = ldapContext.search(sosLdapWebserviceCredentials.getSearchBase(), searchFilter, searchCtls);
 
-		String searchFilter = "memberOf:1.2.840.113556.1.4.1941:=" + group;
+        try {
+            while (answer.hasMore()) {
+                SearchResult result = answer.nextElement();
 
-		LOGGER.debug(String.format("getting nested groups from ldap using user search filter %s with search base %s",
-				searchFilter, sosLdapWebserviceCredentials.getSearchBase()));
+                Attribute distinguishName = result.getAttributes().get(DISTINGUISHED_NAME);
+                if (distinguishName != null) {
+                    members.add(distinguishName.get().toString());
+                    LOGGER.debug(String.format("Member %s found in group", distinguishName.get().toString(), DISTINGUISHED_NAME));
+                }
 
-		NamingEnumeration<SearchResult> answer = ldapContext.search(sosLdapWebserviceCredentials.getSearchBase(),
-				searchFilter, searchCtls);
+            }
+        } catch (Exception e) {
+        }
 
-		try {
-			while (answer.hasMore()) {
-				SearchResult result = answer.nextElement();
-				Attribute g = result.getAttributes().get(groupNameAttribute);
-				if (g != null) {
-					String grp = g.get().toString();
-					if (!grp.equals(sosLdapWebserviceCredentials.getSosLdapLoginUserName().getUserName())) {
-						Attribute distinguishName = result.getAttributes().get(DISTINGUISHED_NAME);
-						if (distinguishName != null) {
-							groupNames.add(distinguishName.get().toString());
-							LOGGER.debug(String.format("Groupname %s found in attribute",
-									distinguishName.get().toString(), DISTINGUISHED_NAME));
-						}
-					}
-				} else {
-					LOGGER.warn("Could not find attribute in nested search result" + groupNameAttribute);
-				}
-			}
-		} catch (Exception e) {
-		}
+        return members;
 
-		groupKeyCache.put(group, groupNames);
-		return groupNames;
+    }
 
-	}
+    private Collection<String> getGroupNamesByUser() throws NamingException {
 
-	private Collection<String> getGroupNamesByUser() throws NamingException {
+        SearchControls searchCtls = new SearchControls();
+        searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        Collection<String> groupNames = null;
 
-		SearchControls searchCtls = new SearchControls();
-		searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-		Collection<String> groupNames = null;
+        String userSearchFilter = "";
+        if (sosLdapWebserviceCredentials.getUserSearchFilter().isEmpty() && MEMBER_OF.equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
+            userSearchFilter = "(sAMAccountName=%s)";
+        } else {
+            userSearchFilter = sosLdapWebserviceCredentials.getUserSearchFilter();
+        }
 
-		String userSearchFilter = "";
-		if (sosLdapWebserviceCredentials.getUserSearchFilter().isEmpty()
-				&& MEMBER_OF.equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
-			userSearchFilter = "(sAMAccountName=%s)";
-		} else {
-			userSearchFilter = sosLdapWebserviceCredentials.getUserSearchFilter();
-		}
+        String searchFilter = substituteUserName(userSearchFilter);
 
-		String searchFilter = substituteUserName(userSearchFilter);
+        LOGGER.debug(String.format("getting groups from ldap using user search filter %s with search base %s", searchFilter,
+                sosLdapWebserviceCredentials.getSearchBase()));
 
-		LOGGER.debug(String.format("getting groups from ldap using user search filter %s with search base %s",
-				searchFilter, sosLdapWebserviceCredentials.getSearchBase()));
+        NamingEnumeration<SearchResult> answer = ldapContext.search(sosLdapWebserviceCredentials.getSearchBase(), searchFilter, searchCtls);
 
-		NamingEnumeration<SearchResult> answer = ldapContext.search(sosLdapWebserviceCredentials.getSearchBase(),
-				searchFilter, searchCtls);
+        if (!answer.hasMore()) {
+            LOGGER.debug(String.format("Cannot find account with search filter %s and search base: %s ", searchFilter, sosLdapWebserviceCredentials
+                    .getSearchBase()));
+            LOGGER.warn(String.format("Cannot find account for user: search filter %s and search base: %s ", searchFilter, sosLdapWebserviceCredentials
+                    .getSearchBase()));
+        } else {
+            SearchResult result = answer.nextElement();
+            String groupNameAttribute = sosLdapWebserviceCredentials.getGroupNameAttribute();
+            Attribute memberOf = result.getAttributes().get(groupNameAttribute);
 
-		if (!answer.hasMore()) {
-			LOGGER.debug(String.format("Cannot find roles with search filter %s and search base: %s ", searchFilter,
-					sosLdapWebserviceCredentials.getSearchBase()));
-			LOGGER.warn(String.format("Cannot find roles for user: search filter %s and search base: %s ", searchFilter,
-					sosLdapWebserviceCredentials.getSearchBase()));
-		} else {
-			SearchResult result = answer.nextElement();
-			String groupNameAttribute = sosLdapWebserviceCredentials.getGroupNameAttribute();
-			Attribute memberOf = result.getAttributes().get(groupNameAttribute);
+            if (memberOf != null) {
+                LOGGER.debug("getting all attribute values using attribute " + memberOf);
+                groupNames = getAllAttributeValues(memberOf);
+                for (String group : groupNames) {
+                    LOGGER.debug(String.format("Account is member of group: %s", group));
+                }
+                Set<String> groupsToAdd = new HashSet<String>();
+                if (MEMBER_OF.equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
+                    Attribute distinguishName = result.getAttributes().get(DISTINGUISHED_NAME);
+                    String userDistinguishedName = "";
+                    if (distinguishName != null) {
+                        userDistinguishedName = distinguishName.get().toString();
+                        groupsToAdd.addAll(getGroupkeysFromNestedGroup(userDistinguishedName));
+                    }
+                }
+                groupNames.addAll(groupsToAdd);
+            } else {
+                LOGGER.info("User is not member of any group");
+            }
+        }
+        return groupNames;
+    }
 
-			if (memberOf != null) {
-				LOGGER.debug("getting all attribute values using attribute " + memberOf);
-				groupNames = getAllAttributeValues(memberOf);
-				for (String group : groupNames) {
-					LOGGER.debug(String.format("Account is member of group: %s", group));
-				}
-				Set<String> groupsToAdd = new HashSet<String>();
-				if (MEMBER_OF.equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
-					int sizeOfGroupkeys = sosLdapWebserviceCredentials.getGroupRolesMap().keySet().size();
-					for (String group : groupNames) {
-						if (groupsToAdd.size() == sizeOfGroupkeys) {
-							break;
-						}
-						groupsToAdd.addAll(getGroupkeysFromNestedGroup(group));
-					}
-				}
-				groupNames.addAll(groupsToAdd);
-			} else {
-				LOGGER.info("User is not member of any group");
-			}
-		}
-		return groupNames;
-	}
+    public List<String> getGroupRolesMapping() throws NamingException {
+        LOGGER.debug(String.format("Getting roles for user %s", sosLdapWebserviceCredentials.getSosLdapLoginUserName().getLoginAccount()));
+        List<String> listOfRoles = new ArrayList<String>();
+        if (sosLdapWebserviceCredentials.getUserNameAttribute() != null && !sosLdapWebserviceCredentials.getUserNameAttribute().isEmpty()) {
+            LOGGER.debug("get userPrincipalName for substitution from user record.");
+            Attributes user = getUserAttributes();
+            if (user != null) {
+                if (user.get(sosLdapWebserviceCredentials.getUserNameAttribute()) != null) {
+                    sosLdapWebserviceCredentials.getSosLdapLoginUserName().setUserName(user.get(sosLdapWebserviceCredentials.getUserNameAttribute())
+                            .get().toString());
+                }
+            } else {
+                LOGGER.debug("using the username from login: " + sosLdapWebserviceCredentials.getSosLdapLoginUserName().getLoginAccount());
+            }
+        }
+        LOGGER.debug("userPrincipalName: " + sosLdapWebserviceCredentials.getSosLdapLoginUserName().getUserName());
 
-	public List<String> getGroupRolesMapping() throws NamingException {
-		LOGGER.debug(String.format("Getting roles for user %s",
-				sosLdapWebserviceCredentials.getSosLdapLoginUserName().getLoginAccount()));
-		List<String> listOfRoles = new ArrayList<String>();
-		if (sosLdapWebserviceCredentials.getUserNameAttribute() != null
-				&& !sosLdapWebserviceCredentials.getUserNameAttribute().isEmpty()) {
-			LOGGER.debug("get userPrincipalName for substitution from user record.");
-			Attributes user = getUserAttributes();
-			if (user != null) {
-				if (user.get(sosLdapWebserviceCredentials.getUserNameAttribute()) != null) {
-					sosLdapWebserviceCredentials.getSosLdapLoginUserName().setUserName(
-							user.get(sosLdapWebserviceCredentials.getUserNameAttribute()).get().toString());
-				}
-			} else {
-				LOGGER.debug("using the username from login: "
-						+ sosLdapWebserviceCredentials.getSosLdapLoginUserName().getLoginAccount());
-			}
-		}
-		LOGGER.debug("userPrincipalName: " + sosLdapWebserviceCredentials.getSosLdapLoginUserName().getUserName());
+        if ((sosLdapWebserviceCredentials.getSearchBase() != null || sosLdapWebserviceCredentials.getGroupSearchBase() != null)
+                && (sosLdapWebserviceCredentials.getGroupSearchFilter() != null || sosLdapWebserviceCredentials.getUserSearchFilter() != null)) {
 
-		if ((sosLdapWebserviceCredentials.getSearchBase() != null
-				|| sosLdapWebserviceCredentials.getGroupSearchBase() != null)
-				&& (sosLdapWebserviceCredentials.getGroupSearchFilter() != null
-						|| sosLdapWebserviceCredentials.getUserSearchFilter() != null)) {
+            Collection<String> groupNames;
 
-			Collection<String> groupNames;
+            if (sosLdapWebserviceCredentials.getGroupSearchFilter() != null && !sosLdapWebserviceCredentials.getGroupSearchFilter().isEmpty()) {
+                groupNames = getGroupNamesByGroup();
+            } else {
+                groupNames = getGroupNamesByUser();
+            }
 
-			if (sosLdapWebserviceCredentials.getGroupSearchFilter() != null
-					&& !sosLdapWebserviceCredentials.getGroupSearchFilter().isEmpty()) {
-				groupNames = getGroupNamesByGroup();
-			} else {
-				groupNames = getGroupNamesByUser();
-			}
+            if (groupNames != null) {
+                listOfRoles = getRoleNamesForGroups(groupNames);
+            }
+        }
 
-			if (groupNames != null) {
-				listOfRoles = getRoleNamesForGroups(groupNames);
-			}
-		}
+        return listOfRoles;
+    }
 
-		return listOfRoles;
-	}
-
-	private List<String> getRoleNamesForGroups(Collection<String> groupNames) {
-		List<String> listOfRoles = new ArrayList<String>();
-		if (sosLdapWebserviceCredentials.getGroupRolesMap() != null) {
-			LOGGER.debug("Analysing groupRolesMapping");
-			for (String groupName : groupNames) {
-				LOGGER.debug(String.format("Checking group: %s", groupName));
-				List<String> listOfGroupRoles = sosLdapWebserviceCredentials.getGroupRolesMap().get(groupName);
-				if (listOfRoles != null && listOfGroupRoles != null) {
-					for (String role : listOfGroupRoles) {
-						listOfRoles.add(role);
-					}
-				} else {
-					LOGGER.debug(String.format("Group %s not found in groupRolesMapping", groupName));
-				}
-			}
-		}
-		return listOfRoles;
-	}
+    private List<String> getRoleNamesForGroups(Collection<String> groupNames) {
+        List<String> listOfRoles = new ArrayList<String>();
+        if (sosLdapWebserviceCredentials.getGroupRolesMap() != null) {
+            LOGGER.debug("Analysing groupRolesMapping");
+            for (String groupName : groupNames) {
+                LOGGER.debug(String.format("Checking group: %s", groupName));
+                List<String> listOfGroupRoles = sosLdapWebserviceCredentials.getGroupRolesMap().get(groupName);
+                if (listOfRoles != null && listOfGroupRoles != null) {
+                    for (String role : listOfGroupRoles) {
+                        listOfRoles.add(role);
+                    }
+                } else {
+                    LOGGER.debug(String.format("Group %s not found in groupRolesMapping", groupName));
+                }
+            }
+        }
+        return listOfRoles;
+    }
 }
