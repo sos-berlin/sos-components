@@ -113,8 +113,8 @@ public class DeployedConfigurationDBLayer {
         return getNumOfObjects(DBLayer.DBITEM_DEP_CONFIGURATIONS, controllerId, permittedFolders);
     }
 
-    public Map<ConfigurationType, Long> getNumOfReleasedObjects(Set<Folder> permittedFolders) {
-        return getNumOfObjects(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS, null, permittedFolders);
+    public Map<ConfigurationType, Long> getNumOfReleasedObjects(String controllerId, Set<Folder> permittedFolders) {
+        return getNumOfObjects(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS, controllerId, permittedFolders);
     }
 
     private Map<ConfigurationType, Long> getNumOfObjects(String tableName, String controllerId, Set<Folder> permittedFolders) {
@@ -126,9 +126,10 @@ public class DeployedConfigurationDBLayer {
             List<String> clauses = new ArrayList<>();
             if (isReleasedObjects) {// TODO or read all and override later ?
                 clauses.add("type != :scheduleType");
-            }
-            if (controllerId != null && !controllerId.isEmpty()) {
-                clauses.add("controllerId = :controllerId");
+            } else {
+                if (!SOSString.isEmpty(controllerId)) {
+                    clauses.add("controllerId = :controllerId");
+                }
             }
             if (permittedFolders != null && !permittedFolders.isEmpty()) {
                 String clause = permittedFolders.stream().map(folder -> {
@@ -147,12 +148,14 @@ public class DeployedConfigurationDBLayer {
                 hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
             hql.append(" group by type");
+
             Query<NumOfDeployment> query = session.createQuery(hql.toString());
             if (isReleasedObjects) {
                 query.setParameter("scheduleType", ConfigurationType.SCHEDULE.intValue());
-            }
-            if (controllerId != null && !controllerId.isEmpty()) {
-                query.setParameter("controllerId", controllerId);
+            } else {
+                if (!SOSString.isEmpty(controllerId)) {
+                    query.setParameter("controllerId", controllerId);
+                }
             }
 
             Map<ConfigurationType, Long> result = new HashMap<>();
@@ -180,7 +183,7 @@ public class DeployedConfigurationDBLayer {
             hql.append("where dc.type=:workflowType ");
             hql.append("and sw.workflowName=dc.name ");
             if (!SOSString.isEmpty(controllerId)) {
-                hql.append("and controllerId=:controllerId ");
+                hql.append("and dc.controllerId=:controllerId ");
             }
             // folders
             boolean useFolders = FolderPath.useFolders(permittedFolders);

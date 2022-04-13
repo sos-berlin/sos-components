@@ -37,14 +37,14 @@ public class StatisticsResourceImpl extends JOCResourceImpl implements IStatisti
             if (response != null) {
                 return response;
             }
-            
+
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             Statistics entity = new Statistics();
             entity.setSurveyDate(Date.from(Instant.now()));
             Map<ConfigurationType, Long> numOfDeployed = dbLayer.getNumOfDeployedObjects(controllerId, permittedFolders);
-            Map<ConfigurationType, Long> numOfReleased = dbLayer.getNumOfReleasedObjects(permittedFolders);
+            Map<ConfigurationType, Long> numOfReleased = dbLayer.getNumOfReleasedObjects(controllerId, permittedFolders);
             entity.setNumOfWorkflows(numOfDeployed.getOrDefault(ConfigurationType.WORKFLOW, 0L));
             entity.setNumOfJobs(dbLayer.getNumOfDeployedJobs(controllerId, permittedFolders));
             entity.setNumOfLocks(numOfDeployed.getOrDefault(ConfigurationType.LOCK, 0L));
@@ -56,7 +56,7 @@ public class StatisticsResourceImpl extends JOCResourceImpl implements IStatisti
             entity.setNumOfCalendars(numOfReleased.getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, 0L) + numOfReleased.getOrDefault(
                     ConfigurationType.NONWORKINGDAYSCALENDAR, 0L));
             entity.setDeliveryDate(Date.from(Instant.now()));
-            
+
             return JOCDefaultResponse.responseStatus200(entity);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
