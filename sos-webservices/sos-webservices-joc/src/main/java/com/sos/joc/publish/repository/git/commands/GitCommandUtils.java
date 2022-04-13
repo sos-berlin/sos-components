@@ -219,7 +219,7 @@ public class GitCommandUtils {
                     throw new JocGitException(String.format("No credentials found for Git Server '%1$s'.", hostPort));
                 }
                 // prepare Uri
-                String updatedUri = String.format("%1$s://%2$s:%3$s@%4$s:%5$s", protocol, username, pwopat, hostPort, path);
+                String updatedUri = String.format("%1$s://%2$s:%3$s@%4$s%5$s", protocol, username, pwopat, hostPort, path);
                 // clone
                 String folder = filter.getFolder().startsWith("/") ? filter.getFolder().substring(1) : filter.getFolder();
                 GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(
