@@ -69,7 +69,7 @@ public class IdentityService {
      * 
      */
     @JsonProperty("ordering")
-    private Integer ordering;
+    private Integer ordering = 1;
     /**
      * disabled parameter
      * <p>
