@@ -1758,11 +1758,20 @@ public class FrequencyResolver {
         }
     }
 
-    private void addRepetitionsRestrictions() throws SOSInvalidDataException {
+    private void addRepetitionsRestrictionsX() throws SOSInvalidDataException {
         if (includes != null && includes.getRepetitions() != null) {
             for (Repetition repetition : includes.getRepetitions()) {
                 addRestrictions(resolveBasedOnRepetitionRestrictions(repetition.getRepetition(), repetition.getStep(), getFrom(repetition.getFrom(),
                         calendarFrom), getFrom(repetition.getFrom()), getTo(repetition.getTo())));
+            }
+        }
+    }
+
+    private void addRepetitionsRestrictions() throws SOSInvalidDataException {
+        if (includes != null && includes.getRepetitions() != null) {
+            for (Repetition repetition : includes.getRepetitions()) {
+                addRestrictions(resolveBasedOnRepetitionRestrictions(repetition.getRepetition(), repetition.getStep(), getCalendar(repetition
+                        .getFrom()), getCalendar(repetition.getFrom()), getTo(repetition.getTo())));
             }
         }
     }
