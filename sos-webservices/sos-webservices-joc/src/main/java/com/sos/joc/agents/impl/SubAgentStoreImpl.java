@@ -44,13 +44,13 @@ import js7.data_for_java.item.JUpdateItemOperation;
 @Path("agents")
 public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore {
 
-    private static final String API_CALL_REMOVE = "./agents/inventory/cluster/subagents/store";
+    private static final String API_CALL = "./agents/inventory/cluster/subagents/store";
     
     @Override
     public JOCDefaultResponse store(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL_REMOVE, filterBytes, accessToken);
+            initLogging(API_CALL, filterBytes, accessToken);
 
             AgentHelper.throwJocMissingLicenseException();
 
@@ -67,7 +67,7 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
 
             storeAuditLog(subAgentsParam.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL_REMOVE);
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             connection.setAutoCommit(false);
             connection.beginTransaction();
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
@@ -77,7 +77,32 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
                 throw new JocBadRequestException("Cluster Agent '" + agentId + "' doesn't exist");
             }
             
+            // check uniqueness of SubagentUrl in request
+            subAgentsParam.getSubagents().stream().collect(Collectors.groupingBy(SubAgent::getUrl, Collectors.counting())).entrySet().stream().filter(e -> e
+                    .getValue() > 1L).findAny().ifPresent(e -> {
+                        throw new JocBadRequestException(getUniquenessMsg("Subagent url", e));
+                    });
+            
+            Set<String> requestedSubagentIds = subAgentsParam.getSubagents().stream().map(SubAgent::getSubagentId).collect(Collectors.toSet());
+
+            // check java name rules of SubagentIds
+            for (String subagentId : requestedSubagentIds) {
+                CheckJavaVariableName.test("Subagent ID", subagentId);
+            }
+            
+            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(null);
             List<DBItemInventorySubAgentInstance> dbSubAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(controllerId));
+            
+            // check uniqueness of SubagentUrl with DB
+            Set<String> requestedSubagentUrls = subAgentsParam.getSubagents().stream().map(SubAgent::getUrl).collect(Collectors.toSet());
+            dbSubAgents.stream().filter(s -> !requestedSubagentIds.contains(s.getSubAgentId())).filter(s -> requestedSubagentUrls.contains(s
+                    .getUri())).findAny().ifPresent(s -> {
+                        throw new JocBadRequestException(String.format("Subagent url %s is already used by Subagent %s", s.getUri(), s.getSubAgentId()));
+                    });
+            dbAgents.stream().filter(a -> a.getUri() != null && !a.getUri().isEmpty()).filter(a -> requestedSubagentUrls.contains(a
+                    .getUri())).findAny().ifPresent(a -> {
+                        throw new JocBadRequestException(String.format("Subagent url %s is already used by Agent %s", a.getUri(), a.getAgentId()));
+                    });
             
 //            List<JUpdateItemOperation> subAgentsToController = saveOrUpdate(dbLayer, dbAgent, dbSubAgents, subAgentsMap);
             saveOrUpdate(dbLayer, new InventorySubagentClustersDBLayer(connection), dbAgent, dbSubAgents, subAgentsParam.getSubagents());
@@ -320,5 +345,9 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
 
             connection.save(dbSubagentCluster);
             connection.save(dbSubagentClusterMember);
+    }
+    
+    private static String getUniquenessMsg(String key, Map.Entry<String, Long> e) {
+        return key + " has to be unique: " + e.getKey() + " is used " + (e.getValue() == 2L ? "twice" : e.getValue() + " times");
     }
 };
