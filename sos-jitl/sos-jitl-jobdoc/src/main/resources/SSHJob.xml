@@ -32,6 +32,7 @@
             <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command_script.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command_script_file.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command_script_param.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command_delimiter.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_ignore_error.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_ignore_stderr.xml" parse="xml" />
