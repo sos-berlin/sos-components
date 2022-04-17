@@ -5,6 +5,11 @@
 				"from": "2022-04-12",
 				"repetition": "DAILY",
 				"step": 2
+			},
+			{
+				"from": "2022-03-12",
+				"repetition": "DAILY",
+				"step": 2
 			}
 		]
 	},

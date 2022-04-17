@@ -2,9 +2,9 @@
 	"includes": {
 		"repetitions": [
 			{
-				"from": "2022-03-30",
+				"from": "2022-03-29",
 				"repetition": "MONTHLY",
-				"step": 2
+				"step": 1
 			}
 		]
 	}
