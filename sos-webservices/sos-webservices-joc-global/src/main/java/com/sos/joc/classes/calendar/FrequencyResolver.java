@@ -75,6 +75,11 @@ public class FrequencyResolver {
 
     public Dates resolve(com.sos.inventory.model.calendar.Calendar calendar, String from, String to) throws SOSMissingDataException,
             SOSInvalidDataException {
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[resolve][start]from=%s,to=%s", from, to));
+        }
+
         init(calendar, from, to);
         Dates d = new Dates();
         d.setDates(new ArrayList<String>());
@@ -82,6 +87,7 @@ public class FrequencyResolver {
         restrictions.clear();
         withExcludes.clear();
         dates.clear();
+
         if (this.dateFrom.compareTo(this.dateTo) <= 0) {
             // includes
             if (includes != null) {
@@ -121,6 +127,9 @@ public class FrequencyResolver {
         } else {
             d.setDates(new ArrayList<String>());
         }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[resolve][end][dates]%s", String.join(",", d.getDates())));
+        }
         d.setDeliveryDate(Date.from(Instant.now()));
         return d;
     }
@@ -151,38 +160,17 @@ public class FrequencyResolver {
         }
     }
 
-    private String stringJoin(List<String> l) {
-        if (l == null) {
-            return "";
-        }
-        try {
-            int max = 356;
-            return l.size() > max ? new StringBuilder(l.get(0) + ",...,").append(String.join(",", l.subList(max, l.size()))).toString() : String.join(
-                    ",", l);
-        } catch (Throwable e) {
-            return l.toString();
-        }
-    }
-
-    private Calendar getMinRepetitionFrom() throws SOSInvalidDataException {
-        if (includes.getRepetitions() == null || includes.getRepetitions().size() == 0) {
-            return null;
-        }
-        Calendar c = null;
-        for (Repetition r : includes.getRepetitions()) {
-            Calendar rc = getCalendar(r.getFrom());
-            if (c == null) {
-                c = rc;
-            } else if (rc.before(c)) {
-                c = rc;
-            }
-        }
-        return c;
-    }
-
     public Dates resolveRestrictions(com.sos.inventory.model.calendar.Calendar baseCalendar,
             com.sos.inventory.model.calendar.Calendar restrictionsCalendar, String from, String to) throws SOSMissingDataException,
             SOSInvalidDataException {
+
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        String method = "resolveRestrictions";
+
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[%s][start]from=%s,to=%s", method, from, to));
+        }
+
         init(baseCalendar, from, to);
         Dates d = new Dates();
         d.setDates(new ArrayList<String>());
@@ -191,8 +179,6 @@ public class FrequencyResolver {
         withExcludes.clear();
         dates.clear();
 
-        boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        String method = "resolveRestrictions";
         int diff = this.dateFrom.compareTo(this.dateTo);
         if (diff <= 0) {
             if (isDebugEnabled) {
@@ -323,34 +309,36 @@ public class FrequencyResolver {
                         LOGGER.debug(String.format("[%s][restrictions][start]datesWithoutRestrictions=%s", method, datesWithoutRestrictions
                                 .keySet()));
                     }
-                    addDatesRestrictions(dateFromOrig);
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][restrictions][after][addDatesRestrictions]datesWithoutRestrictions=%s", method,
-                                datesWithoutRestrictions.keySet()));
-                    }
+                    if (this.includes != null) {
+                        addDatesRestrictions(this.dateFrom, this.dateTo, dateFromOrig);
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][restrictions][after][addDatesRestrictions]datesWithoutRestrictions=%s", method,
+                                    datesWithoutRestrictions.keySet()));
+                        }
 
-                    addWeekDaysRestrictions(dateFromOrig);
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][restrictions][after][addWeekDaysRestrictions]datesWithoutRestrictions=%s", method,
-                                datesWithoutRestrictions.keySet()));
-                    }
+                        addWeekDaysRestrictions(includes.getWeekdays(), dateFrom, dateTo, dateFromOrig);
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][restrictions][after][addWeekDaysRestrictions]datesWithoutRestrictions=%s", method,
+                                    datesWithoutRestrictions.keySet()));
+                        }
 
-                    addMonthDaysRestrictions(dateFromOrig);
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][restrictions][after][addMonthDaysRestrictions]datesWithoutRestrictions=%s", method,
-                                datesWithoutRestrictions.keySet()));
-                    }
+                        addMonthDaysRestrictions(includes.getMonthdays(), dateFrom, dateTo, dateFromOrig);
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][restrictions][after][addMonthDaysRestrictions]datesWithoutRestrictions=%s", method,
+                                    datesWithoutRestrictions.keySet()));
+                        }
 
-                    addUltimosRestrictions(dateFromOrig);
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][restrictions][after][addUltimosRestrictions]datesWithoutRestrictions=%s", method,
-                                datesWithoutRestrictions.keySet()));
-                    }
+                        addUltimosRestrictions(includes.getUltimos(), dateFrom, dateTo, dateFromOrig);
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][restrictions][after][addUltimosRestrictions]datesWithoutRestrictions=%s", method,
+                                    datesWithoutRestrictions.keySet()));
+                        }
 
-                    addRepetitionsRestrictions(dateFromOrig);
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][restrictions][after][addRepetitionsRestrictions]datesWithoutRestrictions=%s", method,
-                                datesWithoutRestrictions.keySet()));
+                        addRepetitionsRestrictions(includes.getRepetitions(), dateFromOrig);
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][restrictions][after][addRepetitionsRestrictions]datesWithoutRestrictions=%s", method,
+                                    datesWithoutRestrictions.keySet()));
+                        }
                     }
                 } else {
                     if (isDebugEnabled) {
@@ -367,6 +355,11 @@ public class FrequencyResolver {
                         .getDateTimeAsString(this.dateFrom), SOSDate.getDateTimeAsString(this.dateTo), diff));
             }
         }
+
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[%s][end][dates]%s", method, String.join(",", d.getDates())));
+        }
+
         d.setDeliveryDate(Date.from(Instant.now()));
         return d;
     }
@@ -1851,8 +1844,8 @@ public class FrequencyResolver {
         return copy;
     }
 
-    private void addDatesRestrictions(Calendar dateFromOrig) throws SOSInvalidDataException {
-        if (includes != null && includes.getDates() != null && !includes.getDates().isEmpty()) {
+    private void addDatesRestrictions(Calendar dateFrom, Calendar dateTo, Calendar dateFromOrig) throws SOSInvalidDataException {
+        if (includes.getDates() != null && !includes.getDates().isEmpty()) {
             for (Entry<String, Calendar> date : this.dates.entrySet()) {
                 if (date == null || date.getValue() == null) {
                     continue;
@@ -1875,24 +1868,12 @@ public class FrequencyResolver {
         }
     }
 
-    private void addWeekDaysRestrictions(Calendar dateFromOrig) throws SOSInvalidDataException {
-        if (includes != null) {
-            addWeekDaysRestrictions(includes.getWeekdays(), dateFrom, dateTo, dateFromOrig);
-        }
-    }
-
     private void addWeekDaysRestrictions(List<WeekDays> weekDays, Calendar from, Calendar to, Calendar dateFromOrig) throws SOSInvalidDataException {
         if (weekDays != null) {
             for (WeekDays weekDay : weekDays) {
                 addRestrictions(resolveWeekDaysRestrictions(weekDay.getDays(), getFrom(weekDay.getFrom(), from), getTo(weekDay.getTo(), to),
                         dateFromOrig));
             }
-        }
-    }
-
-    private void addMonthDaysRestrictions(Calendar dateFromOrig) throws SOSInvalidDataException {
-        if (includes != null) {
-            addMonthDaysRestrictions(includes.getMonthdays(), dateFrom, dateTo, dateFromOrig);
         }
     }
 
@@ -1906,12 +1887,6 @@ public class FrequencyResolver {
         }
     }
 
-    private void addUltimosRestrictions(Calendar dateFromOrig) throws SOSInvalidDataException {
-        if (includes != null && includes.getUltimos() != null) {
-            addUltimosRestrictions(includes.getUltimos(), dateFrom, dateTo, dateFromOrig);
-        }
-    }
-
     private void addUltimosRestrictions(List<MonthDays> ultimos, Calendar from, Calendar to, Calendar dateFromOrig) throws SOSInvalidDataException {
         if (ultimos != null) {
             for (MonthDays ultimo : ultimos) {
@@ -1921,12 +1896,41 @@ public class FrequencyResolver {
         }
     }
 
-    private void addRepetitionsRestrictions(Calendar dateFromOrig) throws SOSInvalidDataException {
-        if (includes != null && includes.getRepetitions() != null) {
-            for (Repetition repetition : includes.getRepetitions()) {
+    private void addRepetitionsRestrictions(List<Repetition> repetitions, Calendar dateFromOrig) throws SOSInvalidDataException {
+        if (repetitions != null) {
+            for (Repetition repetition : repetitions) {
                 addRestrictions(resolveRepetitionsRestrictions(repetition, dateFromOrig));
             }
         }
+    }
+
+    private String stringJoin(List<String> l) {
+        if (l == null) {
+            return "";
+        }
+        try {
+            int max = 356;
+            return l.size() > max ? new StringBuilder(l.get(0) + ",...,").append(String.join(",", l.subList(max, l.size()))).toString() : String.join(
+                    ",", l);
+        } catch (Throwable e) {
+            return l.toString();
+        }
+    }
+
+    private Calendar getMinRepetitionFrom() throws SOSInvalidDataException {
+        if (includes.getRepetitions() == null || includes.getRepetitions().size() == 0) {
+            return null;
+        }
+        Calendar c = null;
+        for (Repetition r : includes.getRepetitions()) {
+            Calendar rc = getCalendar(r.getFrom());
+            if (c == null) {
+                c = rc;
+            } else if (rc.before(c)) {
+                c = rc;
+            }
+        }
+        return c;
     }
 
     public SortedMap<String, Calendar> getDates() {
