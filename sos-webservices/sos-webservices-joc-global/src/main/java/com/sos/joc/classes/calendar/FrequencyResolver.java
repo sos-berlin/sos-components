@@ -85,25 +85,25 @@ public class FrequencyResolver {
         if (this.dateFrom.compareTo(this.dateTo) <= 0) {
             // includes
             if (includes != null) {
-                addDates(includes.getDates());
-                addHolidays(includes.getHolidays());
-                addWeekDays(includes.getWeekdays());
-                addMonthDays(includes.getMonthdays());
-                addUltimos(includes.getUltimos());
+                addDates(includes.getDates(), this.dateFrom, this.dateTo);
+                addHolidays(includes.getHolidays(), this.dateFrom, this.dateTo);
+                addWeekDays(includes.getWeekdays(), this.dateFrom, this.dateTo);
+                addMonthDays(includes.getMonthdays(), this.dateFrom, this.dateTo);
+                addUltimos(includes.getUltimos(), this.dateFrom, this.dateTo);
                 addRepetitions(includes.getRepetitions());
             }
             // excludes
             if (excludes != null) {
                 if (dates.size() > 0) {
-                    removeDates(excludes.getDates());
+                    removeDates(excludes.getDates(), this.dateFrom, this.dateTo);
                     if (dates.size() > 0) {
-                        removeWeekDays(excludes.getWeekdays());
+                        removeWeekDays(excludes.getWeekdays(), this.dateFrom, this.dateTo);
                         if (dates.size() > 0) {
-                            removeMonthDays(excludes.getMonthdays());
+                            removeMonthDays(excludes.getMonthdays(), this.dateFrom, this.dateTo);
                             if (dates.size() > 0) {
-                                removeUltimos(excludes.getUltimos());
+                                removeUltimos(excludes.getUltimos(), this.dateFrom, this.dateTo);
                                 if (dates.size() > 0) {
-                                    removeHolidays(excludes.getHolidays());
+                                    removeHolidays(excludes.getHolidays(), this.dateFrom, this.dateTo);
                                     if (dates.size() > 0) {
                                         removeRepetitions(excludes.getRepetitions());
                                     }
@@ -200,27 +200,27 @@ public class FrequencyResolver {
                         .getDateTimeAsString(this.dateFrom), SOSDate.getDateTimeAsString(this.dateTo), diff));
             }
             if (includes != null) {
-                addDates(includes.getDates());
+                addDates(includes.getDates(), this.dateFrom, this.dateTo);
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][after][addDates]dates=%s", method, dates.keySet()));
                 }
 
-                addHolidays(includes.getHolidays());
+                addHolidays(includes.getHolidays(), this.dateFrom, this.dateTo);
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][after][addHolidays]dates=%s", method, dates.keySet()));
                 }
 
-                addWeekDays(includes.getWeekdays());
+                addWeekDays(includes.getWeekdays(), this.dateFrom, this.dateTo);
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][after][addWeekDays]dates=%s", method, dates.keySet()));
                 }
 
-                addMonthDays(includes.getMonthdays());
+                addMonthDays(includes.getMonthdays(), this.dateFrom, this.dateTo);
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][after][addMonthDays]dates=%s", method, dates.keySet()));
                 }
 
-                addUltimos(includes.getUltimos());
+                addUltimos(includes.getUltimos(), this.dateFrom, this.dateTo);
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][after][addUltimos]dates=%s", method, dates.keySet()));
                 }
@@ -233,27 +233,27 @@ public class FrequencyResolver {
 
             if (excludes != null) {
                 if (dates.size() > 0) {
-                    removeDates(excludes.getDates());
+                    removeDates(excludes.getDates(), this.dateFrom, this.dateTo);
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("[%s][after][removeDates]dates=%s", method, dates.keySet()));
                     }
                     if (dates.size() > 0) {
-                        removeWeekDays(excludes.getWeekdays());
+                        removeWeekDays(excludes.getWeekdays(), this.dateFrom, this.dateTo);
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format("[%s][after][removeWeekDays]dates=%s", method, dates.keySet()));
                         }
                         if (dates.size() > 0) {
-                            removeMonthDays(excludes.getMonthdays());
+                            removeMonthDays(excludes.getMonthdays(), this.dateFrom, this.dateTo);
                             if (isDebugEnabled) {
                                 LOGGER.debug(String.format("[%s][after][removeMonthDays]dates=%s", method, dates.keySet()));
                             }
                             if (dates.size() > 0) {
-                                removeUltimos(excludes.getUltimos());
+                                removeUltimos(excludes.getUltimos(), this.dateFrom, this.dateTo);
                                 if (isDebugEnabled) {
                                     LOGGER.debug(String.format("[%s][after][removeUltimos]dates=%s", method, dates.keySet()));
                                 }
                                 if (dates.size() > 0) {
-                                    removeHolidays(excludes.getHolidays());
+                                    removeHolidays(excludes.getHolidays(), this.dateFrom, this.dateTo);
                                     if (isDebugEnabled) {
                                         LOGGER.debug(String.format("[%s][after][removeHolidays]dates=%s", method, dates.keySet()));
                                     }
@@ -515,32 +515,28 @@ public class FrequencyResolver {
         return calendar;
     }
 
-    private void addDates(List<String> list) throws SOSInvalidDataException {
-        addAll(resolveDates(list));
+    private void addDates(List<String> list, Calendar dateFrom, Calendar dateTo) throws SOSInvalidDataException {
+        addAll(resolveDates(list, dateFrom, dateTo));
     }
 
-    private void removeDates(List<String> list) throws SOSInvalidDataException {
-        removeAll(resolveDates(list));
+    private void removeDates(List<String> list, Calendar dateFrom, Calendar dateTo) throws SOSInvalidDataException {
+        removeAll(resolveDates(list, dateFrom, dateTo));
     }
 
-    private void addHolidays(List<Holidays> holidays) throws SOSInvalidDataException {
+    private void addHolidays(List<Holidays> holidays, Calendar dateFrom, Calendar dateTo) throws SOSInvalidDataException {
         if (holidays != null) {
             for (Holidays holiday : holidays) {
-                addDates(holiday.getDates());
+                addDates(holiday.getDates(), dateFrom, dateTo);
             }
         }
     }
 
-    private void removeHolidays(List<Holidays> holidays) throws SOSInvalidDataException {
+    private void removeHolidays(List<Holidays> holidays, Calendar dateFrom, Calendar dateTo) throws SOSInvalidDataException {
         if (holidays != null) {
             for (Holidays holiday : holidays) {
-                removeDates(holiday.getDates());
+                removeDates(holiday.getDates(), dateFrom, dateTo);
             }
         }
-    }
-
-    private void addWeekDays(List<WeekDays> weekDays) throws SOSInvalidDataException {
-        addWeekDays(weekDays, dateFrom, dateTo);
     }
 
     private void addWeekDays(List<WeekDays> weekDays, Calendar from, Calendar to) throws SOSInvalidDataException {
@@ -551,20 +547,12 @@ public class FrequencyResolver {
         }
     }
 
-    private void removeWeekDays(List<WeekDays> weekDays) throws SOSInvalidDataException {
-        removeWeekDays(weekDays, dateFrom, dateTo);
-    }
-
     private void removeWeekDays(List<WeekDays> weekDays, Calendar from, Calendar to) throws SOSInvalidDataException {
         if (weekDays != null) {
             for (WeekDays weekDay : weekDays) {
                 removeAll(resolveWeekDays(weekDay.getDays(), getFrom(weekDay.getFrom(), from), getTo(weekDay.getTo(), to)));
             }
         }
-    }
-
-    private void addMonthDays(List<MonthDays> monthDays) throws SOSInvalidDataException {
-        addMonthDays(monthDays, dateFrom, dateTo);
     }
 
     private void addMonthDays(List<MonthDays> monthDays, Calendar from, Calendar to) throws SOSInvalidDataException {
@@ -576,10 +564,6 @@ public class FrequencyResolver {
         }
     }
 
-    private void removeMonthDays(List<MonthDays> monthDays) throws SOSInvalidDataException {
-        removeMonthDays(monthDays, dateFrom, dateTo);
-    }
-
     private void removeMonthDays(List<MonthDays> monthDays, Calendar from, Calendar to) throws SOSInvalidDataException {
         if (monthDays != null) {
             for (MonthDays monthDay : monthDays) {
@@ -589,20 +573,12 @@ public class FrequencyResolver {
         }
     }
 
-    private void addUltimos(List<MonthDays> monthDays) throws SOSInvalidDataException {
-        addUltimos(monthDays, dateFrom, dateTo);
-    }
-
     private void addUltimos(List<MonthDays> ultimos, Calendar from, Calendar to) throws SOSInvalidDataException {
         if (ultimos != null) {
             for (MonthDays ultimo : ultimos) {
                 addAll(resolveUltimos(ultimo.getDays(), ultimo.getWeeklyDays(), getFrom(ultimo.getFrom(), from), getTo(ultimo.getTo(), to)));
             }
         }
-    }
-
-    private void removeUltimos(List<MonthDays> monthDays) throws SOSInvalidDataException {
-        removeUltimos(monthDays, dateFrom, dateTo);
     }
 
     private void removeUltimos(List<MonthDays> ultimos, Calendar from, Calendar to) throws SOSInvalidDataException {
@@ -701,7 +677,7 @@ public class FrequencyResolver {
         return (Calendar) toRef.clone();
     }
 
-    private boolean isBetweenFromTo(Calendar cal) throws SOSInvalidDataException {
+    private boolean isBetweenFromTo(Calendar cal, Calendar dateFrom, Calendar dateTo) throws SOSInvalidDataException {
         if (cal != null) {
             if (cal.compareTo(dateTo) <= 0 && cal.compareTo(dateFrom) >= 0) {
                 return true;
@@ -730,12 +706,12 @@ public class FrequencyResolver {
         return weekOfMonthOfWeeklyDay;
     }
 
-    private Map<String, Calendar> resolveDates(List<String> dates) throws SOSInvalidDataException {
+    private Map<String, Calendar> resolveDates(List<String> dates, Calendar dateFrom, Calendar dateTo) throws SOSInvalidDataException {
         Map<String, Calendar> d = new HashMap<String, Calendar>();
         if (dates != null && !dates.isEmpty()) {
             for (String date : dates) {
                 Calendar cal = getCalendarFromString(date);
-                if (isBetweenFromTo(cal)) {
+                if (isBetweenFromTo(cal, dateFrom, dateTo)) {
                     d.put(date, cal);
                 }
             }
@@ -1000,12 +976,12 @@ public class FrequencyResolver {
         Map<String, Calendar> result = new HashMap<>();
 
         if (baseCalendarIncludes.getDates() != null && baseCalendarIncludes.getDates().size() > 0) {
-            result.putAll(resolveDates(baseCalendarIncludes.getDates()));
+            result.putAll(resolveDates(baseCalendarIncludes.getDates(), from, to));
         }
 
         if (baseCalendarIncludes.getHolidays() != null && baseCalendarIncludes.getHolidays().size() > 0) {
             for (Holidays holiday : baseCalendarIncludes.getHolidays()) {
-                result.putAll(resolveDates(holiday.getDates()));
+                result.putAll(resolveDates(holiday.getDates(), from, to));
             }
         }
 
@@ -1038,12 +1014,12 @@ public class FrequencyResolver {
         // excludes/remove
         if (baseCalendarExcludes != null && result.size() > 0) {
             if (baseCalendarExcludes.getDates() != null && baseCalendarExcludes.getDates().size() > 0) {
-                result = removeDays(result, resolveDates(baseCalendarExcludes.getDates()));
+                result = removeDays(result, resolveDates(baseCalendarExcludes.getDates(), from, to));
             }
 
             if (result.size() > 0 && baseCalendarExcludes.getHolidays() != null && baseCalendarExcludes.getHolidays().size() > 0) {
                 for (Holidays holiday : baseCalendarExcludes.getHolidays()) {
-                    result = removeDays(result, resolveDates(holiday.getDates()));
+                    result = removeDays(result, resolveDates(holiday.getDates(), from, to));
                 }
             }
 

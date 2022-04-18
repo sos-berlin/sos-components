@@ -72,6 +72,23 @@ public class FrequencyResolverTest {
 
     @Ignore
     @Test
+    public void restrictionsCalendarHolidaysEveryDailyTest() throws Exception {
+        String from = "2022-04-18";
+        String to = "2022-12-31";
+        from = null;
+        // to = null;
+
+        Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar_holidays.json"));
+        Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions_every_daily.json"));
+        // restrictions = null;
+
+        FrequencyResolver fr = new FrequencyResolver();
+        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
+        LOGGER.info("DATES: " + String.join(",", dates.getDates()));
+    }
+
+    @Ignore
+    @Test
     public void restrictionsEveryWeeklyTest() throws Exception {
         String from = "2022-05-02";
         String to = "2022-05-04";

@@ -2,9 +2,10 @@
 	"includes": {
 		"repetitions": [
 			{
-				"from": "2022-04-14",
+				"from": "2022-04-18",
+				"to": "2023-04-30",
 				"repetition": "DAILY",
-				"step": 5
+				"step": 2
 			}
 		]
 	}
