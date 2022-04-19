@@ -414,13 +414,13 @@ public class TreePermanent {
                 TreeModel tree = new TreeModel();
                 if (treeMap.containsKey(pFolder)) {
                     tree = treeMap.get(pFolder);
-                    tree = setFolderItemProps(folder, !isNotPermittedParentFolder, tree);
+                    tree = setFolderItemProps(folder, isPermittedForFolder, tree);
                 } else {
                     tree.setPath(folder.getPath());
                     Path fileName = pFolder.getFileName();
                     tree.setName(fileName == null ? "" : fileName.toString());
                     tree.setFolders(null);
-                    tree = setFolderItemProps(folder, !isNotPermittedParentFolder, tree);
+                    tree = setFolderItemProps(folder, isPermittedForFolder, tree);
                     treeMap.put(pFolder, tree);
                 }
                 fillTreeMap(treeMap, pFolder, tree);
