@@ -52,7 +52,7 @@ public class IamAccountDBLayer {
         if (filter.getDisabled() != null) {
             query.setParameter("disabled", filter.getDisabled());
         }
-        if (filter.getAccountName() != null) {
+        if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
             query.setParameter("accountName", filter.getAccountName());
         }
 

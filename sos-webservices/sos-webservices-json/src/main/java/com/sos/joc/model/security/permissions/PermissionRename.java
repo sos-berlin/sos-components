@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.security.permissions;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -85,8 +80,6 @@ public class PermissionRename {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -256,24 +249,14 @@ public class PermissionRename {
         this.auditLog = auditLog;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("controllerId", controllerId).append("roleName", roleName).append("oldPermissionPath", oldPermissionPath).append("newPermission", newPermission).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("controllerId", controllerId).append("roleName", roleName).append("oldPermissionPath", oldPermissionPath).append("newPermission", newPermission).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(controllerId).append(auditLog).append(newPermission).append(roleName).append(oldPermissionPath).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(controllerId).append(auditLog).append(newPermission).append(roleName).append(oldPermissionPath).toHashCode();
     }
 
     @Override
@@ -285,7 +268,7 @@ public class PermissionRename {
             return false;
         }
         PermissionRename rhs = ((PermissionRename) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(newPermission, rhs.newPermission).append(roleName, rhs.roleName).append(oldPermissionPath, rhs.oldPermissionPath).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(newPermission, rhs.newPermission).append(roleName, rhs.roleName).append(oldPermissionPath, rhs.oldPermissionPath).isEquals();
     }
 
 }

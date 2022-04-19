@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.security.permissions;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -54,8 +49,6 @@ public class PermissionListFilter {
      */
     @JsonProperty("roleName")
     private String roleName;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -147,24 +140,14 @@ public class PermissionListFilter {
         this.roleName = roleName;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("controllerId", controllerId).append("roleName", roleName).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("controllerId", controllerId).append("roleName", roleName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(roleName).append(identityServiceName).append(additionalProperties).append(controllerId).toHashCode();
+        return new HashCodeBuilder().append(roleName).append(identityServiceName).append(controllerId).toHashCode();
     }
 
     @Override
@@ -176,7 +159,7 @@ public class PermissionListFilter {
             return false;
         }
         PermissionListFilter rhs = ((PermissionListFilter) other);
-        return new EqualsBuilder().append(roleName, rhs.roleName).append(identityServiceName, rhs.identityServiceName).append(additionalProperties, rhs.additionalProperties).append(controllerId, rhs.controllerId).isEquals();
+        return new EqualsBuilder().append(roleName, rhs.roleName).append(identityServiceName, rhs.identityServiceName).append(controllerId, rhs.controllerId).isEquals();
     }
 
 }

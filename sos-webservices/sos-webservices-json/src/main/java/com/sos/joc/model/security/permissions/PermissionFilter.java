@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.security.permissions;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -74,8 +69,6 @@ public class PermissionFilter {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -217,24 +210,14 @@ public class PermissionFilter {
         this.auditLog = auditLog;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("controllerId", controllerId).append("roleName", roleName).append("permissionPath", permissionPath).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("controllerId", controllerId).append("roleName", roleName).append("permissionPath", permissionPath).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(permissionPath).append(controllerId).append(auditLog).append(roleName).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(roleName).append(identityServiceName).append(permissionPath).append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -246,7 +229,7 @@ public class PermissionFilter {
             return false;
         }
         PermissionFilter rhs = ((PermissionFilter) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(permissionPath, rhs.permissionPath).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(roleName, rhs.roleName).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(roleName, rhs.roleName).append(identityServiceName, rhs.identityServiceName).append(permissionPath, rhs.permissionPath).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

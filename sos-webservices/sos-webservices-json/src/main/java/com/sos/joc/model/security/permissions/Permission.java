@@ -18,8 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "permissionPath",
-    "excluded",
-    "additionalProperties"
+    "excluded"
 })
 public class Permission {
 
@@ -34,8 +33,6 @@ public class Permission {
     private String permissionPath;
     @JsonProperty("excluded")
     private Boolean excluded;
-    @JsonProperty("additionalProperties")
-    private Object additionalProperties;
 
     /**
      * No args constructor for use in serialization
@@ -48,13 +45,11 @@ public class Permission {
      * 
      * @param excluded
      * @param permissionPath
-     * @param additionalProperties
      */
-    public Permission(String permissionPath, Boolean excluded, Object additionalProperties) {
+    public Permission(String permissionPath, Boolean excluded) {
         super();
         this.permissionPath = permissionPath;
         this.excluded = excluded;
-        this.additionalProperties = additionalProperties;
     }
 
     /**
@@ -91,24 +86,14 @@ public class Permission {
         this.excluded = excluded;
     }
 
-    @JsonProperty("additionalProperties")
-    public Object getAdditionalProperties() {
-        return additionalProperties;
-    }
-
-    @JsonProperty("additionalProperties")
-    public void setAdditionalProperties(Object additionalProperties) {
-        this.additionalProperties = additionalProperties;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("permissionPath", permissionPath).append("excluded", excluded).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("permissionPath", permissionPath).append("excluded", excluded).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(excluded).append(permissionPath).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(excluded).append(permissionPath).toHashCode();
     }
 
     @Override
@@ -120,7 +105,7 @@ public class Permission {
             return false;
         }
         Permission rhs = ((Permission) other);
-        return new EqualsBuilder().append(excluded, rhs.excluded).append(permissionPath, rhs.permissionPath).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(excluded, rhs.excluded).append(permissionPath, rhs.permissionPath).isEquals();
     }
 
 }
