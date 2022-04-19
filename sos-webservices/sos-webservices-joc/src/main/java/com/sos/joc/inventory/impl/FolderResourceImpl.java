@@ -120,11 +120,17 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                     ProblemHelper.postExceptionEventIfExist(Either.left(e), null, getJocError(), null);
                 }
             }
+            
+            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
             if (items != null && !items.isEmpty()) {
                 for (InventoryTreeFolderItem item : items) {
                     ResponseFolderItem config = item.toResponseFolderItem();
                     if (config == null) {// e.g. unknown type
+                        continue;
+                    }
+                    // for in.getRecursive() == false: the folder permissions are already checked earlier
+                    if (in.getRecursive() == Boolean.TRUE && !canAdd(config.getPath(), permittedFolders)) {
                         continue;
                     }
                     ConfigurationType type = config.getObjectType();
@@ -203,8 +209,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFolder in, boolean permission) throws Exception {
         JOCDefaultResponse response = initPermissions(null, permission);
         if (response == null) {
+            // for in.getRecursive() == TRUE: folder permissions are checked later
             if (JocInventory.ROOT_FOLDER.equals(in.getPath())) {
-                if (!folderPermissions.isPermittedForFolder(in.getPath())) {
+                if (in.getRecursive() != Boolean.TRUE && !folderPermissions.isPermittedForFolder(in.getPath())) {
                     ResponseFolder entity = new ResponseFolder();
                     entity.setDeliveryDate(Date.from(Instant.now()));
                     entity.setPath(in.getPath());
@@ -212,7 +219,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 }
 
             } else {
-                if (!folderPermissions.isPermittedForFolder(in.getPath())) {
+                if (in.getRecursive() != Boolean.TRUE && !folderPermissions.isPermittedForFolder(in.getPath())) {
                     response = accessDeniedResponse();
                 }
             }
