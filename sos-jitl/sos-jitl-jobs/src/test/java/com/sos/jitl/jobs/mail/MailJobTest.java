@@ -2,6 +2,7 @@ package com.sos.jitl.jobs.mail;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -9,57 +10,66 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.mail.SOSMailReceiver.Protocol;
+import com.sos.commons.util.common.SOSTimeout;
+import com.sos.jitl.jobs.common.DevelopmentJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionAfterProcess;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
 
+import js7.data_for_java.order.JOutcome;
+
 public class MailJobTest {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MailJobTest.class);
 
     @Ignore
     @Test
     public void test() throws Exception {
-        MailJob sosMailJob = new MailJob(null);
-        MailJobArgumentsTest arguments = new MailJobArgumentsTest();
-        arguments.setMailSmtpHost("localhost");
-        arguments.setMailSmtpPort("25");
-        arguments.setSubject("My Mail Subject");
-        arguments.setBody("My Mail body");
+        MailJobArgumentsTest args = new MailJobArgumentsTest();
+        args.setMailSmtpHost("localhost");
+        args.setMailSmtpPort("25");
+        args.setSubject("My Mail Subject");
+        args.setBody("My Mail body");
 
-        arguments.setTo("JS7@localhost.com");
-        arguments.setFrom("JS7@localhost");
+        args.setTo("JS7@localhost.com");
+        args.setFrom("JS7@localhost");
 
-        sosMailJob.process(null, arguments);
+        MailJob job = new MailJob(null);
+        DevelopmentJob<MailJobArguments> dj = new DevelopmentJob<>(job);
+        JOutcome.Completed result = dj.onOrderProcess(args);
+        LOGGER.info("###############################################");
+        LOGGER.info(String.format("[RESULT]%s", result));
     }
-    
+
     @Ignore
     @Test
     public void testInboxJob() throws Exception {
-        MailInboxJob sosMailJob = new MailInboxJob(null);
-        MailInboxArguments arguments = new MailInboxArguments();
-        
-        //arguments.getLogLevel().setValue(LogLevel.TRACE);
-        
-        arguments.getMailProtocol().setValue(Protocol.imap);
-        arguments.getMailHost().setValue("mail.sos-berlin.com");
-        arguments.getMailPassword().setValue("...secret...");
-        arguments.getMailUser().setValue("oliver.haufe@sos-berlin.com");
-        arguments.getMailSSL().setValue(true);
-        arguments.setDefaultMailPort();
-        
-        arguments.getMailMessageFolder().setValue(Arrays.asList("Drafts", "Templates"));
-        arguments.getMinMailAge().setValue("02:00");
-        arguments.getAfterProcessMail().setValue(ActionAfterProcess.mark_as_read);
-        //arguments.getMailSubjectFilter().setValue("test");
-        //arguments.getCopyMailToFile().setValue(true);
-        arguments.getAction().setValue(Collections.singletonList(ActionProcess.dump));
-        arguments.getMailDirectoryName().setValue("C:/tmp/mailTest");
-        
-        LOGGER.info(Job.asNameValueMap(arguments).toString());
+        MailInboxArguments args = new MailInboxArguments();
 
+        // arguments.getLogLevel().setValue(LogLevel.TRACE);
 
-        sosMailJob.process(null, arguments);
+        args.getMailProtocol().setValue(Protocol.imap);
+        args.getMailHost().setValue("localhost");
+        args.getMailPassword().setValue("...secret...");
+        args.getMailUser().setValue("JS7@localhost.com");
+        args.getMailSSL().setValue(true);
+        args.setDefaultMailPort();
+
+        args.getMailMessageFolder().setValue(Arrays.asList("Drafts", "Templates"));
+        args.getMinMailAge().setValue("02:00");
+        args.getAfterProcessMail().setValue(ActionAfterProcess.mark_as_read);
+        // arguments.getMailSubjectFilter().setValue("test");
+        // arguments.getCopyMailToFile().setValue(true);
+        args.getAction().setValue(Collections.singletonList(ActionProcess.dump));
+        args.getMailDirectoryName().setValue("C:/tmp/mailTest");
+
+        LOGGER.info(Job.asNameValueMap(args).toString());
+
+        MailInboxJob job = new MailInboxJob(null);
+        DevelopmentJob<MailInboxArguments> dj = new DevelopmentJob<>(job);
+        JOutcome.Completed result = dj.onOrderProcess(args, new SOSTimeout(5, TimeUnit.MINUTES));
+        LOGGER.info("###############################################");
+        LOGGER.info(String.format("[RESULT]%s", result));
     }
 
 }
