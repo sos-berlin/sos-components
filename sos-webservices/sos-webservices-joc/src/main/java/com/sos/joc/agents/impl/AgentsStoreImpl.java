@@ -127,6 +127,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 dbAgent.setAgentName(agent.getAgentName());
                 dbAgent.setControllerId(controllerId);
                 dbAgent.setHidden(agent.getHidden());
+                dbAgent.setDisabled(false);
                 dbAgent.setIsWatcher(false);
                 dbAgent.setOsId(0L);
                 dbAgent.setStartedAt(null);
@@ -264,7 +265,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 dbAgent.setVersion(null);
                 dbAgent.setTitle(agent.getTitle());
                 dbAgent.setDeployed(false);
-                dbAgent.setHidden(false);
+                dbAgent.setDisabled(false);
                 agentDBLayer.saveAgent(dbAgent);
 
                 SubAgentStoreImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());

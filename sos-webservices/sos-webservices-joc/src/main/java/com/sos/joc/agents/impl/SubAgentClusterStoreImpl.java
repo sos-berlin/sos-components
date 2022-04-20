@@ -116,10 +116,10 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
             }
             // insert
             for (SubagentCluster s : subagentMap.values()) {
-                DBItemInventorySubAgentCluster dbsubagentCluster = new DBItemInventorySubAgentCluster();
                 if (s.getSubagentIds().isEmpty()) { //don't store a new subagent cluster with an empty cluster
                     continue;
                 }
+                DBItemInventorySubAgentCluster dbsubagentCluster = new DBItemInventorySubAgentCluster();
                 dbsubagentCluster.setId(null);
                 dbsubagentCluster.setDeployed(false);
                 dbsubagentCluster.setModified(now);
