@@ -109,7 +109,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 
             Permissions permissions = Globals.objectMapper.readValue(body, Permissions.class);
 
-            JsonValidator.validateFailFast(body, Permission.class);
+            JsonValidator.validateFailFast(body, Permissions.class);
 
             initLogging(API_CALL_PERMISSIONS_STORE, Globals.objectMapper.writeValueAsBytes(permissions), accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
