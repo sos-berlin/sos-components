@@ -9,11 +9,11 @@ import com.sos.commons.util.common.SOSTimeout;
 
 import js7.data_for_java.order.JOutcome;
 
-public class DevelopmentJob<A extends JobArguments> {
+public class UnitTestJobHelper<A extends JobArguments> {
 
     private final ABlockingInternalJob<A> job;
 
-    public DevelopmentJob(ABlockingInternalJob<A> job) {
+    public UnitTestJobHelper(ABlockingInternalJob<A> job) {
         this.job = job;
     }
 
@@ -21,12 +21,17 @@ public class DevelopmentJob<A extends JobArguments> {
         return onOrderProcess(args, null);
     }
 
+    public JobStep<A> newJobStep(A args) {
+        JobStep<A> step = new JobStep<A>(job.getClass().getName(), job.getJobContext(), null);
+        step.init(args);
+        return step;
+    }
+
     public JOutcome.Completed onOrderProcess(A args, SOSTimeout timeout) throws InterruptedException, ExecutionException, TimeoutException {
         if (timeout == null) {
             timeout = new SOSTimeout(2, TimeUnit.MINUTES);
         }
-        final JobStep<A> step = new JobStep<A>(job.getClass().getName(), job.getJobContext(), null);
-        step.init(args);
+        final JobStep<A> step = newJobStep(args);
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return this.job.onOrderProcess(step);

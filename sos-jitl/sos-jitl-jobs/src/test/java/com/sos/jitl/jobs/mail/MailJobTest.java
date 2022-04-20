@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.mail.SOSMailReceiver.Protocol;
 import com.sos.commons.util.common.SOSTimeout;
-import com.sos.jitl.jobs.common.DevelopmentJob;
 import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.common.UnitTestJobHelper;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionAfterProcess;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
 
@@ -24,7 +24,7 @@ public class MailJobTest {
 
     @Ignore
     @Test
-    public void test() throws Exception {
+    public void testMailJobOnOrderProcess() throws Exception {
         MailJobArgumentsTest args = new MailJobArgumentsTest();
         args.setMailSmtpHost("localhost");
         args.setMailSmtpPort("25");
@@ -35,10 +35,32 @@ public class MailJobTest {
         args.setFrom("JS7@localhost");
 
         MailJob job = new MailJob(null);
-        DevelopmentJob<MailJobArguments> dj = new DevelopmentJob<>(job);
-        JOutcome.Completed result = dj.onOrderProcess(args);
+        // for unit tests only
+        UnitTestJobHelper<MailJobArguments> h = new UnitTestJobHelper<>(job);
+        // creates a new thread for each new onOrderProcess call
+        JOutcome.Completed result = h.onOrderProcess(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
+    }
+
+    @Test
+    public void testMailJobProcess() throws Exception {
+        MailJobArgumentsTest args = new MailJobArgumentsTest();
+        args.setMailSmtpHost("localhost");
+        args.setMailSmtpPort("25");
+        args.setSubject("My Mail Subject");
+        args.setBody("My Mail body");
+
+        args.setTo("JS7@localhost.com");
+        args.setFrom("JS7@localhost");
+
+        MailJob job = new MailJob(null);
+        UnitTestJobHelper<MailJobArguments> h = new UnitTestJobHelper<>(job);
+        // the "old" code:
+        // extra function "process" - because a step was null when unit test
+        // job.process(null, args);
+        // it is no more necessary (the second "args" is no longer needed because of h.newJobStep(args))
+        job.process(h.newJobStep(args), args);
     }
 
     @Ignore
@@ -66,8 +88,8 @@ public class MailJobTest {
         LOGGER.info(Job.asNameValueMap(args).toString());
 
         MailInboxJob job = new MailInboxJob(null);
-        DevelopmentJob<MailInboxArguments> dj = new DevelopmentJob<>(job);
-        JOutcome.Completed result = dj.onOrderProcess(args, new SOSTimeout(5, TimeUnit.MINUTES));
+        UnitTestJobHelper<MailInboxArguments> h = new UnitTestJobHelper<>(job);
+        JOutcome.Completed result = h.onOrderProcess(args, new SOSTimeout(5, TimeUnit.MINUTES));
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
     }
