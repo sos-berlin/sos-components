@@ -129,7 +129,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
                 if (roleStore.getOrdering() != null) {
                     dbItemIamRole.setOrdering(roleStore.getOrdering());
                 } else {
-                    dbItemIamRole.setOrdering(9999);
+                    dbItemIamRole.setOrdering(1);
                 }
                 sosHibernateSession.save(dbItemIamRole);
             } else {

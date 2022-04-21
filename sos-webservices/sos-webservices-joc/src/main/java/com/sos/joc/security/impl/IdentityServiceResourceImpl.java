@@ -18,7 +18,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocException;
@@ -122,7 +121,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 dbItemIamIdentityService = new DBItemIamIdentityService();
                 dbItemIamIdentityService.setIdentityServiceName(identityService.getIdentityServiceName());
                 if (identityService.getOrdering() == null) {
-                    dbItemIamIdentityService.setOrdering(9999);
+                    dbItemIamIdentityService.setOrdering(1);
                 } else {
                     dbItemIamIdentityService.setOrdering(identityService.getOrdering());
                 }
@@ -155,7 +154,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 sosHibernateSession.update(dbItemIamIdentityService);
             }
 
-            DBItemJocAuditLog dbAuditLog = storeAuditLog(identityService.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(identityService.getAuditLog(), CategoryType.IDENTITY);
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
         } catch (JocException e) {
