@@ -287,6 +287,11 @@ public class IamAccountDBLayer {
 
 	public com.sos.joc.db.authentication.DBItemIamAccount getIamAccountByName(IamAccountFilter filter)
 			throws SOSHibernateException {
+		
+		if ((filter.getAccountName() == null) || (filter.getAccountName().isEmpty())){
+			return null;
+		}
+				
 		Query<DBItemIamAccount> query = sosHibernateSession.createQuery("from " + DBItemIamAccount + getWhere(filter));
 
 		bindParameters(filter, query);
@@ -385,6 +390,9 @@ public class IamAccountDBLayer {
 	}
 
 	public DBItemIamAccount getUniqueAccount(IamAccountFilter filter) throws SOSHibernateException {
+		if ((filter.getAccountName() == null) || (filter.getAccountName().isEmpty())){
+			return null;
+		}
 		List<DBItemIamAccount> accountList = null;
 		Query<DBItemIamAccount> query = sosHibernateSession.createQuery(
 				"from " + DBItemIamAccount + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode());

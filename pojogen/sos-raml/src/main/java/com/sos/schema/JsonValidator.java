@@ -219,7 +219,8 @@ public class JsonValidator {
             put("com.sos.joc.model.security.identityservice.IdentityService", "security/identityServices/identityService-schema.json");
             put("com.sos.joc.model.security.identityservice.IdentityServiceRename", "security/identityServices/identityServiceRename-schema.json");
             put("com.sos.joc.model.security.identityservice.IdentityServiceFilter", "security/identityServices/identityServiceFilter-schema.json");
-
+            put("com.sos.joc.model.security.identityservice.IdentityServicesFilter", "security/identityServices/identityServicesFilter-schema.json");
+            
             put("com.sos.joc.model.security.folders.FolderFilter", "security/folders/folderFilter-schema.json");
             put("com.sos.joc.model.security.folders.FoldersFilter", "security/folders/foldersFilter-schema.json");
             put("com.sos.joc.model.security.folders.Folders", "security/folders/folders-schema.json");

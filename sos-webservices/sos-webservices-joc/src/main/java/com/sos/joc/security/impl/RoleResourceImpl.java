@@ -49,10 +49,10 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
+            initLogging(API_CALL_ROLE_READ, body, accessToken);
             RoleFilter roleFilter = Globals.objectMapper.readValue(body, RoleFilter.class);
             JsonValidator.validateFailFast(body, RoleFilter.class);
 
-            initLogging(API_CALL_ROLE_READ, body, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -97,11 +97,10 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
+            initLogging(API_CALL_ROLE_STORE, body, accessToken);
             RoleStore roleStore = Globals.objectMapper.readValue(body, RoleStore.class);
-
             JsonValidator.validateFailFast(body, Role.class);
 
-            initLogging(API_CALL_ROLE_STORE, Globals.objectMapper.writeValueAsBytes(roleStore), accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -129,7 +128,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
                 if (roleStore.getOrdering() != null) {
                     dbItemIamRole.setOrdering(roleStore.getOrdering());
                 } else {
-                    dbItemIamRole.setOrdering(9999);
+                    dbItemIamRole.setOrdering(1);
                 }
                 sosHibernateSession.save(dbItemIamRole);
             } else {
@@ -217,9 +216,9 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
 
         try {
+            initLogging(API_CALL_ROLE_DELETE, body, accessToken);
             JsonValidator.validate(body, RolesFilter.class);
             RolesFilter rolesFilter = Globals.objectMapper.readValue(body, RolesFilter.class);
-            initLogging(API_CALL_ROLE_DELETE, Globals.objectMapper.writeValueAsBytes(rolesFilter), accessToken);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
@@ -264,10 +263,10 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
+            initLogging(API_CALL_ROLES, body, accessToken);
             RoleListFilter roleListFilter = Globals.objectMapper.readValue(body, RoleListFilter.class);
             JsonValidator.validateFailFast(body, RoleListFilter.class);
 
-            initLogging(API_CALL_ROLES, body, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -311,11 +310,10 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
+            initLogging(API_CALL_ROLE_STORE, body, accessToken);
             RolesFilter roles = Globals.objectMapper.readValue(body, RolesFilter.class);
-
             JsonValidator.validateFailFast(body, RolesFilter.class);
 
-            initLogging(API_CALL_ROLE_STORE, Globals.objectMapper.writeValueAsBytes(roles), accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

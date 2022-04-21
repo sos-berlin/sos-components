@@ -18,7 +18,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocException;
@@ -50,10 +49,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
+            initLogging(API_CALL_SERVICES_READ, body, accessToken);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
 
-            initLogging(API_CALL_SERVICES_READ, body, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -99,10 +98,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
+            initLogging(API_CALL_SERVICES_STORE, body, accessToken);
             IdentityService identityService = Globals.objectMapper.readValue(body, IdentityService.class);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
 
-            initLogging(API_CALL_SERVICES_STORE, body, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -122,7 +121,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 dbItemIamIdentityService = new DBItemIamIdentityService();
                 dbItemIamIdentityService.setIdentityServiceName(identityService.getIdentityServiceName());
                 if (identityService.getOrdering() == null) {
-                    dbItemIamIdentityService.setOrdering(9999);
+                    dbItemIamIdentityService.setOrdering(1);
                 } else {
                     dbItemIamIdentityService.setOrdering(identityService.getOrdering());
                 }
@@ -155,7 +154,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 sosHibernateSession.update(dbItemIamIdentityService);
             }
 
-            DBItemJocAuditLog dbAuditLog = storeAuditLog(identityService.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(identityService.getAuditLog(), CategoryType.IDENTITY);
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
         } catch (JocException e) {
@@ -175,10 +174,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
+            initLogging(API_CALL_SERVICES_STORE, body, accessToken);
             IdentityServiceRename identityServiceRename = Globals.objectMapper.readValue(body, IdentityServiceRename.class);
             JsonValidator.validateFailFast(body, IdentityServiceRename.class);
 
-            initLogging(API_CALL_SERVICES_STORE, body, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -229,10 +228,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
     public JOCDefaultResponse postIdentityServiceDelete(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
         try {
+            initLogging(API_CALL_SERVICES_DELETE, body, accessToken);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
 
-            initLogging(API_CALL_SERVICES_DELETE, body, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -281,10 +280,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
+            initLogging(API_CALL_SERVICES, body, accessToken);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
 
-            initLogging(API_CALL_SERVICES, body, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -337,11 +336,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
+            initLogging(API_CALL_SERVICES_REORDER, body, accessToken);
             IdentityServicesFilter identityServices = Globals.objectMapper.readValue(body, IdentityServicesFilter.class);
-
             JsonValidator.validateFailFast(body, IdentityServicesFilter.class);
 
-            initLogging(API_CALL_SERVICES_REORDER, Globals.objectMapper.writeValueAsBytes(identityServices), accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
