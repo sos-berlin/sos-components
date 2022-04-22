@@ -205,8 +205,10 @@ public class GitCommandUtils {
             } else {
                 String username = null;
                 String pwopat = null;
+                String gitAccount = null;
                 for(GitCredentials credentials : credList.getCredentials()) {
                     if(credentials.getGitServer().equals(hostPort)) {
+                        gitAccount = credentials.getGitAccount();
                         username = credentials.getUsername();
                         if(credentials.getPersonalAccessToken() != null && !credentials.getPersonalAccessToken().isEmpty()) {
                             pwopat = credentials.getPersonalAccessToken();
@@ -216,11 +218,11 @@ public class GitCommandUtils {
                         break;
                     }
                 }
-                if(username == null || pwopat == null) {
+                if(gitAccount == null || pwopat == null) {
                     throw new JocGitException(String.format("No credentials found for Git Server '%1$s'.", hostPort));
                 }
                 // prepare Uri
-                String updatedUri = String.format("%1$s://%2$s:%3$s@%4$s%5$s", protocol, username, pwopat, hostPort, path);
+                String updatedUri = String.format("%1$s://%2$s:%3$s@%4$s%5$s", protocol, gitAccount, pwopat, hostPort, path);
                 // clone
                 String folder = filter.getFolder().startsWith("/") ? filter.getFolder().substring(1) : filter.getFolder();
                 GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(
