@@ -19,7 +19,26 @@ public class HistoryFilter {
     private Date executedTo;
     private Date startTime;
     private Date endTime;
-    private Collection<String> controllerIds;
+    private Date endFrom;
+    private Date endTo;
+
+    public Date getEndFrom() {
+		return endFrom;
+	}
+
+	public void setEndFrom(Date endFrom) {
+		this.endFrom = endFrom;
+	}
+
+	public Date getEndTo() {
+		return endTo;
+	}
+
+	public void setEndTo(Date endTo) {
+		this.endTo = endTo;
+	}
+
+	private Collection<String> controllerIds;
     private Collection<String> agentIds;
     private Set<Folder> folders;
     private Set<HistoryStateText> states;
