@@ -34,6 +34,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "states",
     "dateFrom",
     "dateTo",
+    "endDateFrom",
+    "endDateTo",
     "timeZone",
     "folders",
     "limit",
@@ -103,6 +105,24 @@ public class OrdersFilter {
     @JsonProperty("dateTo")
     @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String dateTo;
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("endDateFrom")
+    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
+    private String endDateFrom;
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("endDateTo")
+    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
+    private String endDateTo;
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
@@ -293,6 +313,50 @@ public class OrdersFilter {
     }
 
     /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("endDateFrom")
+    public String getEndDateFrom() {
+        return endDateFrom;
+    }
+
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("endDateFrom")
+    public void setEndDateFrom(String endDateFrom) {
+        this.endDateFrom = endDateFrom;
+    }
+
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("endDateTo")
+    public String getEndDateTo() {
+        return endDateTo;
+    }
+
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("endDateTo")
+    public void setEndDateTo(String endDateTo) {
+        this.endDateTo = endDateTo;
+    }
+
+    /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -372,12 +436,12 @@ public class OrdersFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orders", orders).append("excludeWorkflows", excludeWorkflows).append("compact", compact).append("orderId", orderId).append("workflowPath", workflowPath).append("states", states).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("historyIds", historyIds).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orders", orders).append("excludeWorkflows", excludeWorkflows).append("compact", compact).append("orderId", orderId).append("workflowPath", workflowPath).append("states", states).append("dateFrom", dateFrom).append("dateTo", dateTo).append("endDateFrom", endDateFrom).append("endDateTo", endDateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("historyIds", historyIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(controllerId).append(compact).append(orderId).append(workflowPath).append(historyStates).append(timeZone).append(dateFrom).append(historyIds).append(states).append(dateTo).append(limit).append(excludeWorkflows).append(orders).toHashCode();
+        return new HashCodeBuilder().append(endDateFrom).append(endDateTo).append(folders).append(controllerId).append(compact).append(orderId).append(workflowPath).append(historyStates).append(timeZone).append(dateFrom).append(historyIds).append(states).append(dateTo).append(limit).append(excludeWorkflows).append(orders).toHashCode();
     }
 
     @Override
@@ -389,7 +453,7 @@ public class OrdersFilter {
             return false;
         }
         OrdersFilter rhs = ((OrdersFilter) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(orderId, rhs.orderId).append(workflowPath, rhs.workflowPath).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(historyIds, rhs.historyIds).append(states, rhs.states).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(excludeWorkflows, rhs.excludeWorkflows).append(orders, rhs.orders).isEquals();
+        return new EqualsBuilder().append(endDateFrom, rhs.endDateFrom).append(endDateTo, rhs.endDateTo).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(orderId, rhs.orderId).append(workflowPath, rhs.workflowPath).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(historyIds, rhs.historyIds).append(states, rhs.states).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(excludeWorkflows, rhs.excludeWorkflows).append(orders, rhs.orders).isEquals();
     }
 
 }

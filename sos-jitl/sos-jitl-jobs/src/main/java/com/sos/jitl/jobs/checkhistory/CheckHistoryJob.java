@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.jitl.jobs.checkhistory.classes.CheckHistoryJobReturn;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
@@ -26,22 +27,24 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
 	public JOutcome.Completed onOrderProcess(JobStep<CheckHistoryJobArguments> step) throws Exception {
 
 		try {
-			return step.success(exitCode, process(step, step.getArguments()));
+			CheckHistoryJobReturn checkHistoryJobReturn = process(step, step.getArguments());
+			return step.success(checkHistoryJobReturn.getExitCode(), checkHistoryJobReturn.getResultMap());
 
 		} catch (Throwable e) {
 			throw e;
 		}
 	}
 
-	private Map<String, Object> process(JobStep<CheckHistoryJobArguments> step, CheckHistoryJobArguments args)
+	private CheckHistoryJobReturn process(JobStep<CheckHistoryJobArguments> step, CheckHistoryJobArguments args)
 			throws Exception {
 		JobLogger logger = null;
 		if (step != null) {
 			logger = step.getLogger();
 		}
-		exitCode = 0;
+		CheckHistoryJobReturn checkHistoryJobReturn = new CheckHistoryJobReturn();
+		checkHistoryJobReturn.setExitCode(0);
 		Map<String, Object> resultMap = new HashMap<String, Object>();
-		resultMap.put("RETURN", "");
+		resultMap.put("js7_checkhistory_return", "");
 		String query = args.getQuery();
 
 		log(logger, String.format("check history: %s will be executed.", query));
@@ -49,23 +52,18 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
 		HistoryInfo historyInfo = new HistoryInfo(args);
 		boolean result = historyInfo.queryHistory();
 		if (result) {
-			log(logger,args.getQuery() + "(" + args.getWorkflowPath() + ") ==> true");
-			exitCode = 0;
-			resultMap.put("RETURN", "true");
+			log(logger, args.getQuery() + "(" + args.getWorkflowPath() + ") ==> true");
+			checkHistoryJobReturn.setExitCode(0);
+			resultMap.put("js7_checkhistory_return", "true");
 		} else {
-			log(logger,args.getQuery() + "(" + args.getWorkflowPath() + ") ==> false");
-			exitCode = 1;
-			resultMap.put("RETURN", "false");
+			log(logger, args.getQuery() + "(" + args.getWorkflowPath() + ") ==> false");
+			checkHistoryJobReturn.setExitCode(1);
+			resultMap.put("js7_checkhistory_return", "false");
 		}
 
-		/*
-		 * Intervall: today: 0d,0d lastHour: dateFrom: "-1h" last12Hours: dateFrom:
-		 * "-12h" last24Hours: dateFrom: "-24h" last7Days: dateFrom: "-7d"
-		 * 
-		 * dateFrom, dateTo
-		 */
+		checkHistoryJobReturn.setResultMap(resultMap);
 
-		return resultMap;
+		return checkHistoryJobReturn;
 	}
 
 	private void log(JobLogger logger, String log) {
@@ -86,7 +84,7 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
 
 	public static void main(String[] args) {
 		CheckHistoryJobArguments arguments = new CheckHistoryJobArguments();
-		arguments.setQuery("lastfinishedrunendedfailed");
+		arguments.setQuery("isStarted(-3d,-1d)");
 		arguments.setAccount("root");
 		arguments.setPassword("root");
 		arguments.setJocUrl("http://localhost:4426");

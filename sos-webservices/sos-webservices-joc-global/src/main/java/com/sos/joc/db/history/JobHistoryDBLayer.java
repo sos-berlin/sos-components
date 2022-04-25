@@ -327,6 +327,17 @@ public class JobHistoryDBLayer {
                 where.append(and).append(" startTime < :startTimeTo");
                 and = " and";
             }
+            
+            if (filter.getEndFrom() != null) {
+                where.append(and).append(" endTime >= :endTimeFrom");
+                and = " and";
+            }
+ 
+            if (filter.getEndTo() != null) {
+                where.append(and).append(" endTime < :endTimeTo");
+                and = " and";
+            }
+            
             if (filter.getStates() != null && !filter.getStates().isEmpty()) {
                 clause = filter.getStates().stream().map(state -> STATEMAP.get(state)).collect(Collectors.joining(" or "));
                 if (filter.getStates().size() > 1) {
@@ -479,6 +490,12 @@ public class JobHistoryDBLayer {
         }
         if (filter.getExecutedTo() != null) {
             query.setParameter("startTimeTo", filter.getExecutedTo(), TemporalType.TIMESTAMP);
+        }
+        if (filter.getEndFrom() != null) {
+            query.setParameter("endTimeFrom", filter.getEndFrom(), TemporalType.TIMESTAMP);
+        }
+        if (filter.getEndTo() != null) {
+            query.setParameter("endTimeTo", filter.getEndTo(), TemporalType.TIMESTAMP);
         }
         if (filter.getCriticalities() != null && !filter.getCriticalities().isEmpty()) {
             query.setParameterList("criticalities", filter.getCriticalities());

@@ -35,35 +35,13 @@ public class ApiAccessToken {
         this.jocUrl = jocUrl;
     }
 
-    private void addSSLContext(WebserviceCredentials webserviceCredentials) throws SOSSSLException, SOSMissingDataException, KeyStoreException,
-            NoSuchAlgorithmException, CertificateException, IOException {
-
-        LOGGER.debug("add SSLContext to REST api client");
-        jocRestApiClient.setKeyPass(webserviceCredentials.getKeyPassword());
-        jocRestApiClient.setKeystoreType(webserviceCredentials.getKeyStoreType());
-        jocRestApiClient.setKeystorePass(webserviceCredentials.getKeyStorePassword());
-
-        try {
-            KeyStore truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTrustStorePath(), KeystoreType.fromValue(webserviceCredentials.getTrustStoreType()));
-            jocRestApiClient.setTruststore(truststore);
-        } catch (Exception e) {
-        }
-        jocRestApiClient.setKeystorePath(webserviceCredentials.getKeyStorePath());
-        jocRestApiClient.setSSLContext();
-    }
-
+   
     private void createRestApiClient(WebserviceCredentials webserviceCredentials) {
         if (jocRestApiClient == null) {
             jocRestApiClient = new SOSRestApiClient();
 
             jocRestApiClient.addHeader("Content-Type", "application/json");
-            jocRestApiClient.addHeader("Accept", "application/json");
-            try {
-                addSSLContext(webserviceCredentials);
-            } catch (SOSSSLException | SOSMissingDataException | KeyStoreException | NoSuchAlgorithmException | CertificateException
-                    | IOException e) {
-                e.printStackTrace();
-            }
+            jocRestApiClient.addHeader("Accept", "application/json");          
         }
     }
 
