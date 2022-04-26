@@ -211,7 +211,7 @@ public class DBLayer implements Serializable {
     public static final String VIEW_INV_SCHEDULE2WORKFLOWS = "INV_SCHEDULE2WORKFLOWS";
 
     public static final String DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS = DBItemInventoryReleasedSchedule2Workflow.class.getSimpleName();
-    public static final String VIEW_INV_RELEASED_SCHEDULE2WORKFLOWS = "INV_RELEASED_SCHEDULE2WORKFLOWS";
+    public static final String VIEW_INV_RELEASED_SCHEDULE2WORKFLOWS = "INV_REL_SCHEDULE2WORKFLOWS";
 
     /** Search (helper) tables */
     public static final String DBITEM_SEARCH_WORKFLOWS = DBItemSearchWorkflow.class.getSimpleName();
