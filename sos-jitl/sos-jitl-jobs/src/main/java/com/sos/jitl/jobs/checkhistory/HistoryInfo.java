@@ -42,115 +42,91 @@ public class HistoryInfo {
 		String queryName = CheckHistoryHelper.getQueryName(query);
 		String parameter = CheckHistoryHelper.getParameter(query);
 		String[] parameters = parameter.split(",");
-		String parameter1 = "";
-		String parameter2 = "";
-		boolean haveParameter = false;
-
-		switch (queryName.toLowerCase()) {
-		case "isstartedtoday":
-		case "iscompletedtoday":
-		case "iscompletedtodaysuccessful":
-		case "iscompletedtodaywitherror":
-		case "isstartedtodaycompleted":
-		case "isstartedtodaycompletedsuccessful":
-		case "isstartedtodaycompletedwitherror":
-		case "lastcompletedtodaysuccessful":
-		case "lastcompletedtodaywitherror":
-			parameter1 = "0d";
-			parameter2 = "0d";
-			haveParameter = true;
-			break;
-		default:
-			if (parameters.length > 0) {
-				haveParameter = true;
-				parameter1 = parameters[0];
-				if (parameters.length > 1) {
-					parameter2 = parameters[1];
-				} else {
-					parameter2 = "0d";
+		String startedFrom = "0d";
+		String startedTo = "0d";
+		String completedFrom = "0d";
+		String completedTo = "0d";
+		boolean paramStartedFrom = false;
+		boolean paramStartedTo = false;
+	 
+		if (parameters.length > 0) {
+			for (String parameterAssignment : parameters) {
+				String[] p = parameterAssignment.split("=");
+				String pName = p[0];
+				String pValue = "";
+				if (p.length > 1) {
+					pValue = p[1];
+				}
+				switch (pName.toLowerCase()) {
+				case "startedfrom":
+					paramStartedFrom = true;
+					startedFrom = pValue;
+					break;
+				case "startedto":
+					paramStartedTo = true;
+					startedTo = pValue;
+					break;
+				case "completedfrom":
+					completedTo = pValue;
+					break;
+				case "completedto":
+					startedFrom = pValue;
+					break;
+				default:
+					throw new SOSException("unknown parameter name: " + pName);
 				}
 			}
 		}
 
 		switch (queryName.toLowerCase()) {
 		case "isstarted":
-		case "isstartedtoday":
-			if (haveParameter) {
-				ordersFilter.setDateFrom(parameter1);
-				ordersFilter.setDateTo(parameter2);
-			}
+			ordersFilter.setDateFrom(startedFrom);
+			ordersFilter.setDateTo(startedTo);
 			break;
 		case "iscompleted":
-		case "iscompletedtoday":
-			if (haveParameter) {
-				ordersFilter.setEndDateFrom(parameter1);
-				ordersFilter.setEndDateTo(parameter2);
+			if (paramStartedFrom || paramStartedTo) {
+				ordersFilter.setDateFrom(startedFrom);
+				ordersFilter.setDateTo(startedTo);
 			}
+			ordersFilter.setEndDateFrom(completedFrom);
+			ordersFilter.setEndDateTo(completedTo);
 			states.add(OrderStateText.FINISHED);
 			ordersFilter.setStates(states);
 			break;
 		case "iscompletedsuccessful":
-		case "iscompletedtodaysuccessful":
-			if (haveParameter) {
-				ordersFilter.setEndDateFrom(parameter1);
-				ordersFilter.setEndDateTo(parameter2);
+			if (paramStartedFrom || paramStartedTo) {
+				ordersFilter.setDateFrom(startedFrom);
+				ordersFilter.setDateTo(startedTo);
 			}
+			ordersFilter.setEndDateFrom(completedFrom);
+			ordersFilter.setEndDateTo(completedTo);
+ 
 			states.add(OrderStateText.FINISHED);
 			historyStates.add(HistoryStateText.SUCCESSFUL);
 			ordersFilter.setHistoryStates(historyStates);
 			ordersFilter.setStates(states);
 			break;
-		case "iscompletedwitherror":
-		case "iscompletedtodaywitherror":
-			if (haveParameter) {
-				ordersFilter.setEndDateFrom(parameter1);
-				ordersFilter.setEndDateTo(parameter2);
+		case "iscompletedfailed":
+			if (paramStartedFrom || paramStartedTo) {
+				ordersFilter.setDateFrom(startedFrom);
+				ordersFilter.setDateTo(startedTo);
 			}
+			ordersFilter.setEndDateFrom(completedFrom);
+			ordersFilter.setEndDateTo(completedTo);
 			states.add(OrderStateText.FINISHED);
 			historyStates.add(HistoryStateText.FAILED);
 			ordersFilter.setHistoryStates(historyStates);
 			ordersFilter.setStates(states);
 			break;
-		case "isstartedcompleted":
-		case "isstartedtodaycompleted":
-			if (haveParameter) {
-				ordersFilter.setDateFrom(parameter1);
-				ordersFilter.setDateTo(parameter2);
-			}
-			states.add(OrderStateText.FINISHED);
-			ordersFilter.setStates(states);
-			break;
-		case "isstartedcompletedsuccessful":
-		case "isstartedtodaycompletedsuccessful":
-			if (haveParameter) {
-				ordersFilter.setDateFrom(parameter1);
-				ordersFilter.setDateTo(parameter1);
-			}
-			states.add(OrderStateText.FINISHED);
-			historyStates.add(HistoryStateText.SUCCESSFUL);
-			ordersFilter.setHistoryStates(historyStates);
-			ordersFilter.setStates(states);
-			break;
-		case "isstartedcompletedwitherror":
-		case "isstartedtodaycompletedwitherror":
-			if (haveParameter) {
-				ordersFilter.setDateFrom(parameter1);
-				ordersFilter.setDateTo(parameter2);
-			}
-			states.add(OrderStateText.FINISHED);
-			historyStates.add(HistoryStateText.FAILED);
-			ordersFilter.setHistoryStates(historyStates);
-			ordersFilter.setStates(states);
-			break;
-		case "lastcompletedsuccessful":
-		case "lastcompletedwitherror":
-		case "lastcompletedtodaysuccessful":
-		case "lastcompletedtodaywitherror":
-			if (haveParameter) {
-				ordersFilter.setEndDateFrom(parameter1);
-				ordersFilter.setEndDateTo(parameter2);
-			}
 
+		case "lastcompletedsuccessful":
+		case "lastcompletedfailed":
+			if (paramStartedFrom || paramStartedTo) {
+				ordersFilter.setDateFrom(startedFrom);
+				ordersFilter.setDateTo(startedTo);
+			}
+			ordersFilter.setEndDateFrom(completedFrom);
+			ordersFilter.setEndDateTo(completedTo);
 			states.add(OrderStateText.FINISHED);
 			ordersFilter.setStates(states);
 			break;
@@ -163,11 +139,9 @@ public class HistoryInfo {
 
 		switch (query.toLowerCase()) {
 		case "lastcompletedsuccessful":
-		case "lastcompletedtodaysuccessful":
 			return (orderHistoryItem != null
 					&& orderHistoryItem.getState().get_text().value().equals(HistoryStateText.SUCCESSFUL.value()));
-		case "lastcompletedwitherror":
-		case "lastcompletedtodaywitherror":
+		case "lastcompletedfailed":
 			return (orderHistoryItem != null
 					&& orderHistoryItem.getState().get_text().value().equals(HistoryStateText.FAILED.value()));
 		default:

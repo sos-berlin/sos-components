@@ -84,7 +84,7 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
 
 	public static void main(String[] args) {
 		CheckHistoryJobArguments arguments = new CheckHistoryJobArguments();
-		arguments.setQuery("isStarted(-3d,-1d)");
+		arguments.setQuery("isStarted(startedFrom=-1d,startedTo=-2d)");
 		arguments.setAccount("root");
 		arguments.setPassword("root");
 		arguments.setJocUrl("http://localhost:4426");
