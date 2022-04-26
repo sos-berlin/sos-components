@@ -48,7 +48,7 @@ public class HistoryInfo {
 		String completedTo = "0d";
 		boolean paramStartedFrom = false;
 		boolean paramStartedTo = false;
-	 
+
 		if (parameters.length > 0) {
 			for (String parameterAssignment : parameters) {
 				String[] p = parameterAssignment.split("=");
@@ -73,12 +73,16 @@ public class HistoryInfo {
 					startedFrom = pValue;
 					break;
 				default:
-					throw new SOSException("unknown parameter name: " + pName);
+					if (!pName.isEmpty()) {
+						throw new SOSException("unknown parameter name: " + pName);
+					}
 				}
 			}
 		}
 
-		switch (queryName.toLowerCase()) {
+		switch (queryName.toLowerCase())
+
+		{
 		case "isstarted":
 			ordersFilter.setDateFrom(startedFrom);
 			ordersFilter.setDateTo(startedTo);
@@ -100,7 +104,7 @@ public class HistoryInfo {
 			}
 			ordersFilter.setEndDateFrom(completedFrom);
 			ordersFilter.setEndDateTo(completedTo);
- 
+
 			states.add(OrderStateText.FINISHED);
 			historyStates.add(HistoryStateText.SUCCESSFUL);
 			ordersFilter.setHistoryStates(historyStates);
