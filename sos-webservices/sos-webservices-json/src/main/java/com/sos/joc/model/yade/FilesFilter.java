@@ -24,8 +24,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "states",
     "sourceFiles",
     "targetFiles",
-    "sourceFile",
-    "targetFile",
     "integrityHash",
     "limit"
 })
@@ -39,24 +37,6 @@ public class FilesFilter {
     private List<String> sourceFiles = new ArrayList<String>();
     @JsonProperty("targetFiles")
     private List<String> targetFiles = new ArrayList<String>();
-    /**
-     * glob pattern
-     * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
-     * 
-     */
-    @JsonProperty("sourceFile")
-    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
-    private String sourceFile;
-    /**
-     * glob pattern
-     * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
-     * 
-     */
-    @JsonProperty("targetFile")
-    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
-    private String targetFile;
     /**
      * string without < and >
      * <p>
@@ -114,50 +94,6 @@ public class FilesFilter {
     }
 
     /**
-     * glob pattern
-     * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
-     * 
-     */
-    @JsonProperty("sourceFile")
-    public String getSourceFile() {
-        return sourceFile;
-    }
-
-    /**
-     * glob pattern
-     * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
-     * 
-     */
-    @JsonProperty("sourceFile")
-    public void setSourceFile(String sourceFile) {
-        this.sourceFile = sourceFile;
-    }
-
-    /**
-     * glob pattern
-     * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
-     * 
-     */
-    @JsonProperty("targetFile")
-    public String getTargetFile() {
-        return targetFile;
-    }
-
-    /**
-     * glob pattern
-     * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
-     * 
-     */
-    @JsonProperty("targetFile")
-    public void setTargetFile(String targetFile) {
-        this.targetFile = targetFile;
-    }
-
-    /**
      * string without < and >
      * <p>
      * 
@@ -199,12 +135,12 @@ public class FilesFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("transferIds", transferIds).append("states", states).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("sourceFile", sourceFile).append("targetFile", targetFile).append("integrityHash", integrityHash).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("transferIds", transferIds).append("states", states).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("integrityHash", integrityHash).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(sourceFiles).append(targetFile).append(limit).append(targetFiles).append(integrityHash).append(sourceFile).append(transferIds).append(states).toHashCode();
+        return new HashCodeBuilder().append(sourceFiles).append(limit).append(targetFiles).append(integrityHash).append(transferIds).append(states).toHashCode();
     }
 
     @Override
@@ -216,7 +152,7 @@ public class FilesFilter {
             return false;
         }
         FilesFilter rhs = ((FilesFilter) other);
-        return new EqualsBuilder().append(sourceFiles, rhs.sourceFiles).append(targetFile, rhs.targetFile).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).append(integrityHash, rhs.integrityHash).append(sourceFile, rhs.sourceFile).append(transferIds, rhs.transferIds).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(sourceFiles, rhs.sourceFiles).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).append(integrityHash, rhs.integrityHash).append(transferIds, rhs.transferIds).append(states, rhs.states).isEquals();
     }
 
 }

@@ -179,7 +179,7 @@ public class Yade {
 
     public enum TransferEntryState {
         UNKNOWN(1), WAITING(2), TRANSFERRING(3), IN_PROGRESS(4), TRANSFERRED(5), SKIPPED(6), FAILED(7), ABORTED(8), COMPRESSED(9), NOT_OVERWRITTEN(
-                10), DELETED(11), RENAMED(12), IGNORED_DUE_TO_ZEROBYTE_CONSTRAINT(13), ROLLED_BACK(14), POLLING(15), MOVED(16);
+                10), DELETED(11), RENAMED(12), IGNORED_DUE_TO_ZEROBYTE_CONSTRAINT(13), ROLLED_BACK(14), POLLING(15), MOVED(16), SUCCESS(17);
 
         private final Integer intValue;
         private final static Map<String, TransferEntryState> CONSTANTS = new HashMap<String, TransferEntryState>();

@@ -21,7 +21,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "transferIds",
     "compact",
     "regex",
     "profiles",
@@ -33,8 +32,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "limit",
     "sources",
     "targets",
-    "sourceFile",
-    "targetFile",
     "sourceFiles",
     "targetFiles"
 })
@@ -48,8 +45,6 @@ public class TransferFilter {
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    @JsonProperty("transferIds")
-    private List<Long> transferIds = new ArrayList<Long>();
     /**
      * compact parameter
      * <p>
@@ -112,24 +107,6 @@ public class TransferFilter {
     private List<ProtocolFragment> sources = new ArrayList<ProtocolFragment>();
     @JsonProperty("targets")
     private List<ProtocolFragment> targets = new ArrayList<ProtocolFragment>();
-    /**
-     * glob pattern
-     * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
-     * 
-     */
-    @JsonProperty("sourceFile")
-    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
-    private String sourceFile;
-    /**
-     * glob pattern
-     * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
-     * 
-     */
-    @JsonProperty("targetFile")
-    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
-    private String targetFile;
     @JsonProperty("sourceFiles")
     private List<String> sourceFiles = new ArrayList<String>();
     @JsonProperty("targetFiles")
@@ -155,16 +132,6 @@ public class TransferFilter {
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
-    }
-
-    @JsonProperty("transferIds")
-    public List<Long> getTransferIds() {
-        return transferIds;
-    }
-
-    @JsonProperty("transferIds")
-    public void setTransferIds(List<Long> transferIds) {
-        this.transferIds = transferIds;
     }
 
     /**
@@ -345,50 +312,6 @@ public class TransferFilter {
         this.targets = targets;
     }
 
-    /**
-     * glob pattern
-     * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
-     * 
-     */
-    @JsonProperty("sourceFile")
-    public String getSourceFile() {
-        return sourceFile;
-    }
-
-    /**
-     * glob pattern
-     * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
-     * 
-     */
-    @JsonProperty("sourceFile")
-    public void setSourceFile(String sourceFile) {
-        this.sourceFile = sourceFile;
-    }
-
-    /**
-     * glob pattern
-     * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
-     * 
-     */
-    @JsonProperty("targetFile")
-    public String getTargetFile() {
-        return targetFile;
-    }
-
-    /**
-     * glob pattern
-     * <p>
-     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
-     * 
-     */
-    @JsonProperty("targetFile")
-    public void setTargetFile(String targetFile) {
-        this.targetFile = targetFile;
-    }
-
     @JsonProperty("sourceFiles")
     public List<String> getSourceFiles() {
         return sourceFiles;
@@ -411,12 +334,12 @@ public class TransferFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("transferIds", transferIds).append("compact", compact).append("regex", regex).append("profiles", profiles).append("states", states).append("operations", operations).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("sources", sources).append("targets", targets).append("sourceFile", sourceFile).append("targetFile", targetFile).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("compact", compact).append("regex", regex).append("profiles", profiles).append("states", states).append("operations", operations).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("sources", sources).append("targets", targets).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(compact).append(sources).append(profiles).append(timeZone).append(dateFrom).append(targets).append(sourceFile).append(transferIds).append(states).append(regex).append(operations).append(sourceFiles).append(targetFile).append(dateTo).append(limit).append(targetFiles).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(compact).append(sources).append(profiles).append(timeZone).append(dateFrom).append(targets).append(states).append(regex).append(operations).append(sourceFiles).append(dateTo).append(limit).append(targetFiles).toHashCode();
     }
 
     @Override
@@ -428,7 +351,7 @@ public class TransferFilter {
             return false;
         }
         TransferFilter rhs = ((TransferFilter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(sources, rhs.sources).append(profiles, rhs.profiles).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(targets, rhs.targets).append(sourceFile, rhs.sourceFile).append(transferIds, rhs.transferIds).append(states, rhs.states).append(regex, rhs.regex).append(operations, rhs.operations).append(sourceFiles, rhs.sourceFiles).append(targetFile, rhs.targetFile).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(sources, rhs.sources).append(profiles, rhs.profiles).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(targets, rhs.targets).append(states, rhs.states).append(regex, rhs.regex).append(operations, rhs.operations).append(sourceFiles, rhs.sourceFiles).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).isEquals();
     }
 
 }

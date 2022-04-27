@@ -44,7 +44,9 @@ public class YadeFilesResourceImpl extends JOCResourceImpl implements IYadeFiles
                 limit = 10000; // default
             }
             JocDBLayerYade dbLayer = new JocDBLayerYade(session);
-            List<DBItemYadeFile> dbFiles = dbLayer.getFilteredTransferFiles(in, limit);
+            List<Long> transferIds = in.getTransferIds();
+            in.setTransferIds(null);
+            List<DBItemYadeFile> dbFiles = dbLayer.getFilteredTransferFiles(transferIds, in, limit);
 
             TransferFiles answer = new TransferFiles();
             if (dbFiles != null) {
