@@ -106,7 +106,7 @@ public abstract class CAUtils {
         } 
     }
     
-    public static X509Certificate signCSR(String algorithm, PrivateKey privateKey, PKCS10CertificationRequest csr, X509Certificate rootCa,
+    public static X509Certificate signAuthCSR(String algorithm, PrivateKey privateKey, PKCS10CertificationRequest csr, X509Certificate rootCa,
             String subjectAlternativeName) throws OperatorCreationException, IOException, CertificateException, NoSuchAlgorithmException {
       AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(algorithm);
       AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
@@ -186,6 +186,60 @@ public abstract class CAUtils {
         return rootSubjectDN.toString();
     }
     
+    public static X509Certificate signSigningCSR(String algorithm, PrivateKey privateKey, PKCS10CertificationRequest csr, X509Certificate rootCa,
+            String subjectAlternativeName, Date validUntil) throws OperatorCreationException, IOException, CertificateException, NoSuchAlgorithmException {
+      AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(algorithm);
+      AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
+      X500Name issuer = X500Name.getInstance(rootCa.getSubjectX500Principal().getEncoded());
+      Date startDate = Date.from(Instant.now());
+      // Using the current timestamp as the certificate serial number
+      BigInteger certSerialNumber = new BigInteger(Long.toString(startDate.getTime()));
+      Calendar calendar = Calendar.getInstance();
+      calendar.setTime(startDate);
+      if (validUntil == null) {
+          // 2 Year validity
+          calendar.add(Calendar.YEAR, 2);
+          validUntil = calendar.getTime();
+      }
+      X509v3CertificateBuilder certgen = 
+              new X509v3CertificateBuilder(issuer, certSerialNumber, startDate, validUntil, csr.getSubject(), csr.getSubjectPublicKeyInfo());
+      // 2.5.29.17 is the oid value for Subject Alternative Name [SAN] 
+      // new ASN1ObjectIdentifier("2.5.29.17")
+      
+      if (subjectAlternativeName != null && !subjectAlternativeName.isEmpty()) {
+          if (subjectAlternativeName.contains(",")) {
+              String[] sans = subjectAlternativeName.split(",");
+              List<GeneralName> generalNames = new ArrayList<>();
+              for (int i=0; i < sans.length; i++) {
+                  GeneralName altName = new GeneralName(GeneralName.dNSName, sans[i].trim());
+                  generalNames.add(altName);
+              }
+              GeneralNames san = new GeneralNames(generalNames.toArray(new GeneralName [0]));
+              certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
+          } else {
+              GeneralName altName = new GeneralName(GeneralName.dNSName, subjectAlternativeName);
+              GeneralNames san = new GeneralNames(altName);
+              certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
+          }
+      }
+
+      // client and server authentication
+      certgen.addExtension(Extension.basicConstraints, false, new BasicConstraints(false));
+      certgen.addExtension(Extension.keyUsage, false, 
+              new KeyUsage(KeyUsage.digitalSignature | KeyUsage.dataEncipherment));
+      AuthorityKeyIdentifier authorityKeyIdentifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootCa.getPublicKey());
+      certgen.addExtension(Extension.authorityKeyIdentifier, false, authorityKeyIdentifier);
+
+      ContentSigner signer = null;
+      if (algorithm.equals(SOSKeyConstants.RSA_SIGNER_ALGORITHM)) {
+          signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));
+      } else {
+          signer = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));
+      }
+      X509CertificateHolder holder = certgen.build(signer);
+      return new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME).getCertificate(holder);
+    }
+    
     public static String createUserSubjectDN (String dnQualifier, String commonName, String organizationUnit, String organization, String locality,
             String state, String countryCode) {
         final String separator = ",";
@@ -252,6 +306,11 @@ public abstract class CAUtils {
         return userSubjectDN.toString();
     }
     
+    public static String createUserSubjectDN (String dn, X509Certificate alternativeSource) throws InvalidNameException {
+        return createUserSubjectDN(dn, alternativeSource, null);
+    }
+
+    
     public static String createUserSubjectDN (String dn, X509Certificate alternativeSource, String targetHostname) throws InvalidNameException {
         LdapName dnName = null;
         if (dn != null) {
@@ -278,6 +337,9 @@ public abstract class CAUtils {
                 commonName = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("DN")).map(rdn -> rdn.getValue().toString())
                         .collect(Collectors.toList()).get(0);
             }
+        }
+        if (altSourceIssuerDN != null) {
+            dnQualifier = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().get().getValue().toString();
         }
         if (dn != null && dn.contains("CN=")) {
             commonName = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).map(rdn -> rdn.getValue().toString())

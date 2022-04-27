@@ -161,7 +161,7 @@ public class DBLayerKeys {
     }
 
     public void saveOrUpdateKey (Integer type, String key, String certificate, String account, JocSecurityLevel secLvl,
-            String keyAlgorythm) throws SOSHibernateException {
+            String keyAlgorithm) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_DEP_KEYS);
         hql.append(" where account = :account");
@@ -176,11 +176,11 @@ public class DBLayerKeys {
             existingKey.setKeyType(type);
             existingKey.setCertificate(certificate);
             existingKey.setKey(key);
-            if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyAlgorythm)) {
+            if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 existingKey.setKeyAlgorithm(JocKeyAlgorithm.PGP.value());
-            } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyAlgorythm)) {
+            } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 existingKey.setKeyAlgorithm(JocKeyAlgorithm.RSA.value());
-            } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorythm)) {
+            } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 existingKey.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.value());
             }
             session.update(existingKey);
@@ -189,11 +189,11 @@ public class DBLayerKeys {
             newKey.setKeyType(type);
             newKey.setCertificate(certificate);
             newKey.setKey(key);
-            if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyAlgorythm)) {
+            if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 newKey.setKeyAlgorithm(JocKeyAlgorithm.PGP.value());
-            } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyAlgorythm)) {
+            } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 newKey.setKeyAlgorithm(JocKeyAlgorithm.RSA.value());
-            } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorythm)) {
+            } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 newKey.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.value());
             }
             newKey.setAccount(account);
@@ -254,12 +254,24 @@ public class DBLayerKeys {
         return key;
     }
     
+    public DBItemInventoryCertificate getSigningRootCaCertificate(String account) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(DBLayer.DBITEM_INV_CERTS);
+        hql.append(" where ca = 1");
+        hql.append(" and account = :account");
+        Query<DBItemInventoryCertificate> query = session.createQuery(hql.toString());
+        query.setParameter("account", account);
+        query.setMaxResults(1);
+        DBItemInventoryCertificate key = session.getSingleResult(query);
+        return key;
+    }
+    
     public void saveOrUpdateSigningRootCaCertificate(JocKeyPair keyPair, String account, Integer secLvl) throws SOSHibernateException {
         DBItemInventoryCertificate certificate = getSigningRootCaCertificate();
         if (certificate != null) {
             certificate.setCa(true);
             certificate.setKeyAlgorithm(JocKeyAlgorithm.valueOf(keyPair.getKeyAlgorithm()).value());
-            certificate.setKeyType(JocKeyType.valueOf(keyPair.getKeyType()).value());
+            certificate.setKeyType(JocKeyType.CA.value());
             certificate.setPem(keyPair.getCertificate());
             certificate.setAccount(account);
             certificate.setSecLvl(secLvl);
