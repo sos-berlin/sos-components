@@ -2,6 +2,7 @@ package com.sos.joc.db.yade;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -13,11 +14,13 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.query.Query;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.SearchStringHelper;
+import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.yade.FilesFilter;
 import com.sos.yade.commons.Yade;
@@ -226,7 +229,13 @@ public class JocDBLayerYade {
         }
 
         if (withProfiles) {
-            hql.append(and).append(" yt.profileName in (:profiles)");
+            hql.append(and).append(filter.getProfiles().stream().map(p -> {
+                if (SearchStringHelper.isGlobPattern(p)) {
+                   return "yt.profileName like '" + SearchStringHelper.globToSqlPattern(p) + "'"; 
+                } else {
+                   return "yt.profileName = '" + p + "'"; 
+                }
+            }).collect(Collectors.joining(" or ", " (", ")")));
             and = " and";
         }
         if (filter.getDateFrom() != null) {
@@ -240,9 +249,6 @@ public class JocDBLayerYade {
             hql.append(" group by yt.id");
         }
         Query<T> query = session.createQuery(hql.toString());
-        if (withProfiles) {
-            query.setParameterList("profiles", filter.getProfiles());
-        }
         if (withControllerIds) {
             query.setParameterList("controllerIds", filter.getControllerIds());
         }
@@ -286,80 +292,83 @@ public class JocDBLayerYade {
     }
 
     public DBItemYadeProtocol getProtocolById(Long id) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_YADE_PROTOCOLS).append(" ");
-        hql.append("where id=:id");
-
-        Query<DBItemYadeProtocol> query = session.createQuery(hql.toString());
-        query.setParameter("id", id);
-        return query.getSingleResult();
+        return session.get(DBItemYadeProtocol.class, id);
     }
 
-    public List<DBItemYadeFile> getFilteredTransferFiles(FilesFilter filter, Integer limit) throws SOSHibernateException {
-        boolean withTransferIds = filter.getTransferIds() != null && !filter.getTransferIds().isEmpty();
-        boolean withSourceFiles = filter.getSourceFiles() != null && !filter.getSourceFiles().isEmpty();
-        boolean withTargetFiles = filter.getTargetFiles() != null && !filter.getTargetFiles().isEmpty();
-        boolean withSourcePattern = filter.getSourceFile() != null && !filter.getSourceFile().isEmpty();
-        boolean withTargetPattern = filter.getTargetFile() != null && !filter.getTargetFile().isEmpty();
-        boolean withStates = filter.getStates() != null && !filter.getStates().isEmpty();
-        boolean withIntegrityHash = !SOSString.isEmpty(filter.getIntegrityHash());
+    public List<DBItemYadeFile> getFilteredTransferFiles(List<Long> transferIds, FilesFilter filter, Integer limit) throws SOSHibernateException {
+        boolean withTransferIds = transferIds != null && !transferIds.isEmpty();
+        
+        if (withTransferIds && transferIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemYadeFile> r = new ArrayList<>();
+            for (int i = 0; i < transferIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                r.addAll(getFilteredTransferFiles(SOSHibernate.getInClausePartition(i, transferIds), filter, limit));
+                int resultSize = r.size();
+                if (resultSize > limit) {
+                    //reduce r to limit items
+                    r.subList(limit, resultSize).clear();
+                    break;
+                }
+            }
+            return r;
+        } else {
+            boolean withSourceFiles = filter.getSourceFiles() != null && !filter.getSourceFiles().isEmpty();
+            boolean withTargetFiles = filter.getTargetFiles() != null && !filter.getTargetFiles().isEmpty();
+            boolean withStates = filter.getStates() != null && !filter.getStates().isEmpty();
+            boolean withIntegrityHash = !SOSString.isEmpty(filter.getIntegrityHash());
+            
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_YADE_FILES);
+            List<String> clauses = new ArrayList<>(5);
+            if (withTransferIds) {
+                clauses.add("transferId in (:transferIds)");
+            }
+            if (withStates) {
+                clauses.add("state in (:states)");
+            }
+            if (withSourceFiles) {
+                clauses.add(filter.getSourceFiles().stream().map(f -> {
+                    if (SearchStringHelper.isGlobPattern(f)) {
+                       return "sourcePath like '" + SearchStringHelper.globToSqlPattern(f) + "'"; 
+                    } else {
+                       return "sourcePath = '" + f + "'"; 
+                    }
+                }).collect(Collectors.joining(" or ", "(", ")")));
+            }
+            if (withTargetFiles) {
+                clauses.add(filter.getTargetFiles().stream().map(f -> {
+                    if (SearchStringHelper.isGlobPattern(f)) {
+                       return "sourcePath like '" + SearchStringHelper.globToSqlPattern(f) + "'"; 
+                    } else {
+                       return "sourcePath = '" + f + "'"; 
+                    }
+                }).collect(Collectors.joining(" or ", "(", ")")));
+            }
+            if (withIntegrityHash) {
+                clauses.add("integrityHash = :integrityHash");
+            }
+            if (!clauses.isEmpty()) {
+                hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
+            }
+            Query<DBItemYadeFile> query = session.createQuery(hql.toString());
+            if (limit != null && limit > 0) {
+                query.setMaxResults(limit);
+            }
+            if (withTransferIds) {
+                query.setParameterList("transferIds", transferIds);
+            }
+            if (withStates) {
+                query.setParameterList("states", filter.getStates().stream().map(s -> Yade.TransferEntryState.fromValue(s.value()).intValue()).collect(
+                        Collectors.toSet()));
+            }
+            if (withIntegrityHash) {
+                query.setParameter("integrityHash", filter.getIntegrityHash());
+            }
+            List<DBItemYadeFile> result = session.getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        }
 
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_YADE_FILES);
-        List<String> clauses = new ArrayList<>();
-        if (withTransferIds) {
-            clauses.add("transferId in (:transferIds)");
-        }
-        if (withStates) {
-            clauses.add("state in (:states)");
-        }
-        if (withSourceFiles) {
-            clauses.add("sourcePath in (:sources)");
-        } else if (withSourcePattern) {
-            if (SearchStringHelper.isGlobPattern(filter.getSourceFile())) {
-                clauses.add("sourcePath like :source");
-            } else {
-                clauses.add("sourcePath = :source");
-            }
-        }
-        if (withTargetFiles) {
-            clauses.add("targetPath in (:targets)");
-        } else if (withTargetPattern) {
-            if (SearchStringHelper.isGlobPattern(filter.getTargetFile())) {
-                clauses.add("targetPath like :target");
-            } else {
-                clauses.add("targetPath = :target");
-            }
-        }
-        if (withIntegrityHash) {
-            clauses.add("integrityHash = :integrityHash");
-        }
-        if (!clauses.isEmpty()) {
-            hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
-        }
-        Query<DBItemYadeFile> query = session.createQuery(hql.toString());
-        if (limit != null && limit > 0) {
-            query.setMaxResults(limit);
-        }
-        if (withTransferIds) {
-            query.setParameterList("transferIds", filter.getTransferIds());
-        }
-        if (withStates) {
-            query.setParameterList("states", filter.getStates());
-        }
-        if (withSourceFiles) {
-            query.setParameterList("sources", filter.getSourceFiles().stream().map(s -> Yade.TransferEntryState.fromValue(s).intValue()).collect(
-                    Collectors.toSet()));
-        } else if (withSourcePattern) {
-            query.setParameter("source", SearchStringHelper.globToSqlPattern(filter.getSourceFile()));
-        }
-        if (withTargetFiles) {
-            query.setParameterList("targets", filter.getTargetFiles());
-        } else if (withTargetPattern) {
-            query.setParameter("target", SearchStringHelper.globToSqlPattern(filter.getTargetFile()));
-        }
-        if (withIntegrityHash) {
-            query.setParameter("integrityHash", filter.getIntegrityHash());
-        }
-        return session.getResultList(query);
     }
 
     public DBItemYadeTransfer getTransfer(Long id) throws SOSHibernateException {
@@ -400,61 +409,37 @@ public class JocDBLayerYade {
         return (foundFiles != null && !foundFiles.isEmpty());
     }
 
-    public List<Long> transferIdsFilteredBySourceTargetPath(Collection<Long> transferIds, Collection<String> sourceFiles,
-            Collection<String> targetFiles, String sourcePattern, String targetPattern) throws SOSHibernateException {
-        boolean withTransferIds = transferIds != null && !transferIds.isEmpty();
-        boolean withSourceFiles = sourceFiles != null && !sourceFiles.isEmpty();
-        boolean withTargetFiles = targetFiles != null && !targetFiles.isEmpty();
-        boolean withSourcePattern = !withSourceFiles && sourcePattern != null && !sourcePattern.isEmpty();
-        boolean withTargetPattern = !withTargetFiles && targetPattern != null && !targetPattern.isEmpty();
-        String and = " where";
+    public List<Long> transferIdsFilteredBySourceTargetPath(Collection<String> sourceFiles, Collection<String> targetFiles) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder();
         hql.append("select transferId from ").append(DBLayer.DBITEM_YADE_FILES);
-        if (withTransferIds) {
-            hql.append(and).append(" transferId in (:transferIds)");
-            and = " and";
+        List<String> clauses = new ArrayList<>(2);
+        
+        if (sourceFiles != null && !sourceFiles.isEmpty()) {
+            clauses.add(sourceFiles.stream().map(f -> {
+                if (SearchStringHelper.isGlobPattern(f)) {
+                   return "sourcePath like '" + SearchStringHelper.globToSqlPattern(f) + "'"; 
+                } else {
+                   return "sourcePath = '" + f + "'"; 
+                }
+            }).collect(Collectors.joining(" or ", "(", ")")));
         }
-        if (withSourceFiles) {
-            hql.append(and).append(" sourcePath in (:sourcePaths)");
-            and = " and";
+        if (targetFiles != null && !targetFiles.isEmpty()) {
+            clauses.add(targetFiles.stream().map(f -> {
+                if (SearchStringHelper.isGlobPattern(f)) {
+                   return "sourcePath like '" + SearchStringHelper.globToSqlPattern(f) + "'"; 
+                } else {
+                   return "sourcePath = '" + f + "'"; 
+                }
+            }).collect(Collectors.joining(" or ", "(", ")")));
         }
-        if (withTargetFiles) {
-            hql.append(and).append(" targetPath in (:targetPaths)");
-            and = " and";
-        }
-        if (withSourcePattern) {
-            if (SearchStringHelper.isGlobPattern(sourcePattern)) {
-                hql.append(and).append(" sourcePath like :sourcePattern");
-            } else {
-                hql.append(and).append(" sourcePath = :sourcePattern");
-            }
-            and = " and";
-        }
-        if (withTargetPattern) {
-            if (SearchStringHelper.isGlobPattern(targetPattern)) {
-                hql.append(and).append(" targetPath like :targetPattern");
-            } else {
-                hql.append(and).append(" targetPath = :targetPattern");
-            }
-            and = " and";
+        
+
+        if (!clauses.isEmpty()) {
+            hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
         }
         hql.append(" group by transferId");
         Query<Long> query = session.createQuery(hql.toString());
-        if (withTransferIds) {
-            query.setParameterList("transferIds", transferIds);
-        }
-        if (withSourceFiles) {
-            query.setParameterList("sourcePaths", sourceFiles);
-        }
-        if (withTargetFiles) {
-            query.setParameterList("targetPaths", targetFiles);
-        }
-        if (withSourcePattern) {
-            query.setParameter("sourcePattern", SearchStringHelper.globToSqlPattern(sourcePattern));
-        }
-        if (withTargetPattern) {
-            query.setParameter("targetPattern", SearchStringHelper.globToSqlPattern(targetPattern));
-        }
+        
         return session.getResultList(query);
     }
 

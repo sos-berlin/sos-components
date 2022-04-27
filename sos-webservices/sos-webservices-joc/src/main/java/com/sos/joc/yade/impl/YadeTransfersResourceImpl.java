@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +44,7 @@ import com.sos.yade.commons.Yade;
 public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeTransfersResource {
 
     private static final String IMPL_PATH = "./yade/transfers";
+    private Map<Long, ProtocolFragment> protocolFragments = new HashMap<>();
 
     @Override
     public JOCDefaultResponse postYadeTransfers(String accessToken, byte[] inBytes) {
@@ -83,42 +85,35 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
 
             JocYadeFilter filter = new JocYadeFilter();
             filter.setControllerIds(allowedControllers);
-            filter.setTransferIds(in.getTransferIds());
             filter.setOperations(in.getOperations());
             filter.setStates(in.getStates());
             filter.setSources(in.getSources());
             filter.setTargets(in.getTargets());
             filter.setProfiles(in.getProfiles());
             filter.setLimit(limit);
-            filter.setDateFrom(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()));
-            filter.setDateTo(JobSchedulerDate.getDateTo(in.getDateTo(), in.getTimeZone()));
+            filter.setDateFrom(JobSchedulerDate.getDateFrom(JobSchedulerDate.setRelativeDateIntoPast(in.getDateFrom()), in.getTimeZone()));
+            filter.setDateTo(JobSchedulerDate.getDateTo(JobSchedulerDate.setRelativeDateIntoPast(in.getDateTo()), in.getTimeZone()));
 
             Transfers entity = new Transfers();
-            List<Transfer> transfers = new ArrayList<Transfer>();
-            List<Long> filteredTransferIds = null;
+            List<Transfer> transfers = new ArrayList<>();
 
             JocDBLayerYade dbLayer = new JocDBLayerYade(session);
             List<DBItemYadeTransfer> items = dbLayer.getFilteredTransfers(filter);
             if (items != null && !items.isEmpty()) {
                 boolean withSourceFiles = in.getSourceFiles() != null && !in.getSourceFiles().isEmpty();
                 boolean withTargetFiles = in.getTargetFiles() != null && !in.getTargetFiles().isEmpty();
-                boolean withSourceFilePattern = in.getSourceFile() != null && !in.getSourceFile().isEmpty();
-                boolean withTargetFilePattern = in.getTargetFile() != null && !in.getTargetFile().isEmpty();
-                boolean withSourceTargetFilter = withSourceFiles || withTargetFiles || withSourceFilePattern || withTargetFilePattern;
+                boolean withSourceTargetFilter = withSourceFiles || withTargetFiles;
 
+                List<Long> filteredTransferIds = Collections.emptyList();
                 if (withSourceTargetFilter) {
-                    filteredTransferIds = items.stream().map(DBItemYadeTransfer::getId).distinct().collect(Collectors.toList());
-                }
-                if ((withSourceFiles || withTargetFiles) && filteredTransferIds != null && !filteredTransferIds.isEmpty()) {
-                    filteredTransferIds = dbLayer.transferIdsFilteredBySourceTargetPath(filteredTransferIds, in.getSourceFiles(), in.getTargetFiles(),
-                            in.getSourceFile(), in.getTargetFile());
-                }
-                if (filteredTransferIds == null) {
-                    filteredTransferIds = Collections.emptyList();
+                    filteredTransferIds = dbLayer.transferIdsFilteredBySourceTargetPath(in.getSourceFiles(), in.getTargetFiles());
+                    if (filteredTransferIds == null) {
+                        filteredTransferIds = Collections.emptyList();
+                    }
                 }
                 boolean compact = in.getCompact() == Boolean.TRUE;
                 for (DBItemYadeTransfer item : items) {
-                    if (withSourceTargetFilter && !filteredTransferIds.contains(item.getId())) {
+                    if (withSourceTargetFilter && !filteredTransferIds.remove(item.getId())) {
                         continue;
                     }
                     if (item.getWorkflowPath() != null && !item.getWorkflowPath().isEmpty()) {
@@ -173,14 +168,18 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
 
     private ProtocolFragment getProtocolFragment(JocDBLayerYade dbLayer, Long id) throws SOSHibernateException {
         if (id != null) {
-            DBItemYadeProtocol protocol = dbLayer.getProtocolById(id);
-            if (protocol != null) {
-                ProtocolFragment pf = new ProtocolFragment();
-                pf.setAccount(protocol.getAccount());
-                pf.setHost(protocol.getHostname());
-                pf.setPort(protocol.getPort());
-                pf.setProtocol(Protocol.fromValue(Yade.TransferProtocol.fromValue(protocol.getProtocol()).name()));
-                return pf;
+            ProtocolFragment pf = protocolFragments.get(id);
+            if (pf == null) {
+                DBItemYadeProtocol protocol = dbLayer.getProtocolById(id);
+                if (protocol != null) {
+                    pf = new ProtocolFragment();
+                    pf.setAccount(protocol.getAccount());
+                    pf.setHost(protocol.getHostname());
+                    pf.setPort(protocol.getPort());
+                    pf.setProtocol(Protocol.fromValue(Yade.TransferProtocol.fromValue(protocol.getProtocol()).name()));
+                    protocolFragments.put(id, pf);
+                    return pf;
+                }
             }
         }
         return null;

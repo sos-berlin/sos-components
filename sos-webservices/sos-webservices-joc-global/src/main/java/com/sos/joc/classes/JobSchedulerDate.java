@@ -289,10 +289,35 @@ public class JobSchedulerDate {
 
     }
 
-  
-
     public static String asTimeString(ZonedDateTime time) {
         java.time.format.DateTimeFormatter dateTimeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss");
         return time.format(dateTimeFormatter);
+    }
+    
+    public static String setRelativeDateIntoPast(String dateToFrom) {
+        if (dateToFrom != null) {
+            if (dateToFrom.trim().matches("\\+?[0-9]+\\s*[smhdwMy]")) { //is positive relative date
+                return "-" + dateToFrom.trim().replaceAll("\\+", "");
+            }
+        }
+        return dateToFrom;
+    }
+    
+    public static String setFutureRelativeDateToToday(String dateToFrom) {
+        if (dateToFrom != null) {
+            if (dateToFrom.trim().matches("\\+?[0-9]+\\s*[smhdwMy]")) { //is positive relative date
+                return "0";
+            }
+        }
+        return dateToFrom;
+    }
+    
+    public static String deleteFutureRelativeDate(String dateToFrom) {
+        if (dateToFrom != null) {
+            if (dateToFrom.trim().matches("\\+?[0-9]+\\s*[smhdwMy]")) { //is positive relative date
+                return null;
+            }
+        }
+        return dateToFrom;
     }
 }

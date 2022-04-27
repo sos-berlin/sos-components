@@ -48,14 +48,14 @@ public class AgentsNamesImpl extends JOCResourceImpl implements IAgentsNames {
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                        availableController, accessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
+                        availableController, accessToken).getView()).collect(Collectors.toSet());
                 permitted = !allowedControllers.isEmpty();
                 if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                     allowedControllers = Collections.emptySet();
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
-                permitted = getControllerPermissions(controllerId, accessToken).getDeployments().getDeploy();
+                permitted = getControllerPermissions(controllerId, accessToken).getView();
             }        
                     
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);
