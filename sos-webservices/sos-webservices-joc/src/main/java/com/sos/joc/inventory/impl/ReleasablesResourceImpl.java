@@ -58,9 +58,6 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                 if (in.getFolder().isEmpty()) {
                     in.setFolder("/");
                 }
-                if (!folderPermissions.isPermittedForFolder(in.getFolder())) {
-                    throw new JocFolderPermissionsException("Access denied for folder: " + in.getFolder());
-                }
                 response = JOCDefaultResponse.responseStatus200(releasables(in, false));
             }
             return response;
@@ -85,9 +82,6 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
             if (response == null) {
                 if (in.getFolder().isEmpty()) {
                     in.setFolder("/");
-                }
-                if (!folderPermissions.isPermittedForFolder(in.getFolder())) {
-                    throw new JocFolderPermissionsException("Access denied for folder: " + in.getFolder());
                 }
                 response = JOCDefaultResponse.responseStatus200(releasables(in, true));
             }

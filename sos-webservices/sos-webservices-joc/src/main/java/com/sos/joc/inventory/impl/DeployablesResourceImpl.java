@@ -65,9 +65,6 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 if (in.getFolder().isEmpty()) {
                     in.setFolder("/");
                 }
-                if (!folderPermissions.isPermittedForFolder(in.getFolder())) {
-                    throw new JocFolderPermissionsException("Access denied for folder: " + in.getFolder());
-                }
                 response = JOCDefaultResponse.responseStatus200(deployables(in, false));
             }
             return response;
@@ -92,9 +89,6 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             if (response == null) {
                 if (in.getFolder().isEmpty()) {
                     in.setFolder("/");
-                }
-                if (!folderPermissions.isPermittedForFolder(in.getFolder())) {
-                    throw new JocFolderPermissionsException("Access denied for folder: " + in.getFolder());
                 }
                 response = JOCDefaultResponse.responseStatus200(deployables(in, true));
             }
