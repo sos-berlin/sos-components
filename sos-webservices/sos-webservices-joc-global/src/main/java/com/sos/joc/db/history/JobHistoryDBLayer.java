@@ -461,6 +461,14 @@ public class JobHistoryDBLayer {
                     }
                     and = " and";
                 }
+                if (filter.getWorkflowName() != null && !filter.getWorkflowName().isEmpty()) {
+                    if (filter.getWorkflowName().contains("*") || filter.getWorkflowName().contains("?")) {
+                        where.append(and).append(" workflowName like :workflowName");
+                    } else {
+                        where.append(and).append(" workflowName = :workflowName");
+                    }
+                    and = " and";
+                }
             }
         }
 
@@ -515,6 +523,13 @@ public class JobHistoryDBLayer {
                 query.setParameter("workflowPath", filter.getWorkflowPath().replace('*', '%').replace('?', '_'));
             } else {
                 query.setParameter("workflowPath", filter.getWorkflowPath());
+            }
+        }
+        if (filter.getWorkflowName() != null && !filter.getWorkflowName().isEmpty()) {
+            if (filter.getWorkflowName().contains("*") || filter.getWorkflowName().contains("?")) {
+                query.setParameter("workflowName", filter.getWorkflowName().replace('*', '%').replace('?', '_'));
+            } else {
+                query.setParameter("workflowName", filter.getWorkflowName());
             }
         }
         return query;

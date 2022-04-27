@@ -86,10 +86,10 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 dbFilter.setHistoryIds(in.getHistoryIds());
             } else {
                 if (in.getDateFrom() != null) {
-                    dbFilter.setExecutedFrom(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()));
+                    dbFilter.setExecutedFrom(JobSchedulerDate.getDateFrom(JobSchedulerDate.setRelativeDateIntoPast(in.getDateFrom()), in.getTimeZone()));
                 }
                 if (in.getDateTo() != null) {
-                    dbFilter.setExecutedTo(JobSchedulerDate.getDateTo(in.getDateTo(), in.getTimeZone()));
+                    dbFilter.setExecutedTo(JobSchedulerDate.getDateTo(JobSchedulerDate.setRelativeDateIntoPast(in.getDateTo()), in.getTimeZone()));
                 }
                 if (in.getEndDateFrom() != null) {
                     dbFilter.setExecutedFrom(JobSchedulerDate.getDateFrom(in.getEndDateFrom(), in.getTimeZone()));
@@ -123,6 +123,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     // TODO consider these parameter in DB
                     dbFilter.setOrderId(in.getOrderId());
                     dbFilter.setWorkflowPath(in.getWorkflowPath());
+                    dbFilter.setWorkflowName(in.getWorkflowName());
                 }
             }
 

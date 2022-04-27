@@ -53,6 +53,7 @@ public class HistoryFilter {
     private String jobName;
     private String orderId;
     private String workflowPath;
+    private String workflowName;
 
     public void setLimit(Integer limit) {
         this.limit = limit;
@@ -276,6 +277,14 @@ public class HistoryFilter {
 
     public void setWorkflowPath(String workflowPath) {
         this.workflowPath = workflowPath == null ? null : workflowPath.trim();
+    }
+    
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    public void setWorkflowName(String workflowName) {
+        this.workflowName = workflowName == null ? null : workflowName.trim();
     }
 
 }
