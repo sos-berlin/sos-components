@@ -1,25 +1,36 @@
 package com.sos.js7.converter.autosys.common.v12.job;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
+import com.sos.js7.converter.autosys.common.v12.job.attributes.AJobArguments;
+import com.sos.js7.converter.autosys.common.v12.job.attributes.CommonJobBox;
+import com.sos.js7.converter.autosys.common.v12.job.attributes.CommonJobCondition;
+import com.sos.js7.converter.autosys.common.v12.job.attributes.CommonJobFolder;
+import com.sos.js7.converter.autosys.common.v12.job.attributes.CommonJobMonitoring;
+import com.sos.js7.converter.autosys.common.v12.job.attributes.CommonJobNotification;
+import com.sos.js7.converter.autosys.common.v12.job.attributes.CommonJobRunTime;
 
 /** see
  * https://techdocs.broadcom.com/us/en/ca-enterprise-software/intelligent-automation/autosys-workload-automation/12-0-01/reference/ae-job-information-language/jil-job-definitions/alarm-if-fail-attribute-specify-whether-to-post-an-alarm-for-failure-status.html<br/>
+ * <br/>
+ * Not implemented:<br/>
+ * monitor_mode - because of supported job types<br/>
  */
 public abstract class ACommonJob {
 
+    /** FW - File Watcher<br/>
+     * FT - File Trigger <br/>
+     * OTMF - Text File Reading and Monitoring<br/>
+     */
     public enum JobType {
-        CMD, BOX, FILE_WATCHER
+        CMD, BOX, FW, FT, OMTF
     }
-
-    private final JobType type;
 
     /** Subcommands */
 
     /** The insert_job subcommand adds a job definition to the database.<br/>
      * Depending on the type of job you are adding, the insert_job subcommand requires one or more additional attributes.<br/>
+     * 
      * Format: insert_job: job_name<br/>
      * Defines the name of the job that you want to schedule.<br/>
      * Limits: Up to 64 characters; valid characters are a-z, A-Z, 0-9, period (.), underscore (_), hyphen (-), colon (:), and pound (#);<br/>
@@ -34,8 +45,26 @@ public abstract class ACommonJob {
     private SOSArgument<String> insertJob = new SOSArgument<>("insert_job", true);
 
     /** Common Job Attribute */
+    private CommonJobFolder folder = new CommonJobFolder();
+    private CommonJobBox box = new CommonJobBox();
+    private CommonJobCondition condition = new CommonJobCondition();
+    private CommonJobMonitoring monitoring = new CommonJobMonitoring();
+    private CommonJobNotification notification = new CommonJobNotification();
+    private CommonJobRunTime runTime = new CommonJobRunTime();
 
-    /** owner - This attribute is optional for all job types except for File Trigger (FT) jobs.<br/>
+    /** job_type - Specify Job Type<br/>
+     * This attribute is optional for all job types.<br/>
+     * 
+     * Note: If you do not specify the job_type attribute in your job definition, the job type is set to CMD (the default).<br/>
+     * Format: job_type: type<br/>
+     * type: Specifies the type of the job that you are defining. You can specify one of the following values:<br/>
+     * BOX,CMD,FT(File Trigger),FW(File Watcher) + ca. 20 another types<br/>
+     */
+    private SOSArgument<JobType> jobType = new SOSArgument<>("job_type", false);
+
+    /** owner - Define the Owner of the Job<br/>
+     * This attribute is optional for all job types except for File Trigger (FT) jobs.<br/>
+     * 
      * Format:owner: user@host<br/>
      * user@host: Specifies a valid user that is used as the owner of the job.<br/>
      * For a command job, the user must be a valid user with an account on the specified real machine.<br/>
@@ -46,11 +75,13 @@ public abstract class ACommonJob {
      * Windows Syntax: owner: user@host| user@domain<br/>
      * Example: owner: chris<br/>
      * <br/>
-     * JS7 - ? <br/>
+     * JS7 - to be dropped? <br/>
      */
     private SOSArgument<String> owner = new SOSArgument<>("owner", false);
 
-    /** permission - This attribute is optional for all job types.<br/>
+    /** permission - Specify the Users with Edit and Execute Permissions Contents<br/>
+     * This attribute is optional for all job types.<br/>
+     * 
      * UNIX Note: The permission attribute is based on the same permissions used in native UNIX.<br/>
      * It uses the user ID (uid), and group ID (gid) from the UNIX environment to control who can edit job definitions and who can execute the actual command
      * specified in the job.<br/>
@@ -74,127 +105,153 @@ public abstract class ACommonJob {
      * off.<br/>
      * Example: permission: ge, wx<br/>
      * <br/>
-     * JS7 - ? <br/>
+     * JS7 - to be dropped? <br/>
      */
     private SOSArgument<String> permission = new SOSArgument<>("permission", false);
 
-    /** application - This attribute is optional for all job types.<br/>
-     * Format: application: application_name<br/>
-     * <br/>
-     * The application attribute associates a job with a specific application so users can classify, sort, and filter jobs by application name.<br/>
-     * Note: If both the box and child job belongs to the same application, you have to specify the application attribute only for a box job.<br/>
-     * Limits: Up to 64 characters; valid characters are a-z, A-Z, 0-9, period (.), underscore (_), pound (#), and hyphen (-);<br/>
-     * do not include embedded spaces or tabs<br/>
-     * <br/>
-     * JS7 - Mapping Folder - Inventory <br/>
-     */
-    private SOSArgument<String> application = new SOSArgument<>("application", false);
-
-    /** condition - This attribute is optional for all job types.<br/>
-     * Format: condition: [(]condition[)][(AND|OR)[(]condition[)]] condition: [(]condition,look_back[)][(AND|OR)[(]condition,look_back[)]]<br/>
-     * Example: condition: (success(JobA) AND success(JobB)) OR (done(JobD) AND done(JobE))<br/>
-     * <br/>
-     * JS7-Notice Board<br/>
-     */
-    private SOSArgument<String> condition = new SOSArgument<>("condition", false);
-
-    /** description - This attribute is optional for all job types.<br/>
+    /** description - Define a Text Description for a Job<br/>
+     * This attribute is optional for all job types.<br/>
+     * 
      * Format: description: "text"<br/>
      * Limits: Up to 500 alphanumeric characters (including spaces)<br/>
      * <br/>
-     * JS7-??? Documentation ?<br/>
+     * JS7 - 100% - ??? Documentation ?<br/>
      */
     private SOSArgument<String> description = new SOSArgument<>("description", false);
 
-    /** svcdesk_sev - This attribute is optional for all job types.<br/>
-     * The svcdesk_sev attribute specifies the severity level to assign the Service Desk request generated when you have set the service_desk attribute to y or
-     * 1 and the job you are defining completes with a FAILURE status.<br/>
-     * The severity level indicates how much you expect the request to affect other users.<br/>
+    /** job_load - Define a Job's Relative Processing Load<br/>
+     * This attribute is optional for all job types.<br/>
+     * 
+     * Format: job_load: load_units<br/>
+     * load_units<br/>
+     * Defines the relative load of the job.<br/>
+     * This number can be any value in the user-defined range of possible values, which are arbitrary.<br/>
+     * Define a value that has some relationship to the value defined in the max_load attribute.<br/>
+     * Default: 0 (unrestricted)<br/>
+     * Limits: Up to 10 digits<br/>
+     * Example: job_load: 10<br/>
      * <br/>
-     * Format: svcdesk_sev: level<br/>
-     * level limits: 0 to 5<br/>
-     * Example: svcdesk_sev: 3<br/>
+     * JS7-to be discussed: we have doubts about the applicability of this AutoSys feature to virtual server architectures<br/>
      */
-    private SOSArgument<Integer> svcdeskSev = new SOSArgument<>("svcdesk_sev", false);
+    private SOSArgument<Long> jobLoad = new SOSArgument<>("job_load", false);
 
-    /** svcdesk_imp - This attribute is optional for all job types.<br/>
-     * The svcdesk_imp attribute specifies the impact level to assign the Service Desk request generated when you have set the service_desk attribute to y or 1
-     * and the job you are defining completes with a FAILURE status.<br/>
-     * The impact level indicates how much you expect the request to affect work being performed.<br/>
+    /** n_retrys - Define the Number of Times to Restart a Job After a Failure<br/>
+     * This attribute is optional for all job types.<br/>
+     * 
+     * Format: n_retrys: attempts<br/>
+     * attempts - Defines the number of times to attempt to restart the job after it exits with a FAILURE status.<br/>
+     * Limits: This value can be any integer in the range 0 to 20.<br/>
+     * Default: 0<br/>
      * <br/>
-     * Format: svcdesk_imp: level<br/>
-     * level limits: 0 to 5<br/>
-     * Example: svcdesk_imp: 3<br/>
+     * JS7 - 90% - Retry Instruction.<br/>
+     * JS7 allows any number of retries and individual intervals per retry. No use of a "Restart Factor" to calculate retries.<br/>
      */
-    private SOSArgument<Integer> svcdeskImp = new SOSArgument<>("svcdesk_imp", false);
+    private SOSArgument<Integer> nRetrys = new SOSArgument<>("n_retrys", false);
 
-    /** days_of_week - This attribute is optional for all job types.<br/>
-     * Format: <br/>
-     * - days_of_week: day [,day...]<br/>
-     * - days_of_week: all<br/>
-     * day -Specifies the days of the week when the job runs. Options are the following:<br/>
-     * – mo -- Specifies Monday.<br/>
-     * – tue -- Specifies Tuesday.<br/>
-     * – we -- Specifies Wednesday.<br/>
-     * – th -- Specifies Thursday.<br/>
-     * – fr -- Specifies Friday.<br/>
-     * – sa -- Specifies Saturday.<br/>
-     * – su -- Specifies Sunday.<br/>
-     * Default: No days are selected.<br/>
+    /** auto_delete - Automatically Delete a Job on Completion<br/>
+     * This attribute is optional for all job types.<br/>
+     * 
+     * Format: auto_delete: hours | 0 | -1<br/>
+     * hours - Defines the number of hours to wait after the job completes. At that time, the job is automatically deleted.<br/>
+     * Limits: 1-17520<br/>
+     * 0 - Deletes the job immediately after successful completion. If the job does not complete successfully, the job definition is kept for seven days before
+     * it is automatically deleted.<br/>
+     * -1 - Does not automatically delete the job. This is the default.<br/>
      * <br/>
-     * JS7 - Calendar & Schedules<br/>
+     * JS7 - to be dropped?<br/>
      */
-    private SOSArgument<String> daysOfWeek = new SOSArgument<>("days_of_week", false);
+    private SOSArgument<Integer> autoDelete = new SOSArgument<>("auto_delete", false);
 
-    /** date_conditions - This attribute is optional for all job types.<br/>
-     * The date_conditions attribute specifies whether to use the date or time conditions defined in the following attributes to determine when to run the
-     * job:<br/>
-     * autocal_asc<br/>
-     * days_of_week<br/>
-     * exclude_calendar<br/>
-     * must_complete_times<br/>
-     * must_start_times<br/>
-     * run_calendar<br/>
-     * run_window<br/>
-     * start_mins<br/>
-     * start_times<br/>
-     * timezone<br/>
-     * Format: date_conditions: y | n<br/>
-     * y - Uses the date and time conditions defined in other attributes to determine when to run the job.<br/>
-     * Note:You can specify 1 instead of y.<br/>
-     * n - Default, Ignores the date and time conditions defined in other attributes to determine when to run the job.<br/>
-     * Note: You can specify 0 instead of n.<br/>
+    /** max_run_alarm - Define the Maximum Run Time for a Job<br/>
+     * This attribute is optional for all job types.<br/>
+     * 
+     * The max_run_alarm attribute specifies the maximum run time (in minutes) that a job requires to finish normally.<br/>
+     * Format: max_run_alarm: mins<br/>
+     * Limits: 0-2147483647; must be an integer.<br/>
+     * Example: max_run_alarm: 120<br/>
+     * <br/>
+     * JS7 - 100% - job warn_if_longer<br/>
      */
-    private SOSArgument<Boolean> dateConditions = new SOSArgument<>("date_conditions", false);
+    private SOSArgument<Integer> maxRunAlarm = new SOSArgument<>("max_run_alarm", false);
+    /** Define the Minimum Run Time for a Job<br/>
+     * JS7 - 100% - job warn_if_shorter */
+    private SOSArgument<Integer> minRunAlarm = new SOSArgument<>("min_run_alarm", false);
 
-    /** alarm_if_fail - This attribute is optional for all job types.<br/>
-     * Format: alarm_if_fail: y | n<br/>
-     * y - Default. Posts an alarm to the scheduler when the job fails.<br/>
-     * Note: You can specify 1 instead of y.<br/>
-     * n - Does not post an alarm to the scheduler when the job fails.<br/>
-     * You can specify 0 instead of n.<br/>
+    /** must_complete_times - Specify the Time a Job Must Complete By<br/>
+     * This attribute is optional for all job types.<br/>
+     * 
+     * Format:<br/>
+     * must_complete_times: "hh:mm[, hh:mm...]"<br/>
+     * must_complete_times: +minutes<br/>
+     * <br/>
+     * JS7 - 0% - Feature requires development for iteration 3<br/>
      */
-    private SOSArgument<Boolean> alarmIfFail = new SOSArgument<>("alarm_if_fail", false);
+    private SOSArgument<String> mustCompleteTimes = new SOSArgument<>("must_complete_times", false);
 
-    /** alarm_if_terminated - This attribute is optional for all job types.<br/>
-     * Format: alarm_if_terminated: y | n<br/>
-     * y - Default. Posts the JOBTERMINATED alarm to the scheduler when the job is terminated.<br/>
-     * Note: You can specify 1 instead of y.<br/>
-     * n - Does not post the JOBTERMINATED alarm to the scheduler when the job is terminated.<br/>
-     * You can specify 0 instead of n.<br/>
+    /** must_start_times - Specify the Time a Job Must Start By<br/>
+     * This attribute is optional for all job types.<br/>
+     * 
+     * Format:<br/>
+     * must_start_times: "hh:mm[, hh:mm...]"<br/>
+     * must_start_times: +minutes<br/>
+     * <br/>
+     * JS7 - 0% - Feature requires development for iteration 3<br/>
      */
-    private SOSArgument<Boolean> alarmIfTerminated = new SOSArgument<>("alarm_if_terminated", false);
+    private SOSArgument<String> mustStartTimes = new SOSArgument<>("must_start_times", false);
 
-    public ACommonJob(JobType type) {
-        this.type = type;
+    /** term_run_time - Specify the Maximum Runtime<br/>
+     * This attribute is optional for all job types.<br/>
+     * 
+     * The term_run_time attribute specifies the maximum run time (in minutes) that the job you are defining should require to finish normally.<br/>
+     * If the job runs longer than the specified time, AutoSys Workload Automation terminates it.<br/>
+     * Format:term_run_time: mins mins<br/>
+     * Defines the maximum number of minutes the job should ever require to finish normally.<br/>
+     * Limits: 0-527040<br/>
+     * Default: 0 (the job is allowed to run forever)<br/>
+     * Example: term_run_time: 120<br/>
+     * <br/>
+     * JS7 - 100% - Job Instructions. timeout attribute<br/>
+     */
+    private SOSArgument<Integer> termRunTime = new SOSArgument<>("term_run_time", false);
+
+    public ACommonJob(JobType jobType) {
+        this.jobType.setValue(jobType);
+    }
+
+    public SOSArgument<JobType> getJobType() {
+        return jobType;
     }
 
     public SOSArgument<String> getInsertJob() {
         return insertJob;
     }
 
+    public CommonJobFolder getFolder() {
+        return folder;
+    }
+
+    public CommonJobCondition getConditions() {
+        return condition;
+    }
+
+    public CommonJobBox getBox() {
+        return box;
+    }
+
+    public CommonJobMonitoring getMonitoring() {
+        return monitoring;
+    }
+
+    public CommonJobNotification getNotification() {
+        return notification;
+    }
+
+    public CommonJobRunTime getRunTime() {
+        return runTime;
+    }
+
     public void setInsertJob(String val) {
-        String s = stringValue(val);
+        String s = AJobArguments.stringValue(val);
         if (!SOSString.isEmpty(s)) {
             // \myJob
             if (s.startsWith("\\")) {
@@ -209,7 +266,7 @@ public abstract class ACommonJob {
     }
 
     public void setOwner(String val) {
-        owner.setValue(stringValue(val));
+        owner.setValue(AJobArguments.stringValue(val));
     }
 
     public SOSArgument<String> getPermission() {
@@ -217,47 +274,7 @@ public abstract class ACommonJob {
     }
 
     public void setPermission(String val) {
-        permission.setValue(stringValue(val));
-    }
-
-    public SOSArgument<String> getApplication() {
-        return application;
-    }
-
-    public void setApplication(String val) {
-        application.setValue(stringValue(val));
-    }
-
-    public SOSArgument<Boolean> getDateConditions() {
-        return dateConditions;
-    }
-
-    public void setDateConditions(String val) {
-        dateConditions.setValue(booleanValue(val, false));
-    }
-
-    public SOSArgument<Boolean> getAlarmIfFail() {
-        return alarmIfFail;
-    }
-
-    public void setAlarmIfFail(String val) {
-        alarmIfFail.setValue(booleanValue(val, true));
-    }
-
-    public SOSArgument<Boolean> getAlarmIfTerminated() {
-        return alarmIfTerminated;
-    }
-
-    public void setAlarmIfTerminated(String val) {
-        alarmIfTerminated.setValue(booleanValue(val, true));
-    }
-
-    public SOSArgument<String> getCondition() {
-        return condition;
-    }
-
-    public void setCondition(String val) {
-        condition.setValue(stringValue(val));
+        permission.setValue(AJobArguments.stringValue(val));
     }
 
     public SOSArgument<String> getDescription() {
@@ -265,60 +282,71 @@ public abstract class ACommonJob {
     }
 
     public void setDescription(String val) {
-        description.setValue(stringValue(val));
+        description.setValue(AJobArguments.stringValue(val));
     }
 
-    public SOSArgument<Integer> getSvcdeskSev() {
-        return svcdeskSev;
+    public SOSArgument<Long> getJobLoad() {
+        return jobLoad;
     }
 
-    public void setSvcdeskSev(String val) {
-        svcdeskSev.setValue(integerValue(val));
+    public void setJobLoad(String val) {
+        jobLoad.setValue(AJobArguments.longValue(val));
     }
 
-    public SOSArgument<Integer> getSvcdeskImp() {
-        return svcdeskImp;
+    public SOSArgument<Integer> getNRetrys() {
+        return nRetrys;
     }
 
-    public SOSArgument<String> getDaysOfWeek() {
-        return daysOfWeek;
+    public void setNRetrys(String val) {
+        nRetrys.setValue(AJobArguments.integerValue(val));
     }
 
-    public void setDaysOfWeek(String val) {
-        daysOfWeek.setValue(stringValue(val));
+    public SOSArgument<Integer> getAutoDelete() {
+        return autoDelete;
     }
 
-    public void setSvcdeskImp(String val) {
-        svcdeskImp.setValue(integerValue(val));
+    public void setAutoDelete(String val) {
+        autoDelete.setValue(AJobArguments.integerValue(val));
     }
 
-    protected String stringValue(String val) {
-        return val == null ? null : StringUtils.strip(val.trim(), "\"");
+    public SOSArgument<Integer> getMaxRunAlarm() {
+        return maxRunAlarm;
     }
 
-    protected Integer integerValue(String val) {
-        return val == null ? null : Integer.parseInt(val.trim());
+    public void setMaxRunAlarm(String val) {
+        maxRunAlarm.setValue(AJobArguments.integerValue(val));
     }
 
-    protected boolean booleanValue(String val, boolean defaultValue) {
-        boolean v = defaultValue;
-        if (val != null) {
-            switch (val.trim().toLowerCase()) {
-            case "y":
-            case "1":
-                v = true;
-                break;
-            case "n":
-            case "0":
-                v = false;
-                break;
-            }
-        }
-        return v;
+    public SOSArgument<Integer> getMinRunAlarm() {
+        return minRunAlarm;
     }
 
-    public JobType getType() {
-        return type;
+    public void setMinRunAlarm(String val) {
+        minRunAlarm.setValue(AJobArguments.integerValue(val));
+    }
+
+    public SOSArgument<String> getMustCompleteTimes() {
+        return mustCompleteTimes;
+    }
+
+    public void setMustCompleteTimes(String val) {
+        mustCompleteTimes.setValue(AJobArguments.stringValue(val));
+    }
+
+    public SOSArgument<String> getMustStartTimes() {
+        return mustStartTimes;
+    }
+
+    public void setMustStartTimes(String val) {
+        mustStartTimes.setValue(AJobArguments.stringValue(val));
+    }
+
+    public SOSArgument<Integer> getTermRunTime() {
+        return termRunTime;
+    }
+
+    public void setTermRunTime(String val) {
+        termRunTime.setValue(AJobArguments.integerValue(val));
     }
 
 }
