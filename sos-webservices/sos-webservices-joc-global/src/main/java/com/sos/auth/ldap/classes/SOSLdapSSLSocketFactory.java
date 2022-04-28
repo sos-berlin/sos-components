@@ -102,7 +102,7 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
 			System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", "true");
 			LOGGER.debug("hostname verification disabled");
 		}else {
-			System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", "true");
+			System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", "false");
 			LOGGER.debug("hostname verification enabled");
 		}
 		String truststorePathJocProperties = jocCockpitProperties.getProperty("truststore_path", "");

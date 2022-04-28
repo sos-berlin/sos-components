@@ -129,7 +129,7 @@ public class SOSLdapHandler {
             if (ex.getCause() != null) {
                 s = s + ex.getCause();
             }
-            msg = "IOException: error when trying to create the ldap context with startTls >> " + s;
+            msg = "IOException: error when trying to create the ldap context >> " + s;
             LOGGER.info(msg);
         }
         return sosAuthAccessToken;
