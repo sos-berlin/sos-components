@@ -84,6 +84,8 @@ public class Globals {
     private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
     private static JocSecurityLevel jocSecurityLevel = null;
     public static Integer iamSessionTimeout;
+    public static boolean shiroIsActive=false;
+
 
     public static synchronized SOSHibernateFactory getHibernateFactory() throws JocConfigurationException {
         if (sosHibernateFactory == null || sosHibernateFactory.getSessionFactory() == null) {
@@ -143,7 +145,7 @@ public class Globals {
         } else {
             Ini oldShiroIni = factory.getIni();
             Ini currentShiroIni = Ini.fromResourcePath(getIniFileForShiro(iniFile));
-            if (shiroNeedFactoryReloadAfterIniChanged(oldShiroIni, currentShiroIni) && !oldShiroIni.equals(currentShiroIni)) {
+            if ((oldShiroIni != null) && shiroNeedFactoryReloadAfterIniChanged(oldShiroIni, currentShiroIni) && !oldShiroIni.equals(currentShiroIni)) {
                 LOGGER.debug(getIniFileForShiro(iniFile) + " is changed");
                 factory = new IniSecurityManagerFactory();
                 factory.setIni(currentShiroIni);
