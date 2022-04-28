@@ -89,30 +89,30 @@ public class WorkflowsHelper {
         return isCurrentVersion(workflowId.getVersionId(), currentState);
     }
 
-    public static Stream<String> currentVersions(JControllerState currentState) {
-        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().map(o -> o.workflowId().versionId().string());
-    }
+//    public static Stream<String> currentVersions(JControllerState currentState) {
+//        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().map(o -> o.workflowId().versionId().string());
+//    }
+//
+//    public static Stream<JWorkflowId> currentJWorkflowIds(JControllerState currentState) {
+//        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().map(JOrder::workflowId);
+//    }
+//
+//    public static Stream<WorkflowId> currentWorkflowIds(JControllerState currentState) {
+//        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().map(o -> new WorkflowId(o.workflowId().path()
+//                .string(), o.workflowId().versionId().string()));
+//    }
+//
+//    public static Stream<String> oldVersions(JControllerState currentState) {
+//        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(o -> o.workflowId()
+//                .versionId().string());
+//    }
 
-    public static Stream<JWorkflowId> currentJWorkflowIds(JControllerState currentState) {
-        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().map(JOrder::workflowId);
-    }
-
-    public static Stream<WorkflowId> currentWorkflowIds(JControllerState currentState) {
-        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().map(o -> new WorkflowId(o.workflowId().path()
-                .string(), o.workflowId().versionId().string()));
-    }
-
-    public static Stream<String> oldVersions(JControllerState currentState) {
-        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(o -> o.workflowId()
-                .versionId().string());
-    }
-
-    public static Stream<WorkflowId> oldWorkflowIds(JControllerState currentState) {
+    private static Stream<WorkflowId> oldWorkflowIds(JControllerState currentState) {
         return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(o -> new WorkflowId(o
                 .workflowId().path().string(), o.workflowId().versionId().string()));
     }
 
-    public static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
+    private static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
         return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(JOrder::workflowId);
     }
 
@@ -246,19 +246,24 @@ public class WorkflowsHelper {
                     // TODO check if workflows known in controller
 
                     dbFilter.setWorkflowIds((Set<WorkflowId>) null);
-                    dbFilter.setPaths(workflowMap.get(true).parallelStream().map(WorkflowId::getPath).collect(Collectors.toSet()));
+                    dbFilter.setNames(workflowMap.get(true).parallelStream().map(WorkflowId::getPath).map(JocInventory::pathToName).collect(Collectors
+                            .toSet()));
                     List<DeployedContent> contents2 = dbLayer.getDeployedInventory(dbFilter);
                     if (contents2 != null && !contents2.isEmpty()) {
-                        Set<String> commitIds = contents2.parallelStream().map(c -> c.getPath() + "," + c.getCommitId()).collect(Collectors.toSet());
+                        Set<String> commitIds = contents2.parallelStream().map(c -> c.getName() + "," + c.getCommitId()).collect(Collectors.toSet());
                         contents = contents.parallelStream().map(c -> {
-                            c.setIsCurrentVersion(commitIds.contains(c.getPath() + "," + c.getCommitId()));
+                            c.setPath(WorkflowPaths.getPath(c.getName()));
+                            c.setIsCurrentVersion(commitIds.contains(c.getName() + "," + c.getCommitId()));
                             return c;
                         }).collect(Collectors.toList());
+                    } else {
+                        contents = contents.parallelStream().peek(c -> c.setPath(WorkflowPaths.getPath(c.getName()))).collect(Collectors.toList());
                     }
                 }
             }
             if (workflowMap.containsKey(false)) { // without versionId
-                dbFilter.setPaths(workflowMap.get(false).stream().parallel().map(WorkflowId::getPath).collect(Collectors.toSet()));
+                dbFilter.setNames(workflowMap.get(false).stream().parallel().map(WorkflowId::getPath).map(JocInventory::pathToName).collect(Collectors
+                        .toSet()));
 
                 // TODO check if workflows known in controller
 
@@ -296,17 +301,19 @@ public class WorkflowsHelper {
             // no folder permissions
         } else {
             
-            List<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toList());
+            List<WorkflowId> wIds = oldWorkflowIds(currentState).collect(Collectors.toList());
             if (wIds == null || wIds.isEmpty()) {
                 return Collections.emptyList();
             }
             
+            //List<String> jsons = oldJWorkflowIds(currentState).map(wId -> currentState.repo().idToWorkflow(wId)).filter(Either::isRight).map(Either::get).map(JWorkflow::toJson).collect(Collectors.toList());
+            
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
             dbFilter.setControllerId(workflowsFilter.getControllerId());
             dbFilter.setObjectTypes(Collections.singleton(DeployType.WORKFLOW.intValue()));
-            if (permittedFolders != null && !permittedFolders.isEmpty()) {
-                dbFilter.setFolders(permittedFolders);
-            }
+//            if (permittedFolders != null && !permittedFolders.isEmpty()) {
+//                dbFilter.setFolders(permittedFolders);
+//            }
             
             // considered that wIds.size() can be > 1000
             if (wIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
@@ -325,8 +332,13 @@ public class WorkflowsHelper {
         if (contents == null) {
             return Collections.emptyList();
         }
+        
+        Stream<DeployedContent> stream = contents.stream().peek(i -> i.setPath(WorkflowPaths.getPath(i.getName())));
+        if (permittedFolders != null && !permittedFolders.isEmpty()) {
+            stream = stream.filter(i -> JOCResourceImpl.canAdd(i.getPath(), permittedFolders));
+        }
 
-        return contents;
+        return stream.collect(Collectors.toList());
     }
     
     private static void setInitialDeps(WorkflowDeps w, Set<String> expectedNoticeBoards, Set<String> postNoticeBoards,
@@ -602,9 +614,9 @@ public class WorkflowsHelper {
         return Collections.emptyMap();
     }
     
-    public static List<FileOrderSource> workflowToFileOrderSources(JControllerState controllerState, String controllerId, String WorkflowPath,
+    public static List<FileOrderSource> workflowToFileOrderSources(JControllerState controllerState, String controllerId, String workflowName,
             DeployedConfigurationDBLayer dbLayer) {
-        Set<String> fileWatchNames = WorkflowsHelper.workflowToFileWatchNames(controllerState, WorkflowPath);
+        Set<String> fileWatchNames = WorkflowsHelper.workflowToFileWatchNames(controllerState, workflowName);
         if (!fileWatchNames.isEmpty()) {
             DeployedConfigurationFilter filter = new DeployedConfigurationFilter();
             filter.setControllerId(controllerId);
@@ -628,8 +640,7 @@ public class WorkflowsHelper {
         return null;
     }
     
-    private static Set<String> workflowToFileWatchNames(JControllerState controllerState, String workflowPath) {
-        String workflowName = JocInventory.pathToName(workflowPath);
+    private static Set<String> workflowToFileWatchNames(JControllerState controllerState, String workflowName) {
         return controllerState.fileWatches().stream().parallel().filter(f -> f.workflowPath().string().equals(workflowName)).map(f -> f.path()
                 .string()).collect(Collectors.toSet());
     }

@@ -13,7 +13,6 @@ public class DeployedConfigurationFilter {
     private String controllerId = "";
     private Set<Integer> objectTypes;
     private Set<Folder> folders;
-    private Set<String> paths;
     private Set<String> names;
     private Set<WorkflowId> workflowIds;
 
@@ -37,20 +36,6 @@ public class DeployedConfigurationFilter {
     public void setFolders(Collection<Folder> folders) {
         if (folders != null && !folders.isEmpty()) {
             this.folders = folders.stream().collect(Collectors.toSet());
-        }
-    }
-    
-    public void setPaths(Set<String> paths) {
-        this.paths = paths;
-    }
-
-    public Set<String> getPaths() {
-        return paths;
-    }
-    
-    public void setPaths(Collection<String> paths) {
-        if (paths != null && !paths.isEmpty()) {
-            this.paths = paths.stream().collect(Collectors.toSet());
         }
     }
     
