@@ -233,7 +233,11 @@ public class JocInventory {
         if (objectTypes == null || objectTypes.isEmpty()) {
             return getDeployableTypes();
         }
-        return objectTypes.stream().filter(type -> isDeployable(type)).map(ConfigurationType::intValue).collect(Collectors.toSet());
+        Set<Integer> deployables = objectTypes.stream().filter(type -> isDeployable(type)).map(ConfigurationType::intValue).collect(Collectors.toSet());
+        if (deployables.isEmpty()) {
+            return getDeployableTypes();
+        }
+        return deployables;
     }
 
     public static Set<Integer> getDeployableTypesWithFolder(Collection<ConfigurationType> objectTypes) {
@@ -246,7 +250,11 @@ public class JocInventory {
         if (objectTypes == null || objectTypes.isEmpty()) {
             return getReleasableTypes();
         }
-        return objectTypes.stream().filter(type -> isReleasable(type)).map(ConfigurationType::intValue).collect(Collectors.toSet());
+        Set<Integer> releasables = objectTypes.stream().filter(type -> isReleasable(type)).map(ConfigurationType::intValue).collect(Collectors.toSet());
+        if (releasables.isEmpty()) {
+            return getReleasableTypes();
+        }
+        return releasables;
     }
 
     public static Set<Integer> getReleasableTypesWithFolder(Collection<ConfigurationType> objectTypes) {
