@@ -17,6 +17,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
@@ -28,6 +29,7 @@ import com.sos.joc.workflow.resource.IWorkflowResource;
 import com.sos.schema.JsonValidator;
 
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.workflow.JWorkflowId;
 
 @Path("workflow")
 public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowResource {
@@ -57,6 +59,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             final JControllerState currentstate = getCurrentState(controllerId);
             if (currentstate != null) {
                 entity.setSurveyDate(Date.from(currentstate.instant()));
+                LOGGER.info(currentstate.repo().idToWorkflow(JWorkflowId.of(workflowPath, versionId)).get().withPositions().toJson());
             }
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -66,8 +69,9 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             if (content != null && content.getContent() != null && !content.getContent().isEmpty()) {
                 com.sos.controller.model.workflow.Workflow workflow = Globals.objectMapper.readValue(content.getContent(),
                         com.sos.controller.model.workflow.Workflow.class);
-                checkFolderPermissions(content.getPath(), folderPermissions.getListOfFolders());
-                workflow.setPath(content.getPath());
+                String path = WorkflowPaths.getPath(content.getName());
+                checkFolderPermissions(path, folderPermissions.getListOfFolders());
+                workflow.setPath(path);
                 workflow.setVersionDate(content.getCreated());
                 workflow.setVersionId(content.getCommitId());
                 workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
@@ -81,7 +85,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                     }
                 }
                 if (workflow.getIsCurrentVersion() && workflowFilter.getCompact() != Boolean.TRUE) {
-                    workflow.setFileOrderSources(WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, content.getPath(), dbLayer));
+                    workflow.setFileOrderSources(WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, content.getName(), dbLayer));
                 }
                 List<WorkflowId> wIds = dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId);
                 if (wIds != null && !wIds.isEmpty()) {

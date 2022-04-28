@@ -52,20 +52,17 @@ public class DeployedConfigurationDBLayer {
     public DeployedContent getDeployedInventory(String controllerId, Integer type, String path) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
+            String name = JocInventory.pathToName(path);
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
             hql.append("(path, name, title, content, commitId, created, true as isCurrentVersion) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
             hql.append(" where controllerId = :controllerId");
             hql.append(" and type = :type");
-            if (path.contains("/")) {
-                hql.append(" and path = :path");
-            } else {
-                hql.append(" and name = :path");
-            }
+            hql.append(" and name = :name");
             hql.append(" order by id desc");
             Query<DeployedContent> query = session.createQuery(hql.toString());
             query.setParameter("controllerId", controllerId);
             query.setParameter("type", type);
-            query.setParameter("path", path);
+            query.setParameter("name", name);
             query.setMaxResults(1);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -81,16 +78,13 @@ public class DeployedConfigurationDBLayer {
             return getDeployedInventory(controllerId, type, path);
         }
         try {
+            String name = JocInventory.pathToName(path);
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
             hql.append("(path, name, title, invContent, commitId, deploymentDate, false as isCurrentVersion) from ").append(
                     DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where controllerId = :controllerId");
             hql.append(" and type = :type");
-            if (path.contains("/")) {
-                hql.append(" and path = :path");
-            } else {
-                hql.append(" and name = :path");
-            }
+            hql.append(" and name = :name");
             hql.append(" and commitId = :commitId");
             hql.append(" and operation = 0");
             hql.append(" and state = 0");
@@ -98,7 +92,7 @@ public class DeployedConfigurationDBLayer {
             Query<DeployedContent> query = session.createQuery(hql.toString());
             query.setParameter("controllerId", controllerId);
             query.setParameter("type", type);
-            query.setParameter("path", path);
+            query.setParameter("name", name);
             query.setParameter("commitId", commitId);
             query.setMaxResults(1);
             return session.getSingleResult(query);
@@ -629,15 +623,6 @@ public class DeployedConfigurationDBLayer {
         }
 
         // TODO consider max in
-        if (filter.getPaths() != null && !filter.getPaths().isEmpty()) {
-            if (filter.getPaths().size() == 1) {
-                clauses.add("path = :path");
-            } else {
-                clauses.add("path in (:paths)");
-            }
-        }
-
-        // TODO consider max in
         if (filter.getNames() != null && !filter.getNames().isEmpty()) {
             if (filter.getNames().size() == 1) {
                 clauses.add("name = :name");
@@ -692,13 +677,6 @@ public class DeployedConfigurationDBLayer {
         Query<T> query = session.createQuery(hql);
         if (filter.getControllerId() != null && !filter.getControllerId().isEmpty()) {
             query.setParameter("controllerId", filter.getControllerId());
-        }
-        if (filter.getPaths() != null && !filter.getPaths().isEmpty()) {
-            if (filter.getPaths().size() == 1) {
-                query.setParameter("path", filter.getPaths().iterator().next());
-            } else {
-                query.setParameterList("paths", filter.getPaths());
-            }
         }
         if (filter.getNames() != null && !filter.getNames().isEmpty()) {
             if (filter.getNames().size() == 1) {

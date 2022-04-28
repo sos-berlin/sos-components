@@ -63,6 +63,10 @@ public class DeployedContent {
         return path;
     }
     
+    public void setPath(String path) {
+        this.path = path;
+    }
+    
     public String getName() {
         return name;
     }

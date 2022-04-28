@@ -26,6 +26,7 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.history.DBItemHistoryOrder;
@@ -92,10 +93,10 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     dbFilter.setExecutedTo(JobSchedulerDate.getDateTo(JobSchedulerDate.setRelativeDateIntoPast(in.getDateTo()), in.getTimeZone()));
                 }
                 if (in.getEndDateFrom() != null) {
-                    dbFilter.setExecutedFrom(JobSchedulerDate.getDateFrom(in.getEndDateFrom(), in.getTimeZone()));
+                    dbFilter.setEndFrom(JobSchedulerDate.getDateFrom(in.getEndDateFrom(), in.getTimeZone()));
                 }
                 if (in.getEndDateTo() != null) {
-                    dbFilter.setExecutedTo(JobSchedulerDate.getDateTo(in.getEndDateTo(), in.getTimeZone()));
+                    dbFilter.setEndTo(JobSchedulerDate.getDateTo(in.getEndDateTo(), in.getTimeZone()));
                 }
 
                 if (in.getHistoryStates() != null && !in.getHistoryStates().isEmpty()) {
@@ -104,9 +105,10 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 
                 if (in.getOrders() != null && !in.getOrders().isEmpty()) {
                     // TODO consider workflowId in groupingby???
-                    dbFilter.setOrders(in.getOrders().stream().filter(Objects::nonNull).peek(order -> order.setWorkflowPath(WorkflowPaths.getPath(
-                            order.getWorkflowPath()))).filter(order -> canAdd(order.getWorkflowPath(), permittedFolders)).collect(Collectors
-                                    .groupingBy(OrderPath::getWorkflowPath, Collectors.mapping(OrderPath::getOrderId, Collectors.toSet()))));
+                    dbFilter.setOrders(in.getOrders().stream().filter(Objects::nonNull).filter(order -> canAdd(WorkflowPaths.getPath(order
+                            .getWorkflowPath()), permittedFolders)).peek(order -> order.setWorkflowPath(JocInventory.pathToName(order
+                                    .getWorkflowPath()))).collect(Collectors.groupingBy(OrderPath::getWorkflowPath, Collectors.mapping(
+                                            OrderPath::getOrderId, Collectors.toSet()))));
                     folderPermissionsAreChecked = true;
                 } else {
 
