@@ -40,10 +40,10 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
 
 			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 			tmf.init(trustStore);
-			SSLContext ctx = SSLContext.getInstance("TLS");
+			SSLContext ctx = SSLContext.getInstance("TLS"); 
 
 			ctx.init(null, tmf.getTrustManagers(), null);
-			sf = ctx.getSocketFactory();
+			sf = ctx.getSocketFactory(); 
 
 		} catch (Exception e) {
 			LOGGER.error("", e);
@@ -97,7 +97,14 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
             Globals.sosCockpitProperties = new JocCockpitProperties();
         }
 		JocCockpitProperties jocCockpitProperties = Globals.sosCockpitProperties;
-
+		boolean withHostnameVerification = jocCockpitProperties.getProperty("https_with_hostname_verification", false);
+		if (withHostnameVerification) {
+			System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", "true");
+			LOGGER.debug("hostname verification disabled");
+		}else {
+			System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", "true");
+			LOGGER.debug("hostname verification enabled");
+		}
 		String truststorePathJocProperties = jocCockpitProperties.getProperty("truststore_path", "");
 		String truststorePassJocProperties = jocCockpitProperties.getProperty("truststore_path", "");
 		String tTypeJocProperties = jocCockpitProperties.getProperty("truststore_path", "");
