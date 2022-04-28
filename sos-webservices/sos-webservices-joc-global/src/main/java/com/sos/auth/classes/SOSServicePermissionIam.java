@@ -244,15 +244,17 @@ public class SOSServicePermissionIam {
 						.getJocConfigurationList(filter, 0);
 
 				IniSecurityManagerFactory factory = Globals.getShiroIniSecurityManagerFactory();
-				SecurityManager securityManager = factory.getInstance();
-				SecurityUtils.setSecurityManager(securityManager);
+				if (factory != null) {
+					SecurityManager securityManager = factory.getInstance();
+					SecurityUtils.setSecurityManager(securityManager);
 
-				for (DBItemJocConfiguration jocConfigurationDbItem : listOfConfigurtions) {
-					SessionKey s = new DefaultSessionKey(jocConfigurationDbItem.getName());
-					try {
-						SecurityUtils.getSecurityManager().getSession(s);
-					} catch (ExpiredSessionException e) {
-						LOGGER.trace("Session " + jocConfigurationDbItem.getName() + " removed");
+					for (DBItemJocConfiguration jocConfigurationDbItem : listOfConfigurtions) {
+						SessionKey s = new DefaultSessionKey(jocConfigurationDbItem.getName());
+						try {
+							SecurityUtils.getSecurityManager().getSession(s);
+						} catch (ExpiredSessionException e) {
+							LOGGER.trace("Session " + jocConfigurationDbItem.getName() + " removed");
+						}
 					}
 				}
 				Globals.commit(sosHibernateSession);
