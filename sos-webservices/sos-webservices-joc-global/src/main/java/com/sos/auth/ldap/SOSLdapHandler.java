@@ -84,7 +84,15 @@ public class SOSLdapHandler {
     }
 
     public SOSAuthAccessToken login(SOSLdapWebserviceCredentials sosLdapWebserviceCredentials, IdentityServiceTypes identityServiceType, String password) throws SOSHibernateException {
+ 		if (Globals.withHostnameVerification) {
+			System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", "false");
+			LOGGER.info("hostname verification is enabled");
+		}else {
+			System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", "true");
+			LOGGER.info("hostname verification is disabled");
+		}
 
+ 
         SOSAuthAccessToken sosAuthAccessToken = null;
         try {
             if (identityServiceType == IdentityServiceTypes.LDAP && sosLdapWebserviceCredentials.getSearchBaseNotNull().isEmpty() && "memberOf".equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
@@ -99,7 +107,7 @@ public class SOSLdapHandler {
             if (sosLdapWebserviceCredentials.getLdapServerUrlNotNull().isEmpty()) {
                 msg = ("LDAP configuration is not valid: Missing setting ldapUrl");
             }
-            if (password.isEmpty()) {
+            if (password == null || password.isEmpty()) {
             	msg = "Password is empty";
             }
             if (msg.isEmpty()) {
