@@ -19,7 +19,6 @@ import org.bouncycastle.cert.CertException;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 
-import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
@@ -34,22 +33,18 @@ import com.sos.joc.model.publish.RolloutResponse;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
 
-public class ClientServerCertificateUtil {
+public abstract class ClientServerCertificateUtil {
 
     public static RolloutResponse createClientServerAuthKeyPair (SOSHibernateSession hibernateSession, CreateCSRFilter createCsrFilter)
             throws SOSHibernateException, CertificateException, NoSuchAlgorithmException, NoSuchProviderException,
-            InvalidAlgorithmParameterException, CertException, OperatorCreationException, IOException, InvalidKeySpecException, 
-            InvalidNameException, SOSMissingDataException {
+            InvalidAlgorithmParameterException, CertException, OperatorCreationException, IOException, InvalidKeySpecException, InvalidNameException {
         DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
         JocKeyPair rootKeyPair = dbLayer.getAuthRootCaKeyPair();
-        if (rootKeyPair == null) {
-            throw new SOSMissingDataException("No CA found for signing.");
-        }
         X509Certificate rootCert = KeyUtil.getX509Certificate(rootKeyPair.getCertificate());
         KeyPair newClientKeyPair = KeyUtil.createECDSAKeyPair();
         String userDN = CAUtils.createUserSubjectDN(createCsrFilter.getDn(), rootCert, createCsrFilter.getHostname());
         PKCS10CertificationRequest csr = CAUtils.createCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, newClientKeyPair, userDN);
-        X509Certificate clientCert = CAUtils.signAuthCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
+        X509Certificate clientCert = CAUtils.signCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
                 KeyUtil.getKeyPairFromECDSAPrivatKeyString(rootKeyPair.getPrivateKey()).getPrivate(), csr, rootCert, createCsrFilter.getSan());
         JocKeyPair clientServerAuthKeyPair = KeyUtil.createECDSAJOCKeyPair(newClientKeyPair);
         clientServerAuthKeyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
@@ -61,7 +56,6 @@ public class ClientServerCertificateUtil {
         return response;
     }
 
-    
     public static void cleanupInvalidatedTokens() {
         Date now = Date.from(Instant.now());
         OnetimeTokens onetimeTokens = OnetimeTokens.getInstance();
