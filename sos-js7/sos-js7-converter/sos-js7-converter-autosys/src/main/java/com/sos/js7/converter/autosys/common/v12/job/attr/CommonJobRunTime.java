@@ -1,10 +1,19 @@
-package com.sos.js7.converter.autosys.common.v12.job.attributes;
+package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import java.util.List;
 
 import com.sos.commons.util.common.SOSArgument;
+import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
 
-public class CommonJobRunTime extends AJobArguments {
+public class CommonJobRunTime extends AJobAttributes {
+
+    private static final String ATTR_TIMEZONE = "timezone";
+    private static final String ATTR_RUN_CALENDAR = "run_calendar";
+    private static final String ATTR_RUN_WINDOW = "run_window";
+    private static final String ATTR_DAYS_OF_WEEK = "days_of_week";
+    private static final String ATTR_START_TIMES = "start_times";
+    private static final String ATTR_START_MINS = "start_mins";
+    private static final String ATTR_DATE_CONDITIONS = "date_conditions";
 
     /** timezone - Define the Time Zone<br/>
      * This attribute is optional for all job types.<br/>
@@ -16,7 +25,7 @@ public class CommonJobRunTime extends AJobArguments {
      * <br/>
      * JS7 - 100% - Time Zone Support<br/>
      */
-    private SOSArgument<String> timezone = new SOSArgument<>("timezone", false);
+    private SOSArgument<String> timezone = new SOSArgument<>(ATTR_TIMEZONE, false);
 
     /** run_calendar - Identify a Custom Calendar<br/>
      * This attribute is optional for all job types.<br/>
@@ -28,7 +37,7 @@ public class CommonJobRunTime extends AJobArguments {
      * <br/>
      * JS7 - 100% - Calendar & Schedules<br/>
      */
-    private SOSArgument<String> runCalendar = new SOSArgument<>("run_calendar", false);
+    private SOSArgument<String> runCalendar = new SOSArgument<>(ATTR_RUN_CALENDAR, false);
 
     /** run_window - Define an Interval for a Job to Start<br/>
      * This attribute is optional for all job types.<br/>
@@ -44,7 +53,7 @@ public class CommonJobRunTime extends AJobArguments {
      * <br/>
      * JS7 - 100% - Admission Times for Job<br/>
      */
-    private SOSArgument<String> runWindow = new SOSArgument<>("run_window", false);
+    private SOSArgument<String> runWindow = new SOSArgument<>(ATTR_RUN_WINDOW, false);
 
     /** days_of_week - Specify which Days of the Week to Run a Job<br/>
      * This attribute is optional for all job types.<br/>
@@ -64,7 +73,7 @@ public class CommonJobRunTime extends AJobArguments {
      * <br/>
      * JS7 - 100% - Calendar & Schedules<br/>
      */
-    private SOSArgument<String> daysOfWeek = new SOSArgument<>("days_of_week", false);
+    private SOSArgument<String> daysOfWeek = new SOSArgument<>(ATTR_DAYS_OF_WEEK, false);
 
     /** start_times - Define the Time of the Day to Run a Job<br/>
      * This attribute is optional for all job types.<br/>
@@ -77,7 +86,7 @@ public class CommonJobRunTime extends AJobArguments {
      * <br/>
      * JS7 - 100% - Calendar & Schedules<br/>
      */
-    private SOSArgument<List<String>> startTimes = new SOSArgument<>("start_times", false);
+    private SOSArgument<List<String>> startTimes = new SOSArgument<>(ATTR_START_TIMES, false);
 
     /** start_mins - Define the Minutes to Run a Job<br/>
      * This attribute is optional for all job types.<br/>
@@ -89,7 +98,7 @@ public class CommonJobRunTime extends AJobArguments {
      * <br/>
      * JS7 - 100% - Cycle Instruction<br/>
      */
-    private SOSArgument<List<Integer>> startMins = new SOSArgument<>("start_mins", false);
+    private SOSArgument<List<Integer>> startMins = new SOSArgument<>(ATTR_START_MINS, false);
 
     /** date_conditions - Base Job Start on Date and Time Attribute Values<br/>
      * This attribute is optional for all job types.<br/>
@@ -114,61 +123,68 @@ public class CommonJobRunTime extends AJobArguments {
      * <br/>
      * JS7 - Calendar & Schedules<br/>
      */
-    private SOSArgument<Boolean> dateConditions = new SOSArgument<>("date_conditions", false);
+    private SOSArgument<Boolean> dateConditions = new SOSArgument<>(ATTR_DATE_CONDITIONS, false);
 
     public SOSArgument<String> getTimezone() {
         return timezone;
     }
 
+    @JobAttributeSetter(name = ATTR_TIMEZONE)
     public void setTimezone(String val) {
-        timezone.setValue(AJobArguments.stringValue(val));
+        timezone.setValue(AJobAttributes.stringValue(val));
     }
 
     public SOSArgument<String> getRunCalendar() {
         return runCalendar;
     }
 
+    @JobAttributeSetter(name = ATTR_RUN_CALENDAR)
     public void setRunCalendar(String val) {
-        runCalendar.setValue(AJobArguments.stringValue(val));
+        runCalendar.setValue(AJobAttributes.stringValue(val));
     }
 
     public SOSArgument<String> getRunWindow() {
         return runWindow;
     }
 
+    @JobAttributeSetter(name = ATTR_RUN_WINDOW)
     public void setRunWindow(String val) {
-        runWindow.setValue(AJobArguments.stringValue(val));
+        runWindow.setValue(AJobAttributes.stringValue(val));
     }
 
     public SOSArgument<String> getDaysOfWeek() {
         return daysOfWeek;
     }
 
+    @JobAttributeSetter(name = ATTR_DAYS_OF_WEEK)
     public void setDaysOfWeek(String val) {
-        daysOfWeek.setValue(AJobArguments.stringValue(val));
+        daysOfWeek.setValue(AJobAttributes.stringValue(val));
     }
 
     public SOSArgument<List<String>> getStartTimes() {
         return startTimes;
     }
 
+    @JobAttributeSetter(name = ATTR_START_TIMES)
     public void setStartTimes(String val) {
-        startTimes.setValue(AJobArguments.stringListValue(val));
+        startTimes.setValue(AJobAttributes.stringListValue(val));
     }
 
     public SOSArgument<List<Integer>> getStartMins() {
         return startMins;
     }
 
+    @JobAttributeSetter(name = ATTR_START_MINS)
     public void setStartMins(String val) {
-        startMins.setValue(AJobArguments.integerListValue(val));
+        startMins.setValue(AJobAttributes.integerListValue(val));
     }
 
     public SOSArgument<Boolean> getDateConditions() {
         return dateConditions;
     }
 
+    @JobAttributeSetter(name = ATTR_DATE_CONDITIONS)
     public void setDateConditions(String val) {
-        dateConditions.setValue(AJobArguments.booleanValue(val, false));
+        dateConditions.setValue(AJobAttributes.booleanValue(val, false));
     }
 }

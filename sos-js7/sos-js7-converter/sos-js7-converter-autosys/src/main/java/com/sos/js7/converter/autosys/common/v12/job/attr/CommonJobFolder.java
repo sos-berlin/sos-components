@@ -1,8 +1,12 @@
-package com.sos.js7.converter.autosys.common.v12.job.attributes;
+package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import com.sos.commons.util.common.SOSArgument;
+import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
 
-public class CommonJobFolder extends AJobArguments {
+public class CommonJobFolder extends AJobAttributes {
+
+    private static final String ATTR_APPLICATION = "application";
+    private static final String ATTR_GROUP = "group";
 
     /** application - Associate a Job with an Application<br/>
      * This attribute is optional for all job types.<br/>
@@ -16,7 +20,7 @@ public class CommonJobFolder extends AJobArguments {
      * <br/>
      * JS7 - 100% - Mapping Folder - Inventory <br/>
      */
-    private SOSArgument<String> application = new SOSArgument<>("application", false);
+    private SOSArgument<String> application = new SOSArgument<>(ATTR_APPLICATION, false);
 
     /** group - Associate a Job with a Group<br/>
      * This attribute is optional for all job types.<br/>
@@ -31,21 +35,24 @@ public class CommonJobFolder extends AJobArguments {
      * <br/>
      * JS7 - 50% - Most probably will be mapped to search criteria for jobs and will be made available from the REST API<br/>
      */
-    private SOSArgument<String> group = new SOSArgument<>("group", false);
+    private SOSArgument<String> group = new SOSArgument<>(ATTR_GROUP, false);
 
     public SOSArgument<String> getApplication() {
         return application;
     }
 
+    @JobAttributeSetter(name = ATTR_APPLICATION)
     public void setApplication(String val) {
-        application.setValue(AJobArguments.stringValue(val));
+        application.setValue(AJobAttributes.stringValue(val));
     }
 
     public SOSArgument<String> getGroup() {
         return group;
     }
 
+    @JobAttributeSetter(name = ATTR_GROUP)
     public void setGroup(String val) {
-        group.setValue(AJobArguments.stringValue(val));
+        group.setValue(AJobAttributes.stringValue(val));
     }
+
 }

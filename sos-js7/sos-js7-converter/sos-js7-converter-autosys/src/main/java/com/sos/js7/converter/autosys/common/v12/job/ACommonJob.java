@@ -1,14 +1,19 @@
 package com.sos.js7.converter.autosys.common.v12.job;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attributes.AJobArguments;
-import com.sos.js7.converter.autosys.common.v12.job.attributes.CommonJobBox;
-import com.sos.js7.converter.autosys.common.v12.job.attributes.CommonJobCondition;
-import com.sos.js7.converter.autosys.common.v12.job.attributes.CommonJobFolder;
-import com.sos.js7.converter.autosys.common.v12.job.attributes.CommonJobMonitoring;
-import com.sos.js7.converter.autosys.common.v12.job.attributes.CommonJobNotification;
-import com.sos.js7.converter.autosys.common.v12.job.attributes.CommonJobRunTime;
+import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
+import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobBox;
+import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobCondition;
+import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobFolder;
+import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobMonitoring;
+import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobNotification;
+import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobRunTime;
+import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeInclude;
+import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
 
 /** see
  * https://techdocs.broadcom.com/us/en/ca-enterprise-software/intelligent-automation/autosys-workload-automation/12-0-01/reference/ae-job-information-language/jil-job-definitions/alarm-if-fail-attribute-specify-whether-to-post-an-alarm-for-failure-status.html<br/>
@@ -18,13 +23,32 @@ import com.sos.js7.converter.autosys.common.v12.job.attributes.CommonJobRunTime;
  */
 public abstract class ACommonJob {
 
-    /** FW - File Watcher<br/>
-     * FT - File Trigger <br/>
+    /** <br/>
+     * CMD -<br/>
+     * BOX -<br/>
+     * FW - File Watcher<br/>
+     * FT - File Trigger<br/>
      * OTMF - Text File Reading and Monitoring<br/>
+     * <br/>
+     * NOT_SUPPORTED - sos type<br/>
      */
-    public enum JobType {
-        CMD, BOX, FW, FT, OMTF
+    public enum ConverterJobType {
+        CMD, BOX, FW, FT, OMTF, NOT_SUPPORTED
     }
+
+    private static final String ATTR_INSERT_JOB = "insert_job";
+    private static final String ATTR_JOB_TYPE = "job_type";
+    private static final String ATTR_OWNER = "owner";
+    private static final String ATTR_PERMISSION = "permission";
+    private static final String ATTR_DESCRIPTION = "description";
+    private static final String ATTR_JOB_LOAD = "job_load";
+    private static final String ATTR_N_RETRYS = "n_retrys";
+    private static final String ATTR_AUTO_DELETE = "auto_delete";
+    private static final String ATTR_MAX_RUN_ALARM = "max_run_alarm";
+    private static final String ATTR_MIN_RUN_ALARM = "min_run_alarm";
+    private static final String ATTR_MUST_COMPLETE_TIMES = "must_complete_times";
+    private static final String ATTR_MUST_START_TIMES = "must_start_times";
+    private static final String ATTR_TERM_RUN_TIME = "term_run_time";
 
     /** Subcommands */
 
@@ -42,15 +66,25 @@ public abstract class ACommonJob {
      * <br/>
      * JS7 - Job Instructions<br/>
      */
-    private SOSArgument<String> insertJob = new SOSArgument<>("insert_job", true);
+    private SOSArgument<String> insertJob = new SOSArgument<>(ATTR_INSERT_JOB, true);
 
     /** Common Job Attribute */
+    /** argument includes */
+    @JobAttributeInclude(getMethod = "getFolder")
     private CommonJobFolder folder = new CommonJobFolder();
+    @JobAttributeInclude(getMethod = "getBox")
     private CommonJobBox box = new CommonJobBox();
+    @JobAttributeInclude(getMethod = "getCondition")
     private CommonJobCondition condition = new CommonJobCondition();
+    @JobAttributeInclude(getMethod = "getMonitoring")
     private CommonJobMonitoring monitoring = new CommonJobMonitoring();
+    @JobAttributeInclude(getMethod = "getNotification")
     private CommonJobNotification notification = new CommonJobNotification();
+    @JobAttributeInclude(getMethod = "getRunTime")
     private CommonJobRunTime runTime = new CommonJobRunTime();
+
+    /** not declared/unknown job arguments */
+    private List<SOSArgument<String>> unknown = new ArrayList<>();
 
     /** job_type - Specify Job Type<br/>
      * This attribute is optional for all job types.<br/>
@@ -60,7 +94,8 @@ public abstract class ACommonJob {
      * type: Specifies the type of the job that you are defining. You can specify one of the following values:<br/>
      * BOX,CMD,FT(File Trigger),FW(File Watcher) + ca. 20 another types<br/>
      */
-    private SOSArgument<JobType> jobType = new SOSArgument<>("job_type", false);
+    private SOSArgument<String> jobType = new SOSArgument<>(ATTR_JOB_TYPE, false);
+    private final ConverterJobType converterJobType;
 
     /** owner - Define the Owner of the Job<br/>
      * This attribute is optional for all job types except for File Trigger (FT) jobs.<br/>
@@ -77,7 +112,7 @@ public abstract class ACommonJob {
      * <br/>
      * JS7 - to be dropped? <br/>
      */
-    private SOSArgument<String> owner = new SOSArgument<>("owner", false);
+    private SOSArgument<String> owner = new SOSArgument<>(ATTR_OWNER, false);
 
     /** permission - Specify the Users with Edit and Execute Permissions Contents<br/>
      * This attribute is optional for all job types.<br/>
@@ -107,7 +142,7 @@ public abstract class ACommonJob {
      * <br/>
      * JS7 - to be dropped? <br/>
      */
-    private SOSArgument<String> permission = new SOSArgument<>("permission", false);
+    private SOSArgument<String> permission = new SOSArgument<>(ATTR_PERMISSION, false);
 
     /** description - Define a Text Description for a Job<br/>
      * This attribute is optional for all job types.<br/>
@@ -117,7 +152,7 @@ public abstract class ACommonJob {
      * <br/>
      * JS7 - 100% - ??? Documentation ?<br/>
      */
-    private SOSArgument<String> description = new SOSArgument<>("description", false);
+    private SOSArgument<String> description = new SOSArgument<>(ATTR_DESCRIPTION, false);
 
     /** job_load - Define a Job's Relative Processing Load<br/>
      * This attribute is optional for all job types.<br/>
@@ -133,7 +168,7 @@ public abstract class ACommonJob {
      * <br/>
      * JS7-to be discussed: we have doubts about the applicability of this AutoSys feature to virtual server architectures<br/>
      */
-    private SOSArgument<Long> jobLoad = new SOSArgument<>("job_load", false);
+    private SOSArgument<Long> jobLoad = new SOSArgument<>(ATTR_JOB_LOAD, false);
 
     /** n_retrys - Define the Number of Times to Restart a Job After a Failure<br/>
      * This attribute is optional for all job types.<br/>
@@ -146,7 +181,7 @@ public abstract class ACommonJob {
      * JS7 - 90% - Retry Instruction.<br/>
      * JS7 allows any number of retries and individual intervals per retry. No use of a "Restart Factor" to calculate retries.<br/>
      */
-    private SOSArgument<Integer> nRetrys = new SOSArgument<>("n_retrys", false);
+    private SOSArgument<Integer> nRetrys = new SOSArgument<>(ATTR_N_RETRYS, false);
 
     /** auto_delete - Automatically Delete a Job on Completion<br/>
      * This attribute is optional for all job types.<br/>
@@ -160,7 +195,7 @@ public abstract class ACommonJob {
      * <br/>
      * JS7 - to be dropped?<br/>
      */
-    private SOSArgument<Integer> autoDelete = new SOSArgument<>("auto_delete", false);
+    private SOSArgument<Integer> autoDelete = new SOSArgument<>(ATTR_AUTO_DELETE, false);
 
     /** max_run_alarm - Define the Maximum Run Time for a Job<br/>
      * This attribute is optional for all job types.<br/>
@@ -172,10 +207,10 @@ public abstract class ACommonJob {
      * <br/>
      * JS7 - 100% - job warn_if_longer<br/>
      */
-    private SOSArgument<Integer> maxRunAlarm = new SOSArgument<>("max_run_alarm", false);
+    private SOSArgument<Integer> maxRunAlarm = new SOSArgument<>(ATTR_MAX_RUN_ALARM, false);
     /** Define the Minimum Run Time for a Job<br/>
      * JS7 - 100% - job warn_if_shorter */
-    private SOSArgument<Integer> minRunAlarm = new SOSArgument<>("min_run_alarm", false);
+    private SOSArgument<Integer> minRunAlarm = new SOSArgument<>(ATTR_MIN_RUN_ALARM, false);
 
     /** must_complete_times - Specify the Time a Job Must Complete By<br/>
      * This attribute is optional for all job types.<br/>
@@ -186,7 +221,7 @@ public abstract class ACommonJob {
      * <br/>
      * JS7 - 0% - Feature requires development for iteration 3<br/>
      */
-    private SOSArgument<String> mustCompleteTimes = new SOSArgument<>("must_complete_times", false);
+    private SOSArgument<String> mustCompleteTimes = new SOSArgument<>(ATTR_MUST_COMPLETE_TIMES, false);
 
     /** must_start_times - Specify the Time a Job Must Start By<br/>
      * This attribute is optional for all job types.<br/>
@@ -197,7 +232,7 @@ public abstract class ACommonJob {
      * <br/>
      * JS7 - 0% - Feature requires development for iteration 3<br/>
      */
-    private SOSArgument<String> mustStartTimes = new SOSArgument<>("must_start_times", false);
+    private SOSArgument<String> mustStartTimes = new SOSArgument<>(ATTR_MUST_START_TIMES, false);
 
     /** term_run_time - Specify the Maximum Runtime<br/>
      * This attribute is optional for all job types.<br/>
@@ -212,25 +247,41 @@ public abstract class ACommonJob {
      * <br/>
      * JS7 - 100% - Job Instructions. timeout attribute<br/>
      */
-    private SOSArgument<Integer> termRunTime = new SOSArgument<>("term_run_time", false);
+    private SOSArgument<Integer> termRunTime = new SOSArgument<>(ATTR_TERM_RUN_TIME, false);
 
-    public ACommonJob(JobType jobType) {
-        this.jobType.setValue(jobType);
+    public ACommonJob(ConverterJobType type) {
+        this.converterJobType = type;
     }
 
-    public SOSArgument<JobType> getJobType() {
+    public ConverterJobType getConverterJobType() {
+        return converterJobType;
+    }
+
+    public SOSArgument<String> getJobType() {
         return jobType;
     }
 
-    public SOSArgument<String> getInsertJob() {
-        return insertJob;
+    @JobAttributeSetter(name = ATTR_JOB_TYPE)
+    public void setJobType(String val) {
+        jobType.setValue(AJobAttributes.stringValue(val));
+    }
+
+    public SOSArgument<String> addUnknown(String name, String value) {
+        SOSArgument<String> a = new SOSArgument<>(name, false);
+        a.setValue(value);
+        unknown.add(a);
+        return a;
+    }
+
+    public List<SOSArgument<String>> getUnknown() {
+        return unknown;
     }
 
     public CommonJobFolder getFolder() {
         return folder;
     }
 
-    public CommonJobCondition getConditions() {
+    public CommonJobCondition getCondition() {
         return condition;
     }
 
@@ -250,8 +301,13 @@ public abstract class ACommonJob {
         return runTime;
     }
 
+    public SOSArgument<String> getInsertJob() {
+        return insertJob;
+    }
+
+    @JobAttributeSetter(name = ATTR_INSERT_JOB)
     public void setInsertJob(String val) {
-        String s = AJobArguments.stringValue(val);
+        String s = AJobAttributes.stringValue(val);
         if (!SOSString.isEmpty(s)) {
             // \myJob
             if (s.startsWith("\\")) {
@@ -265,88 +321,99 @@ public abstract class ACommonJob {
         return owner;
     }
 
+    @JobAttributeSetter(name = ATTR_OWNER)
     public void setOwner(String val) {
-        owner.setValue(AJobArguments.stringValue(val));
+        owner.setValue(AJobAttributes.stringValue(val));
     }
 
     public SOSArgument<String> getPermission() {
         return permission;
     }
 
+    @JobAttributeSetter(name = ATTR_PERMISSION)
     public void setPermission(String val) {
-        permission.setValue(AJobArguments.stringValue(val));
+        permission.setValue(AJobAttributes.stringValue(val));
     }
 
     public SOSArgument<String> getDescription() {
         return description;
     }
 
+    @JobAttributeSetter(name = ATTR_DESCRIPTION)
     public void setDescription(String val) {
-        description.setValue(AJobArguments.stringValue(val));
+        description.setValue(AJobAttributes.stringValue(val));
     }
 
     public SOSArgument<Long> getJobLoad() {
         return jobLoad;
     }
 
+    @JobAttributeSetter(name = ATTR_JOB_LOAD)
     public void setJobLoad(String val) {
-        jobLoad.setValue(AJobArguments.longValue(val));
+        jobLoad.setValue(AJobAttributes.longValue(val));
     }
 
     public SOSArgument<Integer> getNRetrys() {
         return nRetrys;
     }
 
+    @JobAttributeSetter(name = ATTR_N_RETRYS)
     public void setNRetrys(String val) {
-        nRetrys.setValue(AJobArguments.integerValue(val));
+        nRetrys.setValue(AJobAttributes.integerValue(val));
     }
 
     public SOSArgument<Integer> getAutoDelete() {
         return autoDelete;
     }
 
+    @JobAttributeSetter(name = ATTR_AUTO_DELETE)
     public void setAutoDelete(String val) {
-        autoDelete.setValue(AJobArguments.integerValue(val));
+        autoDelete.setValue(AJobAttributes.integerValue(val));
     }
 
     public SOSArgument<Integer> getMaxRunAlarm() {
         return maxRunAlarm;
     }
 
+    @JobAttributeSetter(name = ATTR_MAX_RUN_ALARM)
     public void setMaxRunAlarm(String val) {
-        maxRunAlarm.setValue(AJobArguments.integerValue(val));
+        maxRunAlarm.setValue(AJobAttributes.integerValue(val));
     }
 
     public SOSArgument<Integer> getMinRunAlarm() {
         return minRunAlarm;
     }
 
+    @JobAttributeSetter(name = ATTR_MIN_RUN_ALARM)
     public void setMinRunAlarm(String val) {
-        minRunAlarm.setValue(AJobArguments.integerValue(val));
+        minRunAlarm.setValue(AJobAttributes.integerValue(val));
     }
 
     public SOSArgument<String> getMustCompleteTimes() {
         return mustCompleteTimes;
     }
 
+    @JobAttributeSetter(name = ATTR_MUST_COMPLETE_TIMES)
     public void setMustCompleteTimes(String val) {
-        mustCompleteTimes.setValue(AJobArguments.stringValue(val));
+        mustCompleteTimes.setValue(AJobAttributes.stringValue(val));
     }
 
     public SOSArgument<String> getMustStartTimes() {
         return mustStartTimes;
     }
 
+    @JobAttributeSetter(name = ATTR_MUST_START_TIMES)
     public void setMustStartTimes(String val) {
-        mustStartTimes.setValue(AJobArguments.stringValue(val));
+        mustStartTimes.setValue(AJobAttributes.stringValue(val));
     }
 
     public SOSArgument<Integer> getTermRunTime() {
         return termRunTime;
     }
 
+    @JobAttributeSetter(name = ATTR_TERM_RUN_TIME)
     public void setTermRunTime(String val) {
-        termRunTime.setValue(AJobArguments.integerValue(val));
+        termRunTime.setValue(AJobAttributes.integerValue(val));
     }
 
 }

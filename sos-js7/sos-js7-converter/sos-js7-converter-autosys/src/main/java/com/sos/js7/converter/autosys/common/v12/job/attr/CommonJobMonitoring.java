@@ -1,8 +1,15 @@
-package com.sos.js7.converter.autosys.common.v12.job.attributes;
+package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import com.sos.commons.util.common.SOSArgument;
+import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
 
-public class CommonJobMonitoring extends AJobArguments {
+public class CommonJobMonitoring extends AJobAttributes {
+
+    private static final String ATTR_SVCDESK_DESC = "svcdesk_desc";
+    private static final String ATTR_SVCDESK_IMP = "svcdesk_imp";
+    private static final String ATTR_SVCDESK_PRI = "svcdesk_pri";
+    private static final String ATTR_SVCDESK_SEV = "svcdesk_sev";
+    private static final String ATTR_SERVICE_DESC = "service_desk";
 
     /** svcdesk_desc - Define the Message to Include in the CA Service Desk Request<br/>
      * This attribute is optional for all job types.<br/>
@@ -13,7 +20,7 @@ public class CommonJobMonitoring extends AJobArguments {
      * <br/>
      * JS7 - 0% - to be discussed in context with monitoring<br/>
      */
-    private SOSArgument<Integer> svcdeskDesc = new SOSArgument<>("svcdesk_desc", false);
+    private SOSArgument<Integer> svcdeskDesc = new SOSArgument<>(ATTR_SVCDESK_DESC, false);
 
     /** svcdesk_imp - Specify the Impact Level of the Service Desk Request<br/>
      * This attribute is optional for all job types.<br/>
@@ -28,7 +35,7 @@ public class CommonJobMonitoring extends AJobArguments {
      * <br/>
      * JS7 - 0% - to be discussed in context with monitoring<br/>
      */
-    private SOSArgument<Integer> svcdeskImp = new SOSArgument<>("svcdesk_imp", false);
+    private SOSArgument<Integer> svcdeskImp = new SOSArgument<>(ATTR_SVCDESK_IMP, false);
 
     /** svcdesk_pri - Specify the Priority Level of the Service Desk Request<br/>
      * This attribute is optional for all job types.<br/>
@@ -42,7 +49,7 @@ public class CommonJobMonitoring extends AJobArguments {
      * <br/>
      * JS7 - 0% - to be discussed in context with monitoring<br/>
      */
-    private SOSArgument<Integer> svcdeskPri = new SOSArgument<>("svcdesk_pri", false);
+    private SOSArgument<Integer> svcdeskPri = new SOSArgument<>(ATTR_SVCDESK_PRI, false);
 
     /** svcdesk_sev - Specify the Severity Level of the Service Desk Request<br/>
      * This attribute is optional for all job types.<br/>
@@ -57,7 +64,7 @@ public class CommonJobMonitoring extends AJobArguments {
      * <br/>
      * JS7 - 0% - to be discussed in context with monitoring<br/>
      */
-    private SOSArgument<Integer> svcdeskSev = new SOSArgument<>("svcdesk_sev", false);
+    private SOSArgument<Integer> svcdeskSev = new SOSArgument<>(ATTR_SVCDESK_SEV, false);
 
     /** service_desk - Specify Whether to Open a CA Service Desk Ticket When a Job Fails<br/>
      * This attribute is optional for all job types.<br/>
@@ -66,45 +73,51 @@ public class CommonJobMonitoring extends AJobArguments {
      * <br/>
      * JS7 - to be discussed in context with monitoring<br/>
      */
-    private SOSArgument<Boolean> serviceDesk = new SOSArgument<>("service_desk", false);
+    private SOSArgument<Boolean> serviceDesk = new SOSArgument<>(ATTR_SERVICE_DESC, false);
 
     public SOSArgument<Integer> getSvcdeskDesc() {
         return svcdeskDesc;
     }
 
+    @JobAttributeSetter(name = ATTR_SVCDESK_DESC)
     public void setSvcdeskDesc(String val) {
-        svcdeskDesc.setValue(AJobArguments.integerValue(val));
+        svcdeskDesc.setValue(AJobAttributes.integerValue(val));
     }
 
     public SOSArgument<Integer> getSvcdeskImp() {
         return svcdeskImp;
     }
 
+    @JobAttributeSetter(name = ATTR_SVCDESK_IMP)
     public void setSvcdeskImp(String val) {
-        svcdeskImp.setValue(AJobArguments.integerValue(val));
+        svcdeskImp.setValue(AJobAttributes.integerValue(val));
     }
 
     public SOSArgument<Integer> getSvcdeskPri() {
         return svcdeskPri;
     }
 
+    @JobAttributeSetter(name = ATTR_SVCDESK_PRI)
     public void setSvcdeskPri(String val) {
-        svcdeskPri.setValue(AJobArguments.integerValue(val));
+        svcdeskPri.setValue(AJobAttributes.integerValue(val));
     }
 
     public SOSArgument<Integer> getSvcdeskSev() {
         return svcdeskSev;
     }
 
+    @JobAttributeSetter(name = ATTR_SVCDESK_SEV)
     public void setSvcdeskSev(String val) {
-        svcdeskSev.setValue(AJobArguments.integerValue(val));
+        svcdeskSev.setValue(AJobAttributes.integerValue(val));
     }
 
     public SOSArgument<Boolean> getServiceDesk() {
         return serviceDesk;
     }
 
+    @JobAttributeSetter(name = ATTR_SERVICE_DESC)
     public void setServiceDesk(String val) {
-        serviceDesk.setValue(AJobArguments.booleanValue(val, false));
+        serviceDesk.setValue(AJobAttributes.booleanValue(val, false));
     }
+
 }

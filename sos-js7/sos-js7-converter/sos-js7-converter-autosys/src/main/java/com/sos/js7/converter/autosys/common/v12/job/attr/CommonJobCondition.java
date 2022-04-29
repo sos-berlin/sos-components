@@ -1,8 +1,11 @@
-package com.sos.js7.converter.autosys.common.v12.job.attributes;
+package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import com.sos.commons.util.common.SOSArgument;
+import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
 
-public class CommonJobCondition extends AJobArguments {
+public class CommonJobCondition extends AJobAttributes {
+
+    private static final String ATTR_CONDITION = "condition";
 
     /** condition - Define Starting Conditions for a Job Contents<br/>
      * This attribute is optional for all job types.<br/>
@@ -12,13 +15,15 @@ public class CommonJobCondition extends AJobArguments {
      * <br/>
      * JS7 - 100% - Notice Board<br/>
      */
-    private SOSArgument<String> condition = new SOSArgument<>("condition", false);
+    private SOSArgument<String> condition = new SOSArgument<>(ATTR_CONDITION, false);
 
     public SOSArgument<String> getCondition() {
         return condition;
     }
 
+    @JobAttributeSetter(name = ATTR_CONDITION)
     public void setCondition(String val) {
-        condition.setValue(AJobArguments.stringValue(val));
+        condition.setValue(AJobAttributes.stringValue(val));
     }
+
 }
