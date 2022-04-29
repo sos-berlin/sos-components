@@ -19,7 +19,7 @@ import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.model.security.ldap.LdapGroupRolesMappingItem;
- 
+
 public class SOSLdapWebserviceCredentials {
 
     private static final String DEFAULT_USER_DN_TEMPLATE = "{0}";
@@ -65,7 +65,13 @@ public class SOSLdapWebserviceCredentials {
     }
 
     public String getSecurityPrincipal() {
-        String securityPrincipal = userDnTemplate.replaceAll("\\{0\\}", account);
+        String securityPrincipal = "";
+        if (sosLdapLoginUserName.getDomain() != null && !sosLdapLoginUserName.getDomain().trim().isEmpty()) {
+            String a = sosLdapLoginUserName.getUserName() + "@" + sosLdapLoginUserName.getDomain();
+            securityPrincipal = userDnTemplate.replaceAll("\\{0\\}", a);
+        } else {
+            securityPrincipal = userDnTemplate.replaceAll("\\{0\\}", account);
+        }
         return securityPrincipal;
     }
 
@@ -292,35 +298,35 @@ public class SOSLdapWebserviceCredentials {
     }
 
     public String getGroupSearchBaseNotNull() {
-        if (this.groupSearchBase == null){
+        if (this.groupSearchBase == null) {
             return "";
         }
         return this.groupSearchBase;
     }
 
     public String getGroupSearchFilterNotNull() {
-        if (this.groupSearchFilter == null){
+        if (this.groupSearchFilter == null) {
             return "";
         }
         return this.groupSearchFilter;
     }
 
     public String getSearchBaseNotNull() {
-        if (this.searchBase == null){
+        if (this.searchBase == null) {
             return "";
         }
         return this.searchBase;
     }
 
     public String getUserDnTemplateNotNull() {
-        if (this.userDnTemplate == null){
+        if (this.userDnTemplate == null) {
             return "";
         }
         return this.userDnTemplate;
     }
 
     public String getLdapServerUrlNotNull() {
-        if (this.ldapServerUrl == null){
+        if (this.ldapServerUrl == null) {
             return "";
         }
         return this.ldapServerUrl;
