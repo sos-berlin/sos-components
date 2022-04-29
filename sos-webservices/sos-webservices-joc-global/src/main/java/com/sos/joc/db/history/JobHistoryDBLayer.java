@@ -355,7 +355,7 @@ public class JobHistoryDBLayer {
             if (filter.getJobs() != null && !filter.getJobs().isEmpty()) {
                 List<String> l = new ArrayList<String>();
                 for (Entry<String, Set<String>> entry : filter.getJobs().entrySet()) {
-                    String s = "workflowPath = '" + entry.getKey() + "'";
+                    String s = "workflowName = '" + entry.getKey() + "'";
                     if (!entry.getValue().isEmpty() && !entry.getValue().contains(null)) {
                         if (entry.getValue().size() == 1) {
                             s += " and jobName = '" + entry.getValue().iterator().next() + "'";
@@ -372,7 +372,7 @@ public class JobHistoryDBLayer {
             } else if (filter.getOrders() != null && !filter.getOrders().isEmpty()) {
                 List<String> l = new ArrayList<String>();
                 for (Entry<String, Set<String>> entry : filter.getOrders().entrySet()) {
-                    String s = "workflowPath = '" + entry.getKey() + "'";
+                    String s = "workflowName = '" + entry.getKey() + "'";
                     if (!entry.getValue().isEmpty() && !entry.getValue().contains(null)) {
                         if (entry.getValue().size() == 1) {
                             s += " and orderId = '" + entry.getValue().iterator().next() + "'";

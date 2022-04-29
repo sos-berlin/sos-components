@@ -376,7 +376,8 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         }
     }
     
-    private Map<Integer, Map<Long, String>> getDeployedInventoryPaths(String controllerId, String folder, Boolean recursive, Set<Integer> types, SOSHibernateSession session) {
+    private Map<Integer, Map<Long, String>> getDeployedInventoryPaths(String controllerId, String folder, Boolean recursive, Set<Integer> types,
+            SOSHibernateSession session) {
         if (controllerId != null && !controllerId.isEmpty()) {
             DeployedConfigurationDBLayer deployedDbLayer = new DeployedConfigurationDBLayer(session);
             DeployedConfigurationFilter deployedFilter = new DeployedConfigurationFilter();

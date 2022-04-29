@@ -26,6 +26,7 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
@@ -108,9 +109,10 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     }
 
                     if (in.getJobs() != null && !in.getJobs().isEmpty()) {
-                        dbFilter.setJobs(in.getJobs().stream().filter(Objects::nonNull).peek(job -> job.setWorkflowPath(WorkflowPaths.getPath(job
-                                .getWorkflowPath()))).filter(job -> canAdd(job.getWorkflowPath(), permittedFolders)).collect(Collectors.groupingBy(
-                                        JobPath::getWorkflowPath, Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
+                        dbFilter.setJobs(in.getJobs().stream().filter(Objects::nonNull).filter(job -> canAdd(WorkflowPaths.getPath(job
+                                .getWorkflowPath()), permittedFolders)).peek(job -> job.setWorkflowPath(JocInventory.pathToName(job
+                                        .getWorkflowPath()))).collect(Collectors.groupingBy(JobPath::getWorkflowPath, Collectors.mapping(
+                                                JobPath::getJob, Collectors.toSet()))));
                         folderPermissionsAreChecked = true;
                     } else {
 
