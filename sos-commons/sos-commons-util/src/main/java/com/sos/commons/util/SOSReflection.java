@@ -2,6 +2,7 @@ package com.sos.commons.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -36,11 +37,19 @@ public class SOSReflection {
     }
 
     public static List<Field> getAllDeclaredFields(Class<?> type) {
-        List<Field> fields = new ArrayList<Field>();
+        List<Field> result = new ArrayList<>();
         for (Class<?> c = type; c != null; c = c.getSuperclass()) {
-            fields.addAll(Arrays.asList(c.getDeclaredFields()));
+            result.addAll(Arrays.asList(c.getDeclaredFields()));
         }
-        return fields;
+        return result;
+    }
+
+    public static List<Method> getAllDeclaredMethods(Class<?> type) {
+        List<Method> result = new ArrayList<>();
+        for (Class<?> c = type; c != null; c = c.getSuperclass()) {
+            result.addAll(Arrays.asList(c.getDeclaredMethods()));
+        }
+        return result;
     }
 
     public static boolean isEmpty(Object obj) {

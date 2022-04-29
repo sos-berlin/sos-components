@@ -1,8 +1,12 @@
-package com.sos.js7.converter.autosys.common.v12.job.attributes;
+package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import com.sos.commons.util.common.SOSArgument;
+import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
 
-public class CommonJobBox extends AJobArguments {
+public class CommonJobBox extends AJobAttributes {
+
+    private static final String ATTR_BOX_NAME = "box_name";
+    private static final String ATTR_BOX_TERMINATOR = "box_terminator";
 
     /** box_name - Identify a Box as Container for a Job<br/>
      * This attribute is optional for all job types.<br/>
@@ -17,7 +21,7 @@ public class CommonJobBox extends AJobArguments {
      * <br/>
      * JS7 - 100% - Workflows<br/>
      */
-    private SOSArgument<String> boxName = new SOSArgument<>("box_name", false);
+    private SOSArgument<String> boxName = new SOSArgument<>(ATTR_BOX_NAME, false);
 
     /** box_terminator - Terminate Box on Job Failure<br/>
      * This attribute applies to all job types and is optional.<br/>
@@ -28,21 +32,24 @@ public class CommonJobBox extends AJobArguments {
      * <br/>
      * JS7 - 75% - JS7 workflows ("boxes") to not terminate the parent workflow on failure.<br/>
      */
-    private SOSArgument<Boolean> boxTerminator = new SOSArgument<>("box_terminator", false);
+    private SOSArgument<Boolean> boxTerminator = new SOSArgument<>(ATTR_BOX_TERMINATOR, false);
 
     public SOSArgument<String> getBoxName() {
         return boxName;
     }
 
+    @JobAttributeSetter(name = ATTR_BOX_NAME)
     public void setBoxName(String val) {
-        boxName.setValue(AJobArguments.stringValue(val));
+        boxName.setValue(AJobAttributes.stringValue(val));
     }
 
     public SOSArgument<Boolean> getBoxTerminator() {
         return boxTerminator;
     }
 
+    @JobAttributeSetter(name = ATTR_BOX_TERMINATOR)
     public void setBoxTerminator(String val) {
-        boxTerminator.setValue(AJobArguments.booleanValue(val, false));
+        boxTerminator.setValue(AJobAttributes.booleanValue(val, false));
     }
+
 }

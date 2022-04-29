@@ -1,5 +1,6 @@
 package com.sos.commons.sign;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -47,9 +48,12 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.ca.CAUtils;
+import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
+
+import junit.framework.Assert;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CATests {
@@ -122,7 +126,7 @@ public class CATests {
         LOGGER.trace("************************************  CSR:  ***********************************************************");
         LOGGER.trace("\n" + csrAsString);
         X509Certificate userCertificate = 
-                CAUtils.signAuthCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, userKeyPair.getPrivate(), csr, (X509Certificate)rootCertificate, "sp.sos");
+                CAUtils.signCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, userKeyPair.getPrivate(), csr, (X509Certificate)rootCertificate, "sp.sos");
         assertNotNull(userCertificate);
         String userCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(userCertificate.getEncoded()), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
@@ -255,7 +259,7 @@ public class CATests {
         LOGGER.trace("************************************  CSR:  ***********************************************************");
         LOGGER.trace("\n" + csrAsString);
         X509Certificate userCertificate = 
-                CAUtils.signAuthCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, userKeyPair.getPrivate(), csr, (X509Certificate)rootCertificate, "sp.sos");
+                CAUtils.signCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, userKeyPair.getPrivate(), csr, (X509Certificate)rootCertificate, "sp.sos");
         assertNotNull(userCertificate);
         String userCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(userCertificate.getEncoded()), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);

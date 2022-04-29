@@ -1,4 +1,4 @@
-package com.sos.js7.converter.autosys.common.v12.job.attributes;
+package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 
-public abstract class AJobArguments {
+public abstract class AJobAttributes {
 
     private static final String LIST_VALUE_DELIMITER = ",";
 

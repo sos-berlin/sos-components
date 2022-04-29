@@ -1,9 +1,14 @@
 package com.sos.js7.converter.autosys.common.v12.job;
 
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attributes.AJobArguments;
+import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
+import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
 
 public abstract class ACommonMachineJob extends ACommonJob {
+
+    private static final String ATTR_MACHINE = "machine";
+    private static final String ATTR_PROFILE = "profile";
+    private static final String ATTR_PRIORITY = "priority";
 
     /** machine - Define the Client Where a Job Runs<br/>
      * This attribute is required for all job types. This attribute does not apply to Box jobs.<br/>
@@ -17,7 +22,7 @@ public abstract class ACommonMachineJob extends ACommonJob {
      * For example, 'C\:\tmp' is valid; 'C:\tmp' is not. <br/>
      * <br/>
      * JS7 - 100% - Mapping to Agents. Agent Cluster. No "machine chooser supported" */
-    private SOSArgument<String> machine = new SOSArgument<>("machine", true);
+    private SOSArgument<String> machine = new SOSArgument<>(ATTR_MACHINE, true);
 
     /** profile - Specify a Job Profile<br/>
      * This attribute is optional for the following job types: Command(CMD), File Watcher(FW)<br/>
@@ -29,7 +34,7 @@ public abstract class ACommonMachineJob extends ACommonJob {
      * <br/>
      * JS7 - 90% - Job Resource. Not used for File Watcher<br/>
      */
-    private SOSArgument<String> profile = new SOSArgument<>("profile", false);
+    private SOSArgument<String> profile = new SOSArgument<>(ATTR_PROFILE, false);
 
     /** priority - Define the Queue Priority of the Job<br/>
      * This attribute is optional for all job types. This attribute does not apply to box jobs.<br/>
@@ -38,34 +43,37 @@ public abstract class ACommonMachineJob extends ACommonJob {
      * Example: priority: 0 <br/>
      * JS7 - JS7 feature currently not available and is developed for iteration 3<br/>
      */
-    private SOSArgument<Integer> priority = new SOSArgument<>("priority", false);
+    private SOSArgument<Integer> priority = new SOSArgument<>(ATTR_PRIORITY, false);
 
-    public ACommonMachineJob(JobType jobType) {
-        super(jobType);
+    public ACommonMachineJob(ConverterJobType type) {
+        super(type);
     }
 
     public SOSArgument<String> getMachine() {
         return machine;
     }
 
+    @JobAttributeSetter(name = ATTR_MACHINE)
     public void setMachine(String val) {
-        machine.setValue(AJobArguments.stringValue(val));
+        machine.setValue(AJobAttributes.stringValue(val));
     }
 
     public SOSArgument<String> getProfile() {
         return profile;
     }
 
+    @JobAttributeSetter(name = ATTR_PROFILE)
     public void setProfile(String val) {
-        profile.setValue(AJobArguments.stringValue(val));
+        profile.setValue(AJobAttributes.stringValue(val));
     }
 
     public SOSArgument<Integer> getPriority() {
         return priority;
     }
 
+    @JobAttributeSetter(name = ATTR_PRIORITY)
     public void setPriority(String val) {
-        priority.setValue(AJobArguments.integerValue(val));
+        priority.setValue(AJobAttributes.integerValue(val));
     }
 
 }

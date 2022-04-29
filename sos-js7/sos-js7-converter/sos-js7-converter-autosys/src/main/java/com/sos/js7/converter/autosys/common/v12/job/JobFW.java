@@ -1,9 +1,12 @@
 package com.sos.js7.converter.autosys.common.v12.job;
 
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attributes.AJobArguments;
+import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
+import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
 
 public class JobFW extends ACommonFileWatcherJob {
+
+    private static final String ATTR_WATCH_INTERVAL = "watch_interval";
 
     /** watch_interval - Specify the Frequency to Monitor a File<br/>
      * This attribute is optional for the FW job type.<br/>
@@ -18,18 +21,19 @@ public class JobFW extends ACommonFileWatcherJob {
      * For other Unixes including MacOS the polling interval is 2s.<br/>
      * This behavior is not configurable. We have doubts if a development for configurability makes sense.<br/>
      */
-    private SOSArgument<Long> watchInterval = new SOSArgument<>("watch_interval", false);
+    private SOSArgument<Long> watchInterval = new SOSArgument<>(ATTR_WATCH_INTERVAL, false);
 
     public JobFW() {
-        super(JobType.FW);
+        super(ConverterJobType.FW);
     }
 
     public SOSArgument<Long> getWatchInterval() {
         return watchInterval;
     }
 
+    @JobAttributeSetter(name = ATTR_WATCH_INTERVAL)
     public void setWatchInterval(String val) {
-        watchInterval.setValue(AJobArguments.longValue(val));
+        watchInterval.setValue(AJobAttributes.longValue(val));
     }
 
 }
