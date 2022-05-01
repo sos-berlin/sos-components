@@ -177,12 +177,12 @@ public class ProxyContext {
             SOSHibernateSession sosHibernateSession = null;
             try {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetAgents");
-                sosHibernateSession.setAutoCommit(false);
-                sosHibernateSession.beginTransaction();
                 InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
                 JControllerState currentState = p.currentState();
                 Map<AgentPath, JAgentRef> controllerKnownAgents = currentState.pathToAgentRef();
-                Map<JAgentRef, List<JSubagentItem>> agents = Proxies.getUnknownAgents(credentials.getControllerId(), dbLayer, controllerKnownAgents);
+                Map<SubagentId, JSubagentItem> controllerKnownSubagents = currentState.idToSubagentItem();
+                Map<JAgentRef, List<JSubagentItem>> agents = Proxies.getUnknownAgents(credentials.getControllerId(), dbLayer, controllerKnownAgents,
+                        controllerKnownSubagents, false);
                 if (!agents.isEmpty()) {
                     LOGGER.info(toString() + ": Redeploy Agents");
 
@@ -216,7 +216,6 @@ public class ProxyContext {
                 }
                 DailyPlanCalendar.getInstance().updateDailyPlanCalendar(p.api(), currentState, toString());
             } catch (Exception e) {
-                Globals.rollback(sosHibernateSession);
                 LOGGER.error(e.toString());
             } finally {
                 Globals.disconnect(sosHibernateSession);

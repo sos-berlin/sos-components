@@ -34,7 +34,6 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
-import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
@@ -93,13 +92,18 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
                 Map<AgentPath, JAgentRef> knownAgents = currentState.pathToAgentRef();
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     JAgentRef agentRef = knownAgents.get(AgentPath.of(dbAgent.getAgentId()));
-                    if (agentRef != null && (!agentRef.director().isPresent() || agentRef.directors().isEmpty())) {
+                    if (agentRef != null) {
                         agentRefs.add(JUpdateItemOperation.deleteSimple(AgentPath.of(dbAgent.getAgentId())));
+                        if (agentRef.director().isPresent()) {
+                            agentRefs.add(JUpdateItemOperation.deleteSimple(agentRef.director().get()));
+                        }
+                        updateAgentIds.add(dbAgent.getAgentId());
                     } else {
-                        agentRefs.add(JUpdateItemOperation.deleteSimple(AgentPath.of(dbAgent.getAgentId())));
-                        agentRefs.add(JUpdateItemOperation.deleteSimple(SubagentId.of(dbAgent.getAgentId())));
+                        if (dbAgent.getDeployed()) {
+                            dbAgent.setDeployed(false);
+                            agentDBLayer.updateAgent(dbAgent);
+                        }
                     }
-                    updateAgentIds.add(dbAgent.getAgentId());
                 }
             }
 

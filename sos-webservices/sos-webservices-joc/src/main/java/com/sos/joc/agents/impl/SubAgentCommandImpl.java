@@ -25,7 +25,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.agent.AgentHelper;
-import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -235,14 +234,29 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
             SubAgentCommand subAgentCommand = Globals.objectMapper.readValue(filterBytes, SubAgentCommand.class);
 
             String controllerId = subAgentCommand.getControllerId();
-
             storeAuditLog(subAgentCommand.getAuditLog(), controllerId, CategoryType.CONTROLLER);
-            JControllerCommand resetSubagentCommand = JControllerCommand.apply(new ControllerCommand.ResetSubagent(SubagentId.of(subAgentCommand
-                    .getSubagentId()), subAgentCommand.getForce() == Boolean.TRUE));
-            LOGGER.debug("Reset Subagent: " + resetSubagentCommand.toJson());
-            ControllerApi.of(controllerId).executeCommand(resetSubagentCommand).thenAccept(e -> {
-                ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
-            });
+            
+            JControllerProxy proxy = Proxy.of(controllerId);
+            JControllerState currentstate = proxy.currentState();
+            JSubagentItem subagent = currentstate.idToSubagentItem().get(SubagentId.of(subAgentCommand.getSubagentId()));
+            if (subagent != null) {
+                boolean subagentIsDirector = currentstate.pathToAgentRef().get(subagent.agentPath()).directors().contains(subagent.id());
+                JControllerCommand resetSubagentCommand = null;
+                if (subagentIsDirector) {
+                    resetSubagentCommand = JControllerCommand.apply(new ControllerCommand.ResetAgent(subagent.agentPath(), subAgentCommand
+                            .getForce() == Boolean.TRUE));
+                } else {
+                    resetSubagentCommand = JControllerCommand.apply(new ControllerCommand.ResetSubagent(subagent.id(), subAgentCommand
+                            .getForce() == Boolean.TRUE));
+                }
+                if (resetSubagentCommand != null) {
+                    LOGGER.debug("Reset Subagent: " + resetSubagentCommand.toJson());
+                    proxy.api().executeCommand(resetSubagentCommand).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken,
+                            getJocError(), controllerId));
+                }
+            } else {
+                throw new ControllerObjectNotExistException(String.format("Unknown Subagent '%s'", subAgentCommand.getSubagentId()));
+            }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

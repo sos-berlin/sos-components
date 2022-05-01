@@ -317,14 +317,16 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 JControllerState currentState = proxy.currentState();
                 
                 Map<AgentPath, JAgentRef> knownAgents = currentState.pathToAgentRef();
-                
+
                 proxy.api().updateItems(Flux.fromStream(agentWatchers.stream().map(a -> {
-                    JAgentRef agentE = knownAgents.get(AgentPath.of(a.getAgentId()));
-                    if (agentE != null && (!agentE.director().isPresent() || agentE.directors().isEmpty())) {
+                    JAgentRef agentRef = knownAgents.get(AgentPath.of(a.getAgentId()));
+                    if (agentRef != null && (!agentRef.director().isPresent() || agentRef.directors().isEmpty())) {
                         return Collections.singletonList(JUpdateItemOperation.addOrChangeSimple(createOldAgent(a)));
                     } else {
-                        return Arrays.asList(JUpdateItemOperation.addOrChangeSimple(createNewAgent(a)), JUpdateItemOperation.addOrChangeSimple(
-                                createSubagentDirector(a)));
+                        SubagentId subagentId = agentRef != null && agentRef.director().isPresent() ? agentRef.director().get() : SubagentId.of(a
+                                .getAgentId());
+                        return Arrays.asList(JUpdateItemOperation.addOrChangeSimple(createNewAgent(a, subagentId)), JUpdateItemOperation
+                                .addOrChangeSimple(createSubagentDirector(a, subagentId)));
                     }
                 }).flatMap(List::stream))).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), cId);
@@ -369,12 +371,12 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         return JAgentRef.of(AgentPath.of(a.getAgentId()), Uri.of(a.getUrl()));
     }
     
-    private static JAgentRef createNewAgent(Agent a) {
-        return JAgentRef.of(AgentPath.of(a.getAgentId()), SubagentId.of((a.getAgentId())));
+    private static JAgentRef createNewAgent(Agent a, SubagentId subagentId) {
+        return JAgentRef.of(AgentPath.of(a.getAgentId()), subagentId);
     }
     
-    private static JSubagentItem createSubagentDirector(Agent a) {
-        return JSubagentItem.of(SubagentId.of(a.getAgentId()), AgentPath.of(a.getAgentId()), Uri.of(a.getUrl()), true);
+    private static JSubagentItem createSubagentDirector(Agent a, SubagentId subagentId) {
+        return JSubagentItem.of(subagentId, AgentPath.of(a.getAgentId()), Uri.of(a.getUrl()), a.getDisabled());
     }
     
     @Override

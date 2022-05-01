@@ -837,6 +837,9 @@ public class HistoryEventEntry {
                     Optional<SubagentId> sid = OptionConverters.toJava(((Order.Processing) order.asScala().state()).subagentId());
                     if (sid.isPresent()) {
                         subagentId = sid.get().string();
+                        if (agentId != null && subagentId.equals(agentId + "-1")) { // delete Joacim's unexpected default for implicit directors
+                            subagentId = subagentId.replaceFirst("-1$", "");
+                        }
                         JSubagentItem si = state.idToSubagentItem().get(sid.get());
                         if (si != null) {
                             agentUri = si.uri().string();

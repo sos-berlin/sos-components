@@ -85,11 +85,13 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
                 Map<AgentPath, JAgentRef> knownAgents = currentState.pathToAgentRef();
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     JAgentRef agentRef = knownAgents.get(AgentPath.of(dbAgent.getAgentId()));
-                    if (agentRef != null && (!agentRef.director().isPresent() || agentRef.directors().isEmpty())) {
+                    if (agentRef != null && !agentRef.director().isPresent()) {
                         agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createOldAgent(dbAgent)));
                     } else {
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createNewAgent(dbAgent)));
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createSubagentDirector(dbAgent)));
+                        SubagentId subagentId = agentRef != null && agentRef.director().isPresent() ? agentRef.director().get() : SubagentId.of(
+                                dbAgent.getAgentId());
+                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createNewAgent(dbAgent, subagentId)));
+                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createSubagentDirector(dbAgent, subagentId)));
                     }
                     updateAgentIds.add(dbAgent.getAgentId());
                 }
@@ -135,11 +137,11 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
         return JAgentRef.of(AgentPath.of(a.getAgentId()), Uri.of(a.getUri()));
     }
     
-    private static JAgentRef createNewAgent(DBItemInventoryAgentInstance a) {
-        return JAgentRef.of(AgentPath.of(a.getAgentId()), SubagentId.of((a.getAgentId())));
+    private static JAgentRef createNewAgent(DBItemInventoryAgentInstance a, SubagentId subagentId) {
+        return JAgentRef.of(AgentPath.of(a.getAgentId()), subagentId);
     }
     
-    private static JSubagentItem createSubagentDirector(DBItemInventoryAgentInstance a) {
-        return JSubagentItem.of(SubagentId.of(a.getAgentId()), AgentPath.of(a.getAgentId()), Uri.of(a.getUri()), true);
+    private static JSubagentItem createSubagentDirector(DBItemInventoryAgentInstance a, SubagentId subagentId) {
+        return JSubagentItem.of(subagentId, AgentPath.of(a.getAgentId()), Uri.of(a.getUri()), a.getDisabled());
     }
 }

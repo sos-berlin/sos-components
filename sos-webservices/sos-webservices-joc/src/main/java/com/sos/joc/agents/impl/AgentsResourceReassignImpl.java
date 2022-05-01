@@ -1,12 +1,9 @@
 package com.sos.joc.agents.impl;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,17 +15,15 @@ import com.sos.joc.agents.resource.IAgentsResourceReassign;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
-import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.agent.SubagentDirectorType;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
-import js7.base.web.Uri;
+import io.vavr.control.Either;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
@@ -65,51 +60,44 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             }
             storeAuditLog(body.getAuditLog(), controllerId, CategoryType.CONTROLLER);
             
-            // TODO consider old Agent cannot convert to new Agents
-            //Map<JAgentRef, List<JSubagentRef>> agents = Proxies.getAgents(controllerId, null);
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetAgents");
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
-            List<DBItemInventoryAgentInstance> dbAvailableAgents = dbLayer.getAgentsByControllerIds(Collections.singleton(controllerId), false, true);
-           
-            if (dbAvailableAgents != null) {
-                JControllerProxy proxy = Proxy.of(controllerId);
-                JControllerState currentState = proxy.currentState();
-                Map<JAgentRef, List<JSubagentItem>> agents = new LinkedHashMap<>(dbAvailableAgents.size());
-                
-                Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
-                        controllerId), false, true);
-                Map<AgentPath, JAgentRef> knownAgents = currentState.pathToAgentRef();
-                
-                for (DBItemInventoryAgentInstance agent : dbAvailableAgents) {
-                    boolean versionBefore220beta20211201 = false;
-                    List<DBItemInventorySubAgentInstance> subs = subAgents.get(agent.getAgentId());
-                    if (subs == null || subs.isEmpty()) { // single agent
-                        JAgentRef agentE = knownAgents.get(AgentPath.of(agent.getAgentId()));
-                        if (agentE != null && (!agentE.director().isPresent() || agentE.directors().isEmpty())) {
-                            versionBefore220beta20211201 = true;
+            JControllerProxy proxy = Proxy.of(controllerId);
+            JControllerState currentState = proxy.currentState();
+            Map<AgentPath, JAgentRef> controllerKnownAgents = currentState.pathToAgentRef();
+            Map<SubagentId, JSubagentItem> controllerKnownSubagents = currentState.idToSubagentItem();
+            Map<JAgentRef, List<JSubagentItem>> agents = Proxies.getUnknownAgents(controllerId, dbLayer, controllerKnownAgents,
+                    controllerKnownSubagents, true);
+            if (!agents.isEmpty()) {
+
+                Stream<JUpdateItemOperation> a = agents.keySet().stream().map(JUpdateItemOperation::addOrChangeSimple);
+                Stream<JUpdateItemOperation> s = agents.values().stream().flatMap(l -> l.stream().map(
+                        JUpdateItemOperation::addOrChangeSimple));
+
+                proxy.api().updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s))).thenAccept(e -> {
+                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                    if (e.isRight()) {
+                        SOSHibernateSession connection1 = null;
+                        try {
+                            connection1 = Globals.createSosHibernateStatelessConnection(API_CALL);
+                            connection1.setAutoCommit(false);
+                            Globals.beginTransaction(connection1);
+                            InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
+                            dbLayer1.setAgentsDeployed(agents.keySet().stream().map(JAgentRef::path).map(AgentPath::string).collect(Collectors
+                                    .toList()));
+                            dbLayer1.setSubAgentsDeployed(agents.values().stream().flatMap(l -> l.stream()).map(JSubagentItem::path).map(
+                                    SubagentId::string).collect(Collectors.toList()));
+                            Globals.commit(connection1);
+                        } catch (Exception e1) {
+                            Globals.rollback(connection1);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
+                        } finally {
+                            Globals.disconnect(connection1);
                         }
-                        subs = Collections.singletonList(dbLayer.solveAgentWithoutSubAgent(agent));
                     }
-                    List<JSubagentItem> subRefs = subs.stream().map(s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s
-                            .getAgentId()), Uri.of(s.getUri()), s.getDisabled())).collect(Collectors.toList());
-                    Set<SubagentId> directors = subs.stream().filter(s -> s.getIsDirector() > SubagentDirectorType.NO_DIRECTOR.intValue()).sorted()
-                            .map(s -> SubagentId.of(s.getSubAgentId())).collect(Collectors.toSet());
-                    if (versionBefore220beta20211201) {
-                        agents.put(JAgentRef.of(AgentPath.of(agent.getAgentId()), Uri.of(agent.getUri())), Collections.emptyList());
-                    } else {
-                        agents.put(JAgentRef.of(AgentPath.of(agent.getAgentId()), directors), subRefs);
-                    }
-                }
-                
-                if (!agents.isEmpty()) {
-                    Stream<JUpdateItemOperation> a = agents.keySet().stream().map(JUpdateItemOperation::addOrChangeSimple);
-                    Stream<JUpdateItemOperation> s = agents.values().stream().flatMap(l -> l.stream().map(JUpdateItemOperation::addOrChangeSimple));
-                    proxy.api().updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s)))
-                        .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
-                }
+                });
             }
             
-
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
