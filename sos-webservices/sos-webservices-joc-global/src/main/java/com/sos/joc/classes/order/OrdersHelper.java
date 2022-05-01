@@ -394,7 +394,11 @@ public class OrdersHelper {
         if ("Processing".equals(oItem.getState().getTYPE())) {
             Option<SubagentId> subAgentId = ((Order.Processing) jOrder.asScala().state()).subagentId();
             if (subAgentId.nonEmpty()) {
-                o.setSubagentId(subAgentId.get().string());
+                String sId = subAgentId.get().string();
+                if (o.getAgentId() != null && sId.equals(o.getAgentId())) {
+                   sId = sId.replaceFirst("-1$", ""); 
+                }
+                o.setSubagentId(sId);
             }
             if (positionsSize > 2) {
                 try {

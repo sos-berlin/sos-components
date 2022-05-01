@@ -477,29 +477,45 @@ public class Proxies {
     }
     
     public static Map<JAgentRef, List<JSubagentItem>> getUnknownAgents(String controllerId, InventoryAgentInstancesDBLayer dbLayer,
-            Map<AgentPath, JAgentRef> controllerKnownAgents) throws JocException, DBConnectionRefusedException {
+            Map<AgentPath, JAgentRef> controllerKnownAgents, Map<SubagentId, JSubagentItem> controllerKnownSubagents, boolean onlyReDeployed) throws JocException,
+            DBConnectionRefusedException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             if (dbLayer == null) {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetUnknownAgents");
                 dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
             }
-            List<DBItemInventoryAgentInstance> dbAvailableAgents = dbLayer.getAgentsByControllerIds(Collections.singleton(controllerId), false, true);
-            if (dbAvailableAgents != null) {
-                Map<JAgentRef, List<JSubagentItem>> result = new LinkedHashMap<>(dbAvailableAgents.size());
+            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(Collections.singleton(controllerId), false, false);
+            if (dbAgents != null) {
+                Map<JAgentRef, List<JSubagentItem>> result = new LinkedHashMap<>(dbAgents.size());
                 Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                         controllerId), false, true);
-                for (DBItemInventoryAgentInstance agent : dbAvailableAgents) {
-                    AgentPath agentPath = AgentPath.of(agent.getAgentId());
-                    if (controllerKnownAgents.containsKey(agentPath)) {
+                for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
+                    AgentPath agentPath = AgentPath.of(dbAgent.getAgentId());
+                    JAgentRef jAgentRef = controllerKnownAgents.get(agentPath);
+                    List<DBItemInventorySubAgentInstance> subs = subAgents.get(dbAgent.getAgentId());
+                    if (subs == null || subs.isEmpty()) { // single agent
+                        if (jAgentRef != null) {
+                            // update deployed flag in DB if necessary
+                            String url = jAgentRef.director().map(controllerKnownSubagents::get).map(JSubagentItem::uri).map(Uri::string).orElse(
+                                    dbAgent.getUri());
+                            if (!dbAgent.getDeployed() && dbAgent.getUri().equals(url)) {
+                                dbAgent.setDeployed(true);
+                                dbLayer.updateAgent(dbAgent);
+                            }
+                            continue;
+                        }
+                        subs = Collections.singletonList(dbLayer.solveAgentWithoutSubAgent(dbAgent)); // create director with agentId as subagentId
+                    } else {
+                        if (jAgentRef != null) {
+                            continue;
+                        }
+                    }
+                    if (dbAgent.getHidden()) {
                         continue;
                     }
-                    if (!agent.getDeployed() && !agent.getIsWatcher()) {
-                        continue; 
-                    }
-                    List<DBItemInventorySubAgentInstance> subs = subAgents.get(agent.getAgentId());
-                    if (subs == null || subs.isEmpty()) { // single agent
-                        subs = Collections.singletonList(dbLayer.solveAgentWithoutSubAgent(agent));
+                    if (onlyReDeployed && !dbAgent.getDeployed()) {
+                        continue;
                     }
                     List<JSubagentItem> subRefs = subs.stream().map(s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s
                             .getAgentId()), Uri.of(s.getUri()), s.getDisabled())).collect(Collectors.toList());
