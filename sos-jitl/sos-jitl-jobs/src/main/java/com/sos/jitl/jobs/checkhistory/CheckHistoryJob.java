@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.jitl.jobs.checkhistory.classes.CheckHistoryJobReturn;
+import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
@@ -16,90 +17,102 @@ import js7.data_for_java.order.JOutcome;
 
 public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArguments> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(CheckHistoryJob.class);
-	private Integer exitCode = 0;
+    private static final Logger LOGGER = LoggerFactory.getLogger(CheckHistoryJob.class);
 
-	public CheckHistoryJob(JobContext jobContext) {
-		super(jobContext);
-	}
+    public CheckHistoryJob(JobContext jobContext) {
+        super(jobContext);
+    }
 
-	@Override
-	public JOutcome.Completed onOrderProcess(JobStep<CheckHistoryJobArguments> step) throws Exception {
+    @Override
+    public JOutcome.Completed onOrderProcess(JobStep<CheckHistoryJobArguments> step) throws Exception {
 
-		try {
-			CheckHistoryJobReturn checkHistoryJobReturn = process(step, step.getArguments());
-			return step.success(checkHistoryJobReturn.getExitCode(), checkHistoryJobReturn.getResultMap());
+        try {
+            CheckHistoryJobReturn checkHistoryJobReturn = process(step, step.getArguments());
+            return step.success(checkHistoryJobReturn.getExitCode(), checkHistoryJobReturn.getResultMap());
 
-		} catch (Throwable e) {
-			throw e;
-		}
-	}
+        } catch (Throwable e) {
+            throw e;
+        }
+    }
 
-	private CheckHistoryJobReturn process(JobStep<CheckHistoryJobArguments> step, CheckHistoryJobArguments args)
-			throws Exception {
-		JobLogger logger = null;
-		if (step != null) {
-			logger = step.getLogger();
-		}
-		CheckHistoryJobReturn checkHistoryJobReturn = new CheckHistoryJobReturn();
-		checkHistoryJobReturn.setExitCode(0);
-		Map<String, Object> resultMap = new HashMap<String, Object>();
-		resultMap.put("js7_checkhistory_return", "");
-		String query = args.getQuery();
+    private CheckHistoryJobReturn process(JobStep<CheckHistoryJobArguments> step, CheckHistoryJobArguments args) throws Exception {
+        JobLogger logger = null;
+        if (step != null) {
+            logger = step.getLogger();
+        }
+        CheckHistoryJobReturn checkHistoryJobReturn = new CheckHistoryJobReturn();
+        checkHistoryJobReturn.setExitCode(0);
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+        resultMap.put("js7CheckHistoryResult", false);
+        resultMap.put("js7CheckHistoryWorkflow", "");
+        resultMap.put("js7CheckHistoryJob", "");
+        resultMap.put("js7CheckHistoryStarted", "");
+        resultMap.put("js7CheckHistoryCompleted", "");
 
-		log(logger, String.format("check history: %s will be executed.", query));
+        String query = args.getQuery();
 
-		HistoryInfo historyInfo = new HistoryInfo(args);
-		boolean result = historyInfo.queryHistory();
-		if (result) {
-			log(logger, args.getQuery() + "(" + args.getWorkflowPath() + ") ==> true");
-			checkHistoryJobReturn.setExitCode(0);
-			resultMap.put("js7_checkhistory_return", "true");
-		} else {
-			log(logger, args.getQuery() + "(" + args.getWorkflowPath() + ") ==> false");
-			checkHistoryJobReturn.setExitCode(1);
-			resultMap.put("js7_checkhistory_return", "false");
-		}
+        log(logger, String.format("check history: %s will be executed.", query));
 
-		checkHistoryJobReturn.setResultMap(resultMap);
+        HistoryInfo historyInfo = new HistoryInfo(args);
+        HistoryItem historyItem = historyInfo.queryHistory();
 
-		return checkHistoryJobReturn;
-	}
+        boolean result = historyItem.getResult();
+        if (result) {
+            log(logger, args.getQuery() + "(" + historyItem.getName() + ") ==> true");
+            checkHistoryJobReturn.setExitCode(0);
+            resultMap.put("js7CheckHistoryResult", true);
+            resultMap.put("js7CheckHistoryControllerId", historyItem.getControllerId());
+            resultMap.put("js7CheckHistoryWorkflow", historyItem.getWorkflow());
+            resultMap.put("js7CheckHistoryJob", historyItem.getJob());
+            resultMap.put("js7CheckHistoryStarted", historyItem.getStartTime());
+            resultMap.put("js7CheckHistoryCompleted", historyItem.getEndTime());
 
-	private void log(JobLogger logger, String log) {
-		if (logger != null) {
-			logger.info(log);
-		} else {
-			LOGGER.info(log);
-		}
-	}
+        } else {
+            log(logger, args.getQuery() + "(" + historyItem.getName() + ") ==> false");
+            checkHistoryJobReturn.setExitCode(1);
+            resultMap.put("js7CheckHistoryResult", false);
+        }
 
-	private void debug(JobLogger logger, String log) {
-		if (logger != null) {
-			logger.debug(log);
-		} else {
-			LOGGER.debug(log);
-		}
-	}
+        checkHistoryJobReturn.setResultMap(resultMap);
 
-	public static void main(String[] args) {
-		CheckHistoryJobArguments arguments = new CheckHistoryJobArguments();
-		arguments.setQuery("isStarted(startedFrom=-1d,startedTo=-2d)");
-		arguments.setAccount("root");
-		arguments.setPassword("root");
-		arguments.setJocUrl("http://localhost:4426");
-		arguments.setWorkflowPath("/Examples.Windows/Jitl/Mail");
+        return checkHistoryJobReturn;
+    }
 
-		SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
-		CheckHistoryJob checkHistoryJob = new CheckHistoryJob(null);
+    private void log(JobLogger logger, String log) {
+        if (logger != null) {
+            logger.info(log);
+        } else {
+            LOGGER.info(log);
+        }
+    }
 
-		try {
-			checkHistoryJob.process(null, arguments);
+    private void debug(JobLogger logger, String log) {
+        if (logger != null) {
+            logger.debug(log);
+        } else {
+            LOGGER.debug(log);
+        }
+    }
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			System.exit(0);
-		}
-	}
+    public static void main(String[] args) {
+        CheckHistoryJobArguments arguments = new CheckHistoryJobArguments();
+        arguments.setQuery("isStarted(startedFrom=-1d,startedTo=-2d)");
+        arguments.setQuery("iscompletedsuccessful");
+        arguments.setAccount("root");
+        arguments.setPassword("root");
+        arguments.setJocUrl("http://localhost:4426");
+        arguments.setWorkflow("Mail");
+
+        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        CheckHistoryJob checkHistoryJob = new CheckHistoryJob(null);
+
+        try {
+            checkHistoryJob.process(null, arguments);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            System.exit(0);
+        }
+    }
 }

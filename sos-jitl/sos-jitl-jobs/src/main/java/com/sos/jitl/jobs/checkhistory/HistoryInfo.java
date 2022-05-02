@@ -6,159 +6,193 @@ import java.util.List;
 import com.sos.commons.exception.SOSException;
 import com.sos.jitl.jobs.checkhistory.classes.AccessTokenProvider;
 import com.sos.jitl.jobs.checkhistory.classes.CheckHistoryHelper;
+import com.sos.jitl.jobs.checkhistory.classes.HistoryFilter;
+import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryWebserviceExecuter;
 import com.sos.jitl.jobs.checkhistory.classes.JOCCredentialStoreParameters;
 import com.sos.jitl.jobs.checkhistory.classes.WebserviceCredentials;
 import com.sos.joc.model.common.HistoryStateText;
+import com.sos.joc.model.job.JobsFilter;
+import com.sos.joc.model.job.TaskHistory;
+import com.sos.joc.model.job.TaskHistoryItem;
 import com.sos.joc.model.order.OrderHistoryItem;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersFilter;
 
 public class HistoryInfo {
 
-	private CheckHistoryJobArguments args;
+    private CheckHistoryJobArguments args;
 
-	public HistoryInfo(CheckHistoryJobArguments args) {
-		this.args = args;
-	}
+    public HistoryInfo(CheckHistoryJobArguments args) {
+        this.args = args;
+    }
 
-	private boolean executeApiCall(String query) throws Exception {
+    private HistoryItem executeApiCall(String query) throws Exception {
 
-		JOCCredentialStoreParameters jobSchedulerCredentialStoreJOCParameters = new JOCCredentialStoreParameters();
-		jobSchedulerCredentialStoreJOCParameters.setUser(args.getAccount());
-		jobSchedulerCredentialStoreJOCParameters.setPassword(args.getPassword());
-		jobSchedulerCredentialStoreJOCParameters.setJocUrl(args.getJocUrl());
-		AccessTokenProvider accessTokenProvider = new AccessTokenProvider(jobSchedulerCredentialStoreJOCParameters);
-		WebserviceCredentials webserviceCredentials = accessTokenProvider.getAccessToken();
+        JOCCredentialStoreParameters jobSchedulerCredentialStoreJOCParameters = new JOCCredentialStoreParameters();
+        jobSchedulerCredentialStoreJOCParameters.setUser(args.getAccount());
+        jobSchedulerCredentialStoreJOCParameters.setPassword(args.getPassword());
+        jobSchedulerCredentialStoreJOCParameters.setJocUrl(args.getJocUrl());
+        AccessTokenProvider accessTokenProvider = new AccessTokenProvider(jobSchedulerCredentialStoreJOCParameters);
+        WebserviceCredentials webserviceCredentials = accessTokenProvider.getAccessToken();
 
-		HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(webserviceCredentials);
-		OrdersFilter ordersFilter = new OrdersFilter();
+        HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(webserviceCredentials);
+        HistoryFilter historyFilter = new HistoryFilter();
+        historyFilter.setJob(args.getJob());
+        historyFilter.setWorkflow(args.getWorkflow());
 
-		ordersFilter.setControllerId(args.getController());
-		ordersFilter.setWorkflowPath(args.getWorkflowPath());
+        historyFilter.setControllerId(args.getController());
 
-		List<OrderStateText> states = new ArrayList<OrderStateText>();
-		List<HistoryStateText> historyStates = new ArrayList<HistoryStateText>();
-		String queryName = CheckHistoryHelper.getQueryName(query);
-		String parameter = CheckHistoryHelper.getParameter(query);
-		String[] parameters = parameter.split(",");
-		String startedFrom = "0d";
-		String startedTo = "0d";
-		String completedFrom = "0d";
-		String completedTo = "0d";
-		boolean paramStartedFrom = false;
-		boolean paramStartedTo = false;
+        List<OrderStateText> states = new ArrayList<OrderStateText>();
+        List<HistoryStateText> historyStates = new ArrayList<HistoryStateText>();
+        String queryName = CheckHistoryHelper.getQueryName(query);
+        String parameter = CheckHistoryHelper.getParameter(query);
+        String[] parameters = parameter.split(",");
+        String startedFrom = "0d";
+        String startedTo = "0d";
+        String completedFrom = "0d";
+        String completedTo = "0d";
+        boolean paramStartedFrom = false;
+        boolean paramStartedTo = false;
 
-		if (parameters.length > 0) {
-			for (String parameterAssignment : parameters) {
-				String[] p = parameterAssignment.split("=");
-				String pName = p[0];
-				String pValue = "";
-				if (p.length > 1) {
-					pValue = p[1];
-				}
-				switch (pName.toLowerCase()) {
-				case "startedfrom":
-					paramStartedFrom = true;
-					startedFrom = pValue;
-					break;
-				case "startedto":
-					paramStartedTo = true;
-					startedTo = pValue;
-					break;
-				case "completedfrom":
-					completedTo = pValue;
-					break;
-				case "completedto":
-					startedFrom = pValue;
-					break;
-				default:
-					if (!pName.isEmpty()) {
-						throw new SOSException("unknown parameter name: " + pName);
-					}
-				}
-			}
-		}
+        if (parameters.length > 0) {
+            for (String parameterAssignment : parameters) {
+                String[] p = parameterAssignment.split("=");
+                String pName = p[0];
+                String pValue = "";
+                if (p.length > 1) {
+                    pValue = p[1];
+                }
+                switch (pName.toLowerCase()) {
+                case "startedfrom":
+                    paramStartedFrom = true;
+                    startedFrom = pValue;
+                    break;
+                case "startedto":
+                    paramStartedTo = true;
+                    startedTo = pValue;
+                    break;
+                case "completedfrom":
+                    completedTo = pValue;
+                    break;
+                case "completedto":
+                    startedFrom = pValue;
+                    break;
+                default:
+                    if (!pName.isEmpty()) {
+                        throw new SOSException("unknown parameter name: " + pName);
+                    }
+                }
+            }
+        }
 
-		switch (queryName.toLowerCase())
+        switch (queryName.toLowerCase()) {
+        case "isstarted":
+            historyFilter.setDateFrom(startedFrom);
+            historyFilter.setDateTo(startedTo);
+            break;
+        case "iscompleted":
+            if (paramStartedFrom || paramStartedTo) {
+                historyFilter.setDateFrom(startedFrom);
+                historyFilter.setDateTo(startedTo);
+            }
+            historyFilter.setEndDateFrom(completedFrom);
+            historyFilter.setEndDateTo(completedTo);
+            states.add(OrderStateText.FINISHED);
+            historyFilter.setStates(states);
+            break;
+        case "iscompletedsuccessful":
+            if (paramStartedFrom || paramStartedTo) {
+                historyFilter.setDateFrom(startedFrom);
+                historyFilter.setDateTo(startedTo);
+            }
+            historyFilter.setEndDateFrom(completedFrom);
+            historyFilter.setEndDateTo(completedTo);
 
-		{
-		case "isstarted":
-			ordersFilter.setDateFrom(startedFrom);
-			ordersFilter.setDateTo(startedTo);
-			break;
-		case "iscompleted":
-			if (paramStartedFrom || paramStartedTo) {
-				ordersFilter.setDateFrom(startedFrom);
-				ordersFilter.setDateTo(startedTo);
-			}
-			ordersFilter.setEndDateFrom(completedFrom);
-			ordersFilter.setEndDateTo(completedTo);
-			states.add(OrderStateText.FINISHED);
-			ordersFilter.setStates(states);
-			break;
-		case "iscompletedsuccessful":
-			if (paramStartedFrom || paramStartedTo) {
-				ordersFilter.setDateFrom(startedFrom);
-				ordersFilter.setDateTo(startedTo);
-			}
-			ordersFilter.setEndDateFrom(completedFrom);
-			ordersFilter.setEndDateTo(completedTo);
+            states.add(OrderStateText.FINISHED);
+            historyStates.add(HistoryStateText.SUCCESSFUL);
+            historyFilter.setHistoryStates(historyStates);
+            historyFilter.setStates(states);
+            break;
+        case "iscompletedfailed":
+            if (paramStartedFrom || paramStartedTo) {
+                historyFilter.setDateFrom(startedFrom);
+                historyFilter.setDateTo(startedTo);
+            }
+            historyFilter.setEndDateFrom(completedFrom);
+            historyFilter.setEndDateTo(completedTo);
+            states.add(OrderStateText.FINISHED);
+            historyStates.add(HistoryStateText.FAILED);
+            historyFilter.setHistoryStates(historyStates);
+            historyFilter.setStates(states);
+            break;
 
-			states.add(OrderStateText.FINISHED);
-			historyStates.add(HistoryStateText.SUCCESSFUL);
-			ordersFilter.setHistoryStates(historyStates);
-			ordersFilter.setStates(states);
-			break;
-		case "iscompletedfailed":
-			if (paramStartedFrom || paramStartedTo) {
-				ordersFilter.setDateFrom(startedFrom);
-				ordersFilter.setDateTo(startedTo);
-			}
-			ordersFilter.setEndDateFrom(completedFrom);
-			ordersFilter.setEndDateTo(completedTo);
-			states.add(OrderStateText.FINISHED);
-			historyStates.add(HistoryStateText.FAILED);
-			ordersFilter.setHistoryStates(historyStates);
-			ordersFilter.setStates(states);
-			break;
+        case "lastcompletedsuccessful":
+        case "lastcompletedfailed":
+            if (paramStartedFrom || paramStartedTo) {
+                historyFilter.setDateFrom(startedFrom);
+                historyFilter.setDateTo(startedTo);
+            }
+            historyFilter.setEndDateFrom(completedFrom);
+            historyFilter.setEndDateTo(completedTo);
+            states.add(OrderStateText.FINISHED);
+            historyFilter.setStates(states);
+            break;
+        default:
+            throw new SOSException("unknown query: " + query);
+        }
 
-		case "lastcompletedsuccessful":
-		case "lastcompletedfailed":
-			if (paramStartedFrom || paramStartedTo) {
-				ordersFilter.setDateFrom(startedFrom);
-				ordersFilter.setDateTo(startedTo);
-			}
-			ordersFilter.setEndDateFrom(completedFrom);
-			ordersFilter.setEndDateTo(completedTo);
-			states.add(OrderStateText.FINISHED);
-			ordersFilter.setStates(states);
-			break;
-		default:
-			throw new SOSException("unknown query: " + query);
-		}
+        HistoryItem historyItem;
+        if (args.getJob() != null && !args.getJob().isEmpty()) {
+            JobsFilter jobsFilter = new JobsFilter();
+            jobsFilter.setLimit(1);
+            jobsFilter.setControllerId(historyFilter.getControllerId());
+            jobsFilter.setJobName(historyFilter.getJob());
+            jobsFilter.setWorkflowName(historyFilter.getWorkflow());
+            jobsFilter.setDateFrom(historyFilter.getDateFrom());
+            jobsFilter.setDateTo(historyFilter.getDateTo());
+            jobsFilter.setEndDateTo(historyFilter.getEndDateTo());
+            jobsFilter.setEndDateFrom(historyFilter.getEndDateFrom());
+            jobsFilter.setFolders(historyFilter.getFolders());
+            jobsFilter.setHistoryStates(historyFilter.getHistoryStates());
+            jobsFilter.setTimeZone(historyFilter.getTimeZone());
 
-		ordersFilter.setLimit(1);
-		OrderHistoryItem orderHistoryItem = historyWebserviceExecuter.getJobHistoryEntry(ordersFilter);
+            TaskHistoryItem taskHistoryItem = historyWebserviceExecuter.getJobHistoryEntry(jobsFilter);
+            historyItem = new HistoryItem(taskHistoryItem);
+        } else {
 
-		switch (query.toLowerCase()) {
-		case "lastcompletedsuccessful":
-			return (orderHistoryItem != null
-					&& orderHistoryItem.getState().get_text().value().equals(HistoryStateText.SUCCESSFUL.value()));
-		case "lastcompletedfailed":
-			return (orderHistoryItem != null
-					&& orderHistoryItem.getState().get_text().value().equals(HistoryStateText.FAILED.value()));
-		default:
-			return orderHistoryItem != null;
-		}
-	}
+            OrdersFilter ordersFilter = new OrdersFilter();
+            ordersFilter.setLimit(1);
+            ordersFilter.setControllerId(historyFilter.getControllerId());
+            ordersFilter.setWorkflowName(historyFilter.getWorkflow());
+            ordersFilter.setDateFrom(historyFilter.getDateFrom());
+            ordersFilter.setDateTo(historyFilter.getDateTo());
+            ordersFilter.setEndDateTo(historyFilter.getEndDateTo());
+            ordersFilter.setEndDateFrom(historyFilter.getEndDateFrom());
+            ordersFilter.setFolders(historyFilter.getFolders());
+            ordersFilter.setHistoryStates(historyFilter.getHistoryStates());
+            ordersFilter.setStates(historyFilter.getStates());
+            ordersFilter.setTimeZone(historyFilter.getTimeZone());
 
-	public boolean queryHistory() throws Exception {
-		String query = args.getQuery();
-		boolean result = false;
-		result = executeApiCall(query);
+            OrderHistoryItem orderHistoryItem = historyWebserviceExecuter.getWorkflowHistoryEntry(ordersFilter);
+            historyItem = new HistoryItem(orderHistoryItem);
+        }
 
-		return result;
-	}
+        switch (query.toLowerCase()) {
+        case "lastcompletedsuccessful":
+            historyItem.setResult((historyItem.getHistoryItemFound() && historyItem.getState().get_text().value().equals(HistoryStateText.SUCCESSFUL
+                    .value())));
+        case "lastcompletedfailed":
+            historyItem.setResult((historyItem.getHistoryItemFound() && historyItem.getState().get_text().value().equals(HistoryStateText.FAILED
+                    .value())));
+        }
+        return historyItem;
+
+    }
+
+    public HistoryItem queryHistory() throws Exception {
+        String query = args.getQuery();
+        return executeApiCall(query);
+    }
 
 }
