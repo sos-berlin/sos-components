@@ -33,7 +33,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "sources",
     "targets",
     "sourceFiles",
-    "targetFiles"
+    "targetFiles",
+    "workflowNames"
 })
 public class TransferFilter {
 
@@ -111,6 +112,8 @@ public class TransferFilter {
     private List<String> sourceFiles = new ArrayList<String>();
     @JsonProperty("targetFiles")
     private List<String> targetFiles = new ArrayList<String>();
+    @JsonProperty("workflowNames")
+    private List<String> workflowNames = new ArrayList<String>();
 
     /**
      * controllerId
@@ -332,14 +335,24 @@ public class TransferFilter {
         this.targetFiles = targetFiles;
     }
 
+    @JsonProperty("workflowNames")
+    public List<String> getWorkflowNames() {
+        return workflowNames;
+    }
+
+    @JsonProperty("workflowNames")
+    public void setWorkflowNames(List<String> workflowNames) {
+        this.workflowNames = workflowNames;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("compact", compact).append("regex", regex).append("profiles", profiles).append("states", states).append("operations", operations).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("sources", sources).append("targets", targets).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("compact", compact).append("regex", regex).append("profiles", profiles).append("states", states).append("operations", operations).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("sources", sources).append("targets", targets).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("workflowNames", workflowNames).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(compact).append(sources).append(profiles).append(timeZone).append(dateFrom).append(targets).append(states).append(regex).append(operations).append(sourceFiles).append(dateTo).append(limit).append(targetFiles).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(compact).append(sources).append(profiles).append(timeZone).append(dateFrom).append(targets).append(states).append(workflowNames).append(regex).append(operations).append(sourceFiles).append(dateTo).append(limit).append(targetFiles).toHashCode();
     }
 
     @Override
@@ -351,7 +364,7 @@ public class TransferFilter {
             return false;
         }
         TransferFilter rhs = ((TransferFilter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(sources, rhs.sources).append(profiles, rhs.profiles).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(targets, rhs.targets).append(states, rhs.states).append(regex, rhs.regex).append(operations, rhs.operations).append(sourceFiles, rhs.sourceFiles).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(sources, rhs.sources).append(profiles, rhs.profiles).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(targets, rhs.targets).append(states, rhs.states).append(workflowNames, rhs.workflowNames).append(regex, rhs.regex).append(operations, rhs.operations).append(sourceFiles, rhs.sourceFiles).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).isEquals();
     }
 
 }
