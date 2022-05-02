@@ -53,7 +53,7 @@ public class HistoryWebserviceExecuterTest {
         ordersFilter.setOrders(orders);
         
         ordersFilter.setLimit(10);
-        OrderHistoryItem orderHistoryItem = historyWebserviceExecuter.getJobHistoryEntry(ordersFilter);
+        OrderHistoryItem orderHistoryItem = historyWebserviceExecuter.getWorkflowHistoryEntry(ordersFilter);
         System.out.println(orderHistoryItem.getHistoryId());
 
     }

@@ -24,7 +24,7 @@ import com.sos.auth.ldap.classes.SOSLdapWebserviceCredentials;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
- 
+
 public class SOSLdapHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapHandler.class);
@@ -85,22 +85,24 @@ public class SOSLdapHandler {
         }
     }
 
-    public SOSAuthAccessToken login(SOSLdapWebserviceCredentials sosLdapWebserviceCredentials, IdentityServiceTypes identityServiceType, String password) throws SOSHibernateException {
- 		if (Globals.withHostnameVerification) {
-			System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", "false");
-			LOGGER.info("hostname verification is enabled");
-		}else {
-			System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", "true");
-			LOGGER.info("hostname verification is disabled");
-		}
+    public SOSAuthAccessToken login(SOSLdapWebserviceCredentials sosLdapWebserviceCredentials, IdentityServiceTypes identityServiceType,
+            String password) throws SOSHibernateException {
+        if (Globals.withHostnameVerification) {
+            System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", "false");
+            LOGGER.info("hostname verification is enabled");
+        } else {
+            System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", "true");
+            LOGGER.info("hostname verification is disabled");
+        }
 
- 
         SOSAuthAccessToken sosAuthAccessToken = null;
         try {
-            if (identityServiceType == IdentityServiceTypes.LDAP && sosLdapWebserviceCredentials.getSearchBaseNotNull().isEmpty() && "memberOf".equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
+            if (identityServiceType == IdentityServiceTypes.LDAP && sosLdapWebserviceCredentials.getSearchBaseNotNull().isEmpty() && "memberOf"
+                    .equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
                 msg = "LDAP configuration is not valid: Missing setting 'searchBase'";
             }
-            if (sosLdapWebserviceCredentials.getGroupSearchBaseNotNull().isEmpty() && !sosLdapWebserviceCredentials.getGroupSearchFilterNotNull().isEmpty()) {
+            if (sosLdapWebserviceCredentials.getGroupSearchBaseNotNull().isEmpty() && !sosLdapWebserviceCredentials.getGroupSearchFilterNotNull()
+                    .isEmpty()) {
                 msg = "LDAP configuration is not valid: Missing setting 'groupSearchBase'";
             }
             if (sosLdapWebserviceCredentials.getUserDnTemplateNotNull().isEmpty()) {
@@ -110,7 +112,7 @@ public class SOSLdapHandler {
                 msg = ("LDAP configuration is not valid: Missing setting ldapUrl");
             }
             if (password == null || password.isEmpty()) {
-            	msg = "Password is empty";
+                msg = "Password is empty";
             }
             if (msg.isEmpty()) {
                 createDirContext(sosLdapWebserviceCredentials, password);
@@ -121,10 +123,10 @@ public class SOSLdapHandler {
         } catch (AuthenticationNotSupportedException ex) {
             msg = "AuthenticationNotSupportedException: The authentication is not supported by the server";
         } catch (AuthenticationException ex) {
-        	   String s = ex.getMessage();
-               if (ex.getCause() != null) {
-                   s = s + ex.getCause();
-               }
+            String s = ex.getMessage();
+            if (ex.getCause() != null) {
+                s = s + ex.getCause();
+            }
             LOGGER.info(s);
             msg = "There is no account with the given accountname/password combination. " + s;
         } catch (NamingException ex) {

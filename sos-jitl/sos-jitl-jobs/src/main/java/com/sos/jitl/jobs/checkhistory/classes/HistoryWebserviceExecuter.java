@@ -8,6 +8,9 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.sos.joc.model.job.JobsFilter;
+import com.sos.joc.model.job.TaskHistory;
+import com.sos.joc.model.job.TaskHistoryItem;
 import com.sos.joc.model.order.OrderHistory;
 import com.sos.joc.model.order.OrderHistoryItem;
 import com.sos.joc.model.order.OrdersFilter;
@@ -23,7 +26,7 @@ public class HistoryWebserviceExecuter {
 
 	}
 
-	public OrderHistoryItem getJobHistoryEntry(OrdersFilter ordersFilter) throws Exception {
+	public OrderHistoryItem getWorkflowHistoryEntry(OrdersFilter ordersFilter) throws Exception {
 		if (webserviceCredentials.getAccessToken().isEmpty()) {
 			throw new Exception("AccessToken is empty. Login not executed");
 		}
@@ -50,5 +53,33 @@ public class HistoryWebserviceExecuter {
 			return h;
 		}
 	}
+
+    public TaskHistoryItem getJobHistoryEntry(JobsFilter jobsFilter) throws Exception {
+        if (webserviceCredentials.getAccessToken().isEmpty()) {
+            throw new Exception("AccessToken is empty. Login not executed");
+        }
+
+        ObjectMapper objectMapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+        String body = objectMapper.writeValueAsString(jobsFilter);
+        String answer = webserviceCredentials.getSosRestApiClient()
+                .postRestService(new URI(webserviceCredentials.getJocUrl() + "/tasks/history"), body);
+        TaskHistory taskHistory = new TaskHistory();
+        taskHistory = objectMapper.readValue(answer, TaskHistory.class);
+        if (taskHistory.getHistory().size() == 0) {
+            return null;
+        }
+        TaskHistoryItem h = taskHistory.getHistory().get(0);
+        if (!jobsFilter.getJobName().equals(h.getJob())) {
+            return null;
+        }
+        if (h.getTaskId() == null) {
+            return null;
+        } else {
+            return h;
+        }
+    }
 
 }
