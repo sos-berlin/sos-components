@@ -28,6 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "excludeJobs",
     "jobName",
     "workflowPath",
+    "workflowName",
     "dateFrom",
     "dateTo",
     "timeZone",
@@ -61,13 +62,23 @@ public class JobsFilter {
     @JsonProperty("jobName")
     private String jobName;
     /**
-     * string without < and >
+     * glob pattern
      * <p>
-     * 
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
     @JsonProperty("workflowPath")
+    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
     private String workflowPath;
+    /**
+     * glob pattern
+     * <p>
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
+     */
+    @JsonProperty("workflowName")
+    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
+    private String workflowName;
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
@@ -182,9 +193,9 @@ public class JobsFilter {
     }
 
     /**
-     * string without < and >
+     * glob pattern
      * <p>
-     * 
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
     @JsonProperty("workflowPath")
@@ -193,14 +204,36 @@ public class JobsFilter {
     }
 
     /**
-     * string without < and >
+     * glob pattern
      * <p>
-     * 
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
     @JsonProperty("workflowPath")
     public void setWorkflowPath(String workflowPath) {
         this.workflowPath = workflowPath;
+    }
+
+    /**
+     * glob pattern
+     * <p>
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
+     */
+    @JsonProperty("workflowName")
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    /**
+     * glob pattern
+     * <p>
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
+     */
+    @JsonProperty("workflowName")
+    public void setWorkflowName(String workflowName) {
+        this.workflowName = workflowName;
     }
 
     /**
@@ -347,12 +380,12 @@ public class JobsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("jobName", jobName).append("workflowPath", workflowPath).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("criticalities", criticalities).append("taskIds", taskIds).append("historyIds", historyIds).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("jobName", jobName).append("workflowPath", workflowPath).append("workflowName", workflowName).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("criticalities", criticalities).append("taskIds", taskIds).append("historyIds", historyIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobName).append(folders).append(controllerId).append(workflowPath).append(jobs).append(historyStates).append(timeZone).append(criticalities).append(dateFrom).append(taskIds).append(historyIds).append(dateTo).append(limit).append(excludeJobs).toHashCode();
+        return new HashCodeBuilder().append(jobName).append(folders).append(controllerId).append(workflowPath).append(jobs).append(historyStates).append(timeZone).append(workflowName).append(criticalities).append(dateFrom).append(taskIds).append(historyIds).append(dateTo).append(limit).append(excludeJobs).toHashCode();
     }
 
     @Override
@@ -364,7 +397,7 @@ public class JobsFilter {
             return false;
         }
         JobsFilter rhs = ((JobsFilter) other);
-        return new EqualsBuilder().append(jobName, rhs.jobName).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(criticalities, rhs.criticalities).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(historyIds, rhs.historyIds).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(excludeJobs, rhs.excludeJobs).isEquals();
+        return new EqualsBuilder().append(jobName, rhs.jobName).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(criticalities, rhs.criticalities).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(historyIds, rhs.historyIds).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(excludeJobs, rhs.excludeJobs).isEquals();
     }
 
 }

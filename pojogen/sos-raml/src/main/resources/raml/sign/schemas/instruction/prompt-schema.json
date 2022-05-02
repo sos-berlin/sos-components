@@ -3,6 +3,9 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.sign.model.instruction.Prompt",
   "type": "object",
+  "required": [
+  	"question"
+  ],
   "extends" : {
     "$ref": "instruction-schema.json"
   },
@@ -10,7 +13,8 @@
   "description": "instruction with fixed property 'TYPE':'Prompt'",
   "properties": {
     "question": {
-    	"type": "string"
+    	"type": "string",
+		"minLength": 1
     }
   },
   "additionalProperties": false
