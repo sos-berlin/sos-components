@@ -27,6 +27,7 @@ public class JocYadeFilter {
     private Set<Integer> targetProtocols;
     private Set<String> targetProtocolHosts;
     private Set<String> profiles;
+    private Set<String> workflowNames;
     private Integer limit;
     private Date dateFrom;
     private Date dateTo;
@@ -169,6 +170,18 @@ public class JocYadeFilter {
             this.profiles = profiles.stream().collect(Collectors.toSet());
         } else {
             this.profiles = null;
+        }
+    }
+    
+    public Set<String> getWorkflowNames() {
+        return workflowNames;
+    }
+
+    public void setWorkflowNames(Collection<String> workflowNames) {
+        if (workflowNames != null) {
+            this.workflowNames = workflowNames.stream().collect(Collectors.toSet());
+        } else {
+            this.workflowNames = null;
         }
     }
 

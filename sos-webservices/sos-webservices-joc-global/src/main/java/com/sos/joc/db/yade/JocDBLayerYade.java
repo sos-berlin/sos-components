@@ -105,29 +105,6 @@ public class JocDBLayerYade {
         return session.getResultList(query);
     }
 
-    public List<String> getSourceFilesByIdsAndTransferId(Long transferId, List<Long> ids) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select sourcePath from ").append(DBLayer.DBITEM_YADE_FILES).append(" ");
-        hql.append("where transferId=:transferId ");
-        if (ids != null && !ids.isEmpty()) {
-            if (ids.size() == 1) {
-                hql.append("and id=:id ");
-            } else {
-                hql.append("and id in (:ids) ");
-            }
-        }
-
-        Query<String> query = session.createQuery(hql.toString());
-        query.setParameter("transferId", transferId);
-        if (ids != null && !ids.isEmpty()) {
-            if (ids.size() == 1) {
-                query.setParameter("id", ids.get(0));
-            } else {
-                query.setParameterList("ids", ids);
-            }
-        }
-        return session.getResultList(query);
-    }
-
     public List<DBItemYadeTransfer> getAllTransfers() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_YADE_TRANSFERS);
 
@@ -159,6 +136,7 @@ public class JocDBLayerYade {
         boolean withTargetProtocols = filter.getTargetProtocols() != null && !filter.getTargetProtocols().isEmpty();
         boolean withTargetProtocolHosts = filter.getTargetProtocolHosts() != null && !filter.getTargetProtocolHosts().isEmpty();
         boolean withProfiles = filter.getProfiles() != null && !filter.getProfiles().isEmpty();
+        boolean withWorkflowNames = filter.getWorkflowNames() != null && !filter.getWorkflowNames().isEmpty();
         String and = " where";
 
         StringBuilder hql = new StringBuilder();
@@ -234,6 +212,16 @@ public class JocDBLayerYade {
                    return "yt.profileName like '" + SearchStringHelper.globToSqlPattern(p) + "'"; 
                 } else {
                    return "yt.profileName = '" + p + "'"; 
+                }
+            }).collect(Collectors.joining(" or ", " (", ")")));
+            and = " and";
+        }
+        if (withWorkflowNames) {
+            hql.append(and).append(filter.getWorkflowNames().stream().map(w -> {
+                if (SearchStringHelper.isGlobPattern(w)) {
+                   return "yt.workflowName like '" + SearchStringHelper.globToSqlPattern(w) + "'"; 
+                } else {
+                   return "yt.workflowName = '" + w + "'"; 
                 }
             }).collect(Collectors.joining(" or ", " (", ")")));
             and = " and";
@@ -336,9 +324,9 @@ public class JocDBLayerYade {
             if (withTargetFiles) {
                 clauses.add(filter.getTargetFiles().stream().map(f -> {
                     if (SearchStringHelper.isGlobPattern(f)) {
-                       return "sourcePath like '" + SearchStringHelper.globToSqlPattern(f) + "'"; 
+                       return "targetPath like '" + SearchStringHelper.globToSqlPattern(f) + "'"; 
                     } else {
-                       return "sourcePath = '" + f + "'"; 
+                       return "targetPath = '" + f + "'"; 
                     }
                 }).collect(Collectors.joining(" or ", "(", ")")));
             }
@@ -380,35 +368,6 @@ public class JocDBLayerYade {
         return session.getSingleResult(query);
     }
 
-    public boolean transferHasFiles(Long transferId, List<String> sourceFiles, List<String> targetFiles) throws SOSHibernateException {
-        boolean withSourceFiles = (sourceFiles != null && !sourceFiles.isEmpty());
-        boolean withTargetFiles = (targetFiles != null && !targetFiles.isEmpty());
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_YADE_FILES);
-        hql.append(" where transferId = :transferId");
-        if (withSourceFiles && !withTargetFiles) {
-            hql.append(" and");
-            hql.append(" sourcePath in (:sourceFiles)");
-        } else if (withTargetFiles && !withSourceFiles) {
-            hql.append(" and");
-            hql.append(" targetPath in (:targetFiles)");
-        } else if (withSourceFiles && withTargetFiles) {
-            hql.append(" and");
-            hql.append(" (sourcePath in (:sourceFiles)");
-            hql.append(" or");
-            hql.append(" targetPath in (:targetFiles))");
-        }
-        Query<DBItemYadeFile> query = session.createQuery(hql.toString());
-        query.setParameter("transferId", transferId);
-        if (withSourceFiles) {
-            query.setParameterList("sourceFiles", sourceFiles);
-        }
-        if (withTargetFiles) {
-            query.setParameter("targetFiles", targetFiles);
-        }
-        List<DBItemYadeFile> foundFiles = session.getResultList(query);
-        return (foundFiles != null && !foundFiles.isEmpty());
-    }
-
     public List<Long> transferIdsFilteredBySourceTargetPath(Collection<String> sourceFiles, Collection<String> targetFiles) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder();
         hql.append("select transferId from ").append(DBLayer.DBITEM_YADE_FILES);
@@ -426,9 +385,9 @@ public class JocDBLayerYade {
         if (targetFiles != null && !targetFiles.isEmpty()) {
             clauses.add(targetFiles.stream().map(f -> {
                 if (SearchStringHelper.isGlobPattern(f)) {
-                   return "sourcePath like '" + SearchStringHelper.globToSqlPattern(f) + "'"; 
+                   return "targetPath like '" + SearchStringHelper.globToSqlPattern(f) + "'"; 
                 } else {
-                   return "sourcePath = '" + f + "'"; 
+                   return "targetPath = '" + f + "'"; 
                 }
             }).collect(Collectors.joining(" or ", "(", ")")));
         }
@@ -440,21 +399,6 @@ public class JocDBLayerYade {
         hql.append(" group by transferId");
         Query<Long> query = session.createQuery(hql.toString());
         
-        return session.getResultList(query);
-    }
-
-    public List<YadeSourceTargetFiles> SourceTargetFilePaths(List<Long> transferIds) throws SOSHibernateException {
-        boolean withTransferIds = (transferIds != null && !transferIds.isEmpty());
-        StringBuilder hql = new StringBuilder();
-        hql.append("select new ").append(YADE_SOURCE_TARGET_FILES).append("(transferId, sourcePath, targetPath) from ");
-        hql.append(DBLayer.DBITEM_YADE_FILES).append(" where");
-        if (withTransferIds) {
-            hql.append(" transferId in (:transferIds)");
-        }
-        Query<YadeSourceTargetFiles> query = session.createQuery(hql.toString());
-        if (withTransferIds) {
-            query.setParameterList("transferIds", transferIds);
-        }
         return session.getResultList(query);
     }
 

@@ -76,10 +76,12 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
             historyFilter.setMainOrder(true);
 
             if (ordersFilter.getDateFrom() != null) {
-                historyFilter.setExecutedFrom(JobSchedulerDate.getDateFrom(ordersFilter.getDateFrom(), ordersFilter.getTimeZone()));
+                historyFilter.setExecutedFrom(JobSchedulerDate.getDateFrom(JobSchedulerDate.setRelativeDateIntoPast(ordersFilter.getDateFrom()),
+                        ordersFilter.getTimeZone()));
             }
             if (ordersFilter.getDateTo() != null) {
-                historyFilter.setExecutedTo(JobSchedulerDate.getDateTo(ordersFilter.getDateTo(), ordersFilter.getTimeZone()));
+                historyFilter.setExecutedTo(JobSchedulerDate.getDateTo(JobSchedulerDate.setRelativeDateIntoPast(ordersFilter.getDateTo()),
+                        ordersFilter.getTimeZone()));
             }
             
             OrdersHistoricSummary ordersHistoricSummary = new OrdersHistoricSummary();
