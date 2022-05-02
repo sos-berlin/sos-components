@@ -130,9 +130,9 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             folderPermissionsAreChecked = true;
                         }
 
-                        // TODO consider these parameter in DB
                         dbFilter.setJobName(in.getJobName());
                         dbFilter.setWorkflowPath(in.getWorkflowPath());
+                        dbFilter.setWorkflowName(in.getWorkflowName());
                     }
                 }
             }
