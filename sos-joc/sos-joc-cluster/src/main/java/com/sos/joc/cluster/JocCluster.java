@@ -118,8 +118,8 @@ public class JocCluster {
                 configurations = getStoredSettings();
                 instanceProcessed = true;
             } catch (Throwable e) {
-                LOGGER.error(e.toString());
-                LOGGER.info("wait 30s and try again ...");
+                LOGGER.error(String.format("[getInstance]%s", e.toString()), e);
+                LOGGER.info("[getInstance]wait 30s and try again ...");
                 waitFor(30);
             }
         }
@@ -241,6 +241,7 @@ public class JocCluster {
 
                     dbLayer.getSession().save(item);
                 } catch (Throwable e) {
+                    LOGGER.warn(String.format("[getStoredSettings][store][new]%s", e.toString()), e);
                     dbLayer.rollback();
                     waitFor(5);
 
@@ -272,6 +273,7 @@ public class JocCluster {
             }
 
         } catch (SOSHibernateException e) {
+            LOGGER.warn(String.format("[getStoredSettings]%s", e.toString()), e);
             dbLayer.rollback();
         } finally {
             if (dbLayer != null) {
