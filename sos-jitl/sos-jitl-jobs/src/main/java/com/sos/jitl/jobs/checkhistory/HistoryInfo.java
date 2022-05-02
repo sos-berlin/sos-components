@@ -159,6 +159,8 @@ public class HistoryInfo {
 
             TaskHistoryItem taskHistoryItem = historyWebserviceExecuter.getJobHistoryEntry(jobsFilter);
             historyItem = new HistoryItem(taskHistoryItem);
+            historyItem.setJob(historyFilter.getJob());
+
         } else {
 
             OrdersFilter ordersFilter = new OrdersFilter();
@@ -176,6 +178,7 @@ public class HistoryInfo {
 
             OrderHistoryItem orderHistoryItem = historyWebserviceExecuter.getWorkflowHistoryEntry(ordersFilter);
             historyItem = new HistoryItem(orderHistoryItem);
+            historyItem.setWorkflow(historyFilter.getWorkflow());
         }
 
         switch (query.toLowerCase()) {
