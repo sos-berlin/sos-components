@@ -110,18 +110,19 @@ public class JocClusterService {
                 @Override
                 public void run() {
                     AJocClusterService.setLogger();
-                    LOGGER.info("[" + mode + "][start][run]...");
+                    LOGGER.info(String.format("[%s][start][run]...", mode));
                     try {
                         createFactory(config.getHibernateConfiguration());
 
                         cluster = new JocCluster(factory, clusterConfig, config, startTime);
                         Globals.configurationGlobals = cluster.getConfigurationGlobals(mode);
-                        cluster.doProcessing(mode, Globals.configurationGlobals);
-
+                        if (cluster != null) {// null when closed during cluster.getConfigurationGlobals (empty database or db errors)
+                            cluster.doProcessing(mode, Globals.configurationGlobals);
+                        }
+                        LOGGER.info(String.format("[%s][start][end]", mode));
                     } catch (Throwable e) {
-                        LOGGER.error(e.toString(), e);
+                        LOGGER.error(String.format("[%s][start][end]%s", mode, e.toString()), e);
                     }
-                    LOGGER.info("[" + mode + "][start][end]");
                     AJocClusterService.removeLogger();
                 }
 
