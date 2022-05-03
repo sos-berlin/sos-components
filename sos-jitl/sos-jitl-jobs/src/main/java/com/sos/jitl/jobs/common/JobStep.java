@@ -532,15 +532,22 @@ public class JobStep<A extends JobArguments> {
     }
 
     private Map<String, Value> convert4engine(final Map<String, Object> map) {
+        Map<String, Value> result = new HashMap<>();
         if (map == null || map.size() == 0) {
-            return new HashMap<>();
+            return result;
         }
-        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getEngineValue(e.getValue())));
+
+        // Collectors.toMap throws an exception when duplicate or value is null
+        // return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getEngineValue(e.getValue())));
+        map.entrySet().forEach(e -> {
+            result.put(e.getKey(), getEngineValue(e.getValue()));
+        });
+        return result;
     }
 
     private Value getEngineValue(final Object o) {
         if (o == null) {
-            return null;
+            return StringValue.of("");
         }
         if (o instanceof Value) {
             return (Value) o;
