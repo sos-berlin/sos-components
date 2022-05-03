@@ -1,5 +1,9 @@
 package com.sos.jitl.jobs.examples;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -165,8 +169,25 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
             step.getLogger().info("[SUCCESS]set step outcome: %s", map);
             return step.success(map);
         } else {
-            step.getLogger().info("[SUCCESS]");
-            return step.success();
+            Map<String, Object> map = new HashMap<String, Object>();
+            map.put("test", "my_test");
+            map.put("test_null_value", null);
+            map.put("test_boolean_value", true);
+            map.put("test_Boolean_value", new Boolean(false));
+            map.put("test_int_value", 1);
+            map.put("test_Integer_value", new Integer(1));
+            map.put("test_long_value", new Integer(1).longValue());
+            map.put("test_Long_value", new Long(1));
+            map.put("test_Double_value", new Double(1));
+            map.put("test_BigDecimal_value", new BigDecimal(1));
+            map.put("test_Date_value", new Date());
+            map.put("test_Instant_value", Instant.now());
+            map.put("test_LocalDate_value", LocalDate.now());
+
+            step.getLogger().info("[SUCCESS]set step outcome: %s", map);
+            return step.success(map);
+            // step.getLogger().info("[SUCCESS]");
+            // return step.success();
         }
     }
 

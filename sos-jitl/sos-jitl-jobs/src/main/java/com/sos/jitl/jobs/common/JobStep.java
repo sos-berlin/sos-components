@@ -3,14 +3,18 @@ package com.sos.jitl.jobs.common;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.common.ASOSArguments;
@@ -552,15 +556,19 @@ public class JobStep<A extends JobArguments> {
         } else if (o instanceof String) {
             return StringValue.of((String) o);
         } else if (o instanceof Boolean) {
-            return BooleanValue.of((Boolean) o);
+            return BooleanValue.of(((Boolean) o).booleanValue());
         } else if (o instanceof Integer) {
             return NumberValue.of((Integer) o);
         } else if (o instanceof Long) {
-            return NumberValue.of((Long) o);
+            return NumberValue.of(((Long) o).longValue());
         } else if (o instanceof Double) {
             return NumberValue.of(BigDecimal.valueOf((Double) o));
         } else if (o instanceof BigDecimal) {
             return NumberValue.of((BigDecimal) o);
+        } else if (o instanceof Date) {
+            return getDateAsValue((Date) o);
+        } else if (o instanceof Instant) {
+            return getDateAsValue(Date.from((Instant) o));
         } else if (SOSReflection.isEnum(o.getClass())) {
             return StringValue.of(o.toString());
         } else if (SOSReflection.isList(o.getClass())) {
@@ -570,7 +578,15 @@ public class JobStep<A extends JobArguments> {
             }).collect(Collectors.joining(SOSArgumentHelper.LIST_VALUE_DELIMITER));
             return StringValue.of(s);
         }
-        return null;
+        return StringValue.of("" + o);
+    }
+
+    private Value getDateAsValue(Date date) {
+        try {
+            return StringValue.of(SOSDate.getDateTimeAsString(date));
+        } catch (SOSInvalidDataException e) {
+            return StringValue.of("" + date);
+        }
     }
 
     private Map<String, Map<String, JobDetailValue>> historicOutcomes2map() {
