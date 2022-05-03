@@ -169,7 +169,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         Instant profilerFirstEntry = null;
                         int i = 0;
                         Map<String, Boolean> checkedControllers = new HashMap<>();
-                        boolean isControllerIdEmpty = in.getControllerId().isEmpty();
+                        boolean isControllerIdEmpty = (in.getControllerId() == null || in.getControllerId().isEmpty());
                         Map<String, Boolean> checkedFolders = new HashMap<>();
                         while (sr.next()) {
                             i++;
