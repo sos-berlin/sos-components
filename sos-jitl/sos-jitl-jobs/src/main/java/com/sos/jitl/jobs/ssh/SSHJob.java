@@ -48,7 +48,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         SOSEnv envVars = new SOSEnv();
         JobLogger logger = step.getLogger();
         Map<String, Object> outcomes = new HashMap<String, Object>();
-        String returnValuesFileName = "sos-ssh-return-values-" + UUID.randomUUID() + ".txt";;
+        String returnValuesFileName = "sos-ssh-return-values-" + UUID.randomUUID() + ".txt";
         String resolvedReturnValuesFileName = null;
         boolean isWindowsShell = false;
         String delimiter = null;
@@ -70,8 +70,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                 Map<String, String> envVarsOfWorkflowParameters = SSHJobUtil.getWorkflowParamsAsEnvVars(step, jobArgs);
                 allEnvVars = Stream.of(js7EnvVars, envVarsOfWorkflowParameters).flatMap(map -> map.entrySet().stream())
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                Map<String,String> resolved = resolveReturnValuesFilename(
-                        jobArgs, tempFilesToDelete, returnValuesFileName.concat(delimiter), isWindowsShell, logger);
+                Map<String,String> resolved = resolveReturnValuesFilename(jobArgs, tempFilesToDelete, returnValuesFileName, isWindowsShell, logger);
                 resolvedReturnValuesFileName = resolved.get(resolved.keySet().toArray()[0]);
                 allEnvVars.putAll(resolved);
                 envVars.setLocalEnvs(allEnvVars);// ??? local?global
@@ -83,8 +82,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                     logSosEnvVars(envVarsOfWorkflowParameters, logger);
                 }
             } else {
-                Map<String,String> resolved = resolveReturnValuesFilename(
-                        jobArgs, tempFilesToDelete, returnValuesFileName.concat(delimiter), isWindowsShell, logger);
+                Map<String,String> resolved = resolveReturnValuesFilename(jobArgs, tempFilesToDelete, returnValuesFileName, isWindowsShell, logger);
                 resolvedReturnValuesFileName = resolved.get(resolved.keySet().toArray()[0]);
                 envVars.setLocalEnvs(resolved);
             }
