@@ -249,4 +249,17 @@ public class JobTest {
         return val;
     }
 
+    @Ignore
+    @Test
+    public void testTypes() {
+        Map<String, Object> m = new HashMap<>();
+        m.put("my_boolean", true);
+
+        Object o = m.get("my_boolean");
+        if (o instanceof Boolean) {
+            LOGGER.info("my_boolean= is Boolean");
+        }
+
+        LOGGER.info("my_boolean=" + o.getClass());
+    }
 }
