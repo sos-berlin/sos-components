@@ -498,6 +498,13 @@ public class JobStep<A extends JobArguments> {
         return map;
     }
 
+    public Map<String, String> getEnv() throws SOSJobProblemException {
+        if (internalStep == null) {
+            return null;
+        }
+        return Job.getFromEither(internalStep.env());
+    }
+
     public String replaceVars(Path path) throws Exception {
         Map<String, Object> vars = Job.asNameValueMap(getAllCurrentArguments());
         put(vars, Job.VAR_NAME_CONTROLLER_ID, getControllerId());
