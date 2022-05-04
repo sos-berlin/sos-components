@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.sos-berlin</groupId>
 		<artifactId>sos-components</artifactId>
-		<version>2.3.1-SNAPSHOT</version>
+		<version>2.3.1</version>
 	</parent>
 
 	<artifactId>sos-jitl</artifactId>
