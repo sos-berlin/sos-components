@@ -139,6 +139,14 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
             printEnvs(step.getLogger());
         }
 
+        step.getLogger().info("----------step.getEnv-----------------");
+        try {
+            Map<String, String> m = step.getEnv();
+            step.getLogger().info("[step.getEnv]" + m);
+        } catch (Throwable e) {
+            step.getLogger().warn(String.format("[step.getEnv]%s", e.toString()), e);
+        }
+
         if (!args.getShellCommand().isEmpty()) {
             step.getLogger().info("----------EXECUTE SHELL COMMAND-----------------");
             step.getLogger().info("  " + args.getShellCommand().getDisplayValue());
