@@ -3,7 +3,6 @@ package com.sos.jitl.jobs.common;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSReflection;
@@ -533,7 +531,7 @@ public class JobStep<A extends JobArguments> {
         return map;
     }
 
-    private Map<String, Value> convert4engine(final Map<String, Object> map) {
+    public Map<String, Value> convert4engine(final Map<String, Object> map) {
         Map<String, Value> result = new HashMap<>();
         if (map == null || map.size() == 0) {
             return result;
@@ -566,26 +564,24 @@ public class JobStep<A extends JobArguments> {
         } else if (o instanceof BigDecimal) {
             return NumberValue.of((BigDecimal) o);
         } else if (o instanceof Date) {
-            return getDateAsValue((Date) o);
-        } else if (o instanceof Instant) {
-            return getDateAsValue(Date.from((Instant) o));
-        } else if (SOSReflection.isEnum(o.getClass())) {
-            return StringValue.of(o.toString());
+            return getDateAsStringValue((Date) o);
         } else if (SOSReflection.isList(o.getClass())) {
+            // TODO use ListValue?
             List<?> l = (List<?>) o;
             String s = (String) l.stream().map(e -> {
                 return e.toString();
             }).collect(Collectors.joining(SOSArgumentHelper.LIST_VALUE_DELIMITER));
             return StringValue.of(s);
         }
-        return StringValue.of("" + o);
+        return StringValue.of(o.toString());
     }
 
-    private Value getDateAsValue(Date date) {
+    private Value getDateAsStringValue(Date date) {
         try {
             return StringValue.of(SOSDate.getDateTimeAsString(date));
-        } catch (SOSInvalidDataException e) {
-            return StringValue.of("" + date);
+        } catch (Throwable e) {
+            logger.warn(e.toString(), e);
+            return StringValue.of(date == null ? "" : date.toString());
         }
     }
 

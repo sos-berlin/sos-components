@@ -184,7 +184,8 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
             map.put("test_Instant_value", Instant.now());
             map.put("test_LocalDate_value", LocalDate.now());
 
-            step.getLogger().info("[SUCCESS]set step outcome: %s", map);
+            step.getLogger().info("[SUCCESS][java][step outcome]%s", map);
+            step.getLogger().info("[SUCCESS][scala][step outcome]%s", step.convert4engine(map));
             return step.success(map);
             // step.getLogger().info("[SUCCESS]");
             // return step.success();
