@@ -35,7 +35,10 @@ public class JobLogger {
     }
 
     protected void init(Object args) {
-        if (args != null && args instanceof JobArguments) {
+        if (step == null) {
+            isTraceEnabled = LOGGER.isTraceEnabled();
+            isDebugEnabled = LOGGER.isDebugEnabled();
+        } else if (args != null && args instanceof JobArguments) {
             JobArguments ja = (JobArguments) args;
             isTraceEnabled = ja.getLogLevel().getValue().equals(LogLevel.TRACE);
             isDebugEnabled = ja.getLogLevel().getValue().equals(LogLevel.DEBUG) || isTraceEnabled;
@@ -44,6 +47,7 @@ public class JobLogger {
 
     public void info(final Object msg) {
         if (step == null) {
+            LOGGER.info(String.format("[%s]%s", LOG_LEVEL_INFO, msg));
             return;
         }
         step.out().println(String.format("[%s]%s", LOG_LEVEL_INFO, msg));
@@ -58,14 +62,18 @@ public class JobLogger {
     }
 
     public void debug(final Object msg) {
-        if (!isDebugEnabled || step == null) {
+        if (!isDebugEnabled) {
+            return;
+        }
+        if (step == null) {
+            LOGGER.debug(String.format("[%s]%s", LOG_LEVEL_DEBUG, msg));
             return;
         }
         step.out().println(String.format("[%s]%s", LOG_LEVEL_DEBUG, msg));
     }
 
     public void debug(final String format, final Object... args) {
-        if (!isDebugEnabled || step == null) {
+        if (!isDebugEnabled) {
             return;
         }
         if (args.length == 0) {
@@ -76,14 +84,18 @@ public class JobLogger {
     }
 
     public void trace(final Object msg) {
-        if (!isTraceEnabled || step == null) {
+        if (!isTraceEnabled) {
+            return;
+        }
+        if (step == null) {
+            LOGGER.trace(String.format("[%s]%s", LOG_LEVEL_TRACE, msg));
             return;
         }
         step.out().println(String.format("[%s]%s", LOG_LEVEL_TRACE, msg));
     }
 
     public void trace(final String format, final Object... args) {
-        if (!isTraceEnabled || step == null) {
+        if (!isTraceEnabled) {
             return;
         }
         if (args.length == 0) {
@@ -95,6 +107,7 @@ public class JobLogger {
 
     public void warn(final Object msg) {
         if (step == null) {
+            LOGGER.warn(String.format("[%s]%s", LOG_LEVEL_WARN, msg));
             return;
         }
         step.out().println(String.format("[%s]%s", LOG_LEVEL_WARN, msg));
@@ -122,6 +135,7 @@ public class JobLogger {
 
     public void error(final Object msg) {
         if (step == null) {
+            LOGGER.error(String.format("[%s]%s", LOG_LEVEL_ERROR, msg));
             return;
         }
         step.err().println(String.format("[%s]%s", LOG_LEVEL_ERROR, msg));

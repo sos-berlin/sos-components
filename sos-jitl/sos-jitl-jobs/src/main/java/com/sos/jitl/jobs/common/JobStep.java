@@ -212,23 +212,25 @@ public class JobStep<A extends JobArguments> {
                 }
             });
         }
-        // preference 2 - Order Variables (Node Arguments are unknown)
-        Map<String, Object> o = Job.convert(internalStep.order().arguments());
-        if (o != null && o.size() > 0) {
-            o.entrySet().stream().forEach(e -> {
-                if (!allCurrentArguments.containsKey(e.getKey())) {
-                    allCurrentArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.ORDER));
-                }
-            });
-        }
-        // preference 3 - JobArgument
-        Map<String, Object> j = Job.convert(internalStep.arguments());
-        if (j != null && j.size() > 0) {
-            j.entrySet().stream().forEach(e -> {
-                if (!allCurrentArguments.containsKey(e.getKey())) {
-                    allCurrentArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.JOB));
-                }
-            });
+        if (internalStep != null) {
+            // preference 2 - Order Variables (Node Arguments are unknown)
+            Map<String, Object> o = Job.convert(internalStep.order().arguments());
+            if (o != null && o.size() > 0) {
+                o.entrySet().stream().forEach(e -> {
+                    if (!allCurrentArguments.containsKey(e.getKey())) {
+                        allCurrentArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.ORDER));
+                    }
+                });
+            }
+            // preference 3 - JobArgument
+            Map<String, Object> j = Job.convert(internalStep.arguments());
+            if (j != null && j.size() > 0) {
+                j.entrySet().stream().forEach(e -> {
+                    if (!allCurrentArguments.containsKey(e.getKey())) {
+                        allCurrentArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.JOB));
+                    }
+                });
+            }
         }
         // preference 4 (LOWEST) - JobResources
         Map<String, JobDetailValue> resources = getJobResourcesValues();
@@ -246,7 +248,7 @@ public class JobStep<A extends JobArguments> {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void setKnownArguments() {
-        if (internalStep == null || arguments == null) {
+        if (arguments == null) {
             knownArguments = null;
             return;
         }
