@@ -1,5 +1,6 @@
 package com.sos.joc.repository;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -324,4 +325,31 @@ public class RepositoryTest {
         assertFalse(not3.matches());
     }
     
+    @Test
+    public void test09HostPortSubstring() throws IOException, URISyntaxException {
+        Pattern p = Pattern.compile("^(http.?)://([^/]*)(.*)$");
+        Matcher m = p.matcher("https://abc@def:ghi@jkl@centosdev_third.sos/js7-configurations/sp.git");
+        String hostPort = "";
+        String path = "";
+        String protocol = "";
+        if(m.matches()) {
+            protocol = m.group(1);
+            hostPort = m.group(2);
+            path = m.group(3);
+        }
+        if(hostPort.contains("@")) {
+            String up = hostPort.substring(0, hostPort.lastIndexOf("@"));
+            String hp = hostPort.substring(hostPort.lastIndexOf("@") + 1);
+            String u = up.split(":")[0];
+            String pw = up.split(":")[1];
+            assertEquals(protocol, "https");
+            assertEquals(hostPort, "abc@def:ghi@jkl@centosdev_third.sos");
+            assertEquals(path, "/js7-configurations/sp.git");
+            assertEquals(up, "abc@def:ghi@jkl");
+            assertEquals(hp, "centosdev_third.sos");
+            assertEquals(u, "abc@def");
+            assertEquals(pw, "ghi@jkl");
+        }
+    }
+
 }
