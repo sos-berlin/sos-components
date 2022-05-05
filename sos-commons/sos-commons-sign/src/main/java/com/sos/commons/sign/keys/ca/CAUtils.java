@@ -35,34 +35,28 @@ import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.cert.CertException;
-import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
-import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
 import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
 import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.operator.bc.BcECContentSignerBuilder;
-import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 
-import com.sos.commons.sign.keys.SOSKeyConstants;
-
 public abstract class CAUtils {
-    
-    public static Certificate createSelfSignedRootCertificate(String algorithm, KeyPair keyPair, String subjectDN, boolean operatesAsCA, boolean critical)
-            throws OperatorCreationException, CertificateException, IOException, NoSuchAlgorithmException {
+
+    public static Certificate createSelfSignedRootCertificate(String algorithm, KeyPair keyPair, String subjectDN, boolean operatesAsCA,
+            boolean critical) throws OperatorCreationException, CertificateException, IOException, NoSuchAlgorithmException {
         Provider bcProvider = new BouncyCastleProvider();
         Security.addProvider(bcProvider);
         Date startDate = Date.from(Instant.now());
-//        X500Name subjectDNX500Name = new X500Name(subjectDN);
+        // X500Name subjectDNX500Name = new X500Name(subjectDN);
         X500Name subjectDNX500Name = createX500NameWithReverseOrder(subjectDN);
         
         // Using the current timestamp as the certificate serial number
@@ -73,8 +67,7 @@ public abstract class CAUtils {
         calendar.add(Calendar.YEAR, 5);
         Date endDate = calendar.getTime();
         // Use appropriate signature algorithm based on your keyPair algorithm.
-        ContentSigner contentSigner = new JcaContentSignerBuilder(algorithm)
-                .setProvider(BouncyCastleProvider.PROVIDER_NAME).build(keyPair.getPrivate());
+        ContentSigner contentSigner = new JcaContentSignerBuilder(algorithm).build(keyPair.getPrivate());
         X509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(subjectDNX500Name, certSerialNumber, startDate, endDate,
                 subjectDNX500Name, keyPair.getPublic());
         // Extension: Basic Constraint
@@ -93,75 +86,85 @@ public abstract class CAUtils {
         return new JcaX509CertificateConverter().setProvider(bcProvider).getCertificate(certBuilder.build(contentSigner));
     }
 
-    public static PKCS10CertificationRequest createCSR(String algorithm, KeyPair keyPair, String userDN) throws CertException {
+    public static PKCS10CertificationRequest createCSR(String algorithm, KeyPair issuerKeyPair, KeyPair signerKeyPair, String userDN)
+            throws CertException {
         try {
-            PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(createX500NameWithReverseOrder(userDN), keyPair.getPublic());
+            PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(createX500NameWithReverseOrder(userDN),
+                    issuerKeyPair.getPublic());
             JcaContentSignerBuilder jcaBuilder = new JcaContentSignerBuilder(algorithm);
             jcaBuilder.setProvider(BouncyCastleProvider.PROVIDER_NAME);
-            ContentSigner contentSigner = jcaBuilder.build(keyPair.getPrivate());
+            ContentSigner contentSigner = jcaBuilder.build(issuerKeyPair.getPrivate());
             PKCS10CertificationRequest certificationRequest = builder.build(contentSigner);
             return certificationRequest;
         } catch (Exception e) {
             throw new CertException("createCSR failed", e);
-        } 
+        }
     }
-    
-    public static X509Certificate signCSR(String algorithm, PrivateKey privateKey, PKCS10CertificationRequest csr, X509Certificate rootCa,
-            String subjectAlternativeName) throws OperatorCreationException, IOException, CertificateException, NoSuchAlgorithmException {
-      AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(algorithm);
-      AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
-      X500Name issuer = X500Name.getInstance(rootCa.getSubjectX500Principal().getEncoded());
-      Date startDate = Date.from(Instant.now());
-      // Using the current timestamp as the certificate serial number
-      BigInteger certSerialNumber = new BigInteger(Long.toString(startDate.getTime()));
-      Calendar calendar = Calendar.getInstance();
-      calendar.setTime(startDate);
-      // 2 Year validity
-      calendar.add(Calendar.YEAR, 2);
-      Date endDate = calendar.getTime();
-      X509v3CertificateBuilder certgen = 
-              new X509v3CertificateBuilder(issuer, certSerialNumber, startDate, endDate, csr.getSubject(), csr.getSubjectPublicKeyInfo());
-      // 2.5.29.17 is the oid value for Subject Alternative Name [SAN] 
-      // new ASN1ObjectIdentifier("2.5.29.17")
-      if (subjectAlternativeName != null && !subjectAlternativeName.isEmpty()) {
-          if (subjectAlternativeName.contains(",")) {
-              String[] sans = subjectAlternativeName.split(",");
-              List<GeneralName> generalNames = new ArrayList<>();
-              for (int i=0; i < sans.length; i++) {
-                  GeneralName altName = new GeneralName(GeneralName.dNSName, sans[i].trim());
-                  generalNames.add(altName);
-              }
-              GeneralNames san = new GeneralNames(generalNames.toArray(new GeneralName [0]));
-              certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
-          } else {
-              GeneralName altName = new GeneralName(GeneralName.dNSName, subjectAlternativeName);
-              GeneralNames san = new GeneralNames(altName);
-              certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
-          }
-      }
 
-      // client and server authentication
-      certgen.addExtension(Extension.basicConstraints, false, new BasicConstraints(false));
-      certgen.addExtension(Extension.keyUsage, false, 
-              new KeyUsage(KeyUsage.nonRepudiation | KeyUsage.keyAgreement | KeyUsage.digitalSignature | KeyUsage.dataEncipherment));
-      certgen.addExtension(MiscObjectIdentifiers.netscapeCertType, false, 
-              new NetscapeCertType(NetscapeCertType.sslClient | NetscapeCertType.sslServer));
-      certgen.addExtension(Extension.extendedKeyUsage, true, 
-              new ExtendedKeyUsage(new KeyPurposeId[] {KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth}));
-      AuthorityKeyIdentifier authorityKeyIdentifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootCa.getPublicKey());
-      certgen.addExtension(Extension.authorityKeyIdentifier, false, authorityKeyIdentifier);
-
-      ContentSigner signer = null;
-      if (algorithm.equals(SOSKeyConstants.RSA_SIGNER_ALGORITHM)) {
-          signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));
-      } else {
-          signer = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));
-      }
-      X509CertificateHolder holder = certgen.build(signer);
-      return new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME).getCertificate(holder);
+    public static X509Certificate signCSR(String algorithm, PrivateKey caPrivateKey, KeyPair subjectKeyPair, PKCS10CertificationRequest csr,
+            X509Certificate rootCaCert, String subjectAlternativeName) throws OperatorCreationException, IOException, CertificateException,
+            NoSuchAlgorithmException {
+        return signCSR(algorithm, caPrivateKey, subjectKeyPair, csr, rootCaCert, subjectAlternativeName, null);
     }
-    
-    public static String createRootSubjectDN (String dnQualifier, String commonName, String organizationUnit, String organization, String countryCode) {
+
+    public static X509Certificate signCSR(String algorithm, PrivateKey caPrivateKey, KeyPair subjectKeyPair, PKCS10CertificationRequest csr,
+            X509Certificate rootCaCert, String subjectAlternativeName, Date validUntil) throws OperatorCreationException, IOException,
+            CertificateException, NoSuchAlgorithmException {
+        AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(algorithm);
+        AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
+        X500Name issuerName = X500Name.getInstance(rootCaCert.getSubjectX500Principal().getEncoded());
+//        X500Name subName = CaUtils.getX509Name(subject);
+        Date validFrom = Date.from(Instant.now());
+        // Using the current timestamp as the certificate serial number
+        BigInteger certSerialNumber = new BigInteger(Long.toString(validFrom.getTime()));
+        if (validUntil == null) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(validFrom);
+            // 2 Year validity
+            calendar.add(Calendar.YEAR, 2);
+            validUntil = calendar.getTime();
+        }
+        X509v3CertificateBuilder certgen = new X509v3CertificateBuilder(issuerName, certSerialNumber, validFrom, validUntil, csr.getSubject(),
+                csr.getSubjectPublicKeyInfo());
+        // 2.5.29.17 is the oid value for Subject Alternative Name [SAN]
+        // new ASN1ObjectIdentifier("2.5.29.17")
+        if (subjectAlternativeName != null && !subjectAlternativeName.isEmpty()) {
+            if (subjectAlternativeName.contains(",")) {
+                String[] sans = subjectAlternativeName.split(",");
+                List<GeneralName> generalNames = new ArrayList<>();
+                for (int i = 0; i < sans.length; i++) {
+                    GeneralName altName = new GeneralName(GeneralName.dNSName, sans[i].trim());
+                    generalNames.add(altName);
+                }
+                GeneralNames san = new GeneralNames(generalNames.toArray(new GeneralName[0]));
+                certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
+            } else {
+                GeneralName altName = new GeneralName(GeneralName.dNSName, subjectAlternativeName);
+                GeneralNames san = new GeneralNames(altName);
+                certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
+            }
+        }
+        // client and server authentication
+        certgen.addExtension(Extension.basicConstraints, false, new BasicConstraints(false));
+        certgen.addExtension(Extension.keyUsage, false, new KeyUsage(KeyUsage.nonRepudiation | KeyUsage.keyAgreement | KeyUsage.digitalSignature
+                | KeyUsage.dataEncipherment));
+        certgen.addExtension(MiscObjectIdentifiers.netscapeCertType, false, new NetscapeCertType(NetscapeCertType.sslClient
+                | NetscapeCertType.sslServer));
+        certgen.addExtension(Extension.extendedKeyUsage, false, new ExtendedKeyUsage(new KeyPurposeId[] { KeyPurposeId.id_kp_serverAuth,
+                KeyPurposeId.id_kp_clientAuth, KeyPurposeId.id_kp_codeSigning }));
+        
+        AuthorityKeyIdentifier authorityKeyIdentifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootCaCert.getPublicKey(),
+                rootCaCert.getSubjectX500Principal(), certSerialNumber);
+        certgen.addExtension(Extension.authorityKeyIdentifier, false, authorityKeyIdentifier);
+        SubjectKeyIdentifier subjectKeyIdentifier = new JcaX509ExtensionUtils().createSubjectKeyIdentifier(subjectKeyPair.getPublic());
+        certgen.addExtension(Extension.subjectKeyIdentifier, false, subjectKeyIdentifier);
+        
+        ContentSigner signer = new JcaContentSignerBuilder(algorithm).build(caPrivateKey);
+        return new JcaX509CertificateConverter().getCertificate(certgen.build(signer));
+    }
+
+    public static String createRootSubjectDN(String dnQualifier, String commonName, String organizationUnit, String organization,
+            String countryCode) {
         final String separator = ",";
         StringBuilder rootSubjectDN = new StringBuilder();
         if (dnQualifier != null) {
@@ -185,8 +188,8 @@ public abstract class CAUtils {
         }
         return rootSubjectDN.toString();
     }
-    
-    public static String createUserSubjectDN (String dnQualifier, String commonName, String organizationUnit, String organization, String locality,
+
+    public static String createUserSubjectDN(String dnQualifier, String commonName, String organizationUnit, String organization, String locality,
             String state, String countryCode) {
         final String separator = ",";
         StringBuilder userSubjectDN = new StringBuilder();
@@ -217,8 +220,8 @@ public abstract class CAUtils {
         }
         return userSubjectDN.toString();
     }
-    
-    public static String createUserSubjectDN (String dnQualifier, String commonName, String[] organizationUnits, String organization, String locality,
+
+    public static String createUserSubjectDN(String dnQualifier, String commonName, String[] organizationUnits, String organization, String locality,
             String state, String countryCode) {
         final String separator = ",";
         StringBuilder userSubjectDN = new StringBuilder();
@@ -233,7 +236,7 @@ public abstract class CAUtils {
             }
         }
         if (organizationUnits != null && organizationUnits.length > 0) {
-            for(int i = organizationUnits.length -1; i == 0; i--) {
+            for (int i = organizationUnits.length - 1; i == 0; i--) {
                 userSubjectDN.append(separator).append("OU=").append(organizationUnits[i]);
             }
         }
@@ -251,8 +254,12 @@ public abstract class CAUtils {
         }
         return userSubjectDN.toString();
     }
-    
-    public static String createUserSubjectDN (String dn, X509Certificate alternativeSource, String targetHostname) throws InvalidNameException {
+
+    public static String createUserSubjectDN(String dn, X509Certificate alternativeSource) throws InvalidNameException {
+        return createUserSubjectDN(dn, alternativeSource, null);
+    }
+
+    public static String createUserSubjectDN(String dn, X509Certificate alternativeSource, String targetHostname) throws InvalidNameException {
         LdapName dnName = null;
         if (dn != null) {
             dnName = new LdapName(dn);
@@ -270,7 +277,7 @@ public abstract class CAUtils {
         String countryCode = null;
         String locality = null;
         String state = null;
-        if(dn != null && (dn.contains("DN=") || dn.contains("DNQ="))) {
+        if (dn != null && (dn.contains("DN=") || dn.contains("DNQ="))) {
             try {
                 commonName = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("DNQ")).map(rdn -> rdn.getValue().toString())
                         .collect(Collectors.toList()).get(0);
@@ -279,37 +286,44 @@ public abstract class CAUtils {
                         .collect(Collectors.toList()).get(0);
             }
         }
+        if (altSourceIssuerDN != null) {
+            dnQualifier = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().get().getValue()
+                    .toString();
+        }
         if (dn != null && dn.contains("CN=")) {
-            commonName = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).map(rdn -> rdn.getValue().toString())
-                .collect(Collectors.toList()).get(0);
+            commonName = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).map(rdn -> rdn.getValue().toString()).collect(
+                    Collectors.toList()).get(0);
         } else if (targetHostname != null) {
             commonName = targetHostname;
         }
         if (dn != null && dn.contains("OU=")) {
             organizationUnits = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("OU")).map(rdn -> rdn.getValue().toString())
-                .collect(Collectors.toList());
-        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("OU=")){
-            organizationUnits = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("OU")).map(rdn -> rdn.getValue().toString())
                     .collect(Collectors.toList());
+        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("OU=")) {
+            organizationUnits = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("OU")).map(rdn -> rdn.getValue()
+                    .toString()).collect(Collectors.toList());
         }
         if (dn != null && dn.contains("O=")) {
             organization = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("O")).findFirst().get().getValue().toString();
-        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("O=")){
-            organization = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("O")).findFirst().get().getValue().toString();
+        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("O=")) {
+            organization = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("O")).findFirst().get().getValue()
+                    .toString();
         }
         if (dn != null && dn.contains("C=")) {
             countryCode = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("C")).findFirst().get().getValue().toString();
-        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("C=")){
-            countryCode = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("C")).findFirst().get().getValue().toString();
+        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("C=")) {
+            countryCode = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("C")).findFirst().get().getValue()
+                    .toString();
         }
         if (dn != null && dn.contains("L=")) {
             locality = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("L")).findFirst().get().getValue().toString();
-        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("L=")){
-            locality = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("L")).findFirst().get().getValue().toString();
+        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("L=")) {
+            locality = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("L")).findFirst().get().getValue()
+                    .toString();
         }
         if (dn != null && dn.contains("ST=")) {
             state = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("ST")).findFirst().get().getValue().toString();
-        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("ST=")){
+        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("ST=")) {
             state = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("ST")).findFirst().get().getValue().toString();
         }
         if (organizationUnits != null) {
@@ -318,15 +332,16 @@ public abstract class CAUtils {
             return createUserSubjectDN(dnQualifier, commonName, new String[0], organization, locality, state, countryCode);
         }
     }
-    
-    private static X500Name createX500NameWithReverseOrder( String dn) {
+
+    private static X500Name createX500NameWithReverseOrder(String dn) {
         String[] RDN = dn.split(",");
         StringBuffer buf = new StringBuffer(dn.length());
-        for(int i = RDN.length - 1; i >= 0; i--){
-            if(i != RDN.length - 1) {
+        for (int i = RDN.length - 1; i >= 0; i--) {
+            if (i != RDN.length - 1) {
                 buf.append(',');
             }
             buf.append(RDN[i]);
         }
         return new X500Name(buf.toString());
-    }}
+    }
+}

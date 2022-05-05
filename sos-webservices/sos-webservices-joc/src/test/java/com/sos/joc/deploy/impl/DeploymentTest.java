@@ -9,10 +9,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -24,7 +26,9 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -36,10 +40,16 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import javax.naming.InvalidNameException;
+import javax.xml.bind.DatatypeConverter;
+
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.cert.CertException;
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -49,23 +59,34 @@ import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.sign.keys.SOSKeyConstants;
+import com.sos.commons.sign.keys.ca.CAUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.controller.model.agent.AgentRef;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.ControllerObject;
+import com.sos.joc.model.publish.CreateCSRFilter;
+import com.sos.joc.model.publish.RolloutResponse;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.Signature;
 import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.util.ClientServerCertificateUtil;
+import com.sos.joc.publish.util.PublishUtils;
+import com.sos.joc.publish.util.SigningCertificateUtil;
 import com.sos.sign.model.workflow.Workflow;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -482,6 +503,257 @@ public class DeploymentTest {
             }
         }
         LOGGER.trace("**************************** Determine Items For Cleanup Test finished **************");
+    }
+    
+    @Ignore
+    @Test
+    public void test14CheckCertificateAgainstCa() {
+        LOGGER.trace("******************************  Check against CA Test  ******************************");
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = new SOSHibernateFactory(Paths.get("C:/ProgramData/sos-berlin.com/js7/joc/jetty_base/resources/joc/hibernate.cfg.xml"));
+            factory.setAutoCommit(true);
+            factory.addClassMapping(DBLayer.getJocClassMapping());
+            factory.addClassMapping(DBLayer.getHistoryClassMapping());
+            factory.build();
+            session = factory.openStatelessSession();
+            DBLayerKeys dbLayer = new DBLayerKeys(session);
+            JocKeyPair signingKeyPair = dbLayer.getKeyPair("sp", JocSecurityLevel.MEDIUM);
+            DBLayerDeploy deployDbLayer = new DBLayerDeploy(session);
+            List<DBItemInventoryCertificate> caCerts = deployDbLayer.getCaCertificates();
+            X509Certificate cert = KeyUtil.getX509Certificate(signingKeyPair.getCertificate());
+            boolean valid = PublishUtils.verifyCertificateAgainstCAs(cert, caCerts);
+            assertTrue(valid);
+        } catch (SOSHibernateException | CertificateException | UnsupportedEncodingException e) {
+            LOGGER.debug(e.getMessage(), e);
+        } finally {
+            if(session != null) {
+                session.close();
+            }
+            if(factory != null) {
+                factory.close();
+            }
+        }
+        LOGGER.trace("**************************** Check against CA Test finished *************************");
+    }
+    
+//    @Ignore
+    @Test
+    public void test15CreateAndCheckCertificateAgainstCa() {
+        LOGGER.trace("******************************  Check against CA Test  ******************************");
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = new SOSHibernateFactory(Paths.get("C:/ProgramData/sos-berlin.com/js7/joc/jetty_base/resources/joc/hibernate.cfg.xml"));
+            factory.setAutoCommit(true);
+            factory.addClassMapping(DBLayer.getJocClassMapping());
+            factory.addClassMapping(DBLayer.getHistoryClassMapping());
+            factory.build();
+            session = factory.openStatelessSession();
+            DBLayerKeys dbLayer = new DBLayerKeys(session);
+            
+            JocKeyPair signingKeyPair = null;
+            JocKeyPair clientServerKeyPair = null;
+            RolloutResponse rolloutResponse = null;
+            boolean rootCaAvailable = false;
+            JocKeyPair rootKeyPair = dbLayer.getAuthRootCaKeyPair();
+            X509Certificate rootCert = null;
+            if (rootKeyPair != null) {
+                rootCaAvailable = true;
+                rootCert = KeyUtil.getX509Certificate(rootKeyPair.getCertificate());
+            }
+            String accountName = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());;
+            
+            if (rootCaAvailable && rootCert != null) {
+                // first: get new PK and X509 certificate from stored CA
+                String newDN = CAUtils.createUserSubjectDN("CN=" + accountName, rootCert);
+//                String san = accountName;
+                CreateCSRFilter csrFilter = new CreateCSRFilter();
+                csrFilter.setDn(newDN);
+//                csrFilter.setSan(san);
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(2099, 0, 31);
+                Date validUntil = calendar.getTime();
+                signingKeyPair = SigningCertificateUtil.createSigningKeyPair(session, csrFilter, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, validUntil);
+                rolloutResponse = ClientServerCertificateUtil.createClientServerAuthKeyPair(session, csrFilter);
+                clientServerKeyPair = rolloutResponse.getJocKeyPair();
+                X509Certificate rootCertFromResponse = KeyUtil.getX509Certificate(rolloutResponse.getCaCert());
+                boolean rootCrtsMatch = false;
+                if(rootCert.equals(rootCertFromResponse)) {
+                    rootCrtsMatch = true;
+                }
+                boolean signingCertValid = false;
+                X509Certificate cert = KeyUtil.getX509Certificate(signingKeyPair.getCertificate());
+                try {
+                    cert.verify(rootCert.getPublicKey());
+                    signingCertValid = true;
+                    LOGGER.trace("created signing cert valid!");
+                } catch (Exception e) {
+                    LOGGER.trace("created signing cert not valid!");
+                    LOGGER.trace(e.getMessage());
+                    // Do nothing if verification fails, as an exception here only indicates that the verification failed
+                }
+                cert = KeyUtil.getX509Certificate(clientServerKeyPair.getCertificate());
+                try {
+                    cert.verify(rootCert.getPublicKey());
+                    signingCertValid = true;
+                    LOGGER.trace("created auth cert valid!");
+                } catch (Exception e) {
+                    LOGGER.trace("created auth cert not valid!");
+                    LOGGER.trace(e.getMessage());
+                    // Do nothing if verification fails, as an exception here only indicates that the verification failed
+                }
+            }
+        } catch (SOSHibernateException | CertificateException | IOException | InvalidNameException | NoSuchAlgorithmException
+                | NoSuchProviderException | InvalidAlgorithmParameterException | OperatorCreationException | InvalidKeySpecException
+                | SOSMissingDataException | CertException e) {
+            LOGGER.debug(e.getMessage(), e);
+        } finally {
+            if(session != null) {
+                session.close();
+            }
+            if(factory != null) {
+                factory.close();
+            }
+        }
+        LOGGER.trace("**************************** Check against CA Test finished *************************");
+    }
+    
+    @Ignore
+    @Test
+    public void test16ECDSACreateCSRAndUserCertificate() 
+            throws NoSuchAlgorithmException, NoSuchProviderException, OperatorCreationException, CertificateException, IOException, CertException, 
+            InvalidKeyException, InvalidKeySpecException, SignatureException, InvalidAlgorithmParameterException {
+        LOGGER.trace("****************************  Test ECDSA: create rootCertificate, CSR and userCertificate  ****");
+        // read root CA KeyPair from database
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        KeyPair rootKeyPair = null;
+        X509Certificate rootCertificate = null;
+        PrivateKey privKey = null;
+        PublicKey pubKey = null;
+        try {
+            factory = new SOSHibernateFactory(Paths.get("C:/ProgramData/sos-berlin.com/js7/joc/jetty_base/resources/joc/hibernate.cfg.xml"));
+            factory.setAutoCommit(true);
+            factory.addClassMapping(DBLayer.getJocClassMapping());
+            factory.addClassMapping(DBLayer.getHistoryClassMapping());
+            factory.build();
+            session = factory.openStatelessSession();
+            DBLayerKeys dbLayer = new DBLayerKeys(session);
+            JocKeyPair jocRootKeyPair = dbLayer.getAuthRootCaKeyPair();
+            if (jocRootKeyPair != null) {
+                if(jocRootKeyPair.getKeyAlgorithm().equals(SOSKeyConstants.ECDSA_ALGORITHM_NAME)) {
+                    privKey = KeyUtil.getPrivateECDSAKeyFromString(jocRootKeyPair.getPrivateKey());
+                    if (jocRootKeyPair.getPublicKey() != null) {
+                        pubKey = KeyUtil.getECDSAPublicKeyFromString(jocRootKeyPair.getPublicKey());
+                    }
+                    rootKeyPair = KeyUtil.getKeyPairFromECDSAPrivatKeyString(jocRootKeyPair.getPrivateKey());
+                } else {
+                    privKey = KeyUtil.getPrivateRSAKeyFromString(jocRootKeyPair.getPrivateKey());
+                    if (jocRootKeyPair.getPublicKey() != null) {
+                        pubKey = KeyUtil.getRSAPublicKeyFromString(jocRootKeyPair.getPublicKey());
+                    }
+                    rootKeyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(jocRootKeyPair.getPrivateKey());
+                }
+                rootCertificate = KeyUtil.getX509Certificate(jocRootKeyPair.getCertificate());
+            }
+        } catch (SOSHibernateException | CertificateException | IOException  e) {
+            LOGGER.debug(e.getMessage(), e);
+        } finally {
+            if(session != null) {
+                session.close();
+            }
+            if(factory != null) {
+                factory.close();
+            }
+        }
+        assertNotNull(rootKeyPair);
+        assertNotNull(rootCertificate);
+        
+        String rootPrivateKeyString = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootKeyPair.getPrivate().getEncoded()),
+                SOSKeyConstants.PRIVATE_EC_KEY_HEADER, SOSKeyConstants.PRIVATE_EC_KEY_FOOTER);
+        LOGGER.trace("root private key - algorithm: " + rootKeyPair.getPrivate().getAlgorithm());
+        LOGGER.trace("root private key - format: " + rootKeyPair.getPrivate().getFormat());
+        LOGGER.trace("\n" + rootPrivateKeyString);
+        String rootCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootCertificate.getEncoded()), 
+                SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
+        try {
+            rootCertificate.verify(rootKeyPair.getPublic());
+            LOGGER.trace("root certificate was successfully verified.");
+            LOGGER.trace("\nCertificate cerdentials :\n" + ((X509Certificate)rootCertificate).toString());
+            List<String> usages = ((X509Certificate)rootCertificate).getExtendedKeyUsage();
+            if (usages != null) {
+                for (String usage : usages) {
+                    LOGGER.trace("Usage: " + usage);
+                } 
+            }
+        } catch (CertificateException | NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException | SignatureException e) {
+            // CertificateException on encoding errors
+            // NoSuchAlgorithmException on unsupported signature algorithms
+            // InvalidKeyException on incorrect key
+            // NoSuchProviderException if there's no default provider
+            // SignatureException on signature errors
+            LOGGER.trace("root certificate verification failed against CA keyPairs public key.");
+            LOGGER.trace(e.getMessage());
+        }
+        // create a user KeyPair
+        KeyPair userKeyPair = KeyUtil.createECDSAKeyPair();
+        String userPrivateKeyString = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(userKeyPair.getPrivate().getEncoded()),
+                SOSKeyConstants.PRIVATE_EC_KEY_HEADER, SOSKeyConstants.PRIVATE_EC_KEY_FOOTER);
+        String userSubjectDN = CAUtils.createUserSubjectDN("SOS root CA", "SP", "www.sos-berlin.com", "SOS GmbH", "Berlin", "Berlin", "DE"); 
+        LOGGER.trace("user subjectDN: " + userSubjectDN);
+        // create a CSR based on the users KeyPair
+        PKCS10CertificationRequest csr = CAUtils.createCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, userKeyPair, rootKeyPair, userSubjectDN);
+        assertNotNull(csr);
+        String csrAsString= KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2099, 0, 31);
+        Date validUntil = calendar.getTime();
+
+        X509Certificate userCertificate = 
+                CAUtils.signCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, rootKeyPair.getPrivate(), userKeyPair, csr, 
+                        (X509Certificate)rootCertificate, null, validUntil);
+        assertNotNull(userCertificate);
+        String userCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(userCertificate.getEncoded()), 
+                SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
+        try {
+            LOGGER.trace("****************************  Verify user Certificate:  ***************************************");
+            userCertificate.verify(rootCertificate.getPublicKey());
+            LOGGER.trace("user certificate was successfully verified against CA certificates public key.");
+            LOGGER.trace("\nUser certificate credentials:\n" + userCertificate.toString());
+            List<String> usages = ((X509Certificate)userCertificate).getExtendedKeyUsage();
+            if (usages != null) {
+                for (String usage : usages) {
+                    LOGGER.trace("Usage: " + usage);
+                } 
+            }
+        } catch (CertificateException | NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException | SignatureException e) {
+            // CertificateException on encoding errors
+            // NoSuchAlgorithmException on unsupported signature algorithms
+            // InvalidKeyException on incorrect key
+            // NoSuchProviderException if there's no default provider
+            // SignatureException on signature errors
+            LOGGER.trace("user certificate verification failed against CA certificates public key.");
+            LOGGER.trace(e.getMessage());
+        }
+        LOGGER.trace("**************  check if PublicKey from KeyPair and Public Key from user certificate are the same  ****");
+        if (userKeyPair.getPublic().equals(userCertificate.getPublicKey())) {
+            LOGGER.trace("Users PublicKey from Key Pair and Public Key from user certificate are the same!");
+        } else {
+            LOGGER.trace("Users PublicKey from Key Pair and Public Key from user certificate are not the same!");
+        }
+        String testStringToSign = "Test String to Sign";
+        LOGGER.trace("************************************  Sign String with users Private Key:******************************");
+        String signature = SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, userKeyPair.getPrivate(), testStringToSign);
+        LOGGER.trace("************************************  Signature:  *****************************************************");
+        LOGGER.trace("\n" + signature);
+        LOGGER.trace("****************************  Signature verification with user certificate:  ******************");
+        boolean verify = VerifySignature.verifyX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, userCertificate, testStringToSign, signature);
+        LOGGER.trace("Signature verification with method \"VerifySignature.verifyX509BC\" successful: " + verify);
+        assertTrue(verify);
+        LOGGER.trace("***************************  Test create rootCertificate, CSR and userCertificate finished ***");
     }
     
     private void exportWorkflows(Set<ControllerObject> jsObjectsToExport) throws IOException {
