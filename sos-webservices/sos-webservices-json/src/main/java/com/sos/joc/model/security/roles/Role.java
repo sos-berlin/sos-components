@@ -24,8 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "roleName",
     "ordering",
     "controllers",
-    "auditLog",
-    "additionalProperties"
+    "auditLog"
 })
 public class Role {
 
@@ -65,8 +64,6 @@ public class Role {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-    @JsonProperty("additionalProperties")
-    private Object additionalProperties;
 
     /**
      * No args constructor for use in serialization
@@ -82,16 +79,14 @@ public class Role {
      * @param ordering
      * @param roleName
      * @param controllers
-     * @param additionalProperties
      */
-    public Role(String identityServiceName, String roleName, Integer ordering, List<String> controllers, AuditParams auditLog, Object additionalProperties) {
+    public Role(String identityServiceName, String roleName, Integer ordering, List<String> controllers, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.roleName = roleName;
         this.ordering = ordering;
         this.controllers = controllers;
         this.auditLog = auditLog;
-        this.additionalProperties = additionalProperties;
     }
 
     /**
@@ -196,24 +191,14 @@ public class Role {
         this.auditLog = auditLog;
     }
 
-    @JsonProperty("additionalProperties")
-    public Object getAdditionalProperties() {
-        return additionalProperties;
-    }
-
-    @JsonProperty("additionalProperties")
-    public void setAdditionalProperties(Object additionalProperties) {
-        this.additionalProperties = additionalProperties;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("roleName", roleName).append("ordering", ordering).append("controllers", controllers).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("roleName", roleName).append("ordering", ordering).append("controllers", controllers).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(auditLog).append(ordering).append(roleName).append(controllers).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(roleName).append(controllers).append(identityServiceName).append(auditLog).append(ordering).toHashCode();
     }
 
     @Override
@@ -225,7 +210,7 @@ public class Role {
             return false;
         }
         Role rhs = ((Role) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(ordering, rhs.ordering).append(roleName, rhs.roleName).append(controllers, rhs.controllers).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(roleName, rhs.roleName).append(controllers, rhs.controllers).append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(ordering, rhs.ordering).isEquals();
     }
 
 }

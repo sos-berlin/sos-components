@@ -2,12 +2,7 @@
 package com.sos.joc.model.security.ldap;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -39,8 +34,6 @@ public class LdapGroupRolesMappingItem {
     private String ldapGroupDn;
     @JsonProperty("roles")
     private List<String> roles = new ArrayList<String>();
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -92,24 +85,14 @@ public class LdapGroupRolesMappingItem {
         this.roles = roles;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("ldapGroupDn", ldapGroupDn).append("roles", roles).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("ldapGroupDn", ldapGroupDn).append("roles", roles).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(ldapGroupDn).append(additionalProperties).append(roles).toHashCode();
+        return new HashCodeBuilder().append(ldapGroupDn).append(roles).toHashCode();
     }
 
     @Override
@@ -121,7 +104,7 @@ public class LdapGroupRolesMappingItem {
             return false;
         }
         LdapGroupRolesMappingItem rhs = ((LdapGroupRolesMappingItem) other);
-        return new EqualsBuilder().append(ldapGroupDn, rhs.ldapGroupDn).append(additionalProperties, rhs.additionalProperties).append(roles, rhs.roles).isEquals();
+        return new EqualsBuilder().append(ldapGroupDn, rhs.ldapGroupDn).append(roles, rhs.roles).isEquals();
     }
 
 }

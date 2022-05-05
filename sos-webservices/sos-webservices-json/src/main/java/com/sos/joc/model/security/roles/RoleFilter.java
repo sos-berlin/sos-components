@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.security.roles;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -55,8 +50,6 @@ public class RoleFilter {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -148,24 +141,14 @@ public class RoleFilter {
         this.auditLog = auditLog;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("roleName", roleName).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("roleName", roleName).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(roleName).append(identityServiceName).append(additionalProperties).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(roleName).append(identityServiceName).append(auditLog).toHashCode();
     }
 
     @Override
@@ -177,7 +160,7 @@ public class RoleFilter {
             return false;
         }
         RoleFilter rhs = ((RoleFilter) other);
-        return new EqualsBuilder().append(roleName, rhs.roleName).append(identityServiceName, rhs.identityServiceName).append(additionalProperties, rhs.additionalProperties).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(roleName, rhs.roleName).append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

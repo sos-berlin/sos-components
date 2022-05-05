@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.security.accounts;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -55,8 +50,6 @@ public class AccountListFilter {
     @JsonProperty("disabled")
     @JsonPropertyDescription("controls if the object is disabled")
     private Boolean disabled = false;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -146,24 +139,14 @@ public class AccountListFilter {
         this.disabled = disabled;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("accountName", accountName).append("identityServiceName", identityServiceName).append("disabled", disabled).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("accountName", accountName).append("identityServiceName", identityServiceName).append("disabled", disabled).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(disabled).append(additionalProperties).append(accountName).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(disabled).append(accountName).toHashCode();
     }
 
     @Override
@@ -175,7 +158,7 @@ public class AccountListFilter {
             return false;
         }
         AccountListFilter rhs = ((AccountListFilter) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(disabled, rhs.disabled).append(additionalProperties, rhs.additionalProperties).append(accountName, rhs.accountName).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(disabled, rhs.disabled).append(accountName, rhs.accountName).isEquals();
     }
 
 }

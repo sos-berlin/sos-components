@@ -45,7 +45,7 @@ public class SOSLdapWebserviceCredentials {
     private String truststorePassword = "";
     private KeystoreType truststoreType = null;
 
-    private String hostnameVerification;
+    private Boolean hostnameVerification;
     private Map<String, List<String>> groupRolesMap;
 
     public Long getIdentityServiceId() {
@@ -58,10 +58,6 @@ public class SOSLdapWebserviceCredentials {
 
     public String getLdapServerUrl() {
         return ldapServerUrl;
-    }
-
-    public void setLdapServerUrl(String ldapServerUrl) {
-        this.ldapServerUrl = ldapServerUrl;
     }
 
     public String getSecurityPrincipal() {
@@ -79,56 +75,28 @@ public class SOSLdapWebserviceCredentials {
         return userDnTemplate;
     }
 
-    public void setUserDnTemplate(String userDnTemplate) {
-        this.userDnTemplate = userDnTemplate;
-    }
-
     public String getSearchBase() {
         return searchBase;
-    }
-
-    public void setSearchBase(String searchBase) {
-        this.searchBase = searchBase;
     }
 
     public String getGroupNameAttribute() {
         return groupNameAttribute;
     }
 
-    public void setGroupNameAttribute(String groupNameAttribute) {
-        this.groupNameAttribute = groupNameAttribute;
-    }
-
     public String getUserNameAttribute() {
         return userNameAttribute;
-    }
-
-    public void setUserNameAttribute(String userNameAttribute) {
-        this.userNameAttribute = userNameAttribute;
     }
 
     public String getUserSearchFilter() {
         return userSearchFilter;
     }
 
-    public void setUserSearchFilter(String userSearchFilter) {
-        this.userSearchFilter = userSearchFilter;
-    }
-
     public String getGroupSearchBase() {
         return groupSearchBase;
     }
 
-    public void setGroupSearchBase(String groupSearchBase) {
-        this.groupSearchBase = groupSearchBase;
-    }
-
     public String getGroupSearchFilter() {
         return groupSearchFilter;
-    }
-
-    public void setGroupSearchFilter(String groupSearchFilter) {
-        this.groupSearchFilter = groupSearchFilter;
     }
 
     public String getAccount() {
@@ -144,16 +112,8 @@ public class SOSLdapWebserviceCredentials {
         return sosLdapLoginUserName;
     }
 
-    public String getHostnameVerification() {
+    public Boolean getHostnameVerification() {
         return hostnameVerification;
-    }
-
-    public void setHostnameVerification(String hostnameVerification) {
-        this.hostnameVerification = hostnameVerification;
-    }
-
-    public void setUseStartTls(Boolean useStartTls) {
-        this.useStartTls = useStartTls;
     }
 
     public Boolean getUseStartTls() {
@@ -164,32 +124,16 @@ public class SOSLdapWebserviceCredentials {
         return truststorePath;
     }
 
-    public void setTruststorePath(String truststorePath) {
-        this.truststorePath = truststorePath;
-    }
-
     public String getTruststorePassword() {
         return truststorePassword;
-    }
-
-    public void setTruststorePassword(String truststorePassword) {
-        this.truststorePassword = truststorePassword;
     }
 
     public KeystoreType getTruststoreType() {
         return truststoreType;
     }
 
-    public void setTruststoreType(KeystoreType truststoreType) {
-        this.truststoreType = truststoreType;
-    }
-
     public Map<String, List<String>> getGroupRolesMap() {
         return groupRolesMap;
-    }
-
-    public void setGroupRolesMap(Map<String, List<String>> groupRolesMap) {
-        this.groupRolesMap = groupRolesMap;
     }
 
     private String getProperty(String value, String defaultValue) {
@@ -255,7 +199,7 @@ public class SOSLdapWebserviceCredentials {
                 if (useStartTls == null) {
                     useStartTls = properties.getLdap().getExpert().getIamLdapUseStartTls();
                 }
-                if (hostnameVerification == null || hostnameVerification.isEmpty()) {
+                if (hostnameVerification == null) {
                     hostnameVerification = properties.getLdap().getExpert().getIamLdapHostNameVerification();
                 }
 
@@ -294,7 +238,7 @@ public class SOSLdapWebserviceCredentials {
     }
 
     public boolean isHostnameVerification() {
-        return "on".equalsIgnoreCase(hostnameVerification);
+        return hostnameVerification;
     }
 
     public String getGroupSearchBaseNotNull() {

@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.security.identityservice;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -55,8 +50,6 @@ public class IdentityServiceRename {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -148,24 +141,14 @@ public class IdentityServiceRename {
         this.auditLog = auditLog;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceOldName", identityServiceOldName).append("identityServiceNewName", identityServiceNewName).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceOldName", identityServiceOldName).append("identityServiceNewName", identityServiceNewName).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceOldName).append(additionalProperties).append(auditLog).append(identityServiceNewName).toHashCode();
+        return new HashCodeBuilder().append(identityServiceOldName).append(auditLog).append(identityServiceNewName).toHashCode();
     }
 
     @Override
@@ -177,7 +160,7 @@ public class IdentityServiceRename {
             return false;
         }
         IdentityServiceRename rhs = ((IdentityServiceRename) other);
-        return new EqualsBuilder().append(identityServiceOldName, rhs.identityServiceOldName).append(additionalProperties, rhs.additionalProperties).append(auditLog, rhs.auditLog).append(identityServiceNewName, rhs.identityServiceNewName).isEquals();
+        return new EqualsBuilder().append(identityServiceOldName, rhs.identityServiceOldName).append(auditLog, rhs.auditLog).append(identityServiceNewName, rhs.identityServiceNewName).isEquals();
     }
 
 }

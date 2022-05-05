@@ -3,12 +3,7 @@ package com.sos.joc.model.security.accounts;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -51,8 +46,6 @@ public class Accounts {
     private String identityServiceName;
     @JsonProperty("accountItems")
     private List<Account> accountItems = new ArrayList<Account>();
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -128,24 +121,14 @@ public class Accounts {
         this.accountItems = accountItems;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("identityServiceName", identityServiceName).append("accountItems", accountItems).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("identityServiceName", identityServiceName).append("accountItems", accountItems).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(additionalProperties).append(deliveryDate).append(accountItems).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(deliveryDate).append(accountItems).toHashCode();
     }
 
     @Override
@@ -157,7 +140,7 @@ public class Accounts {
             return false;
         }
         Accounts rhs = ((Accounts) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(additionalProperties, rhs.additionalProperties).append(deliveryDate, rhs.deliveryDate).append(accountItems, rhs.accountItems).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(deliveryDate, rhs.deliveryDate).append(accountItems, rhs.accountItems).isEquals();
     }
 
 }

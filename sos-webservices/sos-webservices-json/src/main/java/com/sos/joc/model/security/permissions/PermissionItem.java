@@ -22,8 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "roleName",
     "permission",
-    "auditLog",
-    "additionalProperties"
+    "auditLog"
 })
 public class PermissionItem {
 
@@ -67,8 +66,6 @@ public class PermissionItem {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-    @JsonProperty("additionalProperties")
-    private Object additionalProperties;
 
     /**
      * No args constructor for use in serialization
@@ -84,16 +81,14 @@ public class PermissionItem {
      * @param auditLog
      * @param roleName
      * @param permission
-     * @param additionalProperties
      */
-    public PermissionItem(String identityServiceName, String controllerId, String roleName, Permission permission, AuditParams auditLog, Object additionalProperties) {
+    public PermissionItem(String identityServiceName, String controllerId, String roleName, Permission permission, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.controllerId = controllerId;
         this.roleName = roleName;
         this.permission = permission;
         this.auditLog = auditLog;
-        this.additionalProperties = additionalProperties;
     }
 
     /**
@@ -206,24 +201,14 @@ public class PermissionItem {
         this.auditLog = auditLog;
     }
 
-    @JsonProperty("additionalProperties")
-    public Object getAdditionalProperties() {
-        return additionalProperties;
-    }
-
-    @JsonProperty("additionalProperties")
-    public void setAdditionalProperties(Object additionalProperties) {
-        this.additionalProperties = additionalProperties;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("controllerId", controllerId).append("roleName", roleName).append("permission", permission).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("controllerId", controllerId).append("roleName", roleName).append("permission", permission).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(controllerId).append(auditLog).append(roleName).append(permission).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(roleName).append(identityServiceName).append(permission).append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -235,7 +220,7 @@ public class PermissionItem {
             return false;
         }
         PermissionItem rhs = ((PermissionItem) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(roleName, rhs.roleName).append(permission, rhs.permission).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(roleName, rhs.roleName).append(identityServiceName, rhs.identityServiceName).append(permission, rhs.permission).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

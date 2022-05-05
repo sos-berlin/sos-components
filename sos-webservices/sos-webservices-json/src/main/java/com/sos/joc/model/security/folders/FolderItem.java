@@ -23,8 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "roleName",
     "folder",
-    "auditLog",
-    "additionalProperties"
+    "auditLog"
 })
 public class FolderItem {
 
@@ -37,7 +36,7 @@ public class FolderItem {
     @JsonProperty("identityServiceName")
     private String identityServiceName;
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * 
@@ -68,8 +67,6 @@ public class FolderItem {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-    @JsonProperty("additionalProperties")
-    private Object additionalProperties;
 
     /**
      * No args constructor for use in serialization
@@ -85,16 +82,14 @@ public class FolderItem {
      * @param controllerId
      * @param auditLog
      * @param roleName
-     * @param additionalProperties
      */
-    public FolderItem(String identityServiceName, String controllerId, String roleName, Folder folder, AuditParams auditLog, Object additionalProperties) {
+    public FolderItem(String identityServiceName, String controllerId, String roleName, Folder folder, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.controllerId = controllerId;
         this.roleName = roleName;
         this.folder = folder;
         this.auditLog = auditLog;
-        this.additionalProperties = additionalProperties;
     }
 
     /**
@@ -120,7 +115,7 @@ public class FolderItem {
     }
 
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * 
@@ -131,7 +126,7 @@ public class FolderItem {
     }
 
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * 
@@ -207,24 +202,14 @@ public class FolderItem {
         this.auditLog = auditLog;
     }
 
-    @JsonProperty("additionalProperties")
-    public Object getAdditionalProperties() {
-        return additionalProperties;
-    }
-
-    @JsonProperty("additionalProperties")
-    public void setAdditionalProperties(Object additionalProperties) {
-        this.additionalProperties = additionalProperties;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("controllerId", controllerId).append("roleName", roleName).append("folder", folder).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("controllerId", controllerId).append("roleName", roleName).append("folder", folder).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(folder).append(controllerId).append(auditLog).append(roleName).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(roleName).append(identityServiceName).append(folder).append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -236,7 +221,7 @@ public class FolderItem {
             return false;
         }
         FolderItem rhs = ((FolderItem) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(folder, rhs.folder).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(roleName, rhs.roleName).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(roleName, rhs.roleName).append(identityServiceName, rhs.identityServiceName).append(folder, rhs.folder).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

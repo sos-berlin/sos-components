@@ -21,8 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "identityServiceName",
     "roleName",
     "ordering",
-    "auditLog",
-    "additionalProperties"
+    "auditLog"
 })
 public class RoleStore {
 
@@ -60,8 +59,6 @@ public class RoleStore {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-    @JsonProperty("additionalProperties")
-    private Object additionalProperties;
 
     /**
      * No args constructor for use in serialization
@@ -76,15 +73,13 @@ public class RoleStore {
      * @param auditLog
      * @param ordering
      * @param roleName
-     * @param additionalProperties
      */
-    public RoleStore(String identityServiceName, String roleName, Integer ordering, AuditParams auditLog, Object additionalProperties) {
+    public RoleStore(String identityServiceName, String roleName, Integer ordering, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.roleName = roleName;
         this.ordering = ordering;
         this.auditLog = auditLog;
-        this.additionalProperties = additionalProperties;
     }
 
     /**
@@ -179,24 +174,14 @@ public class RoleStore {
         this.auditLog = auditLog;
     }
 
-    @JsonProperty("additionalProperties")
-    public Object getAdditionalProperties() {
-        return additionalProperties;
-    }
-
-    @JsonProperty("additionalProperties")
-    public void setAdditionalProperties(Object additionalProperties) {
-        this.additionalProperties = additionalProperties;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("roleName", roleName).append("ordering", ordering).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("roleName", roleName).append("ordering", ordering).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(roleName).append(identityServiceName).append(additionalProperties).append(auditLog).append(ordering).toHashCode();
+        return new HashCodeBuilder().append(roleName).append(identityServiceName).append(auditLog).append(ordering).toHashCode();
     }
 
     @Override
@@ -208,7 +193,7 @@ public class RoleStore {
             return false;
         }
         RoleStore rhs = ((RoleStore) other);
-        return new EqualsBuilder().append(roleName, rhs.roleName).append(identityServiceName, rhs.identityServiceName).append(additionalProperties, rhs.additionalProperties).append(auditLog, rhs.auditLog).append(ordering, rhs.ordering).isEquals();
+        return new EqualsBuilder().append(roleName, rhs.roleName).append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(ordering, rhs.ordering).isEquals();
     }
 
 }

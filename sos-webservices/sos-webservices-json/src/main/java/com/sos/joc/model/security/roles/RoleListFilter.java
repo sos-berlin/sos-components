@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.security.roles;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -35,8 +30,6 @@ public class RoleListFilter {
      */
     @JsonProperty("identityServiceName")
     private String identityServiceName;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -78,24 +71,14 @@ public class RoleListFilter {
         this.identityServiceName = identityServiceName;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).toHashCode();
     }
 
     @Override
@@ -107,7 +90,7 @@ public class RoleListFilter {
             return false;
         }
         RoleListFilter rhs = ((RoleListFilter) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).isEquals();
     }
 
 }

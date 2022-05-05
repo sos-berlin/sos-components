@@ -39,7 +39,7 @@ public class Folders {
     @JsonProperty("identityServiceName")
     private String identityServiceName;
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -121,7 +121,7 @@ public class Folders {
     }
 
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -133,7 +133,7 @@ public class Folders {
     }
 
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * (Required)
