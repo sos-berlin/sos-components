@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 public class CheckHistoryHelper {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CheckHistoryHelper.class);
 
     public static String getParameter(String p) {
         p = p.trim();

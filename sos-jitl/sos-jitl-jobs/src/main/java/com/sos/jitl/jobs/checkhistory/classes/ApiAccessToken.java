@@ -1,13 +1,8 @@
 package com.sos.jitl.jobs.checkhistory.classes;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -17,11 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.httpclient.SOSRestApiClient;
-import com.sos.commons.httpclient.exception.SOSSSLException;
-import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
-import com.sos.commons.sign.keys.keyStore.KeystoreType;
 
 public class ApiAccessToken {
 

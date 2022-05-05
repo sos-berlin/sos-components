@@ -13,7 +13,6 @@ import com.sos.commons.exception.SOSException;
 
 public class AccessTokenProvider {
 
-	private static final String JOC_URL = "joc_url";
 	private static final Logger LOGGER = LoggerFactory.getLogger(AccessTokenProvider.class);
 	private static final String X_ACCESS_TOKEN = "X-Access-Token";
 	private static final int MAX_WAIT_TIME_FOR_ACCESS_TOKEN = 30;
