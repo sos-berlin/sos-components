@@ -4,12 +4,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.TaskHistory;
 import com.sos.joc.model.job.TaskHistoryItem;
@@ -19,27 +14,27 @@ import com.sos.joc.model.order.OrdersFilter;
 
 public class HistoryWebserviceExecuter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryWebserviceExecuter.class);
     private WebserviceCredentials webserviceCredentials;
+    private JobLogger logger;
 
-    public HistoryWebserviceExecuter(WebserviceCredentials webserviceCredentials) {
+    public HistoryWebserviceExecuter(JobLogger logger, WebserviceCredentials webserviceCredentials) {
         super();
         this.webserviceCredentials = webserviceCredentials;
-
+        this.logger = logger;
     }
 
-    public OrderHistoryItem getWorkflowHistoryEntry(OrdersFilter ordersFilter) throws Exception {
+    public OrderHistory getWorkflowHistoryEntry(OrdersFilter ordersFilter) throws Exception {
         if (webserviceCredentials.getAccessToken().isEmpty()) {
             throw new Exception("AccessToken is empty. Login not executed");
         }
 
-        ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
-                SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
-        String body = objectMapper.writeValueAsString(ordersFilter);
+        String body = Globals.objectMapper.writeValueAsString(ordersFilter);
         String answer = webserviceCredentials.getSosRestApiClient().postRestService(new URI(webserviceCredentials.getJocUrl() + "/orders/history"),
                 body);
+        Globals.debug(logger, body);
+        Globals.debug(logger, "answer=" + answer);
         OrderHistory orderHistory = new OrderHistory();
-        orderHistory = objectMapper.readValue(answer, OrderHistory.class);
+        orderHistory = Globals.objectMapper.readValue(answer, OrderHistory.class);
         if (orderHistory.getHistory().size() == 0) {
             return null;
         }
@@ -51,22 +46,22 @@ public class HistoryWebserviceExecuter {
         if (h.getHistoryId() == null) {
             return null;
         } else {
-            return h;
+            return orderHistory;
         }
     }
 
-    public TaskHistoryItem getJobHistoryEntry(JobsFilter jobsFilter) throws Exception {
+    public TaskHistory getJobHistoryEntry(JobsFilter jobsFilter) throws Exception {
         if (webserviceCredentials.getAccessToken().isEmpty()) {
             throw new Exception("AccessToken is empty. Login not executed");
         }
 
-        ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
-                SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
-        String body = objectMapper.writeValueAsString(jobsFilter);
+        String body = Globals.objectMapper.writeValueAsString(jobsFilter);
         String answer = webserviceCredentials.getSosRestApiClient().postRestService(new URI(webserviceCredentials.getJocUrl() + "/tasks/history"),
                 body);
+        Globals.debug(logger, body);
+        Globals.debug(logger, "answer=" + answer);
         TaskHistory taskHistory = new TaskHistory();
-        taskHistory = objectMapper.readValue(answer, TaskHistory.class);
+        taskHistory = Globals.objectMapper.readValue(answer, TaskHistory.class);
         if (taskHistory.getHistory().size() == 0) {
             return null;
         }
@@ -77,7 +72,7 @@ public class HistoryWebserviceExecuter {
         if (h.getTaskId() == null) {
             return null;
         } else {
-            return h;
+            return taskHistory;
         }
     }
 

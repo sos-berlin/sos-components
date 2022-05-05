@@ -1,15 +1,25 @@
 package com.sos.jitl.jobs.checkhistory.classes;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 import com.sos.joc.model.common.HistoryState;
 import com.sos.joc.model.job.TaskHistory;
 import com.sos.joc.model.job.TaskHistoryItem;
+import com.sos.joc.model.order.OrderHistory;
 import com.sos.joc.model.order.OrderHistoryItem;
 
 public class HistoryItem {
 
-    
+    public int getCount() {
+        return count;
+    }
+
+    public void setResult(Boolean result) {
+        this.result = result;
+    }
+
     public String getName() {
         return name;
     }
@@ -19,43 +29,63 @@ public class HistoryItem {
     private String workflow;
     private String name;
     private String orderId;
-    private Date startTime;
-    private Date endTime;
+    private String startTime;
+    private String endTime;
     private String position;
     private HistoryState state;
     private Long taskId;
     private Integer exitCode;
     private Boolean historyItemFound;
     private Boolean result;
+    private int count = 0;
+    private OrderHistory orderHistory;
+    private TaskHistory taskHistory;
 
-    public HistoryItem(OrderHistoryItem orderHistoryItem) {
-        result = orderHistoryItem != null;
-        historyItemFound = orderHistoryItem != null;
+    private String getIso8601String(Date d) {
+        if (d != null) {
+        SimpleDateFormat sdf;
+        sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return sdf.format(d);
+        }else {
+            return "1900-01-01T00:00:00.000" ;
+        }
+    }
+
+    public HistoryItem(OrderHistory orderHistory) {
+        this.orderHistory = orderHistory;
+        result = orderHistory != null;
+        historyItemFound = orderHistory != null;
 
         if (result) {
+            count = orderHistory.getHistory().size();
+            OrderHistoryItem orderHistoryItem = orderHistory.getHistory().get(0);
             controllerId = orderHistoryItem.getControllerId();
             job = "";
             workflow = orderHistoryItem.getWorkflow();
             orderId = orderHistoryItem.getOrderId();
-            startTime = orderHistoryItem.getStartTime();
-            endTime = orderHistoryItem.getEndTime();
+            startTime = getIso8601String(orderHistoryItem.getStartTime());
+            endTime = getIso8601String(orderHistoryItem.getEndTime());
             position = orderHistoryItem.getPosition();
             state = orderHistoryItem.getState();
             taskId = 0L;
         }
     }
 
-    public HistoryItem(TaskHistoryItem taskHistoryItem) {
-        result = taskHistoryItem != null;
-        historyItemFound = taskHistoryItem != null;
+    public HistoryItem(TaskHistory taskHistory) {
+        this.taskHistory = taskHistory;
+        result = taskHistory != null;
+        historyItemFound = taskHistory != null;
 
         if (result) {
+            count = taskHistory.getHistory().size();
+            TaskHistoryItem taskHistoryItem = taskHistory.getHistory().get(0);
             controllerId = taskHistoryItem.getControllerId();
             job = taskHistoryItem.getJob();
             workflow = taskHistoryItem.getWorkflow();
             orderId = taskHistoryItem.getOrderId();
-            startTime = taskHistoryItem.getStartTime();
-            endTime = taskHistoryItem.getEndTime();
+            startTime = getIso8601String(taskHistoryItem.getStartTime());
+            endTime = getIso8601String(taskHistoryItem.getEndTime());
             position = taskHistoryItem.getPosition();
             state = taskHistoryItem.getState();
             taskId = taskHistoryItem.getTaskId();
@@ -66,20 +96,12 @@ public class HistoryItem {
         return historyItemFound;
     }
 
-    public void setHistoryItemFound(Boolean historyItemFound) {
-        this.historyItemFound = historyItemFound;
-    }
-
     public Integer getExitCode() {
         return exitCode;
     }
 
     public String getControllerId() {
         return controllerId;
-    }
-
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
     }
 
     public String getJob() {
@@ -104,56 +126,28 @@ public class HistoryItem {
         return orderId;
     }
 
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
-    }
-
-    public Date getStartTime() {
+    public String getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(Date startTime) {
-        this.startTime = startTime;
-    }
-
-    public Date getEndTime() {
+    public String getEndTime() {
         return endTime;
-    }
-
-    public void setEndTime(Date endTime) {
-        this.endTime = endTime;
     }
 
     public String getPosition() {
         return position;
     }
 
-    public void setPosition(String position) {
-        this.position = position;
-    }
-
     public HistoryState getState() {
         return state;
-    }
-
-    public void setState(HistoryState state) {
-        this.state = state;
     }
 
     public Long getTaskId() {
         return taskId;
     }
 
-    public void setTaskId(Long taskId) {
-        this.taskId = taskId;
-    }
-
     public Boolean getResult() {
         return result;
-    }
-
-    public void setResult(Boolean result) {
-        this.result = result;
     }
 
     public void setExitCode(Integer exitCode) {

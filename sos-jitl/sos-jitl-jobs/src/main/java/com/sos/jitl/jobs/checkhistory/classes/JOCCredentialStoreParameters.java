@@ -1,12 +1,10 @@
 package com.sos.jitl.jobs.checkhistory.classes;
 
 public class JOCCredentialStoreParameters {
- 
-    private String jocUrl="";
-    private String user="";
-    private String password="";
 
-  
+    private String jocUrl = "";
+    private String user = "";
+    private String password = "";
 
     public String getJocUrl() {
         return jocUrl;
@@ -32,5 +30,4 @@ public class JOCCredentialStoreParameters {
         this.password = password;
     }
 
- 
 }

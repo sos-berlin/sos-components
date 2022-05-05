@@ -4,9 +4,9 @@ import java.time.LocalDateTime;
 
 public class JobSchedulerHistoryInfoEntry {
 
-    public boolean found=false;
+    public boolean found = false;
     public String name;
-    public boolean top=false;
+    public boolean top = false;
     public LocalDateTime start;
     public LocalDateTime end;
     public String duration;

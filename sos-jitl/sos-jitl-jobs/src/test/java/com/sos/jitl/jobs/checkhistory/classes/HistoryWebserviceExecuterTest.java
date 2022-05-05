@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.model.common.HistoryStateText;
+import com.sos.joc.model.order.OrderHistory;
 import com.sos.joc.model.order.OrderHistoryItem;
 import com.sos.joc.model.order.OrderPath;
 import com.sos.joc.model.order.OrderStateText;
@@ -29,32 +30,32 @@ public class HistoryWebserviceExecuterTest {
         jobSchedulerCredentialStoreJOCParameters.setJocUrl("http://localhost:4426");
         AccessTokenProvider accessTokenProvider = new AccessTokenProvider(jobSchedulerCredentialStoreJOCParameters);
         WebserviceCredentials webserviceCredentials = accessTokenProvider.getAccessToken();
-        
-        HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(webserviceCredentials);
-        OrdersFilter ordersFilter  = new OrdersFilter();
-        
-      //{"controllerId":"controller","historyIds":["437691"],
-      //    "historyStates":["SUCCESSFUL","FAILED"],"states":["FINISHED"],"orders":[{"workflowPath":"Mail"}],"limit":10}
-        
+
+        HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(null, webserviceCredentials);
+        OrdersFilter ordersFilter = new OrdersFilter();
+
+        // {"controllerId":"controller","historyIds":["437691"],
+        // "historyStates":["SUCCESSFUL","FAILED"],"states":["FINISHED"],"orders":[{"workflowPath":"Mail"}],"limit":10}
+
         ordersFilter.setControllerId("controller");
         List<HistoryStateText> historyStates = new ArrayList<HistoryStateText>();
         historyStates.add(HistoryStateText.SUCCESSFUL);
-        historyStates.add(HistoryStateText.FAILED);      
+        historyStates.add(HistoryStateText.FAILED);
         ordersFilter.setHistoryStates(historyStates);
-        
+
         List<OrderStateText> states = new ArrayList<OrderStateText>();
         states.add(OrderStateText.FINISHED);
         ordersFilter.setStates(states);
-        
+
         Set<OrderPath> orders = new HashSet<OrderPath>();
         OrderPath orderPath = new OrderPath();
         orderPath.setWorkflowPath("Mail");
         orders.add(orderPath);
         ordersFilter.setOrders(orders);
-        
+
         ordersFilter.setLimit(10);
-        OrderHistoryItem orderHistoryItem = historyWebserviceExecuter.getWorkflowHistoryEntry(ordersFilter);
-        System.out.println(orderHistoryItem.getHistoryId());
+        OrderHistory orderHistory = historyWebserviceExecuter.getWorkflowHistoryEntry(ordersFilter);
+        System.out.println(orderHistory.getHistory().get(0).getHistoryId());
 
     }
 

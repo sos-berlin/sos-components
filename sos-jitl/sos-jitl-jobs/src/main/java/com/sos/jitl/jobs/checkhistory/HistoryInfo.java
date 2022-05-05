@@ -6,25 +6,33 @@ import java.util.List;
 import com.sos.commons.exception.SOSException;
 import com.sos.jitl.jobs.checkhistory.classes.AccessTokenProvider;
 import com.sos.jitl.jobs.checkhistory.classes.CheckHistoryHelper;
+import com.sos.jitl.jobs.checkhistory.classes.Globals;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryFilter;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryWebserviceExecuter;
 import com.sos.jitl.jobs.checkhistory.classes.JOCCredentialStoreParameters;
 import com.sos.jitl.jobs.checkhistory.classes.WebserviceCredentials;
+import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.TaskHistory;
-import com.sos.joc.model.job.TaskHistoryItem;
-import com.sos.joc.model.order.OrderHistoryItem;
+import com.sos.joc.model.order.OrderHistory;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersFilter;
 
 public class HistoryInfo {
 
+    private static final int EQ = 1;
+    private static final int GE = 2;
+    private static final int GT = 3;
+    private static final int LE = 4;
+    private static final int LT = 5;
     private CheckHistoryJobArguments args;
+    private JobLogger logger;
 
-    public HistoryInfo(CheckHistoryJobArguments args) {
+    public HistoryInfo(JobLogger logger, CheckHistoryJobArguments args) {
         this.args = args;
+        this.logger = logger;
     }
 
     private HistoryItem executeApiCall(String query) throws Exception {
@@ -36,7 +44,7 @@ public class HistoryInfo {
         AccessTokenProvider accessTokenProvider = new AccessTokenProvider(jobSchedulerCredentialStoreJOCParameters);
         WebserviceCredentials webserviceCredentials = accessTokenProvider.getAccessToken();
 
-        HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(webserviceCredentials);
+        HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(logger, webserviceCredentials);
         HistoryFilter historyFilter = new HistoryFilter();
         historyFilter.setJob(args.getJob());
         historyFilter.setWorkflow(args.getWorkflow());
@@ -54,29 +62,79 @@ public class HistoryInfo {
         String completedTo = "0d";
         boolean paramStartedFrom = false;
         boolean paramStartedTo = false;
+        boolean paramCompletedFrom = false;
+        boolean paramCompletedTo = false;
+        boolean paramCount = false;
+
+        int countCommand = 0;
+        int count = 0;
 
         if (parameters.length > 0) {
             for (String parameterAssignment : parameters) {
                 String[] p = parameterAssignment.split("=");
-                String pName = p[0];
+                String pName = p[0].trim();
+                if (pName.startsWith("count")) {
+                    pName = "count";
+                }
                 String pValue = "";
                 if (p.length > 1) {
-                    pValue = p[1];
+                    pValue = p[1].trim();
                 }
                 switch (pName.toLowerCase()) {
                 case "startedfrom":
                     paramStartedFrom = true;
                     startedFrom = pValue;
+                    Globals.debug(logger, "startedFrom=" + startedFrom);
                     break;
                 case "startedto":
                     paramStartedTo = true;
                     startedTo = pValue;
+                    Globals.debug(logger, "startedTo=" + startedTo);
                     break;
                 case "completedfrom":
-                    completedTo = pValue;
+                    paramCompletedFrom = true;
+                    completedFrom = pValue;
+                    Globals.debug(logger, "completedFrom=" + completedFrom);
                     break;
                 case "completedto":
-                    startedFrom = pValue;
+                    paramCompletedTo = true;
+                    completedTo = pValue;
+                    Globals.debug(logger, "completedto=" + completedTo);
+                    break;
+                case "count":
+                    try {
+                        String[] pEq = parameterAssignment.split("=");
+                        String[] pLe = parameterAssignment.split("<=");
+                        String[] pLt = parameterAssignment.split("<");
+                        String[] pGe = parameterAssignment.split(">=");
+                        String[] pGt = parameterAssignment.split(">");
+                        if (pEq.length > 1) {
+                            count = Integer.valueOf(pEq[1]);
+                            countCommand = EQ;
+                        }
+                        if (pLe.length > 1) {
+                            count = Integer.valueOf(pLe[1]);
+                            countCommand = LE;
+                        }
+                        if (pLt.length > 1) {
+                            count = Integer.valueOf(pLt[1]);
+                            countCommand = LT;
+                        }
+                        if (pGe.length > 1) {
+                            count = Integer.valueOf(pGe[1]);
+                            countCommand = GE;
+                        }
+                        if (pGt.length > 1) {
+                            count = Integer.valueOf(pGt[1]);
+                            countCommand = GT;
+                        }
+                        paramCount = true;
+
+                    } catch (NumberFormatException e) {
+                        Globals.log(logger, "Not a valid number:" + pValue);
+                        count = 0;
+                    }
+                    Globals.debug(logger, "completedto=" + completedTo);
                     break;
                 default:
                     if (!pName.isEmpty()) {
@@ -86,6 +144,7 @@ public class HistoryInfo {
             }
         }
 
+        historyFilter.setLimit(count + 1);
         switch (queryName.toLowerCase()) {
         case "isstarted":
             historyFilter.setDateFrom(startedFrom);
@@ -96,8 +155,10 @@ public class HistoryInfo {
                 historyFilter.setDateFrom(startedFrom);
                 historyFilter.setDateTo(startedTo);
             }
-            historyFilter.setEndDateFrom(completedFrom);
-            historyFilter.setEndDateTo(completedTo);
+            if (paramCompletedFrom || paramCompletedTo) {
+                historyFilter.setEndDateFrom(completedFrom);
+                historyFilter.setEndDateTo(completedTo);
+            }
             states.add(OrderStateText.FINISHED);
             historyFilter.setStates(states);
             break;
@@ -106,8 +167,10 @@ public class HistoryInfo {
                 historyFilter.setDateFrom(startedFrom);
                 historyFilter.setDateTo(startedTo);
             }
-            historyFilter.setEndDateFrom(completedFrom);
-            historyFilter.setEndDateTo(completedTo);
+            if (paramCompletedFrom || paramCompletedTo) {
+                historyFilter.setEndDateFrom(completedFrom);
+                historyFilter.setEndDateTo(completedTo);
+            }
 
             states.add(OrderStateText.FINISHED);
             historyStates.add(HistoryStateText.SUCCESSFUL);
@@ -119,8 +182,10 @@ public class HistoryInfo {
                 historyFilter.setDateFrom(startedFrom);
                 historyFilter.setDateTo(startedTo);
             }
-            historyFilter.setEndDateFrom(completedFrom);
-            historyFilter.setEndDateTo(completedTo);
+            if (paramCompletedFrom || paramCompletedTo) {
+                historyFilter.setEndDateFrom(completedFrom);
+                historyFilter.setEndDateTo(completedTo);
+            }
             states.add(OrderStateText.FINISHED);
             historyStates.add(HistoryStateText.FAILED);
             historyFilter.setHistoryStates(historyStates);
@@ -133,8 +198,10 @@ public class HistoryInfo {
                 historyFilter.setDateFrom(startedFrom);
                 historyFilter.setDateTo(startedTo);
             }
-            historyFilter.setEndDateFrom(completedFrom);
-            historyFilter.setEndDateTo(completedTo);
+            if (paramCompletedFrom || paramCompletedTo) {
+                historyFilter.setEndDateFrom(completedFrom);
+                historyFilter.setEndDateTo(completedTo);
+            }
             states.add(OrderStateText.FINISHED);
             historyFilter.setStates(states);
             break;
@@ -145,7 +212,7 @@ public class HistoryInfo {
         HistoryItem historyItem;
         if (args.getJob() != null && !args.getJob().isEmpty()) {
             JobsFilter jobsFilter = new JobsFilter();
-            jobsFilter.setLimit(1);
+            jobsFilter.setLimit(historyFilter.getLimit());
             jobsFilter.setControllerId(historyFilter.getControllerId());
             jobsFilter.setJobName(historyFilter.getJob());
             jobsFilter.setWorkflowName(historyFilter.getWorkflow());
@@ -157,14 +224,14 @@ public class HistoryInfo {
             jobsFilter.setHistoryStates(historyFilter.getHistoryStates());
             jobsFilter.setTimeZone(historyFilter.getTimeZone());
 
-            TaskHistoryItem taskHistoryItem = historyWebserviceExecuter.getJobHistoryEntry(jobsFilter);
-            historyItem = new HistoryItem(taskHistoryItem);
+            TaskHistory taskHistory = historyWebserviceExecuter.getJobHistoryEntry(jobsFilter);
+            historyItem = new HistoryItem(taskHistory);
             historyItem.setJob(historyFilter.getJob());
 
         } else {
 
             OrdersFilter ordersFilter = new OrdersFilter();
-            ordersFilter.setLimit(1);
+            ordersFilter.setLimit(historyFilter.getLimit());
             ordersFilter.setControllerId(historyFilter.getControllerId());
             ordersFilter.setWorkflowName(historyFilter.getWorkflow());
             ordersFilter.setDateFrom(historyFilter.getDateFrom());
@@ -176,8 +243,8 @@ public class HistoryInfo {
             ordersFilter.setStates(historyFilter.getStates());
             ordersFilter.setTimeZone(historyFilter.getTimeZone());
 
-            OrderHistoryItem orderHistoryItem = historyWebserviceExecuter.getWorkflowHistoryEntry(ordersFilter);
-            historyItem = new HistoryItem(orderHistoryItem);
+            OrderHistory orderHistory = historyWebserviceExecuter.getWorkflowHistoryEntry(ordersFilter);
+            historyItem = new HistoryItem(orderHistory);
             historyItem.setWorkflow(historyFilter.getWorkflow());
         }
 
@@ -185,12 +252,37 @@ public class HistoryInfo {
         case "lastcompletedsuccessful":
             historyItem.setResult((historyItem.getHistoryItemFound() && historyItem.getState().get_text().value().equals(HistoryStateText.SUCCESSFUL
                     .value())));
+            break;
         case "lastcompletedfailed":
             historyItem.setResult((historyItem.getHistoryItemFound() && historyItem.getState().get_text().value().equals(HistoryStateText.FAILED
                     .value())));
-        }
-        return historyItem;
+            break;
+        default:
+            if (paramCount && historyItem.getResult()) {
+                switch (countCommand) {
+                case EQ:
+                    historyItem.setResult(historyItem.getCount() == count);
+                    break;
+                case GE:
+                    historyItem.setResult(historyItem.getCount() >= count);
+                    break;
+                case GT:
+                    historyItem.setResult(historyItem.getCount() > count);
+                    break;
+                case LE:
+                    historyItem.setResult(historyItem.getCount() <= count);
+                    break;
+                case LT:
+                    historyItem.setResult(historyItem.getCount() < count);
+                    break;
+                default:
+                    throw new SOSException("unknown operator in count parameter");
+                }
 
+            }
+        }
+
+        return historyItem;
     }
 
     public HistoryItem queryHistory() throws Exception {

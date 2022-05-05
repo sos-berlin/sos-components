@@ -2,13 +2,13 @@ package com.sos.jitl.jobs.checkhistory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.jitl.jobs.checkhistory.classes.CheckHistoryJobReturn;
+import com.sos.jitl.jobs.checkhistory.classes.Globals;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobLogger;
@@ -45,74 +45,56 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
         checkHistoryJobReturn.setExitCode(0);
         Map<String, Object> resultMap = new HashMap<String, Object>();
         resultMap.put("js7CheckHistoryResult", false);
-       /* resultMap.put("js7CheckHistoryControllerId", "");
+        resultMap.put("js7CheckHistoryControllerId", "");
         resultMap.put("js7CheckHistoryWorkflow", "");
         resultMap.put("js7CheckHistoryJob", "");
         resultMap.put("js7CheckHistoryStarted", "");
         resultMap.put("js7CheckHistoryCompleted", "");
         resultMap.put("js7CheckHistoryStarted", "");
-        resultMap.put("js7CheckHistoryCompleted", ""); */
+        resultMap.put("js7CheckHistoryCompleted", "");
 
         String query = args.getQuery();
-        log(logger, String.format("check history: %s will be executed.", query));
+        Globals.debug(logger, String.format("check history: %s will be executed.", query));
 
-        HistoryInfo historyInfo = new HistoryInfo(args);
+        HistoryInfo historyInfo = new HistoryInfo(logger, args);
         HistoryItem historyItem = historyInfo.queryHistory();
 
         boolean result = historyItem.getResult();
         if (result) {
-            log(logger, args.getQuery() + "(" + historyItem.getName() + ") ==> true");
+            Globals.debug(logger, args.getQuery() + "(" + historyItem.getName() + ") ==> true");
             checkHistoryJobReturn.setExitCode(0);
             resultMap.put("js7CheckHistoryResult", true);
-         /*   resultMap.put("js7CheckHistoryControllerId", historyItem.getControllerId());
+            resultMap.put("js7CheckHistoryControllerId", historyItem.getControllerId());
             resultMap.put("js7CheckHistoryWorkflow", historyItem.getWorkflow());
             resultMap.put("js7CheckHistoryJob", historyItem.getJob());
             resultMap.put("js7CheckHistoryStarted", historyItem.getStartTime());
-            resultMap.put("js7CheckHistoryCompleted", historyItem.getEndTime()); */
-            
+            resultMap.put("js7CheckHistoryCompleted", historyItem.getEndTime());
+
         } else {
-            log(logger, args.getQuery() + "(" + historyItem.getName() + ") ==> false");
+            Globals.debug(logger, args.getQuery() + "(" + historyItem.getName() + ") ==> false");
             checkHistoryJobReturn.setExitCode(1);
             resultMap.put("js7CheckHistoryResult", false);
         }
 
-        for (Entry<String, Object> entry : resultMap.entrySet()) {
-            if (entry.getValue() == null) {
-                resultMap.put(entry.getKey(), "");
-            }
-            log(logger,"--> "  + entry.getKey() + "=" + entry.getValue() );
-            
-        }
         checkHistoryJobReturn.setResultMap(resultMap);
 
         return checkHistoryJobReturn;
     }
 
-    private void log(JobLogger logger, String log) {
-        if (logger != null) {
-            logger.info(log);
-        } else {
-            LOGGER.info(log);
-        }
-    }
-
-    private void debug(JobLogger logger, String log) {
-        if (logger != null) {
-            logger.debug(log);
-        } else {
-            LOGGER.debug(log);
-        }
-    }
-
     public static void main(String[] args) {
         CheckHistoryJobArguments arguments = new CheckHistoryJobArguments();
-        arguments.setQuery("isStarted(startedFrom=-1d,startedTo=-2d)");
-        arguments.setQuery("iscompleted");
+        arguments.setQuery("isStarted(startedFrom=-1d,startedTo=-1d)");
+        
+        arguments.setQuery("isCompletedSuccessful(startedFrom=-1d,startedTo=-1d)");
+     //   arguments.setQuery("isCompleted(startedFrom=-100d, count>5)");
+          
+        arguments.setQuery("lastCompletedSuccessful");
         arguments.setAccount("root");
         arguments.setPassword("root");
         arguments.setJocUrl("http://localhost:4426");
-//        arguments.setJob("job2");
-        arguments.setWorkflow("CheckHistory");
+        // arguments.setJob("job2");
+        // arguments.setJob("jobCheckHistory2");
+        arguments.setWorkflow("fork");
 
         SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
         CheckHistoryJob checkHistoryJob = new CheckHistoryJob(null);

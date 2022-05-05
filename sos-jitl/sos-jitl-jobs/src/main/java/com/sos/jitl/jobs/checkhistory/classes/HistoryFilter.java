@@ -8,6 +8,36 @@ import com.sos.joc.model.order.OrderStateText;
 
 public class HistoryFilter {
 
+    public int getLimit() {
+        return limit;
+    }
+
+    public void setLimit(int limit) {
+        this.limit = limit;
+    }
+
+    private String controllerId;
+    private String job;
+    private String workflow;
+    private List<OrderStateText> states;
+    private String dateFrom;
+    private String dateTo;
+    private String endDateFrom;
+    private String endDateTo;
+    private String timeZone;
+    private int limit = 1;
+
+    private List<Folder> folders;
+    private List<HistoryStateText> historyStates;
+
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
+
     public String getJob() {
         return job;
     }
@@ -22,26 +52,6 @@ public class HistoryFilter {
 
     public void setWorkflow(String workflow) {
         this.workflow = workflow;
-    }
-
-    private String controllerId;
-    private String job;
-    private String workflow;
-    private List<OrderStateText> states;
-    private String dateFrom;
-    private String dateTo;
-    private String endDateFrom;
-    private String endDateTo;
-    private String timeZone;
-    private List<Folder> folders;
-    private List<HistoryStateText> historyStates;
-
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
     }
 
     public List<OrderStateText> getStates() {
