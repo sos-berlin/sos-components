@@ -36,12 +36,8 @@ public class SOSLdapHandler {
         if (sosLdapWebserviceCredentials.getUseStartTls()) {
             LOGGER.debug("using StartTls for authentication");
             startTls = (StartTlsResponse) ldapContext.extendedOperation(new StartTlsRequest());
-            boolean isHostNameVerification = false;
-            if (sosLdapWebserviceCredentials.getHostnameVerification() != null && !sosLdapWebserviceCredentials.getHostnameVerification()
-                    .isEmpty()) {
-                isHostNameVerification = sosLdapWebserviceCredentials.isHostnameVerification();
-            }
-            if (isHostNameVerification) {
+
+            if (sosInternAuthWebserviceCredentials.isHostnameVerification()) {
                 LOGGER.debug("HostNameVerification=true");
             } else {
                 LOGGER.debug("HostNameVerification=false");

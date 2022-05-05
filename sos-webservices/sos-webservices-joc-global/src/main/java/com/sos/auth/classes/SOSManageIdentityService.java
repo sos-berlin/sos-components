@@ -190,7 +190,10 @@ public class SOSManageIdentityService {
 
         ldapExpertProperties.setIamLdapUserDnTemplate(getLdapValue(mainSection, ldapName, "userDnTemplate"));
         ldapExpertProperties.setIamLdapSearchBase(getLdapValue(mainSection, ldapName, "searchBase"));
-        ldapExpertProperties.setIamLdapHostNameVerification(getLdapValue(mainSection, ldapName, "hostNameVerification"));
+        if ("true".equals(getLdapValue(mainSection, ldapName, "hostNameVerification")) || "on".equals(getLdapValue(mainSection, ldapName,
+                "hostNameVerification"))) {
+            ldapExpertProperties.setIamLdapHostNameVerification(true);
+        }
         ldapExpertProperties.setIamLdapGroupSearchFilter(getLdapValue(mainSection, ldapName, "groupSearchFilter"));
         ldapExpertProperties.setIamLdapGroupSearchBase(getLdapValue(mainSection, ldapName, "groupSearchBase"));
         ldapExpertProperties.setIamLdapGroupNameAttribute(getLdapValue(mainSection, ldapName, "groupNameAttribute"));

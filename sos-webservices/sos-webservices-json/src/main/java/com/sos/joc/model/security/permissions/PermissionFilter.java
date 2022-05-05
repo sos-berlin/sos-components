@@ -36,7 +36,7 @@ public class PermissionFilter {
     @JsonProperty("identityServiceName")
     private String identityServiceName;
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * 
@@ -119,7 +119,7 @@ public class PermissionFilter {
     }
 
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * 
@@ -130,7 +130,7 @@ public class PermissionFilter {
     }
 
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * 

@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.security.accounts;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -75,8 +70,6 @@ public class AccountChangePassword {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -228,24 +221,14 @@ public class AccountChangePassword {
         this.auditLog = auditLog;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("password", password).append("repeatedPassword", repeatedPassword).append("oldPassword", oldPassword).append("forcePasswordChange", forcePasswordChange).append("auditLog", auditLog).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("password", password).append("repeatedPassword", repeatedPassword).append("oldPassword", oldPassword).append("forcePasswordChange", forcePasswordChange).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(password).append(auditLog).append(accountName).append(oldPassword).append(forcePasswordChange).append(additionalProperties).append(repeatedPassword).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(password).append(auditLog).append(accountName).append(oldPassword).append(forcePasswordChange).append(repeatedPassword).toHashCode();
     }
 
     @Override
@@ -257,7 +240,7 @@ public class AccountChangePassword {
             return false;
         }
         AccountChangePassword rhs = ((AccountChangePassword) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(password, rhs.password).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(oldPassword, rhs.oldPassword).append(forcePasswordChange, rhs.forcePasswordChange).append(additionalProperties, rhs.additionalProperties).append(repeatedPassword, rhs.repeatedPassword).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(password, rhs.password).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(oldPassword, rhs.oldPassword).append(forcePasswordChange, rhs.forcePasswordChange).append(repeatedPassword, rhs.repeatedPassword).isEquals();
     }
 
 }

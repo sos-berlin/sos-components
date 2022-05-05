@@ -3,12 +3,7 @@ package com.sos.joc.model.security.identityservice;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -45,8 +40,6 @@ public class IdentityServices {
     private List<IdentityService> identityServiceItems = new ArrayList<IdentityService>();
     @JsonProperty("identityServiceTypes")
     private List<IdentityServiceTypes> identityServiceTypes = new ArrayList<IdentityServiceTypes>();
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -110,24 +103,14 @@ public class IdentityServices {
         this.identityServiceTypes = identityServiceTypes;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("identityServiceItems", identityServiceItems).append("identityServiceTypes", identityServiceTypes).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("identityServiceItems", identityServiceItems).append("identityServiceTypes", identityServiceTypes).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceTypes).append(identityServiceItems).append(additionalProperties).append(deliveryDate).toHashCode();
+        return new HashCodeBuilder().append(identityServiceTypes).append(identityServiceItems).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -139,7 +122,7 @@ public class IdentityServices {
             return false;
         }
         IdentityServices rhs = ((IdentityServices) other);
-        return new EqualsBuilder().append(identityServiceTypes, rhs.identityServiceTypes).append(identityServiceItems, rhs.identityServiceItems).append(additionalProperties, rhs.additionalProperties).append(deliveryDate, rhs.deliveryDate).isEquals();
+        return new EqualsBuilder().append(identityServiceTypes, rhs.identityServiceTypes).append(identityServiceItems, rhs.identityServiceItems).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }

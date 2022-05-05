@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.security.ldap;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -61,8 +56,6 @@ public class LdapSimpleProperties {
     private Boolean iamLdapADwithSamAccount;
     @JsonProperty("iamLdapWithMemberOf")
     private Boolean iamLdapWithMemberOf;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -186,24 +179,14 @@ public class LdapSimpleProperties {
         this.iamLdapWithMemberOf = iamLdapWithMemberOf;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamLdapHost", iamLdapHost).append("iamLdapPort", iamLdapPort).append("iamLdapProtocol", iamLdapProtocol).append("iamLdapAD", iamLdapAD).append("iamLdapADwithSamAccount", iamLdapADwithSamAccount).append("iamLdapWithMemberOf", iamLdapWithMemberOf).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("iamLdapHost", iamLdapHost).append("iamLdapPort", iamLdapPort).append("iamLdapProtocol", iamLdapProtocol).append("iamLdapAD", iamLdapAD).append("iamLdapADwithSamAccount", iamLdapADwithSamAccount).append("iamLdapWithMemberOf", iamLdapWithMemberOf).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamLdapWithMemberOf).append(iamLdapAD).append(iamLdapProtocol).append(iamLdapHost).append(additionalProperties).append(iamLdapADwithSamAccount).append(iamLdapPort).toHashCode();
+        return new HashCodeBuilder().append(iamLdapWithMemberOf).append(iamLdapAD).append(iamLdapProtocol).append(iamLdapHost).append(iamLdapADwithSamAccount).append(iamLdapPort).toHashCode();
     }
 
     @Override
@@ -215,7 +198,7 @@ public class LdapSimpleProperties {
             return false;
         }
         LdapSimpleProperties rhs = ((LdapSimpleProperties) other);
-        return new EqualsBuilder().append(iamLdapWithMemberOf, rhs.iamLdapWithMemberOf).append(iamLdapAD, rhs.iamLdapAD).append(iamLdapProtocol, rhs.iamLdapProtocol).append(iamLdapHost, rhs.iamLdapHost).append(additionalProperties, rhs.additionalProperties).append(iamLdapADwithSamAccount, rhs.iamLdapADwithSamAccount).append(iamLdapPort, rhs.iamLdapPort).isEquals();
+        return new EqualsBuilder().append(iamLdapWithMemberOf, rhs.iamLdapWithMemberOf).append(iamLdapAD, rhs.iamLdapAD).append(iamLdapProtocol, rhs.iamLdapProtocol).append(iamLdapHost, rhs.iamLdapHost).append(iamLdapADwithSamAccount, rhs.iamLdapADwithSamAccount).append(iamLdapPort, rhs.iamLdapPort).isEquals();
     }
 
 }

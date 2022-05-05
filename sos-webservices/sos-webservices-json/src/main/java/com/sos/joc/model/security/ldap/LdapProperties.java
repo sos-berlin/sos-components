@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.security.ldap;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -43,8 +38,6 @@ public class LdapProperties {
      */
     @JsonProperty("expert")
     private LdapExpertProperties expert;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -108,24 +101,14 @@ public class LdapProperties {
         this.expert = expert;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("simple", simple).append("expert", expert).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("simple", simple).append("expert", expert).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(simple).append(expert).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(simple).append(expert).toHashCode();
     }
 
     @Override
@@ -137,7 +120,7 @@ public class LdapProperties {
             return false;
         }
         LdapProperties rhs = ((LdapProperties) other);
-        return new EqualsBuilder().append(simple, rhs.simple).append(expert, rhs.expert).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(simple, rhs.simple).append(expert, rhs.expert).isEquals();
     }
 
 }

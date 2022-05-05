@@ -37,7 +37,7 @@ public class PermissionRename {
     @JsonProperty("identityServiceName")
     private String identityServiceName;
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -132,7 +132,7 @@ public class PermissionRename {
     }
 
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -144,7 +144,7 @@ public class PermissionRename {
     }
 
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * (Required)

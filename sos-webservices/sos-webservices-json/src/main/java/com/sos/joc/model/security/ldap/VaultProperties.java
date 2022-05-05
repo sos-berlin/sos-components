@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.security.ldap;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -79,8 +74,6 @@ public class VaultProperties {
      */
     @JsonProperty("iamVaultApplicationToken")
     private String iamVaultApplicationToken;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -240,24 +233,14 @@ public class VaultProperties {
         this.iamVaultApplicationToken = iamVaultApplicationToken;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamVaultUrl", iamVaultUrl).append("iamVaultAuthenticationMethodPath", iamVaultAuthenticationMethodPath).append("iamVaultTruststorePath", iamVaultTruststorePath).append("iamVaultTruststorePassword", iamVaultTruststorePassword).append("iamVaultTruststoreType", iamVaultTruststoreType).append("iamVaultApplicationToken", iamVaultApplicationToken).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("iamVaultUrl", iamVaultUrl).append("iamVaultAuthenticationMethodPath", iamVaultAuthenticationMethodPath).append("iamVaultTruststorePath", iamVaultTruststorePath).append("iamVaultTruststorePassword", iamVaultTruststorePassword).append("iamVaultTruststoreType", iamVaultTruststoreType).append("iamVaultApplicationToken", iamVaultApplicationToken).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamVaultAuthenticationMethodPath).append(iamVaultUrl).append(iamVaultTruststorePath).append(additionalProperties).append(iamVaultTruststorePassword).append(iamVaultTruststoreType).append(iamVaultApplicationToken).toHashCode();
+        return new HashCodeBuilder().append(iamVaultAuthenticationMethodPath).append(iamVaultUrl).append(iamVaultTruststorePath).append(iamVaultTruststorePassword).append(iamVaultTruststoreType).append(iamVaultApplicationToken).toHashCode();
     }
 
     @Override
@@ -269,7 +252,7 @@ public class VaultProperties {
             return false;
         }
         VaultProperties rhs = ((VaultProperties) other);
-        return new EqualsBuilder().append(iamVaultAuthenticationMethodPath, rhs.iamVaultAuthenticationMethodPath).append(iamVaultUrl, rhs.iamVaultUrl).append(iamVaultTruststorePath, rhs.iamVaultTruststorePath).append(additionalProperties, rhs.additionalProperties).append(iamVaultTruststorePassword, rhs.iamVaultTruststorePassword).append(iamVaultTruststoreType, rhs.iamVaultTruststoreType).append(iamVaultApplicationToken, rhs.iamVaultApplicationToken).isEquals();
+        return new EqualsBuilder().append(iamVaultAuthenticationMethodPath, rhs.iamVaultAuthenticationMethodPath).append(iamVaultUrl, rhs.iamVaultUrl).append(iamVaultTruststorePath, rhs.iamVaultTruststorePath).append(iamVaultTruststorePassword, rhs.iamVaultTruststorePassword).append(iamVaultTruststoreType, rhs.iamVaultTruststoreType).append(iamVaultApplicationToken, rhs.iamVaultApplicationToken).isEquals();
     }
 
 }
