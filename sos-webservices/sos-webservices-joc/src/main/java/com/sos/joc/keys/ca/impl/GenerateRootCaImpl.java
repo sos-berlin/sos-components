@@ -45,7 +45,7 @@ public class GenerateRootCaImpl extends JOCResourceImpl implements IGenerateRoot
             
             KeyPair keyPair = KeyUtil.createECDSAKeyPair();
             String subjectDN = filter.getDn();
-            Certificate cert = CAUtils.createSelfSignedRootCertificate(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair, subjectDN, true, false);
+            Certificate cert = CAUtils.createSelfSignedRootCertificate(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair, subjectDN, true, true);
             JocKeyPair jocKeyPair = KeyUtil.createECDSAJOCKeyPair(keyPair);
             jocKeyPair.setCertificate(CertificateUtils.asPEMString((X509Certificate)cert));
             jocKeyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
