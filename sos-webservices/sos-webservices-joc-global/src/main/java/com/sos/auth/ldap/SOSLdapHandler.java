@@ -37,7 +37,7 @@ public class SOSLdapHandler {
             LOGGER.debug("using StartTls for authentication");
             startTls = (StartTlsResponse) ldapContext.extendedOperation(new StartTlsRequest());
 
-            if (sosLdapAuthWebserviceCredentials.isHostnameVerification()) {
+            if (sosLdapWebserviceCredentials.isHostnameVerification()) {
                 LOGGER.debug("HostNameVerification=true");
             } else {
                 LOGGER.debug("HostNameVerification=false");
