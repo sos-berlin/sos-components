@@ -2,6 +2,7 @@ package com.sos.jitl.jobs.checkhistory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,36 +47,51 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
         Map<String, Object> resultMap = new HashMap<String, Object>();
         resultMap.put("js7CheckHistoryResult", false);
         resultMap.put("js7CheckHistoryControllerId", "");
-        resultMap.put("js7CheckHistoryWorkflow", "");
-        resultMap.put("js7CheckHistoryJob", "");
-        resultMap.put("js7CheckHistoryStarted", "");
-        resultMap.put("js7CheckHistoryCompleted", "");
-        resultMap.put("js7CheckHistoryStarted", "");
-        resultMap.put("js7CheckHistoryCompleted", "");
+        resultMap.put("js7CheckHistoryAnswerWorkflow", "");
+        resultMap.put("js7CheckHistoryAnswerStarted", "");
+        resultMap.put("js7CheckHistoryAnswerCompleted", "");
 
         String query = args.getQuery();
+        resultMap.put("js7CheckHistoryQuery", query);
+        resultMap.put("js7CheckHistoryWorkflow", args.getWorkflow());
+        resultMap.put("js7CheckHistoryJob", args.getJob());
         Globals.debug(logger, String.format("check history: %s will be executed.", query));
 
         HistoryInfo historyInfo = new HistoryInfo(logger, args);
         HistoryItem historyItem = historyInfo.queryHistory();
 
+        String name = args.getWorkflow();
+        if (name == null) {
+            name = args.getJob();
+        } else {
+            if (args.getJob() != null) {
+                name = name + "<" + args.getJob() + ">";
+            }
+        }
+
         boolean result = historyItem.getResult();
         if (result) {
-            Globals.debug(logger, args.getQuery() + "(" + historyItem.getName() + ") ==> true");
+            String s = args.getQuery() + "(" + name + ") ==> true";
+            Globals.debug(logger, s);
+            resultMap.put("js7CheckHistoryResultString", s);
             checkHistoryJobReturn.setExitCode(0);
             resultMap.put("js7CheckHistoryResult", true);
             resultMap.put("js7CheckHistoryControllerId", historyItem.getControllerId());
-            resultMap.put("js7CheckHistoryWorkflow", historyItem.getWorkflow());
-            resultMap.put("js7CheckHistoryJob", historyItem.getJob());
-            resultMap.put("js7CheckHistoryStarted", historyItem.getStartTime());
-            resultMap.put("js7CheckHistoryCompleted", historyItem.getEndTime());
+            resultMap.put("js7CheckHistoryAnswerStarted", historyItem.getStartTime());
+            resultMap.put("js7CheckHistoryAnswerCompleted", historyItem.getEndTime());
+            resultMap.put("js7CheckHistoryAnswerWorkflow", historyItem.getWorkflow());
 
         } else {
-            Globals.debug(logger, args.getQuery() + "(" + historyItem.getName() + ") ==> false");
+            String s = args.getQuery() + "(" + name + ") ==> false";
+            Globals.debug(logger, s);
+            resultMap.put("js7CheckHistoryResultString", s);
             checkHistoryJobReturn.setExitCode(1);
             resultMap.put("js7CheckHistoryResult", false);
         }
 
+        for (Entry<String, Object> entry : resultMap.entrySet()) {
+            logger.info(entry.getKey() + "=" + entry.getValue());
+        }
         checkHistoryJobReturn.setResultMap(resultMap);
 
         return checkHistoryJobReturn;
@@ -84,10 +100,10 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
     public static void main(String[] args) {
         CheckHistoryJobArguments arguments = new CheckHistoryJobArguments();
         arguments.setQuery("isStarted(startedFrom=-1d,startedTo=-1d)");
-        
+
         arguments.setQuery("isCompletedSuccessful(startedFrom=-1d,startedTo=-1d)");
-     //   arguments.setQuery("isCompleted(startedFrom=-100d, count>5)");
-          
+        // arguments.setQuery("isCompleted(startedFrom=-100d, count>5)");
+
         arguments.setQuery("lastCompletedSuccessful");
         arguments.setAccount("root");
         arguments.setPassword("root");
