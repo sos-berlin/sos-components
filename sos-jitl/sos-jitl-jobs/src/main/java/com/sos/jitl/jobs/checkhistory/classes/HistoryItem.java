@@ -12,22 +12,9 @@ import com.sos.joc.model.order.OrderHistoryItem;
 
 public class HistoryItem {
 
-    public int getCount() {
-        return count;
-    }
-
-    public void setResult(Boolean result) {
-        this.result = result;
-    }
-
-    public String getName() {
-        return name;
-    }
-
     private String controllerId;
     private String job;
     private String workflow;
-    private String name;
     private String orderId;
     private String startTime;
     private String endTime;
@@ -35,20 +22,20 @@ public class HistoryItem {
     private HistoryState state;
     private Long taskId;
     private Integer exitCode;
-    private Boolean historyItemFound;
-    private Boolean result;
+    private boolean historyItemFound = false;
+    private boolean result = false;
     private int count = 0;
     private OrderHistory orderHistory;
     private TaskHistory taskHistory;
 
     private String getIso8601String(Date d) {
         if (d != null) {
-        SimpleDateFormat sdf;
-        sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return sdf.format(d);
-        }else {
-            return "1900-01-01T00:00:00.000" ;
+            SimpleDateFormat sdf;
+            sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return sdf.format(d);
+        } else {
+            return "1900-01-01T00:00:00.000";
         }
     }
 
@@ -92,7 +79,7 @@ public class HistoryItem {
         }
     }
 
-    public Boolean getHistoryItemFound() {
+    public boolean getHistoryItemFound() {
         return historyItemFound;
     }
 
@@ -108,18 +95,8 @@ public class HistoryItem {
         return job;
     }
 
-    public void setJob(String job) {
-        this.name = job;
-        this.job = job;
-    }
-
     public String getWorkflow() {
         return workflow;
-    }
-
-    public void setWorkflow(String workflow) {
-        this.name = workflow;
-        this.workflow = workflow;
     }
 
     public String getOrderId() {
@@ -146,11 +123,20 @@ public class HistoryItem {
         return taskId;
     }
 
-    public Boolean getResult() {
+    public boolean getResult() {
         return result;
     }
 
     public void setExitCode(Integer exitCode) {
         this.exitCode = exitCode;
     }
+
+    public int getCount() {
+        return count;
+    }
+
+    public void setResult(boolean result) {
+        this.result = result;
+    }
+
 }
