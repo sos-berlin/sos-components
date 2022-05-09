@@ -60,7 +60,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                 rootCaAvailable = true;
                 rootCert = KeyUtil.getX509Certificate(rootKeyPair.getCertificate());
             }
-            String accountName = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());;
+            String accountName = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                 if (validUntil != null) {
                     Long secondsToExpire = validUntil.getTime() / 1000;
