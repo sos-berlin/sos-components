@@ -28,7 +28,7 @@ public class HistoryWebserviceExecuterTest {
         jobSchedulerCredentialStoreJOCParameters.setUser("root");
         jobSchedulerCredentialStoreJOCParameters.setPassword("root");
         jobSchedulerCredentialStoreJOCParameters.setJocUrl("http://localhost:4426");
-        AccessTokenProvider accessTokenProvider = new AccessTokenProvider(jobSchedulerCredentialStoreJOCParameters);
+        AccessTokenProvider accessTokenProvider = new AccessTokenProvider(null,jobSchedulerCredentialStoreJOCParameters);
         WebserviceCredentials webserviceCredentials = accessTokenProvider.getAccessToken();
 
         HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(null, webserviceCredentials);
