@@ -16,7 +16,7 @@ public class AccesTokenProviderTest {
 		jobSchedulerCredentialStoreJOCParameters.setUser("root");
 		jobSchedulerCredentialStoreJOCParameters.setPassword("root");
 		jobSchedulerCredentialStoreJOCParameters.setJocUrl("http://localhost:4426");
-		AccessTokenProvider accessTokenProvider = new AccessTokenProvider(jobSchedulerCredentialStoreJOCParameters);
+		AccessTokenProvider accessTokenProvider = new AccessTokenProvider(null,jobSchedulerCredentialStoreJOCParameters);
 		WebserviceCredentials webserviceCredentials = accessTokenProvider.getAccessToken();
 		if (webserviceCredentials != null) {
 			System.out.println(webserviceCredentials.getAccessToken());

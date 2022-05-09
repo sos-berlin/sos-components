@@ -4,9 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.jitl.jobs.checkhistory.classes.CheckHistoryJobReturn;
 import com.sos.jitl.jobs.checkhistory.classes.Globals;
@@ -19,7 +16,6 @@ import js7.data_for_java.order.JOutcome;
 
 public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArguments> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CheckHistoryJob.class);
 
     public CheckHistoryJob(JobContext jobContext) {
         super(jobContext);
@@ -89,9 +85,7 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
             resultMap.put("js7CheckHistoryResult", false);
         }
 
-        for (Entry<String, Object> entry : resultMap.entrySet()) {
-            logger.info(entry.getKey() + "=" + entry.getValue());
-        }
+ 
         checkHistoryJobReturn.setResultMap(resultMap);
 
         return checkHistoryJobReturn;

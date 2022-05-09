@@ -8,31 +8,28 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.jitl.jobs.common.JobLogger;
 
 public class ApiAccessToken {
 
     private static final String NOT_VALID = "not-valid";
     private SOSRestApiClient jocRestApiClient;
     private String jocUrl;
-    private static final Logger LOGGER = LoggerFactory.getLogger(ApiAccessToken.class);
+    private JobLogger logger;
 
-    public ApiAccessToken(String jocUrl) {
+    public ApiAccessToken(JobLogger logger, String jocUrl) {
         super();
         this.jocUrl = jocUrl;
     }
 
-   
     private void createRestApiClient(WebserviceCredentials webserviceCredentials) {
         if (jocRestApiClient == null) {
             jocRestApiClient = new SOSRestApiClient();
 
             jocRestApiClient.addHeader("Content-Type", "application/json");
-            jocRestApiClient.addHeader("Accept", "application/json");          
+            jocRestApiClient.addHeader("Accept", "application/json");
         }
     }
 
@@ -56,7 +53,7 @@ public class ApiAccessToken {
 
         boolean valid = false;
         if (xAccessToken == null || xAccessToken.isEmpty() || jocUrl == null || jocUrl.isEmpty()) {
-            LOGGER.debug("Empty Access-Token or empty jocUrl");
+            Globals.debug(logger, "Empty Access-Token or empty jocUrl");
             return false;
         }
 
@@ -64,17 +61,17 @@ public class ApiAccessToken {
         jocRestApiClient.addHeader("X-Access-Token", xAccessToken);
 
         String s = jocUrl + "/authentication/userbytoken";
-        LOGGER.debug("uri:" + s);
+        Globals.debug(logger, "uri:" + s);
         String answer = jocRestApiClient.postRestService(new URI(s), "");
-        LOGGER.debug("answer:" + answer);
+        Globals.debug(logger, "answer:" + answer);
 
         JsonObject userByTokenAnswer = jsonFromString(answer);
         valid = isValid(userByTokenAnswer);
         if (valid) {
             s = jocUrl + "/controller/ids";
-            LOGGER.debug("uri:" + s);
+            Globals.debug(logger, "uri:" + s);
             answer = jocRestApiClient.postRestService(new URI(s), "");
-            LOGGER.debug("answer:" + answer);
+            Globals.debug(logger, "answer:" + answer);
 
             JsonObject schedulerIds = jsonFromString(answer);
             valid = (schedulerIds.get("error") == null);
@@ -88,15 +85,15 @@ public class ApiAccessToken {
         jocRestApiClient.addAuthorizationHeader(webserviceCredentials.getUserDecodedAccount());
 
         String s = jocUrl + "/authentication/login";
-        LOGGER.debug("uri:" + s);
+        Globals.debug(logger, "uri:" + s);
         String answer = jocRestApiClient.postRestService(new URI(s), "");
 
-        LOGGER.debug("answer:" + answer);
+        Globals.debug(logger, "answer:" + answer);
         JsonObject login = jsonFromString(answer);
         if (login.get("accessToken") != null) {
             return login.getString("accessToken");
         } else {
-            LOGGER.error(login.toString());
+            logger.error(login.toString());
             return "";
         }
     }
@@ -105,7 +102,6 @@ public class ApiAccessToken {
         this.jocUrl = jocUrl;
     }
 
-    
     public SOSRestApiClient getJocRestApiClient() {
         return jocRestApiClient;
     }

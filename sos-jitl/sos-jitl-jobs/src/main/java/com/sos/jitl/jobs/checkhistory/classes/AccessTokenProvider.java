@@ -2,39 +2,25 @@ package com.sos.jitl.jobs.checkhistory.classes;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+ 
 import com.sos.commons.exception.SOSException;
+import com.sos.jitl.jobs.common.JobLogger;
 
 public class AccessTokenProvider {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(AccessTokenProvider.class);
-	private static final String X_ACCESS_TOKEN = "X-Access-Token";
+    private JobLogger logger;
+    private static final String X_ACCESS_TOKEN = "X-Access-Token";
 	private static final int MAX_WAIT_TIME_FOR_ACCESS_TOKEN = 30;
-	private Map<String, String> session = new HashMap<String, String>();
 	private WebserviceCredentials webserviceCredentials;
 	private JOCCredentialStoreParameters credentialStoreParameters;
 
-	public AccessTokenProvider(JOCCredentialStoreParameters options) {
+	public AccessTokenProvider(JobLogger logger,JOCCredentialStoreParameters options) {
 		super();
+		this.logger = logger;
 		this.credentialStoreParameters = options;
 	}
 
-	private String getSessionVariable(String name) {
-		if (session.get(name) == null) {
-			return "";
-		}
-		return session.get(name);
-	}
-
-	private String setSessionVariable(String name, String value) {
-		return session.put(name, value);
-	}
 
 	public WebserviceCredentials getAccessToken()
 			throws URISyntaxException, InterruptedException, UnsupportedEncodingException, SOSException {
@@ -43,29 +29,31 @@ public class AccessTokenProvider {
 			webserviceCredentials = this.createWebServiceCredentials();
 		}
 
-		LOGGER.debug("User:" + webserviceCredentials.getUser());
+		Globals.debug(logger,"User:" + webserviceCredentials.getUser());
 		String xAccessToken;
 		if (webserviceCredentials.getUser() != null && !webserviceCredentials.getUser().isEmpty()) {
-			xAccessToken = getSessionVariable(webserviceCredentials.getUser() + "_" + X_ACCESS_TOKEN);
+			xAccessToken = Globals.getSessionVariable(webserviceCredentials.getUser() + "_" + X_ACCESS_TOKEN);
 		} else {
 			xAccessToken = "";
 		}
 
-		ApiAccessToken apiAccessToken = new ApiAccessToken(webserviceCredentials.getJocUrl());
+		ApiAccessToken apiAccessToken = new ApiAccessToken(logger,webserviceCredentials.getJocUrl());
 
-		LOGGER.debug("Check whether accessToken " + xAccessToken + " is valid");
+		Globals.debug(logger,"Check whether accessToken " + xAccessToken + " is valid");
 		if (xAccessToken.isEmpty() || !apiAccessToken.isValidAccessToken(xAccessToken, webserviceCredentials)) {
-			LOGGER.debug("---> not valid. Execute login");
+		    Globals.debug(logger,"---> not valid. Execute login");
 			xAccessToken = executeLogin();
 			apiAccessToken.setJocUrl(webserviceCredentials.getJocUrl());
 
 			if (xAccessToken != null && !xAccessToken.isEmpty()) {
-				LOGGER.debug("... set accessToken:" + xAccessToken);
-				setSessionVariable(webserviceCredentials.getUser() + "_" + X_ACCESS_TOKEN, xAccessToken);
+			    Globals.debug(logger,"... set accessToken:" + xAccessToken);
+				Globals.setSessionVariable(webserviceCredentials.getUser() + "_" + X_ACCESS_TOKEN, xAccessToken);
 			} else {
-				LOGGER.debug("AccessToken " + xAccessToken + " is not valid. Trying to renew it...");
+			    Globals.debug(logger,"AccessToken " + xAccessToken + " is not valid. Trying to renew it...");
 				java.lang.Thread.sleep(1000);
 			}
+		}else {
+	          Globals.debug(logger,"---> valid.");
 		}
 
 		if (!apiAccessToken.isValidAccessToken(xAccessToken, webserviceCredentials)) {
@@ -97,9 +85,9 @@ public class AccessTokenProvider {
 				throw new SOSException(e);
 			}
 
-			LOGGER.debug("JOCUrl: " + jocUrl);
-			LOGGER.debug("User: " + jocApiUser);
-			LOGGER.debug("Password: " + "********");
+			Globals.debug(logger,"JOCUrl: " + jocUrl);
+			Globals.debug(logger,"User: " + jocApiUser);
+			Globals.debug(logger,"Password: " + "********");
 
 		} else {
 			if (credentialStoreParameters != null) {
@@ -127,15 +115,15 @@ public class AccessTokenProvider {
 
 		String jocUrl = webserviceCredentials.getJocUrl();
 
-		LOGGER.debug("jocUrl: " + jocUrl);
+		Globals.debug(logger,"jocUrl: " + jocUrl);
 
-		ApiAccessToken apiAccessToken = new ApiAccessToken(jocUrl);
+		ApiAccessToken apiAccessToken = new ApiAccessToken(logger,jocUrl);
 		boolean sessionIsValid = false;
 		String xAccessToken = "";
 
 		int cnt = 0;
 		while (cnt < MAX_WAIT_TIME_FOR_ACCESS_TOKEN && !sessionIsValid) {
-			LOGGER.debug("check session");
+			Globals.debug(logger,"check session");
 
 			try {
 				sessionIsValid = apiAccessToken.isValidAccessToken(xAccessToken, webserviceCredentials);
@@ -143,11 +131,11 @@ public class AccessTokenProvider {
 				sessionIsValid = false;
 			}
 			if (!sessionIsValid || xAccessToken.isEmpty()) {
-				LOGGER.debug("... execute login");
+				Globals.debug(logger,"... execute login");
 				try {
 					xAccessToken = apiAccessToken.login(webserviceCredentials);
 				} catch (Exception e) {
-					LOGGER.warn(
+				    Globals.warn(logger,
 							"... login failed with " + webserviceCredentials.getUserEncodedAccount() + " at " + jocUrl);
 					try {
 						TimeUnit.SECONDS.sleep(1);
@@ -158,7 +146,7 @@ public class AccessTokenProvider {
 			}
 		}
 		if (cnt == MAX_WAIT_TIME_FOR_ACCESS_TOKEN) {
-			LOGGER.warn("Could not get the access token from JOC Server:" + jocUrl);
+		    Globals.warn(logger,"Could not get the access token from JOC Server:" + jocUrl);
 		}
 		return xAccessToken;
 	}
