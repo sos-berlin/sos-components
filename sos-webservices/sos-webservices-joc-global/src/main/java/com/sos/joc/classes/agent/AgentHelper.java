@@ -32,7 +32,7 @@ public class AgentHelper {
         if (testMode) {
             return true;
         }
-        return JocClusterService.getInstance().getCluster() != null && JocClusterService.getInstance().getCluster().getConfig().getClusterMode();
+        return JocClusterService.getInstance().getCluster() != null && JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getUse();
     }
 
     public static void throwJocMissingLicenseException() throws JocMissingLicenseException {

@@ -103,7 +103,7 @@ public class JocClusterService {
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         if (cluster == null) {
             JocClusterConfiguration clusterConfig = new JocClusterConfiguration(Globals.sosCockpitProperties.getProperties());
-            config.setClusterMode(clusterConfig.getClusterMode());
+            config.setClusterMode(clusterConfig.getClusterModeResult().getUse());
             threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(clusterConfig.getThreadGroup(), THREAD_NAME_PREFIX));
             Runnable task = new Runnable() {
 
