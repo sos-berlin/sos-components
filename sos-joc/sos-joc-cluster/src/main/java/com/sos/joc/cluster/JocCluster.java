@@ -404,7 +404,7 @@ public class JocCluster {
             ConfigurationGlobals configurations) throws Exception {
         if (item == null) {
             boolean fs = isFirstRun();
-            if (!config.getClusterMode() && !fs) {
+            if (!config.getClusterModeResult().getUse() && !fs) {
                 inactiveMemberTryStopServices(configurations);
                 return null;
             }
@@ -426,7 +426,7 @@ public class JocCluster {
                 item = trySwitchActiveMemberOnProcess(mode, dbLayer, item, configurations);
             } else {
                 if (isHeartBeatExceeded(item.getHeartBeat())) {
-                    if (!config.getClusterMode()) {
+                    if (!config.getClusterModeResult().getUse()) {
                         if (!isFirstRun()) {// extra check when active JOC was killed/not removed from database
                             return null;
                         }
@@ -435,7 +435,7 @@ public class JocCluster {
 
                     boolean update = true;
                     // to avoid start of the current instance if a switchMember defined
-                    if (config.getClusterMode() && item.getSwitchMemberId() != null && !item.getSwitchMemberId().equals(currentMemberId)) {
+                    if (config.getClusterModeResult().getUse() && item.getSwitchMemberId() != null && !item.getSwitchMemberId().equals(currentMemberId)) {
                         DBItemJocInstance switchInstance = getInstance(item.getSwitchMemberId());
                         if (switchInstance != null) {
                             if (!isHeartBeatExceeded(switchInstance.getHeartBeat())) {
@@ -455,7 +455,7 @@ public class JocCluster {
                         dbLayer.getSession().update(activeMemberHandleConfigurationGlobalsChanged(item));
                         dbLayer.commit();
 
-                        mode = config.getClusterMode() ? StartupMode.automatic_switchover : StartupMode.automatic;
+                        mode = config.getClusterModeResult().getUse() ? StartupMode.automatic_switchover : StartupMode.automatic;
                         item.setStartupMode(mode.name());
                         LOGGER.info(String.format("[%s][active changed]%s", mode, SOSHibernate.toString(item)));
                     }
@@ -481,7 +481,7 @@ public class JocCluster {
 
     // GUI - separate thread
     public JocClusterAnswer switchMember(StartupMode mode, ConfigurationGlobals configurations, String newMemberId) {
-        if (!config.getClusterMode()) {
+        if (!config.getClusterModeResult().getUse()) {
             return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_LICENSE);
         }
         LOGGER.info(String.format("[%s][switch][start][new]%s", mode, newMemberId));
@@ -643,7 +643,7 @@ public class JocCluster {
         skipPerform = false;
         item.setMemberId(currentMemberId);
 
-        if (item.getSwitchMemberId() != null) {// && config.getClusterMode()
+        if (item.getSwitchMemberId() != null) {// && config.getClusterModeResult().getUse()
             mode = StartupMode.manual_switchover;
             item.setStartupMode(mode.name());
 
@@ -695,7 +695,7 @@ public class JocCluster {
                 }
             }
         } else {
-            if (!config.getClusterMode()) {
+            if (!config.getClusterModeResult().getUse()) {
                 if (!handler.isActive() && !isFirstRun()) { // changed in the database directly
                     return null;
                 }

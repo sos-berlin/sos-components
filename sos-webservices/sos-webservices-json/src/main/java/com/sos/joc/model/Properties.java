@@ -36,7 +36,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "showViews",
     "welcomeDoNotRemindMe",
     "welcomeGotIt",
-    "clusterLicense"
+    "clusterLicense",
+    "licenseValidFrom",
+    "licenseValidUntil"
 })
 public class Properties {
 
@@ -133,6 +135,24 @@ public class Properties {
     private Boolean welcomeGotIt = false;
     @JsonProperty("clusterLicense")
     private Boolean clusterLicense = false;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("licenseValidFrom")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date licenseValidFrom;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("licenseValidUntil")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date licenseValidUntil;
 
     /**
      * timestamp
@@ -408,14 +428,58 @@ public class Properties {
         this.clusterLicense = clusterLicense;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("licenseValidFrom")
+    public Date getLicenseValidFrom() {
+        return licenseValidFrom;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("licenseValidFrom")
+    public void setLicenseValidFrom(Date licenseValidFrom) {
+        this.licenseValidFrom = licenseValidFrom;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("licenseValidUntil")
+    public Date getLicenseValidUntil() {
+        return licenseValidUntil;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("licenseValidUntil")
+    public void setLicenseValidUntil(Date licenseValidUntil) {
+        this.licenseValidUntil = licenseValidUntil;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("copy", copy).append("restore", restore).append("_import", _import).append("showViews", showViews).append("welcomeDoNotRemindMe", welcomeDoNotRemindMe).append("welcomeGotIt", welcomeGotIt).append("clusterLicense", clusterLicense).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("copy", copy).append("restore", restore).append("_import", _import).append("showViews", showViews).append("welcomeDoNotRemindMe", welcomeDoNotRemindMe).append("welcomeGotIt", welcomeGotIt).append("clusterLicense", clusterLicense).append("licenseValidFrom", licenseValidFrom).append("licenseValidUntil", licenseValidUntil).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(comments).append(restore).append(clusterLicense).append(welcomeDoNotRemindMe).append(title).append(defaultProfileAccount).append(securityLevel).append(forceCommentsForAuditLog).append(apiVersion).append(_import).append(welcomeGotIt).append(inventoryVersion).append(showViews).append(copy).append(deliveryDate).toHashCode();
+        return new HashCodeBuilder().append(comments).append(restore).append(clusterLicense).append(welcomeDoNotRemindMe).append(title).append(licenseValidFrom).append(defaultProfileAccount).append(securityLevel).append(forceCommentsForAuditLog).append(apiVersion).append(_import).append(welcomeGotIt).append(inventoryVersion).append(showViews).append(licenseValidUntil).append(copy).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -427,7 +491,7 @@ public class Properties {
             return false;
         }
         Properties rhs = ((Properties) other);
-        return new EqualsBuilder().append(comments, rhs.comments).append(restore, rhs.restore).append(clusterLicense, rhs.clusterLicense).append(welcomeDoNotRemindMe, rhs.welcomeDoNotRemindMe).append(title, rhs.title).append(defaultProfileAccount, rhs.defaultProfileAccount).append(securityLevel, rhs.securityLevel).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(_import, rhs._import).append(welcomeGotIt, rhs.welcomeGotIt).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(copy, rhs.copy).append(deliveryDate, rhs.deliveryDate).isEquals();
+        return new EqualsBuilder().append(comments, rhs.comments).append(restore, rhs.restore).append(clusterLicense, rhs.clusterLicense).append(welcomeDoNotRemindMe, rhs.welcomeDoNotRemindMe).append(title, rhs.title).append(licenseValidFrom, rhs.licenseValidFrom).append(defaultProfileAccount, rhs.defaultProfileAccount).append(securityLevel, rhs.securityLevel).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(_import, rhs._import).append(welcomeGotIt, rhs.welcomeGotIt).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(licenseValidUntil, rhs.licenseValidUntil).append(copy, rhs.copy).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }

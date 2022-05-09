@@ -54,8 +54,11 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             entity.setWelcomeDoNotRemindMe(ClusterSettings.getWelcomeDoNotRemindMe(userSettings));
             entity.setWelcomeGotIt(ClusterSettings.getWelcomeGotIt(userSettings));
             entity.setClusterLicense(JocClusterService.getInstance().getCluster() != null && JocClusterService.getInstance().getCluster().getConfig()
-                    .getClusterMode());
-
+                    .getClusterModeResult().getUse());
+            if (JocClusterService.getInstance().getCluster() != null) {
+                entity.setLicenseValidFrom(JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getValidFrom());
+                entity.setLicenseValidUntil(JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getValidUntil());
+            }
             entity.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(entity);

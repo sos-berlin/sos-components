@@ -1,10 +1,12 @@
 package com.sos.joc.cluster.configuration;
 
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +36,8 @@ public class JocClusterConfiguration {
 
     private List<Class<?>> services;
     private final ThreadGroup threadGroup;
-    private final boolean clusterMode;
+
+    private final ClusterModeResult clusterModeResult;
 
     private int heartBeatExceededInterval = 60;// seconds
 
@@ -56,7 +59,7 @@ public class JocClusterConfiguration {
             setConfiguration(properties);
         }
         threadGroup = new ThreadGroup(JocClusterConfiguration.IDENTIFIER);
-        clusterMode = clusterMode();
+        clusterModeResult = clusterMode();
         register();
     }
 
@@ -140,17 +143,17 @@ public class JocClusterConfiguration {
         return threadGroup;
     }
 
-    public boolean getClusterMode() {
-        return clusterMode;
+    public ClusterModeResult getClusterModeResult() {
+        return clusterModeResult;
     }
 
-    private boolean clusterMode() {
+    private ClusterModeResult clusterMode() {
         final ClassLoader webAppCL = this.getClass().getClassLoader();
         URL lJar = null;
         try {
             lJar = webAppCL.loadClass(CLASS_NAME_CLUSTER_MODE).getProtectionDomain().getCodeSource().getLocation();
         } catch (Throwable e1) {
-            return false;
+            return null;
         }
 
         URLClassLoader currentCL = null;
@@ -167,12 +170,27 @@ public class JocClusterConfiguration {
             currentCL = new URLClassLoader(jars.stream().toArray(URL[]::new));
 
             Object o = currentCL.loadClass(CLASS_NAME_CLUSTER_MODE).newInstance();
-            boolean result = (boolean) o.getClass().getDeclaredMethods()[0].invoke(o);
+            ClusterModeResult cmResult = new ClusterModeResult();
             try {
                 TimeUnit.SECONDS.sleep(1);// waiting for lJar logging ...
             } catch (Throwable e) {
             }
-            return result;
+             
+            for(Method m : o.getClass().getDeclaredMethods()) {
+                switch(m.getName()) {
+                case "getValidFrom":
+                    cmResult.setValidFrom((Date)m.invoke(o));
+                    break;
+                case "getValidUntil":
+                    cmResult.setValidUntil((Date)m.invoke(o));
+                    break;
+                default:
+                    cmResult.setUse((boolean) m.invoke(o));
+                    break;
+                }
+            }
+            // provide from/until for joc properties api
+            return cmResult;
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         } finally {
@@ -183,6 +201,6 @@ public class JocClusterConfiguration {
                 }
             }
         }
-        return false;
+        return null;
     }
 }
