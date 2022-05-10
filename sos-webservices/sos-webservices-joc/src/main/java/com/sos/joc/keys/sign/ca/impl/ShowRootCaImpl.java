@@ -24,7 +24,6 @@ import com.sos.joc.model.sign.JocKeyType;
 public class ShowRootCaImpl extends JOCResourceImpl implements IShowKey {
 
     private static final String API_CALL = "./profile/key/ca";
-//    private static final Logger LOGGER = LoggerFactory.getLogger(ShowRootCaImpl.class);
 
     @Override
     public JOCDefaultResponse postShowKey(String xAccessToken) throws Exception {
