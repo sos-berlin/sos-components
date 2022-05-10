@@ -9,10 +9,12 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.sign.resource.IShowKey;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.sign.JocKeyAlgorithm;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
@@ -22,7 +24,6 @@ import com.sos.joc.model.sign.JocKeyType;
 public class ShowRootCaImpl extends JOCResourceImpl implements IShowKey {
 
     private static final String API_CALL = "./profile/key/ca";
-//    private static final Logger LOGGER = LoggerFactory.getLogger(ShowRootCaImpl.class);
 
     @Override
     public JOCDefaultResponse postShowKey(String xAccessToken) throws Exception {
@@ -36,7 +37,13 @@ public class ShowRootCaImpl extends JOCResourceImpl implements IShowKey {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            DBItemInventoryCertificate dbCert = dbLayerKeys.getSigningRootCaCertificate();
+            String accountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+            if (JocSecurityLevel.MEDIUM.equals(Globals.getJocSecurityLevel())) {
+                accountName =  jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+            } else {
+                accountName = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
+            }
+            DBItemInventoryCertificate dbCert = dbLayerKeys.getSigningRootCaCertificate(accountName);
             JocKeyPair jocKeyPair = new JocKeyPair();
             if(dbCert != null) {
                 X509Certificate certificate = KeyUtil.getX509Certificate(dbCert.getPem());
