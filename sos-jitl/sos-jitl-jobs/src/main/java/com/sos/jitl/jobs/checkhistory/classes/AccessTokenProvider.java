@@ -36,7 +36,6 @@ public class AccessTokenProvider {
 		} else {
 			xAccessToken = "";
 		}
-
 		ApiAccessToken apiAccessToken = new ApiAccessToken(logger,webserviceCredentials.getJocUrl());
 
 		Globals.debug(logger,"Check whether accessToken " + xAccessToken + " is valid");
