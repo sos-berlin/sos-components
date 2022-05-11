@@ -20,15 +20,16 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
+import com.sos.commons.util.loganonymizer.classes.DefaultRulesTable;
 import com.sos.commons.util.loganonymizer.classes.Rule;
 import com.sos.commons.util.loganonymizer.classes.SOSRules;
 
-public class SOSLogAnonymizerExecuter {
+public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLogAnonymizerExecuter.class);
 
     private List<String> listOfLogfileNames = new ArrayList<String>();
-    private List<Rule> listOfDefaultRules = new ArrayList<Rule>();
+    private List<Rule> listOfDefaultRules;
     private List<Rule> listOfRules = new ArrayList<Rule>();
 
     private List<Rule> listOfDefaultAgentRules = new ArrayList<Rule>();
@@ -45,6 +46,9 @@ public class SOSLogAnonymizerExecuter {
     }
 
     private void addRule(String item, String search, String replace) {
+        if (listOfDefaultRules == null) {
+            listOfDefaultRules = new ArrayList<Rule>();
+        }
         Rule rule = new Rule();
         rule.setItem(item);
         rule.setReplace(replace);
@@ -53,17 +57,7 @@ public class SOSLogAnonymizerExecuter {
     }
 
     private void initDefaultRules() {
-        listOfDefaultRules.clear();
-        addRule("ip-address",
-                "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])",
-                "<ip-address>");
-        addRule("User", "User:.(.*)", "<user-id>");
-        addRule("agent_id", "agent=(.*)", "agent=<agent_id>");
-        addRule("host1", "Connect(.*.:.......)", "Connect(<host:port>");
-        addRule("user_name", "user_name.*=.*$", "user_name            = <user>");
-        addRule("user_home", "user_home.*=.*$", "user_home            = <user_home>");
         listOfRules.addAll(listOfDefaultRules);
-
     }
 
     public void addLogfileName(String logfileName) {
@@ -194,13 +188,13 @@ public class SOSLogAnonymizerExecuter {
 
     public void exportRules(String exportFile) throws IOException {
         try {
-           
+
             final YAMLFactory yamlFactory = new YAMLFactory();
             yamlFactory.enable(Feature.MINIMIZE_QUOTES);
             yamlFactory.disable(Feature.WRITE_DOC_START_MARKER);
             yamlFactory.disable(Feature.SPLIT_LINES);
-            ObjectMapper mapper = new ObjectMapper(yamlFactory); 
-            
+            ObjectMapper mapper = new ObjectMapper(yamlFactory);
+
             SOSRules defaultRules = new SOSRules();
             defaultRules.getRules().addAll(getListOfDefaultRules());
 
@@ -216,6 +210,11 @@ public class SOSLogAnonymizerExecuter {
 
     public List<Rule> getListOfRules() {
         return listOfRules;
+    }
+
+    @Override
+    protected void a(String item, String search, String replace) {
+        addRule(item, search, replace);
     }
 
 }
