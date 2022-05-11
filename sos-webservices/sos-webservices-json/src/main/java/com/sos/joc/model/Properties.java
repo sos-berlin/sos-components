@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.joc.LicenseType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -38,7 +39,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "welcomeGotIt",
     "clusterLicense",
     "licenseValidFrom",
-    "licenseValidUntil"
+    "licenseValidUntil",
+    "licenseType"
 })
 public class Properties {
 
@@ -153,6 +155,14 @@ public class Properties {
     @JsonProperty("licenseValidUntil")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date licenseValidUntil;
+    /**
+     * sos js7 license types
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("licenseType")
+    private LicenseType licenseType;
 
     /**
      * timestamp
@@ -472,14 +482,36 @@ public class Properties {
         this.licenseValidUntil = licenseValidUntil;
     }
 
+    /**
+     * sos js7 license types
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("licenseType")
+    public LicenseType getLicenseType() {
+        return licenseType;
+    }
+
+    /**
+     * sos js7 license types
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("licenseType")
+    public void setLicenseType(LicenseType licenseType) {
+        this.licenseType = licenseType;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("copy", copy).append("restore", restore).append("_import", _import).append("showViews", showViews).append("welcomeDoNotRemindMe", welcomeDoNotRemindMe).append("welcomeGotIt", welcomeGotIt).append("clusterLicense", clusterLicense).append("licenseValidFrom", licenseValidFrom).append("licenseValidUntil", licenseValidUntil).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("copy", copy).append("restore", restore).append("_import", _import).append("showViews", showViews).append("welcomeDoNotRemindMe", welcomeDoNotRemindMe).append("welcomeGotIt", welcomeGotIt).append("clusterLicense", clusterLicense).append("licenseValidFrom", licenseValidFrom).append("licenseValidUntil", licenseValidUntil).append("licenseType", licenseType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(comments).append(restore).append(clusterLicense).append(welcomeDoNotRemindMe).append(title).append(licenseValidFrom).append(defaultProfileAccount).append(securityLevel).append(forceCommentsForAuditLog).append(apiVersion).append(_import).append(welcomeGotIt).append(inventoryVersion).append(showViews).append(licenseValidUntil).append(copy).append(deliveryDate).toHashCode();
+        return new HashCodeBuilder().append(comments).append(restore).append(clusterLicense).append(welcomeDoNotRemindMe).append(title).append(licenseValidFrom).append(defaultProfileAccount).append(securityLevel).append(licenseType).append(forceCommentsForAuditLog).append(apiVersion).append(_import).append(welcomeGotIt).append(inventoryVersion).append(showViews).append(licenseValidUntil).append(copy).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -491,7 +523,7 @@ public class Properties {
             return false;
         }
         Properties rhs = ((Properties) other);
-        return new EqualsBuilder().append(comments, rhs.comments).append(restore, rhs.restore).append(clusterLicense, rhs.clusterLicense).append(welcomeDoNotRemindMe, rhs.welcomeDoNotRemindMe).append(title, rhs.title).append(licenseValidFrom, rhs.licenseValidFrom).append(defaultProfileAccount, rhs.defaultProfileAccount).append(securityLevel, rhs.securityLevel).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(_import, rhs._import).append(welcomeGotIt, rhs.welcomeGotIt).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(licenseValidUntil, rhs.licenseValidUntil).append(copy, rhs.copy).append(deliveryDate, rhs.deliveryDate).isEquals();
+        return new EqualsBuilder().append(comments, rhs.comments).append(restore, rhs.restore).append(clusterLicense, rhs.clusterLicense).append(welcomeDoNotRemindMe, rhs.welcomeDoNotRemindMe).append(title, rhs.title).append(licenseValidFrom, rhs.licenseValidFrom).append(defaultProfileAccount, rhs.defaultProfileAccount).append(securityLevel, rhs.securityLevel).append(licenseType, rhs.licenseType).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(_import, rhs._import).append(welcomeGotIt, rhs.welcomeGotIt).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(licenseValidUntil, rhs.licenseValidUntil).append(copy, rhs.copy).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }
