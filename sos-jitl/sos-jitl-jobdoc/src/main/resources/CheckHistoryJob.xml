@@ -60,9 +60,9 @@
                     <p>
                         <ul>
                             <li>isStarted: specifies that the job started today.</li>
-                            <li>isCompleted: specifies that the job started today and completed today. It is not considered if the job terminated successfully or failed.</li>
-                            <li>isCompletedSuccessful: specifies that the job started today and completed successfully today.</li>
-                            <li>isCompletedFailed( startedFrom=0d ): specifies that the job started today and failed today.</li>
+                            <li>isCompleted: specifies that the job completed today. It is not considered if the job terminated successfully or failed.</li>
+                            <li>isCompletedSuccessful: specifies that the job completed successfully today.</li>
+                            <li>isCompletedFailed( startedFrom=0d ): specifies that the job failed today.</li>
                             <li>lastCompletedSuccessful: specifies that the last run of the job completed succesfully.</li>
                             <li>lastCompletedFailed: specifies that the last run of the job failed.</li>
                             <li>lastCompletedSuccessful( startedFrom=-1, startedTo=-1d ): specifies that the last run of the job started and completed successfully in the given period .</li>
