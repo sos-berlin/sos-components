@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import com.sos.commons.util.loganonymizer.classes.Rule;
 import com.sos.commons.util.loganonymizer.classes.SOSRules;
 
@@ -26,16 +27,16 @@ public class SOSLogAnonymizerExecuter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLogAnonymizerExecuter.class);
 
-    private List<String> listOfLogfileNames;
-    private List<Rule> listOfDefaultRules;
-    private List<Rule> listOfRules;
+    private List<String> listOfLogfileNames = new ArrayList<String>();
+    private List<Rule> listOfDefaultRules = new ArrayList<Rule>();
+    private List<Rule> listOfRules = new ArrayList<Rule>();
 
-    private List<Rule> listOfDefaultAgentRules;
-    private List<Rule> listOfDefaultControllerRules;
-    private List<Rule> listOfDefaultCockpitRules;
-    private List<Rule> listOfAgentRules;
-    private List<Rule> listOfControllerRules;
-    private List<Rule> listOfJocCockpitRules;
+    private List<Rule> listOfDefaultAgentRules = new ArrayList<Rule>();
+    private List<Rule> listOfDefaultControllerRules = new ArrayList<Rule>();
+    private List<Rule> listOfDefaultCockpitRules = new ArrayList<Rule>();
+    private List<Rule> listOfAgentRules = new ArrayList<Rule>();
+    private List<Rule> listOfControllerRules = new ArrayList<Rule>();
+    private List<Rule> listOfJocCockpitRules = new ArrayList<Rule>();
     private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     public SOSLogAnonymizerExecuter() {
@@ -43,15 +44,30 @@ public class SOSLogAnonymizerExecuter {
         initDefaultRules();
     }
 
+    private void addRule(String item, String search, String replace) {
+        Rule rule = new Rule();
+        rule.setItem(item);
+        rule.setReplace(replace);
+        rule.setSearch(search);
+        listOfDefaultRules.add(rule);
+    }
+
     private void initDefaultRules() {
+        listOfDefaultRules.clear();
+        addRule("ip-address",
+                "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])",
+                "<ip-address>");
+        addRule("User", "User:.(.*)", "<user-id>");
+        addRule("agent_id", "agent=(.*)", "agent=<agent_id>");
+        addRule("host1", "Connect(.*.:.......)", "Connect(<host:port>");
+        addRule("user_name", "user_name.*=.*$", "user_name            = <user>");
+        addRule("user_home", "user_home.*=.*$", "user_home            = <user_home>");
+        listOfRules.addAll(listOfDefaultRules);
 
     }
 
     public void addLogfileName(String logfileName) {
-        if (listOfLogfileNames == null) {
-            listOfLogfileNames = new ArrayList<String>();
-            listOfLogfileNames.add(logfileName);
-        }
+        listOfLogfileNames.add(logfileName);
     }
 
     private int getLogfileSource(String filename) {
@@ -114,49 +130,16 @@ public class SOSLogAnonymizerExecuter {
         return listOfDefaultCockpitRules;
     }
 
-    public void addAgentRule(Rule rule) {
-        if (listOfAgentRules == null) {
-            listOfAgentRules = new ArrayList<Rule>();
-        }
-        listOfAgentRules.add(rule);
-    }
-
-    public void addRulesRule(Rule rule) {
-        if (listOfRules == null) {
-            listOfRules = new ArrayList<Rule>();
-        }
-        listOfRules.add(rule);
-    }
-
-    public void addControllerRule(Rule rule) {
-        if (listOfControllerRules == null) {
-            listOfControllerRules = new ArrayList<Rule>();
-        }
-        listOfControllerRules.add(rule);
-    }
-
-    public void addJocCockpitRule(Rule rule) {
-        if (listOfJocCockpitRules == null) {
-            listOfJocCockpitRules = new ArrayList<Rule>();
-        }
-        listOfJocCockpitRules.add(rule);
-    }
-
     public void setRules(String rules) {
+        listOfRules.clear();
         mapper.findAndRegisterModules();
         try {
             SOSRules sosRules = mapper.readValue(new File(rules), SOSRules.class);
-            for (Rule rule : sosRules.getRules()) {
-                addRulesRule(rule);
-            }
-            for (Rule rule : sosRules.getAgent()) {
-                // addAgentRule(rule);
-            }
-            for (Rule rule : sosRules.getController()) {
-                // addControllerRule(rule);
-            }
-            for (Rule rule : sosRules.getJocCockpit()) {
-                // addJocCockpitRule(rule);
+            if (sosRules.getRules() != null) {
+                listOfRules.addAll(sosRules.getRules());
+                // listOfAgentRules.addAll(sosRules.getRules());
+                // listOfControllerRules.addAll(sosRules.getRules());
+                // listOfJocCockpitRules.addAll(sosRules.getRules());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -211,11 +194,20 @@ public class SOSLogAnonymizerExecuter {
 
     public void exportRules(String exportFile) throws IOException {
         try {
+           
+            final YAMLFactory yamlFactory = new YAMLFactory();
+            yamlFactory.enable(Feature.MINIMIZE_QUOTES);
+            yamlFactory.disable(Feature.WRITE_DOC_START_MARKER);
+            yamlFactory.disable(Feature.SPLIT_LINES);
+            ObjectMapper mapper = new ObjectMapper(yamlFactory); 
+            
             SOSRules defaultRules = new SOSRules();
-            defaultRules.setRules(getListOfDefaultRules());
-            defaultRules.setAgent(getListOfDefaultAgentRules());
-            defaultRules.setController(getListOfDefaultControllerRules());
-            defaultRules.setJocCockpit(getListOfDefaultJocCockpitRules());
+            defaultRules.getRules().addAll(getListOfDefaultRules());
+
+            // defaultRules.getAgent().addAll(getListOfDefaultAgentRules());
+            // defaultRules.getController().addAll(getListOfDefaultControllerRules());
+            // defaultRules.getJocCockpit().addAll(getListOfDefaultJocCockpitRules());
+
             mapper.writeValue(new File(exportFile), defaultRules);
         } catch (IOException e) {
             throw e;
