@@ -1,5 +1,6 @@
 package com.sos.js7.converter.autosys.common.v12.job;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,6 +50,8 @@ public abstract class ACommonJob {
     private static final String ATTR_MUST_COMPLETE_TIMES = "must_complete_times";
     private static final String ATTR_MUST_START_TIMES = "must_start_times";
     private static final String ATTR_TERM_RUN_TIME = "term_run_time";
+
+    private final Path source;
 
     /** Subcommands */
 
@@ -249,8 +252,13 @@ public abstract class ACommonJob {
      */
     private SOSArgument<Integer> termRunTime = new SOSArgument<>(ATTR_TERM_RUN_TIME, false);
 
-    public ACommonJob(ConverterJobType type) {
+    public ACommonJob(Path source, ConverterJobType type) {
+        this.source = source;
         this.converterJobType = type;
+    }
+
+    public Path getSource() {
+        return source;
     }
 
     public ConverterJobType getConverterJobType() {

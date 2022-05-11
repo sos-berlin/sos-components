@@ -15,6 +15,16 @@
 			<artifactId>sos-commons-util</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-xml</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-js7-converter-commons</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<!-- 3RD PARTY DEPENDENCIES -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>

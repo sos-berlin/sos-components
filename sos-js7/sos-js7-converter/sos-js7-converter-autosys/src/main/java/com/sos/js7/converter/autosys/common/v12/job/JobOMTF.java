@@ -1,5 +1,7 @@
 package com.sos.js7.converter.autosys.common.v12.job;
 
+import java.nio.file.Path;
+
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
 import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
@@ -60,8 +62,8 @@ public class JobOMTF extends ACommonMachineJob {
      */
     private SOSArgument<String> textFileName = new SOSArgument<>(ATTR_TEXT_FILE_NAME, true);
 
-    public JobOMTF() {
-        super(ConverterJobType.OMTF);
+    public JobOMTF(Path source) {
+        super(source, ConverterJobType.OMTF);
     }
 
     public SOSArgument<String> getEncoding() {

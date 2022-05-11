@@ -2,8 +2,10 @@ package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import java.util.List;
 
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
 
 public class CommonJobRunTime extends AJobAttributes {
 
@@ -14,6 +16,10 @@ public class CommonJobRunTime extends AJobAttributes {
     private static final String ATTR_START_TIMES = "start_times";
     private static final String ATTR_START_MINS = "start_mins";
     private static final String ATTR_DATE_CONDITIONS = "date_conditions";
+
+    public enum DaysOfWeekType {
+        ALL, SPECIFIC
+    }
 
     /** timezone - Define the Time Zone<br/>
      * This attribute is optional for all job types.<br/>
@@ -53,7 +59,7 @@ public class CommonJobRunTime extends AJobAttributes {
      * <br/>
      * JS7 - 100% - Admission Times for Job<br/>
      */
-    private SOSArgument<String> runWindow = new SOSArgument<>(ATTR_RUN_WINDOW, false);
+    private SOSArgument<RunWindow> runWindow = new SOSArgument<>(ATTR_RUN_WINDOW, false);
 
     /** days_of_week - Specify which Days of the Week to Run a Job<br/>
      * This attribute is optional for all job types.<br/>
@@ -73,7 +79,7 @@ public class CommonJobRunTime extends AJobAttributes {
      * <br/>
      * JS7 - 100% - Calendar & Schedules<br/>
      */
-    private SOSArgument<String> daysOfWeek = new SOSArgument<>(ATTR_DAYS_OF_WEEK, false);
+    private SOSArgument<DaysOfWeek> daysOfWeek = new SOSArgument<>(ATTR_DAYS_OF_WEEK, false);
 
     /** start_times - Define the Time of the Day to Run a Job<br/>
      * This attribute is optional for all job types.<br/>
@@ -143,22 +149,22 @@ public class CommonJobRunTime extends AJobAttributes {
         runCalendar.setValue(AJobAttributes.stringValue(val));
     }
 
-    public SOSArgument<String> getRunWindow() {
+    public SOSArgument<RunWindow> getRunWindow() {
         return runWindow;
     }
 
     @JobAttributeSetter(name = ATTR_RUN_WINDOW)
     public void setRunWindow(String val) {
-        runWindow.setValue(AJobAttributes.stringValue(val));
+        runWindow.setValue(SOSString.isEmpty(val) ? null : this.new RunWindow(val));
     }
 
-    public SOSArgument<String> getDaysOfWeek() {
+    public SOSArgument<DaysOfWeek> getDaysOfWeek() {
         return daysOfWeek;
     }
 
     @JobAttributeSetter(name = ATTR_DAYS_OF_WEEK)
     public void setDaysOfWeek(String val) {
-        daysOfWeek.setValue(AJobAttributes.stringValue(val));
+        daysOfWeek.setValue(SOSString.isEmpty(val) ? null : this.new DaysOfWeek(val));
     }
 
     public SOSArgument<List<String>> getStartTimes() {
@@ -167,7 +173,7 @@ public class CommonJobRunTime extends AJobAttributes {
 
     @JobAttributeSetter(name = ATTR_START_TIMES)
     public void setStartTimes(String val) {
-        startTimes.setValue(AJobAttributes.stringListValue(val));
+        startTimes.setValue(JS7ConverterHelper.getTimes(AJobAttributes.stringListValue(val)));
     }
 
     public SOSArgument<List<Integer>> getStartMins() {
@@ -186,5 +192,49 @@ public class CommonJobRunTime extends AJobAttributes {
     @JobAttributeSetter(name = ATTR_DATE_CONDITIONS)
     public void setDateConditions(String val) {
         dateConditions.setValue(AJobAttributes.booleanValue(val, false));
+    }
+
+    public class RunWindow {
+
+        private final String from;
+        private final String to;
+
+        private RunWindow(String val) {
+            String[] arr = AJobAttributes.stringValue(val).split("-");
+            this.from = arr[0].trim();
+            this.to = arr[1].trim();
+        }
+
+        public String getFrom() {
+            return from;
+        }
+
+        public String getTo() {
+            return to;
+        }
+    }
+
+    public class DaysOfWeek {
+
+        private final DaysOfWeekType type;
+        private final List<String> days;
+
+        private DaysOfWeek(String val) {
+            if (val.equals("all")) {
+                this.type = DaysOfWeekType.ALL;
+                this.days = stringListValue("mo,tu,we,th,fr,sa,su");
+            } else {
+                this.type = DaysOfWeekType.SPECIFIC;
+                this.days = stringListValue(val);
+            }
+        }
+
+        public DaysOfWeekType getType() {
+            return type;
+        }
+
+        public List<String> getDays() {
+            return days;
+        }
     }
 }

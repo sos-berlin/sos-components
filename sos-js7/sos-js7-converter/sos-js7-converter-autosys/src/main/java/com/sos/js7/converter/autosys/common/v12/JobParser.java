@@ -2,6 +2,7 @@ package com.sos.js7.converter.autosys.common.v12;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,8 @@ import com.sos.js7.converter.autosys.common.v12.job.JobNotSupported;
 import com.sos.js7.converter.autosys.common.v12.job.JobOMTF;
 import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeInclude;
 import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
+import com.sos.js7.converter.commons.report.CommonReport.ErrorType;
+import com.sos.js7.converter.commons.report.ParserReport;
 
 public class JobParser {
 
@@ -35,8 +38,8 @@ public class JobParser {
         init();
     }
 
-    public ACommonJob parse(Properties p) {
-        ACommonJob job = newJob(getConverterJobType(p.getProperty("job_type")));
+    public ACommonJob parse(Path source, Properties p) {
+        ACommonJob job = newJob(source, getConverterJobType(source, p.getProperty("insert_job"), p.getProperty("job_type")));
         return set(job, p);
     }
 
@@ -49,7 +52,7 @@ public class JobParser {
         }
     }
 
-    private ConverterJobType getConverterJobType(String val) {
+    private ConverterJobType getConverterJobType(Path source, String jobName, String val) {
         ConverterJobType t = ConverterJobType.CMD;
         if (val != null && val.trim().length() > 0) {
             try {
@@ -59,25 +62,26 @@ public class JobParser {
             }
             if (t == null) {
                 t = ConverterJobType.NOT_SUPPORTED;
+                ParserReport.INSTANCE.addErrorRecord(source, jobName, ErrorType.WARNING, String.format("[job type=%s]not supported", val));
             }
         }
         return t;
     }
 
-    private ACommonJob newJob(ConverterJobType type) {
+    private ACommonJob newJob(Path source, ConverterJobType type) {
         switch (type) {
         case CMD:
-            return new JobCMD();
+            return new JobCMD(source);
         case FT:
-            return new JobFT();
+            return new JobFT(source);
         case FW:
-            return new JobFW();
+            return new JobFW(source);
         case BOX:
-            return new JobBOX();
+            return new JobBOX(source);
         case OMTF:
-            return new JobOMTF();
+            return new JobOMTF(source);
         default:
-            return new JobNotSupported();
+            return new JobNotSupported(source);
         }
     }
 
@@ -130,6 +134,8 @@ public class JobParser {
                 SOSArgument<String> ua = new SOSArgument<>((String) name, false);
                 ua.setValue((String) value);
                 job.getUnknown().add(ua);
+                ParserReport.INSTANCE.addErrorRecord(job.getSource(), job.getInsertJob().getValue(), ErrorType.WARNING, String.format(
+                        "[job argument][name=%s, value=%s]not supported", ua.getName(), ua.getValue()));
             }
         });
 
@@ -151,8 +157,10 @@ public class JobParser {
                         m.invoke(im.invoke(job), value);
                     }
                 } catch (Throwable e) {
-                    LOGGER.warn(String.format("[%s.%s][can't invoke method]method=%s,value=%s", getClass().getName(), m.getName(), value, e
-                            .toString()), e);
+                    String msg = String.format("[%s.%s][can't invoke method]method=%s,value=%s", getClass().getName(), m.getName(), value, e
+                            .toString());
+                    LOGGER.error(msg, e);
+                    ParserReport.INSTANCE.addErrorRecord(job.getSource(), job.getInsertJob().getValue(), ErrorType.ERROR, msg);
                 }
                 return true;
             }

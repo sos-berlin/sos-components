@@ -22,7 +22,6 @@ public class OutputWriterTest {
         wl.addItem(Paths.get("4/w-001.json"), new Workflow());
         wl.addItem(Paths.get("5/w-001.json"), new Workflow());
 
-        OutputWriter w = new OutputWriter(Paths.get("src/test/resources/output"));
-        w.write(wl);
+        OutputWriter.write(Paths.get("src/test/resources/output"), wl);
     }
 }

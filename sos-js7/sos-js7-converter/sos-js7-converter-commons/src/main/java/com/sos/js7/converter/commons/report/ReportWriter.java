@@ -2,6 +2,8 @@ package com.sos.js7.converter.commons.report;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.commons.csv.CSVFormat;
@@ -13,11 +15,13 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSPath;
 
-public class CSVWriter {
+/** <br/>
+ * TODO several report writer types */
+public class ReportWriter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CSVWriter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReportWriter.class);
 
-    public void write(Path outputFile, CSVRecords records) {
+    public static void write(Path outputFile, CSVRecords records) {
         if (outputFile == null) {
             LOGGER.error("[write][skip]missing outputFile");
             return;
@@ -25,6 +29,13 @@ public class CSVWriter {
         if (records == null || records.getRecords().size() == 0) {
             LOGGER.info("[write][skip]missing records");
             return;
+        }
+        if (!Files.exists(outputFile.getParent())) {
+            try {
+                Files.createDirectories(outputFile.getParent());
+            } catch (IOException e) {
+                LOGGER.error(String.format("[write][%s][can't create the parent directory]%s", outputFile, e.toString()), e);
+            }
         }
 
         File file = SOSPath.toFile(outputFile);
@@ -53,7 +64,7 @@ public class CSVWriter {
         }
     }
 
-    private void close(CSVPrinter printer) {
+    private static void close(CSVPrinter printer) {
         if (printer != null) {
             try {
                 printer.flush();
@@ -66,7 +77,7 @@ public class CSVWriter {
         }
     }
 
-    private void close(FileWriter writer) {
+    private static void close(FileWriter writer) {
         if (writer != null) {
             try {
                 writer.flush();
@@ -79,7 +90,7 @@ public class CSVWriter {
         }
     }
 
-    private void removeOutputFile(File file, boolean remove) {
+    private static void removeOutputFile(File file, boolean remove) {
         if (remove) {
             try {
                 if (file.exists()) {

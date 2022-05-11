@@ -19,7 +19,7 @@ public class JobParserTest {
     @Test
     public void test() {
         JobParser p = new JobParser();
-        ACommonJob job = p.parse(getJob());
+        ACommonJob job = p.parse(null, getJob());
 
         LOGGER.info(SOSString.toString(job));
         LOGGER.info(" " + SOSString.toString(job.getFolder()));

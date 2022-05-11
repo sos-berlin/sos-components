@@ -1,7 +1,11 @@
 package com.sos.js7.converter.autosys.common.v12.job.attr;
 
+import java.util.List;
+
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
+import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
 
 public class CommonJobCondition extends AJobAttributes {
 
@@ -15,15 +19,21 @@ public class CommonJobCondition extends AJobAttributes {
      * <br/>
      * JS7 - 100% - Notice Board<br/>
      */
-    private SOSArgument<String> condition = new SOSArgument<>(ATTR_CONDITION, false);
+    private SOSArgument<List<Object>> condition = new SOSArgument<>(ATTR_CONDITION, false);
+    private String originalCondition;
 
-    public SOSArgument<String> getCondition() {
+    public SOSArgument<List<Object>> getCondition() {
         return condition;
     }
 
     @JobAttributeSetter(name = ATTR_CONDITION)
-    public void setCondition(String val) {
-        condition.setValue(AJobAttributes.stringValue(val));
+    public void setCondition(String val) throws Exception {
+        String v = AJobAttributes.stringValue(val);
+        originalCondition = val;
+        condition.setValue(SOSString.isEmpty(v) ? null : Conditions.parse(v));
     }
 
+    public String getOriginalCondition() {
+        return originalCondition;
+    }
 }

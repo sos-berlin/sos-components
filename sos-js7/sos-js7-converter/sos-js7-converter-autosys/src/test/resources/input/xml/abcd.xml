@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<ArrayOfJIL>
+	<JIL>
+		<insert_job>abcd.job_1</insert_job>
+		<job_type>CMD</job_type>
+		<command><![CDATA["/bin/ksh -c "/tmp/script.sh -c ARG"]]></command>
+		<machine>xyz.machine</machine>
+		<owner>owner</owner>
+		<permission>gx</permission>
+		<date_conditions>1</date_conditions>
+		<days_of_week>su,mo,tu,we,th,fr,sa</days_of_week>
+		<start_mins>40</start_mins>
+		<condition>v(xyz.var) = "yes"</condition>
+		<description><![CDATA["Job abcd.job_1"]]></description>
+		<term_run_time>60</term_run_time>
+		<std_out_file>"/tmp/out.out"
+		</std_out_file>
+		<std_err_file>"/tmp/out.err"
+		</std_err_file>
+		<max_run_alarm>30</max_run_alarm>
+		<alarm_if_fail>1</alarm_if_fail>
+		<alarm_if_terminated>1</alarm_if_terminated>
+		<application>abcd</application>
+		<svcdesk_pri>3</svcdesk_pri>
+		<svcdesk_imp>3</svcdesk_imp>
+		<svcdesk_sev>3</svcdesk_sev>
+	</JIL>
+	<JIL>
+		<insert_job>abcd.job_2</insert_job>
+		<job_type>CMD</job_type>
+		<command><![CDATA["/bin/ksh -c "/tmp/script.sh -c ARG"]]></command>
+		<machine>xyz.machine</machine>
+		<owner>owner</owner>
+		<permission>gx</permission>
+		<date_conditions>1</date_conditions>
+		<days_of_week>su,mo,tu,we,th,fr,sa</days_of_week>
+		<start_mins>40</start_mins>
+		<condition>v(xyz.var) = "yes"</condition>
+		<description><![CDATA["Job abcd.job_1"]]></description>
+		<term_run_time>60</term_run_time>
+		<std_out_file>"/tmp/out.out"
+		</std_out_file>
+		<std_err_file>"/tmp/out.err"
+		</std_err_file>
+		<max_run_alarm>30</max_run_alarm>
+		<alarm_if_fail>1</alarm_if_fail>
+		<alarm_if_terminated>1</alarm_if_terminated>
+		<application>abcd</application>
+		<svcdesk_pri>3</svcdesk_pri>
+		<svcdesk_imp>3</svcdesk_imp>
+		<svcdesk_sev>3</svcdesk_sev>
+	</JIL>
+</ArrayOfJIL>

@@ -1,5 +1,7 @@
 package com.sos.js7.converter.autosys.common.v12.job;
 
+import java.nio.file.Path;
+
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
 import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
@@ -45,8 +47,8 @@ public abstract class ACommonMachineJob extends ACommonJob {
      */
     private SOSArgument<Integer> priority = new SOSArgument<>(ATTR_PRIORITY, false);
 
-    public ACommonMachineJob(ConverterJobType type) {
-        super(type);
+    public ACommonMachineJob(Path source, ConverterJobType type) {
+        super(source, type);
     }
 
     public SOSArgument<String> getMachine() {

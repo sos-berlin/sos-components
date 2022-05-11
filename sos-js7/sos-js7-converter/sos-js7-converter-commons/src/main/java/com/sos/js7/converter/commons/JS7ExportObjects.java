@@ -25,6 +25,9 @@ public class JS7ExportObjects<T> {
 
     private List<JS7ExportObject> items;
 
+    // TODO temporary solution - unique should be checked before write to file ...
+    private boolean useUniquePath = false;
+
     public JS7ExportObjects() {
         this.items = new ArrayList<>();
     }
@@ -35,6 +38,17 @@ public class JS7ExportObjects<T> {
         return eo;
     }
 
+    public JS7ExportObject addOrReplaceItem(Path path, T o) {
+        JS7ExportObject newEo = new JS7ExportObject(o, path, getUniquePath(path));
+        JS7ExportObject oldEo = items.stream().filter(e -> e.getOriginalPath().getPath().equals(path)).findAny().orElse(null);
+        if (oldEo == null) {
+            items.add(newEo);
+        } else {
+            items.set(items.indexOf(oldEo), newEo);
+        }
+        return newEo;
+    }
+
     public List<JS7ExportObject> getItems() {
         return items;
     }
@@ -43,6 +57,11 @@ public class JS7ExportObjects<T> {
     private Path getUniquePath(Path path) {
         JS7ExportObject eo = find(path);
         if (eo == null) {
+            return path;
+        }
+
+        LOGGER.debug(String.format("[%s]already used", path));
+        if (!useUniquePath) {
             return path;
         }
 
@@ -85,7 +104,8 @@ public class JS7ExportObjects<T> {
     private Path getUniquePath(Path originalPath, String namePrefix, int counter) {
         StringBuilder sb = new StringBuilder(namePrefix);
         sb.append(UNIQUE_NAME_DELIMITER);
-        sb.append(String.format("%0" + UNIQUE_NAME_MAX_DIGITS + "x", counter));
+        // sb.append(String.format("%0" + UNIQUE_NAME_MAX_DIGITS + "x", counter));
+        sb.append(String.format("%0" + UNIQUE_NAME_MAX_DIGITS + "d", counter));
         sb.append(".json").toString();
 
         Path parent = originalPath.getParent();

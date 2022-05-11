@@ -1,5 +1,7 @@
 package com.sos.js7.converter.autosys.common.v12.job;
 
+import java.nio.file.Path;
+
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
 import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
@@ -91,8 +93,8 @@ public class JobCMD extends ACommonMachineJob {
      */
     private SOSArgument<Long> heartbeatInterval = new SOSArgument<>(ATTR_HEARTBEAT_INTERVAL, false);
 
-    public JobCMD() {
-        super(ConverterJobType.CMD);
+    public JobCMD(Path source) {
+        super(source, ConverterJobType.CMD);
     }
 
     public SOSArgument<String> getCommand() {

@@ -21,25 +21,13 @@ public class OutputWriter {
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false).configure(
                     SerializationFeature.INDENT_OUTPUT, true);
 
-    private final Path directory;
-
-    public OutputWriter(Path directory) throws IOException {
-        this.directory = directory;
-
-        Path dir = directory.toAbsolutePath();
-        if (Files.exists(dir)) {
-            SOSPath.cleanupDirectory(dir);
-        } else {
-            Files.createDirectories(dir);
-        }
-    }
-
-    public <T> void write(JS7ExportObjects<T> objects) throws IOException {
+    public static <T> void write(Path directory, JS7ExportObjects<T> objects) throws IOException {
         String method = "write";
         if (objects == null || objects.getItems().size() == 0) {
             LOGGER.info(String.format("[%s][skip]missing objects", method));
             return;
         }
+        // directory = directory.toAbsolutePath();
         LOGGER.info(String.format("[%s][directory=%s][start]%s objects", method, directory, objects.getItems().size()));
         for (JS7ExportObjects<T>.JS7ExportObject item : objects.getItems()) {
             Path outputPath = directory.resolve(item.getUniquePath().getPath());
@@ -51,6 +39,16 @@ public class OutputWriter {
             OM.writeValue(SOSPath.toFile(outputPath), item.getObject());
         }
         LOGGER.info(String.format("[%s][directory=%s][end]", method, directory));
+    }
 
+    public static void prepareDirectory(Path directory) throws IOException {
+        Path dir = directory.toAbsolutePath();
+        if (Files.exists(dir)) {
+            LOGGER.info(String.format("[checkDirectory][cleanup]%s", dir));
+            SOSPath.cleanupDirectory(dir);
+        } else {
+            LOGGER.info(String.format("[checkDirectory][create]%s", dir));
+            Files.createDirectories(dir);
+        }
     }
 }

@@ -1,5 +1,7 @@
 package com.sos.js7.converter.autosys.common.v12.job;
 
+import java.nio.file.Path;
+
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
 import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
@@ -23,8 +25,8 @@ public class JobFW extends ACommonFileWatcherJob {
      */
     private SOSArgument<Long> watchInterval = new SOSArgument<>(ATTR_WATCH_INTERVAL, false);
 
-    public JobFW() {
-        super(ConverterJobType.FW);
+    public JobFW(Path source) {
+        super(source, ConverterJobType.FW);
     }
 
     public SOSArgument<Long> getWatchInterval() {

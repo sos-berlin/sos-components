@@ -1,5 +1,10 @@
 package com.sos.js7.converter.autosys.common.v12.job;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
 import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
@@ -29,8 +34,10 @@ public class JobBOX extends ACommonJob {
      */
     private SOSArgument<String> boxFailure = new SOSArgument<>(ATTR_BOX_FAILURE, false);
 
-    public JobBOX() {
-        super(ConverterJobType.BOX);
+    private List<ACommonJob> jobs = new ArrayList<>();
+
+    public JobBOX(Path source) {
+        super(source, ConverterJobType.BOX);
     }
 
     public SOSArgument<String> getBoxSuccess() {
@@ -49,6 +56,19 @@ public class JobBOX extends ACommonJob {
     @JobAttributeSetter(name = ATTR_BOX_FAILURE)
     public void setBoxFailure(String val) {
         boxFailure.setValue(AJobAttributes.stringValue(val));
+    }
+
+    public boolean addJob(ACommonJob job) {
+        String bn = job.getBox().getBoxName().getValue();
+        if (!SOSString.isEmpty(bn) && bn.equalsIgnoreCase(getInsertJob().getValue())) {
+            jobs.add(job);
+            return true;
+        }
+        return false;
+    }
+
+    public List<ACommonJob> getJobs() {
+        return jobs;
     }
 
 }

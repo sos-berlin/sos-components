@@ -7,7 +7,7 @@ import java.util.Arrays;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class CSVWriterTest {
+public class ReportWriterTest {
 
     public enum MyHEADER {
         FOO, BAR;
@@ -22,8 +22,7 @@ public class CSVWriterTest {
         r.addRecord(Arrays.asList("foo1", "bar1"));
         r.addRecord(Arrays.asList("foo2", "bar2"));
 
-        CSVWriter w = new CSVWriter();
-        w.write(outputFile, r);
+        ReportWriter.write(outputFile, r);
     }
 
 }
