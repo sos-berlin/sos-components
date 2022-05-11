@@ -36,7 +36,7 @@ public class HistoryInfo {
         jobSchedulerCredentialStoreJOCParameters.setUser(args.getAccount());
         jobSchedulerCredentialStoreJOCParameters.setPassword(args.getPassword());
         jobSchedulerCredentialStoreJOCParameters.setJocUrl(args.getJocUrl());
-        AccessTokenProvider accessTokenProvider = new AccessTokenProvider(logger,jobSchedulerCredentialStoreJOCParameters);
+        AccessTokenProvider accessTokenProvider = new AccessTokenProvider(logger, jobSchedulerCredentialStoreJOCParameters);
         WebserviceCredentials webserviceCredentials = accessTokenProvider.getAccessToken();
 
         HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(logger, webserviceCredentials);
@@ -56,6 +56,10 @@ public class HistoryInfo {
         historyFilter.setLimit(parameterResolver.getCount() + 1);
         switch (queryName.toLowerCase()) {
         case "isstarted":
+            if (parameterResolver.isParamCompletedFrom() || parameterResolver.isParamCompletedTo()) {
+                historyFilter.setDateFrom(parameterResolver.getStartedFrom());
+                historyFilter.setDateTo(parameterResolver.getStartedTo());
+            }
             historyFilter.setDateFrom(parameterResolver.getStartedFrom());
             historyFilter.setDateTo(parameterResolver.getStartedTo());
             break;
@@ -64,10 +68,9 @@ public class HistoryInfo {
                 historyFilter.setDateFrom(parameterResolver.getStartedFrom());
                 historyFilter.setDateTo(parameterResolver.getStartedTo());
             }
-            if (parameterResolver.isParamCompletedFrom() || parameterResolver.isParamCompletedTo()) {
-                historyFilter.setEndDateFrom(parameterResolver.getCompletedFrom());
-                historyFilter.setEndDateTo(parameterResolver.getCompletedTo());
-            }
+            historyFilter.setEndDateFrom(parameterResolver.getCompletedFrom());
+            historyFilter.setEndDateTo(parameterResolver.getCompletedTo());
+
             states.add(OrderStateText.FINISHED);
             historyFilter.setStates(states);
             break;
@@ -76,10 +79,8 @@ public class HistoryInfo {
                 historyFilter.setDateFrom(parameterResolver.getStartedFrom());
                 historyFilter.setDateTo(parameterResolver.getStartedTo());
             }
-            if (parameterResolver.isParamCompletedFrom() || parameterResolver.isParamCompletedTo()) {
-                historyFilter.setEndDateFrom(parameterResolver.getCompletedFrom());
-                historyFilter.setEndDateTo(parameterResolver.getCompletedTo());
-            }
+            historyFilter.setEndDateFrom(parameterResolver.getCompletedFrom());
+            historyFilter.setEndDateTo(parameterResolver.getCompletedTo());
 
             states.add(OrderStateText.FINISHED);
             historyStates.add(HistoryStateText.SUCCESSFUL);
@@ -91,10 +92,9 @@ public class HistoryInfo {
                 historyFilter.setDateFrom(parameterResolver.getStartedFrom());
                 historyFilter.setDateTo(parameterResolver.getStartedTo());
             }
-            if (parameterResolver.isParamCompletedFrom() || parameterResolver.isParamCompletedTo()) {
-                historyFilter.setEndDateFrom(parameterResolver.getCompletedFrom());
-                historyFilter.setEndDateTo(parameterResolver.getCompletedTo());
-            }
+            historyFilter.setEndDateFrom(parameterResolver.getCompletedFrom());
+            historyFilter.setEndDateTo(parameterResolver.getCompletedTo());
+
             states.add(OrderStateText.FINISHED);
             historyStates.add(HistoryStateText.FAILED);
             historyFilter.setHistoryStates(historyStates);
@@ -107,10 +107,9 @@ public class HistoryInfo {
                 historyFilter.setDateFrom(parameterResolver.getStartedFrom());
                 historyFilter.setDateTo(parameterResolver.getStartedTo());
             }
-            if (parameterResolver.isParamCompletedFrom() || parameterResolver.isParamCompletedTo()) {
-                historyFilter.setEndDateFrom(parameterResolver.getCompletedFrom());
-                historyFilter.setEndDateTo(parameterResolver.getCompletedTo());
-            }
+            historyFilter.setEndDateFrom(parameterResolver.getCompletedFrom());
+            historyFilter.setEndDateTo(parameterResolver.getCompletedTo());
+
             states.add(OrderStateText.FINISHED);
             historyFilter.setStates(states);
             break;

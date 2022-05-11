@@ -69,7 +69,17 @@
                         </ul>
 					</p>
                     <p>
-                        Queries can use the following parameters:
+                        Queries can use the following parameters to overwrite the "today" property and/or to add additional filter arguments:
+                        
+                        <p>                        	
+                        <b>query: isStarted</b><br/>
+                        if neither completedFrom is specified nor completedTo is specified the completed date will not be considered.
+                        </p>
+                        <p>                        	
+                        <b>query: isCompleted*</b><br/>
+                        <b>query: lastCompleted*</b><br/>
+                        if neither startedFrom is specified nor startedTo is specified the started date will not be considered.
+                        </p>
                         <ul>
                             <li>startedFrom, default=0d</li>
                             <li>startedTo, default=0d</li>
