@@ -16,6 +16,7 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsUser;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.IPropertiesResource;
 import com.sos.joc.model.Properties;
+import com.sos.joc.model.joc.LicenseType;
 
 @Path("joc")
 public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResource {
@@ -53,11 +54,17 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             ConfigurationGlobalsUser userSettings = Globals.getConfigurationGlobalsUser();
             entity.setWelcomeDoNotRemindMe(ClusterSettings.getWelcomeDoNotRemindMe(userSettings));
             entity.setWelcomeGotIt(ClusterSettings.getWelcomeGotIt(userSettings));
-            entity.setClusterLicense(JocClusterService.getInstance().getCluster() != null && JocClusterService.getInstance().getCluster().getConfig()
-                    .getClusterModeResult().getUse());
+            
+            entity.setClusterLicense(JocClusterService.getInstance().getCluster() != null && 
+                    JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getUse());
             if (JocClusterService.getInstance().getCluster() != null) {
                 entity.setLicenseValidFrom(JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getValidFrom());
                 entity.setLicenseValidUntil(JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getValidUntil());
+            }
+            if (entity.getLicenseValidFrom() == null && entity.getLicenseValidUntil() == null && !entity.getClusterLicense()) {
+                entity.setLicenseType(LicenseType.OPENSOURCE);
+            } else {
+                entity.setLicenseType(LicenseType.COMMERCIAL);
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
             
