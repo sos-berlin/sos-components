@@ -147,7 +147,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
 
             Element jobElem = (Element) xpath.compile("//jobdoc:job").evaluate(doc, XPathConstants.NODE);
             Element scriptElem = (Element) xpath.compile("//jobdoc:script").evaluate(doc, XPathConstants.NODE);
-            NodeList paramsNodes = (NodeList) xpath.compile("//jobdoc:configuration/*/jobdoc:param").evaluate(doc, XPathConstants.NODESET);
+            NodeList paramsNodes = (NodeList) xpath.compile("//jobdoc:configuration/jobdoc:params[@id='job_parameter']/jobdoc:param").evaluate(doc, XPathConstants.NODESET);
 
             Job job = new Job();
             if (scriptElem != null) {
