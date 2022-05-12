@@ -75,8 +75,8 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
  
     private String executeReplace(int logFileSource, String line) {
         String ret = line;
+        List<String> replaceSearch = new ArrayList<String>();
         for (Rule rule : listOfRules) {
-            List<String> replaceSearch = new ArrayList<String>();
             Matcher m = Pattern.compile(rule.getSearch()).matcher(ret);
             if (m.find() && (m.groupCount() == rule.getReplace().length)) {
                 for (int g = 1; g <= m.groupCount(); g++) {
@@ -90,7 +90,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
             } else {
                 ret = ret.replaceAll(rule.getSearch(), rule.getReplace()[0]);
             }
-
+            replaceSearch.clear();
         }
         return ret;
     }
