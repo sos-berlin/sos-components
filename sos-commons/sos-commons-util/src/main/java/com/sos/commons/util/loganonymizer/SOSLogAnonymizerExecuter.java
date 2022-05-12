@@ -72,18 +72,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         return 1;
     }
 
-    private String replaceGroup(String regex, String source, int groupToReplace, String replacement) {
-        return replaceGroup(regex, source, groupToReplace, 1, replacement);
-    }
-
-    private String replaceGroup(String regex, String source, int groupToReplace, int groupOccurrence, String replacement) {
-        Matcher m = Pattern.compile(regex).matcher(source);
-        for (int i = 0; i < groupOccurrence; i++)
-            if (!m.find())
-                return source; // pattern not met, may also throw an exception here
-        return new StringBuilder(source).replace(m.start(groupToReplace), m.end(groupToReplace), replacement).toString();
-    }
-
+ 
     private String executeReplace(int logFileSource, String line) {
         String ret = line;
         for (Rule rule : listOfRules) {
@@ -106,18 +95,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         return ret;
     }
 
-    private String executeReplace_(int logFileSource, String line) {
-        String ret = line;
-        switch (logFileSource) {
-        case 1:
-            for (Rule rule : listOfRules) {
-                ret = ret.replaceAll(rule.getSearch(), rule.getReplace()[0]);
-            }
-            break;
-        }
-        return ret;
-    }
-
+  
     public void executeSubstitution() {
         for (String logFilename : listOfLogfileNames) {
             LOGGER.debug("input --->" + logFilename);
