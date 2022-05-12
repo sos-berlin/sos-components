@@ -19,7 +19,6 @@ public class HistoryFilter {
     private String controllerId;
     private String job;
     private String workflow;
-    private List<OrderStateText> states;
     private String dateFrom;
     private String dateTo;
     private String endDateFrom;
@@ -52,14 +51,6 @@ public class HistoryFilter {
 
     public void setWorkflow(String workflow) {
         this.workflow = workflow;
-    }
-
-    public List<OrderStateText> getStates() {
-        return states;
-    }
-
-    public void setStates(List<OrderStateText> states) {
-        this.states = states;
     }
 
     public String getDateFrom() {
