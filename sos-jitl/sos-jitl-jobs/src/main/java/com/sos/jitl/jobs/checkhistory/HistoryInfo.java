@@ -45,7 +45,6 @@ public class HistoryInfo {
         historyFilter.setWorkflow(args.getWorkflow());
         historyFilter.setControllerId(args.getController());
 
-        List<OrderStateText> states = new ArrayList<OrderStateText>();
         List<HistoryStateText> historyStates = new ArrayList<HistoryStateText>();
         String queryName = CheckHistoryHelper.getQueryName(query);
         String parameter = CheckHistoryHelper.getParameter(query);
@@ -71,8 +70,9 @@ public class HistoryInfo {
             historyFilter.setEndDateFrom(parameterResolver.getCompletedFrom());
             historyFilter.setEndDateTo(parameterResolver.getCompletedTo());
 
-            states.add(OrderStateText.FINISHED);
-            historyFilter.setStates(states);
+            historyStates.add(HistoryStateText.SUCCESSFUL);
+            historyStates.add(HistoryStateText.FAILED);
+            historyFilter.setHistoryStates(historyStates);
             break;
         case "iscompletedsuccessful":
             if (parameterResolver.isParamStartedFrom() || parameterResolver.isParamStartedTo()) {
@@ -82,10 +82,8 @@ public class HistoryInfo {
             historyFilter.setEndDateFrom(parameterResolver.getCompletedFrom());
             historyFilter.setEndDateTo(parameterResolver.getCompletedTo());
 
-            states.add(OrderStateText.FINISHED);
             historyStates.add(HistoryStateText.SUCCESSFUL);
             historyFilter.setHistoryStates(historyStates);
-            historyFilter.setStates(states);
             break;
         case "iscompletedfailed":
             if (parameterResolver.isParamCompletedFrom() || parameterResolver.isParamCompletedTo()) {
@@ -95,10 +93,8 @@ public class HistoryInfo {
             historyFilter.setEndDateFrom(parameterResolver.getCompletedFrom());
             historyFilter.setEndDateTo(parameterResolver.getCompletedTo());
 
-            states.add(OrderStateText.FINISHED);
             historyStates.add(HistoryStateText.FAILED);
             historyFilter.setHistoryStates(historyStates);
-            historyFilter.setStates(states);
             break;
 
         case "lastcompletedsuccessful":
@@ -110,8 +106,10 @@ public class HistoryInfo {
             historyFilter.setEndDateFrom(parameterResolver.getCompletedFrom());
             historyFilter.setEndDateTo(parameterResolver.getCompletedTo());
 
-            states.add(OrderStateText.FINISHED);
-            historyFilter.setStates(states);
+            historyStates.add(HistoryStateText.SUCCESSFUL);
+            historyStates.add(HistoryStateText.FAILED);
+            historyFilter.setHistoryStates(historyStates);
+
             break;
         default:
             throw new SOSException("unknown query: " + query);
