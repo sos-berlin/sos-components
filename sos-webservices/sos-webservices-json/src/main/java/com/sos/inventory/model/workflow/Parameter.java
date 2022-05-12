@@ -1,6 +1,7 @@
 
 package com.sos.inventory.model.workflow;
 
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -23,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "final",
     "listParameters",
     "facet",
+    "facets",
     "message"
 })
 public class Parameter {
@@ -55,12 +57,19 @@ public class Parameter {
     @JsonPropertyDescription("parameters only for parameter type 'List'")
     private ListParameters listParameters;
     /**
-     * a regular expression to check the value of the parameter
+     * deprecated; use facets
      * 
      */
     @JsonProperty("facet")
-    @JsonPropertyDescription("a regular expression to check the value of the parameter")
+    @JsonPropertyDescription("deprecated; use facets")
     private String facet;
+    /**
+     * regular expressions to check the value of the parameter
+     * 
+     */
+    @JsonProperty("facets")
+    @JsonPropertyDescription("regular expressions to check the value of the parameter")
+    private List<String> facets = null;
     /**
      * a message if the value doesn't match the facet
      * 
@@ -84,14 +93,16 @@ public class Parameter {
      * @param message
      * @param facet
      * @param listParameters
+     * @param facets
      */
-    public Parameter(ParameterType type, Object _default, String _final, ListParameters listParameters, String facet, String message) {
+    public Parameter(ParameterType type, Object _default, String _final, ListParameters listParameters, String facet, List<String> facets, String message) {
         super();
         this.type = type;
         this._default = _default;
         this._final = _final;
         this.listParameters = listParameters;
         this.facet = facet;
+        this.facets = facets;
         this.message = message;
     }
 
@@ -170,7 +181,7 @@ public class Parameter {
     }
 
     /**
-     * a regular expression to check the value of the parameter
+     * deprecated; use facets
      * 
      */
     @JsonProperty("facet")
@@ -179,12 +190,30 @@ public class Parameter {
     }
 
     /**
-     * a regular expression to check the value of the parameter
+     * deprecated; use facets
      * 
      */
     @JsonProperty("facet")
     public void setFacet(String facet) {
         this.facet = facet;
+    }
+
+    /**
+     * regular expressions to check the value of the parameter
+     * 
+     */
+    @JsonProperty("facets")
+    public List<String> getFacets() {
+        return facets;
+    }
+
+    /**
+     * regular expressions to check the value of the parameter
+     * 
+     */
+    @JsonProperty("facets")
+    public void setFacets(List<String> facets) {
+        this.facets = facets;
     }
 
     /**
@@ -207,12 +236,12 @@ public class Parameter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("type", type).append("_default", _default).append("_final", _final).append("listParameters", listParameters).append("facet", facet).append("message", message).toString();
+        return new ToStringBuilder(this).append("type", type).append("_default", _default).append("_final", _final).append("listParameters", listParameters).append("facet", facet).append("facets", facets).append("message", message).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(_default).append(type).append(_final).append(message).append(facet).append(listParameters).toHashCode();
+        return new HashCodeBuilder().append(_default).append(type).append(_final).append(message).append(facet).append(listParameters).append(facets).toHashCode();
     }
 
     @Override
@@ -224,7 +253,7 @@ public class Parameter {
             return false;
         }
         Parameter rhs = ((Parameter) other);
-        return new EqualsBuilder().append(_default, rhs._default).append(type, rhs.type).append(_final, rhs._final).append(message, rhs.message).append(facet, rhs.facet).append(listParameters, rhs.listParameters).isEquals();
+        return new EqualsBuilder().append(_default, rhs._default).append(type, rhs.type).append(_final, rhs._final).append(message, rhs.message).append(facet, rhs.facet).append(listParameters, rhs.listParameters).append(facets, rhs.facets).isEquals();
     }
 
 }
