@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "final",
     "listParameters",
     "facet",
-    "facets",
+    "list",
     "message"
 })
 public class Parameter {
@@ -57,19 +57,19 @@ public class Parameter {
     @JsonPropertyDescription("parameters only for parameter type 'List'")
     private ListParameters listParameters;
     /**
-     * deprecated; use facets
+     * a regular expression to check the value of the parameter
      * 
      */
     @JsonProperty("facet")
-    @JsonPropertyDescription("deprecated; use facets")
+    @JsonPropertyDescription("a regular expression to check the value of the parameter")
     private String facet;
     /**
-     * regular expressions to check the value of the parameter
+     * enumeration of possible parameter values
      * 
      */
-    @JsonProperty("facets")
-    @JsonPropertyDescription("regular expressions to check the value of the parameter")
-    private List<String> facets = null;
+    @JsonProperty("list")
+    @JsonPropertyDescription("enumeration of possible parameter values")
+    private List<String> list = null;
     /**
      * a message if the value doesn't match the facet
      * 
@@ -90,19 +90,19 @@ public class Parameter {
      * @param _default
      * @param type
      * @param _final
+     * @param list
      * @param message
      * @param facet
      * @param listParameters
-     * @param facets
      */
-    public Parameter(ParameterType type, Object _default, String _final, ListParameters listParameters, String facet, List<String> facets, String message) {
+    public Parameter(ParameterType type, Object _default, String _final, ListParameters listParameters, String facet, List<String> list, String message) {
         super();
         this.type = type;
         this._default = _default;
         this._final = _final;
         this.listParameters = listParameters;
         this.facet = facet;
-        this.facets = facets;
+        this.list = list;
         this.message = message;
     }
 
@@ -181,7 +181,7 @@ public class Parameter {
     }
 
     /**
-     * deprecated; use facets
+     * a regular expression to check the value of the parameter
      * 
      */
     @JsonProperty("facet")
@@ -190,7 +190,7 @@ public class Parameter {
     }
 
     /**
-     * deprecated; use facets
+     * a regular expression to check the value of the parameter
      * 
      */
     @JsonProperty("facet")
@@ -199,21 +199,21 @@ public class Parameter {
     }
 
     /**
-     * regular expressions to check the value of the parameter
+     * enumeration of possible parameter values
      * 
      */
-    @JsonProperty("facets")
-    public List<String> getFacets() {
-        return facets;
+    @JsonProperty("list")
+    public List<String> getList() {
+        return list;
     }
 
     /**
-     * regular expressions to check the value of the parameter
+     * enumeration of possible parameter values
      * 
      */
-    @JsonProperty("facets")
-    public void setFacets(List<String> facets) {
-        this.facets = facets;
+    @JsonProperty("list")
+    public void setList(List<String> list) {
+        this.list = list;
     }
 
     /**
@@ -236,12 +236,12 @@ public class Parameter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("type", type).append("_default", _default).append("_final", _final).append("listParameters", listParameters).append("facet", facet).append("facets", facets).append("message", message).toString();
+        return new ToStringBuilder(this).append("type", type).append("_default", _default).append("_final", _final).append("listParameters", listParameters).append("facet", facet).append("list", list).append("message", message).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(_default).append(type).append(_final).append(message).append(facet).append(listParameters).append(facets).toHashCode();
+        return new HashCodeBuilder().append(_default).append(type).append(_final).append(list).append(message).append(facet).append(listParameters).toHashCode();
     }
 
     @Override
@@ -253,7 +253,7 @@ public class Parameter {
             return false;
         }
         Parameter rhs = ((Parameter) other);
-        return new EqualsBuilder().append(_default, rhs._default).append(type, rhs.type).append(_final, rhs._final).append(message, rhs.message).append(facet, rhs.facet).append(listParameters, rhs.listParameters).append(facets, rhs.facets).isEquals();
+        return new EqualsBuilder().append(_default, rhs._default).append(type, rhs.type).append(_final, rhs._final).append(list, rhs.list).append(message, rhs.message).append(facet, rhs.facet).append(listParameters, rhs.listParameters).isEquals();
     }
 
 }
