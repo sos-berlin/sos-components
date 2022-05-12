@@ -144,7 +144,6 @@ public class HistoryInfo {
             ordersFilter.setEndDateFrom(historyFilter.getEndDateFrom());
             ordersFilter.setFolders(historyFilter.getFolders());
             ordersFilter.setHistoryStates(historyFilter.getHistoryStates());
-            ordersFilter.setStates(historyFilter.getStates());
             ordersFilter.setTimeZone(historyFilter.getTimeZone());
 
             OrderHistory orderHistory = historyWebserviceExecuter.getWorkflowHistoryEntry(ordersFilter);
