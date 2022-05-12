@@ -2,7 +2,7 @@ package com.sos.commons.util.loganonymizer.classes;
 
 public abstract class DefaultRulesTable {
 
-    protected abstract void a(String item, String search, String replace);
+    protected abstract void a(String item, String search, String... replace);
 
     public DefaultRulesTable() {
         super();
@@ -13,7 +13,7 @@ public abstract class DefaultRulesTable {
 
         a( "url-component",             // any log              ://apmacwin:4244
                 "://(.*):(\\d{3,5})", 
-                "<host>:<port>" );
+                "<host>","<port>" );
 
         a( "ip-address",                // any log              92.168.2.1
                 "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])",

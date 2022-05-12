@@ -4,7 +4,7 @@ public class Rule {
 
     private String item;
     private String search;
-    private String replace;
+    private String[] replace;
 
     public String getItem() {
         return item;
@@ -22,11 +22,11 @@ public class Rule {
         this.search = search;
     }
 
-    public String getReplace() {
+    public String[] getReplace() {
         return replace;
     }
 
-    public void setReplace(String replace) {
+    public void setReplace(String[] replace) {
         this.replace = replace;
     }
 

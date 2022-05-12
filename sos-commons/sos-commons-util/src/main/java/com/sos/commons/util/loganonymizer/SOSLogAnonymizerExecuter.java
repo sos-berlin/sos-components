@@ -12,6 +12,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.slf4j.Logger;
@@ -25,6 +27,8 @@ import com.sos.commons.util.loganonymizer.classes.Rule;
 import com.sos.commons.util.loganonymizer.classes.SOSRules;
 
 public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
+
+    private static final String ANONYMIZED = "anonymized_";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLogAnonymizerExecuter.class);
 
@@ -45,7 +49,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         initDefaultRules();
     }
 
-    private void addRule(String item, String search, String replace) {
+    private void addRule(String item, String search, String... replace) {
         if (listOfDefaultRules == null) {
             listOfDefaultRules = new ArrayList<Rule>();
         }
@@ -68,12 +72,46 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         return 1;
     }
 
+    private String replaceGroup(String regex, String source, int groupToReplace, String replacement) {
+        return replaceGroup(regex, source, groupToReplace, 1, replacement);
+    }
+
+    private String replaceGroup(String regex, String source, int groupToReplace, int groupOccurrence, String replacement) {
+        Matcher m = Pattern.compile(regex).matcher(source);
+        for (int i = 0; i < groupOccurrence; i++)
+            if (!m.find())
+                return source; // pattern not met, may also throw an exception here
+        return new StringBuilder(source).replace(m.start(groupToReplace), m.end(groupToReplace), replacement).toString();
+    }
+
     private String executeReplace(int logFileSource, String line) {
+        String ret = line;
+        for (Rule rule : listOfRules) {
+            List<String> replaceSearch = new ArrayList<String>();
+            Matcher m = Pattern.compile(rule.getSearch()).matcher(ret);
+            if (m.find() && (m.groupCount() == rule.getReplace().length)) {
+                for (int g = 1; g <= m.groupCount(); g++) {
+                    replaceSearch.add(line.substring(m.start(g), m.end(g)));
+                }
+                for (int s = 0; s < rule.getReplace().length; s++) {
+                    if (replaceSearch.size() > s) {
+                        ret = ret.replace(replaceSearch.get(s), rule.getReplace()[s]);
+                    }
+                }
+            } else {
+                ret = ret.replaceAll(rule.getSearch(), rule.getReplace()[0]);
+            }
+
+        }
+        return ret;
+    }
+
+    private String executeReplace_(int logFileSource, String line) {
         String ret = line;
         switch (logFileSource) {
         case 1:
             for (Rule rule : listOfRules) {
-                ret = ret.replaceAll(rule.getSearch(), rule.getReplace());
+                ret = ret.replaceAll(rule.getSearch(), rule.getReplace()[0]);
             }
             break;
         }
@@ -83,14 +121,17 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
     public void executeSubstitution() {
         for (String logFilename : listOfLogfileNames) {
             LOGGER.debug("input --->" + logFilename);
-            Path input = Paths.get(logFilename);
-            String output = input.getParent() + "/anonymized_" + input.getFileName();
-
-            LOGGER.debug("output --->" + logFilename);
+            File input = new File(logFilename);
+            Path p = Paths.get(input.getAbsolutePath());
+            String output = p.getParent() + "/" + ANONYMIZED + p.getFileName();
 
             int logFileSource = getLogfileSource(logFilename);
             try (BufferedReader r = Files.newBufferedReader(Paths.get(logFilename)); BufferedWriter writer = new BufferedWriter(new FileWriter(
                     output));) {
+
+                File f = new File(output);
+                LOGGER.info("Output file " + f.getAbsolutePath());
+                System.out.println("File " + f.getAbsolutePath());
                 for (String line; (line = r.readLine()) != null;) {
                     String replacedLine = executeReplace(logFileSource, line);
                     writer.write(replacedLine);
@@ -156,7 +197,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                 isDirectory = Files.isDirectory(path);
                 isFile = Files.isRegularFile(path);
                 if (isFile) {
-                    if (Files.exists(path)) {
+                    if (Files.exists(path) && !logfile.startsWith(ANONYMIZED)) {
                         listOfLogfileNames.add(logfile);
                     }
                 } else {
@@ -177,7 +218,10 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
             if (dir != null) {
                 File[] files = dir.listFiles(fileFilter);
                 for (int i = 0; i < files.length; i++) {
-                    listOfLogfileNames.add(files[i].getAbsolutePath());
+                    String s = files[i].getAbsolutePath();
+                    if (!s.startsWith(ANONYMIZED)) {
+                        listOfLogfileNames.add(files[i].getAbsolutePath());
+                    }
                 }
             }
         }
@@ -191,6 +235,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
 
             final YAMLFactory yamlFactory = new YAMLFactory();
             yamlFactory.enable(Feature.MINIMIZE_QUOTES);
+            yamlFactory.enable(Feature.LITERAL_BLOCK_STYLE);
             yamlFactory.disable(Feature.WRITE_DOC_START_MARKER);
             yamlFactory.disable(Feature.SPLIT_LINES);
             ObjectMapper mapper = new ObjectMapper(yamlFactory);
@@ -213,7 +258,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
     }
 
     @Override
-    protected void a(String item, String search, String replace) {
+    protected void a(String item, String search, String... replace) {
         addRule(item, search, replace);
     }
 
