@@ -70,6 +70,11 @@
       <groupId>com.sos-berlin.js7.engine</groupId>
       <artifactId>js7-data-for-java_2.13</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.sos-berlin</groupId>
+      <artifactId>js7-license</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
     <!-- 3RD PARTY DEPENDENCIES -->
     <dependency>
