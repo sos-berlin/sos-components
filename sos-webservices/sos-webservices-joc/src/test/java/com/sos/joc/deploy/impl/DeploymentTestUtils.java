@@ -5,8 +5,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +25,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.path.PathFilter;
 import com.sos.joc.model.inventory.path.PathResponse;
+import com.sos.joc.model.joc.Js7LicenseInfo;
+import com.sos.joc.model.joc.LicenseType;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
@@ -1091,4 +1095,15 @@ public class DeploymentTestUtils {
         return response;
     }
 
+    public static Js7LicenseInfo createLicenseInfo() {
+        Js7LicenseInfo info = new Js7LicenseInfo();
+        info.setValid(true);
+        info.setType(LicenseType.COMMERCIAL);
+        Calendar cal = new GregorianCalendar();
+        cal.set(2020, 0, 12, 9, 33, 42);
+        info.setValidFrom(Date.from(cal.toInstant()));
+        cal.set(2023, 0, 12, 9, 32, 41);
+        info.setValidUntil(Date.from(cal.toInstant()));
+        return info;
+    }
 }

@@ -429,6 +429,11 @@ public class MappingTest {
     }
 
     @Test
+    public void test27LicenseInfoFilter () throws JsonProcessingException {
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createLicenseInfo()));
+    }
+    
+    @Test
     public void test27ValidateWithRegex() {
         CloneFilter cloneFilter = DeploymentTestUtils.createExampleCloneFilter();
         boolean validatedSuccessfully = false;
