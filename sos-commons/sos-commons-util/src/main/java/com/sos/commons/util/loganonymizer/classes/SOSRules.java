@@ -16,4 +16,8 @@ public class SOSRules {
         this.rules = rules;
     }
 
+    public SOSRules() {
+        super();
+     }
+
 }

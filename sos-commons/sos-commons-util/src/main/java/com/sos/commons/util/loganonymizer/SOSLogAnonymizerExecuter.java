@@ -4,8 +4,11 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -18,10 +21,12 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.error.YAMLException;
+import org.yaml.snakeyaml.nodes.Tag;
+import org.yaml.snakeyaml.representer.Representer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import com.sos.commons.util.loganonymizer.classes.DefaultRulesTable;
 import com.sos.commons.util.loganonymizer.classes.Rule;
 import com.sos.commons.util.loganonymizer.classes.SOSRules;
@@ -42,7 +47,6 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
     private List<Rule> listOfAgentRules = new ArrayList<Rule>();
     private List<Rule> listOfControllerRules = new ArrayList<Rule>();
     private List<Rule> listOfJocCockpitRules = new ArrayList<Rule>();
-    private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     public SOSLogAnonymizerExecuter() {
         super();
@@ -77,17 +81,17 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         List<String> replaceSearch = new ArrayList<String>();
         for (Rule rule : listOfRules) {
             Matcher m = Pattern.compile(rule.getSearch()).matcher(ret);
-            if (m.find() && (m.groupCount() == rule.getReplace().length)) {
+            if (m.find()) {
                 for (int g = 1; g <= m.groupCount(); g++) {
-                    replaceSearch.add(line.substring(m.start(g), m.end(g)));
+                    if (rule.getReplace().length >= g) {
+                        replaceSearch.add(line.substring(m.start(g), m.end(g)));
+                    }
                 }
                 for (int s = 0; s < rule.getReplace().length; s++) {
                     if (replaceSearch.size() > s) {
                         ret = ret.replace(replaceSearch.get(s), rule.getReplace()[s]);
                     }
                 }
-            } else {
-                ret = ret.replaceAll(rule.getSearch(), rule.getReplace()[0]);
             }
             replaceSearch.clear();
             line = ret;
@@ -144,16 +148,17 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
 
     public void setRules(String rules) {
         listOfRules.clear();
-        mapper.findAndRegisterModules();
+        Yaml yaml = new Yaml(new org.yaml.snakeyaml.constructor.Constructor(SOSRules.class));
         try {
-            SOSRules sosRules = mapper.readValue(new File(rules), SOSRules.class);
+
+            InputStream inputStream = new FileInputStream(new File(rules));
+
+            SOSRules sosRules = yaml.load(inputStream);
             if (sosRules.getRules() != null) {
                 listOfRules.addAll(sosRules.getRules());
-                // listOfAgentRules.addAll(sosRules.getRules());
-                // listOfControllerRules.addAll(sosRules.getRules());
-                // listOfJocCockpitRules.addAll(sosRules.getRules());
+
             }
-        } catch (IOException e) {
+        } catch (YAMLException | FileNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -208,26 +213,20 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
     }
 
     public void exportRules(String exportFile) throws IOException {
-        try {
+        final DumperOptions options = new DumperOptions();
+        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        options.setPrettyFlow(true);
+        options.setProcessComments(true);
+        options.setCanonical(false);
+        Representer representer = new Representer();
+        representer.addClassTag(com.sos.commons.util.loganonymizer.classes.SOSRules.class, Tag.MAP);
 
-            final YAMLFactory yamlFactory = new YAMLFactory();
-            yamlFactory.enable(Feature.MINIMIZE_QUOTES);
-            yamlFactory.enable(Feature.LITERAL_BLOCK_STYLE);
-            yamlFactory.disable(Feature.WRITE_DOC_START_MARKER);
-            yamlFactory.disable(Feature.SPLIT_LINES);
-            ObjectMapper mapper = new ObjectMapper(yamlFactory);
+        final Yaml yaml = new Yaml(representer, options);
 
-            SOSRules defaultRules = new SOSRules();
-            defaultRules.getRules().addAll(getListOfDefaultRules());
-
-            // defaultRules.getAgent().addAll(getListOfDefaultAgentRules());
-            // defaultRules.getController().addAll(getListOfDefaultControllerRules());
-            // defaultRules.getJocCockpit().addAll(getListOfDefaultJocCockpitRules());
-
-            mapper.writeValue(new File(exportFile), defaultRules);
-        } catch (IOException e) {
-            throw e;
-        }
+        SOSRules defaultRules = new SOSRules();
+        defaultRules.getRules().addAll(getListOfDefaultRules());
+        FileWriter writer = new FileWriter(exportFile);
+        yaml.dump(defaultRules, writer);
     }
 
     public List<Rule> getListOfRules() {
