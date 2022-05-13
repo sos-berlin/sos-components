@@ -102,8 +102,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
     public void executeSubstitution() {
         for (String logFilename : listOfLogfileNames) {
             LOGGER.debug("input --->" + logFilename);
-            File input = new File(logFilename);
-            Path p = Paths.get(input.getAbsolutePath());
+            Path p = Paths.get(logFilename);
             String output = p.getParent() + "/" + ANONYMIZED + p.getFileName();
 
             int logFileSource = getLogfileSource(logFilename);
@@ -112,7 +111,6 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
 
                 File f = new File(output);
                 LOGGER.info("Output file " + f.getAbsolutePath());
-                System.out.println("File " + f.getAbsolutePath());
                 for (String line; (line = r.readLine()) != null;) {
                     String replacedLine = executeReplace(logFileSource, line);
                     writer.write(replacedLine);
@@ -167,20 +165,29 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         if (listOfLogfileNames == null) {
             listOfLogfileNames = new ArrayList<String>();
         }
+
         String[] logs = log.split(",");
         for (String logfile : logs) {
+
             File dir = null;
             FileFilter fileFilter = null;
             try {
                 boolean isDirectory = false;
                 boolean isFile = false;
-                Path path = Paths.get(logfile);
+
+                File input = new File(logfile);
+                Path path = Paths.get(input.getAbsolutePath());
 
                 isDirectory = Files.isDirectory(path);
                 isFile = Files.isRegularFile(path);
+
                 if (isFile) {
-                    if (Files.exists(path) && !logfile.startsWith(ANONYMIZED)) {
-                        listOfLogfileNames.add(logfile);
+                    if (Files.exists(path)) {
+                        if (!logfile.startsWith(ANONYMIZED)) {
+                            listOfLogfileNames.add(path.toString());
+                        }
+                    } else {
+                        LOGGER.info("File not found: " + path.toString());
                     }
                 } else {
                     if (isDirectory) {
@@ -201,7 +208,9 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                 File[] files = dir.listFiles(fileFilter);
                 for (int i = 0; i < files.length; i++) {
                     String s = files[i].getAbsolutePath();
-                    if (!s.startsWith(ANONYMIZED)) {
+                    Path path = Paths.get(s);
+
+                    if (!Files.isDirectory(path) && !s.startsWith(ANONYMIZED)) {
                         listOfLogfileNames.add(files[i].getAbsolutePath());
                     }
                 }
@@ -213,6 +222,8 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
     }
 
     public void exportRules(String exportFile) throws IOException {
+        File input = new File(exportFile);
+        Path path = Paths.get(input.getAbsolutePath());
         final DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         options.setPrettyFlow(true);
@@ -225,7 +236,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
 
         SOSRules defaultRules = new SOSRules();
         defaultRules.getRules().addAll(getListOfDefaultRules());
-        FileWriter writer = new FileWriter(exportFile);
+        FileWriter writer = new FileWriter(path.toString());
         yaml.dump(defaultRules, writer);
     }
 
