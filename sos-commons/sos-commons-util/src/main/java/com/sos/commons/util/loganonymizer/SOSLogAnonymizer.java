@@ -32,7 +32,7 @@ public class SOSLogAnonymizer {
                 String[] parameters = arg.split("=");
                 String paramName = parameters[0];
                 switch (paramName) {
-                case "--export-rules-file":
+                case "--export-rules":
                     if (parameters.length > 1) {
                         try {
                             sosLogAnonymizerExecuter.exportRules(parameters[1]);
