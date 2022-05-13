@@ -62,6 +62,9 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     // s -> new ConfigurationEntry("show_view_" + s.name(), null, GlobalSettingsSectionValueType.BOOLEAN)));
 
     private ConfigurationEntry encoding = new ConfigurationEntry("encoding", null, GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry disableWarningOnLicenseExpiration = new ConfigurationEntry("disable_warning_on_license_expiration", "false",
+            GlobalSettingsSectionValueType.BOOLEAN);
+    
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
 
@@ -97,6 +100,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         historyPwd.setOrdering(++index);
 
         encoding.setOrdering(++index);
+        disableWarningOnLicenseExpiration.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -145,6 +149,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     public ConfigurationEntry getEncoding() {
         return encoding;
+    }
+    
+    public ConfigurationEntry getDisableWarningOnLicenseExpiration() {
+        return disableWarningOnLicenseExpiration;
     }
 
     public Map<ShowViewName, Boolean> getShowViews() {

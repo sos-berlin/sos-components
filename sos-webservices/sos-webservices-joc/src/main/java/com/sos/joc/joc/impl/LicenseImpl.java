@@ -4,11 +4,11 @@ import javax.ws.rs.Path;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.ILicense;
 import com.sos.joc.model.joc.Js7LicenseInfo;
 import com.sos.joc.model.joc.LicenseType;
-import com.sos.js7.license.joc.ClusterLicenseCheck;
 
 @Path("joc")
 public class LicenseImpl extends JOCResourceImpl implements ILicense {
@@ -24,13 +24,23 @@ public class LicenseImpl extends JOCResourceImpl implements ILicense {
                 return jocDefaultResponse;
             }
             Js7LicenseInfo info = new Js7LicenseInfo();
-            info.setValid(ClusterLicenseCheck.hasLicense());
-            info.setValidFrom(ClusterLicenseCheck.getValidFrom());
-            info.setValidUntil(ClusterLicenseCheck.getValidUntil());
-            if(info.getValidFrom() == null && info.getValidUntil() == null && !info.getValid()) {
-                info.setType(LicenseType.OPENSOURCE);
+            if(JocClusterService.getInstance().getCluster() != null) {
+                JocClusterService.getInstance().getCluster().getConfig().rereadClusterMode();
+                if(JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().isJarFound()) {
+                    info.setValid(JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getUse());
+                    info.setValidFrom(JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getValidFrom());
+                    info.setValidUntil(JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getValidUntil());
+                    if (info.getValid()) {
+                        info.setType(LicenseType.COMMERCIAL_VALID);
+                    } else {
+                        info.setType(LicenseType.COMMERCIAL_INVALID);
+                    }
+                } else {
+                    info.setType(LicenseType.OPENSOURCE);
+                    info.setValid(false);
+                }
             } else {
-                info.setType(LicenseType.COMMERCIAL);
+                return JOCDefaultResponse.responseStatusJSError("cluster service not available, retry in a few seconds.");
             }
             return JOCDefaultResponse.responseStatus200(info);
         } catch (JocException e) {
