@@ -64,7 +64,11 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             if (entity.getLicenseValidFrom() == null && entity.getLicenseValidUntil() == null && !entity.getClusterLicense()) {
                 entity.setLicenseType(LicenseType.OPENSOURCE);
             } else {
-                entity.setLicenseType(LicenseType.COMMERCIAL);
+                if(entity.getClusterLicense()) {
+                    entity.setLicenseType(LicenseType.COMMERCIAL_VALID);
+                } else {
+                    entity.setLicenseType(LicenseType.COMMERCIAL_INVALID);
+                }
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
             
