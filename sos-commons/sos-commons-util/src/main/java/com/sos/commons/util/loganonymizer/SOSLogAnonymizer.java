@@ -11,9 +11,9 @@ public class SOSLogAnonymizer {
 
     public static void usage() {
         LOGGER.info("Usage: --export-rules-file=<export-rules-file> --log-file=<log-file>[,<log-file>[,<log-file>]] --rules-file=<rules-file>");
-        LOGGER.info("       --export-rules-file     : optional: a file name where the default rules will be exported.");
-        LOGGER.info("       --log-file              : a file name with placeholder like /temp/agent*.log or a folder name");
-        LOGGER.info("       --rules-file            : optional: a file with rules.");
+        LOGGER.info("       -e|--export-rules-file     : optional: a file name where the default rules will be exported.");
+        LOGGER.info("       -l|--log-file              : a file name with placeholder like /temp/agent*.log or a folder name");
+        LOGGER.info("       -r|--rules-file            : optional: a file with rules.");
     }
 
     public static void main(String[] args) {
@@ -32,6 +32,7 @@ public class SOSLogAnonymizer {
                 String[] parameters = arg.split("=");
                 String paramName = parameters[0];
                 switch (paramName) {
+                case "-e":
                 case "--export-rules":
                     if (parameters.length > 1) {
                         try {
@@ -44,11 +45,13 @@ public class SOSLogAnonymizer {
                         System.exit(1);
                     }
                     break;
+                case "-l":
                 case "--log-file":
                     if (parameters.length > 1) {
                         sosLogAnonymizerExecuter.setLogfiles(parameters[1]);
                     }
                     break;
+                case "-r":
                 case "--rules-file":
                     if (parameters.length > 1) {
                         sosLogAnonymizerExecuter.setRules(parameters[1]);
