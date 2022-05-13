@@ -1098,7 +1098,7 @@ public class DeploymentTestUtils {
     public static Js7LicenseInfo createLicenseInfo() {
         Js7LicenseInfo info = new Js7LicenseInfo();
         info.setValid(true);
-        info.setType(LicenseType.COMMERCIAL);
+        info.setType(LicenseType.COMMERCIAL_VALID);
         Calendar cal = new GregorianCalendar();
         cal.set(2020, 0, 12, 9, 33, 42);
         info.setValidFrom(Date.from(cal.toInstant()));

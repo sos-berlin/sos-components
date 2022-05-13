@@ -8,8 +8,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum LicenseType {
 
-    COMMERCIAL("COMMERCIAL"),
-    OPENSOURCE("OPENSOURCE");
+    OPENSOURCE("OPENSOURCE"),
+    COMMERCIAL_VALID("COMMERCIAL_VALID"),
+    COMMERCIAL_INVALID("COMMERCIAL_INVALID");
     private final String value;
     private final static Map<String, LicenseType> CONSTANTS = new HashMap<String, LicenseType>();
 
