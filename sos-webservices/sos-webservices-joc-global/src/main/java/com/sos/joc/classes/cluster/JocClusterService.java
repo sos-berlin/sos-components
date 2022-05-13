@@ -348,6 +348,8 @@ public class JocClusterService {
             AJocClusterService.removeLogger();
             return JocCluster.getErrorAnswer(new Exception("cluster not running"));
         }
+
+        cluster.getConfig().rereadClusterMode();
         JocClusterAnswer answer = cluster.switchMember(mode, Globals.configurationGlobals, memberId);
         AJocClusterService.removeLogger();
         return answer;

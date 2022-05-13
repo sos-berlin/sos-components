@@ -435,7 +435,8 @@ public class JocCluster {
 
                     boolean update = true;
                     // to avoid start of the current instance if a switchMember defined
-                    if (config.getClusterModeResult().getUse() && item.getSwitchMemberId() != null && !item.getSwitchMemberId().equals(currentMemberId)) {
+                    if (config.getClusterModeResult().getUse() && item.getSwitchMemberId() != null && !item.getSwitchMemberId().equals(
+                            currentMemberId)) {
                         DBItemJocInstance switchInstance = getInstance(item.getSwitchMemberId());
                         if (switchInstance != null) {
                             if (!isHeartBeatExceeded(switchInstance.getHeartBeat())) {
