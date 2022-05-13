@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
 public class JocClusterConfiguration {
@@ -37,7 +38,7 @@ public class JocClusterConfiguration {
     private List<Class<?>> services;
     private final ThreadGroup threadGroup;
 
-    private final ClusterModeResult clusterModeResult;
+    private ClusterModeResult clusterModeResult;
 
     private int heartBeatExceededInterval = 60;// seconds
 
@@ -144,7 +145,15 @@ public class JocClusterConfiguration {
     }
 
     public ClusterModeResult getClusterModeResult() {
+        if (clusterModeResult == null) {
+            LOGGER.error("can't evaluate cluster mode. set cluster mode=false");
+            clusterModeResult = new ClusterModeResult(false);
+        }
         return clusterModeResult;
+    }
+
+    public void rereadClusterMode() {
+        clusterModeResult = clusterMode();
     }
 
     private ClusterModeResult clusterMode() {
@@ -153,9 +162,10 @@ public class JocClusterConfiguration {
         try {
             lJar = webAppCL.loadClass(CLASS_NAME_CLUSTER_MODE).getProtectionDomain().getCodeSource().getLocation();
         } catch (Throwable e1) {
-            return null;
+            return new ClusterModeResult(false);
         }
 
+        ClusterModeResult result = new ClusterModeResult(true);
         URLClassLoader currentCL = null;
         try {
             List<URL> jars = new ArrayList<>();
@@ -168,29 +178,30 @@ public class JocClusterConfiguration {
                 jars.add(jar.toUri().toURL());
             }
             currentCL = new URLClassLoader(jars.stream().toArray(URL[]::new));
-
             Object o = currentCL.loadClass(CLASS_NAME_CLUSTER_MODE).newInstance();
-            ClusterModeResult cmResult = new ClusterModeResult();
+            for (Method m : o.getClass().getDeclaredMethods()) {
+                switch (m.getName()) {
+                case "getValidFrom":
+                    result.setValidFrom((Date) m.invoke(o));
+                    break;
+                case "getValidUntil":
+                    result.setValidUntil((Date) m.invoke(o));
+                    break;
+                default:
+                    result.setUse((boolean) m.invoke(o));
+                    break;
+                }
+            }
+
             try {
                 TimeUnit.SECONDS.sleep(1);// waiting for lJar logging ...
             } catch (Throwable e) {
             }
-             
-            for(Method m : o.getClass().getDeclaredMethods()) {
-                switch(m.getName()) {
-                case "getValidFrom":
-                    cmResult.setValidFrom((Date)m.invoke(o));
-                    break;
-                case "getValidUntil":
-                    cmResult.setValidUntil((Date)m.invoke(o));
-                    break;
-                default:
-                    cmResult.setUse((boolean) m.invoke(o));
-                    break;
-                }
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[log jars=%s]%s", logJars.size(), SOSString.toString(result)));
             }
             // provide from/until for joc properties api
-            return cmResult;
+            return result;
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         } finally {
@@ -201,6 +212,6 @@ public class JocClusterConfiguration {
                 }
             }
         }
-        return null;
+        return result;
     }
 }
