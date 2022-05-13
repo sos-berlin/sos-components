@@ -72,7 +72,6 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         return 1;
     }
 
- 
     private String executeReplace(int logFileSource, String line) {
         String ret = line;
         List<String> replaceSearch = new ArrayList<String>();
@@ -91,11 +90,11 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                 ret = ret.replaceAll(rule.getSearch(), rule.getReplace()[0]);
             }
             replaceSearch.clear();
+            line = ret;
         }
         return ret;
     }
 
-  
     public void executeSubstitution() {
         for (String logFilename : listOfLogfileNames) {
             LOGGER.debug("input --->" + logFilename);
