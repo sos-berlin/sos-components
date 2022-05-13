@@ -17,11 +17,17 @@ import com.sos.jitl.jobs.common.JobLogger;
 
 public class Export2CSV {
 
-    public static void export(ResultSet resultSet, Path outputFile, JobLogger logger) {
+    public static void export(ResultSet resultSet, Path outputFile, JobLogger logger) throws Exception {
         export(resultSet, outputFile, null, logger);
     }
 
-    public static void export(ResultSet resultSet, Path outputFile, Builder builder, JobLogger logger) {
+    public static void export(ResultSet resultSet, Path outputFile, Builder builder, JobLogger logger) throws Exception {
+        if (resultSet == null) {
+            throw new Exception("missing ResultSet");
+        }
+        if (outputFile == null) {
+            throw new Exception("missing outputFile");
+        }
         if (builder == null) {
             builder = defaultBuilder();
         }
@@ -61,6 +67,13 @@ public class Export2CSV {
             }
         } catch (Throwable e) {
             removeOutputFile = true;
+            String f = file.toString();
+            try {
+                f = file.getCanonicalPath();
+            } catch (Throwable ee) {
+
+            }
+            throw new Exception(String.format("[%s]%s", f, e.toString()), e);
         } finally {
             if (printer != null) {
                 try {
