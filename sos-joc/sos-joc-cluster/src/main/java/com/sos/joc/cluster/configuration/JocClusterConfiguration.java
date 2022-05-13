@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSPath;
-import com.sos.commons.util.SOSString;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
 public class JocClusterConfiguration {
@@ -194,13 +193,9 @@ public class JocClusterConfiguration {
             }
 
             try {
-                TimeUnit.SECONDS.sleep(1);// waiting for lJar logging ...
+                TimeUnit.SECONDS.sleep(1);// waiting for lJar logging because currentCL will be closed...
             } catch (Throwable e) {
             }
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[log jars=%s]%s", logJars.size(), SOSString.toString(result)));
-            }
-            // provide from/until for joc properties api
             return result;
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);

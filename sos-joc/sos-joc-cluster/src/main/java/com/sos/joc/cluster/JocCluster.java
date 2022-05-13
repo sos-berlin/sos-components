@@ -482,6 +482,7 @@ public class JocCluster {
 
     // GUI - separate thread
     public JocClusterAnswer switchMember(StartupMode mode, ConfigurationGlobals configurations, String newMemberId) {
+        config.rereadClusterMode();
         if (!config.getClusterModeResult().getUse()) {
             return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_LICENSE);
         }
