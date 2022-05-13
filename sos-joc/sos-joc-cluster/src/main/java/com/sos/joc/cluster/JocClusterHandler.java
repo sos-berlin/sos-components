@@ -55,8 +55,16 @@ public class JocClusterHandler {
         String method = type.name().toLowerCase();
         boolean isStart = type.equals(PerformType.START);
         if (isStart) {
+            if (!StartupMode.automatic.equals(mode)) {
+                cluster.getConfig().rereadClusterMode();
+            }
             if (active) {
                 return JocCluster.getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
+            }
+            if (StartupMode.manual_switchover.equals(mode) || StartupMode.automatic_switchover.equals(mode)) {
+                if (!cluster.getConfig().getClusterModeResult().getUse()) {
+                    return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_LICENSE);
+                }
             }
         } else {
             if (!active || (services == null || services.size() == 0)) {
