@@ -10,10 +10,11 @@ public class SOSLogAnonymizer {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLogAnonymizer.class);
 
     public static void usage() {
-        LOGGER.info("Usage: --export-rules-file=<export-rules-file> --log-file=<log-file>[,<log-file>[,<log-file>]] --rules-file=<rules-file>");
-        LOGGER.info("       -e|--export-rules-file     : optional: a file name where the default rules will be exported.");
-        LOGGER.info("       -l|--log-file              : a file name with placeholder like /temp/agent*.log or a folder name");
-        LOGGER.info("       -r|--rules-file            : optional: a file with rules.");
+        LOGGER.info("\r\n"  
+                + "Usage: --export-rules=<export-rules> --log-file=<log-file>[,<log-file>[,<log-file>]] --rules-file=<rules-file>" + "\r\n"
+                + " -e|--export-rules          : optional: a file name where the default rules will be exported." +  "\r\n"
+                + " -l|--log-file              : a file name with placeholder like /temp/agent*.log or a folder name" +  "\r\n"
+                + " -r|--rules-file            : optional: a file with rules.");
     }
 
     public static void main(String[] args) {
@@ -63,7 +64,7 @@ public class SOSLogAnonymizer {
                     break;
                 default:
                     LOGGER.error("... wrong parameter: " + paramName);
-                    System.out.println("... wrong parameter: " + paramName);
+                    usage();
                     System.exit(1);
 
                 }
