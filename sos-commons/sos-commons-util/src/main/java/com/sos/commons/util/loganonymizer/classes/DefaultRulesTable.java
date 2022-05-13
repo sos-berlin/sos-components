@@ -15,7 +15,7 @@ public abstract class DefaultRulesTable {
                 "://(.*):(\\d{3,5})", 
                 "<host>","<port>" );
 
-        a( "ip-address",                // any log              92.168.2.1
+        a( "ip-address",                // any log              192.168.2.1
                 "(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5]))",
                 "<ip-address>" );
 
