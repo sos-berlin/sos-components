@@ -13,7 +13,7 @@ public class SOSLogAnonymizer {
         LOGGER.info("\r\n"  
                 + "Usage: --export-rules=<export-rules> --log-file=<log-file>[,<log-file>[,<log-file>]] --rules-file=<rules-file>" + "\r\n"
                 + " -e|--export-rules          : optional: a file name where the default rules will be exported." +  "\r\n"
-                + " -l|--log-file              : a file name with placeholder like /temp/agent*.log or a folder name" +  "\r\n"
+                + " -l|--log-file              : optional: a file name with placeholder like /temp/agent*.log or a folder name" +  "\r\n"
                 + " -r|--rules-file            : optional: a file with rules.");
     }
 
