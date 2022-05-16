@@ -1,5 +1,6 @@
 package com.sos.commons.util.loganonymizer;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -9,6 +10,9 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -17,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.slf4j.Logger;
@@ -33,10 +38,11 @@ import com.sos.commons.util.loganonymizer.classes.SOSRules;
 
 public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
 
-    private static final String ANONYMIZED = "anonymized_";
+    private static final String ANONYMIZED = "anonymized-";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLogAnonymizerExecuter.class);
 
+    private String outputDir;
     private List<String> listOfLogfileNames = new ArrayList<String>();
     private List<Rule> listOfDefaultRules;
     private List<Rule> listOfRules = new ArrayList<Rule>();
@@ -99,31 +105,90 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         return ret;
     }
 
+    public static boolean isGZipped(InputStream in) {
+        if (!in.markSupported()) {
+            in = new BufferedInputStream(in);
+        }
+        in.mark(2);
+        int magic = 0;
+        try {
+            magic = in.read() & 0xff | ((in.read() << 8) & 0xff00);
+            in.reset();
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+            return false;
+        }
+        return magic == GZIPInputStream.GZIP_MAGIC;
+    }
+
     public void executeSubstitution() {
         for (String logFilename : listOfLogfileNames) {
             LOGGER.debug("input --->" + logFilename);
             Path p = Paths.get(logFilename);
-            String output = p.getParent() + "/" + ANONYMIZED + p.getFileName();
+
+            String output = outputDir + "/" + ANONYMIZED + p.getFileName();
 
             int logFileSource = getLogfileSource(logFilename);
-            try (BufferedReader r = Files.newBufferedReader(Paths.get(logFilename)); BufferedWriter writer = new BufferedWriter(new FileWriter(
-                    output));) {
+            BufferedReader r = null;
+            BufferedWriter writer = null;
+            GZIPInputStream gzipInputStream = null;
+            try {
 
+                InputStream is = Files.newInputStream(Paths.get(logFilename));
+                if (isGZipped(is)) {
+                    InputStream fileInputStream = new FileInputStream(logFilename);
+                    gzipInputStream = new GZIPInputStream(fileInputStream);
+                    Reader isReader = new InputStreamReader(gzipInputStream, StandardCharsets.ISO_8859_1);
+                    r = new BufferedReader(isReader);
+                    if (output.endsWith(".gz")) {
+                        output =  output.substring(0,output.length() - 3);
+                    }
+                } else {
+                    r = Files.newBufferedReader(Paths.get(logFilename));
+                }
+
+                writer = new BufferedWriter(new FileWriter(output));
                 File f = new File(output);
                 LOGGER.info("Output file " + f.getAbsolutePath());
-                for (String line; (line = r.readLine()) != null;) {
-                    String replacedLine = executeReplace(logFileSource, line);
-                    writer.write(replacedLine);
-                    writer.newLine();
+                try {
+                    for (String line; (line = r.readLine()) != null;) {
+                        String replacedLine = executeReplace(logFileSource, line);
+                        writer.write(replacedLine);
+                        writer.newLine();
 
-                    if (!line.equals(replacedLine)) {
-                        LOGGER.debug(line);
-                        LOGGER.debug(replacedLine);
+                        if (!line.equals(replacedLine)) {
+                            LOGGER.debug(line);
+                            LOGGER.debug(replacedLine);
+                        }
+
                     }
-
+                } catch (Exception e) {
+                    LOGGER.warn(e.getMessage());
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                if (gzipInputStream != null) {
+                    try {
+                        gzipInputStream.close();
+                    } catch (IOException e) {
+                    }
+
+                }
+                if (writer != null) {
+                    try {
+                        writer.close();
+                    } catch (IOException e) {
+                    }
+
+                }
+                if (r != null) {
+                    try {
+                        r.close();
+                    } catch (IOException e) {
+                    }
+
+                }
             }
         }
     }
@@ -247,6 +312,10 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
     @Override
     protected void a(String item, String search, String... replace) {
         addRule(item, search, replace);
+    }
+
+    public void setOutputdir(String outputDir) {
+        this.outputDir = outputDir;
     }
 
 }
