@@ -52,6 +52,12 @@ public class SOSLogAnonymizer {
                         sosLogAnonymizerExecuter.setLogfiles(parameters[1]);
                     }
                     break;
+                case "-o":
+                case "--output-dir":
+                    if (parameters.length > 1) {
+                        sosLogAnonymizerExecuter.setOutputdir(parameters[1]);
+                    }
+                    break;
                 case "-r":
                 case "--rules-file":
                     if (parameters.length > 1) {
