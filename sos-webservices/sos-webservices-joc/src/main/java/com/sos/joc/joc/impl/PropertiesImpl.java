@@ -55,23 +55,25 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             entity.setWelcomeDoNotRemindMe(ClusterSettings.getWelcomeDoNotRemindMe(userSettings));
             entity.setWelcomeGotIt(ClusterSettings.getWelcomeGotIt(userSettings));
             
-            entity.setClusterLicense(JocClusterService.getInstance().getCluster() != null && 
-                    JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getUse());
-            if (JocClusterService.getInstance().getCluster() != null) {
+            if(JocClusterService.getInstance().getCluster() != null) {
+                JocClusterService.getInstance().getCluster().getConfig().rereadClusterMode();
+                entity.setClusterLicense(JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getUse());
                 entity.setLicenseValidFrom(JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getValidFrom());
                 entity.setLicenseValidUntil(JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getValidUntil());
-            }
-            if (entity.getLicenseValidFrom() == null && entity.getLicenseValidUntil() == null && !entity.getClusterLicense()) {
-                entity.setLicenseType(LicenseType.OPENSOURCE);
-            } else {
-                if(entity.getClusterLicense()) {
-                    entity.setLicenseType(LicenseType.COMMERCIAL_VALID);
+                if (entity.getLicenseValidFrom() == null && entity.getLicenseValidUntil() == null && !entity.getClusterLicense()) {
+                    entity.setLicenseType(LicenseType.OPENSOURCE);
                 } else {
-                    entity.setLicenseType(LicenseType.COMMERCIAL_INVALID);
+                    if(entity.getClusterLicense()) {
+                        entity.setLicenseType(LicenseType.COMMERCIAL_VALID);
+                    } else {
+                        entity.setLicenseType(LicenseType.COMMERCIAL_INVALID);
+                    }
                 }
+            } else {
+                entity.setClusterLicense(false);
+                entity.setLicenseType(LicenseType.OPENSOURCE);
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
-            
             return JOCDefaultResponse.responseStatus200(entity);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
