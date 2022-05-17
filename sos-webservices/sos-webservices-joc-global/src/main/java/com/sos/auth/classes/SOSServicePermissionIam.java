@@ -51,6 +51,7 @@ import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.db.security.IamHistoryDbLayer;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -523,9 +524,9 @@ public class SOSServicePermissionIam {
             sosShiroCurrentUserAnswer.setMessage(sosLogin.getMsg());
             sosShiroCurrentUserAnswer.setIdentityService(identityServiceType.name() + ":" + identityServiceName);
             currentAccount.setCurrentSubject(null);
+
             throw new JocAuthenticationException(sosShiroCurrentUserAnswer);
         }
-
         SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
         String accessToken = sosSessionHandler.getAccessToken().toString();
 
@@ -651,8 +652,6 @@ public class SOSServicePermissionIam {
                         }
                     }
 
-                    Globals.disconnect(sosHibernateSession);
-
                     msg = "";
                     for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
                         try {
@@ -676,14 +675,20 @@ public class SOSServicePermissionIam {
 
                 }
 
+                IamHistoryDbLayer iamHistoryDbLayer = new IamHistoryDbLayer(sosHibernateSession);
+
                 if (currentAccount.getCurrentSubject() != null) {
+                    iamHistoryDbLayer.addLoginAttempt(currentAccount.getAccountname(), true);
                     currentAccount.getCurrentSubject().getListOfAccountPermissions().addAll(setOfAccountPermissions);
                     SecurityConfiguration securityConfigurationEntry = sosPermissionMerger.mergePermissions();
                     SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
                     Permissions sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(
                             securityConfigurationEntry);
                     currentAccount.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
+                } else {
+                    iamHistoryDbLayer.addLoginAttempt(currentAccount.getAccountname(), false);
                 }
+                Globals.disconnect(sosHibernateSession);
 
             } catch (JocAuthenticationException e) {
                 msg = e.getMessage();

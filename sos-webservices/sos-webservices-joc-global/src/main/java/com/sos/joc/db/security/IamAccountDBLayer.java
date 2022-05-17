@@ -363,11 +363,6 @@ public class IamAccountDBLayer {
 		}
 	}
 
-	public int update(IamAccountFilter filter) {
-		return 0;
-
-	}
-
 	public int renameAccount(Long identityServiceId, String accountOldName, String accountNewName)
 			throws SOSHibernateException {
 		String hql = "update " + DBItemIamAccount

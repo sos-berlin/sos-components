@@ -7,6 +7,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSClassList;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
+import com.sos.joc.db.authentication.DBItemIamHistory;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamPermission;
 import com.sos.joc.db.authentication.DBItemIamRole;
@@ -273,6 +274,9 @@ public class DBLayer implements Serializable {
     public static final String TABLE_IAM_ACCOUNTS = "IAM_ACCOUNTS";
     public static final String TABLE_IAM_ACCOUNTS_SEQUENCE = "SEQ_IAM_ACCOUNTS";
 
+    public static final String TABLE_IAM_HISTORY = "IAM_HISTORY";
+    public static final String TABLE_IAM_HISTORY_SEQUENCE = "SEQ_IAM_HISTORY";
+
     public static final String TABLE_IAM_ACCOUNT2ROLES = "IAM_ACCOUNT2ROLES";
     public static final String TABLE_IAM_ACCOUNT2ROLES_SEQUENCE = "SEQ_IAM_ACCOUNT2ROLES";
 
@@ -434,6 +438,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDepCommitIds.class);
         cl.add(DBItemDepNamePaths.class);
 
+        cl.add(DBItemIamHistory.class);
         cl.add(DBItemIamAccount.class);
         cl.add(DBItemIamIdentityService.class);
         cl.add(DBItemIamAccount2Roles.class);
