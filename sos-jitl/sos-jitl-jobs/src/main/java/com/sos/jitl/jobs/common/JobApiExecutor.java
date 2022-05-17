@@ -210,14 +210,26 @@ public class JobApiExecutor {
             String pwd = "";
             if(csFile != null && !csFile.isEmpty()) {
                 SOSKeePassResolver resolver = new SOSKeePassResolver(csFile, csKeyFile, csPwd);
-                username = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME));
-                pwd = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD));
+                try {
+                    username = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME));
+                    pwd = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD));
+                } catch (Exception e) {
+                    logDebug(e.getMessage());
+                }
             } else {
-                username = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME);
-                pwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD);
+                try {
+                    username = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME);
+                    pwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD);
+                } catch (Exception e) {
+                    logDebug(e.getMessage());
+                }
             }
-            String basicAuth = Base64.getMimeEncoder().encodeToString((username + ":" + pwd).getBytes());
-            client.setBasicAuthorization(basicAuth);
+            if((username == null || username.isEmpty()) && (pwd == null || pwd.isEmpty())) {
+                logError("no username and password configured in privat.conf");
+            } else {
+                String basicAuth = Base64.getMimeEncoder().encodeToString((username + ":" + pwd).getBytes());
+                client.setBasicAuthorization(basicAuth);
+            }
         }
 
 
