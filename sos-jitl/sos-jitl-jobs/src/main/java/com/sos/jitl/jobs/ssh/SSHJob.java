@@ -68,7 +68,8 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             if (jobArgs.getCreateEnvVars().getValue()) {
                 Map<String, String> js7EnvVars = SSHJobUtil.getJS7EnvVars();
                 Map<String, String> envVarsOfWorkflowParameters = SSHJobUtil.getWorkflowParamsAsEnvVars(step, jobArgs);
-                allEnvVars = Stream.of(js7EnvVars, envVarsOfWorkflowParameters).flatMap(map -> map.entrySet().stream())
+                Map<String,String> stepEnvVars = SSHJobUtil.getJobResourceEnvVars(step);
+                allEnvVars = Stream.of(js7EnvVars, envVarsOfWorkflowParameters, stepEnvVars).flatMap(map -> map.entrySet().stream())
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                 Map<String,String> resolved = resolveReturnValuesFilename(jobArgs, tempFilesToDelete, returnValuesFileName, isWindowsShell, logger);
                 resolvedReturnValuesFileName = resolved.get(resolved.keySet().toArray()[0]);
