@@ -17,7 +17,6 @@ import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.TaskHistory;
 import com.sos.joc.model.order.OrderHistory;
-import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersFilter;
 
 public class HistoryInfo {
@@ -124,8 +123,8 @@ public class HistoryInfo {
             jobsFilter.setWorkflowName(historyFilter.getWorkflow());
             jobsFilter.setDateFrom(historyFilter.getDateFrom());
             jobsFilter.setDateTo(historyFilter.getDateTo());
-            jobsFilter.setEndDateTo(historyFilter.getEndDateTo());
-            jobsFilter.setEndDateFrom(historyFilter.getEndDateFrom());
+            jobsFilter.setCompletedDateTo(historyFilter.getEndDateTo());
+            jobsFilter.setCompletedDateFrom(historyFilter.getEndDateFrom());
             jobsFilter.setFolders(historyFilter.getFolders());
             jobsFilter.setHistoryStates(historyFilter.getHistoryStates());
             jobsFilter.setTimeZone(historyFilter.getTimeZone());
@@ -140,8 +139,8 @@ public class HistoryInfo {
             ordersFilter.setWorkflowName(historyFilter.getWorkflow());
             ordersFilter.setDateFrom(historyFilter.getDateFrom());
             ordersFilter.setDateTo(historyFilter.getDateTo());
-            ordersFilter.setEndDateTo(historyFilter.getEndDateTo());
-            ordersFilter.setEndDateFrom(historyFilter.getEndDateFrom());
+            ordersFilter.setCompletedDateTo(historyFilter.getEndDateTo());
+            ordersFilter.setCompletedDateFrom(historyFilter.getEndDateFrom());
             ordersFilter.setFolders(historyFilter.getFolders());
             ordersFilter.setHistoryStates(historyFilter.getHistoryStates());
             ordersFilter.setTimeZone(historyFilter.getTimeZone());

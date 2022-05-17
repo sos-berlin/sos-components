@@ -3,6 +3,7 @@ package com.sos.joc.model.job;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -31,8 +32,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "workflowName",
     "dateFrom",
     "dateTo",
-    "endDateFrom",
-    "endDateTo",
+    "completedDateFrom",
+    "completedDateTo",
     "timeZone",
     "folders",
     "limit",
@@ -100,23 +101,25 @@ public class JobsFilter {
     @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String dateTo;
     /**
-     * string for dateFrom and dateTo as search filter
-     * <p>
      *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
      * 
      */
-    @JsonProperty("endDateFrom")
+    @JsonProperty("completedDateFrom")
     @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
-    private String endDateFrom;
+    @JsonAlias({
+        "endDateFrom"
+    })
+    private String completedDateFrom;
     /**
-     * string for dateFrom and dateTo as search filter
-     * <p>
      *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
      * 
      */
-    @JsonProperty("endDateTo")
+    @JsonProperty("completedDateTo")
     @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
-    private String endDateTo;
+    @JsonAlias({
+        "endDateTo"
+    })
+    private String completedDateTo;
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
@@ -301,47 +304,39 @@ public class JobsFilter {
     }
 
     /**
-     * string for dateFrom and dateTo as search filter
-     * <p>
      *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
      * 
      */
-    @JsonProperty("endDateFrom")
-    public String getEndDateFrom() {
-        return endDateFrom;
+    @JsonProperty("completedDateFrom")
+    public String getCompletedDateFrom() {
+        return completedDateFrom;
     }
 
     /**
-     * string for dateFrom and dateTo as search filter
-     * <p>
      *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
      * 
      */
-    @JsonProperty("endDateFrom")
-    public void setEndDateFrom(String endDateFrom) {
-        this.endDateFrom = endDateFrom;
+    @JsonProperty("completedDateFrom")
+    public void setCompletedDateFrom(String completedDateFrom) {
+        this.completedDateFrom = completedDateFrom;
     }
 
     /**
-     * string for dateFrom and dateTo as search filter
-     * <p>
      *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
      * 
      */
-    @JsonProperty("endDateTo")
-    public String getEndDateTo() {
-        return endDateTo;
+    @JsonProperty("completedDateTo")
+    public String getCompletedDateTo() {
+        return completedDateTo;
     }
 
     /**
-     * string for dateFrom and dateTo as search filter
-     * <p>
      *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
      * 
      */
-    @JsonProperty("endDateTo")
-    public void setEndDateTo(String endDateTo) {
-        this.endDateTo = endDateTo;
+    @JsonProperty("completedDateTo")
+    public void setCompletedDateTo(String completedDateTo) {
+        this.completedDateTo = completedDateTo;
     }
 
     /**
@@ -444,12 +439,12 @@ public class JobsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("jobName", jobName).append("workflowPath", workflowPath).append("workflowName", workflowName).append("dateFrom", dateFrom).append("dateTo", dateTo).append("endDateFrom", endDateFrom).append("endDateTo", endDateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("criticalities", criticalities).append("taskIds", taskIds).append("historyIds", historyIds).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("jobName", jobName).append("workflowPath", workflowPath).append("workflowName", workflowName).append("dateFrom", dateFrom).append("dateTo", dateTo).append("completedDateFrom", completedDateFrom).append("completedDateTo", completedDateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("criticalities", criticalities).append("taskIds", taskIds).append("historyIds", historyIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobName).append(endDateFrom).append(endDateTo).append(folders).append(controllerId).append(workflowPath).append(jobs).append(historyStates).append(timeZone).append(workflowName).append(criticalities).append(dateFrom).append(taskIds).append(historyIds).append(dateTo).append(limit).append(excludeJobs).toHashCode();
+        return new HashCodeBuilder().append(jobName).append(folders).append(controllerId).append(workflowPath).append(completedDateFrom).append(jobs).append(historyStates).append(timeZone).append(workflowName).append(criticalities).append(dateFrom).append(taskIds).append(completedDateTo).append(historyIds).append(dateTo).append(limit).append(excludeJobs).toHashCode();
     }
 
     @Override
@@ -461,7 +456,7 @@ public class JobsFilter {
             return false;
         }
         JobsFilter rhs = ((JobsFilter) other);
-        return new EqualsBuilder().append(jobName, rhs.jobName).append(endDateFrom, rhs.endDateFrom).append(endDateTo, rhs.endDateTo).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(criticalities, rhs.criticalities).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(historyIds, rhs.historyIds).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(excludeJobs, rhs.excludeJobs).isEquals();
+        return new EqualsBuilder().append(jobName, rhs.jobName).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(completedDateFrom, rhs.completedDateFrom).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(criticalities, rhs.criticalities).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(completedDateTo, rhs.completedDateTo).append(historyIds, rhs.historyIds).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(excludeJobs, rhs.excludeJobs).isEquals();
     }
 
 }

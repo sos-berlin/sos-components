@@ -92,11 +92,11 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 if (in.getDateTo() != null) {
                     dbFilter.setExecutedTo(JobSchedulerDate.getDateTo(JobSchedulerDate.setRelativeDateIntoPast(in.getDateTo()), in.getTimeZone()));
                 }
-                if (in.getEndDateFrom() != null) {
-                    dbFilter.setEndFrom(JobSchedulerDate.getDateFrom(JobSchedulerDate.setRelativeDateIntoPast(in.getEndDateFrom()), in.getTimeZone()));
+                if (in.getCompletedDateFrom() != null) {
+                    dbFilter.setEndFrom(JobSchedulerDate.getDateFrom(JobSchedulerDate.setRelativeDateIntoPast(in.getCompletedDateFrom()), in.getTimeZone()));
                 }
-                if (in.getEndDateTo() != null) {
-                    dbFilter.setEndTo(JobSchedulerDate.getDateTo(JobSchedulerDate.setRelativeDateIntoPast(in.getEndDateTo()), in.getTimeZone()));
+                if (in.getCompletedDateTo() != null) {
+                    dbFilter.setEndTo(JobSchedulerDate.getDateTo(JobSchedulerDate.setRelativeDateIntoPast(in.getCompletedDateTo()), in.getTimeZone()));
                 }
 
                 if (in.getHistoryStates() != null && !in.getHistoryStates().isEmpty()) {

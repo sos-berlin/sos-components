@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
-import com.sos.joc.model.order.OrderStateText;
 
 public class HistoryFilter {
 

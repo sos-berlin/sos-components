@@ -7,19 +7,13 @@ import java.util.Set;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.order.OrderHistory;
-import com.sos.joc.model.order.OrderHistoryItem;
 import com.sos.joc.model.order.OrderPath;
-import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersFilter;
 
 public class HistoryWebserviceExecuterTest {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryWebserviceExecuter.class);
 
     @Ignore
     @Test
@@ -42,10 +36,6 @@ public class HistoryWebserviceExecuterTest {
         historyStates.add(HistoryStateText.SUCCESSFUL);
         historyStates.add(HistoryStateText.FAILED);
         ordersFilter.setHistoryStates(historyStates);
-
-        List<OrderStateText> states = new ArrayList<OrderStateText>();
-        states.add(OrderStateText.FINISHED);
-        ordersFilter.setStates(states);
 
         Set<OrderPath> orders = new HashSet<OrderPath>();
         OrderPath orderPath = new OrderPath();
