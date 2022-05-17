@@ -18,7 +18,7 @@
      
         <params id="job_parameter">
         
-            <param name="controller" required="false">
+            <param name="controller-id" required="false">
                 <note>
                 	<title>The Controller ID indicates the Controller for which jobs or workflows have been executed.</title>
                 	<p>
@@ -150,7 +150,7 @@
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistoryAnswerControllerId" required="false">
+            <param name="js7CheckHistoryResultControllerId" required="false">
                 <note>
                     <title>The Controller ID of the resulting history entry</title>
                     <p>
@@ -159,7 +159,7 @@
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistoryAnswerWorkflow" required="false">
+            <param name="js7CheckHistoryResultWorkflow" required="false">
                 <note>
                     <title>The workflow of the resulting history entry</title>
                     <p>
@@ -169,7 +169,7 @@
                 </note>
             </param>
              
-            <param name="js7CheckHistoryAnswerStarted" required="false">
+            <param name="js7CheckHistoryResultStarted" required="false">
                 <note>
                     <title>The start date and time of the resulting history entry</title>
                     <p>
@@ -178,7 +178,7 @@
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistoryAnswerCompleted" required="false">
+            <param name="js7CheckHistoryResultCompleted" required="false">
                 <note>
                     <title>The completion date and time of the resulting history entry</title>
                     <p>
@@ -195,7 +195,7 @@
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistoryWorkflow" required="false">
+            <param name="js7CheckHistorQueryyWorkflow" required="false">
                 <note>
                     <title>The value of the parameter 'workflow'</title>
                     <p>
@@ -203,7 +203,7 @@
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistoryJob" required="false">
+            <param name="js7CheckHistoryQueryJob" required="false">
                 <note>
                     <title>The value of the parameter 'job'</title>
                     <p>
