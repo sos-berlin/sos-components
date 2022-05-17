@@ -15,7 +15,14 @@ public class JocApiJob extends ABlockingInternalJob<JocApiJobArguments> {
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<JocApiJobArguments> step) throws Exception {
 //        JobApiExecutor ex = new JobApiExecutor(step.getArguments().getJocUri().getValue(), step.getArguments().getTrustoreFileName());
-        JobApiExecutor ex = new JobApiExecutor(step.getLogger());
+        boolean useHttps = true;
+        if (step.getArguments().getUseHttps().getValue() != null) {
+            useHttps = step.getArguments().getUseHttps().getValue();
+        } else {
+            useHttps = step.getArguments().getUseHttps().getDefaultValue();
+        }
+        JobApiExecutor ex = new JobApiExecutor(step.getLogger(), useHttps);
+        step.getLogger().info("use https: " + step.getArguments().getUseHttps().getValue());
         try {
             String token = ex.login();
 
