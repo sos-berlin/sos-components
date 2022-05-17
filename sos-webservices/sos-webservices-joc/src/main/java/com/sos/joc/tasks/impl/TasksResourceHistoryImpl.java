@@ -99,11 +99,11 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     if (in.getDateTo() != null) {
                         dbFilter.setExecutedTo(JobSchedulerDate.getDateTo(in.getDateTo(), in.getTimeZone()));
                     }
-                    if (in.getEndDateFrom() != null) {
-                        dbFilter.setEndFrom(JobSchedulerDate.getDateFrom(in.getEndDateFrom(), in.getTimeZone()));
+                    if (in.getCompletedDateFrom() != null) {
+                        dbFilter.setEndFrom(JobSchedulerDate.getDateFrom(in.getCompletedDateFrom(), in.getTimeZone()));
                     }
-                    if (in.getEndDateTo() != null) {
-                        dbFilter.setEndTo(JobSchedulerDate.getDateTo(in.getEndDateTo(), in.getTimeZone()));
+                    if (in.getCompletedDateTo() != null) {
+                        dbFilter.setEndTo(JobSchedulerDate.getDateTo(in.getCompletedDateTo(), in.getTimeZone()));
                     }
                     if (in.getHistoryStates() != null && !in.getHistoryStates().isEmpty()) {
                         dbFilter.setState(in.getHistoryStates());
