@@ -112,6 +112,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
     public void executeSubstitution() {
         for (String logFilename : listOfLogfileNames) {
             LOGGER.debug("input --->" + logFilename);
+
             Path p = Paths.get(logFilename);
             if (outputDir == null) {
                 outputDir = p.getParent().toString();
@@ -228,7 +229,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
             if (isFile) {
                 LOGGER.debug("is file");
                 if (Files.exists(path)) {
-                    if (!logfileName.startsWith(ANONYMIZED)) {
+                    if (!path.getFileName().startsWith(ANONYMIZED)) {
                         listOfLogfileNames.add(path.toString());
                     }
                 } else {
@@ -239,7 +240,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                     LOGGER.debug("is directory");
                     try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(logfileName))) {
                         dirStream.forEach(pathLogfile -> {
-                            if (Files.isRegularFile(pathLogfile)) {
+                            if (Files.isRegularFile(pathLogfile) && !pathLogfile.getFileName().startsWith(ANONYMIZED)) {
                                 listOfLogfileNames.add(pathLogfile.toString());
                             }
                         });
@@ -253,9 +254,11 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                     String s = logfileName.replace("/" + lastPart, "");
 
                     LOGGER.debug("wildcard:" + lastPart);
+                    
                     try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(s), lastPart)) {
                         dirStream.forEach(pathLogfile -> {
-                            if (Files.isRegularFile(pathLogfile)) {
+
+                            if (Files.isRegularFile(pathLogfile) && !pathLogfile.getFileName().startsWith(ANONYMIZED)) {
                                 listOfLogfileNames.add(pathLogfile.toString());
                             }
                         });
@@ -272,10 +275,9 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
             String s = logfileName.replace("/" + lastPart, "");
 
             LOGGER.debug("Exception. try wildcard " + lastPart);
-
             try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(s), lastPart)) {
                 dirStream.forEach(pathLogfile -> {
-                    if (Files.isRegularFile(pathLogfile)) {
+                    if (Files.isRegularFile(pathLogfile) && !pathLogfile.getFileName().startsWith(ANONYMIZED)) {
                         listOfLogfileNames.add(pathLogfile.toString());
                     }
                 });
