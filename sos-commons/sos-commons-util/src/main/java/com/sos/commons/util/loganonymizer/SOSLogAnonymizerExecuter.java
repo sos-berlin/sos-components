@@ -209,6 +209,8 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
     }
 
     public void setLogfiles(String logfileName) {
+
+        LOGGER.debug("Adding:" + logfileName);
         if (listOfLogfileNames == null) {
             listOfLogfileNames = new ArrayList<String>();
         }
@@ -224,6 +226,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
             isFile = Files.isRegularFile(path);
 
             if (isFile) {
+                LOGGER.debug("is file");
                 if (Files.exists(path)) {
                     if (!logfileName.startsWith(ANONYMIZED)) {
                         listOfLogfileNames.add(path.toString());
@@ -233,6 +236,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                 }
             } else {
                 if (isDirectory) {
+                    LOGGER.debug("is directory");
                     try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(logfileName))) {
                         dirStream.forEach(pathLogfile -> {
                             if (Files.isRegularFile(pathLogfile)) {
@@ -242,13 +246,32 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                } else {
+                    logfileName = logfileName.replace("\\", "/");
+                    String[] logfileParts = logfileName.split("/");
+                    String lastPart = logfileParts[logfileParts.length - 1];
+                    String s = logfileName.replace("/" + lastPart, "");
+
+                    LOGGER.debug("wildcard:" + lastPart);
+                    try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(s), lastPart)) {
+                        dirStream.forEach(pathLogfile -> {
+                            if (Files.isRegularFile(pathLogfile)) {
+                                listOfLogfileNames.add(pathLogfile.toString());
+                            }
+                        });
+                    } catch (IOException e3) {
+                        e3.printStackTrace();
+                    }
                 }
             }
         } catch (InvalidPathException e) {
+
             logfileName = logfileName.replace("\\", "/");
             String[] logfileParts = logfileName.split("/");
             String lastPart = logfileParts[logfileParts.length - 1];
             String s = logfileName.replace("/" + lastPart, "");
+
+            LOGGER.debug("Exception. try wildcard " + lastPart);
 
             try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(s), lastPart)) {
                 dirStream.forEach(pathLogfile -> {
@@ -257,7 +280,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                     }
                 });
             } catch (IOException e2) {
-                e.printStackTrace();
+                e2.printStackTrace();
             }
 
         }
