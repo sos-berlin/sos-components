@@ -15,46 +15,10 @@
     </job>
 
     <configuration>
-     
-        <params id="job_parameter">
-        
-            <param name="controller-id" required="false">
-                <note>
-                	<title>The Controller ID indicates the Controller for which jobs or workflows have been executed.</title>
-                	<p>
-                        The argument holds the Controller ID for the query. Without this argument the Controller ID is not considered.
-                     </p>
-                </note>
-            </param>
-      
-            <param name="workflow" required="one of workflow or job">
-                <note>
-                	<title>The workflow which is looked up in the history</title>
-                	<p>
-                	Limits the result to a specific workflow indicated by its name. This includes use of '*' and '?' placeholders:
-                	<ul>
-					<li>* : matches zero or more characters</li>
-					<li>? : matches any single character</li>
-					</ul>
-                    </p>
-                  
-                </note>
-            </param>                     
 
-            <param name="job" required="one of workflow or job">
-                <note>
-                    <title>The job which is looked up in the history</title>
-                   <p>
-                	Limits the result to a specific job indicated by its name. This includes use of '*' and '?' p
-                	<ul>
-					<li>* : match zero or more characters</li>
-					<li>? : match any single character</li>
-					</ul>
-                    </p>
-                </note>
-            </param>
-      
-            <param name="query" required="true">
+        <params id="job_parameter">
+
+                <param name="query" required="true">
                 <note>
                     <title>The query to be executed</title>
                     <p>
@@ -136,6 +100,42 @@
                 </note>
             </param>
       
+             
+            <param name="workflow" required="one of workflow or job">
+                <note>
+                	<title>The workflow which is looked up in the history</title>
+                	<p>
+                	Limits the result to a specific workflow indicated by its name. This includes use of '*' and '?' placeholders:
+                	<ul>
+					<li>* : matches zero or more characters</li>
+					<li>? : matches any single character</li>
+					</ul>
+                    </p>
+                  
+                </note>
+            </param>                     
+
+            <param name="job" required="one of workflow or job">
+                <note>
+                    <title>The job which is looked up in the history</title>
+                   <p>
+                	Limits the result to a specific job indicated by its name. This includes use of '*' and '?' p
+                	<ul>
+					<li>* : match zero or more characters</li>
+					<li>? : match any single character</li>
+					</ul>
+                    </p>
+                </note>
+            </param>
+      
+            <param name="controller-id" required="false">
+                <note>
+                	<title>The Controller ID indicates the Controller for which jobs or workflows have been executed.</title>
+                	<p>
+                        The argument holds the Controller ID for the query. Without this argument the Controller ID is not considered.
+                     </p>
+                </note>
+            </param>
                
         </params>
         
