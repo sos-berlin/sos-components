@@ -43,7 +43,7 @@ public class HistoryInfo {
         HistoryFilter historyFilter = new HistoryFilter();
         historyFilter.setJob(args.getJob());
         historyFilter.setWorkflow(args.getWorkflow());
-        historyFilter.setControllerId(args.getController());
+        historyFilter.setControllerId(args.getControllerId());
 
         List<HistoryStateText> historyStates = new ArrayList<HistoryStateText>();
         String queryName = CheckHistoryHelper.getQueryName(query);

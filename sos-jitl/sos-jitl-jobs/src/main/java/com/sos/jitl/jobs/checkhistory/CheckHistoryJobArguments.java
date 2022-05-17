@@ -6,7 +6,7 @@ import com.sos.jitl.jobs.common.JobArguments;
 
 public class CheckHistoryJobArguments extends JobArguments {
 
-    private JobArgument<String> controller = new JobArgument<String>("controller", false);
+    private JobArgument<String> controllerId = new JobArgument<String>("controller-id", false);
     private JobArgument<String> workflow = new JobArgument<String>("workflow", false);
     private JobArgument<String> job = new JobArgument<String>("job", false);
     private JobArgument<String> jocUrl = new JobArgument<String>("joc_url", false);
@@ -18,12 +18,12 @@ public class CheckHistoryJobArguments extends JobArguments {
         super(new SOSCredentialStoreArguments());
     }
 
-    public String getController() {
-        return controller.getValue();
+    public String getControllerId() {
+        return controllerId.getValue();
     }
 
-    public void setController(String controller) {
-        this.controller.setValue(controller);
+    public void setControllerId(String controller) {
+        this.controllerId.setValue(controller);
     }
 
     public String getJob() {

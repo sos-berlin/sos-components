@@ -42,15 +42,15 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
         checkHistoryJobReturn.setExitCode(0);
         Map<String, Object> resultMap = new HashMap<String, Object>();
         resultMap.put("js7CheckHistoryResult", false);
-        resultMap.put("js7CheckHistoryControllerId", "");
-        resultMap.put("js7CheckHistoryAnswerWorkflow", "");
-        resultMap.put("js7CheckHistoryAnswerStarted", "");
-        resultMap.put("js7CheckHistoryAnswerCompleted", "");
+        resultMap.put("js7CheckHistoryResultControllerId", "");
+        resultMap.put("js7CheckHistoryResultWorkflow", "");
+        resultMap.put("js7CheckHistoryResultStarted", "");
+        resultMap.put("js7CheckHistoryResultCompleted", "");
 
         String query = args.getQuery();
         resultMap.put("js7CheckHistoryQuery", query);
-        resultMap.put("js7CheckHistoryWorkflow", args.getWorkflow());
-        resultMap.put("js7CheckHistoryJob", args.getJob());
+        resultMap.put("js7CheckHistoryQueryWorkflow", args.getWorkflow());
+        resultMap.put("js7CheckHistoryQueryJob", args.getJob());
         Globals.debug(logger, String.format("check history: %s will be executed.", query));
 
         HistoryInfo historyInfo = new HistoryInfo(logger, args);
@@ -72,10 +72,10 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
             resultMap.put("js7CheckHistoryResultString", s);
             checkHistoryJobReturn.setExitCode(0);
             resultMap.put("js7CheckHistoryResult", true);
-            resultMap.put("js7CheckHistoryControllerId", historyItem.getControllerId());
-            resultMap.put("js7CheckHistoryAnswerStarted", historyItem.getStartTime());
-            resultMap.put("js7CheckHistoryAnswerCompleted", historyItem.getEndTime());
-            resultMap.put("js7CheckHistoryAnswerWorkflow", historyItem.getWorkflow());
+            resultMap.put("js7CheckHistoryResultControllerId", historyItem.getControllerId());
+            resultMap.put("js7CheckHistoryResultStarted", historyItem.getStartTime());
+            resultMap.put("js7CheckHistoryResultCompleted", historyItem.getEndTime());
+            resultMap.put("js7CheckHistoryResultWorkflow", historyItem.getWorkflow());
 
         } else {
             String s = args.getQuery() + "(" + name + ") ==> false";
