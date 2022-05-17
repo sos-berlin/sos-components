@@ -12,6 +12,7 @@ import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.exception.SOSJobProblemException;
 import com.sos.jitl.jobs.ssh.SSHJobArguments;
 import com.sos.jitl.jobs.ssh.exception.SOSJobSSHException;
 
@@ -28,9 +29,9 @@ public class SSHJobUtil {
             "filter_regex", "pre_command", "post_command_read", "post_command_delete");
     private static final List<String> PROVIDER_ARG_NAMES = Arrays.asList("protocol", "host", "user", "password", "proxy_type", "proxy_host",
             "proxy_port", "proxy_user", "proxy_password", "proxy_connect_timeout");
-    private static final List<String> SSH_PROVIDER_ARG_NAMES = Arrays.asList("port", "passphrase", "auth_file", "auth_method", "preferred_authentications",
-            "required_authentications", "connect_timeout", "socket_timeout", "server_alive_interval", "strict_hostkey_checking", "hostkey_location",
-            "use_zlib_compression", "simulate_shell", "remote_charset");
+    private static final List<String> SSH_PROVIDER_ARG_NAMES = Arrays.asList("port", "passphrase", "auth_file", "auth_method",
+            "preferred_authentications", "required_authentications", "connect_timeout", "socket_timeout", "server_alive_interval", 
+            "strict_hostkey_checking", "hostkey_location", "use_zlib_compression", "simulate_shell", "remote_charset");
     private static final List<String> FTP_PROVIDER_ARG_NAMES = Arrays.asList("keystore_type", "keystore_file", "keystore_password");
     private static final List<String> CREDENTIAL_STORE_ARG_NAMES = Arrays.asList("credential_store_key_file", "credential_store_file",
             "credential_store_entry_path", "credential_store_password");
@@ -128,9 +129,11 @@ public class SSHJobUtil {
             }
         }
     }
-    
+
     public static Map<String, String> getWorkflowParamsAsEnvVars(JobStep<SSHJobArguments> step, SSHJobArguments jobArgs) {
-        Map<String, JobArgument<SSHJobArguments>> allArguments = step.getAllCurrentArguments();
+        Map<String, JobArgument<SSHJobArguments>> allArguments = step.getAllCurrentArguments().entrySet().stream()
+                .filter(e->!e.getValue().getValueSource().equals(JobArgument.ValueSource.JOB_RESOURCE))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         if(jobArgs.getFilterRegex().getValue().isEmpty()) {
             // all variables
             return allArguments.entrySet().stream().filter(e -> 
@@ -172,6 +175,11 @@ public class SSHJobUtil {
         }
     }
 
+    public static Map<String, String> getJobResourceEnvVars(JobStep<SSHJobArguments> step) throws SOSJobProblemException {
+        return step.getEnv().entrySet().stream().collect(
+                Collectors.toMap(e -> JS7_WORKFLOW_VARIABLES_ENVVAR_PREFIX + e.getKey().toUpperCase(), Map.Entry::getValue));
+    }
+
     public static Map<String, String> getJS7EnvVars() {
         Map<String, String> unfiltered = System.getenv();
         return unfiltered.entrySet().stream().filter(item -> item.getKey().startsWith(JS7_ENVVAR_PREFIX)).collect(Collectors.toMap(
@@ -186,8 +194,8 @@ public class SSHJobUtil {
 
     public static Map<String, String> getYadeEnvVars() {
         Map<String, String> unfiltered = System.getenv();
-        return unfiltered.entrySet().stream().filter(item -> item.getKey().startsWith(YADE_ENVVAR_PREFIX)).collect(Collectors.toMap(Map.Entry::getKey,
-                Map.Entry::getValue));
+        return unfiltered.entrySet().stream().filter(item -> item.getKey().startsWith(YADE_ENVVAR_PREFIX)).collect(Collectors.toMap(
+                Map.Entry::getKey, Map.Entry::getValue));
     }
 
 }

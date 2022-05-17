@@ -18,8 +18,8 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
-import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
+import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.SOSString;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -56,7 +56,6 @@ public class JobApiExecutor {
     private SOSRestApiClient client;
     private URI jocUri;
     private final JobLogger jobLogger;
-    private boolean useHttps = false;
 
     public JobApiExecutor() {
         this(null, null, null);
@@ -66,54 +65,24 @@ public class JobApiExecutor {
         this(null, null, jobLogger);
     }
 
-    public JobApiExecutor(JobLogger jobLogger, boolean useHttps) {
-        this(null, null, jobLogger, useHttps);
-    }
-
     public JobApiExecutor(URI jocUri) {
         this(jocUri, null, null);
-    }
-
-    public JobApiExecutor(URI jocUri, boolean useHttps) {
-        this(jocUri, null, null, useHttps);
     }
 
     public JobApiExecutor(URI jocUri, JobLogger logger) {
         this(jocUri, null, logger);
     }
 
-    public JobApiExecutor(URI jocUri, JobLogger logger, boolean useHttps) {
-        this(jocUri, null, logger, useHttps);
-    }
-
     public JobApiExecutor(URI jocUri, String truststoreFileName) {
         this.jocUri = jocUri;
         this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
         this.jobLogger = null;
-        // default
-        this.useHttps = true;
-    }
-
-    public JobApiExecutor(URI jocUri, String truststoreFileName, boolean useHttps) {
-        this.jocUri = jocUri;
-        this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
-        this.jobLogger = null;
-        this.useHttps = useHttps;
     }
 
     public JobApiExecutor(URI jocUri, String truststoreFileName, JobLogger jobLogger) {
         this.jocUri = jocUri;
         this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
         this.jobLogger = jobLogger;
-        // default
-        this.useHttps = true;
-    }
-
-    public JobApiExecutor(URI jocUri, String truststoreFileName, JobLogger jobLogger, boolean useHttps) {
-        this.jocUri = jocUri;
-        this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
-        this.jobLogger = jobLogger;
-        this.useHttps = useHttps;
     }
 
     public String login() throws Exception {
@@ -170,8 +139,7 @@ public class JobApiExecutor {
         
         client = new SOSRestApiClient();
         logInfo("initiate REST api client");
-        logInfo("use https: " + useHttps);
-        if (useHttps) {
+        if (jocUri.startsWith("https:")) {
             List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(config);
             logInfo("read Trustore from: " + config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
             KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(truststoreFileName)).map(item -> {
