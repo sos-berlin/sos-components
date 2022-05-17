@@ -11,10 +11,14 @@ public class SOSLogAnonymizer {
 
     public static void usage() {
         LOGGER.info("\r\n"  
-                + "Usage: --export-rules=<export-rules> --log-file=<log-file>[,<log-file>[,<log-file>]] --rules-file=<rules-file>" + "\r\n"
-                + " -e|--export-rules          : optional: a file name where the default rules will be exported." +  "\r\n"
-                + " -l|--log-file              : optional: a file name with placeholder like /temp/agent*.log or a folder name" +  "\r\n"
-                + " -r|--rules-file            : optional: a file with rules.");
+                + "Usage:  log-anonymizer.sh [Options]" + "\r\n" +  "\r\n"  
+                + "Options: " + "\r\n"  
+                + "  -l | --log-file=<log-file>       | optional: location of log files to be anonymized; a single file, directory or wildcards can be specified" + "\r\n" 
+                + "                                               the argument can occur any number of times" +  "\r\n"
+                + "  -o | --output-dir=<directory>    | optional: output directory for anonymized log files" +  "\r\n"
+                + "  -r | --rules-file=<rules-file>   | optional: path to a YAML file holding rules for anonymization; by default built-in rules will be applied" +  "\r\n" 
+                + "  -e | --export-rules=<rules-file> | optional: path to a YAML file to which built-in rules will be exported" +  "\r\n");
+        
     }
 
     public static void main(String[] args) {

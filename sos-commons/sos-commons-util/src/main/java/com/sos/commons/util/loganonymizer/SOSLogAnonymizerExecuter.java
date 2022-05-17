@@ -3,16 +3,14 @@ package com.sos.commons.util.loganonymizer;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -23,7 +21,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
@@ -48,11 +45,6 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
     private List<Rule> listOfRules = new ArrayList<Rule>();
 
     private List<Rule> listOfDefaultAgentRules = new ArrayList<Rule>();
-    private List<Rule> listOfDefaultControllerRules = new ArrayList<Rule>();
-    private List<Rule> listOfDefaultCockpitRules = new ArrayList<Rule>();
-    private List<Rule> listOfAgentRules = new ArrayList<Rule>();
-    private List<Rule> listOfControllerRules = new ArrayList<Rule>();
-    private List<Rule> listOfJocCockpitRules = new ArrayList<Rule>();
 
     public SOSLogAnonymizerExecuter() {
         super();
@@ -78,11 +70,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         listOfLogfileNames.add(logfileName);
     }
 
-    private int getLogfileSource(String filename) {
-        return 1;
-    }
-
-    private String executeReplace(int logFileSource, String line) {
+    private String executeReplace(String line) {
         String ret = line;
         List<String> replaceSearch = new ArrayList<String>();
         for (Rule rule : listOfRules) {
@@ -125,10 +113,12 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         for (String logFilename : listOfLogfileNames) {
             LOGGER.debug("input --->" + logFilename);
             Path p = Paths.get(logFilename);
+            if (outputDir == null) {
+                outputDir = p.getParent().toString();
+            }
 
             String output = outputDir + "/" + ANONYMIZED + p.getFileName();
 
-            int logFileSource = getLogfileSource(logFilename);
             BufferedReader r = null;
             BufferedWriter writer = null;
             GZIPInputStream gzipInputStream = null;
@@ -141,18 +131,18 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                     Reader isReader = new InputStreamReader(gzipInputStream, StandardCharsets.ISO_8859_1);
                     r = new BufferedReader(isReader);
                     if (output.endsWith(".gz")) {
-                        output =  output.substring(0,output.length() - 3);
+                        output = output.substring(0, output.length() - 3);
                     }
                 } else {
                     r = Files.newBufferedReader(Paths.get(logFilename));
                 }
 
                 writer = new BufferedWriter(new FileWriter(output));
-                File f = new File(output);
-                LOGGER.info("Output file " + f.getAbsolutePath());
+                Path pOutput = Paths.get(output);
+                LOGGER.info("Output file " + pOutput.toString());
                 try {
                     for (String line; (line = r.readLine()) != null;) {
-                        String replacedLine = executeReplace(logFileSource, line);
+                        String replacedLine = executeReplace(line);
                         writer.write(replacedLine);
                         writer.newLine();
 
@@ -201,94 +191,82 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         return listOfDefaultRules;
     }
 
-    public List<Rule> getListOfDefaultControllerRules() {
-        return listOfDefaultControllerRules;
-    }
-
-    public List<Rule> getListOfDefaultJocCockpitRules() {
-        return listOfDefaultCockpitRules;
-    }
-
     public void setRules(String rules) {
         listOfRules.clear();
         Yaml yaml = new Yaml(new org.yaml.snakeyaml.constructor.Constructor(SOSRules.class));
         try {
 
-            InputStream inputStream = new FileInputStream(new File(rules));
+            InputStream inputStream = Files.newInputStream(Paths.get(rules));
 
             SOSRules sosRules = yaml.load(inputStream);
             if (sosRules.getRules() != null) {
                 listOfRules.addAll(sosRules.getRules());
 
             }
-        } catch (YAMLException | FileNotFoundException e) {
+        } catch (YAMLException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void setLogfiles(String log) {
+    public void setLogfiles(String logfileName) {
         if (listOfLogfileNames == null) {
             listOfLogfileNames = new ArrayList<String>();
         }
 
-        String[] logs = log.split(",");
-        for (String logfile : logs) {
+        boolean isDirectory = false;
+        boolean isFile = false;
 
-            File dir = null;
-            FileFilter fileFilter = null;
-            try {
-                boolean isDirectory = false;
-                boolean isFile = false;
+        Path path = null;
+        try {
+            path = Paths.get(logfileName);
 
-                File input = new File(logfile);
-                Path path = Paths.get(input.getAbsolutePath());
+            isDirectory = Files.isDirectory(path);
+            isFile = Files.isRegularFile(path);
 
-                isDirectory = Files.isDirectory(path);
-                isFile = Files.isRegularFile(path);
-
-                if (isFile) {
-                    if (Files.exists(path)) {
-                        if (!logfile.startsWith(ANONYMIZED)) {
-                            listOfLogfileNames.add(path.toString());
-                        }
-                    } else {
-                        LOGGER.info("File not found: " + path.toString());
+            if (isFile) {
+                if (Files.exists(path)) {
+                    if (!logfileName.startsWith(ANONYMIZED)) {
+                        listOfLogfileNames.add(path.toString());
                     }
                 } else {
-                    if (isDirectory) {
-                        dir = new File(logfile);
-                        fileFilter = new WildcardFileFilter("*.*");
-                    }
+                    LOGGER.info("File not found: " + path.toString());
                 }
-            } catch (InvalidPathException e) {
-                logfile = logfile.replace("\\", "/");
-                String[] logfileParts = logfile.split("/");
-                String lastPart = logfileParts[logfileParts.length - 1];
-                fileFilter = new WildcardFileFilter(lastPart);
-                String s = logfile.replace("/" + lastPart, "");
-                dir = new File(s);
-            }
-
-            if (dir != null) {
-                File[] files = dir.listFiles(fileFilter);
-                for (int i = 0; i < files.length; i++) {
-                    String s = files[i].getAbsolutePath();
-                    Path path = Paths.get(s);
-
-                    if (!Files.isDirectory(path) && !s.startsWith(ANONYMIZED)) {
-                        listOfLogfileNames.add(files[i].getAbsolutePath());
+            } else {
+                if (isDirectory) {
+                    try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(logfileName))) {
+                        dirStream.forEach(pathLogfile -> {
+                            if (Files.isRegularFile(pathLogfile)) {
+                                listOfLogfileNames.add(pathLogfile.toString());
+                            }
+                        });
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
             }
+        } catch (InvalidPathException e) {
+            logfileName = logfileName.replace("\\", "/");
+            String[] logfileParts = logfileName.split("/");
+            String lastPart = logfileParts[logfileParts.length - 1];
+            String s = logfileName.replace("/" + lastPart, "");
+
+            try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(s), lastPart)) {
+                dirStream.forEach(pathLogfile -> {
+                    if (Files.isRegularFile(pathLogfile)) {
+                        listOfLogfileNames.add(pathLogfile.toString());
+                    }
+                });
+            } catch (IOException e2) {
+                e.printStackTrace();
+            }
+
         }
-        for (String l : listOfLogfileNames) {
-            LOGGER.debug(l);
-        }
+
     }
 
     public void exportRules(String exportFile) throws IOException {
-        File input = new File(exportFile);
-        Path path = Paths.get(input.getAbsolutePath());
+        Path pInput = Paths.get(exportFile);
+        Path path = Paths.get(pInput.toAbsolutePath().toString());
         final DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         options.setPrettyFlow(true);
@@ -310,7 +288,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
     }
 
     @Override
-    protected void a(String item, String search, String... replace) {
+    protected void add(String item, String search, String... replace) {
         addRule(item, search, replace);
     }
 
