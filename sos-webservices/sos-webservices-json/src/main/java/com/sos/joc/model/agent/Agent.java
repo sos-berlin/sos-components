@@ -31,7 +31,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "hidden",
     "disabled",
     "syncState",
-    "deployed"
+    "deployed",
+    "ordering"
 })
 public class Agent {
 
@@ -97,6 +98,8 @@ public class Agent {
     private SyncState syncState;
     @JsonProperty("deployed")
     private Boolean deployed = false;
+    @JsonProperty("ordering")
+    private Integer ordering;
 
     /**
      * controllerId
@@ -286,14 +289,24 @@ public class Agent {
         this.deployed = deployed;
     }
 
+    @JsonProperty("ordering")
+    public Integer getOrdering() {
+        return ordering;
+    }
+
+    @JsonProperty("ordering")
+    public void setOrdering(Integer ordering) {
+        this.ordering = ordering;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("agentNameAliases", agentNameAliases).append("url", url).append("isClusterWatcher", isClusterWatcher).append("title", title).append("hidden", hidden).append("disabled", disabled).append("syncState", syncState).append("deployed", deployed).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("agentNameAliases", agentNameAliases).append("url", url).append("isClusterWatcher", isClusterWatcher).append("title", title).append("hidden", hidden).append("disabled", disabled).append("syncState", syncState).append("deployed", deployed).append("ordering", ordering).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(hidden).append(agentNameAliases).append(syncState).append(agentName).append(deployed).append(isClusterWatcher).append(disabled).append(title).append(url).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(controllerId).append(hidden).append(agentNameAliases).append(ordering).append(syncState).append(agentName).append(deployed).append(isClusterWatcher).append(title).append(url).append(disabled).toHashCode();
     }
 
     @Override
@@ -305,7 +318,7 @@ public class Agent {
             return false;
         }
         Agent rhs = ((Agent) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(hidden, rhs.hidden).append(agentNameAliases, rhs.agentNameAliases).append(syncState, rhs.syncState).append(agentName, rhs.agentName).append(deployed, rhs.deployed).append(isClusterWatcher, rhs.isClusterWatcher).append(disabled, rhs.disabled).append(title, rhs.title).append(url, rhs.url).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(hidden, rhs.hidden).append(agentNameAliases, rhs.agentNameAliases).append(ordering, rhs.ordering).append(syncState, rhs.syncState).append(agentName, rhs.agentName).append(deployed, rhs.deployed).append(isClusterWatcher, rhs.isClusterWatcher).append(title, rhs.title).append(url, rhs.url).append(disabled, rhs.disabled).isEquals();
     }
 
 }
