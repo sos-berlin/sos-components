@@ -17,7 +17,7 @@ import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
-import com.sos.jitl.jobs.common.JOCApiJobExecutor;
+import com.sos.jitl.jobs.common.ApiExecutor;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -139,7 +139,7 @@ public class HttpClientTests {
     public void readPrivateConf() {
         System.setProperty("js7.config-directory", "C:/sp/devel/js7/local/agents/agent/agent_2111/config");
         Config defaultConfig = ConfigFactory.load();
-        JOCApiJobExecutor ex = new JOCApiJobExecutor();
+        ApiExecutor ex = new ApiExecutor();
         Config config = null;// ex.readConfig(Paths.get("C:/sp/devel/js7/centosdev_third/agent/private.conf"));
         assertNotNull(config);
         try {
