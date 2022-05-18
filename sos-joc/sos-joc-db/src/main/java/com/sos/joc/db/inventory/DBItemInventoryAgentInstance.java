@@ -41,7 +41,10 @@ public class DBItemInventoryAgentInstance extends DBItem {
 
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
-
+    
+    @Column(name = "[ORDERING]", nullable = false)
+    private Integer ordering;
+    
     /* foreign key INVENTORY_OPERTATION_SYSTEM.ID */
     @Column(name = "[OS_ID]", nullable = false)
     private Long osId;
@@ -123,6 +126,14 @@ public class DBItemInventoryAgentInstance extends DBItem {
 
     public void setControllerId(String val) {
         controllerId = val;
+    }
+    
+    public Integer getOrdering() {
+        return ordering;
+    }
+
+    public void setOrdering(Integer val) {
+        ordering = val;
     }
     
     public Long getOsId() {

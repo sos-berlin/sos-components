@@ -43,6 +43,9 @@ public class DBItemInventorySubAgentCluster extends DBItem {
     @Type(type = "numeric_boolean")
     private boolean deployed;
 
+    @Column(name = "[ORDERING]", nullable = false)
+    private Integer ordering;
+    
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
@@ -87,6 +90,14 @@ public class DBItemInventorySubAgentCluster extends DBItem {
         deployed = val;
     }
 
+    public Integer getOrdering() {
+        return ordering;
+    }
+
+    public void setOrdering(Integer val) {
+        ordering = val;
+    }
+    
     public void setModified(Date val) {
         modified = val;
     }
