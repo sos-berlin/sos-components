@@ -29,6 +29,7 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -87,7 +88,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
 
             List<DBItemDeploymentHistory> unsignedRedeployables = null;
             if (latest != null) {
-                Stream<DBItemDeploymentHistory> latestStream = latest.stream();
+                Stream<DBItemDeploymentHistory> latestStream = latest.stream().filter(item -> OperationType.DELETE.value() != item.getOperation());
                 if (API_CALL_SYNC.equals(action)) {
                     // filter latest with only "not in sync" objects
                     final JControllerState currentstate = SyncStateHelper.getControllerState(controllerId, xAccessToken, getJocError());
