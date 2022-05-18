@@ -1,9 +1,9 @@
 package com.sos.jitl.jobs.checkhistory.classes;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import com.sos.jitl.jobs.common.ApiExecutor;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.TaskHistory;
@@ -14,23 +14,19 @@ import com.sos.joc.model.order.OrdersFilter;
 
 public class HistoryWebserviceExecuter {
 
-    private WebserviceCredentials webserviceCredentials;
+    private ApiExecutor apiExecutor;
     private JobLogger logger;
 
-    public HistoryWebserviceExecuter(JobLogger logger, WebserviceCredentials webserviceCredentials) {
+    public HistoryWebserviceExecuter(JobLogger logger, ApiExecutor apiExecutor) {
         super();
-        this.webserviceCredentials = webserviceCredentials;
+        this.apiExecutor = apiExecutor;
         this.logger = logger;
     }
 
-    public OrderHistory getWorkflowHistoryEntry(OrdersFilter ordersFilter) throws Exception {
-        if (webserviceCredentials.getAccessToken().isEmpty()) {
-            throw new Exception("AccessToken is empty. Login not executed");
-        }
-
+    public OrderHistory getWorkflowHistoryEntry(OrdersFilter ordersFilter, String accessToken) throws Exception {
+       
         String body = Globals.objectMapper.writeValueAsString(ordersFilter);
-        String answer = webserviceCredentials.getSosRestApiClient().postRestService(new URI(webserviceCredentials.getJocUrl() + "/orders/history"),
-                body);
+        String answer = apiExecutor.post(accessToken, "/orders/history/", body);
         Globals.debug(logger, body);
         Globals.debug(logger, "answer=" + answer);
         OrderHistory orderHistory = new OrderHistory();
@@ -50,14 +46,10 @@ public class HistoryWebserviceExecuter {
         }
     }
 
-    public TaskHistory getJobHistoryEntry(JobsFilter jobsFilter) throws Exception {
-        if (webserviceCredentials.getAccessToken().isEmpty()) {
-            throw new Exception("AccessToken is empty. Login not executed");
-        }
-
+    public TaskHistory getJobHistoryEntry(JobsFilter jobsFilter,String accessToken) throws Exception {
+      
         String body = Globals.objectMapper.writeValueAsString(jobsFilter);
-        String answer = webserviceCredentials.getSosRestApiClient().postRestService(new URI(webserviceCredentials.getJocUrl() + "/tasks/history"),
-                body);
+        String answer = apiExecutor.post(accessToken, "/tasks/history", body);
         Globals.debug(logger, body);
         Globals.debug(logger, "answer=" + answer);
         TaskHistory taskHistory = new TaskHistory();
