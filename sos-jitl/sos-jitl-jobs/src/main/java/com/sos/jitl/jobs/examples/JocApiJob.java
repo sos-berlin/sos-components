@@ -21,11 +21,16 @@ public class JocApiJob extends ABlockingInternalJob<JocApiJobArguments> {
             step.getLogger().info("Logged in!");
             step.getLogger().info("accessToken: " + token);
             
-            String relativeApiUrl = "/joc/api/orders/history";
+            String apiUrl = "/joc/api/orders/history";
             String body = "{\"controllerId\":\"standalone\",\"dateFrom\":\"0d\",\"dateTo\":\"0d\",\"limit\":5000,\"timeZone\":\"Europe/Berlin\"}";
-            String response = ex.post(token, relativeApiUrl, body);
+            String response = ex.post(token, apiUrl, body);
             step.getLogger().info(response);
             
+            apiUrl = "/orders/history";
+            body = "{\"controllerId\":\"standalone\",\"dateFrom\":\"0d\",\"dateTo\":\"0d\",\"limit\":5000,\"timeZone\":\"Europe/Berlin\"}";
+            response = ex.post(token, apiUrl, body);
+            step.getLogger().info(response);
+
             ex.logout(token);
             step.getLogger().info("Logged out!");
         } catch (Throwable e) {
