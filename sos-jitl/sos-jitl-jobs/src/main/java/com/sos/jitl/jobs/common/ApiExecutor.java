@@ -26,9 +26,9 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValue;
 
-public class JOCApiJobExecutor {
+public class ApiExecutor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JOCApiJobExecutor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApiExecutor.class);
 
     private static final String DEFAULT_TRUSTSTORE_FILENAME = "https-truststore.p12";
     private static final String WS_API_LOGIN = "/joc/api/authentication/login";
@@ -53,34 +53,33 @@ public class JOCApiJobExecutor {
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD = "js7.api-server.http.password";
     
     private final String truststoreFileName;
-
     private SOSRestApiClient client;
     private URI jocUri;
     private final JobLogger jobLogger;
 
-    public JOCApiJobExecutor() {
+    public ApiExecutor() {
         this(null, null, null);
     }
 
-    public JOCApiJobExecutor(JobLogger jobLogger) {
+    public ApiExecutor(JobLogger jobLogger) {
         this(null, null, jobLogger);
     }
 
-    public JOCApiJobExecutor(URI jocUri) {
+    public ApiExecutor(URI jocUri) {
         this(jocUri, null, null);
     }
 
-    public JOCApiJobExecutor(URI jocUri, JobLogger logger) {
+    public ApiExecutor(URI jocUri, JobLogger logger) {
         this(jocUri, null, logger);
     }
 
-    public JOCApiJobExecutor(URI jocUri, String truststoreFileName) {
+    public ApiExecutor(URI jocUri, String truststoreFileName) {
         this.jocUri = jocUri;
         this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
         this.jobLogger = null;
     }
 
-    public JOCApiJobExecutor(URI jocUri, String truststoreFileName, JobLogger jobLogger) {
+    public ApiExecutor(URI jocUri, String truststoreFileName, JobLogger jobLogger) {
         this.jocUri = jocUri;
         this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
         this.jobLogger = jobLogger;
