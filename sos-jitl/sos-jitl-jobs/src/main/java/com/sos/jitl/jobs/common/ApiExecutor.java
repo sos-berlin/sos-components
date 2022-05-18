@@ -33,6 +33,7 @@ public class ApiExecutor {
     private static final String DEFAULT_TRUSTSTORE_FILENAME = "https-truststore.p12";
     private static final String WS_API_LOGIN = "/joc/api/authentication/login";
     private static final String WS_API_LOGOUT = "/joc/api/authentication/logout";
+    private static final String WS_API_PREFIX = "/joc/api";
     private static final String ACCESS_TOKEN_HEADER = "X-Access-Token";
     private static final String AGENT_CONF_DIR_ENV_PARAM = "JS7_AGENT_CONFIG_DIR";
     private static final String PRIVATE_CONF_JS7_PARAM_CONFDIR = "js7.config-directory";
@@ -86,7 +87,7 @@ public class ApiExecutor {
     }
 
     public String login() throws Exception {
-    	logInfo("***JOCApiJobExecutor***");
+    	logInfo("***ApiExecutor***");
     	tryCreateClient();
     	logInfo("send login to: " + jocUri.resolve(WS_API_LOGIN).toString());
         String response = client.postRestService(jocUri.resolve(WS_API_LOGIN), null);
@@ -104,6 +105,9 @@ public class ApiExecutor {
             client.addHeader(ACCESS_TOKEN_HEADER, token);
             logInfo("REQUEST: " + apiUrl);
             logInfo("PARAMS: " + body);
+            if(!apiUrl.startsWith(WS_API_PREFIX)) {
+                apiUrl = WS_API_PREFIX + apiUrl;
+            }
             logInfo("resolvedUri: " + jocUri.resolve(apiUrl).toString());
             return client.postRestService(jocUri.resolve(apiUrl), body);
         }
