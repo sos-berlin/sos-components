@@ -18,7 +18,7 @@ public class HistoryWebserviceExecuterTest {
     @Ignore
     @Test
     public void testHistoryWebserviceExecuter() throws Exception {
-        JOCCredentialStoreParameters jobSchedulerCredentialStoreJOCParameters = new JOCCredentialStoreParameters();
+       /* JOCCredentialStoreParameters jobSchedulerCredentialStoreJOCParameters = new JOCCredentialStoreParameters();
         jobSchedulerCredentialStoreJOCParameters.setUser("root");
         jobSchedulerCredentialStoreJOCParameters.setPassword("root");
         jobSchedulerCredentialStoreJOCParameters.setJocUrl("http://localhost:4426");
@@ -45,7 +45,7 @@ public class HistoryWebserviceExecuterTest {
 
         ordersFilter.setLimit(10);
         OrderHistory orderHistory = historyWebserviceExecuter.getWorkflowHistoryEntry(ordersFilter);
-        System.out.println(orderHistory.getHistory().get(0).getHistoryId());
+       System.out.println(orderHistory.getHistory().get(0).getHistoryId());*/ 
 
     }
 

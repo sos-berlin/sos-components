@@ -99,9 +99,6 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
         // arguments.setQuery("isCompleted(startedFrom=-100d, count>5)");
 
         arguments.setQuery("lastCompletedSuccessful");
-        arguments.setAccount("root");
-        arguments.setPassword("root");
-        arguments.setJocUrl("http://localhost:4426");
         // arguments.setJob("job2");
         // arguments.setJob("jobCheckHistory2");
         arguments.setWorkflow("fork");

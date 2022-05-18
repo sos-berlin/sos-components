@@ -128,7 +128,7 @@
                 </note>
             </param>
       
-            <param name="controller-id" required="false">
+            <param name="controller_id" required="false">
                 <note>
                 	<title>The Controller ID indicates the Controller for which jobs or workflows have been executed.</title>
                 	<p>

@@ -9,9 +9,6 @@ public class CheckHistoryJobArguments extends JobArguments {
     private JobArgument<String> controllerId = new JobArgument<String>("controller_id", false);
     private JobArgument<String> workflow = new JobArgument<String>("workflow", false);
     private JobArgument<String> job = new JobArgument<String>("job", false);
-    private JobArgument<String> jocUrl = new JobArgument<String>("joc_url", false);
-    private JobArgument<String> account = new JobArgument<String>("account", false);
-    private JobArgument<String> password = new JobArgument<String>("password", false);
     private JobArgument<String> query = new JobArgument<String>("query", false);
 
     public CheckHistoryJobArguments() {
@@ -40,30 +37,6 @@ public class CheckHistoryJobArguments extends JobArguments {
 
     public void setWorkflow(String workflow) {
         this.workflow.setValue(workflow);
-    }
-
-    public String getJocUrl() {
-        return jocUrl.getValue();
-    }
-
-    public void setJocUrl(String jocUrl) {
-        this.jocUrl.setValue(jocUrl);
-    }
-
-    public String getAccount() {
-        return account.getValue();
-    }
-
-    public void setAccount(String account) {
-        this.account.setValue(account);
-    }
-
-    public String getPassword() {
-        return password.getValue();
-    }
-
-    public void setPassword(String password) {
-        this.password.setValue(password);
     }
 
     public String getQuery() {
