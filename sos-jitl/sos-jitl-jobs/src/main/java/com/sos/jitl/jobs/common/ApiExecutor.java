@@ -58,10 +58,6 @@ public class ApiExecutor {
     private URI jocUri;
     private final JobLogger jobLogger;
 
-    public ApiExecutor() {
-        this(null, null, null);
-    }
-
     public ApiExecutor(JobLogger jobLogger) {
         this(null, null, jobLogger);
     }
@@ -87,13 +83,11 @@ public class ApiExecutor {
     }
 
     public String login() throws Exception {
-    	logInfo("***ApiExecutor***");
+    	logDebug("***ApiExecutor***");
     	tryCreateClient();
-    	logInfo("send login to: " + jocUri.resolve(WS_API_LOGIN).toString());
-        String response = client.postRestService(jocUri.resolve(WS_API_LOGIN), null);
-        logInfo("HTTP status code: " + client.statusCode());
-        logInfo("response from web server: " + response);
-        logInfo("access token: " + client.getResponseHeader(ACCESS_TOKEN_HEADER));
+    	logDebug("send login to: " + jocUri.resolve(WS_API_LOGIN).toString());
+        client.postRestService(jocUri.resolve(WS_API_LOGIN), null);
+        logDebug("HTTP status code: " + client.statusCode());
         return client.getResponseHeader(ACCESS_TOKEN_HEADER);
     }
     
@@ -108,7 +102,7 @@ public class ApiExecutor {
             if(!apiUrl.startsWith(WS_API_PREFIX)) {
                 apiUrl = WS_API_PREFIX + apiUrl;
             }
-            logInfo("resolvedUri: " + jocUri.resolve(apiUrl).toString());
+            logDebug("resolvedUri: " + jocUri.resolve(apiUrl).toString());
             return client.postRestService(jocUri.resolve(apiUrl), body);
         }
     }
@@ -116,9 +110,8 @@ public class ApiExecutor {
     public void logout(String token) throws Exception {
         if (token != null) {
             tryCreateClient();
-            
             client.addHeader(ACCESS_TOKEN_HEADER, token);
-        	logInfo("send logout");
+        	logDebug("send logout");
             client.postRestService(jocUri.resolve(WS_API_LOGOUT), null);
         }
     }
@@ -274,14 +267,6 @@ public class ApiExecutor {
     		jobLogger.debug(log);
     	} else {
     		LOGGER.debug(log);
-    	}
-    }
-    
-    private void logTrace (String log) {
-    	if (jobLogger != null) {
-    		jobLogger.trace(log);
-    	} else {
-    		LOGGER.trace(log);
     	}
     }
     
