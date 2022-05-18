@@ -26,6 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "title",
     "deployed",
     "syncState",
+    "ordering",
     "subagentIds"
 })
 public class SubagentCluster {
@@ -74,6 +75,8 @@ public class SubagentCluster {
      */
     @JsonProperty("syncState")
     private SyncState syncState;
+    @JsonProperty("ordering")
+    private Integer ordering;
     /**
      * 
      * (Required)
@@ -206,6 +209,16 @@ public class SubagentCluster {
         this.syncState = syncState;
     }
 
+    @JsonProperty("ordering")
+    public Integer getOrdering() {
+        return ordering;
+    }
+
+    @JsonProperty("ordering")
+    public void setOrdering(Integer ordering) {
+        this.ordering = ordering;
+    }
+
     /**
      * 
      * (Required)
@@ -228,12 +241,12 @@ public class SubagentCluster {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("subagentClusterId", subagentClusterId).append("title", title).append("deployed", deployed).append("syncState", syncState).append("subagentIds", subagentIds).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("subagentClusterId", subagentClusterId).append("title", title).append("deployed", deployed).append("syncState", syncState).append("ordering", ordering).append("subagentIds", subagentIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(subagentIds).append(controllerId).append(syncState).append(deployed).append(subagentClusterId).append(title).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(subagentIds).append(controllerId).append(ordering).append(syncState).append(deployed).append(subagentClusterId).append(title).toHashCode();
     }
 
     @Override
@@ -245,7 +258,7 @@ public class SubagentCluster {
             return false;
         }
         SubagentCluster rhs = ((SubagentCluster) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(subagentIds, rhs.subagentIds).append(controllerId, rhs.controllerId).append(syncState, rhs.syncState).append(deployed, rhs.deployed).append(subagentClusterId, rhs.subagentClusterId).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(subagentIds, rhs.subagentIds).append(controllerId, rhs.controllerId).append(ordering, rhs.ordering).append(syncState, rhs.syncState).append(deployed, rhs.deployed).append(subagentClusterId, rhs.subagentClusterId).append(title, rhs.title).isEquals();
     }
 
 }
