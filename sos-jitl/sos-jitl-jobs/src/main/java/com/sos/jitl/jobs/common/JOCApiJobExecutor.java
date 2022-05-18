@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
 import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
@@ -25,9 +26,9 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValue;
 
-public class JobApiExecutor {
+public class JOCApiJobExecutor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobApiExecutor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JOCApiJobExecutor.class);
 
     private static final String DEFAULT_TRUSTSTORE_FILENAME = "https-truststore.p12";
     private static final String WS_API_LOGIN = "/joc/api/authentication/login";
@@ -35,7 +36,7 @@ public class JobApiExecutor {
     private static final String ACCESS_TOKEN_HEADER = "X-Access-Token";
     private static final String AGENT_CONF_DIR_ENV_PARAM = "JS7_AGENT_CONFIG_DIR";
     private static final String PRIVATE_CONF_JS7_PARAM_CONFDIR = "js7.config-directory";
-    private static final String PRIVATE_CONF_JS7_PARAM_JOCURL = "js7.web.joc.url";
+    private static final String PRIVATE_CONF_JS7_PARAM_JOCURL = "js7.api-server.url";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH = "js7.web.https.keystore.file";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD = "js7.web.https.keystore.key-password";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD = "js7.web.https.keystore.store-password";
@@ -45,11 +46,11 @@ public class JobApiExecutor {
     private static final String PRIVATE_FOLDER_NAME = "private";
     private static final String PRIVATE_CONF_FILENAME = "private.conf";
     
-    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_FILE = "js7.web.http.cs_file";
-    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_KEYFILE = "js7.web.http.cs_keyFile";
-    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD = "js7.web.http.cs_password";
-    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME = "js7.web.http.username";
-    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD = "js7.web.http.password";
+    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_FILE = "js7.api-server.http.cs-file";
+    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_KEYFILE = "js7.api-server.http.cs-keyFile";
+    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD = "js7.api-server.http.cs-password";
+    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME = "js7.api-server.http.username";
+    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD = "js7.api-server.http.password";
     
     private final String truststoreFileName;
 
@@ -57,37 +58,36 @@ public class JobApiExecutor {
     private URI jocUri;
     private final JobLogger jobLogger;
 
-    public JobApiExecutor() {
+    public JOCApiJobExecutor() {
         this(null, null, null);
     }
 
-    public JobApiExecutor(JobLogger jobLogger) {
+    public JOCApiJobExecutor(JobLogger jobLogger) {
         this(null, null, jobLogger);
     }
 
-    public JobApiExecutor(URI jocUri) {
+    public JOCApiJobExecutor(URI jocUri) {
         this(jocUri, null, null);
     }
 
-    public JobApiExecutor(URI jocUri, JobLogger logger) {
+    public JOCApiJobExecutor(URI jocUri, JobLogger logger) {
         this(jocUri, null, logger);
     }
 
-    public JobApiExecutor(URI jocUri, String truststoreFileName) {
+    public JOCApiJobExecutor(URI jocUri, String truststoreFileName) {
         this.jocUri = jocUri;
         this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
         this.jobLogger = null;
     }
 
-    public JobApiExecutor(URI jocUri, String truststoreFileName, JobLogger jobLogger) {
+    public JOCApiJobExecutor(URI jocUri, String truststoreFileName, JobLogger jobLogger) {
         this.jocUri = jocUri;
         this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
         this.jobLogger = jobLogger;
     }
 
     public String login() throws Exception {
-    	logInfo("***JobApiExecutor***");
-
+    	logInfo("***JOCApiJobExecutor***");
     	tryCreateClient();
     	logInfo("send login to: " + jocUri.resolve(WS_API_LOGIN).toString());
         String response = client.postRestService(jocUri.resolve(WS_API_LOGIN), null);
@@ -97,8 +97,19 @@ public class JobApiExecutor {
         return client.getResponseHeader(ACCESS_TOKEN_HEADER);
     }
     
+    public String post(String token, String apiUrl, String body) throws Exception {
+        if (token == null) {
+            throw new SOSBadRequestException("no access token provided. permission denied.");
+        } else {
+            tryCreateClient();
+            client.addHeader(ACCESS_TOKEN_HEADER, token);
+            logInfo("REQUEST: " + apiUrl);
+            logInfo("PARAMS: " + body);
+            logInfo("resolvedUri: " + jocUri.resolve(apiUrl).toString());
+            return client.postRestService(jocUri.resolve(apiUrl), body);
+        }
+    }
     
-
     public void logout(String token) throws Exception {
         if (token != null) {
             tryCreateClient();
@@ -118,18 +129,18 @@ public class JobApiExecutor {
             return;
         }
         String agentConfDirPath = System.getenv(AGENT_CONF_DIR_ENV_PARAM);
-        logInfo("agentConfDirPath: " + agentConfDirPath);
+        logDebug("agentConfDirPath: " + agentConfDirPath);
         Path agentConfDir = Paths.get(System.getenv(AGENT_CONF_DIR_ENV_PARAM));
         Config config = readConfig(agentConfDir);
         
-        logInfo("agent private folder: " + agentConfDir.resolve(PRIVATE_FOLDER_NAME).toString());
+        logDebug("agent private folder: " + agentConfDir.resolve(PRIVATE_FOLDER_NAME).toString());
         for (Entry<String, ConfigValue> entry : config.entrySet()) {
             if(entry.getKey().startsWith("js7")) {
                 logDebug(entry.getKey() + ": " + entry.getValue().toString());
             }
         }
         String jocUri = config.getString(PRIVATE_CONF_JS7_PARAM_JOCURL);
-        logInfo("JOC Url (private.conf): " + jocUri);
+        logDebug("JOC Url (private.conf): " + jocUri);
         if (!SOSString.isEmpty(jocUri)) {
             this.jocUri = URI.create(jocUri);
         }
@@ -138,10 +149,11 @@ public class JobApiExecutor {
         }
         
         client = new SOSRestApiClient();
-        logInfo("initiate REST api client");
+        logDebug("initiate REST api client");
         if (jocUri.startsWith("https:")) {
             List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(config);
-            logInfo("read Trustore from: " + config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
+            logDebug("read Trustore from: " + config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).
+                    getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
             KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(truststoreFileName)).map(item -> {
                 try {
                     return KeyStoreUtil.readTrustStore(item.getPath(), KeystoreType.PKCS12, item.getStorePwd());
@@ -150,7 +162,7 @@ public class JobApiExecutor {
                 }
             }).filter(Objects::nonNull).findFirst().get();
             KeyStoreCredentials credentials = readKeystoreCredentials(config);
-            logInfo("read Keystore from: " + config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
+            logDebug("read Keystore from: " + config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
             KeyStore keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
             if (keystore != null && truststore != null) {
                 client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), truststore);
@@ -220,10 +232,11 @@ public class JobApiExecutor {
         Properties props = new Properties();
     	props.setProperty(PRIVATE_CONF_JS7_PARAM_CONFDIR, agentConfigDirectory.toString());
     	Path privatFolderPath = agentConfigDirectory.resolve(PRIVATE_FOLDER_NAME);
-    	logInfo("agents private folder: " + privatFolderPath.toString());
+    	logDebug("agents private folder: " + privatFolderPath.toString());
     	Config defaultConfigWithAgentConfDir = ConfigFactory.parseProperties(props).withFallback(defaultConfig).resolve();
-    	logInfo(PRIVATE_CONF_JS7_PARAM_CONFDIR + " (Config): " + defaultConfigWithAgentConfDir.getString(PRIVATE_CONF_JS7_PARAM_CONFDIR));
-        return ConfigFactory.parseFile(privatFolderPath.resolve(PRIVATE_CONF_FILENAME).toFile()).withFallback(defaultConfigWithAgentConfDir).resolve();
+    	logDebug(PRIVATE_CONF_JS7_PARAM_CONFDIR + " (Config): " + defaultConfigWithAgentConfDir.getString(PRIVATE_CONF_JS7_PARAM_CONFDIR));
+        return ConfigFactory.parseFile(privatFolderPath.resolve(PRIVATE_CONF_FILENAME).toFile()).withFallback(defaultConfigWithAgentConfDir)
+                .resolve();
     }
 
     private static KeyStoreCredentials readKeystoreCredentials(Config config) {
