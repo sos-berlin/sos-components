@@ -29,7 +29,7 @@
                             <li>isCompletedFailed( startedFrom=0d ): specifies that the job failed today.</li>
                             <li>lastCompletedSuccessful: specifies that the last run of the job completed succesfully.</li>
                             <li>lastCompletedFailed: specifies that the last run of the job failed.</li>
-                            <li>lastCompletedSuccessful( startedFrom=-1, startedTo=-1d ): specifies that the last run of the job started and completed successfully in the given period .</li>
+                            <li>lastCompletedSuccessful( startedFrom=-1d, startedTo=-1d ): specifies that the last run of the job started and completed successfully in the given period .</li>
                         </ul>
 					</p>
                     <p>
@@ -55,19 +55,19 @@
                     <p>
                         The 'startedFrom' and 'startedTo' parameters specify the period of the start date that should be considered.
                         <ul>
-                            <li>Example: isCompleted( startedFrom=-1d, startedTo=-1 ) specifies that the workflow or job started and completed yesterday.</li> 
+                            <li>Example: isCompleted( startedFrom=-1d, startedTo=-1d ) specifies that the workflow or job started and completed yesterday.</li> 
                         </ul> 
                     </p>
                     <p>
                         The 'completedFrom' and 'completedTo' parameters specify the period in which the workflow or job completed.
                         <ul>
-                            <li>Example: isCompleted( completedFrom=-1d, completedTo=-1 ) specifies that the workflow or job completed yesterday.</li>
+                            <li>Example: isCompleted( completedFrom=-1d, completedTo=-1d ) specifies that the workflow or job completed yesterday.</li>
                         </ul> 
                     </p>
                     <p>
                         The 'count' parameter specifies the number of expected history items.
                         <ul>
-                            <li>Example: isCompleted( completedFrom=-1d, completedTo=-1, count=2 ) specifies that the workflow or job completed twice yesterday.</li>
+                            <li>Example: isCompleted( completedFrom=-1d, completedTo=-1d, count=2 ) specifies that the workflow or job completed twice yesterday.</li>
                         </ul>
                     </p>
                     <p>
@@ -91,10 +91,10 @@
                             <li>isCompletedFailed( endDateFrom=2000-05-05T01:00:00.000Z, endDateTo=2022-05-05T01:00:00.000Z ): specifies that the workflow or job failed before the given point in time.</li>
                             <li>lastCompletedSuccessful: specifies that the last run of the workflow or job completed succesfully.</li>
                             <li>lastCompletedFailed: specifies that the last run of the workflow or job failed.</li>
-                            <li>lastCompletedSuccessful( startedFrom=-1, startedTo=-1d ): specifies that the last run of the workflow or job started and completed successfully in the given periiod.</li>
-                            <li>lastCompletedFailed( startedFrom=-1, startedTo=-1d ): specifies that the last run of the workflow or job started and failed in the given period.</li>
-                            <li>lastCompletedSuccessful( completedFrom=-1, completedTo=-1d ): specifies that the last run of the workflow or job completed successfully in the given period.</li>
-                            <li>lastCompletedFailed( completedFrom=-1, completedTo=-1d ): specifies that the last run of the job failed in the given period.</li>
+                            <li>lastCompletedSuccessful( startedFrom=-1d, startedTo=-1d ): specifies that the last run of the workflow or job started and completed successfully in the given periiod.</li>
+                            <li>lastCompletedFailed( startedFrom=-1d, startedTo=-1d ): specifies that the last run of the workflow or job started and failed in the given period.</li>
+                            <li>lastCompletedSuccessful( completedFrom=-1d, completedTo=-1d ): specifies that the last run of the workflow or job completed successfully in the given period.</li>
+                            <li>lastCompletedFailed( completedFrom=-1d, completedTo=-1d ): specifies that the last run of the job failed in the given period.</li>
                         </ul>
                     </p>
                 </note>
