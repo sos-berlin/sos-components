@@ -75,7 +75,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         List<String> replaceSearch = new ArrayList<String>();
         for (Rule rule : listOfRules) {
             Matcher m = Pattern.compile(rule.getSearch()).matcher(ret);
-            if (m.find()) {
+            while (m.find()) {
                 for (int g = 1; g <= m.groupCount(); g++) {
                     if (rule.getReplace().length >= g) {
                         replaceSearch.add(line.substring(m.start(g), m.end(g)));
@@ -86,8 +86,8 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                         ret = ret.replace(replaceSearch.get(s), rule.getReplace()[s]);
                     }
                 }
+                replaceSearch.clear();
             }
-            replaceSearch.clear();
             line = ret;
         }
         return ret;
@@ -103,7 +103,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
             magic = in.read() & 0xff | ((in.read() << 8) & 0xff00);
             in.reset();
         } catch (IOException e) {
-            e.printStackTrace(System.err);
+            LOGGER.error("", e);
             return false;
         }
         return magic == GZIPInputStream.GZIP_MAGIC;
@@ -113,33 +113,33 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         for (String logFilename : listOfLogfileNames) {
             LOGGER.debug("input --->" + logFilename);
 
-            Path p = Paths.get(logFilename);
+            Path pLogFilename = Paths.get(logFilename);
             if (outputDir == null) {
-                outputDir = p.getParent().toString();
+                outputDir = pLogFilename.getParent().toString();
             }
 
-            String output = outputDir + "/" + ANONYMIZED + p.getFileName();
+            String output = outputDir + "/" + ANONYMIZED + pLogFilename.getFileName();
 
             BufferedReader r = null;
             BufferedWriter writer = null;
-            GZIPInputStream gzipInputStream = null;
+            InputStream is = null;
             try {
 
-                InputStream is = Files.newInputStream(Paths.get(logFilename));
+                is = Files.newInputStream(pLogFilename);
                 if (isGZipped(is)) {
                     InputStream fileInputStream = new FileInputStream(logFilename);
-                    gzipInputStream = new GZIPInputStream(fileInputStream);
-                    Reader isReader = new InputStreamReader(gzipInputStream, StandardCharsets.ISO_8859_1);
+                    GZIPInputStream gzipInputStream = new GZIPInputStream(fileInputStream);
+                    Reader isReader = new InputStreamReader(gzipInputStream, StandardCharsets.UTF_8);
                     r = new BufferedReader(isReader);
                     if (output.endsWith(".gz")) {
                         output = output.substring(0, output.length() - 3);
                     }
                 } else {
-                    r = Files.newBufferedReader(Paths.get(logFilename));
+                    r = Files.newBufferedReader(pLogFilename);
                 }
 
-                writer = new BufferedWriter(new FileWriter(output));
                 Path pOutput = Paths.get(output);
+                writer = Files.newBufferedWriter(pOutput);
                 LOGGER.info("Output file " + pOutput.toString());
                 try {
                     for (String line; (line = r.readLine()) != null;) {
@@ -157,11 +157,11 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                     LOGGER.warn(e.getMessage());
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error("", e);
             } finally {
-                if (gzipInputStream != null) {
+                if (is != null) {
                     try {
-                        gzipInputStream.close();
+                        is.close();
                     } catch (IOException e) {
                     }
 
@@ -205,7 +205,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
 
             }
         } catch (YAMLException | IOException e) {
-            e.printStackTrace();
+            LOGGER.error("", e);
         }
     }
 
@@ -245,16 +245,16 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                             }
                         });
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        LOGGER.error("", e);
                     }
                 } else {
-                    logfileName = logfileName.replace("\\", "/");
+                    logfileName = logfileName.replace('\\', '/');
                     String[] logfileParts = logfileName.split("/");
                     String lastPart = logfileParts[logfileParts.length - 1];
                     String s = logfileName.replace("/" + lastPart, "");
 
                     LOGGER.debug("wildcard:" + lastPart);
-                    
+
                     try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(Paths.get(s), lastPart)) {
                         dirStream.forEach(pathLogfile -> {
 
@@ -263,13 +263,13 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                             }
                         });
                     } catch (IOException e3) {
-                        e3.printStackTrace();
+                        LOGGER.error("", e3);
                     }
                 }
             }
         } catch (InvalidPathException e) {
 
-            logfileName = logfileName.replace("\\", "/");
+            logfileName = logfileName.replace('\\', '/');
             String[] logfileParts = logfileName.split("/");
             String lastPart = logfileParts[logfileParts.length - 1];
             String s = logfileName.replace("/" + lastPart, "");
@@ -282,7 +282,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
                     }
                 });
             } catch (IOException e2) {
-                e2.printStackTrace();
+                LOGGER.error("", e2);
             }
 
         }
