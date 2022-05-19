@@ -1,11 +1,13 @@
 package com.sos.joc.db.security;
 
+import java.util.Date;
+
 public class IamHistoryFilter extends SOSHibernateFilter {
 
     private Long id;
     private String accountName;
     private Boolean loginSuccess;
-    private String loginDateTo;
+    private Date loginDateTo;
 
     public IamHistoryFilter() {
 
@@ -19,11 +21,11 @@ public class IamHistoryFilter extends SOSHibernateFilter {
         this.id = id;
     }
 
-    public String getLoginDateTo() {
+    public Date getLoginDateTo() {
         return loginDateTo;
     }
 
-    public void setLoginDateTo(String loginDateTo) {
+    public void setLoginDateTo(Date loginDateTo) {
         this.loginDateTo = loginDateTo;
     }
 

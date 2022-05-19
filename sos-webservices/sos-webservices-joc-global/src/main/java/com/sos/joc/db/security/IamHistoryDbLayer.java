@@ -33,6 +33,9 @@ public class IamHistoryDbLayer {
         if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
             query.setParameter("accountName", filter.getAccountName());
         }
+        if (filter.getLoginDateTo() != null) {
+            query.setParameter("loginDate", filter.getLoginDateTo());
+        }
 
         return query;
 
@@ -51,6 +54,10 @@ public class IamHistoryDbLayer {
         }
         if (filter.getLoginSuccess() != null) {
             where += and + " loginSuccess = :loginSuccess";
+            and = " and ";
+        }
+        if (filter.getLoginDateTo() != null) {
+            where += and + " loginDate < :loginDate";
             and = " and ";
         }
         if (!where.trim().equals("")) {
