@@ -4,6 +4,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +38,8 @@ public class ApiExecutor {
     private static final String ACCESS_TOKEN_HEADER = "X-Access-Token";
     private static final String AGENT_CONF_DIR_ENV_PARAM = "JS7_AGENT_CONFIG_DIR";
     private static final String PRIVATE_CONF_JS7_PARAM_CONFDIR = "js7.config-directory";
+    private static final String PRIVATE_CONF_JS7_PARAM_API_SERVER = "js7.api-server";
+    private static final String PRIVATE_CONF_JS7_PARAM_URL = "url";
     private static final String PRIVATE_CONF_JS7_PARAM_JOCURL = "js7.api-server.url";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH = "js7.web.https.keystore.file";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD = "js7.web.https.keystore.key-password";
@@ -52,6 +55,10 @@ public class ApiExecutor {
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD = "js7.api-server.http.cs-password";
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME = "js7.api-server.http.username";
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD = "js7.api-server.http.password";
+    private static final List<String> DO_NOT_LOG_KEY = Arrays.asList(new String []{"js7.api-server.http.password", 
+            "js7.api-server.http.cs-password", "js7.web.https.keystore.store-password", "js7.web.https.keystore.key-password",
+            "js7.web.https.truststores"});
+    private static final String DO_NOT_LOG_VAL = "store-password";
     
     private final String truststoreFileName;
     private SOSRestApiClient client;
@@ -132,10 +139,13 @@ public class ApiExecutor {
         logDebug("agent private folder: " + agentConfDir.resolve(PRIVATE_FOLDER_NAME).toString());
         for (Entry<String, ConfigValue> entry : config.entrySet()) {
             if(entry.getKey().startsWith("js7")) {
-                logDebug(entry.getKey() + ": " + entry.getValue().toString());
+                if (!DO_NOT_LOG_KEY.contains(entry.getKey())) {
+                    logDebug(entry.getKey() + ": " + entry.getValue().toString());
+                }
             }
         }
-        String jocUri = config.getString(PRIVATE_CONF_JS7_PARAM_JOCURL);
+//        List<String> jocUris = config.getConfig(PRIVATE_CONF_JS7_PARAM_API_SERVER).getStringList("url");
+        String jocUri = config.getConfig(PRIVATE_CONF_JS7_PARAM_API_SERVER).getStringList(PRIVATE_CONF_JS7_PARAM_URL).get(0);
         logDebug("JOC Url (private.conf): " + jocUri);
         if (!SOSString.isEmpty(jocUri)) {
             this.jocUri = URI.create(jocUri);
@@ -143,13 +153,13 @@ public class ApiExecutor {
         if (this.jocUri == null) {
             throw new Exception("missing jocUri");
         }
-        
+
         client = new SOSRestApiClient();
         logDebug("initiate REST api client");
         if (jocUri.startsWith("https:")) {
             List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(config);
-            logDebug("read Trustore from: " + config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).
-                    getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
+            logDebug("read Trustore from: " + config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(
+                    PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
             KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(truststoreFileName)).map(item -> {
                 try {
                     return KeyStoreUtil.readTrustStore(item.getPath(), KeystoreType.PKCS12, item.getStorePwd());
@@ -184,7 +194,7 @@ public class ApiExecutor {
             }
             String username = "";
             String pwd = "";
-            if(csFile != null && !csFile.isEmpty()) {
+            if (csFile != null && !csFile.isEmpty()) {
                 SOSKeePassResolver resolver = new SOSKeePassResolver(csFile, csKeyFile, csPwd);
                 try {
                     username = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME));
@@ -200,14 +210,13 @@ public class ApiExecutor {
                     logDebug(e.getMessage());
                 }
             }
-            if((username == null || username.isEmpty()) && (pwd == null || pwd.isEmpty())) {
+            if ((username == null || username.isEmpty()) && (pwd == null || pwd.isEmpty())) {
                 logError("no username and password configured in privat.conf");
             } else {
                 String basicAuth = Base64.getMimeEncoder().encodeToString((username + ":" + pwd).getBytes());
                 client.setBasicAuthorization(basicAuth);
             }
         }
-
 
     }
 

@@ -3,10 +3,11 @@ package com.sos.jitl.common;
 import static org.junit.Assert.assertNotNull;
 
 import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.List;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -15,10 +16,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
-import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
+import com.sos.commons.sign.keys.keyStore.KeystoreType;
+import com.sos.jitl.jobs.common.ApiExecutor;
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 public class HttpClientTests {
 
@@ -85,24 +86,25 @@ public class HttpClientTests {
         }
     }
 
-     
+    @Ignore 
     @Test
     public void testHttpClient() {
         KeyStore keyStore = null;
         KeyStore truststore = null;
         try {
-            keyStore = KeyStoreUtil.readKeyStore("C:/temp/laptop-7rsacscv.p12", KeystoreType.PKCS12);
-            truststore = KeyStoreUtil.readTrustStore("C:/temp/https-truststore.p12", KeystoreType.PKCS12);
+            keyStore = KeyStoreUtil.readKeyStore(KEYSTORE_PATH, KeystoreType.PKCS12);
+            truststore = KeyStoreUtil.readTrustStore(TRUSTORE_PATH, KeystoreType.PKCS12);
             SOSRestApiClient restApiClient = new SOSRestApiClient();
             // restApiClient.setAutoCloseHttpClient(true);
             restApiClient.setSSLContext(keyStore, "".toCharArray(), truststore);
-            String response = restApiClient.postRestService(URI.create("https://joc-1-13-secondary.sos:17543/joc/api/security/login"), null);
+            String response = restApiClient.postRestService(URI.create("http://localhost:4444/joc/api/security/login"), null);
+            
             String accessToken = restApiClient.getResponseHeader("X-Access-Token");
             LOGGER.info(accessToken);
             assertNotNull(response);
             if (accessToken != null) {
                 restApiClient.addHeader("X-Access-Token", accessToken);
-                response = restApiClient.postRestService(URI.create("https://joc-1-13-secondary.sos:17543/joc/api/security/logout"), null);
+                response = restApiClient.postRestService(URI.create("http://localhost:4444/joc/api/security/logout"), null);
                 LOGGER.info(response);
                 assertNotNull(response);
             }
@@ -133,27 +135,13 @@ public class HttpClientTests {
         }
     }
 
-    @Ignore
     @Test
     public void readPrivateConf() {
-        System.setProperty("js7.config-directory", "C:/sp/devel/js7/local/agents/agent/agent_2111/config");
-        Config defaultConfig = ConfigFactory.load();
-        Config config = null;// ex.readConfig(Paths.get("C:/sp/devel/js7/centosdev_third/agent/private.conf"));
+        Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
+        System.setProperty("js7.config-directory", privateConfPath.toString());
+        ApiExecutor ex = new ApiExecutor(null, null, null);
+        Config config = ex.readConfig(privateConfPath);
         assertNotNull(config);
-        try {
-            LOGGER.info("KeyStore File Path: " + config.getString("js7.web.https.keystore.file"));
-            LOGGER.info("KeyStore Key Passwd: " + config.getString("js7.web.https.keystore.key-password"));
-            LOGGER.info("KeyStore Store Passwd: " + config.getString("js7.web.https.keystore.store-password"));
-            LOGGER.info("Truststores list:");
-            List<? extends Config> truststores = config.getConfigList("js7.web.https.truststores");
-            truststores.stream().forEach(item -> {
-                LOGGER.info(" TrustStore File Path: " + item.getString("file"));
-                LOGGER.info(" TrustStore Store Passwd: " + item.getString("store-password"));
-                LOGGER.info(" ----------------------------------------------");
-            });
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-        }
     }
 
     @Ignore
