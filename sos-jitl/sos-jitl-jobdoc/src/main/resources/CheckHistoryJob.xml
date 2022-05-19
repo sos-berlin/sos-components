@@ -195,7 +195,7 @@
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistorQueryyWorkflow" required="false">
+            <param name="js7CheckHistorQueryWorkflow" required="false">
                 <note>
                     <title>The value of the parameter 'workflow'</title>
                     <p>
@@ -211,14 +211,7 @@
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistoryResultString" required="false">
-                <note>
-                    <title>Resultinng information</title>
-                    <p>
-                        <query>(job|workflow) ==> true|false;</query>
-                    </p>
-                </note>
-            </param>
+            
 
         </params>
 
@@ -248,7 +241,7 @@
 	            <p>
 	                The outcome of the job can be used in subsequent PROMPT Instructions in a workflow.
 	                <ul>
-		                <li>Example: $js7CheckHistoryResultString</li>
+		                <li>Example:  $js7CheckHistoryQuery ++ '(' ++ $js7CheckHistoryQueryWorkflow ++ ') ==> ' ++ $returnCode</li>
 	                </ul>  
 	            </p>	            
   				<b>Use with RETRY Instructions</b>
