@@ -44,11 +44,13 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
         resultMap.put("js7CheckHistoryResult", false);
         resultMap.put("js7CheckHistoryResultControllerId", "");
         resultMap.put("js7CheckHistoryResultWorkflow", "");
+        resultMap.put("js7CheckHistoryResultJob", "");
         resultMap.put("js7CheckHistoryResultStarted", "");
         resultMap.put("js7CheckHistoryResultCompleted", "");
 
         String query = args.getQuery();
         resultMap.put("js7CheckHistoryQuery", query);
+        resultMap.put("js7CheckHistoryQueryControllerId", args.getControllerId());
         resultMap.put("js7CheckHistoryQueryWorkflow", args.getWorkflow());
         resultMap.put("js7CheckHistoryQueryJob", args.getJob());
         Globals.debug(logger, String.format("check history: %s will be executed.", query));
@@ -76,6 +78,7 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
             resultMap.put("js7CheckHistoryResultStarted", historyItem.getStartTime());
             resultMap.put("js7CheckHistoryResultCompleted", historyItem.getEndTime());
             resultMap.put("js7CheckHistoryResultWorkflow", historyItem.getWorkflow());
+            resultMap.put("js7CheckHistoryResultJob", historyItem.getJob());
 
         } else {
             String s = args.getQuery() + "(" + name + ") ==> false";
