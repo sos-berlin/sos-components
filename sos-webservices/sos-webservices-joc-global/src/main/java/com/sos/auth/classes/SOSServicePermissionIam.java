@@ -187,7 +187,7 @@ public class SOSServicePermissionIam {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
-            @HeaderParam("X-CLIENT-ID") String loginClientId, @QueryParam("user") String account, @QueryParam("pwd") String pwd) {
+            @HeaderParam("X-CLIENT-ID") String loginClientId, @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
