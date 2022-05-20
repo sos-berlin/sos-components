@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
+import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
@@ -132,8 +133,13 @@ public class ApiExecutor {
             return;
         }
         String agentConfDirPath = System.getenv(AGENT_CONF_DIR_ENV_PARAM);
+        if(agentConfDirPath == null) {
+            throw new SOSMissingDataException(
+                    String.format("Environment variable %1$s not set. Can´t read credetials from agents private.conf file.",
+                            AGENT_CONF_DIR_ENV_PARAM));
+        }
         logDebug("agentConfDirPath: " + agentConfDirPath);
-        Path agentConfDir = Paths.get(System.getenv(AGENT_CONF_DIR_ENV_PARAM));
+        Path agentConfDir = Paths.get(agentConfDirPath);
         Config config = readConfig(agentConfDir);
         
         logDebug("agent private folder: " + agentConfDir.resolve(PRIVATE_FOLDER_NAME).toString());
