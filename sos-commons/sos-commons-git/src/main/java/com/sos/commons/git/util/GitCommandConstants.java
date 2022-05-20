@@ -104,6 +104,7 @@ public class GitCommandConstants {
     public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_EMAIL_FORMAT_LINUX = "git config --local --add user.email '%1$s'";
 
     public static final String CMD_SHELL_CD = "cd ";
+    public static final String CMD_SHELL_CD_WIN = "cd /D ";
     public static final String REGEX_CHANGES_COUNT = "\\s(\\d)\\s[a-z]{4}\\s[a-z]{1,},\\s(\\d)\\s[a-z]{1,}\\(\\+\\),\\s(\\d).*";
 
 }

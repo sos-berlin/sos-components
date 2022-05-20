@@ -131,8 +131,13 @@ public class GitCommandUtils {
                 dbLayer.saveOrUpdateConfiguration(dbItem);
             }
             Path workingDir = Paths.get(System.getProperty("user.dir"));
-
+            if (workingDir != null) {
+                LOGGER.info("working dir: " + workingDir.toString());
+            }
             Path repositoryBase = Globals.sosCockpitProperties.resolvePath("repositories").resolve(getSubrepositoryFromFilter(filter));
+            if(repositoryBase != null) {
+                LOGGER.debug("repositoryBase: " + repositoryBase.toString());
+            }
             if(protocol.equals(DEFAULT_PROTOCOL)) {
                 Path gitKeyfilePath = null;
                 String username = null;
@@ -182,7 +187,7 @@ public class GitCommandUtils {
                 // clone
                 String folder = filter.getFolder().startsWith("/") ? filter.getFolder().substring(1) : filter.getFolder();
                 GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(
-                        filter.getRemoteUri(), folder, repositoryBase, workingDir, charset);
+                        filter.getRemoteUri(), folder, repositoryBase, charset);
                 if(result.getExitCode() != 0) {
                     throw new JocGitException(String.format("clone command exit code <%1$d> with message: %2$s", 
                             result.getExitCode(), result.getStdErr()), result.getException());
@@ -225,8 +230,7 @@ public class GitCommandUtils {
                 String updatedUri = String.format("%1$s://%2$s:%3$s@%4$s%5$s", protocol, gitAccount, pwopat, hostPort, path);
                 // clone
                 String folder = filter.getFolder().startsWith("/") ? filter.getFolder().substring(1) : filter.getFolder();
-                GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(
-                        updatedUri, folder, repositoryBase, workingDir, charset);
+                GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(updatedUri, folder, repositoryBase, charset);
                 if(result.getExitCode() != 0) {
                     throw new JocGitException(String.format("clone command exit code <%1$d> with message: %2$s", 
                             result.getExitCode(), result.getStdErr()), result.getException());
