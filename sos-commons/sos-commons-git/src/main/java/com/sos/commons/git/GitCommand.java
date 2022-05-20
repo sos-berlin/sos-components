@@ -5,8 +5,8 @@ import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.commons.git.enums.GitConfigType;
 import com.sos.commons.git.enums.GitConfigAction;
+import com.sos.commons.git.enums.GitConfigType;
 import com.sos.commons.git.results.GitCommandResult;
 import com.sos.commons.git.util.GitCommandConstants;
 import com.sos.commons.git.util.GitUtil;
@@ -30,14 +30,13 @@ public class GitCommand {
 
     public static GitCommandResult executeGitStatusShort(Path repository, Path workingDir, Charset charset) {
         if (repository == null) {
-            return GitUtil.createGitStatusShortCommandResult(SOSShell.executeCommand(GitCommandConstants.CMD_GIT_STATUS_SHORT, charset, TIMEMOUT_SHORT));
+            return GitUtil.createGitStatusShortCommandResult(
+                    SOSShell.executeCommand(GitCommandConstants.CMD_GIT_STATUS_SHORT, charset, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitStatusShortCommandResult(SOSShell.executeCommand(
                     getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_STATUS_SHORT), charset, TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_STATUS_SHORT);
-            if (workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -56,9 +55,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitPullCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_PULL), charset, TIMEMOUT_LONG), GitCommandConstants.CMD_GIT_PULL);
-            if (workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -77,10 +74,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitAddCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_ADD), charset, TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_ADD);
-            if(workingDir != null) {
-                // fire and forget
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -99,9 +93,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitAddAllCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_ADD_ALL), charset, TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_ADD_ALL);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -120,9 +112,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_COMMIT), charset, TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_COMMIT);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -143,9 +133,7 @@ public class GitCommand {
             GitCommandResult result = GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, String.format(GitCommandConstants.CMD_GIT_COMMIT_FORMAT, message)), charset, TIMEMOUT_SHORT), 
                     String.format(GitCommandConstants.CMD_GIT_COMMIT_FORMAT, message));
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -186,9 +174,7 @@ public class GitCommand {
                         repository, workingDir, GitCommandConstants.CMD_GIT_CHECKOUT_TAG + tagname), charset, TIMEMOUT_SHORT), 
                         GitCommandConstants.CMD_GIT_CHECKOUT_TAG + tagname);
             }
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -209,9 +195,7 @@ public class GitCommand {
             GitCommandResult result = GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(
                     getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_ADD_AND_COMMIT), charset, TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_ADD_AND_COMMIT);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -232,9 +216,7 @@ public class GitCommand {
             GitCommandResult result = GitUtil.createGitCommitCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, String.format(GitCommandConstants.CMD_GIT_ADD_AND_COMMIT_FORMAT, message)), charset, TIMEMOUT_SHORT), 
                     String.format(GitCommandConstants.CMD_GIT_ADD_AND_COMMIT_FORMAT, message));
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -253,58 +235,18 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitPushCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_PUSH), charset, TIMEMOUT_LONG), GitCommandConstants.CMD_GIT_PUSH);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
-    }
-    
-    public static GitCommandResult executeGitClone(String remoteRepositoryUri, Charset charset) {
-        return executeGitClone(remoteRepositoryUri, null, null, null, charset);
-    }
-    
-    public static GitCommandResult executeGitClone(String remoteRepositoryUri, String targetFolder, Charset charset) {
-        return executeGitClone(remoteRepositoryUri, targetFolder, null, null, charset);
     }
     
     public static GitCommandResult executeGitClone(String remoteRepositoryUri, Path repository, Charset charset) {
-        return executeGitClone(remoteRepositoryUri, null, repository, null, charset);
+        return executeGitClone(remoteRepositoryUri, null, repository, charset);
     }
     
     public static GitCommandResult executeGitClone(String remoteRepositoryUri, String targetFolder, Path repository, Charset charset) {
-        return executeGitClone(remoteRepositoryUri, targetFolder, repository, null, charset);
-    }
-    
-    public static GitCommandResult executeGitClone(String remoteRepositoryUri, Path repository, Path workingDir, Charset charset) {
-        return executeGitClone(remoteRepositoryUri, null, repository, workingDir, charset);
-    }
-    
-    public static GitCommandResult executeGitClone(String remoteRepositoryUri, String targetFolder, Path repository, Path workingDir,
-            Charset charset) {
-        if (repository == null) {
-            if (targetFolder != null) {
-                return GitUtil.createGitCloneCommandResult(SOSShell.executeCommand(
-                        String.format("%1$s%2$s %3$s", GitCommandConstants.CMD_GIT_CLONE, remoteRepositoryUri, targetFolder), charset,
-                        TIMEMOUT_LONG));
-            }
-            return GitUtil.createGitCloneCommandResult(
-                    SOSShell.executeCommand(GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri, charset, TIMEMOUT_LONG));
-        } else {
-            String pathifiedCommand = null;
-            if (targetFolder != null) {
-                pathifiedCommand = getPathifiedCommand(repository, workingDir, 
-                        String.format("%1$s%2$s %3$s", GitCommandConstants.CMD_GIT_CLONE, remoteRepositoryUri, targetFolder));
-            } else {
-                pathifiedCommand = getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri);
-            }
-            GitCommandResult result = GitUtil.createGitCloneCommandResult(SOSShell.executeCommand(pathifiedCommand, charset, TIMEMOUT_LONG),
-                    GitCommandConstants.CMD_GIT_CLONE + remoteRepositoryUri);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
-            return result;
-        }
+        return GitUtil.createGitCloneCommandResult(SOSShell.executeCommand(String.format("%1$s%2$s %3$s", 
+                GitCommandConstants.CMD_GIT_CLONE, remoteRepositoryUri, repository.resolve(targetFolder)).toString(), charset, TIMEMOUT_LONG));
     }
     
     public static GitCommandResult executeGitTag(Charset charset) {
@@ -321,9 +263,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitTagCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_TAG), charset, TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_TAG);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -343,9 +283,7 @@ public class GitCommand {
             GitCommandResult result = GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_REMOTE_V), charset, TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_REMOTE_V);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -366,9 +304,7 @@ public class GitCommand {
             GitCommandResult result = GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_REMOTE_ADD + shortName + " " + remoteURI), charset, TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_REMOTE_ADD + shortName + " " + remoteURI);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -389,9 +325,7 @@ public class GitCommand {
             GitCommandResult result = GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(
                     getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_REMOTE_REMOVE + shortName), charset, TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_REMOTE_REMOVE + shortName);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -412,9 +346,7 @@ public class GitCommand {
             GitCommandResult result = GitUtil.createGitRemoteCommandResult(SOSShell.executeCommand(
                     getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_REMOTE_UPDATE), charset, TIMEMOUT_LONG),
                     GitCommandConstants.CMD_GIT_REMOTE_UPDATE);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -435,9 +367,7 @@ public class GitCommand {
             GitCommandResult result = GitUtil.createGitLsRemoteCommandResult(SOSShell.executeCommand(
                     getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_LS_REMOTE + repositoryUri), charset, TIMEMOUT_SHORT), 
                     GitCommandConstants.CMD_GIT_LS_REMOTE + repositoryUri);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -456,9 +386,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitLogCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_LOG), charset, TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_LOG);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -478,9 +406,7 @@ public class GitCommand {
             GitCommandResult result = GitUtil.createGitLogCommandResult(SOSShell.executeCommand(
                     getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_LOG_ONE_LINE), charset, TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_LOG_ONE_LINE);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -501,9 +427,7 @@ public class GitCommand {
             GitCommandResult result = GitUtil.createGitCherryPickCommandResult(SOSShell.executeCommand(
                     getPathifiedCommand(repository, workingDir, GitCommandConstants.CMD_GIT_CHERRY_PICK), charset, TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_CHERRY_PICK);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -523,9 +447,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitRestoreCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_RESTORE), charset, TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_RESTORE);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -545,9 +467,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitRestoreCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_RESTORE), charset, TIMEMOUT_SHORT), GitCommandConstants.CMD_GIT_RESTORE);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -568,9 +488,7 @@ public class GitCommand {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_CONFIG + params), charset, TIMEMOUT_SHORT),
                     GitCommandConstants.CMD_GIT_CONFIG + params);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -591,9 +509,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -615,9 +531,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -639,9 +553,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -662,9 +574,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -685,9 +595,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -708,9 +616,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -732,9 +638,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -756,9 +660,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -780,9 +682,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -804,9 +704,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -827,9 +725,7 @@ public class GitCommand {
         } else {
             GitCommandResult result = GitUtil.createGitDiffCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_DIFF), charset, TIMEMOUT_LONG), GitCommandConstants.CMD_GIT_DIFF);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
@@ -850,23 +746,34 @@ public class GitCommand {
             GitCommandResult result = GitUtil.createGitDiffCommandResult(SOSShell.executeCommand(getPathifiedCommand(
                     repository, workingDir, GitCommandConstants.CMD_GIT_DIFF_STAGED), charset, TIMEMOUT_LONG),
                     GitCommandConstants.CMD_GIT_DIFF_STAGED);
-            if(workingDir != null) {
-                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
-            }
+            switchBackToWorkingDir(workingDir, charset);
             return result;
         }
     }
     
     private static String getPathifiedCommand(Path repository, Path workingDir, String command) {
-        String switchTo = GitCommandConstants.CMD_SHELL_CD + repository.toString().replace('\\', '/');
+        String switchTo = "";
         // cd to repository path and execute command
         // switch back to working directory if needed
         String pathifiedCommand = null;
         if (SOSShell.IS_WINDOWS) {
+            switchTo = GitCommandConstants.CMD_SHELL_CD_WIN + repository.toString().replace('\\', '/');
             pathifiedCommand = switchTo + DELIMITER_WINDOWS + command; 
         } else {
+            switchTo = GitCommandConstants.CMD_SHELL_CD + repository.toString().replace('\\', '/');
             pathifiedCommand = switchTo + DELIMITER_LINUX + command;
         }
         return pathifiedCommand;
+    }
+    
+    private static void switchBackToWorkingDir(Path workingDir, Charset charset) {
+        if(workingDir != null) {
+            if (SOSShell.IS_WINDOWS) {
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD_WIN + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
+            } else {
+                SOSShell.executeCommand(GitCommandConstants.CMD_SHELL_CD + workingDir.toString().replace('\\', '/'), charset, TIMEMOUT_SHORT);
+            }
+            
+        }
     }
 }

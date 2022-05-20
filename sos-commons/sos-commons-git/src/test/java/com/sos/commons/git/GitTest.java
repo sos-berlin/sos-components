@@ -112,10 +112,11 @@ public class GitTest {
         LOGGER.debug(" **************************  Test 01a - git status short finished  *******************");
     }
 
+    @Ignore
     @Test
     public void test02GitPull() {
         LOGGER.debug("**************************  Test 02 - git pull started  *****************************");
-        GitCloneCommandResult cloneResult = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
+        GitCloneCommandResult cloneResult = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, Charset.defaultCharset());
         Path repository = repositoryParent.resolve(cloneResult.getClonedInto());
         LOGGER.debug("Repository path: " + repository.toString());
         GitPullCommandResult pullResult = (GitPullCommandResult)GitCommand.executeGitPull(repository, workingDir, Charset.defaultCharset());
@@ -141,10 +142,11 @@ public class GitTest {
         LOGGER.debug("**************************  Test 02 - git pull finished  ****************************");
     }
     
+    @Ignore
     @Test
     public void test03GitAddAll() {
         LOGGER.debug("**************************  Test 03 - git add all started  **************************");
-        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
+        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, Charset.defaultCharset());
         if (result.getExitCode() == 0) {
             Path repository = repositoryParent.resolve(result.getClonedInto());
             String testfileName = "sp_git_test%1$d.txt";
@@ -181,10 +183,11 @@ public class GitTest {
         LOGGER.debug("**************************  Test 03 - git add all finished  *************************");
     }
     
+    @Ignore
     @Test
     public void test04GitCommit() {
         LOGGER.debug("**************************  Test 04 - git commit started            *****************");
-        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
+        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, Charset.defaultCharset());
         if (result.getExitCode() == 0) {
             Path repository = repositoryParent.resolve(result.getClonedInto());
             String testfileName = "sp_git_test.txt";
@@ -228,7 +231,7 @@ public class GitTest {
     @Test
     public void test05GitCheckout() {
         LOGGER.debug("**************************  Test 05 - git checkout started          *****************");
-        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
+        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, Charset.defaultCharset());
         if (result.getExitCode() == 0) {
             Path repository = repositoryParent.resolve(result.getClonedInto());
             String testfileName = "sp_git_test.txt";
@@ -268,10 +271,11 @@ public class GitTest {
         LOGGER.debug("**************************  Test 05 - git checkout finished          ****************");
     }
     
+    @Ignore
     @Test
     public void test06GitPush() {
         LOGGER.debug("**************************  Test 06 - git push started              *****************");
-        GitCloneCommandResult cloneResult = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
+        GitCloneCommandResult cloneResult = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, Charset.defaultCharset());
         if (cloneResult.getExitCode() == 0) {
             Path repository = repositoryParent.resolve(cloneResult.getClonedInto());
             String testfileName = "sp_git_test.txt";
@@ -361,10 +365,11 @@ public class GitTest {
         LOGGER.debug("**************************  Test 10 - git log finished  *****************************");
     }
 
+    @Ignore
     @Test
     public void test11Clone() {
         LOGGER.debug("**************************  Test 11 - git clone started    **************************");
-        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
+        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, Charset.defaultCharset());
         LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
@@ -385,6 +390,7 @@ public class GitTest {
         LOGGER.debug("**************************  Test 11 - git clone finished   **************************");
     }
 
+    @Ignore
     @Test
     public void test12ChangeSSHConfigThenClone() throws SOSException {
         LOGGER.debug("**************************  Test 12 - git config started   **************************");
@@ -409,7 +415,7 @@ public class GitTest {
         LOGGER.debug("StdOut:\n" + configResult.getStdOut());
         LOGGER.debug("StdErr: " + configResult.getStdErr());
         LOGGER.debug("**************************  Step 4: clone                  **************************");
-        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, workingDir, Charset.defaultCharset());
+        GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(repoToClone, repositoryParent, Charset.defaultCharset());
         LOGGER.debug("command: " + result.getOriginalCommand());
         LOGGER.debug("ExitCode: " + result.getExitCode());
         LOGGER.debug("StdOut:\n" + result.getStdOut());
