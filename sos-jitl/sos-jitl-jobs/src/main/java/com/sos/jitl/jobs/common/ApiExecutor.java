@@ -41,7 +41,6 @@ public class ApiExecutor {
     private static final String PRIVATE_CONF_JS7_PARAM_CONFDIR = "js7.config-directory";
     private static final String PRIVATE_CONF_JS7_PARAM_API_SERVER = "js7.api-server";
     private static final String PRIVATE_CONF_JS7_PARAM_URL = "url";
-    private static final String PRIVATE_CONF_JS7_PARAM_JOCURL = "js7.api-server.url";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH = "js7.web.https.keystore.file";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD = "js7.web.https.keystore.key-password";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD = "js7.web.https.keystore.store-password";
@@ -51,13 +50,13 @@ public class ApiExecutor {
     private static final String PRIVATE_FOLDER_NAME = "private";
     private static final String PRIVATE_CONF_FILENAME = "private.conf";
     
-    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_FILE = "js7.api-server.http.cs-file";
-    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_KEYFILE = "js7.api-server.http.cs-keyFile";
-    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD = "js7.api-server.http.cs-password";
-    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME = "js7.api-server.http.username";
-    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD = "js7.api-server.http.password";
-    private static final List<String> DO_NOT_LOG_KEY = Arrays.asList(new String []{"js7.api-server.http.password", 
-            "js7.api-server.http.cs-password", "js7.web.https.keystore.store-password", "js7.web.https.keystore.key-password",
+    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_FILE = "js7.api-server.cs-file";
+    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_KEYFILE = "js7.api-server.cs-keyFile";
+    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD = "js7.api-server.cs-password";
+    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME = "js7.api-server.username";
+    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD = "js7.api-server.password";
+    private static final List<String> DO_NOT_LOG_KEY = Arrays.asList(new String []{"js7.api-server.password", 
+            "js7.api-server.cs-password", "js7.web.https.keystore.store-password", "js7.web.https.keystore.key-password",
             "js7.web.https.truststores"});
     private static final String DO_NOT_LOG_VAL = "store-password";
     
@@ -107,7 +106,7 @@ public class ApiExecutor {
             client.addHeader(ACCESS_TOKEN_HEADER, token);
             logInfo("REQUEST: " + apiUrl);
             logInfo("PARAMS: " + body);
-            if(!apiUrl.startsWith(WS_API_PREFIX)) {
+            if(!apiUrl.toLowerCase().startsWith(WS_API_PREFIX)) {
                 apiUrl = WS_API_PREFIX + apiUrl;
             }
             logDebug("resolvedUri: " + jocUri.resolve(apiUrl).toString());
@@ -162,7 +161,7 @@ public class ApiExecutor {
 
         client = new SOSRestApiClient();
         logDebug("initiate REST api client");
-        if (jocUri.startsWith("https:")) {
+        if (jocUri.toLowerCase().startsWith("https:")) {
             List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(config);
             logDebug("read Trustore from: " + config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(
                     PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
@@ -217,7 +216,7 @@ public class ApiExecutor {
                 }
             }
             if ((username == null || username.isEmpty()) && (pwd == null || pwd.isEmpty())) {
-                logError("no username and password configured in privat.conf");
+                logError("no username and password configured in private.conf");
             } else {
                 String basicAuth = Base64.getMimeEncoder().encodeToString((username + ":" + pwd).getBytes());
                 client.setBasicAuthorization(basicAuth);
