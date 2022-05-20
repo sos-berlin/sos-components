@@ -31,10 +31,10 @@ public class ParameterResolver {
 
     public void resolveParameter(String parameter) throws SOSException {
         String[] parameters = parameter.split(",");
-        String startedFrom = "0d";
-        String startedTo = "0d";
-        String completedFrom = "0d";
-        String completedTo = "0d";
+        startedFrom = "0d";
+        startedTo = "0d";
+        completedFrom = "0d";
+        completedTo = "0d";
 
         if (parameters.length > 0) {
             for (String parameterAssignment : parameters) {
