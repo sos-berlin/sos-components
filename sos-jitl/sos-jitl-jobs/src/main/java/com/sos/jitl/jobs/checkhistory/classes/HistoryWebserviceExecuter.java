@@ -24,7 +24,7 @@ public class HistoryWebserviceExecuter {
     }
 
     public OrderHistory getWorkflowHistoryEntry(OrdersFilter ordersFilter, String accessToken) throws Exception {
-       
+
         String body = Globals.objectMapper.writeValueAsString(ordersFilter);
         String answer = apiExecutor.post(accessToken, "/orders/history/", body);
         Globals.debug(logger, body);
@@ -35,10 +35,7 @@ public class HistoryWebserviceExecuter {
             return null;
         }
         OrderHistoryItem h = orderHistory.getHistory().get(0);
-        Path path = Paths.get(h.getWorkflow());
-        if (!ordersFilter.getWorkflowName().equals(path.getFileName().toString())) {
-            return null;
-        }
+
         if (h.getHistoryId() == null) {
             return null;
         } else {
@@ -46,8 +43,8 @@ public class HistoryWebserviceExecuter {
         }
     }
 
-    public TaskHistory getJobHistoryEntry(JobsFilter jobsFilter,String accessToken) throws Exception {
-      
+    public TaskHistory getJobHistoryEntry(JobsFilter jobsFilter, String accessToken) throws Exception {
+
         String body = Globals.objectMapper.writeValueAsString(jobsFilter);
         String answer = apiExecutor.post(accessToken, "/tasks/history", body);
         Globals.debug(logger, body);
@@ -58,9 +55,7 @@ public class HistoryWebserviceExecuter {
             return null;
         }
         TaskHistoryItem h = taskHistory.getHistory().get(0);
-        if (!jobsFilter.getJobName().equals(h.getJob())) {
-            return null;
-        }
+
         if (h.getTaskId() == null) {
             return null;
         } else {
