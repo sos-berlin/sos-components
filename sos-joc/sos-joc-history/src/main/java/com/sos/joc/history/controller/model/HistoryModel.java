@@ -1907,8 +1907,7 @@ public class HistoryModel {
     }
 
     private String getDateAsString(Date date, String timeZone) throws Exception {
-        // for Etc/UTC a Z is used instead +00:00; see https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html#iso8601timezone
-        return SOSDate.format(date, "yyyy-MM-dd HH:mm:ss.SSSXXX", TimeZone.getTimeZone(timeZone)).replaceFirst("Z$", "+00:00");
+        return SOSDate.format(date, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone(timeZone));
     }
 
     private String getDateAsString(Date date) throws Exception {
