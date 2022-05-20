@@ -4,9 +4,11 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,6 +55,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         boolean isWindowsShell = false;
         String delimiter = null;
         List<String> tempFilesToDelete = new ArrayList<String>();
+        List<Path> localTempFilesToDelete = new ArrayList<Path>();
         
         SOSCommandResult result = null;
         /** steps - read agent environment variables - export some of them - execute command, script, remote script - set return values */
@@ -93,7 +96,8 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                 commands = splitCommands(jobArgs, logger);
                 // new feature 2022-04-05, SP
                 if(!jobArgs.getCommandScriptFile().isEmpty()) {
-                    String remoteCmdScriptFilepath = createRemoteCommandScript(provider, jobArgs, tempFilesToDelete, isWindowsShell, logger);
+                    String remoteCmdScriptFilepath = createRemoteCommandScript(provider, jobArgs, tempFilesToDelete, localTempFilesToDelete,
+                            isWindowsShell, logger);
                     envVars.getLocalEnvs().put("JS7_SSH_TMP_SCRIPT_FILE", remoteCmdScriptFilepath);
                     if (jobArgs.getCommandScriptParam().isDirty() && !jobArgs.getCommandScriptParam().isEmpty()) {
                         String cmdScriptParams = jobArgs.getCommandScriptParam().getValue();
@@ -102,7 +106,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                 }
             } else {
                 commands = new String[1];
-                commands[0] = createRemoteCommandScript(provider, jobArgs, tempFilesToDelete, isWindowsShell, logger);
+                commands[0] = createRemoteCommandScript(provider, jobArgs, tempFilesToDelete, localTempFilesToDelete, isWindowsShell, logger);
                 if (jobArgs.getCommandScriptParam().isDirty() && !jobArgs.getCommandScriptParam().isEmpty()) {
                     commands[0] += " " + jobArgs.getCommandScriptParam().getValue();
                 }
@@ -177,6 +181,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             if (provider != null) {
                 deleteTempFiles(jobArgs, provider, tempFilesToDelete, isWindowsShell, logger);
                 provider.disconnect();
+                deleteLocalTempFiles(localTempFilesToDelete, logger);
                 logger.info("[disconnected]%s:%s", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());
             }
             if (result != null) {
@@ -193,16 +198,16 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
     }
 
     private String createRemoteCommandScript(SSHProvider provider, SSHJobArguments jobArgs, List<String> tempFilesToDelete,
-            boolean isWindowsShell, JobLogger logger) throws Exception {
+            List<Path> localTempFilesToDelete, boolean isWindowsShell, JobLogger logger) throws Exception {
         if (!jobArgs.getCommandScript().isEmpty()) {
             logger.info("[execute command script]%s", jobArgs.getCommandScript().getDisplayValue());
             return putCommandScriptFile(SSHJobUtil.substituteVariables(parameterSubstitutor, jobArgs.getCommandScript().getValue()), provider,
-                    jobArgs, tempFilesToDelete, isWindowsShell, logger);
+                    jobArgs, tempFilesToDelete, localTempFilesToDelete, isWindowsShell, logger);
         } else if (!jobArgs.getCommandScriptFile().isEmpty()) {
             logger.info("[execute command script file]%s", jobArgs.getCommandScriptFile().getDisplayValue());
             String commandScript = new String(Files.readAllBytes(Paths.get(jobArgs.getCommandScriptFile().getValue())));
             return putCommandScriptFile(SSHJobUtil.substituteVariables(parameterSubstitutor, commandScript), provider, jobArgs,
-                    tempFilesToDelete, isWindowsShell, logger);
+                    tempFilesToDelete, localTempFilesToDelete, isWindowsShell, logger);
         }
         return null;
     }
@@ -221,12 +226,13 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         step.getLogger().debug("CommitID of the workflow: %s", step.getWorkflowVersionId());
     }
 
-    private String putCommandScriptFile(String content, SSHProvider provider, SSHJobArguments jobArgs, List<String> tempFilesToDelete, 
-            boolean isWindowsShell, JobLogger logger) throws Exception {
+    private String putCommandScriptFile(String content, SSHProvider provider, SSHJobArguments jobArgs, List<String> tempFilesToDelete,
+            List<Path> localTempFilesToDelete, boolean isWindowsShell, JobLogger logger) throws Exception {
         if (!isWindowsShell) {
             content = content.replaceAll("(?m)\r", "");
         }
         File source = File.createTempFile("sos-ssh-script-", isWindowsShell ? ".cmd" : ".sh");
+        addLocalTemporaryFilesToDelete(source.getPath(), localTempFilesToDelete, logger);
         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(source)));
         out.write(content);
         out.flush();
@@ -246,11 +252,18 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         // handler.putFile(source, target, 0700);
         return target;
     }
-
+    
+    private void addLocalTemporaryFilesToDelete(final String filepath, List<Path> localTempFilesToDelete, JobLogger logger) {
+        if (!SOSString.isEmpty(filepath)) {
+            localTempFilesToDelete.add(Paths.get(filepath));
+            logger.debug(String.format("local file %s marked for deletion", filepath));
+        }
+    }
+    
     private void addTemporaryFilesToDelete(final String filepath, List<String> tempFilesToDelete, JobLogger logger) {
         if (!SOSString.isEmpty(filepath)) {
             tempFilesToDelete.add(filepath);
-            logger.debug(String.format("file %s marked for deletion", filepath));
+            logger.debug(String.format("remote file %s marked for deletion", filepath));
         }
     }
 
@@ -338,6 +351,22 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                 }
             }
             tempFilesToDelete.clear();
+        }
+    }
+    
+    private void deleteLocalTempFiles(List<Path> localTempFilesToDelete, JobLogger logger) {
+        if(localTempFilesToDelete != null && !localTempFilesToDelete.isEmpty()) {
+            for (Path tempFile : localTempFilesToDelete) {
+                try {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[deleteLocalTempFiles]" + tempFile.toString());
+                    }
+                    Files.delete(tempFile);
+                } catch (IOException e) {
+                    logger.warn(String.format("error ocurred deleting %1$s locally: ", tempFile.toString()), e);
+                }
+                
+            }
         }
     }
 }
