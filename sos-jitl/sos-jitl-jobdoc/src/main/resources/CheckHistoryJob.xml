@@ -7,7 +7,7 @@
 	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
 
     <job name  = "CheckHistoryJob"
-         title = "Checks the execution status in the history of jobs or workflows"
+         title = "Checks the execution status in the history of workflows and jobs"
          category="History;JITL">
         <script language   = "java"
                 java_class = "com.sos.jitl.jobs.checkhistory.CheckHistoryJob"
@@ -29,20 +29,19 @@
                             <li>isCompletedFailed( startedFrom=0d ): specifies that the job failed today.</li>
                             <li>lastCompletedSuccessful: specifies that the last run of the job completed succesfully.</li>
                             <li>lastCompletedFailed: specifies that the last run of the job failed.</li>
-                            <li>lastCompletedSuccessful( startedFrom=-1d, startedTo=-1d ): specifies that the last run of the job started and completed successfully in the given period .</li>
+                            <li>lastCompletedSuccessful( startedFrom=-1d, startedTo=-1d ): specifies that the last run of the job started and completed successfully in the given period.</li>
                         </ul>
 					</p>
                     <p>
-                        Queries can use the following parameters to overwrite the "today" property and/or to add additional filter arguments:
-                        
+                        Queries can use the following parameters to select individual periods and/or to add additional filters:
                         <p>                        	
-                        <b>query: isStarted</b><br/>
-                        if neither completedFrom is specified nor completedTo is specified the completed date will not be considered.
+                            <b>query: isStarted</b><br/>
+                            If both 'completedFrom' and 'completedTo' parameters are not specified then no completion date will be considered.
                         </p>
                         <p>                        	
-                        <b>query: isCompleted*</b><br/>
-                        <b>query: lastCompleted*</b><br/>
-                        if neither startedFrom is specified nor startedTo is specified the started date will not be considered.
+                            <b>query: isCompleted*</b><br/>
+                            <b>query: lastCompleted*</b><br/>
+                            If both 'startedFrom' and 'startedTo' parameters are not specified then no start date will be considered.
                         </p>
                         <ul>
                             <li>startedFrom, default=0d</li>
@@ -75,7 +74,7 @@
                         <ul>
                             <li>isStarted: specifies that the workflow or job started today.</li>
                             <li>isCompleted( startedFrom=0d ): specifies that the workflow or job started today and completed today. It is not considered if workflow or job completed successfully or failed.</li>
-                            <li>isCompletedSuccessful( startedFrom=0d ): specifies that the workflow or job started today completed successfully today.</li>
+                            <li>isCompletedSuccessful( startedFrom=0d ): specifies that the workflow or job started today and completed successfully today.</li>
                             <li>isCompletedFailed( startedFrom=0d ): specifies that the workflow or job started today and failed today.</li>
                             <li>isStarted( startedFrom=2022-05-05T01:00:00.000Z ): specifies that the workflow or job started after the given point in time.</li>
                             <li>IsCompletedSuccesful( startedFrom=2022-05-05T01:00:00.000Z ): specifies that the workflow or job started after the given point in time and completed succesfully.</li>
@@ -83,12 +82,12 @@
                             <li>isCompleted: specifies that the workflow or job completed today.</li>
                             <li>isCompletedSuccessful: specifies that the workflow or job completed successfully today.</li>
                             <li>isCompletedFailed: specifies that the workflow or job failed today.</li>
-                            <li>isCompleted( endDateFrom=2022-05-05T01:00:00.000Z ): specifies that the workflow or job completed after the given point in time.</li>
-                            <li>isCompletedSuccessful( endDateFrom=2022-05-05T01:00:00.000Z ): specifies that the workflow or job completed successfully after the given point in time.</li>
-                            <li>isCompletedFailed (endDateFrom=2022-05-05T01:00:00.000Z ): specifies that the workflow or job failed after the given point in time.</li>
-                            <li>isCompleted( endDateFrom=2000-05-05T01:00:00.000Z, endDateTo=2022-05-05T01:00:00.000Z ): specifies that the workflow or job completed before the given pointin time.</li>
-                            <li>isCompletedSuccesful( endDateFrom=2000-05-05T01:00:00.000Z, endDateTo=2022-05-05T01:00:00.000Z ): specifies that the workfow or job completed successfully before the given point in time.</li>
-                            <li>isCompletedFailed( endDateFrom=2000-05-05T01:00:00.000Z, endDateTo=2022-05-05T01:00:00.000Z ): specifies that the workflow or job failed before the given point in time.</li>
+                            <li>isCompleted( completedFrom=2022-05-05T01:00:00.000Z ): specifies that the workflow or job completed after the given point in time.</li>
+                            <li>isCompletedSuccessful( completedFrom=2022-05-05T01:00:00.000Z ): specifies that the workflow or job completed successfully after the given point in time.</li>
+                            <li>isCompletedFailed (completedFrom=2022-05-05T01:00:00.000Z ): specifies that the workflow or job failed after the given point in time.</li>
+                            <li>isCompleted( completedFrom=2000-05-05T01:00:00.000Z, completedTo=2022-05-05T01:00:00.000Z ): specifies that the workflow or job completed before the given pointin time.</li>
+                            <li>isCompletedSuccesful( completedFrom=2000-05-05T01:00:00.000Z, completedTo=2022-05-05T01:00:00.000Z ): specifies that the workfow or job completed successfully before the given point in time.</li>
+                            <li>isCompletedFailed( completedFrom=2000-05-05T01:00:00.000Z, completedTo=2022-05-05T01:00:00.000Z ): specifies that the workflow or job failed before the given point in time.</li>
                             <li>lastCompletedSuccessful: specifies that the last run of the workflow or job completed succesfully.</li>
                             <li>lastCompletedFailed: specifies that the last run of the workflow or job failed.</li>
                             <li>lastCompletedSuccessful( startedFrom=-1d, startedTo=-1d ): specifies that the last run of the workflow or job started and completed successfully in the given periiod.</li>
@@ -105,7 +104,7 @@
                 <note>
                 	<title>The workflow which is looked up in the history</title>
                 	<p>
-                	Limits the result to a specific workflow indicated by its name. This includes use of '*' and '?' placeholders:
+                	Limits results to a specific workflow indicated by its name. This includes use of '*' and '?' wildcards:
                 	<ul>
 					<li>* : matches zero or more characters</li>
 					<li>? : matches any single character</li>
@@ -119,7 +118,7 @@
                 <note>
                     <title>The job which is looked up in the history</title>
                    <p>
-                	Limits the result to a specific job indicated by its name. This includes use of '*' and '?' p
+                	Limits results to a specific job indicated by its name. This includes use of '*' and '?' wildcards:
                 	<ul>
 					<li>* : match zero or more characters</li>
 					<li>? : match any single character</li>
@@ -161,14 +160,22 @@
             </param>
             <param name="js7CheckHistoryResultWorkflow" required="false">
                 <note>
-                    <title>The workflow of the resulting history entry</title>
+                    <title>The workflow name of the resulting history entry</title>
                     <p>
                         The value of the return variable is empty if the query returns no result.
                         If the query returns a result then the return variable holds the workflow name of the youngest resulting history entry.
                     </p>
                 </note>
             </param>
-             
+            <param name="js7CheckHistoryResultJob" required="false">
+                <note>
+                    <title>The job name of the resulting history entry</title>
+                    <p>
+                        The value of the return variable is empty if the query returns no result.
+                        If the query returns a result then the return variable holds the job name of the youngest resulting history entry.
+                    </p>
+                </note>
+            </param>             
             <param name="js7CheckHistoryResultStarted" required="false">
                 <note>
                     <title>The start date and time of the resulting history entry</title>
@@ -189,7 +196,7 @@
             </param>
             <param name="js7CheckHistoryQuery" required="false">
                 <note>
-                    <title>The value of the parameter 'query'</title>
+                    <title>The value of the 'query' parameter</title>
                     <p>
                         Returns a copy of the value of the 'query' parameter that was used with the query.
                     </p>
@@ -197,7 +204,7 @@
             </param>
             <param name="js7CheckHistorQueryWorkflow" required="false">
                 <note>
-                    <title>The value of the parameter 'workflow'</title>
+                    <title>The value of the 'workflow' parameter</title>
                     <p>
                         Returns a copy of the value of the 'workflow' parameter that was used with the query.
                     </p>
@@ -205,7 +212,7 @@
             </param>
             <param name="js7CheckHistoryQueryJob" required="false">
                 <note>
-                    <title>The value of the parameter 'job'</title>
+                    <title>The value of the 'job' parameter</title>
                     <p>
                         Returns a copy of the value of the 'job' parameter that was used with the query.
                     </p>
@@ -222,7 +229,7 @@
         <note>
             <title>What is the purpose of this job?</title>
             <p>
-                The job checks the task history and the order history for execution results of workflows or jobs.
+                The job checks the orders history and task history for execution results of workflows or jobs.
             </p>
         </note>
     
