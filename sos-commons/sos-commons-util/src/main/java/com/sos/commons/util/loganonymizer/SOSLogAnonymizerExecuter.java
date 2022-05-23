@@ -111,7 +111,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
             
             Path pLogFilename = Paths.get(logFilename);
             if (outputDir == null) {
-                outputDir = pLogFilename.getParent();
+                outputDir = pLogFilename.toAbsolutePath().normalize().getParent();
             }
             
             Path output = outputDir.resolve(ANONYMIZED + pLogFilename.getFileName().toString());
@@ -287,8 +287,11 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         Path exportPath = Paths.get(exportFile);
         if (Files.isDirectory(exportPath)) {
             throw new IOException(exportFile + " is a directory.");
-        } else if (!Files.exists(exportPath.getParent())) {
-            Files.createDirectories(exportPath.getParent());
+        } else {
+            Path parent = exportPath.toAbsolutePath().normalize().getParent();
+            if (parent != null && !Files.exists(parent)) {
+                Files.createDirectories(parent);
+            }
         }
         
         final DumperOptions options = new DumperOptions();
