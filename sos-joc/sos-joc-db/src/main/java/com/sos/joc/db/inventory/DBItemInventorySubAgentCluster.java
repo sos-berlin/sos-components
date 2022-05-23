@@ -95,6 +95,9 @@ public class DBItemInventorySubAgentCluster extends DBItem {
     }
 
     public void setOrdering(Integer val) {
+        if (val == null) {
+            val = 0;
+        }
         ordering = val;
     }
     

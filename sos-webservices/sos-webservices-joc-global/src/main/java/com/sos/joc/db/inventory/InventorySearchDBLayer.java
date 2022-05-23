@@ -18,6 +18,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowJob;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.RequestSearchAdvancedItem;
@@ -66,7 +67,11 @@ public class InventorySearchDBLayer extends DBLayer {
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
-            hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+            if (SearchStringHelper.isGlobPattern(search)) {
+                hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+            } else {
+                hql.append("and (lower(mt.name) = :search or lower(mt.title) = :search) ");
+            }
         }
         if (searchInFolders) {
             hql.append("and (").append(foldersHql(folders)).append(") ");
@@ -76,7 +81,11 @@ public class InventorySearchDBLayer extends DBLayer {
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         query.setParameter("type", type.intValue());
         if (search != null) {
-            query.setParameter("search", '%' + search.toLowerCase() + '%');
+            if (SearchStringHelper.isGlobPattern(search)) {
+                query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase()));
+            } else {
+                query.setParameter("search", search.toLowerCase());
+            }
         }
         if (searchInFolders) {
             foldersQueryParameters(query, folders);
@@ -126,7 +135,11 @@ public class InventorySearchDBLayer extends DBLayer {
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
-            hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+            if (SearchStringHelper.isGlobPattern(search)) {
+                hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+            } else {
+                hql.append("and (lower(mt.name) = :search or lower(mt.title) = :search) ");
+            }
         }
         if (searchInFolders) {
             hql.append("and (").append(foldersHql(folders)).append(") ");
@@ -140,7 +153,11 @@ public class InventorySearchDBLayer extends DBLayer {
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         query.setParameter("type", type.intValue());
         if (search != null) {
-            query.setParameter("search", '%' + search.toLowerCase() + '%');
+            if (SearchStringHelper.isGlobPattern(search)) {
+                query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase()));
+            } else {
+                query.setParameter("search", search.toLowerCase());
+            }
         }
         if (searchInFolders) {
             foldersQueryParameters(query, folders);
@@ -211,7 +228,11 @@ public class InventorySearchDBLayer extends DBLayer {
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
-            hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+            if (SearchStringHelper.isGlobPattern(search)) {
+                hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+            } else {
+                hql.append("and (lower(mt.name) = :search or lower(mt.title) = :search) ");
+            }
         }
         if (searchInFolders) {
             hql.append("and (").append(foldersHql(folders)).append(") ");
@@ -403,7 +424,11 @@ public class InventorySearchDBLayer extends DBLayer {
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         query.setParameter("type", type.intValue());
         if (search != null) {
-            query.setParameter("search", '%' + search.toLowerCase() + '%');
+            if (SearchStringHelper.isGlobPattern(search)) {
+                query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase()));
+            } else {
+                query.setParameter("search", search.toLowerCase());
+            }
         }
         if (searchInFolders) {
             foldersQueryParameters(query, folders);
@@ -549,7 +574,11 @@ public class InventorySearchDBLayer extends DBLayer {
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
-            hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+            if (SearchStringHelper.isGlobPattern(search)) {
+                hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+            } else {
+                hql.append("and (lower(mt.name) = :search or lower(mt.title) = :search) ");
+            }
         }
         if (searchInFolders) {
             hql.append("and (").append(foldersHql(folders)).append(") ");
@@ -754,7 +783,11 @@ public class InventorySearchDBLayer extends DBLayer {
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         query.setParameter("type", type.intValue());
         if (search != null) {
-            query.setParameter("search", '%' + search.toLowerCase() + '%');
+            if (SearchStringHelper.isGlobPattern(search)) {
+                query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase()));
+            } else {
+                query.setParameter("search", search.toLowerCase());
+            }
         }
         if (searchInFolders) {
             foldersQueryParameters(query, folders);

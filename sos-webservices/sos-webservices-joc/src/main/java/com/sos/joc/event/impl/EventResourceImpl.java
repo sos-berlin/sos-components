@@ -12,8 +12,6 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
-import org.apache.shiro.session.Session;
-
 import com.sos.auth.interfaces.ISOSSession;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
