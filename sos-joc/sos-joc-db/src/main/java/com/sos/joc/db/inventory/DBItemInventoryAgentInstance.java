@@ -133,6 +133,9 @@ public class DBItemInventoryAgentInstance extends DBItem {
     }
 
     public void setOrdering(Integer val) {
+        if (val == null) {
+            val = 0;
+        }
         ordering = val;
     }
     

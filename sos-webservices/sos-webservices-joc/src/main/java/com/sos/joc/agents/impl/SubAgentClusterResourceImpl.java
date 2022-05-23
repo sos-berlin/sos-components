@@ -95,6 +95,7 @@ public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISub
                 subagentCluster.setSubagentClusterId(key.getSubAgentClusterId());
                 subagentCluster.setTitle(key.getTitle());
                 subagentCluster.setSubagentIds(e.getValue());
+                subagentCluster.setOrdering(key.getOrdering());
                 return subagentCluster;
             }).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));

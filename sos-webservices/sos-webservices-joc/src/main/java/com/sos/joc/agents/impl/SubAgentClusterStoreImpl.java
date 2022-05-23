@@ -20,7 +20,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentClusterMember;
-import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
@@ -109,6 +108,9 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
                     dbsubagentCluster.setDeployed(false);
                     dbsubagentCluster.setModified(now);
                     dbsubagentCluster.setTitle(s.getTitle());
+//                    if (s.getOrdering() != null) {
+//                        dbsubagentCluster.setOrdering(s.getOrdering()); 
+//                    }
                     connection.update(dbsubagentCluster);
 
                     updateMembers(connection, dbsubagentClusterMembersMap, s.getSubagentIds(), s.getSubagentClusterId(), now);
@@ -126,6 +128,7 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
                 dbsubagentCluster.setAgentId(s.getAgentId());
                 dbsubagentCluster.setTitle(s.getTitle());
                 dbsubagentCluster.setSubAgentClusterId(s.getSubagentClusterId());
+                dbsubagentCluster.setOrdering(s.getOrdering());
                 connection.save(dbsubagentCluster);
 
                 updateMembers(connection, dbsubagentClusterMembersMap, s.getSubagentIds(), s.getSubagentClusterId(), now);

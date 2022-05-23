@@ -335,6 +335,7 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
             dbSubagentCluster.setAgentId(agentId);
             dbSubagentCluster.setSubAgentClusterId(subAgent.getSubagentId());
             dbSubagentCluster.setTitle(subAgent.getTitle());
+            dbSubagentCluster.setOrdering(0); // TODO ordering
 
             DBItemInventorySubAgentClusterMember dbSubagentClusterMember = new DBItemInventorySubAgentClusterMember();
             dbSubagentClusterMember.setId(null);
