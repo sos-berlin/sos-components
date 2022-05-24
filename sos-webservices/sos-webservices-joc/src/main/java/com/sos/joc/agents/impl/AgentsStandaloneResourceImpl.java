@@ -1,11 +1,11 @@
 package com.sos.joc.agents.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -77,25 +77,29 @@ public class AgentsStandaloneResourceImpl extends JOCResourceImpl implements IAg
                 Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).collect(Collectors.toSet());
                 Map<String, Set<String>> allAliases = dbLayer.getAgentNamesByAgentIds(controllerIds);
                 Map<String, Set<String>> agentsOnController = AgentHelper.getAgents(controllerIds, AgentHelper.getCurrentStates(controllerIds));
+                List<Agent> soloAgents = new ArrayList<>();
+                int position = 0;
                 
-                agents.setAgents(dbAgents.stream().map(a -> {
-                    if (dbClusterAgentIds.contains(a.getAgentId())) {
-                        return null;
+                for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
+                    if (dbClusterAgentIds.contains(dbAgent.getAgentId())) {
+                        continue;
                     }
                     Agent agent = new Agent();
-                    agent.setAgentId(a.getAgentId());
-                    agent.setAgentName(a.getAgentName());
-                    agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
-                    agent.setTitle(a.getTitle());
-                    agent.setHidden(a.getHidden());
-                    agent.setDisabled(a.getDisabled());
+                    agent.setAgentId(dbAgent.getAgentId());
+                    agent.setAgentName(dbAgent.getAgentName());
+                    agent.setAgentNameAliases(allAliases.get(dbAgent.getAgentId()));
+                    agent.setTitle(dbAgent.getTitle());
+                    agent.setHidden(dbAgent.getHidden());
+                    agent.setDisabled(dbAgent.getDisabled());
                     agent.setDeployed(null); // deployed is obsolete, now part of syncState
-                    agent.setSyncState(AgentHelper.getSyncState(agentsOnController.get(a.getControllerId()), a));
-                    agent.setIsClusterWatcher(a.getIsWatcher());
-                    agent.setControllerId(a.getControllerId());
-                    agent.setUrl(a.getUri());
-                    return agent;
-                }).filter(Objects::nonNull).collect(Collectors.toList()));
+                    agent.setSyncState(AgentHelper.getSyncState(agentsOnController.get(dbAgent.getControllerId()), dbAgent));
+                    agent.setIsClusterWatcher(dbAgent.getIsWatcher());
+                    agent.setControllerId(dbAgent.getControllerId());
+                    agent.setUrl(dbAgent.getUri());
+                    agent.setOrdering(++position);
+                    soloAgents.add(agent);
+                }
+                agents.setAgents(soloAgents);
             }
             agents.setDeliveryDate(Date.from(Instant.now()));
             

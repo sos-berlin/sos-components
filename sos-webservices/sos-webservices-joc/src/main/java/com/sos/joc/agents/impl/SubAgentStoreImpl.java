@@ -99,8 +99,8 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
                     .getUri())).findAny().ifPresent(s -> {
                         throw new JocBadRequestException(String.format("Subagent url %s is already used by Subagent %s", s.getUri(), s.getSubAgentId()));
                     });
-            dbAgents.stream().filter(a -> a.getUri() != null && !a.getUri().isEmpty()).filter(a -> requestedSubagentUrls.contains(a
-                    .getUri())).findAny().ifPresent(a -> {
+            dbAgents.stream().filter(a -> a.getUri() != null && !a.getUri().isEmpty() && !a.getAgentId().equals(agentId)).filter(
+                    a -> requestedSubagentUrls.contains(a.getUri())).findAny().ifPresent(a -> {
                         throw new JocBadRequestException(String.format("Subagent url %s is already used by Agent %s", a.getUri(), a.getAgentId()));
                     });
             

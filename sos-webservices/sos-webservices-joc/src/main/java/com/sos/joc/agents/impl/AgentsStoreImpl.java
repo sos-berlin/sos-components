@@ -94,12 +94,17 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             Map<String, Agent> agentMap = agentStoreParameter.getAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function.identity()));
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(null);
             Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds.keySet());
+            int position = 0;
             
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     Agent agent = agentMap.remove(dbAgent.getAgentId());
                     if (agent == null) {
-                        // throw something?
+                        if (dbAgent.getOrdering() != position) {
+                            dbAgent.setOrdering(position);
+                            agentDBLayer.getSession().update(dbAgent);
+                        }
+                        position++;
                         continue;
                     }
                     if (!dbAgent.getControllerId().equals(controllerId)) {
@@ -109,12 +114,14 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                     dbAgent.setHidden(agent.getHidden());
                     dbAgent.setAgentName(agent.getAgentName());
                     dbAgent.setTitle(agent.getTitle());
+                    dbAgent.setOrdering(position);
                     
                     if (!dbAgent.getUri().equals(agent.getUrl())) {
                         dbAgent.setDeployed(false);
                     }
                     dbAgent.setUri(agent.getUrl());
                     agentDBLayer.updateAgent(dbAgent);
+                    position++;
 
                     updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
                 }
@@ -135,7 +142,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 dbAgent.setVersion(null);
                 dbAgent.setTitle(agent.getTitle());
                 dbAgent.setDeployed(false);
-                dbAgent.setOrdering(agent.getOrdering());
+                dbAgent.setOrdering(position++);
                 agentDBLayer.saveAgent(dbAgent);
                 
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
@@ -225,16 +232,23 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                     .getUri())).findAny().ifPresent(s -> {
                         throw new JocBadRequestException(String.format("Subagent url %s is already used by Subagent %s", s.getUri(), s.getSubAgentId()));
                     });
-            dbAgents.stream().filter(a -> a.getUri() != null && !a.getUri().isEmpty()).filter(a -> requestedSubagentUrls.contains(a
-                  .getUri())).findAny().ifPresent(s -> {
-                      throw new JocBadRequestException(String.format("Subagent url %s is already used by Agent %s", s.getUri(), s.getAgentId()));
-                  });
-
+            dbAgents.stream().filter(a -> a.getUri() != null && !a.getUri().isEmpty()).filter(a -> requestedSubagentUrls.contains(a.getUri())).filter(
+                    a -> agentMap.get(a.getAgentId()) == null || !agentMap.get(a.getAgentId()).getSubagents().stream().map(SubAgent::getUrl).collect(
+                            Collectors.toSet()).contains(a.getUri())).findAny().ifPresent(s -> {
+                                throw new JocBadRequestException(String.format("Subagent url %s is already used by Agent %s", s.getUri(), s
+                                        .getAgentId()));
+                            });
+            
+            int position = 0;
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     ClusterAgent agent = agentMap.remove(dbAgent.getAgentId());
                     if (agent == null) {
-                        // throw something?
+                        if (dbAgent.getOrdering() != position) {
+                            dbAgent.setOrdering(position);
+                            agentDBLayer.getSession().update(dbAgent);
+                        }
+                        position++;
                         continue;
                     }
                     if (!dbAgent.getControllerId().equals(controllerId)) {
@@ -244,8 +258,10 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                     dbAgent.setHidden(agent.getHidden());
                     dbAgent.setAgentName(agent.getAgentName());
                     dbAgent.setTitle(agent.getTitle());
+                    dbAgent.setOrdering(position);
                     agentDBLayer.updateAgent(dbAgent);
-
+                    position++;
+                    
                     SubAgentStoreImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
 
                     updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
@@ -267,7 +283,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 dbAgent.setTitle(agent.getTitle());
                 dbAgent.setDeployed(false);
                 dbAgent.setDisabled(false);
-                dbAgent.setOrdering(agent.getOrdering());
+                dbAgent.setOrdering(position++);
                 agentDBLayer.saveAgent(dbAgent);
 
                 SubAgentStoreImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
