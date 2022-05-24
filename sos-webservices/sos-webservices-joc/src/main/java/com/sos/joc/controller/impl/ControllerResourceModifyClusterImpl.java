@@ -42,8 +42,8 @@ import js7.data.node.NodeId;
 @Path("controller")
 public class ControllerResourceModifyClusterImpl extends JOCResourceImpl implements IControllerResourceModifyCluster {
 
-    private static String API_CALL_SWITCHOVER = "./controller/cluster/switchover";
-    private static String API_CALL_APPOINT_NODES = "./controller/cluster/appoint_nodes";
+    private final static String API_CALL_SWITCHOVER = "./controller/cluster/switchover";
+    private final static String API_CALL_APPOINT_NODES = "./controller/cluster/appoint_nodes";
 
     @Override
     public JOCDefaultResponse postJobschedulerSwitchOver(String accessToken, byte[] filterBytes) {
