@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "subagentId",
-    "ordering"
+    "predecessorSubagentId"
 })
 public class OrderingSubagents {
 
@@ -32,12 +32,13 @@ public class OrderingSubagents {
     @JsonProperty("subagentId")
     private String subagentId;
     /**
+     * string without < and >
+     * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("ordering")
-    private Integer ordering;
+    @JsonProperty("predecessorSubagentId")
+    private String predecessorSubagentId;
 
     /**
      * string without < and >
@@ -64,33 +65,35 @@ public class OrderingSubagents {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("ordering")
-    public Integer getOrdering() {
-        return ordering;
+    @JsonProperty("predecessorSubagentId")
+    public String getPredecessorSubagentId() {
+        return predecessorSubagentId;
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("ordering")
-    public void setOrdering(Integer ordering) {
-        this.ordering = ordering;
+    @JsonProperty("predecessorSubagentId")
+    public void setPredecessorSubagentId(String predecessorSubagentId) {
+        this.predecessorSubagentId = predecessorSubagentId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("subagentId", subagentId).append("ordering", ordering).toString();
+        return new ToStringBuilder(this).append("subagentId", subagentId).append("predecessorSubagentId", predecessorSubagentId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(subagentId).append(ordering).toHashCode();
+        return new HashCodeBuilder().append(predecessorSubagentId).append(subagentId).toHashCode();
     }
 
     @Override
@@ -102,7 +105,7 @@ public class OrderingSubagents {
             return false;
         }
         OrderingSubagents rhs = ((OrderingSubagents) other);
-        return new EqualsBuilder().append(subagentId, rhs.subagentId).append(ordering, rhs.ordering).isEquals();
+        return new EqualsBuilder().append(predecessorSubagentId, rhs.predecessorSubagentId).append(subagentId, rhs.subagentId).isEquals();
     }
 
 }

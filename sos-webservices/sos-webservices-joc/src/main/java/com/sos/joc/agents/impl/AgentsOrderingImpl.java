@@ -18,13 +18,24 @@ import com.sos.schema.JsonValidator;
 @Path("agents")
 public class AgentsOrderingImpl extends JOCResourceImpl implements IAgentsOrdering {
 
-    private static final String API_CALL = "./agents/inventory/ordering";
+    private static final String API_CALL_STANDALONE = "./agents/inventory/ordering";
+    private static final String API_CALL_CLUSTER = "./agents/inventory/cluster/ordering";
 
     @Override
-    public JOCDefaultResponse ordering(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse standaloneOrdering(String accessToken, byte[] filterBytes) {
+        return ordering(accessToken, filterBytes, true);
+    }
+    
+    @Override
+    public JOCDefaultResponse clusterOrdering(String accessToken, byte[] filterBytes) {
+        return ordering(accessToken, filterBytes, false);
+    }
+    
+    private JOCDefaultResponse ordering(String accessToken, byte[] filterBytes, boolean forStandaloneAgents) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            String apiCall = forStandaloneAgents ? API_CALL_STANDALONE : API_CALL_CLUSTER;
+            initLogging(apiCall, filterBytes, accessToken);
 
             // AgentHelper.throwJocMissingLicenseException();
 
@@ -37,11 +48,12 @@ public class AgentsOrderingImpl extends JOCResourceImpl implements IAgentsOrderi
                 return jocDefaultResponse;
             }
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            connection = Globals.createSosHibernateStatelessConnection(apiCall);
             connection.setAutoCommit(false);
             Globals.beginTransaction(connection);
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
-            agentDBLayer.setAgentsOrdering(orderingParam.getAgentId(), orderingParam.getOrdering());
+            agentDBLayer.cleanupAgentsOrdering(false);
+            agentDBLayer.setAgentsOrdering(orderingParam.getAgentId(), orderingParam.getPredecessorAgentId(), forStandaloneAgents);
             Globals.commit(connection);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

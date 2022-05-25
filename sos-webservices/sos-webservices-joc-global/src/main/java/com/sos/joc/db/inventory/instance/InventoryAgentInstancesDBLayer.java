@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -132,7 +131,11 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 if (agentIds != null && !agentIds.isEmpty()) {
                     query.setParameterList("agentIds", agentIds);
                 }
-                return getSession().getResultList(query);
+                List<DBItemInventoryAgentInstance> result = getSession().getResultList(query);
+                if (result == null) {
+                    return Collections.emptyList();
+                }
+                return result;
             } catch (DBMissingDataException ex) {
                 throw ex;
             } catch (SOSHibernateInvalidSessionException ex) {
@@ -749,7 +752,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         try {
             StringBuilder hql = new StringBuilder("select agentId from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
             if ((controllerIds != null && !controllerIds.isEmpty()) || onlyVisibleAgents) {
-                List<String> clauses = new ArrayList<>(3);
+                List<String> clauses = new ArrayList<>(2);
                 hql.append(" where agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
                 if (controllerIds != null && !controllerIds.isEmpty()) {
                     if (controllerIds.size() == 1) {
@@ -764,8 +767,9 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 if (!clauses.isEmpty()) {
                     hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
                 }
-                hql.append(") group by agentId");
+                hql.append(")");
             }
+            hql.append(" group by agentId");
             Query<String> query = getSession().createQuery(hql.toString());
             if (controllerIds != null && !controllerIds.isEmpty()) {
                 if (controllerIds.size() == 1) {
@@ -983,51 +987,63 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
     
-    public void setAgentsOrdering(String agentId, int newPosition) throws SOSHibernateException, DBMissingDataException {
+    public void cleanupAgentsOrdering(boolean force) throws SOSHibernateException {
         List<DBItemInventoryAgentInstance> dbAgents = getAgentsByControllerIds(null);
-        Optional<DBItemInventoryAgentInstance> agentOpt = dbAgents.parallelStream().filter(a -> a.getAgentId().equals(agentId)).findAny();
-        if (agentOpt.isPresent()) {
-            DBItemInventoryAgentInstance agent = agentOpt.get();
-            int oldPosition = dbAgents.indexOf(agent);
-            newPosition--;
-            if (newPosition < 0) {
-                newPosition = 0;  
-            }
-            if (newPosition >= dbAgents.size()) {
-                newPosition = dbAgents.size() - 1;  
-            }
-            if (newPosition != oldPosition) {
-                dbAgents.remove(agent);
-                dbAgents.add(newPosition, agent);
-                int position = 0;
-                for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-                    if (dbAgent.getOrdering() != position) {
-                        dbAgent.setOrdering(position);
-                        getSession().update(dbAgent);
-                    }
-                    position++;
+        if (!force) {
+            // looking for duplicate orderings
+            force = dbAgents.stream().collect(Collectors.groupingBy(DBItemInventoryAgentInstance::getOrdering, Collectors.counting())).entrySet()
+                    .stream().anyMatch(e -> e.getValue() > 1L);
+        }
+        if (force) {
+            int position = 0;
+            for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
+                if (dbAgent.getOrdering() != position) {
+                    dbAgent.setOrdering(position);
+                    getSession().update(dbAgent);
                 }
+                position++;
             }
-        } else {
-            throw new DBMissingDataException("Agent with ID '" + agentId + "' doesn't exist.");
         }
     }
     
-    public void setAgentsOrdering2(String agentId, int newPosition) throws SOSHibernateException, DBMissingDataException {
+    public void setAgentsOrdering(String agentId, String predecessorAgentId, boolean forStandaloneAgents) throws SOSHibernateException,
+            DBMissingDataException, DBInvalidDataException {
+        // TODO better with collect by prior
         DBItemInventoryAgentInstance agent = getAgentInstance(agentId);
         if (agent == null) {
             throw new DBMissingDataException("Agent with ID '" + agentId + "' doesn't exist.");
         }
+        int newPosition = -1;
+        DBItemInventoryAgentInstance predecessorAgent = null;
+        if (predecessorAgentId != null && !predecessorAgentId.isEmpty()) {
+            if (agentId.equals(predecessorAgentId)) {
+                throw new DBInvalidDataException("Agent ID '" + agentId + "' and predecessor Agent ID '" + predecessorAgentId + "' are the same.");
+            }
+            predecessorAgent = getAgentInstance(predecessorAgentId);
+            if (predecessorAgent == null) {
+                throw new DBMissingDataException("Predecessor Agent with ID '" + predecessorAgentId + "' doesn't exist.");
+            }
+            newPosition = predecessorAgent.getOrdering();
+        }
+        List<String> clusterAgentIds = getClusterAgentIds(null, false);
+        if (forStandaloneAgents) {
+            if (clusterAgentIds.contains(agent.getAgentId())) {
+                throw new DBInvalidDataException("Agent with ID '" + agentId + "' is not a standalone Agent.");
+            }
+            if (predecessorAgent != null && clusterAgentIds.contains(predecessorAgent.getAgentId())) {
+                throw new DBInvalidDataException("Predecessor Agent with ID '" + predecessorAgentId + "' is not a standalone Agent.");
+            }
+        } else {
+            if (!clusterAgentIds.contains(agent.getAgentId())) {
+                throw new DBInvalidDataException("Agent with ID '" + agentId + "' is not a Cluster Agent.");
+            }
+            if (predecessorAgent != null && !clusterAgentIds.contains(predecessorAgent.getAgentId())) {
+                throw new DBInvalidDataException("Predecessor Agent with ID '" + predecessorAgentId + "' is not a Cluster Agent.");
+            }
+        }
         int oldPosition = agent.getOrdering();
-        newPosition--;
-        if (newPosition < 0) {
-            newPosition = 0;  
-        }
-        Query<Long> countQuery = getSession().createQuery("select count(*) from " + DBLayer.DBITEM_INV_AGENT_INSTANCES);
-        int numOf = countQuery.getSingleResult().intValue();
-        if (newPosition >= numOf ) {
-            newPosition = numOf - 1;  
-        }
+        newPosition++;
+        agent.setOrdering(newPosition);
         if (newPosition != oldPosition) {
             StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
             if (newPosition < oldPosition) {
@@ -1038,9 +1054,8 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             Query<?> query = getSession().createQuery(hql.toString());
             query.setParameter("newPosition", newPosition);
             query.setParameter("oldPosition", oldPosition);
+
             getSession().executeUpdate(query);
-            
-            agent.setOrdering(newPosition);
             getSession().update(agent);
         }
     }

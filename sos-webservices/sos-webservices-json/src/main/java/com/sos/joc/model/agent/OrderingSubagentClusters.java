@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "subagentClusterId",
-    "ordering"
+    "predecessorSubagentClusterId"
 })
 public class OrderingSubagentClusters {
 
@@ -32,12 +32,13 @@ public class OrderingSubagentClusters {
     @JsonProperty("subagentClusterId")
     private String subagentClusterId;
     /**
+     * string without < and >
+     * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("ordering")
-    private Integer ordering;
+    @JsonProperty("predecessorSubagentClusterId")
+    private String predecessorSubagentClusterId;
 
     /**
      * string without < and >
@@ -64,33 +65,35 @@ public class OrderingSubagentClusters {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("ordering")
-    public Integer getOrdering() {
-        return ordering;
+    @JsonProperty("predecessorSubagentClusterId")
+    public String getPredecessorSubagentClusterId() {
+        return predecessorSubagentClusterId;
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("ordering")
-    public void setOrdering(Integer ordering) {
-        this.ordering = ordering;
+    @JsonProperty("predecessorSubagentClusterId")
+    public void setPredecessorSubagentClusterId(String predecessorSubagentClusterId) {
+        this.predecessorSubagentClusterId = predecessorSubagentClusterId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("subagentClusterId", subagentClusterId).append("ordering", ordering).toString();
+        return new ToStringBuilder(this).append("subagentClusterId", subagentClusterId).append("predecessorSubagentClusterId", predecessorSubagentClusterId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(ordering).append(subagentClusterId).toHashCode();
+        return new HashCodeBuilder().append(predecessorSubagentClusterId).append(subagentClusterId).toHashCode();
     }
 
     @Override
@@ -102,7 +105,7 @@ public class OrderingSubagentClusters {
             return false;
         }
         OrderingSubagentClusters rhs = ((OrderingSubagentClusters) other);
-        return new EqualsBuilder().append(ordering, rhs.ordering).append(subagentClusterId, rhs.subagentClusterId).isEquals();
+        return new EqualsBuilder().append(predecessorSubagentClusterId, rhs.predecessorSubagentClusterId).append(subagentClusterId, rhs.subagentClusterId).isEquals();
     }
 
 }
