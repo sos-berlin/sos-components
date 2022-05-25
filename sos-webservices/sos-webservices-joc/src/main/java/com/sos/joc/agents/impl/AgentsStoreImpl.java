@@ -94,17 +94,15 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             Map<String, Agent> agentMap = agentStoreParameter.getAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function.identity()));
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(null);
             Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds.keySet());
-            int position = 0;
+            int position = -1;
             
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
+                    if (position < dbAgent.getOrdering()) {
+                        position = dbAgent.getOrdering();
+                    }
                     Agent agent = agentMap.remove(dbAgent.getAgentId());
                     if (agent == null) {
-                        if (dbAgent.getOrdering() != position) {
-                            dbAgent.setOrdering(position);
-                            agentDBLayer.getSession().update(dbAgent);
-                        }
-                        position++;
                         continue;
                     }
                     if (!dbAgent.getControllerId().equals(controllerId)) {
@@ -114,14 +112,12 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                     dbAgent.setHidden(agent.getHidden());
                     dbAgent.setAgentName(agent.getAgentName());
                     dbAgent.setTitle(agent.getTitle());
-                    dbAgent.setOrdering(position);
                     
                     if (!dbAgent.getUri().equals(agent.getUrl())) {
                         dbAgent.setDeployed(false);
                     }
                     dbAgent.setUri(agent.getUrl());
                     agentDBLayer.updateAgent(dbAgent);
-                    position++;
 
                     updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
                 }
@@ -142,7 +138,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 dbAgent.setVersion(null);
                 dbAgent.setTitle(agent.getTitle());
                 dbAgent.setDeployed(false);
-                dbAgent.setOrdering(position++);
+                dbAgent.setOrdering(++position);
                 agentDBLayer.saveAgent(dbAgent);
                 
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
@@ -239,16 +235,14 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                                         .getAgentId()));
                             });
             
-            int position = 0;
+            int position = -1;
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
+                    if (position < dbAgent.getOrdering()) {
+                        position = dbAgent.getOrdering();
+                    }
                     ClusterAgent agent = agentMap.remove(dbAgent.getAgentId());
                     if (agent == null) {
-                        if (dbAgent.getOrdering() != position) {
-                            dbAgent.setOrdering(position);
-                            agentDBLayer.getSession().update(dbAgent);
-                        }
-                        position++;
                         continue;
                     }
                     if (!dbAgent.getControllerId().equals(controllerId)) {
@@ -258,9 +252,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                     dbAgent.setHidden(agent.getHidden());
                     dbAgent.setAgentName(agent.getAgentName());
                     dbAgent.setTitle(agent.getTitle());
-                    dbAgent.setOrdering(position);
                     agentDBLayer.updateAgent(dbAgent);
-                    position++;
                     
                     SubAgentStoreImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
 
@@ -283,7 +275,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 dbAgent.setTitle(agent.getTitle());
                 dbAgent.setDeployed(false);
                 dbAgent.setDisabled(false);
-                dbAgent.setOrdering(position++);
+                dbAgent.setOrdering(++position);
                 agentDBLayer.saveAgent(dbAgent);
 
                 SubAgentStoreImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());

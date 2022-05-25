@@ -59,6 +59,7 @@ public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsR
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
+            dbLayer.setWithAgentOrdering(true);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(Collections.singleton(controllerId),
                     agentsParam.getAgentIds(), false, agentsParam.getOnlyVisibleAgents());
 

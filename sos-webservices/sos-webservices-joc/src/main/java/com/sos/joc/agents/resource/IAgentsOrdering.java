@@ -14,8 +14,13 @@ public interface IAgentsOrdering {
     @Path("inventory/ordering")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse ordering(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse standaloneOrdering(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
     
+    @POST
+    @Path("inventory/cluster/ordering")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse clusterOrdering(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
 }

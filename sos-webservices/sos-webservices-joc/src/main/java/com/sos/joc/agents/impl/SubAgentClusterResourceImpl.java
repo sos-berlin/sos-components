@@ -1,7 +1,9 @@
 package com.sos.joc.agents.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -85,8 +87,11 @@ public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISub
 
             SubagentClusters entity = new SubagentClusters();
             entity.setAuditLog(null);
-            entity.setSubagentClusters(dbSubagentClusters.entrySet().stream().map(e -> {
-                DBItemInventorySubAgentCluster key = e.getKey();
+            
+            int position = 0;
+            List<SubagentCluster> subagentClusters = new ArrayList<>();
+            for (DBItemInventorySubAgentCluster key : dbSubagentClusters.keySet().stream().sorted(Comparator.comparingInt(
+                    DBItemInventorySubAgentCluster::getOrdering)).collect(Collectors.toSet())) {
                 SubagentCluster subagentCluster = new SubagentCluster();
                 subagentCluster.setControllerId(agentIdControllerIdMap.get(key.getAgentId()));
                 subagentCluster.setAgentId(key.getAgentId());
@@ -94,10 +99,25 @@ public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISub
                 subagentCluster.setSyncState(AgentHelper.getSyncState(subagentSelectionsOnController.get(subagentCluster.getControllerId()), key));
                 subagentCluster.setSubagentClusterId(key.getSubAgentClusterId());
                 subagentCluster.setTitle(key.getTitle());
-                subagentCluster.setSubagentIds(e.getValue());
-                subagentCluster.setOrdering(key.getOrdering());
-                return subagentCluster;
-            }).collect(Collectors.toList()));
+                subagentCluster.setSubagentIds(dbSubagentClusters.get(key));
+                subagentCluster.setOrdering(++position);
+                subagentClusters.add(subagentCluster);
+            }
+            entity.setSubagentClusters(subagentClusters);
+            
+//            entity.setSubagentClusters(dbSubagentClusters.entrySet().stream().map(e -> {
+//                DBItemInventorySubAgentCluster key = e.getKey();
+//                SubagentCluster subagentCluster = new SubagentCluster();
+//                subagentCluster.setControllerId(agentIdControllerIdMap.get(key.getAgentId()));
+//                subagentCluster.setAgentId(key.getAgentId());
+//                subagentCluster.setDeployed(null); // deployed is obsolete, now part of syncState
+//                subagentCluster.setSyncState(AgentHelper.getSyncState(subagentSelectionsOnController.get(subagentCluster.getControllerId()), key));
+//                subagentCluster.setSubagentClusterId(key.getSubAgentClusterId());
+//                subagentCluster.setTitle(key.getTitle());
+//                subagentCluster.setSubagentIds(e.getValue());
+//                subagentCluster.setOrdering(key.getOrdering());
+//                return subagentCluster;
+//            }).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);

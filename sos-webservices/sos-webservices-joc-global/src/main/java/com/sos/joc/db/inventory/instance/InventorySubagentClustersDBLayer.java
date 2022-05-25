@@ -15,6 +15,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentClusterMember;
 import com.sos.joc.db.inventory.items.SubagentCluster;
@@ -26,9 +27,14 @@ import com.sos.joc.model.agent.SubAgentId;
 public class InventorySubagentClustersDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
+    private boolean withAgentOrdering = false;
 
     public InventorySubagentClustersDBLayer(SOSHibernateSession conn) {
         super(conn);
+    }
+    
+    public void setWithSubAgentClusterOrdering(boolean withAgentOrdering) {
+        this.withAgentOrdering = withAgentOrdering; 
     }
 
     public List<DBItemInventorySubAgentCluster> getSubagentClusters(List<String> subagentClusterIds) throws DBInvalidDataException,
@@ -50,6 +56,9 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
                     } else {
                         hql.append(" where subAgentClusterId in (:subagentClusterIds)");
                     }
+                }
+                if (withAgentOrdering) {
+                    hql.append(" order by ordering");
                 }
                 Query<DBItemInventorySubAgentCluster> query = getSession().createQuery(hql.toString());
                 if (subagentClusterIds != null && !subagentClusterIds.isEmpty()) {
@@ -387,6 +396,86 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
                 throw new DBInvalidDataException(ex);
             }
         }
+    }
+    
+    public DBItemInventorySubAgentCluster getSubAgentCluster(String subagentClusterId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder();
+        hql.append("from ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS);
+        hql.append(" where subAgentClusterId = :subagentClusterId");
+        Query<DBItemInventorySubAgentCluster> query = getSession().createQuery(hql.toString());
+        query.setParameter("subagentClusterId", subagentClusterId);
+        return getSession().getSingleResult(query);
+    }
+    
+    public void cleanupSubAgentClusterOrdering(boolean force) throws SOSHibernateException {
+        setWithSubAgentClusterOrdering(true);
+        List<DBItemInventorySubAgentCluster> dbSubagentClusters = getSubagentClusters(null);
+        if (!force) {
+            // looking for duplicate orderings
+            force = dbSubagentClusters.stream().collect(Collectors.groupingBy(DBItemInventorySubAgentCluster::getOrdering, Collectors.counting()))
+                    .entrySet().stream().anyMatch(e -> e.getValue() > 1L);
+        }
+        if (force) {
+            int position = 0;
+            for (DBItemInventorySubAgentCluster dbSubagentCluster : dbSubagentClusters) {
+                if (dbSubagentCluster.getOrdering() != position) {
+                    dbSubagentCluster.setOrdering(position);
+                    getSession().update(dbSubagentCluster);
+                }
+                position++;
+            }
+        }
+    }
+    
+    public void setSubAgentClusterOrdering(String subagentClusterId, String predecessorSubagentClusterId) throws SOSHibernateException,
+            DBMissingDataException, DBInvalidDataException {
+        // TODO better with collect by prior
+        DBItemInventorySubAgentCluster subagentCluster = getSubAgentCluster(subagentClusterId);
+        if (subagentCluster == null) {
+            throw new DBMissingDataException("SubagentCluster with ID '" + subagentClusterId + "' doesn't exist.");
+        }
+        int newPosition = -1;
+        DBItemInventorySubAgentCluster predecessorSubagentCluster = null;
+        if (predecessorSubagentClusterId != null && !predecessorSubagentClusterId.isEmpty()) {
+            if (subagentClusterId.equals(predecessorSubagentClusterId)) {
+                throw new DBInvalidDataException("SubagentCluster ID '" + subagentClusterId + "' and predecessor SubagentCluster ID '"
+                        + predecessorSubagentClusterId + "' are the same.");
+            }
+            predecessorSubagentCluster = getSubAgentCluster(predecessorSubagentClusterId);
+            if (predecessorSubagentCluster == null) {
+                throw new DBMissingDataException("Predecessor SubagentCluster with ID '" + predecessorSubagentClusterId + "' doesn't exist.");
+            }
+            newPosition = predecessorSubagentCluster.getOrdering();
+        }
+        
+        // TODO check: subagentClusterId and predecessorSubagentClusterId should have same agentId
+
+        int oldPosition = subagentCluster.getOrdering();
+        newPosition++;
+        subagentCluster.setOrdering(newPosition);
+        if (newPosition != oldPosition) {
+            StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS);
+            if (newPosition < oldPosition) {
+                hql.append(" set ordering = ordering + 1").append(" where ordering >= :newPosition and ordering < :oldPosition");
+            } else {
+                hql.append(" set ordering = ordering - 1").append(" where ordering > :oldPosition and ordering <= :newPosition");
+            }
+            Query<?> query = getSession().createQuery(hql.toString());
+            query.setParameter("newPosition", newPosition);
+            query.setParameter("oldPosition", oldPosition);
+
+            getSession().executeUpdate(query);
+            getSession().update(subagentCluster);
+        }
+    }
+    
+    public Integer getMaxOrdering() throws SOSHibernateException {
+        Query<Integer> query = getSession().createQuery("select max(ordering) from " + DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS);
+        Integer result = getSession().getSingleResult(query);
+        if (result == null) {
+            return -1;
+        }
+        return result;
     }
 
 }
