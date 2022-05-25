@@ -71,6 +71,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
+            dbLayer.setWithAgentOrdering(true);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(allowedControllers, agentParameter
                     .getAgentIds(), false, false);
             

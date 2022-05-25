@@ -98,7 +98,9 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-                    position = dbAgent.getOrdering();
+                    if (position < dbAgent.getOrdering()) {
+                        position = dbAgent.getOrdering();
+                    }
                     Agent agent = agentMap.remove(dbAgent.getAgentId());
                     if (agent == null) {
                         continue;
@@ -236,7 +238,9 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             int position = -1;
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-                    position = dbAgent.getOrdering();
+                    if (position < dbAgent.getOrdering()) {
+                        position = dbAgent.getOrdering();
+                    }
                     ClusterAgent agent = agentMap.remove(dbAgent.getAgentId());
                     if (agent == null) {
                         continue;

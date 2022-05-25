@@ -34,9 +34,14 @@ import com.sos.joc.model.agent.SubagentDirectorType;
 public class InventoryAgentInstancesDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
+    private boolean withAgentOrdering = false;
 
     public InventoryAgentInstancesDBLayer(SOSHibernateSession conn) {
         super(conn);
+    }
+    
+    public void setWithAgentOrdering(boolean withAgentOrdering) {
+        this.withAgentOrdering = withAgentOrdering; 
     }
 
     public DBItemInventoryAgentInstance getAgentInstance(Long id) throws DBConnectionRefusedException, DBInvalidDataException {
@@ -119,7 +124,9 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 if (!clauses.isEmpty()) {
                     hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
                 }
-                hql.append(" order by ordering");
+                if (withAgentOrdering) {
+                    hql.append(" order by ordering");
+                }
                 Query<DBItemInventoryAgentInstance> query = getSession().createQuery(hql.toString());
                 if (controllerIds != null && !controllerIds.isEmpty()) {
                     if (controllerIds.size() == 1) {
@@ -988,6 +995,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     }
     
     public void cleanupAgentsOrdering(boolean force) throws SOSHibernateException {
+        setWithAgentOrdering(true);
         List<DBItemInventoryAgentInstance> dbAgents = getAgentsByControllerIds(null);
         if (!force) {
             // looking for duplicate orderings
