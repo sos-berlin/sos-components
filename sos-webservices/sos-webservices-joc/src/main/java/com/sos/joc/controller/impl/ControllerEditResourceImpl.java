@@ -271,6 +271,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 }
                 
                 if (clusterWatcherIsNew) {
+                    int position = agentDBLayer.getMaxOrdering();
                     controllerUpdateRequired = true;
                     updateAgentRequired = true;
                     DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
@@ -287,7 +288,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     dbAgent.setUri(clusterWatcher.getUrl());
                     dbAgent.setVersion(null);
                     dbAgent.setTitle(null);
-                    dbAgent.setOrdering(null); // TODO ordering
+                    dbAgent.setOrdering(++position);
                     agentDBLayer.saveAgent(dbAgent);
                 }
                 if (updateAgentRequired) {

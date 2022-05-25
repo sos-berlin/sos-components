@@ -1067,5 +1067,14 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             getSession().update(agent);
         }
     }
+    
+    public Integer getMaxOrdering() throws SOSHibernateException {
+        Query<Integer> query = getSession().createQuery("select max(ordering) from " + DBLayer.DBITEM_INV_AGENT_INSTANCES);
+        Integer result = getSession().getSingleResult(query);
+        if (result == null) {
+            return -1;
+        }
+        return result;
+    }
 
 }

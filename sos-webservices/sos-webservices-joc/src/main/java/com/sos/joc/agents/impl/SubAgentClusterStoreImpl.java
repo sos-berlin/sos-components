@@ -2,6 +2,7 @@ package com.sos.joc.agents.impl;
 
 import java.time.Instant;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -108,15 +109,13 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
                     dbsubagentCluster.setDeployed(false);
                     dbsubagentCluster.setModified(now);
                     dbsubagentCluster.setTitle(s.getTitle());
-//                    if (s.getOrdering() != null) {
-//                        dbsubagentCluster.setOrdering(s.getOrdering()); 
-//                    }
                     connection.update(dbsubagentCluster);
 
                     updateMembers(connection, dbsubagentClusterMembersMap, s.getSubagentIds(), s.getSubagentClusterId(), now);
                 }
             }
             // insert
+            int position = agentClusterDBLayer.getMaxOrdering();
             for (SubagentCluster s : subagentMap.values()) {
                 if (s.getSubagentIds().isEmpty()) { //don't store a new subagent cluster with an empty cluster
                     continue;
@@ -128,7 +127,7 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
                 dbsubagentCluster.setAgentId(s.getAgentId());
                 dbsubagentCluster.setTitle(s.getTitle());
                 dbsubagentCluster.setSubAgentClusterId(s.getSubagentClusterId());
-                dbsubagentCluster.setOrdering(s.getOrdering());
+                dbsubagentCluster.setOrdering(++position);
                 connection.save(dbsubagentCluster);
 
                 updateMembers(connection, dbsubagentClusterMembersMap, s.getSubagentIds(), s.getSubagentClusterId(), now);
