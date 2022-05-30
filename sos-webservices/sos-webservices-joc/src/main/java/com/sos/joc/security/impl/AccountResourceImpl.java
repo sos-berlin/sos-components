@@ -75,11 +75,13 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
     private static final String API_CALL_ACCOUNT_READ = "./iam/account";
     private static final String API_CALL_ACCOUNT_STORE = "./iam/account/store";
     private static final String API_CALL_ACCOUNT_RENAME = "./iam/account/rename";
-    private static final String API_CALL_ACCOUNT_DELETE = "./iam/account/delete";
-    private static final String API_CALL_CHANGE_PASSWORD = "./iam/account/changePassword";
+    private static final String API_CALL_ACCOUNTS_DELETE = "./iam/accounts/delete";
+    private static final String API_CALL_CHANGE_PASSWORD = "./iam/account/changepassword";
     private static final String API_CALL_ACCOUNT_PERMISSIONS = "./iam/account/permissions";
-
-    private static final String API_CALL_FORCE_PASSWORD_CHANGE = "./iam/account/forcePasswordChange";
+    private static final String API_CALL_FORCE_PASSWORD_CHANGE = "./iam/accounts/forcepasswordchange";
+    private static final String API_CALL_RESET_PASSWORD = "./iam/accounts/resetpassword";
+    private static final String API_CALL_ACCOUNTS_ENABLE = "./iam/accounts/enable";
+    private static final String API_CALL_ACCOUNTS_DISABLE = "./iam/accounts/disable";
 
     @Override
     public JOCDefaultResponse postAccountRead(String accessToken, byte[] body) {
@@ -87,9 +89,9 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         try {
 
             initLogging(API_CALL_ACCOUNT_READ, body, accessToken);
-            AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
             JsonValidator.validateFailFast(body, AccountFilter.class);
-
+            AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
+            
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -138,11 +140,11 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         try {
 
             Account accountMasked = Globals.objectMapper.readValue(body, Account.class);
-            Account account = Globals.objectMapper.readValue(body, Account.class);
-
+            
             accountMasked.setPassword("********");
             initLogging(API_CALL_ACCOUNT_STORE, Globals.objectMapper.writeValueAsBytes(accountMasked), accessToken);
             JsonValidator.validateFailFast(body, Account.class);
+            Account account = Globals.objectMapper.readValue(body, Account.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
@@ -323,7 +325,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            initLogging(API_CALL_ACCOUNT_DELETE, body, accessToken);
+            initLogging(API_CALL_ACCOUNTS_DELETE, body, accessToken);
             JsonValidator.validate(body, AccountsFilter.class);
             AccountsFilter accountsFilter = Globals.objectMapper.readValue(body, AccountsFilter.class);
 
@@ -342,7 +344,15 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
             iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
-            iamAccountFilter.setDisabled(accountsFilter.getDisabled());
+            boolean onlyDisabled = Boolean.TRUE == accountsFilter.getDisabled();
+            boolean onlyEnabled = Boolean.TRUE == accountsFilter.getEnabled();
+            if (onlyDisabled && !onlyEnabled) {
+                iamAccountFilter.setDisabled(true);
+            } else if (onlyEnabled && !onlyDisabled) {
+                iamAccountFilter.setDisabled(false);
+            } else {
+                iamAccountFilter.setDisabled(null);
+            }
             for (String accountName : accountsFilter.getAccountNames()) {
                 iamAccountFilter.setAccountName(accountName);
                 int count = iamAccountDBLayer.deleteCascading(iamAccountFilter);
@@ -371,9 +381,9 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         try {
 
             initLogging(API_CALL_ACCOUNTS, body, accessToken);
-            AccountListFilter accountFilter = Globals.objectMapper.readValue(body, AccountListFilter.class);
             JsonValidator.validateFailFast(body, AccountListFilter.class);
-
+            AccountListFilter accountFilter = Globals.objectMapper.readValue(body, AccountListFilter.class);
+            
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -388,8 +398,16 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter filter = new IamAccountFilter();
+            boolean onlyDisabled = Boolean.TRUE == accountFilter.getDisabled();
+            boolean onlyEnabled = Boolean.TRUE == accountFilter.getEnabled();
+            if (onlyDisabled && !onlyEnabled) {
+                filter.setDisabled(true);
+            } else if (onlyEnabled && !onlyDisabled) {
+                filter.setDisabled(false);
+            } else {
+                filter.setDisabled(null);
+            }
             filter.setAccountName(accountFilter.getAccountName());
-            filter.setDisabled(accountFilter.getDisabled());
             filter.setIdentityServiceId(dbItemIamIdentityService.getId());
             List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(filter, 0);
             for (DBItemIamAccount dbItemIamAccount : listOfAccounts) {
@@ -423,9 +441,9 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         try {
 
             initLogging(API_CALL_ACCOUNT_PERMISSIONS, body, accessToken);
-            AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
             JsonValidator.validateFailFast(body, AccountFilter.class);
-
+            AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
+            
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -629,7 +647,6 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         AccountChangePassword account = null;
         try {
             AccountChangePassword accountMasked = Globals.objectMapper.readValue(body, AccountChangePassword.class);
-            account = Globals.objectMapper.readValue(body, AccountChangePassword.class);
 
             accountMasked.setOldPassword("********");
             accountMasked.setPassword("********");
@@ -638,6 +655,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             initLogging(API_CALL_CHANGE_PASSWORD, Globals.objectMapper.writeValueAsBytes(accountMasked), accessToken);
 
             JsonValidator.validate(body, Account.class);
+            account = Globals.objectMapper.readValue(body, AccountChangePassword.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
@@ -671,21 +689,21 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         }
     }
 
-    private JOCDefaultResponse changeFlage(String accessToken, byte[] body, Boolean disable, Boolean forcePasswordChange) {
+    private JOCDefaultResponse changeFlag(String accessToken, byte[] body, Boolean disable, Boolean forcePasswordChange, String apiCall) {
         SOSHibernateSession sosHibernateSession = null;
         AccountNamesFilter accountsFilter = null;
         try {
 
-        	initLogging(API_CALL_FORCE_PASSWORD_CHANGE, body, accessToken);
-            accountsFilter = Globals.objectMapper.readValue(body, AccountNamesFilter.class);
+        	initLogging(apiCall, body, accessToken);
             JsonValidator.validate(body, AccountsFilter.class);
-
+            accountsFilter = Globals.objectMapper.readValue(body, AccountNamesFilter.class);
+            
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_FORCE_PASSWORD_CHANGE);
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(apiCall);
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
             DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter
@@ -721,9 +739,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
-        } catch (
-
-        JocException e) {
+        } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -739,17 +755,17 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
     @Override
     public JOCDefaultResponse forcePasswordChange(String accessToken, byte[] body) {
-        return changeFlage(accessToken, body, null, true);
+        return changeFlag(accessToken, body, null, true, API_CALL_FORCE_PASSWORD_CHANGE);
     }
 
     @Override
     public JOCDefaultResponse enable(String accessToken, byte[] body) {
-        return changeFlage(accessToken, body, false, null);
+        return changeFlag(accessToken, body, false, null, API_CALL_ACCOUNTS_ENABLE);
     }
 
     @Override
     public JOCDefaultResponse disable(String accessToken, byte[] body) {
-        return changeFlage(accessToken, body, true, null);
+        return changeFlag(accessToken, body, true, null, API_CALL_ACCOUNTS_DISABLE);
     }
 
     @Override
@@ -758,16 +774,16 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         AccountNamesFilter accountsFilter = null;
         try {
 
-            initLogging(API_CALL_CHANGE_PASSWORD, body, accessToken);
-            accountsFilter = Globals.objectMapper.readValue(body, AccountNamesFilter.class);
+            initLogging(API_CALL_RESET_PASSWORD, body, accessToken);
             JsonValidator.validate(body, AccountsFilter.class);
-
+            accountsFilter = Globals.objectMapper.readValue(body, AccountNamesFilter.class);
+            
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_CHANGE_PASSWORD);
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_RESET_PASSWORD);
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 

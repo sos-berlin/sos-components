@@ -3,7 +3,6 @@ package com.sos.joc.model.security.accounts;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -20,6 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "accountName",
     "identityServiceName",
+    "enabled",
     "disabled"
 })
 public class AccountListFilter {
@@ -41,14 +41,9 @@ public class AccountListFilter {
      */
     @JsonProperty("identityServiceName")
     private String identityServiceName;
-    /**
-     * disabled parameter
-     * <p>
-     * controls if the object is disabled
-     * 
-     */
+    @JsonProperty("enabled")
+    private Boolean enabled = false;
     @JsonProperty("disabled")
-    @JsonPropertyDescription("controls if the object is disabled")
     private Boolean disabled = false;
 
     /**
@@ -63,11 +58,13 @@ public class AccountListFilter {
      * @param identityServiceName
      * @param accountName
      * @param disabled
+     * @param enabled
      */
-    public AccountListFilter(String accountName, String identityServiceName, Boolean disabled) {
+    public AccountListFilter(String accountName, String identityServiceName, Boolean enabled, Boolean disabled) {
         super();
         this.accountName = accountName;
         this.identityServiceName = identityServiceName;
+        this.enabled = enabled;
         this.disabled = disabled;
     }
 
@@ -117,23 +114,21 @@ public class AccountListFilter {
         this.identityServiceName = identityServiceName;
     }
 
-    /**
-     * disabled parameter
-     * <p>
-     * controls if the object is disabled
-     * 
-     */
+    @JsonProperty("enabled")
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    @JsonProperty("enabled")
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
     @JsonProperty("disabled")
     public Boolean getDisabled() {
         return disabled;
     }
 
-    /**
-     * disabled parameter
-     * <p>
-     * controls if the object is disabled
-     * 
-     */
     @JsonProperty("disabled")
     public void setDisabled(Boolean disabled) {
         this.disabled = disabled;
@@ -141,12 +136,12 @@ public class AccountListFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("accountName", accountName).append("identityServiceName", identityServiceName).append("disabled", disabled).toString();
+        return new ToStringBuilder(this).append("accountName", accountName).append("identityServiceName", identityServiceName).append("enabled", enabled).append("disabled", disabled).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(disabled).append(accountName).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(disabled).append(accountName).append(enabled).toHashCode();
     }
 
     @Override
@@ -158,7 +153,7 @@ public class AccountListFilter {
             return false;
         }
         AccountListFilter rhs = ((AccountListFilter) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(disabled, rhs.disabled).append(accountName, rhs.accountName).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(disabled, rhs.disabled).append(accountName, rhs.accountName).append(enabled, rhs.enabled).isEquals();
     }
 
 }
