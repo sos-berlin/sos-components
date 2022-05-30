@@ -386,11 +386,11 @@ public class RunTime {
 
         private List<Period> periods;
 
-        private Integer day;
+        private String day;
 
         private Day(SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
             Map<String, String> m = JS7ConverterHelper.attribute2map(node);
-            this.day = JS7ConverterHelper.integerValue(m.get(ATTR_DAY));
+            this.day = JS7ConverterHelper.stringValue(m.get(ATTR_DAY));
             this.periods = convertPeriod(xpath, node);
         }
 
@@ -398,7 +398,7 @@ public class RunTime {
             return periods;
         }
 
-        public Integer getDay() {
+        public String getDay() {
             return day;
         }
 

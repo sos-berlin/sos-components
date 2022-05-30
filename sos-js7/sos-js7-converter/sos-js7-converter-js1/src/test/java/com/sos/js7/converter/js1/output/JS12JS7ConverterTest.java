@@ -19,6 +19,7 @@ public class JS12JS7ConverterTest {
         Path reportDir = Paths.get("src/test/resources/report");
 
         JS12JS7Converter.CONFIG.getGenerateConfig().withWorkflows(true).withSchedules(true).withLocks(true).withCyclicOrders(false);
+        JS12JS7Converter.CONFIG.getParserConfig().withExcludedDirectoryNames(".sos-templates , .svn");
         JS12JS7Converter.CONFIG.getAgentConfig().withForcedPlatform(Platform.WINDOWS).withDefaultName("my_agent_name").withMapping(
                 "abcd=agent;xyz=agent_cluster");
         JS12JS7Converter.CONFIG.getMockConfig().withScript("$HOME/MockScript.sh");

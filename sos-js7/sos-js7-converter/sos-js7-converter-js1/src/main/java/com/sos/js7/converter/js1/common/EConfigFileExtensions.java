@@ -28,6 +28,16 @@ public enum EConfigFileExtensions {
         return getName(JOB, path.getFileName().toString());
     }
 
+    public static String getJobChainName(Path path) {
+        return getName(EConfigFileExtensions.JOB_CHAIN, path.getFileName().toString());
+    }
+
+    public static String getOrderName(Path path) {
+        String n = path.getFileName().toString().replace(ORDER.extension(), "");
+        int idx = n.indexOf(",");
+        return idx == -1 ? n : n.substring(idx + 1);
+    }
+
     public static String getName(EConfigFileExtensions type, String fileName) {
         switch (type) {
         case ORDER:

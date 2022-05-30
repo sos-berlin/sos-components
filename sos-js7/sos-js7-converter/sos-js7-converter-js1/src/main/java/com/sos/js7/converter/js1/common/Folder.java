@@ -70,7 +70,7 @@ public class Folder {
                 }
             }
         } catch (Throwable e) {
-            LOGGER.error(String.format("[%s]%s", "addJob", e.toString()), e);
+            LOGGER.error(String.format("[%s]%s", "addJob", file, e.toString()), e);
             ParserReport.INSTANCE.addErrorRecord(file, null, e);
         }
     }

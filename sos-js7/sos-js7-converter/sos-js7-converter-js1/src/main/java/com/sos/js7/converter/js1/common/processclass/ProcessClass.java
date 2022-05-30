@@ -26,7 +26,7 @@ public class ProcessClass {
     private String name;
 
     private String remoteScheduler; // host:port Task execution on remote computers
-    private boolean replace; // yes|no (Initial value: yes)
+    private Boolean replace; // yes|no (Initial value: yes)
     private String spoolerId;
 
     public ProcessClass(Path path) throws Exception {
@@ -64,7 +64,7 @@ public class ProcessClass {
     }
 
     public boolean isReplace() {
-        return replace;
+        return replace == null ? true : replace;
     }
 
     public String getSpoolerId() {

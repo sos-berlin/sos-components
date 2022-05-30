@@ -67,9 +67,9 @@ public abstract class ACommonJob {
     private Environment environment;
     private Params params;
     private Script script;
-    private List<Monitor> monitors;
-    private List<StartWhenDirectoryChanged> startWhenDirectoryChanged;
-    private List<DelayAfterError> delayAfterError; // delayOrderAfterSetback is declared in the OrderJob
+    private List<Monitor> monitors = new ArrayList<>();
+    private List<StartWhenDirectoryChanged> startWhenDirectoryChanged = new ArrayList<>();
+    private List<DelayAfterError> delayAfterError = new ArrayList<>(); // delayOrderAfterSetback is declared in the OrderJob
     private RunTime runTime;
 
     // ATTRIBUTE

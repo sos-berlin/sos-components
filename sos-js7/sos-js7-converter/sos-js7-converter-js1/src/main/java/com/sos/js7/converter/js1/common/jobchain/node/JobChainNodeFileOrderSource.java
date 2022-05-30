@@ -21,7 +21,7 @@ public class JobChainNodeFileOrderSource extends AJobChainNode {
 
     private String repeat; // no|seconds
 
-    private boolean alertWhenDirectoryMissing;
+    private Boolean alertWhenDirectoryMissing;
     private String delayAfterError; // seconds
 
     protected JobChainNodeFileOrderSource(Node node, JobChainNodeType type) {
@@ -56,7 +56,7 @@ public class JobChainNodeFileOrderSource extends AJobChainNode {
     }
 
     public boolean isAlertWhenDirectoryMissing() {
-        return alertWhenDirectoryMissing;
+        return alertWhenDirectoryMissing == null ? true : alertWhenDirectoryMissing;
     }
 
     public String getDelayAfterError() {

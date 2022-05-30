@@ -4,9 +4,11 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,6 +21,7 @@ public class JS7ConverterConfig {
     }
 
     private final GenerateConfig generateConfig;
+    private final ParserConfig parserConfig;
     private final WorkflowConfig workflowConfig;
     private final JobConfig jobConfig;
     private final AgentConfig agentConfig;
@@ -28,6 +31,7 @@ public class JS7ConverterConfig {
 
     public JS7ConverterConfig() {
         generateConfig = this.new GenerateConfig();
+        parserConfig = this.new ParserConfig();
         jobConfig = this.new JobConfig();
         workflowConfig = new WorkflowConfig();
         agentConfig = this.new AgentConfig();
@@ -61,6 +65,10 @@ public class JS7ConverterConfig {
                         break;
                     case "generateConfig.cyclicOrders":
                         generateConfig.cyclicOrders = Boolean.parseBoolean(val);
+                        break;
+                    // PARSER:
+                    case "parserConfig.excludedDirectoryNames":
+                        parserConfig.withExcludedDirectoryNames(val);
                         break;
                     // WORKFLOW
                     case "workflowConfig.defaultTimeZone":
@@ -132,6 +140,10 @@ public class JS7ConverterConfig {
         return generateConfig;
     }
 
+    public ParserConfig getParserConfig() {
+        return parserConfig;
+    }
+
     public WorkflowConfig getWorkflowConfig() {
         return workflowConfig;
     }
@@ -161,6 +173,9 @@ public class JS7ConverterConfig {
         StringBuilder sb = new StringBuilder();
         sb.append(SOSString.toString(generateConfig));
         sb.append(",").append(SOSString.toString(workflowConfig));
+        if (!parserConfig.isEmpty()) {
+            sb.append(",").append(SOSString.toString(parserConfig));
+        }
         if (!jobConfig.isEmpty()) {
             sb.append(",").append(SOSString.toString(jobConfig));
         }
@@ -177,6 +192,26 @@ public class JS7ConverterConfig {
             sb.append(",").append(SOSString.toString(subFolderConfig));
         }
         return sb.toString();
+    }
+
+    public class ParserConfig {
+
+        private Set<String> excludedDirectoryNames;
+
+        public ParserConfig withExcludedDirectoryNames(String val) {
+            if (!SOSString.isEmpty(val)) {
+                excludedDirectoryNames = Arrays.stream(val.split(",")).map(e -> e.trim()).collect(Collectors.toSet());
+            }
+            return this;
+        }
+
+        public boolean isEmpty() {
+            return excludedDirectoryNames == null || excludedDirectoryNames.size() == 0;
+        }
+
+        public Set<String> getExcludedDirectoryNames() {
+            return excludedDirectoryNames;
+        }
     }
 
     public class GenerateConfig {
@@ -415,12 +450,12 @@ public class JS7ConverterConfig {
             return defaultTimeZone;
         }
 
-        public Boolean planOrders() {
-            return planOrders;
+        public boolean planOrders() {
+            return planOrders == null ? false : planOrders;
         }
 
-        public Boolean submitOrders() {
-            return submitOrders;
+        public boolean submitOrders() {
+            return submitOrders == null ? false : submitOrders;
         }
 
         public boolean isEmpty() {

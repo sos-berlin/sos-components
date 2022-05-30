@@ -13,6 +13,7 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
+import com.sos.js7.converter.commons.JS7ConverterConfig;
 
 public class DirectoryParserTest {
 
@@ -24,7 +25,7 @@ public class DirectoryParserTest {
         Path dir = Paths.get("src/test/resources/input/xml");
 
         Instant start = Instant.now();
-        DirectoryParserResult r = DirectoryParser.parse(new XMLJobParser(), dir);
+        DirectoryParserResult r = DirectoryParser.parse(new JS7ConverterConfig().getParserConfig(), new XMLJobParser(), dir);
         LOGGER.info("[parse][duration]" + SOSDate.getDuration(start, Instant.now()));
 
         log(r);

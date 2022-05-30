@@ -8,6 +8,7 @@ import org.w3c.dom.Node;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 import com.sos.js7.converter.js1.common.Params;
 import com.sos.js7.converter.js1.common.RunTime;
 
@@ -19,6 +20,9 @@ public class JobChainOrder {
     private static final String ELEMENT_PARAMS = "params";
     private static final String ELEMENT_RUN_TIME = "run_time";
 
+    private Path path;// extra
+    private String name;// extra
+
     private Params params;
     private RunTime runTime;
     // TODO xml_payload ???
@@ -27,6 +31,8 @@ public class JobChainOrder {
     private final String title;
 
     public JobChainOrder(Path file) throws Exception {
+        this.path = file;
+        this.name = EConfigFileExtensions.getOrderName(file);
         Node node = JS7ConverterHelper.getDocumentRoot(file);
         Map<String, String> m = JS7ConverterHelper.attribute2map(node);
         this.priority = JS7ConverterHelper.integerValue(m.get(ATTR_PRIORITY));
@@ -41,6 +47,14 @@ public class JobChainOrder {
         if (runTime != null) {
             this.runTime = new RunTime(xpath, runTime);
         }
+    }
+
+    public Path getPath() {
+        return path;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Params getParams() {

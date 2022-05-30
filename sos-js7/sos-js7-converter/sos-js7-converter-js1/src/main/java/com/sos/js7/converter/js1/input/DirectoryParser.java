@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.js7.converter.commons.JS7ConverterConfig.ParserConfig;
 import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 import com.sos.js7.converter.js1.common.Folder;
@@ -21,15 +22,24 @@ public class DirectoryParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryParser.class);
 
-    public static DirectoryParserResult parse(Path dir) {
+    public static DirectoryParserResult parse(ParserConfig config, Path dir) {
         DirectoryParserResult r = new DirectoryParser().new DirectoryParserResult();
 
         String method = "parse";
         if (Files.exists(dir)) {
             try {
+                boolean checkExcluded = !config.isEmpty();
+
                 r.setRoot(parseSingleDir(new Folder(dir)));
                 try (Stream<Path> stream = Files.walk(dir)) {
                     for (Path p : stream.filter(f -> Files.isDirectory(f) && !f.equals(dir)).collect(Collectors.toList())) {
+                        if (checkExcluded) {
+                            if (config.getExcludedDirectoryNames().contains(p.getFileName().toString())) {
+                                LOGGER.info(String.format("[%s][%s][skip]because excluded", method, p));
+                                continue;
+                            }
+                        }
+
                         Folder fp = r.getRoot().findParent(p);
                         if (fp != null) {
                             fp.addFolder(parseSingleDir(new Folder(p)));

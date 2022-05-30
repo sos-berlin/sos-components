@@ -13,13 +13,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
+import com.sos.js7.converter.commons.JS7ConverterConfig.ParserConfig;
 import com.sos.js7.converter.commons.report.ParserReport;
 
 public class DirectoryParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryParser.class);
 
-    public static DirectoryParserResult parse(AFileParser parser, Path input) {
+    public static DirectoryParserResult parse(ParserConfig config, AFileParser parser, Path input) {
         DirectoryParserResult r = new DirectoryParser().new DirectoryParserResult();
 
         String method = "parse";
