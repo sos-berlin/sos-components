@@ -23,6 +23,7 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
     private ConfigurationEntry monitoringHistoryAge = new ConfigurationEntry("monitoring_history_age", "1d", GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry notificationHistoryAge = new ConfigurationEntry("notification_history_age", "1d",
             GlobalSettingsSectionValueType.DURATION);
+    private ConfigurationEntry userLastLoginAge = new ConfigurationEntry("user_last_login_age", "90d", GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry deploymentHistoryVersions = new ConfigurationEntry("deployment_history_versions", "10",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
@@ -41,6 +42,7 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
         dailyPlanHistoryAge.setOrdering(++index);
         monitoringHistoryAge.setOrdering(++index);
         notificationHistoryAge.setOrdering(++index);
+        userLastLoginAge.setOrdering(++index);
 
         deploymentHistoryVersions.setOrdering(++index);
     }
@@ -91,6 +93,10 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
 
     public ConfigurationEntry getNotificationHistoryAge() {
         return notificationHistoryAge;
+    }
+
+    public ConfigurationEntry getUserLastLoginAge() {
+        return userLastLoginAge;
     }
 
     public ConfigurationEntry getDeploymentHistoryVersions() {
