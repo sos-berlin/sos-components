@@ -3,9 +3,7 @@ package com.sos.js7.converter.autosys.common.v12.job.attr.condition;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
-import com.sos.js7.converter.commons.report.CommonReport.ErrorType;
-import com.sos.js7.converter.commons.report.ConverterReport;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
 
 public class Condition {
 
@@ -38,8 +36,8 @@ public class Condition {
             String innerVal = v.substring(i + 1, v.indexOf(")"));
 
             Map<MapKeys, String> resultMap = new HashMap<>();
-            resultMap = getLookBack(resultMap, innerVal);
-            resultMap = getExternalInstance(resultMap);
+            resultMap = getLookBack(resultMap, innerVal, val);
+            resultMap = getExternalInstance(resultMap, val);
 
             this.type = getType(v.substring(0, i).toLowerCase(), val);
             this.name = resultMap.get(MapKeys.NAME);
@@ -79,37 +77,34 @@ public class Condition {
             type = ConditionType.TERMINATED;
             break;
         default:
-            ConverterReport.INSTANCE.addErrorRecord(ErrorType.WARNING, String.format("[%s]unknown condition type=%s", original, t));
             break;
         }
         return type;
     }
 
-    private Map<MapKeys, String> getLookBack(Map<MapKeys, String> map, String val) {
+    private Map<MapKeys, String> getLookBack(Map<MapKeys, String> map, String val, String original) {
         String[] arr = val.split(",");
         if (arr.length == 2) {
             map.put(MapKeys.NAME, arr[0].trim());
             map.put(MapKeys.LOOKBACK, arr[1].trim());
-            ConverterReport.INSTANCE.addErrorRecord(ErrorType.WARNING, String.format("[condition with lookBack]%s", val));
         } else {
             map.put(MapKeys.NAME, val);
         }
         return map;
     }
 
-    private Map<MapKeys, String> getExternalInstance(Map<MapKeys, String> map) {
+    private Map<MapKeys, String> getExternalInstance(Map<MapKeys, String> map, String original) {
         String[] arr = map.get(MapKeys.NAME).split("\\^");
         if (arr.length == 2) {
             map.put(MapKeys.NAME, arr[0].trim());
             map.put(MapKeys.EXTERNAL, arr[1].trim());
-            ConverterReport.INSTANCE.addErrorRecord(ErrorType.WARNING, String.format("[condition with external]%s", map.get(MapKeys.NAME)));
         }
         return map;
     }
 
     private String getValue(String val) {
         String[] arr = val.split("=");
-        return arr.length == 2 ? AJobAttributes.stringValue(arr[1]) : null;
+        return arr.length == 2 ? JS7ConverterHelper.stringValue(arr[1]) : null;
     }
 
     public ConditionType getType() {
@@ -139,6 +134,24 @@ public class Condition {
         }
         if (lookBack != null) {
             sb.append("-").append(lookBack.replaceAll(":", ""));
+        }
+        if (value != null) {
+            sb.append("-").append(value);
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(name);
+        if (externalInstance != null) {
+            sb.append("^").append(externalInstance);
+        }
+        if (lookBack != null) {
+            sb.append("(").append(lookBack).append(")");
+        }
+        if (value != null) {
+            sb.append("=").append(value);
         }
         return sb.toString();
     }

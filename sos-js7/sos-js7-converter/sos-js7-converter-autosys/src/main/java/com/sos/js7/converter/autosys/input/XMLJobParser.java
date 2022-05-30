@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +20,14 @@ import com.sos.commons.xml.exception.SOSXMLXPathException;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
+import com.sos.js7.converter.autosys.report.AutosysReport;
 import com.sos.js7.converter.commons.report.ParserReport;
 
 public class XMLJobParser extends AFileParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(XMLJobParser.class);
 
-    private String xpathJobs = "./ArrayOfJIL/JIL";
+    private String xpathJobs = "//JIL";
 
     public XMLJobParser() {
         super(FileType.XML);
@@ -34,9 +36,14 @@ public class XMLJobParser extends AFileParser {
     @Override
     public List<ACommonJob> parse(Path file) {
         List<ACommonJob> jobs = new ArrayList<>();
-        Map<String, JobBOX> boxJobs = new HashMap<>();
         try {
             Document doc = SOSXML.parse(file);
+
+            Map<String, JobBOX> boxJobs = new HashMap<>();
+            Map<String, List<ACommonJob>> boxChildJobs = new HashMap<>();
+            Map<String, Integer> jobBoxDuplicates = new HashMap<>();
+            Map<String, Integer> jobBoxChildDuplicates = new HashMap<>();
+            int counterBoxJobs = 0;
 
             SOSXMLXPath xpath = SOSXML.newXPath();
             NodeList nl = xpath.selectNodes(doc, xpathJobs);
@@ -46,29 +53,77 @@ public class XMLJobParser extends AFileParser {
                     if (p.size() > 0) {
                         ACommonJob job = getJobParser().parse(file, p);
                         if (ConverterJobType.BOX.equals(job.getConverterJobType())) {
-                            boxJobs.put(job.getInsertJob().getValue(), (JobBOX) job);
+                            String jobName = job.getInsertJob().getValue();
+                            if (boxJobs.containsKey(jobName)) {
+                                Integer count = jobBoxDuplicates.get(jobName);
+                                if (count == null) {
+                                    count = 0;
+                                }
+                                count++;
+                                jobBoxDuplicates.put(jobName, count);
+                            }
+                            counterBoxJobs++;
+
+                            boxJobs.put(jobName, (JobBOX) job);
+                            continue;
                         }
 
                         String boxName = job.getBox().getBoxName().getValue();
                         if (boxName == null) {
                             jobs.add(job);
                         } else {
-                            JobBOX boxJob = boxJobs.get(boxName);
-                            if (boxJob == null) {
-                                boxJob = jobs.stream().filter(j -> {
-                                    return j.getConverterJobType().equals(ConverterJobType.BOX) && j.getInsertJob().getValue().equals(boxName);
-                                }).map(j -> {
-                                    return (JobBOX) j;
-                                }).findAny().orElse(null);
+                            List<ACommonJob> boxChildren = boxChildJobs.get(boxName);
+                            if (boxChildren == null) {
+                                boxChildren = new ArrayList<>();
+                            } else {
+                                List<ACommonJob> l = boxChildren.stream().filter(e -> e.getInsertJob().getValue().equals(job.getInsertJob()
+                                        .getValue())).collect(Collectors.toList());
+                                if (l != null && l.size() > 0) {
+                                    jobBoxChildDuplicates.put(job.getInsertJob().getValue(), l.size());
+                                }
                             }
-                            if (boxJob != null) {
-                                boxJob.addJob(boxJob);
-                                boxJobs.put(boxName, boxJob);
-                            }
-                        }
 
+                            boxChildren.add(job);
+                            boxChildJobs.put(boxName, boxChildren);
+                        }
                     }
                 }
+            }
+            ParserReport.INSTANCE.addSummaryRecord("TOTAL STANDALONE JOBS", jobs.size());
+            ParserReport.INSTANCE.addSummaryRecord("TOTAL BOX JOBS FOUND", counterBoxJobs);
+            if (jobBoxDuplicates.size() > 0) {
+                ParserReport.INSTANCE.addSummaryRecord(" BOX JOBS DUPLICATES", "TOTAL=" + jobBoxDuplicates.size() + "(" + AutosysReport
+                        .strIntMap2String(jobBoxDuplicates) + ")");
+            }
+            if (jobBoxChildDuplicates.size() > 0) {
+                ParserReport.INSTANCE.addSummaryRecord(" BOX CHILD JOBS DUPLICATES", "TOTAL=" + jobBoxChildDuplicates.size() + "(" + AutosysReport
+                        .strIntMap2String(jobBoxChildDuplicates) + ")");
+            }
+
+            List<String> boxJobsWithoutChildren = new ArrayList<>();
+            for (Map.Entry<String, JobBOX> e : boxJobs.entrySet()) {
+                JobBOX bj = e.getValue();
+
+                List<ACommonJob> children = boxChildJobs.get(e.getKey());
+                if (children == null) {
+                    boxJobsWithoutChildren.add(e.getKey());
+                } else {
+                    bj.setJobs(children);
+                    jobs.add(bj);
+
+                    boxChildJobs.remove(e.getKey());
+                }
+            }
+            if (boxJobs.size() != counterBoxJobs) {
+                ParserReport.INSTANCE.addSummaryRecord("TOTAL BOX JOBS TO CONVERT", boxJobs.size());
+            }
+            if (boxJobsWithoutChildren.size() > 0) {
+                ParserReport.INSTANCE.addSummaryRecord("TOTAL BOX JOBS WITHOUT CHILD JOBS", boxJobsWithoutChildren.size() + "(" + String.join(",",
+                        boxJobsWithoutChildren) + ")");
+                ParserReport.INSTANCE.addSummaryRecord("TOTAL BOX JOBS TO CONVERT", boxJobs.size() - boxJobsWithoutChildren.size());
+            }
+            if (boxChildJobs.size() > 0) {
+                ParserReport.INSTANCE.addSummaryRecord("TOTAL USED BOX_NAME WITHOUT MAIN BOX", boxChildJobs.size());
             }
 
         } catch (Throwable e) {

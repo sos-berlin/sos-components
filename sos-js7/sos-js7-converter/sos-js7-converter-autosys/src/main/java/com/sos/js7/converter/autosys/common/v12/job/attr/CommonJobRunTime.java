@@ -1,11 +1,12 @@
 package com.sos.js7.converter.autosys.common.v12.job.attr;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public class CommonJobRunTime extends AJobAttributes {
 
@@ -135,25 +136,25 @@ public class CommonJobRunTime extends AJobAttributes {
         return timezone;
     }
 
-    @JobAttributeSetter(name = ATTR_TIMEZONE)
+    @ArgumentSetter(name = ATTR_TIMEZONE)
     public void setTimezone(String val) {
-        timezone.setValue(AJobAttributes.stringValue(val));
+        timezone.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getRunCalendar() {
         return runCalendar;
     }
 
-    @JobAttributeSetter(name = ATTR_RUN_CALENDAR)
+    @ArgumentSetter(name = ATTR_RUN_CALENDAR)
     public void setRunCalendar(String val) {
-        runCalendar.setValue(AJobAttributes.stringValue(val));
+        runCalendar.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<RunWindow> getRunWindow() {
         return runWindow;
     }
 
-    @JobAttributeSetter(name = ATTR_RUN_WINDOW)
+    @ArgumentSetter(name = ATTR_RUN_WINDOW)
     public void setRunWindow(String val) {
         runWindow.setValue(SOSString.isEmpty(val) ? null : this.new RunWindow(val));
     }
@@ -162,7 +163,7 @@ public class CommonJobRunTime extends AJobAttributes {
         return daysOfWeek;
     }
 
-    @JobAttributeSetter(name = ATTR_DAYS_OF_WEEK)
+    @ArgumentSetter(name = ATTR_DAYS_OF_WEEK)
     public void setDaysOfWeek(String val) {
         daysOfWeek.setValue(SOSString.isEmpty(val) ? null : this.new DaysOfWeek(val));
     }
@@ -171,7 +172,7 @@ public class CommonJobRunTime extends AJobAttributes {
         return startTimes;
     }
 
-    @JobAttributeSetter(name = ATTR_START_TIMES)
+    @ArgumentSetter(name = ATTR_START_TIMES)
     public void setStartTimes(String val) {
         startTimes.setValue(JS7ConverterHelper.getTimes(AJobAttributes.stringListValue(val)));
     }
@@ -180,7 +181,7 @@ public class CommonJobRunTime extends AJobAttributes {
         return startMins;
     }
 
-    @JobAttributeSetter(name = ATTR_START_MINS)
+    @ArgumentSetter(name = ATTR_START_MINS)
     public void setStartMins(String val) {
         startMins.setValue(AJobAttributes.integerListValue(val));
     }
@@ -189,9 +190,33 @@ public class CommonJobRunTime extends AJobAttributes {
         return dateConditions;
     }
 
-    @JobAttributeSetter(name = ATTR_DATE_CONDITIONS)
+    @ArgumentSetter(name = ATTR_DATE_CONDITIONS)
     public void setDateConditions(String val) {
-        dateConditions.setValue(AJobAttributes.booleanValue(val, false));
+        dateConditions.setValue(JS7ConverterHelper.booleanValue(val, false));
+    }
+
+    @Override
+    public String toString() {
+        List<String> l = new ArrayList<>();
+        if (timezone.getValue() != null) {
+            l.add("timezone=" + timezone.getValue().toString());
+        }
+        if (runWindow.getValue() != null) {
+            l.add("runWindow=" + runWindow.getValue().toString());
+        }
+        if (runCalendar.getValue() != null) {
+            l.add("runCalendar=" + runCalendar.getValue());
+        }
+        if (daysOfWeek.getValue() != null) {
+            l.add("daysOfWeek=" + daysOfWeek.getValue().toString());
+        }
+        if (startTimes.getValue() != null) {
+            l.add("startTimes=" + startTimes.getValue().toString());
+        }
+        if (startMins.getValue() != null) {
+            l.add("startMins=" + startMins.getValue().toString());
+        }
+        return String.join(",", l);
     }
 
     public class RunWindow {
@@ -200,7 +225,7 @@ public class CommonJobRunTime extends AJobAttributes {
         private final String to;
 
         private RunWindow(String val) {
-            String[] arr = AJobAttributes.stringValue(val).split("-");
+            String[] arr = JS7ConverterHelper.stringValue(val).split("-");
             this.from = arr[0].trim();
             this.to = arr[1].trim();
         }
@@ -211,6 +236,18 @@ public class CommonJobRunTime extends AJobAttributes {
 
         public String getTo() {
             return to;
+        }
+
+        @Override
+        public String toString() {
+            List<String> l = new ArrayList<>();
+            if (from != null) {
+                l.add("from=" + from);
+            }
+            if (to != null) {
+                l.add("to=" + to);
+            }
+            return String.join(",", l);
         }
     }
 
@@ -235,6 +272,18 @@ public class CommonJobRunTime extends AJobAttributes {
 
         public List<String> getDays() {
             return days;
+        }
+
+        @Override
+        public String toString() {
+            List<String> l = new ArrayList<>();
+            if (type != null) {
+                l.add("type=" + type);
+            }
+            if (days != null) {
+                l.add("days=" + String.join(",", days));
+            }
+            return String.join(",", l);
         }
     }
 }

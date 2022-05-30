@@ -1,7 +1,8 @@
 package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public class CommonJobBox extends AJobAttributes {
 
@@ -38,18 +39,18 @@ public class CommonJobBox extends AJobAttributes {
         return boxName;
     }
 
-    @JobAttributeSetter(name = ATTR_BOX_NAME)
+    @ArgumentSetter(name = ATTR_BOX_NAME)
     public void setBoxName(String val) {
-        boxName.setValue(AJobAttributes.stringValue(val));
+        boxName.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<Boolean> getBoxTerminator() {
         return boxTerminator;
     }
 
-    @JobAttributeSetter(name = ATTR_BOX_TERMINATOR)
+    @ArgumentSetter(name = ATTR_BOX_TERMINATOR)
     public void setBoxTerminator(String val) {
-        boxTerminator.setValue(AJobAttributes.booleanValue(val, false));
+        boxTerminator.setValue(JS7ConverterHelper.booleanValue(val, false));
     }
 
 }

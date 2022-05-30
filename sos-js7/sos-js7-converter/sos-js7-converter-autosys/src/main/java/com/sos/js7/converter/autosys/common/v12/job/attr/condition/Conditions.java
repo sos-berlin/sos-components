@@ -28,11 +28,10 @@ public class Conditions {
      * @return List of Condition and Operator or nested List
      * @throws Exception */
     public static List<Object> parse(String val) throws Exception {
-        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         boolean isTraceEnabled = LOGGER.isTraceEnabled();
         String method = "parse";
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][%s][start]...", method, val));
+        if (isTraceEnabled) {
+            LOGGER.trace(String.format("[%s][%s][start]...", method, val));
         }
         if (SOSString.isEmpty(val)) {
             return null;
@@ -76,8 +75,8 @@ public class Conditions {
                         if (sb.length() > 0) {
                             // TODO check if Operator ???
                             groupResult.add(new Condition(sb.toString().trim()));
-                            if (isDebugEnabled) {
-                                LOGGER.debug(String.format("[%s][condition][add][groupResult]%s", method, sb));
+                            if (isTraceEnabled) {
+                                LOGGER.trace(String.format("[%s][condition][add][groupResult]%s", method, sb));
                             }
                             sb = new StringBuilder();
                         }
@@ -116,13 +115,13 @@ public class Conditions {
                                 Condition cp = new Condition(sb.toString().trim());
                                 if (groupResult == null) {
                                     result.add(cp);
-                                    if (isDebugEnabled) {
-                                        LOGGER.debug(String.format("[%s][condition][add][result]%s", method, sb));
+                                    if (isTraceEnabled) {
+                                        LOGGER.trace(String.format("[%s][condition][add][result]%s", method, sb));
                                     }
                                 } else {
                                     groupResult.add(cp);
-                                    if (isDebugEnabled) {
-                                        LOGGER.debug(String.format("[%s][condition][add][groupResult]%s", method, sb));
+                                    if (isTraceEnabled) {
+                                        LOGGER.trace(String.format("[%s][condition][add][groupResult]%s", method, sb));
                                     }
                                 }
                                 sb = new StringBuilder();
@@ -155,23 +154,24 @@ public class Conditions {
                             if (operator != null) {
                                 if (groupResult == null) {
                                     result.add(operator);
-                                    if (isDebugEnabled) {
-                                        LOGGER.debug(String.format("[%s][operator][add][result]%s", method, sb));
+                                    if (isTraceEnabled) {
+                                        LOGGER.trace(String.format("[%s][operator][add][result]%s", method, sb));
                                     }
                                 } else {
                                     groupResult.add(operator);
-                                    if (isDebugEnabled) {
-                                        LOGGER.debug(String.format("[%s][operator][add][groupResult]%s", method, sb));
+                                    if (isTraceEnabled) {
+                                        LOGGER.trace(String.format("[%s][operator][add][groupResult]%s", method, sb));
                                     }
                                 }
+
                                 valueBegin = false;
                                 valueEnd = false;
                                 valueCounter = 0;
                                 partBegin = false;
                                 partEnd = false;
                             }
-                            if (isDebugEnabled) {
-                                LOGGER.debug(String.format("[%s][isOperator][value begin=%s,end=%s,counter=%s]", method, valueBegin, valueEnd,
+                            if (isTraceEnabled) {
+                                LOGGER.trace(String.format("[%s][isOperator][value begin=%s,end=%s,counter=%s]", method, valueBegin, valueEnd,
                                         valueCounter));
                             }
                             append = false;
@@ -197,14 +197,14 @@ public class Conditions {
         }
         if (sb.length() > 0) {
             // TODO check if Operator ???
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[%s][condition][addOnEnd][result]%s", method, sb));
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[%s][condition][addOnEnd][result]%s", method, sb));
             }
             result.add(new Condition(sb.toString().trim()));
         }
 
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][%s][end]", method, val));
+        if (isTraceEnabled) {
+            LOGGER.trace(String.format("[%s][%s][end]", method, val));
         }
         return result;
     }
@@ -230,4 +230,56 @@ public class Conditions {
         }
         return result;
     }
+
+    @SuppressWarnings("unchecked")
+    public static List<Condition> getConditions(List<Object> conditions) {
+        if (conditions == null || conditions.size() == 0) {
+            return Collections.emptyList();
+        }
+        List<Condition> result = new ArrayList<>();
+        for (Object o : conditions) {
+            if (o instanceof Condition) {
+                result.add((Condition) o);
+            } else if (o instanceof List) {
+                result.addAll(getConditions((List<Object>) o));
+            }
+        }
+        return result;
+    }
+
+    // TODO recursive
+    public static Condition find(List<Object> conditions, String conditionKey) {
+        if (conditions == null) {
+            return null;
+        }
+        return conditions.stream().filter(c -> c instanceof Condition).map(c -> (Condition) c).filter(c -> c.getKey().equals(conditionKey)).findAny()
+                .orElse(null);
+    }
+
+    // TODO recursive
+    public static List<Object> remove(List<Object> conditions, Condition condition) {
+        if (conditions == null) {
+            return conditions;
+        }
+        Condition c = find(conditions, condition.getKey());
+        if (c == null) {
+            return conditions;
+        }
+
+        int i = conditions.indexOf(c);
+        if (i > -1) {
+            List<Object> toRemove = new ArrayList<>();
+            toRemove.add(c);
+            int next = i + 1;
+            if (conditions.size() > next) {
+                Object op = conditions.get(next);
+                if (op != null && op instanceof Operator) {
+                    toRemove.add(op);
+                }
+            }
+            conditions.removeAll(toRemove);
+        }
+        return conditions;
+    }
+
 }

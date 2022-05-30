@@ -1,7 +1,8 @@
 package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public class CommonJobNotification extends AJobAttributes {
 
@@ -68,44 +69,44 @@ public class CommonJobNotification extends AJobAttributes {
         return alarmIfFail;
     }
 
-    @JobAttributeSetter(name = ATTR_ALARM_IF_FAIL)
+    @ArgumentSetter(name = ATTR_ALARM_IF_FAIL)
     public void setAlarmIfFail(String val) {
-        alarmIfFail.setValue(AJobAttributes.booleanValue(val, true));
+        alarmIfFail.setValue(JS7ConverterHelper.booleanValue(val, true));
     }
 
     public SOSArgument<Boolean> getAlarmIfTerminated() {
         return alarmIfTerminated;
     }
 
-    @JobAttributeSetter(name = ATTR_ALARM_IF_TERMINATED)
+    @ArgumentSetter(name = ATTR_ALARM_IF_TERMINATED)
     public void setAlarmIfTerminated(String val) {
-        alarmIfTerminated.setValue(AJobAttributes.booleanValue(val, true));
+        alarmIfTerminated.setValue(JS7ConverterHelper.booleanValue(val, true));
     }
 
     public SOSArgument<String> getNotificationMsg() {
         return notificationMsg;
     }
 
-    @JobAttributeSetter(name = ATTR_NOTIFICATION_MSG)
+    @ArgumentSetter(name = ATTR_NOTIFICATION_MSG)
     public void setNotificationMsg(String val) {
-        notificationMsg.setValue(AJobAttributes.stringValue(val));
+        notificationMsg.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getSendNotification() {
         return sendNotification;
     }
 
-    @JobAttributeSetter(name = ATTR_SEND_NOTIFICATION)
+    @ArgumentSetter(name = ATTR_SEND_NOTIFICATION)
     public void setSendNotification(String val) {
-        sendNotification.setValue(AJobAttributes.stringValue(val));
+        sendNotification.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getNotificationEmailaddress() {
         return notificationEmailaddress;
     }
 
-    @JobAttributeSetter(name = ATTR_NOTIFICATION_EMAILADDRESS)
+    @ArgumentSetter(name = ATTR_NOTIFICATION_EMAILADDRESS)
     public void setNotificationEmailaddress(String val) {
-        notificationEmailaddress.setValue(AJobAttributes.stringValue(val));
+        notificationEmailaddress.setValue(JS7ConverterHelper.stringValue(val));
     }
 }

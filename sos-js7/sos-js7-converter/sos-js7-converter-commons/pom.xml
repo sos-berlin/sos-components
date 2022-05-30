@@ -17,6 +17,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-xml</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-webservices-json</artifactId>
 			<version>${project.version}</version>
 		</dependency>
@@ -24,6 +29,10 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-csv</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>

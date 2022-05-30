@@ -3,8 +3,8 @@ package com.sos.js7.converter.autosys.common.v12.job;
 import java.nio.file.Path;
 
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public abstract class ACommonMachineJob extends ACommonJob {
 
@@ -55,27 +55,27 @@ public abstract class ACommonMachineJob extends ACommonJob {
         return machine;
     }
 
-    @JobAttributeSetter(name = ATTR_MACHINE)
+    @ArgumentSetter(name = ATTR_MACHINE)
     public void setMachine(String val) {
-        machine.setValue(AJobAttributes.stringValue(val));
+        machine.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getProfile() {
         return profile;
     }
 
-    @JobAttributeSetter(name = ATTR_PROFILE)
+    @ArgumentSetter(name = ATTR_PROFILE)
     public void setProfile(String val) {
-        profile.setValue(AJobAttributes.stringValue(val));
+        profile.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<Integer> getPriority() {
         return priority;
     }
 
-    @JobAttributeSetter(name = ATTR_PRIORITY)
+    @ArgumentSetter(name = ATTR_PRIORITY)
     public void setPriority(String val) {
-        priority.setValue(AJobAttributes.integerValue(val));
+        priority.setValue(JS7ConverterHelper.integerValue(val));
     }
 
 }

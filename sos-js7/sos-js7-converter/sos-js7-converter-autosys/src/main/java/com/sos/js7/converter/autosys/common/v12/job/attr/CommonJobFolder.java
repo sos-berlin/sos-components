@@ -1,7 +1,8 @@
 package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public class CommonJobFolder extends AJobAttributes {
 
@@ -41,18 +42,18 @@ public class CommonJobFolder extends AJobAttributes {
         return application;
     }
 
-    @JobAttributeSetter(name = ATTR_APPLICATION)
+    @ArgumentSetter(name = ATTR_APPLICATION)
     public void setApplication(String val) {
-        application.setValue(AJobAttributes.stringValue(val));
+        application.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getGroup() {
         return group;
     }
 
-    @JobAttributeSetter(name = ATTR_GROUP)
+    @ArgumentSetter(name = ATTR_GROUP)
     public void setGroup(String val) {
-        group.setValue(AJobAttributes.stringValue(val));
+        group.setValue(JS7ConverterHelper.stringValue(val));
     }
 
 }

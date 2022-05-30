@@ -60,7 +60,7 @@ public class JS7ExportObjects<T> {
             return path;
         }
 
-        LOGGER.debug(String.format("[%s]already used", path));
+        LOGGER.trace(String.format("[%s]already used", path));
         if (!useUniquePath) {
             return path;
         }

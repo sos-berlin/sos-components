@@ -8,6 +8,7 @@ import java.util.Set;
 import com.sos.controller.model.workflow.Workflow;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
 
@@ -17,6 +18,7 @@ public class JS7ConverterResult {
     private JS7ExportObjects<Calendar> calendars = new JS7ExportObjects<>();
     private JS7ExportObjects<Schedule> schedules = new JS7ExportObjects<>();
     private JS7ExportObjects<Board> boards = new JS7ExportObjects<>();
+    private JS7ExportObjects<JobResource> jobResources = new JS7ExportObjects<>();
 
     private PostNotices postNotices = this.new PostNotices();
     private Set<String> applications = new HashSet<>();
@@ -42,10 +44,20 @@ public class JS7ConverterResult {
         boards.addItem(path, val);
     }
 
+    public void add(Path path, JobResource val) {
+        jobResources.addItem(path, val);
+    }
+
     @SuppressWarnings("rawtypes")
-    public JS7ExportObject getExportObjectWorkflow(String name) {
+    public JS7ExportObject getExportObjectWorkflowByPath(String name) {
         return workflows.getItems().stream().filter(o -> o.getOriginalPath().getPath().getFileName().toString().equals(name + ".workflow.json"))
                 .findAny().orElse(null);
+    }
+
+    @SuppressWarnings("rawtypes")
+    public JS7ExportObject getExportObjectWorkflowByJobName(String name) {
+        return workflows.getItems().stream().filter(o -> o.getObject().getJobs() != null && o.getObject().getJobs().getAdditionalProperties() != null
+                && o.getObject().getJobs().getAdditionalProperties().containsKey(name)).findAny().orElse(null);
     }
 
     public JS7ExportObjects<Workflow> getWorkflows() {
@@ -62,6 +74,10 @@ public class JS7ConverterResult {
 
     public JS7ExportObjects<Board> getBoards() {
         return boards;
+    }
+
+    public JS7ExportObjects<JobResource> getJobResources() {
+        return jobResources;
     }
 
     public PostNotices getPostNotices() {

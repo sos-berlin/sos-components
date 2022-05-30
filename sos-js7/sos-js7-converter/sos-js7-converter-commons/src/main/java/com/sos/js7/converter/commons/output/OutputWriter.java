@@ -24,18 +24,18 @@ public class OutputWriter {
     public static <T> void write(Path directory, JS7ExportObjects<T> objects) throws IOException {
         String method = "write";
         if (objects == null || objects.getItems().size() == 0) {
-            LOGGER.info(String.format("[%s][skip]missing objects", method));
+            LOGGER.debug(String.format("[%s][skip]0 items", method));
             return;
         }
         // directory = directory.toAbsolutePath();
-        LOGGER.info(String.format("[%s][directory=%s][start]%s objects", method, directory, objects.getItems().size()));
+        LOGGER.info(String.format("[%s][directory=%s][start]%s items", method, directory, objects.getItems().size()));
         for (JS7ExportObjects<T>.JS7ExportObject item : objects.getItems()) {
             Path outputPath = directory.resolve(item.getUniquePath().getPath());
             Path parent = outputPath.getParent();
             if (parent != null && !Files.exists(parent)) {
                 Files.createDirectories(parent);
             }
-            LOGGER.info(String.format("[%s]file=%s", method, outputPath));
+            LOGGER.trace(String.format("[%s]file=%s", method, outputPath));
             OM.writeValue(SOSPath.toFile(outputPath), item.getObject());
         }
         LOGGER.info(String.format("[%s][directory=%s][end]", method, directory));

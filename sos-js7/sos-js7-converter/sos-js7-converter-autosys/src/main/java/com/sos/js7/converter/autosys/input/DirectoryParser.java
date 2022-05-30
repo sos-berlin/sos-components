@@ -19,29 +19,34 @@ public class DirectoryParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryParser.class);
 
-    public static DirectoryParserResult parse(AFileParser parser, Path dir) {
+    public static DirectoryParserResult parse(AFileParser parser, Path input) {
         DirectoryParserResult r = new DirectoryParser().new DirectoryParserResult();
 
         String method = "parse";
-        if (Files.exists(dir)) {
+        if (Files.exists(input)) {
             try {
-                try (Stream<Path> stream = Files.walk(dir)) {
-                    for (Path p : stream.filter(f -> !f.equals(dir) && f.getFileName().toString().toUpperCase().endsWith("." + parser.getFileType()
-                            .toString())).collect(Collectors.toList())) {
-                        File f = p.toFile();
-                        if (f.isFile()) {
-                            r.addCountFiles();
-                            r.addJobs(parser.parse(p));
+                if (Files.isDirectory(input)) {
+                    try (Stream<Path> stream = Files.walk(input)) {
+                        for (Path p : stream.filter(f -> !f.equals(input) && f.getFileName().toString().toUpperCase().endsWith("." + parser
+                                .getFileType().toString())).collect(Collectors.toList())) {
+                            File f = p.toFile();
+                            if (f.isFile()) {
+                                r.addCountFiles();
+                                r.addJobs(parser.parse(p));
+                            }
                         }
                     }
+                } else {
+                    r.addCountFiles();
+                    r.addJobs(parser.parse(input));
                 }
                 LOGGER.info(String.format("[%s][total files=%s, main jobs=%s]", method, r.getCountFiles(), r.getJobs().size()));
             } catch (Throwable e) {
                 LOGGER.warn(String.format("[%s]%s", method, e.toString()), e);
-                ParserReport.INSTANCE.addErrorRecord(dir, null, e);
+                ParserReport.INSTANCE.addErrorRecord(input, null, e);
             }
         } else {
-            LOGGER.info(String.format("[%s][not found]%s", method, dir));
+            LOGGER.info(String.format("[%s][not found]%s", method, input));
         }
         return r;
     }

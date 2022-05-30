@@ -3,8 +3,8 @@ package com.sos.js7.converter.autosys.common.v12.job;
 import java.nio.file.Path;
 
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public class JobCMD extends ACommonMachineJob {
 
@@ -101,71 +101,71 @@ public class JobCMD extends ACommonMachineJob {
         return command;
     }
 
-    @JobAttributeSetter(name = ATTR_COMMAND)
+    @ArgumentSetter(name = ATTR_COMMAND)
     public void setCommand(String val) {
-        command.setValue(AJobAttributes.stringValue(val));
+        command.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getStdErrFile() {
         return stdErrFile;
     }
 
-    @JobAttributeSetter(name = ATTR_STD_ERR_FILE)
+    @ArgumentSetter(name = ATTR_STD_ERR_FILE)
     public void setStdErrFile(String val) {
-        stdErrFile.setValue(AJobAttributes.stringValue(val));
+        stdErrFile.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getStdOutFile() {
         return stdOutFile;
     }
 
-    @JobAttributeSetter(name = ATTR_STD_OUT_FILE)
+    @ArgumentSetter(name = ATTR_STD_OUT_FILE)
     public void setStdOutFile(String val) {
-        stdOutFile.setValue(AJobAttributes.stringValue(val));
+        stdOutFile.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getUlimit() {
         return ulimit;
     }
 
-    @JobAttributeSetter(name = ATTR_ULIMIT)
+    @ArgumentSetter(name = ATTR_ULIMIT)
     public void setUlimit(String val) {
-        ulimit.setValue(AJobAttributes.stringValue(val));
+        ulimit.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getFailCodes() {
         return failCodes;
     }
 
-    @JobAttributeSetter(name = ATTR_FAIL_CODES)
+    @ArgumentSetter(name = ATTR_FAIL_CODES)
     public void setFailCodes(String val) {
-        failCodes.setValue(AJobAttributes.stringValue(val));
+        failCodes.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getSuccessCodes() {
         return successCodes;
     }
 
-    @JobAttributeSetter(name = ATTR_SUCCESS_CODES)
+    @ArgumentSetter(name = ATTR_SUCCESS_CODES)
     public void setSuccessCodes(String val) {
-        successCodes.setValue(AJobAttributes.stringValue(val));
+        successCodes.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<Integer> getMaxExitSuccess() {
         return maxExitSuccess;
     }
 
-    @JobAttributeSetter(name = ATTR_MAX_EXIT_SUCCESS)
+    @ArgumentSetter(name = ATTR_MAX_EXIT_SUCCESS)
     public void setMaxExitSuccess(String val) {
-        maxExitSuccess.setValue(AJobAttributes.integerValue(val));
+        maxExitSuccess.setValue(JS7ConverterHelper.integerValue(val));
     }
 
     public SOSArgument<Long> getHeartbeatInterval() {
         return heartbeatInterval;
     }
 
-    @JobAttributeSetter(name = ATTR_HEARTBEAT_INTERVAL)
+    @ArgumentSetter(name = ATTR_HEARTBEAT_INTERVAL)
     public void setHeartbeatInterval(String val) {
-        heartbeatInterval.setValue(AJobAttributes.longValue(val));
+        heartbeatInterval.setValue(JS7ConverterHelper.longValue(val));
     }
 }

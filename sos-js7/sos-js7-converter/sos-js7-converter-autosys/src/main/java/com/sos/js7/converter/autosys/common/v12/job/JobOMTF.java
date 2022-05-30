@@ -3,8 +3,8 @@ package com.sos.js7.converter.autosys.common.v12.job;
 import java.nio.file.Path;
 
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public class JobOMTF extends ACommonMachineJob {
 
@@ -70,44 +70,44 @@ public class JobOMTF extends ACommonMachineJob {
         return encoding;
     }
 
-    @JobAttributeSetter(name = ATTR_ENCODING)
+    @ArgumentSetter(name = ATTR_ENCODING)
     public void setEncoding(String val) {
-        encoding.setValue(AJobAttributes.stringValue(val));
+        encoding.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getTextFileFilter() {
         return textFileFilter;
     }
 
-    @JobAttributeSetter(name = ATTR_TEXT_FILE_FILTER)
+    @ArgumentSetter(name = ATTR_TEXT_FILE_FILTER)
     public void setTextFileFilter(String val) {
-        textFileFilter.setValue(AJobAttributes.stringValue(val));
+        textFileFilter.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<Boolean> getTextFileFilterExists() {
         return textFileFilterExists;
     }
 
-    @JobAttributeSetter(name = ATTR_TEXT_FILE_FILTER_EXISTS)
+    @ArgumentSetter(name = ATTR_TEXT_FILE_FILTER_EXISTS)
     public void setTextFileFilterExists(String val) {
-        textFileFilterExists.setValue(AJobAttributes.booleanValue(val, true));
+        textFileFilterExists.setValue(JS7ConverterHelper.booleanValue(val, true));
     }
 
     public SOSArgument<String> getTextFileMode() {
         return textFileMode;
     }
 
-    @JobAttributeSetter(name = ATTR_TEXT_FILE_MODE)
+    @ArgumentSetter(name = ATTR_TEXT_FILE_MODE)
     public void setTextFileMode(String val) {
-        textFileMode.setValue(AJobAttributes.stringValue(val));
+        textFileMode.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getTextFileName() {
         return textFileName;
     }
 
-    @JobAttributeSetter(name = ATTR_TEXT_FILE_NAME)
+    @ArgumentSetter(name = ATTR_TEXT_FILE_NAME)
     public void setTextFileName(String val) {
-        textFileName.setValue(AJobAttributes.stringValue(val));
+        textFileName.setValue(JS7ConverterHelper.stringValue(val));
     }
 }

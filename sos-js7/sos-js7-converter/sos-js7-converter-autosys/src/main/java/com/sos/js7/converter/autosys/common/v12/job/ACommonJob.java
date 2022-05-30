@@ -6,15 +6,15 @@ import java.util.List;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobBox;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobCondition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobFolder;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobMonitoring;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobNotification;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobRunTime;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeInclude;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.annotation.ArgumentInclude;
+import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 /** see
  * https://techdocs.broadcom.com/us/en/ca-enterprise-software/intelligent-automation/autosys-workload-automation/12-0-01/reference/ae-job-information-language/jil-job-definitions/alarm-if-fail-attribute-specify-whether-to-post-an-alarm-for-failure-status.html<br/>
@@ -73,17 +73,17 @@ public abstract class ACommonJob {
 
     /** Common Job Attribute */
     /** argument includes */
-    @JobAttributeInclude(getMethod = "getFolder")
+    @ArgumentInclude(getMethod = "getFolder")
     private CommonJobFolder folder = new CommonJobFolder();
-    @JobAttributeInclude(getMethod = "getBox")
+    @ArgumentInclude(getMethod = "getBox")
     private CommonJobBox box = new CommonJobBox();
-    @JobAttributeInclude(getMethod = "getCondition")
+    @ArgumentInclude(getMethod = "getCondition")
     private CommonJobCondition condition = new CommonJobCondition();
-    @JobAttributeInclude(getMethod = "getMonitoring")
+    @ArgumentInclude(getMethod = "getMonitoring")
     private CommonJobMonitoring monitoring = new CommonJobMonitoring();
-    @JobAttributeInclude(getMethod = "getNotification")
+    @ArgumentInclude(getMethod = "getNotification")
     private CommonJobNotification notification = new CommonJobNotification();
-    @JobAttributeInclude(getMethod = "getRunTime")
+    @ArgumentInclude(getMethod = "getRunTime")
     private CommonJobRunTime runTime = new CommonJobRunTime();
 
     /** not declared/unknown job arguments */
@@ -269,9 +269,9 @@ public abstract class ACommonJob {
         return jobType;
     }
 
-    @JobAttributeSetter(name = ATTR_JOB_TYPE)
+    @ArgumentSetter(name = ATTR_JOB_TYPE)
     public void setJobType(String val) {
-        jobType.setValue(AJobAttributes.stringValue(val));
+        jobType.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> addUnknown(String name, String value) {
@@ -313,9 +313,9 @@ public abstract class ACommonJob {
         return insertJob;
     }
 
-    @JobAttributeSetter(name = ATTR_INSERT_JOB)
+    @ArgumentSetter(name = ATTR_INSERT_JOB)
     public void setInsertJob(String val) {
-        String s = AJobAttributes.stringValue(val);
+        String s = JS7ConverterHelper.stringValue(val);
         if (!SOSString.isEmpty(s)) {
             // \myJob
             if (s.startsWith("\\")) {
@@ -329,99 +329,107 @@ public abstract class ACommonJob {
         return owner;
     }
 
-    @JobAttributeSetter(name = ATTR_OWNER)
+    @ArgumentSetter(name = ATTR_OWNER)
     public void setOwner(String val) {
-        owner.setValue(AJobAttributes.stringValue(val));
+        owner.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getPermission() {
         return permission;
     }
 
-    @JobAttributeSetter(name = ATTR_PERMISSION)
+    @ArgumentSetter(name = ATTR_PERMISSION)
     public void setPermission(String val) {
-        permission.setValue(AJobAttributes.stringValue(val));
+        permission.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getDescription() {
         return description;
     }
 
-    @JobAttributeSetter(name = ATTR_DESCRIPTION)
+    @ArgumentSetter(name = ATTR_DESCRIPTION)
     public void setDescription(String val) {
-        description.setValue(AJobAttributes.stringValue(val));
+        description.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<Long> getJobLoad() {
         return jobLoad;
     }
 
-    @JobAttributeSetter(name = ATTR_JOB_LOAD)
+    @ArgumentSetter(name = ATTR_JOB_LOAD)
     public void setJobLoad(String val) {
-        jobLoad.setValue(AJobAttributes.longValue(val));
+        jobLoad.setValue(JS7ConverterHelper.longValue(val));
     }
 
     public SOSArgument<Integer> getNRetrys() {
         return nRetrys;
     }
 
-    @JobAttributeSetter(name = ATTR_N_RETRYS)
+    @ArgumentSetter(name = ATTR_N_RETRYS)
     public void setNRetrys(String val) {
-        nRetrys.setValue(AJobAttributes.integerValue(val));
+        nRetrys.setValue(JS7ConverterHelper.integerValue(val));
     }
 
     public SOSArgument<Integer> getAutoDelete() {
         return autoDelete;
     }
 
-    @JobAttributeSetter(name = ATTR_AUTO_DELETE)
+    @ArgumentSetter(name = ATTR_AUTO_DELETE)
     public void setAutoDelete(String val) {
-        autoDelete.setValue(AJobAttributes.integerValue(val));
+        autoDelete.setValue(JS7ConverterHelper.integerValue(val));
     }
 
     public SOSArgument<Integer> getMaxRunAlarm() {
         return maxRunAlarm;
     }
 
-    @JobAttributeSetter(name = ATTR_MAX_RUN_ALARM)
+    @ArgumentSetter(name = ATTR_MAX_RUN_ALARM)
     public void setMaxRunAlarm(String val) {
-        maxRunAlarm.setValue(AJobAttributes.integerValue(val));
+        maxRunAlarm.setValue(JS7ConverterHelper.integerValue(val));
     }
 
     public SOSArgument<Integer> getMinRunAlarm() {
         return minRunAlarm;
     }
 
-    @JobAttributeSetter(name = ATTR_MIN_RUN_ALARM)
+    @ArgumentSetter(name = ATTR_MIN_RUN_ALARM)
     public void setMinRunAlarm(String val) {
-        minRunAlarm.setValue(AJobAttributes.integerValue(val));
+        minRunAlarm.setValue(JS7ConverterHelper.integerValue(val));
     }
 
     public SOSArgument<String> getMustCompleteTimes() {
         return mustCompleteTimes;
     }
 
-    @JobAttributeSetter(name = ATTR_MUST_COMPLETE_TIMES)
+    @ArgumentSetter(name = ATTR_MUST_COMPLETE_TIMES)
     public void setMustCompleteTimes(String val) {
-        mustCompleteTimes.setValue(AJobAttributes.stringValue(val));
+        mustCompleteTimes.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getMustStartTimes() {
         return mustStartTimes;
     }
 
-    @JobAttributeSetter(name = ATTR_MUST_START_TIMES)
+    @ArgumentSetter(name = ATTR_MUST_START_TIMES)
     public void setMustStartTimes(String val) {
-        mustStartTimes.setValue(AJobAttributes.stringValue(val));
+        mustStartTimes.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<Integer> getTermRunTime() {
         return termRunTime;
     }
 
-    @JobAttributeSetter(name = ATTR_TERM_RUN_TIME)
+    @ArgumentSetter(name = ATTR_TERM_RUN_TIME)
     public void setTermRunTime(String val) {
-        termRunTime.setValue(AJobAttributes.integerValue(val));
+        termRunTime.setValue(JS7ConverterHelper.integerValue(val));
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("type=").append(converterJobType);
+        sb.append(",name=").append(insertJob.getValue());
+        return sb.toString();
     }
 
 }

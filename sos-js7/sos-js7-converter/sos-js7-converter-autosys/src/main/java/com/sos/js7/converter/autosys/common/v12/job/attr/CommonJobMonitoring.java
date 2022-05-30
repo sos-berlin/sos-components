@@ -1,7 +1,8 @@
 package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public class CommonJobMonitoring extends AJobAttributes {
 
@@ -79,45 +80,45 @@ public class CommonJobMonitoring extends AJobAttributes {
         return svcdeskDesc;
     }
 
-    @JobAttributeSetter(name = ATTR_SVCDESK_DESC)
+    @ArgumentSetter(name = ATTR_SVCDESK_DESC)
     public void setSvcdeskDesc(String val) {
-        svcdeskDesc.setValue(AJobAttributes.integerValue(val));
+        svcdeskDesc.setValue(JS7ConverterHelper.integerValue(val));
     }
 
     public SOSArgument<Integer> getSvcdeskImp() {
         return svcdeskImp;
     }
 
-    @JobAttributeSetter(name = ATTR_SVCDESK_IMP)
+    @ArgumentSetter(name = ATTR_SVCDESK_IMP)
     public void setSvcdeskImp(String val) {
-        svcdeskImp.setValue(AJobAttributes.integerValue(val));
+        svcdeskImp.setValue(JS7ConverterHelper.integerValue(val));
     }
 
     public SOSArgument<Integer> getSvcdeskPri() {
         return svcdeskPri;
     }
 
-    @JobAttributeSetter(name = ATTR_SVCDESK_PRI)
+    @ArgumentSetter(name = ATTR_SVCDESK_PRI)
     public void setSvcdeskPri(String val) {
-        svcdeskPri.setValue(AJobAttributes.integerValue(val));
+        svcdeskPri.setValue(JS7ConverterHelper.integerValue(val));
     }
 
     public SOSArgument<Integer> getSvcdeskSev() {
         return svcdeskSev;
     }
 
-    @JobAttributeSetter(name = ATTR_SVCDESK_SEV)
+    @ArgumentSetter(name = ATTR_SVCDESK_SEV)
     public void setSvcdeskSev(String val) {
-        svcdeskSev.setValue(AJobAttributes.integerValue(val));
+        svcdeskSev.setValue(JS7ConverterHelper.integerValue(val));
     }
 
     public SOSArgument<Boolean> getServiceDesk() {
         return serviceDesk;
     }
 
-    @JobAttributeSetter(name = ATTR_SERVICE_DESC)
+    @ArgumentSetter(name = ATTR_SERVICE_DESC)
     public void setServiceDesk(String val) {
-        serviceDesk.setValue(AJobAttributes.booleanValue(val, false));
+        serviceDesk.setValue(JS7ConverterHelper.booleanValue(val, false));
     }
 
 }

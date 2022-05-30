@@ -22,14 +22,16 @@ import com.sos.js7.converter.autosys.common.v12.job.JobFT;
 import com.sos.js7.converter.autosys.common.v12.job.JobFW;
 import com.sos.js7.converter.autosys.common.v12.job.JobNotSupported;
 import com.sos.js7.converter.autosys.common.v12.job.JobOMTF;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeInclude;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
-import com.sos.js7.converter.commons.report.CommonReport.ErrorType;
+import com.sos.js7.converter.commons.annotation.ArgumentInclude;
+import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 import com.sos.js7.converter.commons.report.ParserReport;
 
 public class JobParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobParser.class);
+
+    private static final String PROPERTY_JOB_NAME = "insert_job";
+    private static final String PROPERTY_JOB_TYPE = "job_type";
 
     private static Map<ConverterJobType, List<Method>> JOB_METHODS = null;
     private static Map<String, List<Method>> JOB_INCLUDES_METHODS = null;
@@ -39,8 +41,8 @@ public class JobParser {
     }
 
     public ACommonJob parse(Path source, Properties p) {
-        ACommonJob job = newJob(source, getConverterJobType(source, p.getProperty("insert_job"), p.getProperty("job_type")));
-        return set(job, p);
+        ACommonJob job = newJob(source, getConverterJobType(source, p.getProperty(PROPERTY_JOB_NAME), p.getProperty(PROPERTY_JOB_TYPE)));
+        return set(p, job);
     }
 
     private void init() {
@@ -62,7 +64,7 @@ public class JobParser {
             }
             if (t == null) {
                 t = ConverterJobType.NOT_SUPPORTED;
-                ParserReport.INSTANCE.addErrorRecord(source, jobName, ErrorType.WARNING, String.format("[job type=%s]not supported", val));
+                ParserReport.INSTANCE.addAnalyzerRecord(source, jobName, String.format("[job type=%s]not supported", val));
             }
         }
         return t;
@@ -88,7 +90,7 @@ public class JobParser {
     private List<Method> getJobMethods(Class<?> clazz) {
         List<Method> m = SOSReflection.getAllDeclaredMethods(clazz);
         return m.stream().filter(e -> {
-            return e.isAnnotationPresent(JobAttributeSetter.class);
+            return e.isAnnotationPresent(ArgumentSetter.class);
         }).collect(Collectors.toList());
     }
 
@@ -105,24 +107,24 @@ public class JobParser {
     private void setJobIncludesMethods() {
         List<Field> fields = SOSReflection.getAllDeclaredFields(ACommonJob.class);
         fields = fields.stream().filter(e -> {
-            return e.isAnnotationPresent(JobAttributeInclude.class);
+            return e.isAnnotationPresent(ArgumentInclude.class);
         }).collect(Collectors.toList());
 
         JOB_INCLUDES_METHODS = new HashMap<>();
         for (Field f : fields) {
             f.setAccessible(true);
-            JobAttributeInclude a = f.getAnnotation(JobAttributeInclude.class);
+            ArgumentInclude a = f.getAnnotation(ArgumentInclude.class);
             JOB_INCLUDES_METHODS.put(a.getMethod(), getJobMethods(f.getType()));
         }
     }
 
-    private ACommonJob set(ACommonJob job, Properties p) throws IllegalArgumentException {
+    private ACommonJob set(Properties p, ACommonJob job) throws IllegalArgumentException {
         List<Method> jobMethods = JOB_METHODS.get(job.getConverterJobType());
         p.forEach((name, value) -> {
             boolean found = false;
-            if (!set(job, jobMethods, (String) name, (String) value, null)) {
+            if (!set(p, job, jobMethods, (String) name, (String) value, null)) {
                 x: for (Map.Entry<String, List<Method>> entry : JOB_INCLUDES_METHODS.entrySet()) {
-                    if (set(job, entry.getValue(), (String) name, (String) value, entry.getKey())) {
+                    if (set(p, job, entry.getValue(), (String) name, (String) value, entry.getKey())) {
                         found = true;
                         break x;
                     }
@@ -134,17 +136,18 @@ public class JobParser {
                 SOSArgument<String> ua = new SOSArgument<>((String) name, false);
                 ua.setValue((String) value);
                 job.getUnknown().add(ua);
-                ParserReport.INSTANCE.addErrorRecord(job.getSource(), job.getInsertJob().getValue(), ErrorType.WARNING, String.format(
-                        "[job argument][name=%s, value=%s]not supported", ua.getName(), ua.getValue()));
+                ParserReport.INSTANCE.addAnalyzerRecord(job.getSource(), p.getProperty(PROPERTY_JOB_NAME), String.format(
+                        "[job argument][name=%s, value=%s]not supported for \"%s\" job type", ua.getName(), ua.getValue(), p.getProperty(
+                                PROPERTY_JOB_TYPE)));
             }
         });
 
         return job;
     }
 
-    private boolean set(ACommonJob job, List<Method> methods, String name, String value, String includeGetMethod) {
+    private boolean set(Properties p, ACommonJob job, List<Method> methods, String name, String value, String includeGetMethod) {
         for (Method m : methods) {
-            JobAttributeSetter a = m.getAnnotation(JobAttributeSetter.class);
+            ArgumentSetter a = m.getAnnotation(ArgumentSetter.class);
             if (name.equals(a.name())) {
                 m.setAccessible(true);
                 try {
@@ -160,7 +163,7 @@ public class JobParser {
                     String msg = String.format("[%s.%s][can't invoke method]method=%s,value=%s", getClass().getName(), m.getName(), value, e
                             .toString());
                     LOGGER.error(msg, e);
-                    ParserReport.INSTANCE.addErrorRecord(job.getSource(), job.getInsertJob().getValue(), ErrorType.ERROR, msg);
+                    ParserReport.INSTANCE.addErrorRecord(job.getSource(), p.getProperty(PROPERTY_JOB_NAME), msg);
                 }
                 return true;
             }

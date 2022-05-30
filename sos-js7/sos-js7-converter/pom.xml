@@ -10,7 +10,8 @@
 	<artifactId>sos-js7-converter</artifactId>
 	<packaging>pom</packaging>
 	<modules>
-		<module>sos-js7-converter-autosys</module>
-        <module>sos-js7-converter-commons</module>
+	    <module>sos-js7-converter-commons</module>
+        <module>sos-js7-converter-autosys</module>
+        <module>sos-js7-converter-js1</module>
 	</modules>
 </project>

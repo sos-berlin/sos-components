@@ -3,8 +3,8 @@ package com.sos.js7.converter.autosys.common.v12.job;
 import java.nio.file.Path;
 
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public abstract class ACommonFileWatcherJob extends ACommonMachineJob {
 
@@ -25,9 +25,9 @@ public abstract class ACommonFileWatcherJob extends ACommonMachineJob {
         return watchFile;
     }
 
-    @JobAttributeSetter(name = ATTR_WATCH_FILE)
+    @ArgumentSetter(name = ATTR_WATCH_FILE)
     public void setWatchFile(String val) {
-        watchFile.setValue(AJobAttributes.stringValue(val));
+        watchFile.setValue(JS7ConverterHelper.stringValue(val));
     }
 
 }

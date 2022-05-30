@@ -4,10 +4,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.js7.converter.autosys.common.v12.job.attr.AJobAttributes;
-import com.sos.js7.converter.autosys.common.v12.job.attr.annotation.JobAttributeSetter;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public class JobBOX extends ACommonJob {
 
@@ -44,27 +43,22 @@ public class JobBOX extends ACommonJob {
         return boxSuccess;
     }
 
-    @JobAttributeSetter(name = ATTR_BOX_SUCCESS)
+    @ArgumentSetter(name = ATTR_BOX_SUCCESS)
     public void setBoxSuccess(String val) {
-        boxSuccess.setValue(AJobAttributes.stringValue(val));
+        boxSuccess.setValue(JS7ConverterHelper.stringValue(val));
     }
 
     public SOSArgument<String> getBoxFailure() {
         return boxFailure;
     }
 
-    @JobAttributeSetter(name = ATTR_BOX_FAILURE)
+    @ArgumentSetter(name = ATTR_BOX_FAILURE)
     public void setBoxFailure(String val) {
-        boxFailure.setValue(AJobAttributes.stringValue(val));
+        boxFailure.setValue(JS7ConverterHelper.stringValue(val));
     }
 
-    public boolean addJob(ACommonJob job) {
-        String bn = job.getBox().getBoxName().getValue();
-        if (!SOSString.isEmpty(bn) && bn.equalsIgnoreCase(getInsertJob().getValue())) {
-            jobs.add(job);
-            return true;
-        }
-        return false;
+    public void setJobs(List<ACommonJob> val) {
+        jobs = val;
     }
 
     public List<ACommonJob> getJobs() {
