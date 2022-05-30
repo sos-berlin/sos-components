@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -90,8 +91,9 @@ public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISub
             
             int position = 0;
             List<SubagentCluster> subagentClusters = new ArrayList<>();
-            for (DBItemInventorySubAgentCluster key : dbSubagentClusters.keySet().stream().sorted(Comparator.comparingInt(
-                    DBItemInventorySubAgentCluster::getOrdering)).collect(Collectors.toSet())) {
+            Comparator<DBItemInventorySubAgentCluster> comp = Comparator.comparingInt(DBItemInventorySubAgentCluster::getOrdering);
+            for (DBItemInventorySubAgentCluster key : dbSubagentClusters.keySet().stream().collect(Collectors.toCollection(() -> new TreeSet<>(
+                    comp)))) {
                 SubagentCluster subagentCluster = new SubagentCluster();
                 subagentCluster.setControllerId(agentIdControllerIdMap.get(key.getAgentId()));
                 subagentCluster.setAgentId(key.getAgentId());
@@ -104,20 +106,6 @@ public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISub
                 subagentClusters.add(subagentCluster);
             }
             entity.setSubagentClusters(subagentClusters);
-            
-//            entity.setSubagentClusters(dbSubagentClusters.entrySet().stream().map(e -> {
-//                DBItemInventorySubAgentCluster key = e.getKey();
-//                SubagentCluster subagentCluster = new SubagentCluster();
-//                subagentCluster.setControllerId(agentIdControllerIdMap.get(key.getAgentId()));
-//                subagentCluster.setAgentId(key.getAgentId());
-//                subagentCluster.setDeployed(null); // deployed is obsolete, now part of syncState
-//                subagentCluster.setSyncState(AgentHelper.getSyncState(subagentSelectionsOnController.get(subagentCluster.getControllerId()), key));
-//                subagentCluster.setSubagentClusterId(key.getSubAgentClusterId());
-//                subagentCluster.setTitle(key.getTitle());
-//                subagentCluster.setSubagentIds(e.getValue());
-//                subagentCluster.setOrdering(key.getOrdering());
-//                return subagentCluster;
-//            }).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);
