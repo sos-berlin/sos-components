@@ -34,7 +34,6 @@ import com.sos.joc.model.configuration.ConfigurationsDeleteFilter;
 import com.sos.joc.model.configuration.ConfigurationsFilter;
 import com.sos.joc.model.configuration.Profiles;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
-import com.sos.joc.model.security.accounts.AccountsFilter;
 import com.sos.schema.JsonValidator;
 
 @Path("configurations")
