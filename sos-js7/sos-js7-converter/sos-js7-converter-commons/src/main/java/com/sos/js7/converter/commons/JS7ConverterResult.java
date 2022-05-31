@@ -8,6 +8,7 @@ import java.util.Set;
 import com.sos.controller.model.workflow.Workflow;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
@@ -19,6 +20,7 @@ public class JS7ConverterResult {
     private JS7ExportObjects<Schedule> schedules = new JS7ExportObjects<>();
     private JS7ExportObjects<Board> boards = new JS7ExportObjects<>();
     private JS7ExportObjects<JobResource> jobResources = new JS7ExportObjects<>();
+    private JS7ExportObjects<FileOrderSource> fileOrderSources = new JS7ExportObjects<>();
 
     private PostNotices postNotices = this.new PostNotices();
     private Set<String> applications = new HashSet<>();
@@ -46,6 +48,10 @@ public class JS7ConverterResult {
 
     public void add(Path path, JobResource val) {
         jobResources.addItem(path, val);
+    }
+
+    public void add(Path path, FileOrderSource val) {
+        fileOrderSources.addItem(path, val);
     }
 
     @SuppressWarnings("rawtypes")
@@ -78,6 +84,10 @@ public class JS7ConverterResult {
 
     public JS7ExportObjects<JobResource> getJobResources() {
         return jobResources;
+    }
+
+    public JS7ExportObjects<FileOrderSource> getFileOrderSources() {
+        return fileOrderSources;
     }
 
     public PostNotices getPostNotices() {

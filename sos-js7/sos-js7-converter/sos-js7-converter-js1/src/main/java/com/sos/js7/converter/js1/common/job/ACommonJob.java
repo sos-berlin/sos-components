@@ -176,7 +176,7 @@ public abstract class ACommonJob {
 
         Node runTime = xpath.selectNode(node, "./" + ELEMENT_RUN_TIME);
         if (runTime != null) {
-            this.runTime = new RunTime(xpath, script);
+            this.runTime = new RunTime(xpath, runTime);
         }
         return xpath;
     }

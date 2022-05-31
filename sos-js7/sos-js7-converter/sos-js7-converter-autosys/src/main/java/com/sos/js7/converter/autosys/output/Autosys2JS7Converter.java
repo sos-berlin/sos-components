@@ -696,14 +696,14 @@ public class Autosys2JS7Converter {
     }
 
     private static Job setFromConfig(Job j) {
-        if (CONFIG.getJobConfig().getGraceTimeout() != null) {
-            j.setGraceTimeout(CONFIG.getJobConfig().getGraceTimeout());
+        if (CONFIG.getJobConfig().getForcedGraceTimeout() != null) {
+            j.setGraceTimeout(CONFIG.getJobConfig().getForcedGraceTimeout());
         }
-        if (CONFIG.getJobConfig().getParallelism() != null) {
-            j.setParallelism(CONFIG.getJobConfig().getParallelism());
+        if (CONFIG.getJobConfig().getForcedParallelism() != null) {
+            j.setParallelism(CONFIG.getJobConfig().getForcedParallelism());
         }
-        if (CONFIG.getJobConfig().getFailOnErrWritten() != null) {
-            j.setFailOnErrWritten(CONFIG.getJobConfig().getFailOnErrWritten());
+        if (CONFIG.getJobConfig().getForcedFailOnErrWritten() != null) {
+            j.setFailOnErrWritten(CONFIG.getJobConfig().getForcedFailOnErrWritten());
         }
         return j;
     }

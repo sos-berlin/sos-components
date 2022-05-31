@@ -78,14 +78,14 @@ public class JS7ConverterConfig {
                     case "jobConfig.scriptNewLine":
                         jobConfig.scriptNewLine = val;
                         break;
-                    case "jobConfig.graceTimeout":
-                        jobConfig.graceTimeout = Integer.parseInt(val);
+                    case "jobConfig.forcedGraceTimeout":
+                        jobConfig.forcedGraceTimeout = Integer.parseInt(val);
                         break;
-                    case "jobConfig.parallelism":
-                        jobConfig.parallelism = Integer.parseInt(val);
+                    case "jobConfig.forcedParallelism":
+                        jobConfig.forcedParallelism = Integer.parseInt(val);
                         break;
-                    case "jobConfig.failOnErrWritten":
-                        jobConfig.failOnErrWritten = Boolean.parseBoolean(val);
+                    case "jobConfig.forcedFailOnErrWritten":
+                        jobConfig.forcedFailOnErrWritten = Boolean.parseBoolean(val);
                         break;
                     // AGENT
                     case "agentConfig.mapping":
@@ -286,27 +286,27 @@ public class JS7ConverterConfig {
     public class JobConfig {
 
         private String scriptNewLine = "\n";
-        private Integer graceTimeout;
-        private Integer parallelism;
-        private Boolean failOnErrWritten;
+        private Integer forcedGraceTimeout;
+        private Integer forcedParallelism;
+        private Boolean forcedFailOnErrWritten;
 
         public JobConfig withScriptNewLine(String newLine) {
             this.scriptNewLine = newLine;
             return this;
         }
 
-        public JobConfig withGraceTimeout(Integer graceTimeout) {
-            this.graceTimeout = graceTimeout;
+        public JobConfig withForcedGraceTimeout(Integer graceTimeout) {
+            this.forcedGraceTimeout = graceTimeout;
             return this;
         }
 
-        public JobConfig withParallelism(Integer parallelism) {
-            this.parallelism = parallelism;
+        public JobConfig withForcedParallelism(Integer parallelism) {
+            this.forcedParallelism = parallelism;
             return this;
         }
 
-        public JobConfig withFailOnErrWritten(Boolean failOnErrWritten) {
-            this.failOnErrWritten = failOnErrWritten;
+        public JobConfig withForcedFailOnErrWritten(Boolean failOnErrWritten) {
+            this.forcedFailOnErrWritten = failOnErrWritten;
             return this;
         }
 
@@ -314,20 +314,20 @@ public class JS7ConverterConfig {
             return scriptNewLine;
         }
 
-        public Integer getGraceTimeout() {
-            return graceTimeout;
+        public Integer getForcedGraceTimeout() {
+            return forcedGraceTimeout;
         }
 
-        public Integer getParallelism() {
-            return parallelism;
+        public Integer getForcedParallelism() {
+            return forcedParallelism;
         }
 
-        public Boolean getFailOnErrWritten() {
-            return failOnErrWritten;
+        public Boolean getForcedFailOnErrWritten() {
+            return forcedFailOnErrWritten;
         }
 
         public boolean isEmpty() {
-            return graceTimeout == null && parallelism == null && failOnErrWritten == null;
+            return forcedGraceTimeout == null && forcedParallelism == null && forcedFailOnErrWritten == null;
         }
     }
 

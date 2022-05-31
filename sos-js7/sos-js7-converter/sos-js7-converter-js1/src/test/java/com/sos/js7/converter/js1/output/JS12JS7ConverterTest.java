@@ -24,7 +24,7 @@ public class JS12JS7ConverterTest {
                 "abcd=agent;xyz=agent_cluster");
         JS12JS7Converter.CONFIG.getMockConfig().withScript("$HOME/MockScript.sh");
         JS12JS7Converter.CONFIG.getScheduleConfig().withDefaultCalendarName("AnyDays").withPlanOrders(true).withSubmitOrders(true);
-        JS12JS7Converter.CONFIG.getJobConfig().withGraceTimeout(15).withParallelism(1).withFailOnErrWritten(true).withScriptNewLine("\n");
+        JS12JS7Converter.CONFIG.getJobConfig().withForcedFailOnErrWritten(true).withScriptNewLine("\n");
         JS12JS7Converter.CONFIG.getSubFolderConfig().withMapping("aapg=2; ebzc=0; wmad=0; abcd=0").withSeparator("_");
 
         JS12JS7Converter.convert(input, outputDir, reportDir);

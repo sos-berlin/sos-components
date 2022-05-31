@@ -30,7 +30,7 @@ public class DirectoryParser {
             try {
                 boolean checkExcluded = !config.isEmpty();
 
-                r.setRoot(parseSingleDir(new Folder(dir)));
+                r.setRoot(parseSingleDir(r, new Folder(dir)));
                 try (Stream<Path> stream = Files.walk(dir)) {
                     for (Path p : stream.filter(f -> Files.isDirectory(f) && !f.equals(dir)).collect(Collectors.toList())) {
                         if (checkExcluded) {
@@ -42,7 +42,7 @@ public class DirectoryParser {
 
                         Folder fp = r.getRoot().findParent(p);
                         if (fp != null) {
-                            fp.addFolder(parseSingleDir(new Folder(p)));
+                            fp.addFolder(parseSingleDir(r, new Folder(p)));
                         }
                     }
                 }
@@ -53,12 +53,27 @@ public class DirectoryParser {
         } else {
             LOGGER.info(String.format("[%s][not found]%s", method, dir));
         }
+
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL FOLDERS", r.getCountFolders());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB files", r.getCountJobs());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB(STANDALONE) files", r.getCountStandaloneJobs());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB(ORDER) files", r.getCountOrderJobs());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN files", r.getCountJobChains());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN CONFIG files", r.getCountJobChainConfigs());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL ORDER files", r.getCountOrders());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL LOCK files", r.getCountLocks());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL PROCESS CLASS files", r.getCountProcessClasses());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL SCHEDULE files", r.getCountSchedules());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL MONITOR files", r.getCountMonitors());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL ANOTHER files", r.getCountFiles());
+
         return r;
     }
 
-    private static Folder parseSingleDir(Folder folder) {
-        String method = "parseSingleDir";
+    private static Folder parseSingleDir(DirectoryParserResult r, Folder folder) {
+        r.addCountFolders();
 
+        String method = "parseSingleDir";
         File[] files = folder.getPath().toAbsolutePath().toFile().listFiles(f -> !f.isDirectory());
         if (files.length == 0) {
             return folder;
@@ -68,14 +83,19 @@ public class DirectoryParser {
         for (File file : files) {
             String fileName = file.getName();
             if (fileName.endsWith(EConfigFileExtensions.ORDER.extension())) {
+                r.addCountOrders();
                 jobChains = addJobChainFile(jobChains, file, EConfigFileExtensions.getName(EConfigFileExtensions.ORDER, fileName));
             } else if (fileName.endsWith(EConfigFileExtensions.JOB_CHAIN.extension())) {
+                r.addCountJobChains();
                 jobChains = addJobChainFile(jobChains, file, EConfigFileExtensions.getName(EConfigFileExtensions.JOB_CHAIN, fileName));
             } else if (fileName.endsWith(EConfigFileExtensions.JOB_CHAIN_CONFIG.extension())) {
+                r.addCountJobChainConfigs();
                 jobChains = addJobChainFile(jobChains, file, EConfigFileExtensions.getName(EConfigFileExtensions.JOB_CHAIN_CONFIG, fileName));
             } else if (fileName.endsWith(EConfigFileExtensions.JOB.extension())) {
+                r.addCountJobs();
                 folder.addJob(file.toPath());
             } else if (fileName.endsWith(EConfigFileExtensions.LOCK.extension())) {
+                r.addCountLocks();
                 try {
                     folder.addLock(file.toPath());
                 } catch (Exception e) {
@@ -83,6 +103,7 @@ public class DirectoryParser {
                     ParserReport.INSTANCE.addErrorRecord(file.toPath(), null, e);
                 }
             } else if (fileName.endsWith(EConfigFileExtensions.PROCESS_CLASS.extension())) {
+                r.addCountProcessClasses();
                 try {
                     folder.addProcessClass(file.toPath());
                 } catch (Exception e) {
@@ -90,6 +111,7 @@ public class DirectoryParser {
                     ParserReport.INSTANCE.addErrorRecord(file.toPath(), null, e);
                 }
             } else if (fileName.endsWith(EConfigFileExtensions.SCHEDULE.extension())) {
+                r.addCountSchedules();
                 try {
                     folder.addSchedule(file.toPath());
                 } catch (Exception e) {
@@ -97,8 +119,10 @@ public class DirectoryParser {
                     ParserReport.INSTANCE.addErrorRecord(file.toPath(), null, e);
                 }
             } else if (fileName.endsWith(EConfigFileExtensions.MONITOR.extension())) {
+                r.addCountMonitors();
                 folder.addMonitor(null);
             } else {
+                r.addCountFiles();
                 folder.addFile(file.toPath());
             }
         }
@@ -111,6 +135,9 @@ public class DirectoryParser {
                 ParserReport.INSTANCE.addErrorRecord(folder.getPath(), "job chain=" + entry.getKey(), e);
             }
         }
+
+        r.addCountStandaloneJobs(folder.getStandaloneJobs().size());
+        r.addCountOrderJobs(folder.getOrderJobs().size());
 
         return folder;
     }
@@ -130,31 +157,123 @@ public class DirectoryParser {
     public class DirectoryParserResult {
 
         private Folder root;
-        private int countFiles = 0;
+
         private int countFolders = 0;
+        private int countOrders = 0;
+        private int countJobChains = 0;
+        private int countJobChainConfigs = 0;
+        private int countJobs = 0;
+        private int countStandaloneJobs = 0;
+        private int countOrderJobs = 0;
+        private int countLocks = 0;
+        private int countProcessClasses = 0;
+        private int countSchedules = 0;
+        private int countMonitors = 0;
+        private int countFiles = 0;
 
         protected void setRoot(Folder f) {
             root = f;
-        }
-
-        protected void addCountFiles() {
-            countFiles++;
         }
 
         protected void addCountFolders() {
             countFolders++;
         }
 
+        protected void addCountOrders() {
+            countOrders++;
+        }
+
+        protected void addCountJobChains() {
+            countJobChains++;
+        }
+
+        protected void addCountJobChainConfigs() {
+            countJobChainConfigs++;
+        }
+
+        protected void addCountJobs() {
+            countJobs++;
+        }
+
+        protected void addCountStandaloneJobs(int size) {
+            countStandaloneJobs += size;
+        }
+
+        protected void addCountOrderJobs(int size) {
+            countOrderJobs += size;
+        }
+
+        protected void addCountLocks() {
+            countLocks++;
+        }
+
+        protected void addCountProcessClasses() {
+            countProcessClasses++;
+        }
+
+        protected void addCountSchedules() {
+            countSchedules++;
+        }
+
+        protected void addCountMonitors() {
+            countMonitors++;
+        }
+
+        protected void addCountFiles() {
+            countFiles++;
+        }
+
         public Folder getRoot() {
             return root;
+        }
+
+        public int getCountFolders() {
+            return countFolders;
+        }
+
+        public int getCountOrders() {
+            return countOrders;
+        }
+
+        public int getCountJobChains() {
+            return countJobChains;
+        }
+
+        public int getCountJobChainConfigs() {
+            return countJobChainConfigs;
+        }
+
+        public int getCountJobs() {
+            return countJobs;
+        }
+
+        public int getCountStandaloneJobs() {
+            return countStandaloneJobs;
+        }
+
+        public int getCountOrderJobs() {
+            return countOrderJobs;
+        }
+
+        public int getCountLocks() {
+            return countLocks;
+        }
+
+        public int getCountProcessClasses() {
+            return countProcessClasses;
+        }
+
+        public int getCountSchedules() {
+            return countSchedules;
+        }
+
+        public int getCountMonitors() {
+            return countMonitors;
         }
 
         public int getCountFiles() {
             return countFiles;
         }
 
-        public int getCountFolders() {
-            return countFolders;
-        }
     }
 }

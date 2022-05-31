@@ -21,6 +21,7 @@ import com.sos.commons.xml.SOSXML;
 import com.sos.controller.model.workflow.Workflow;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.NamedJob;
@@ -47,6 +48,7 @@ import com.sos.js7.converter.commons.JS7ConverterResult;
 import com.sos.js7.converter.commons.output.OutputWriter;
 import com.sos.js7.converter.commons.report.ConverterReport;
 import com.sos.js7.converter.commons.report.ConverterReportWriter;
+import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 import com.sos.js7.converter.js1.common.Folder;
 import com.sos.js7.converter.js1.common.Include;
@@ -61,6 +63,7 @@ import com.sos.js7.converter.js1.common.jobchain.node.AJobChainNode;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNode;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeFileOrderSink;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeFileOrderSource;
+import com.sos.js7.converter.js1.common.json.calendar.JS1Calendar;
 import com.sos.js7.converter.js1.common.processclass.ProcessClass;
 import com.sos.js7.converter.js1.input.DirectoryParser;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
@@ -69,6 +72,10 @@ import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
  * TODO<br/>
  * Locks<br/>
  * Schedule - convert from files and not from a jobscheduler answer ...<br/>
+ * JobChainNodes:<br/>
+ * job_chain_node.job_chain, file_order_sink, job_chain_node.end<br/>
+ * multiple file_order_source with different next_state ???<br/>
+ * Java: Split/Join<br/>
  */
 public class JS12JS7Converter {
 
@@ -85,6 +92,8 @@ public class JS12JS7Converter {
     private Map<String, Integer> jobResourcesDuplicates = new HashMap<>();
     private Map<Path, OrderJob> orderJobs = new HashMap<>();
 
+    private Map<String, List<ACommonJob>> jobsByLanguage = new HashMap<>();
+
     public static void convert(Path input, Path outputDir, Path reportDir) throws IOException {
 
         String method = "convert";
@@ -100,16 +109,17 @@ public class JS12JS7Converter {
         LOGGER.info(String.format("[%s][JIL][parse][start]...", method));
         DirectoryParserResult pr = DirectoryParser.parse(CONFIG.getParserConfig(), input);
         LOGGER.info(String.format("[%s][JIL][parse][end]%s", method, SOSDate.getDuration(appStart, Instant.now())));
-        // 1.1 - Parser Reports
-        ConverterReportWriter.writeParserReport(reportDir.resolve("parser_summary.csv"), reportDir.resolve("parser_errors.csv"), reportDir.resolve(
-                "parser_warnings.csv"), reportDir.resolve("parser_analyzer.csv"));
 
         // 2 - Convert to JS7
         Instant start = Instant.now();
         LOGGER.info(String.format("[%s][JS7][convert][start]...", method));
         JS7ConverterResult result = convert(pr);
         LOGGER.info(String.format("[%s][JS7][convert][end]%s", method, SOSDate.getDuration(start, Instant.now())));
-        // 2.1 - Converter Reports
+
+        // 2.1 - Parser Reports
+        ConverterReportWriter.writeParserReport(reportDir.resolve("parser_summary.csv"), reportDir.resolve("parser_errors.csv"), reportDir.resolve(
+                "parser_warnings.csv"), reportDir.resolve("parser_analyzer.csv"));
+        // 2.2 - Converter Reports
         ConverterReportWriter.writeConverterReport(reportDir.resolve("converter_errors.csv"), reportDir.resolve("converter_warnings.csv"), reportDir
                 .resolve("converter_analyzer.csv"));
 
@@ -120,7 +130,6 @@ public class JS12JS7Converter {
             LOGGER.info(String.format("[%s][JS7][write][workflows]...", method));
             OutputWriter.write(outputDir, result.getWorkflows());
             ConverterReport.INSTANCE.addSummaryRecord("Workflows", result.getWorkflows().getItems().size());
-
         }
         if (CONFIG.getGenerateConfig().getCalendars()) {
             LOGGER.info(String.format("[%s][JS7][write][calendars]...", method));
@@ -136,6 +145,10 @@ public class JS12JS7Converter {
         LOGGER.info(String.format("[%s][JS7][write][jobResources]...", method));
         OutputWriter.write(outputDir, result.getJobResources());
         ConverterReport.INSTANCE.addSummaryRecord("JobResources", result.getJobResources().getItems().size());
+
+        LOGGER.info(String.format("[%s][JS7][write][fileOrderSources]...", method));
+        OutputWriter.write(outputDir, result.getFileOrderSources());
+        ConverterReport.INSTANCE.addSummaryRecord("FileOrderSources", result.getFileOrderSources().getItems().size());
 
         LOGGER.info(String.format("[%s][JS7][write][boards]...", method));
         OutputWriter.write(outputDir, result.getBoards());
@@ -161,7 +174,22 @@ public class JS12JS7Converter {
         c.convertJobChains(result);
         c.addJobResources(result);
 
+        c.analyzerReport();
+
         return result;
+    }
+
+    private void analyzerReport() {
+        jobsByLanguage.entrySet().forEach(e -> {
+            ParserReport.INSTANCE.addAnalyzerRecord(e.getKey().toUpperCase(), "");
+            for (ACommonJob job : e.getValue()) {
+                String className = null;
+                if (job.getScript() != null && job.getScript().getJavaClass() != null) {
+                    className = job.getScript().getJavaClass();
+                }
+                ParserReport.INSTANCE.addAnalyzerRecord(job.getPath(), job.getType().toString(), className);
+            }
+        });
     }
 
     private void addJobResources(JS7ConverterResult result) {
@@ -220,15 +248,16 @@ public class JS12JS7Converter {
         in = getRetryInstructions(job, in);
         in = getCyclicWorkflowInstructions(job, in);
         w.setInstructions(in);
-        Path wp = getWorkflowPath(result, job, counter);
-        result.add(wp, w);
+        Path workflowPath = getWorkflowPath(result, job, counter);
+        result.add(workflowPath, w);
 
-        convertSchedule(result, job, wp);
+        convertSchedule(result, job, workflowPath);
     }
 
     private void convertSchedule(JS7ConverterResult result, StandaloneJob job, Path workflowPath) {
         if (job.getRunTime() != null && !job.getRunTime().isEmpty()) {
             LOGGER.info("RunTime=" + job.getPath());
+            ConverterReport.INSTANCE.addWarningRecord(workflowPath, "[STANDALONE][run time]" + job.getRunTime().getNodeText(), "not implemented yet");
         }
     }
 
@@ -303,14 +332,14 @@ public class JS12JS7Converter {
     }
 
     private Job setFromConfig(Job j) {
-        if (CONFIG.getJobConfig().getGraceTimeout() != null) {
-            j.setGraceTimeout(CONFIG.getJobConfig().getGraceTimeout());
+        if (CONFIG.getJobConfig().getForcedGraceTimeout() != null) {
+            j.setGraceTimeout(CONFIG.getJobConfig().getForcedGraceTimeout());
         }
-        if (CONFIG.getJobConfig().getParallelism() != null) {
-            j.setParallelism(CONFIG.getJobConfig().getParallelism());
+        if (CONFIG.getJobConfig().getForcedParallelism() != null) {
+            j.setParallelism(CONFIG.getJobConfig().getForcedParallelism());
         }
-        if (CONFIG.getJobConfig().getFailOnErrWritten() != null) {
-            j.setFailOnErrWritten(CONFIG.getJobConfig().getFailOnErrWritten());
+        if (CONFIG.getJobConfig().getForcedFailOnErrWritten() != null) {
+            j.setFailOnErrWritten(CONFIG.getJobConfig().getForcedFailOnErrWritten());
         }
         return j;
     }
@@ -352,6 +381,14 @@ public class JS12JS7Converter {
         String javaClassName = null;
 
         String language = job.getScript().getLanguage() == null ? "shell" : job.getScript().getLanguage();
+
+        List<ACommonJob> jbt = jobsByLanguage.get(language);
+        if (jbt == null) {
+            jbt = new ArrayList<>();
+        }
+        jbt.add(job);
+        jobsByLanguage.put(language, jbt);
+
         String className = null;
         switch (language) {
         case "java":
@@ -407,7 +444,14 @@ public class JS12JS7Converter {
             // YADE
             case "sos.scheduler.jade.JadeJob":
             case "sos.scheduler.jade.SOSJade4DMZJSAdapter":
+                className = jc;
                 isYADE = true;
+                break;
+            // SPLIT/JOIN
+            case "com.sos.jitl.splitter.JobChainSplitterJSAdapterClass":
+            case "com.sos.jitl.join.JobSchedulerJoinOrdersJSAdapterClass":
+                className = jc;
+                ConverterReport.INSTANCE.addWarningRecord(job.getPath(), "[job " + className + "]", "not implemented yet");
                 break;
             default:
                 className = jc;
@@ -643,6 +687,7 @@ public class JS12JS7Converter {
 
         Map<String, OrderJob> uniqueJobs = new LinkedHashMap<>();
         Map<String, JobChainStateHelper> states = new LinkedHashMap<>();
+        List<JobChainNodeFileOrderSource> fileOrderSources = new ArrayList<>();
         int duplicateJobCounter = 0;
         for (AJobChainNode n : jobChain.getNodes()) {
             switch (n.getType()) {
@@ -683,21 +728,18 @@ public class JS12JS7Converter {
             case ORDER_SINK:
                 JobChainNodeFileOrderSink os = (JobChainNodeFileOrderSink) n;
 
-                ConverterReport.INSTANCE.addAnalyzerRecord(jobChain.getPath(), "[jobChain " + jobChain.getName() + "/node=" + SOSString.toString(n)
+                ConverterReport.INSTANCE.addWarningRecord(jobChain.getPath(), "[jobChain " + jobChain.getName() + "/node=" + SOSString.toString(n)
                         + "]", "not implemented yet");
                 break;
             case ORDER_SOURCE:
-                JobChainNodeFileOrderSource oso = (JobChainNodeFileOrderSource) n;
-
-                ConverterReport.INSTANCE.addAnalyzerRecord(jobChain.getPath(), "[jobChain " + jobChain.getName() + "/node=" + SOSString.toString(n)
-                        + "]", "not implemented yet");
+                fileOrderSources.add((JobChainNodeFileOrderSource) n);
                 break;
             case JOB_CHAIN:
-                ConverterReport.INSTANCE.addAnalyzerRecord(jobChain.getPath(), "[jobChain " + jobChain.getName() + "/node=" + SOSString.toString(n)
+                ConverterReport.INSTANCE.addWarningRecord(jobChain.getPath(), "[jobChain " + jobChain.getName() + "/node=" + SOSString.toString(n)
                         + "]", "not implemented yet");
                 break;
             case END:
-                ConverterReport.INSTANCE.addAnalyzerRecord(jobChain.getPath(), "[jobChain " + jobChain.getName() + "/node=" + SOSString.toString(n)
+                ConverterReport.INSTANCE.addWarningRecord(jobChain.getPath(), "[jobChain " + jobChain.getName() + "/node=" + SOSString.toString(n)
                         + "]", "not implemented yet");
                 break;
             }
@@ -719,14 +761,53 @@ public class JS12JS7Converter {
         }
 
         w.setInstructions(in);
-        Path wp = getWorkflowPath(result, jobChain, counter);
-        result.add(wp, w);
+        Path workflowPath = getWorkflowPath(result, jobChain, counter);
+        result.add(workflowPath, w);
 
-        convertJobChainOrders(result, jobChain, wp);
+        String workflowName = workflowPath.getFileName().toString().replace(".workflow.json", "");
+        convertJobChainOrders(result, jobChain, workflowPath, workflowName);
+        convertJobChainFileOrderSources(result, jobChain, fileOrderSources, workflowPath, workflowName);
 
     }
 
-    private void convertJobChainOrders(JS7ConverterResult result, JobChain jobChain, Path jobChainPath) {
+    private void convertJobChainFileOrderSources(JS7ConverterResult result, JobChain jobChain, List<JobChainNodeFileOrderSource> fileOrderSources,
+            Path workflowPath, String workflowName) {
+        if (fileOrderSources.size() > 0) {
+            boolean useNextState = fileOrderSources.size() > 1;
+            for (JobChainNodeFileOrderSource n : fileOrderSources) {
+                String name = workflowName;
+                if (useNextState) {
+                    name = name + "_" + n.getNextState();
+                }
+                FileOrderSource fos = new FileOrderSource();
+                fos.setWorkflowName(workflowName);
+                fos.setAgentName(CONFIG.getAgentConfig().getForcedName() == null ? CONFIG.getAgentConfig().getDefaultName() : CONFIG.getAgentConfig()
+                        .getForcedName());
+                fos.setTimeZone(CONFIG.getWorkflowConfig().getDefaultTimeZone());
+                fos.setDirectory(n.getDirectory());
+                fos.setDirectoryExpr(n.getRegex());
+                Long delay = null;
+                if (n.getRepeat() != null && !n.getRepeat().toLowerCase().equals("no")) {
+                    try {
+                        delay = Long.parseLong(n.getRepeat());
+                    } catch (Throwable e) {
+                        LOGGER.error(String.format("[%s][fileOrderSource nextState=%s][repeat=%s]%s", workflowPath, n.getNextState(), n.getRepeat(), e
+                                .toString()), e);
+                        ConverterReport.INSTANCE.addErrorRecord(workflowPath, "[fileOrderSource nextState=" + n.getNextState() + "]repeat=" + n
+                                .getRepeat(), e);
+                    }
+                }
+                fos.setDelay(delay);
+                Path fosPath = workflowPath.getParent();
+                if (fosPath == null) {
+                    fosPath = Paths.get("");
+                }
+                result.add(fosPath.resolve(workflowName + ".fileordersource.json"), fos);
+            }
+        }
+    }
+
+    private void convertJobChainOrders(JS7ConverterResult result, JobChain jobChain, Path workflowPath, String workflowName) {
         if (jobChain.getOrders().size() > 0 && CONFIG.getGenerateConfig().getSchedules()) {
             List<JobChainOrder> orders = jobChain.getOrders().stream().filter(o -> o.getRunTime() != null && !o.getRunTime().isEmpty()).collect(
                     Collectors.toList());
@@ -753,14 +834,21 @@ public class JS12JS7Converter {
                         set.setVariables(vs);
                         l.add(set);
                     }
+                    if (o.getRunTime().getCalendars() != null && o.getRunTime().getCalendars().getCalendars() != null) {
+                        for (JS1Calendar c : o.getRunTime().getCalendars().getCalendars()) {
+                            // LOGGER.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+                        }
+                    }
                 }
                 if (l.size() > 0) {
                     s.setVariableSets(l);
                 }
-                String workflowName = jobChainPath.getFileName().toString().replace(".workflow.json", "");
                 s.setWorkflowNames(Collections.singletonList(workflowName));
-
-                result.add(jobChainPath.getParent().resolve(workflowName + ".schedule.json"), s);
+                Path schedulePath = workflowPath.getParent();
+                if (schedulePath == null) {
+                    schedulePath = Paths.get("");
+                }
+                result.add(schedulePath.resolve(workflowName + ".schedule.json"), s);
             }
         }
     }

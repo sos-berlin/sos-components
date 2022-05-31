@@ -3,6 +3,7 @@ package com.sos.commons.xml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -11,6 +12,11 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
@@ -123,7 +129,7 @@ public class SOSXML {
     public static DocumentBuilder getDocumentBuilder() throws ParserConfigurationException {
         return getDocumentBuilder(false);
     }
-    
+
     public static DocumentBuilder getDocumentBuilder(boolean namespaceAware) throws ParserConfigurationException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
@@ -140,10 +146,23 @@ public class SOSXML {
         return builder;
     }
 
+    public static String nodeToString(Node node) throws Exception {
+        return nodeToString(node, true, true);
+    }
+
+    public static String nodeToString(Node node, boolean omitXmlDeclaration, boolean indent) throws Exception {
+        StringWriter sw = new StringWriter();
+        Transformer t = TransformerFactory.newInstance().newTransformer();
+        t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, omitXmlDeclaration ? "yes" : "no");
+        t.setOutputProperty(OutputKeys.INDENT, indent ? "yes" : "no");
+        t.transform(new DOMSource(node), new StreamResult(sw));
+        return sw.toString();
+    }
+
     public class SOSXMLXPath {
 
         private XPath xpath = XPathFactory.newInstance().newXPath();
-        
+
         public Node selectNode(Element element, String expression) throws SOSXMLXPathException {
             return selectNode((Node) element, expression);
         }

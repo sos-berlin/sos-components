@@ -7,9 +7,12 @@ import java.util.Map;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
 import com.sos.commons.xml.exception.SOSXMLXPathException;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.report.ParserReport;
+import com.sos.js7.converter.js1.common.json.calendar.JS1Calendars;
 
 public class RunTime {
 
@@ -33,6 +36,9 @@ public class RunTime {
     private static final String ELEMENT_MONTH = "month";
     private static final String ELEMENT_ULTIMOS = "ultimos";
     private static final String ELEMENT_HOLIDAYS = "holidays";
+    private static final String ELEMENT_CALENDARS = "calendars";
+
+    private String nodeText;
 
     private List<Period> periods;
     private List<At> ats;
@@ -54,8 +60,11 @@ public class RunTime {
 
     private String letRun; // yes_no
     private String once; // yes_no
+    private JS1Calendars calendars;
 
     public RunTime(SOSXMLXPath xpath, Node node) throws Exception {
+        this.nodeText = JS7ConverterHelper.nodeToString(node);
+
         Map<String, String> m = JS7ConverterHelper.attribute2map(node);
         this.singleStart = JS7ConverterHelper.stringValue(m.get(ATTR_SINGLE_START));
         this.begin = JS7ConverterHelper.stringValue(m.get(ATTR_BEGIN));
@@ -74,11 +83,12 @@ public class RunTime {
         this.monthDays = convertMonthDays(xpath, node);
         this.months = convertMonth(xpath, node);
         this.holidays = convertHolidays(xpath, node);
+        this.calendars = convertCalendars(xpath, node);
     }
 
     public boolean isEmpty() {
         return singleStart == null && begin == null && end == null && repeat == null && schedule == null && periods == null && ats == null
-                && dates == null && weekDays == null && monthDays == null && months == null && holidays == null;
+                && dates == null && weekDays == null && monthDays == null && months == null && holidays == null && calendars == null;
     }
 
     private List<Period> convertPeriod(SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
@@ -91,6 +101,18 @@ public class RunTime {
             }
         }
         return result;
+    }
+
+    private JS1Calendars convertCalendars(SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
+        String c = SOSXML.getValue(xpath.selectNode(node, "./" + ELEMENT_CALENDARS));
+        if (c != null) {
+            try {
+                return JS7ConverterHelper.JSON_OM.readValue(c, JS1Calendars.class);
+            } catch (Throwable e) {
+                ParserReport.INSTANCE.addErrorRecord(null, "[runtime][covertCalendar]" + nodeText, e);
+            }
+        }
+        return null;
     }
 
     private List<At> convertAt(SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
@@ -196,6 +218,14 @@ public class RunTime {
             result = new Holidays(xpath, h);
         }
         return result;
+    }
+
+    public String getNodeText() {
+        return nodeText;
+    }
+
+    public JS1Calendars getCalendars() {
+        return calendars;
     }
 
     public List<Period> getPeriods() {

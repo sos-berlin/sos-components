@@ -17,12 +17,18 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 
 public class JS7ConverterHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JS7ConverterHelper.class);
+
+    public static ObjectMapper JSON_OM = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
+            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
     public static String stringValue(String val) {
         return val == null ? null : StringUtils.strip(val.trim(), "\"");
@@ -187,6 +193,14 @@ public class JS7ConverterHelper {
             return null;
         }
         return node.getTextContent();
+    }
+
+    public static String nodeToString(Node node) {
+        try {
+            return SOSXML.nodeToString(node, true, false);
+        } catch (Exception e) {
+            return node + "";
+        }
     }
 
 }
