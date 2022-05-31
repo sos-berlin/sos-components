@@ -1911,7 +1911,7 @@ public class HistoryModel {
     }
 
     private String getDateAsString(Date date) throws Exception {
-        return getDateAsString(date, null);
+        return SOSDate.format(date, "yyyy-MM-dd HH:mm:ss.SSSZZZZ");
     }
 
     private Path storeLog2File(LogEntry entry) throws Exception {
