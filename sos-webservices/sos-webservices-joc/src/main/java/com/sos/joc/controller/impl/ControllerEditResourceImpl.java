@@ -271,7 +271,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 }
                 
                 if (clusterWatcherIsNew) {
-                    int position = agentDBLayer.getMaxOrdering();
+                    int position = agentDBLayer.getAgentMaxOrdering();
                     controllerUpdateRequired = true;
                     updateAgentRequired = true;
                     DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();

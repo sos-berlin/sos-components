@@ -23,6 +23,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
+import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.items.SubAgentItem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -735,6 +736,9 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 }
                 hql.append(")");
             }
+            if (withAgentOrdering) {
+                hql.append(" order by ordering");
+            }
             Query<DBItemInventorySubAgentInstance> query = getSession().createQuery(hql.toString());
             if (controllerIds != null && !controllerIds.isEmpty()) {
                 if (controllerIds.size() == 1) {
@@ -808,6 +812,9 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                     hql.append(" where controllerId in (:controllerIds)");
                 }
                 hql.append(")");
+            }
+            if (withAgentOrdering) {
+                hql.append(" order by ordering");
             }
             Query<DBItemInventorySubAgentInstance> query = getSession().createQuery(hql.toString());
             if (controllerIds != null && !controllerIds.isEmpty()) {
@@ -1068,8 +1075,88 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
     
-    public Integer getMaxOrdering() throws SOSHibernateException {
+    public Integer getAgentMaxOrdering() throws SOSHibernateException {
         Query<Integer> query = getSession().createQuery("select max(ordering) from " + DBLayer.DBITEM_INV_AGENT_INSTANCES);
+        Integer result = getSession().getSingleResult(query);
+        if (result == null) {
+            return -1;
+        }
+        return result;
+    }
+    
+    public DBItemInventorySubAgentInstance getSubAgent(String subagentId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder();
+        hql.append("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
+        hql.append(" where subAgentId = :subagentId");
+        Query<DBItemInventorySubAgentInstance> query = getSession().createQuery(hql.toString());
+        query.setParameter("subagentId", subagentId);
+        return getSession().getSingleResult(query);
+    }
+    
+    public void cleanupSubAgentsOrdering(boolean force) throws SOSHibernateException {
+        setWithAgentOrdering(true);
+        List<DBItemInventorySubAgentInstance> dbSubagents = getSubAgentInstancesByControllerIds(null);
+        if (!force) {
+            // looking for duplicate orderings
+            force = dbSubagents.stream().collect(Collectors.groupingBy(DBItemInventorySubAgentInstance::getOrdering, Collectors.counting())).entrySet()
+                    .stream().anyMatch(e -> e.getValue() > 1L);
+        }
+        if (force) {
+            int position = 0;
+            for (DBItemInventorySubAgentInstance dbSubagent : dbSubagents) {
+                if (dbSubagent.getOrdering() != position) {
+                    dbSubagent.setOrdering(position);
+                    getSession().update(dbSubagent);
+                }
+                position++;
+            }
+        }
+    }
+    
+    public void setSubAgentsOrdering(String subagentId, String predecessorSubagentId) throws SOSHibernateException,
+            DBMissingDataException, DBInvalidDataException {
+        // TODO better with collect by prior
+        DBItemInventorySubAgentInstance subagent = getSubAgent(subagentId);
+        if (subagent == null) {
+            throw new DBMissingDataException("Subagent with ID '" + subagentId + "' doesn't exist.");
+        }
+        int newPosition = -1;
+        DBItemInventorySubAgentInstance predecessorSubagentCluster = null;
+        if (predecessorSubagentId != null && !predecessorSubagentId.isEmpty()) {
+            if (subagentId.equals(predecessorSubagentId)) {
+                throw new DBInvalidDataException("Subagent ID '" + subagentId + "' and predecessor Subagent ID '"
+                        + predecessorSubagentId + "' are the same.");
+            }
+            predecessorSubagentCluster = getSubAgent(predecessorSubagentId);
+            if (predecessorSubagentCluster == null) {
+                throw new DBMissingDataException("Predecessor Subagent with ID '" + predecessorSubagentId + "' doesn't exist.");
+            }
+            newPosition = predecessorSubagentCluster.getOrdering();
+        }
+
+        // TODO check: subagentId and predecessorSubagentId should have same agentId ??
+
+        int oldPosition = subagent.getOrdering();
+        newPosition++;
+        subagent.setOrdering(newPosition);
+        if (newPosition != oldPosition) {
+            StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
+            if (newPosition < oldPosition) {
+                hql.append(" set ordering = ordering + 1").append(" where ordering >= :newPosition and ordering < :oldPosition");
+            } else {
+                hql.append(" set ordering = ordering - 1").append(" where ordering > :oldPosition and ordering <= :newPosition");
+            }
+            Query<?> query = getSession().createQuery(hql.toString());
+            query.setParameter("newPosition", newPosition);
+            query.setParameter("oldPosition", oldPosition);
+
+            getSession().executeUpdate(query);
+            getSession().update(subagent);
+        }
+    }
+    
+    public Integer getSubagentMaxOrdering() throws SOSHibernateException {
+        Query<Integer> query = getSession().createQuery("select max(ordering) from " + DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
         Integer result = getSession().getSingleResult(query);
         if (result == null) {
             return -1;
