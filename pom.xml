@@ -35,7 +35,7 @@
     <sos.engine.version>2.3.2-beta.20220510</sos.engine.version>
     <api.schema.version>${project.version}</api.schema.version>
     <inventory.schema.version>1.4.0-SNAPSHOT</inventory.schema.version>
-    <sos.license.version>1.1.0</sos.license.version>
+    <sos.license.version>1.2.0-SNAPSHOT</sos.license.version>
 
     <!-- 3rd Party version properties and the dependencyManagement have to 
       be reworked for 2.0.0 below configuration is only as an example -->
