@@ -125,7 +125,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             }
             
             Comparator<ResponseDeployableTreeItem> comp = Comparator.comparing(ResponseDeployableTreeItem::getFolder).thenComparing(
-                    ResponseDeployableTreeItem::getObjectName);
+                    ResponseDeployableTreeItem::getObjectName).thenComparing(ResponseDeployableTreeItem::getObjectType);
             SortedSet<ResponseDeployableTreeItem> deployables = new TreeSet<>(comp);
             
             DBItemInventoryConfiguration folder = dbLayer.getConfiguration(in.getFolder(), ConfigurationType.FOLDER.intValue());

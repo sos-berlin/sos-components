@@ -31,7 +31,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.resource.IReleasablesResource;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -117,7 +116,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                 releasableTypes.add(ConfigurationType.FOLDER.intValue());
             }
             Comparator<ResponseReleasableTreeItem> comp = Comparator.comparing(ResponseReleasableTreeItem::getFolder).thenComparing(
-                    ResponseReleasableTreeItem::getObjectName);
+                    ResponseReleasableTreeItem::getObjectName).thenComparing(ResponseReleasableTreeItem::getObjectType);
             Set<ResponseReleasableTreeItem> releasables = new TreeSet<>(comp);
             
             DBItemInventoryConfiguration folder = dbLayer.getConfiguration(in.getFolder(), ConfigurationType.FOLDER.intValue());
