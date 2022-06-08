@@ -36,6 +36,7 @@ import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
+import com.sos.joc.db.inventory.DBItemInventoryFavorite;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -207,6 +208,10 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_INV_DOCUMENTATION_IMAGES = DBItemDocumentationImage.class.getSimpleName();
     public static final String TABLE_INV_DOCUMENTATION_IMAGES = "INV_DOCUMENTATION_IMAGES";
     public static final String TABLE_INV_DOCUMENTATION_IMAGES_SEQUENCE = "SEQ_INV_DI";
+
+    public static final String DBITEM_INV_FAVORITES = DBItemInventoryFavorite.class.getSimpleName();
+    public static final String TABLE_INV_FAVORITES = "INV_FAVORITES";
+    public static final String TABLE_INV_FAVORITES_SEQUENCE = "SEQ_INV_F";
 
     public static final String DBITEM_INV_SCHEDULE2WORKFLOWS = DBItemInventorySchedule2Workflow.class.getSimpleName();
     public static final String VIEW_INV_SCHEDULE2WORKFLOWS = "INV_SCHEDULE2WORKFLOWS";
@@ -417,6 +422,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryCertificate.class);
         cl.add(DBItemInventorySchedule2Workflow.class);
         cl.add(DBItemInventoryReleasedSchedule2Workflow.class);
+        cl.add(DBItemInventoryFavorite.class);
         cl.add(DBItemSearchWorkflow.class);
         cl.add(DBItemSearchWorkflow2DeploymentHistory.class);
         cl.add(DBItemDocumentation.class);
