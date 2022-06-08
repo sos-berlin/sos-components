@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "types",
+    "limit",
     "withShared",
     "onlyShared"
 })
@@ -29,6 +30,8 @@ public class ReadFavoritesFilter
 
     @JsonProperty("types")
     private List<FavoriteType> types = new ArrayList<FavoriteType>();
+    @JsonProperty("limit")
+    private Integer limit = -1;
     @JsonProperty("withShared")
     private Boolean withShared = false;
     @JsonProperty("onlyShared")
@@ -42,6 +45,16 @@ public class ReadFavoritesFilter
     @JsonProperty("types")
     public void setTypes(List<FavoriteType> types) {
         this.types = types;
+    }
+
+    @JsonProperty("limit")
+    public Integer getLimit() {
+        return limit;
+    }
+
+    @JsonProperty("limit")
+    public void setLimit(Integer limit) {
+        this.limit = limit;
     }
 
     @JsonProperty("withShared")
@@ -66,12 +79,12 @@ public class ReadFavoritesFilter
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("types", types).append("withShared", withShared).append("onlyShared", onlyShared).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("types", types).append("limit", limit).append("withShared", withShared).append("onlyShared", onlyShared).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(types).append(onlyShared).append(withShared).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(limit).append(types).append(onlyShared).append(withShared).toHashCode();
     }
 
     @Override
@@ -83,7 +96,7 @@ public class ReadFavoritesFilter
             return false;
         }
         ReadFavoritesFilter rhs = ((ReadFavoritesFilter) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(types, rhs.types).append(onlyShared, rhs.onlyShared).append(withShared, rhs.withShared).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(limit, rhs.limit).append(types, rhs.types).append(onlyShared, rhs.onlyShared).append(withShared, rhs.withShared).isEquals();
     }
 
 }

@@ -23,7 +23,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
-import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.items.SubAgentItem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;

@@ -12,33 +12,33 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * favorite identifiers
+ * shared favorite identifiers
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "favoriteIds"
+    "sharedFavoriteIds"
 })
-public class FavoriteIdentifiers {
+public class FavoriteSharedIdentifiers {
 
     /**
      * 
      * (Required)
      * 
      */
-    @JsonProperty("favoriteIds")
-    private List<FavoriteIdentifier> favoriteIds = new ArrayList<FavoriteIdentifier>();
+    @JsonProperty("sharedFavoriteIds")
+    private List<FavoriteSharedIdentifier> sharedFavoriteIds = new ArrayList<FavoriteSharedIdentifier>();
 
     /**
      * 
      * (Required)
      * 
      */
-    @JsonProperty("favoriteIds")
-    public List<FavoriteIdentifier> getFavoriteIds() {
-        return favoriteIds;
+    @JsonProperty("sharedFavoriteIds")
+    public List<FavoriteSharedIdentifier> getSharedFavoriteIds() {
+        return sharedFavoriteIds;
     }
 
     /**
@@ -46,19 +46,19 @@ public class FavoriteIdentifiers {
      * (Required)
      * 
      */
-    @JsonProperty("favoriteIds")
-    public void setFavoriteIds(List<FavoriteIdentifier> favoriteIds) {
-        this.favoriteIds = favoriteIds;
+    @JsonProperty("sharedFavoriteIds")
+    public void setSharedFavoriteIds(List<FavoriteSharedIdentifier> sharedFavoriteIds) {
+        this.sharedFavoriteIds = sharedFavoriteIds;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("favoriteIds", favoriteIds).toString();
+        return new ToStringBuilder(this).append("sharedFavoriteIds", sharedFavoriteIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(favoriteIds).toHashCode();
+        return new HashCodeBuilder().append(sharedFavoriteIds).toHashCode();
     }
 
     @Override
@@ -66,11 +66,11 @@ public class FavoriteIdentifiers {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FavoriteIdentifiers) == false) {
+        if ((other instanceof FavoriteSharedIdentifiers) == false) {
             return false;
         }
-        FavoriteIdentifiers rhs = ((FavoriteIdentifiers) other);
-        return new EqualsBuilder().append(favoriteIds, rhs.favoriteIds).isEquals();
+        FavoriteSharedIdentifiers rhs = ((FavoriteSharedIdentifiers) other);
+        return new EqualsBuilder().append(sharedFavoriteIds, rhs.sharedFavoriteIds).isEquals();
     }
 
 }

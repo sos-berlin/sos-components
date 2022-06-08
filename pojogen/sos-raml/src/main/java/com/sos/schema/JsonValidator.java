@@ -134,6 +134,12 @@ public class JsonValidator {
             put("Xml2JsonConfiguration", "xmleditor/xml2json/xml2json-configuration-schema.json");
 
             put("TreeFilter", "tree/treeFilter-schema.json");
+            
+            put("com.sos.joc.model.favorite.FavoriteIdentifiers", "favorite/identifiers-schema.json");
+            put("com.sos.joc.model.favorite.FavoriteSharedIdentifiers", "favorite/sharedIdentifiers-schema.json");
+            put("com.sos.joc.model.agent.OrderingFavorites", "favorite/orderingFavorite-schema.json");
+            put("com.sos.joc.model.favorite.StoreFavorites", "favorite/storeFavorites-schema.json");
+            put("com.sos.joc.model.favorite.ReadFavoritesFilter", "favorite/readFavoritesFilter-schema.json");
 
             put("ReleaseFilter", "inventory/release/release-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFolder", "inventory/common/request-folder-schema.json");

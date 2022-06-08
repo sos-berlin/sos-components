@@ -20,38 +20,86 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "ordering",
+    "account",
     "configurationDate"
 })
 public class Favorite
     extends StoreFavorite
 {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("ordering")
     private Integer ordering;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("account")
+    private String account;
     /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("configurationDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date configurationDate;
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("ordering")
     public Integer getOrdering() {
         return ordering;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("ordering")
     public void setOrdering(Integer ordering) {
         this.ordering = ordering;
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("account")
+    public String getAccount() {
+        return account;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("account")
+    public void setAccount(String account) {
+        this.account = account;
+    }
+
+    /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("configurationDate")
@@ -63,6 +111,7 @@ public class Favorite
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("configurationDate")
@@ -72,12 +121,12 @@ public class Favorite
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("ordering", ordering).append("configurationDate", configurationDate).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("ordering", ordering).append("account", account).append("configurationDate", configurationDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(configurationDate).append(ordering).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(configurationDate).append(ordering).append(account).toHashCode();
     }
 
     @Override
@@ -89,7 +138,7 @@ public class Favorite
             return false;
         }
         Favorite rhs = ((Favorite) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(configurationDate, rhs.configurationDate).append(ordering, rhs.ordering).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(configurationDate, rhs.configurationDate).append(ordering, rhs.ordering).append(account, rhs.account).isEquals();
     }
 
 }
