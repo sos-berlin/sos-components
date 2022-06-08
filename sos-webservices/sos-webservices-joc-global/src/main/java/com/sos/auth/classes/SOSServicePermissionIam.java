@@ -1,6 +1,5 @@
 package com.sos.auth.classes;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Base64;
@@ -22,12 +21,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.config.IniSecurityManagerFactory;
-import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.session.ExpiredSessionException;
-import org.apache.shiro.session.mgt.DefaultSessionKey;
-import org.apache.shiro.session.mgt.SessionKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -36,12 +29,9 @@ import com.sos.auth.client.ClientCertificateHandler;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.ldap.classes.SOSLdapLogin;
-import com.sos.auth.shiro.classes.SOSShiroIniShare;
-import com.sos.auth.shiro.classes.SOSShiroLogin;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.auth.vault.classes.SOSVaultLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JocCockpitProperties;
@@ -54,9 +44,7 @@ import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamHistoryDbLayer;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
-import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocAuthenticationException;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
@@ -78,7 +66,6 @@ public class SOSServicePermissionIam {
     private static final String ACCESS_TOKEN_EXPECTED = "Access token header expected";
     private static final String AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED = "Authorization header with basic based64part expected";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSServicePermissionIam.class);
-    private static final String SHIRO_SESSION = "SHIRO_SESSION";
     private static final String ThreadCtx = "authentication";
 
     @Context
@@ -94,7 +81,6 @@ public class SOSServicePermissionIam {
         SOSWebserviceAuthenticationRecord sosWebserviceAuthenticationRecord = new SOSWebserviceAuthenticationRecord();
         try {
             accessToken = getAccessToken(accessToken, EMPTY_STRING);
-
             sosWebserviceAuthenticationRecord.setAccessToken(accessToken);
 
             SOSAuthCurrentAccount currentAccount = getCurrentAccount(sosWebserviceAuthenticationRecord.getAccessToken());
@@ -106,10 +92,7 @@ public class SOSServicePermissionIam {
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(currentAccount
                     .getSosPermissionJocCockpitControllers()));
-        } catch (org.apache.shiro.session.ExpiredSessionException e) {
-            SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = createSOSAuthCurrentAccountAnswer(accessToken, sosWebserviceAuthenticationRecord
-                    .getAccount(), e.getMessage());
-            return JOCDefaultResponse.responseStatus440(sosAuthCurrentAccountAnswer);
+
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
         } finally {
@@ -224,45 +207,6 @@ public class SOSServicePermissionIam {
         }
     }
 
-    private void removeTimeOutShiroDBSessions() throws FileNotFoundException, SOSHibernateException, JocConfigurationException,
-            DBOpenSessionException {
-        if (Globals.shiroIsActive) {
-            SOSHibernateSession sosHibernateSession = null;
-            try {
-                sosHibernateSession = Globals.createSosHibernateStatelessConnection("JOC: Logout");
-                Globals.beginTransaction(sosHibernateSession);
-                JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-                JocConfigurationFilter filter = new JocConfigurationFilter();
-
-                filter.setAccount(".");
-                filter.setConfigurationType(SHIRO_SESSION);
-                List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter, 0);
-
-                IniSecurityManagerFactory factory = Globals.getShiroIniSecurityManagerFactory();
-                if (factory != null) {
-                    SecurityManager securityManager = factory.getInstance();
-                    SecurityUtils.setSecurityManager(securityManager);
-
-                    for (DBItemJocConfiguration jocConfigurationDbItem : listOfConfigurtions) {
-                        SessionKey s = new DefaultSessionKey(jocConfigurationDbItem.getName());
-                        try {
-                            SecurityUtils.getSecurityManager().getSession(s);
-                        } catch (ExpiredSessionException e) {
-                            LOGGER.trace("Session " + jocConfigurationDbItem.getName() + " removed");
-                        }
-                    }
-                }
-                Globals.commit(sosHibernateSession);
-            } catch (Exception e) {
-                Globals.rollback(sosHibernateSession);
-                throw e;
-            } finally {
-                Globals.disconnect(sosHibernateSession);
-            }
-        }
-
-    }
-
     protected JOCDefaultResponse logout(String accessToken) {
 
         if (accessToken == null || accessToken.isEmpty()) {
@@ -292,25 +236,19 @@ public class SOSServicePermissionIam {
             } catch (Exception e) {
             }
         }
-        SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(EMPTY_STRING);
+        SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(EMPTY_STRING);
         if (currentAccount != null) {
-            sosShiroCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
+            sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
         }
-        sosShiroCurrentUserAnswer.setIsAuthenticated(false);
-        sosShiroCurrentUserAnswer.setHasRole(false);
-        sosShiroCurrentUserAnswer.setIsPermitted(false);
-        sosShiroCurrentUserAnswer.setAccessToken(EMPTY_STRING);
+        sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
+        sosAuthCurrentAccountAnswer.setHasRole(false);
+        sosAuthCurrentAccountAnswer.setIsPermitted(false);
+        sosAuthCurrentAccountAnswer.setAccessToken(EMPTY_STRING);
         if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
             Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(accessToken);
         }
 
-        try {
-            this.removeTimeOutShiroDBSessions();
-        } catch (SOSHibernateException | JocConfigurationException | DBOpenSessionException | FileNotFoundException e) {
-            LOGGER.warn("Could not remove old session " + e.getMessage());
-        }
-
-        return JOCDefaultResponse.responseStatus200(sosShiroCurrentUserAnswer);
+        return JOCDefaultResponse.responseStatus200(sosAuthCurrentAccountAnswer);
 
     }
 
@@ -370,8 +308,8 @@ public class SOSServicePermissionIam {
         MDC.put("context", ThreadCtx);
         try {
             String accessToken = getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
-            SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = hasRole(accessToken, role);
-            return JOCDefaultResponse.responseStatus200(sosShiroCurrentUserAnswer);
+            SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = hasRole(accessToken, role);
+            return JOCDefaultResponse.responseStatus200(sosAuthCurrentAccountAnswer);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
         } finally {
@@ -386,12 +324,12 @@ public class SOSServicePermissionIam {
     private SOSAuthCurrentAccountAnswer hasRole(String accessToken, String role) {
         SOSAuthCurrentAccount currentAccount = getCurrentAccount(accessToken);
 
-        SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
-        sosShiroCurrentUserAnswer.setRole(role);
-        sosShiroCurrentUserAnswer.setIsAuthenticated(currentAccount.isAuthenticated());
-        sosShiroCurrentUserAnswer.setHasRole(currentAccount.hasRole(role));
-        sosShiroCurrentUserAnswer.setAccessToken(currentAccount.getAccessToken());
-        return sosShiroCurrentUserAnswer;
+        SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
+        sosAuthCurrentAccountAnswer.setRole(role);
+        sosAuthCurrentAccountAnswer.setIsAuthenticated(currentAccount.isAuthenticated());
+        sosAuthCurrentAccountAnswer.setHasRole(currentAccount.hasRole(role));
+        sosAuthCurrentAccountAnswer.setAccessToken(currentAccount.getAccessToken());
+        return sosAuthCurrentAccountAnswer;
     }
 
     @GET
@@ -403,8 +341,8 @@ public class SOSServicePermissionIam {
         MDC.put("context", ThreadCtx);
         try {
             String accessToken = getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
-            SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = isPermitted(accessToken, permission);
-            return JOCDefaultResponse.responseStatus200(sosShiroCurrentUserAnswer);
+            SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = isPermitted(accessToken, permission);
+            return JOCDefaultResponse.responseStatus200(sosAuthCurrentAccountAnswer);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
         } finally {
@@ -419,13 +357,13 @@ public class SOSServicePermissionIam {
     private SOSAuthCurrentAccountAnswer isPermitted(String accessToken, String permission) {
         SOSAuthCurrentAccount currentAccount = getCurrentAccount(accessToken);
 
-        SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
-        sosShiroCurrentUserAnswer.setPermission(permission);
-        sosShiroCurrentUserAnswer.setIsAuthenticated(currentAccount.isAuthenticated());
-        sosShiroCurrentUserAnswer.setIsPermitted(currentAccount.isPermitted(permission));
+        SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
+        sosAuthCurrentAccountAnswer.setPermission(permission);
+        sosAuthCurrentAccountAnswer.setIsAuthenticated(currentAccount.isAuthenticated());
+        sosAuthCurrentAccountAnswer.setIsPermitted(currentAccount.isPermitted(permission));
 
-        sosShiroCurrentUserAnswer.setAccessToken(currentAccount.getAccessToken());
-        return sosShiroCurrentUserAnswer;
+        sosAuthCurrentAccountAnswer.setAccessToken(currentAccount.getAccessToken());
+        return sosAuthCurrentAccountAnswer;
     }
 
     private SOSAuthCurrentAccount getCurrentAccount(String accessToken) throws SessionNotExistException {
@@ -435,25 +373,6 @@ public class SOSServicePermissionIam {
         }
         resetTimeOut(currentAccount);
         return currentAccount;
-    }
-
-    @POST
-    @Path("/permissions")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse getPermissions(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,
-            @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery, @QueryParam("forUser") Boolean forUser) throws SessionNotExistException {
-
-        MDC.put("context", ThreadCtx);
-        try {
-            String accessToken = this.getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
-            SOSAuthCurrentAccount currentAccount = this.getCurrentAccount(accessToken);
-            SOSListOfPermissions sosListOfPermissions = new SOSListOfPermissions(currentAccount, forUser);
-            return JOCDefaultResponse.responseStatus200(sosListOfPermissions.getSosPermissionShiro());
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } finally {
-            MDC.remove("context");
-        }
     }
 
     private String getAccessToken(String xAccessTokenFromHeader, String accessTokenFromQuery) {
@@ -475,20 +394,7 @@ public class SOSServicePermissionIam {
         ISOSLogin sosLogin = null;
 
         switch (identityServiceType) {
-        case SHIRO:
-            SOSHibernateSession sosHibernateSession = null;
-            Globals.shiroIsActive = true;
-            try {
-                sosHibernateSession = Globals.createSosHibernateStatelessConnection(CREATE_ACCOUNT);
 
-                SOSShiroIniShare sosShiroIniShare = new SOSShiroIniShare(sosHibernateSession);
-                sosShiroIniShare.provideIniFile();
-            } finally {
-                Globals.disconnect(sosHibernateSession);
-            }
-            sosLogin = new SOSShiroLogin(Globals.getShiroIniSecurityManagerFactory());
-            LOGGER.debug("Login with idendity service shiro");
-            break;
         case LDAP:
         case LDAP_JOC:
             sosLogin = new SOSLdapLogin();
@@ -519,13 +425,13 @@ public class SOSServicePermissionIam {
                 identityServiceType));
 
         if (sosAuthSubject == null || !sosAuthSubject.isAuthenticated()) {
-            SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
-            sosShiroCurrentUserAnswer.setIsAuthenticated(false);
-            sosShiroCurrentUserAnswer.setMessage(sosLogin.getMsg());
-            sosShiroCurrentUserAnswer.setIdentityService(identityServiceType.name() + ":" + identityServiceName);
+            SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
+            sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
+            sosAuthCurrentAccountAnswer.setMessage(sosLogin.getMsg());
+            sosAuthCurrentAccountAnswer.setIdentityService(identityServiceType.name() + ":" + identityServiceName);
             currentAccount.setCurrentSubject(null);
 
-            throw new JocAuthenticationException(sosShiroCurrentUserAnswer);
+            throw new JocAuthenticationException(sosAuthCurrentAccountAnswer);
         }
         SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
         String accessToken = sosSessionHandler.getAccessToken().toString();

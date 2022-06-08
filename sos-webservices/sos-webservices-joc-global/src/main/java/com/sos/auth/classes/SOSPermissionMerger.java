@@ -7,9 +7,7 @@ import java.util.Map.Entry;
 
 import org.ini4j.InvalidFileFormatException;
 
-import com.sos.auth.interfaces.ISOSSecurityConfiguration;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.classes.security.SOSSecurityConfiguration;
 import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
@@ -41,17 +39,10 @@ public class SOSPermissionMerger {
         if (!identityServices.contains(sosIdentityService)) {
             identityServices.add(sosIdentityService);
         }
-        ISOSSecurityConfiguration sosSecurityConfiguration;
         SecurityConfiguration securityConfiguration = new SecurityConfiguration();
+        SOSSecurityDBConfiguration sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
 
-        switch (sosIdentityService.getIdentyServiceType()) {
-        case SHIRO:
-            sosSecurityConfiguration = new SOSSecurityConfiguration();
-            break;
-        default:
-            sosSecurityConfiguration = new SOSSecurityDBConfiguration();
-        }
-        securityConfiguration = sosSecurityConfiguration.readConfiguration(null, sosIdentityService.getIdentityServiceName());
+        securityConfiguration = sosSecurityDBConfiguration.readConfiguration(null, sosIdentityService.getIdentityServiceName());
         if (listOfSecurityConfigurations == null) {
             listOfSecurityConfigurations = new ArrayList<SecurityConfiguration>();
         }

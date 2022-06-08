@@ -7,8 +7,6 @@ import java.util.Optional;
 
 import javax.ws.rs.Path;
 
-import org.apache.shiro.session.InvalidSessionException;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.joc.Globals;
@@ -65,7 +63,7 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
         }
     }
 
-    private JOCDefaultResponse modifyNotice(String accessToken, byte[] filterBytes, Action action) throws InvalidSessionException, JsonParseException,
+    private JOCDefaultResponse modifyNotice(String accessToken, byte[] filterBytes, Action action) throws JsonParseException,
             JsonMappingException, JocException, IOException, SOSJsonSchemaException {
 
         initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);

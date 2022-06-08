@@ -50,7 +50,6 @@ public class DeleteDeployments {
             DeployType.NOTICEBOARD, 
             DeployType.LOCK);
 
-    // account: LOW -> Globals.defaultProfileAccount, MEDIUM, HIGH -> jobschedulerUser.getSosShiroCurrentUser().getUsername()
 
     public static boolean delete(Collection<DBItemDeploymentHistory> dbItems, DBLayerDeploy dbLayer, String account, String accessToken,
             JocError jocError, Long auditlogId, boolean withoutFolderDeletion) throws SOSHibernateException {

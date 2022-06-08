@@ -35,12 +35,12 @@ public class ControllerResourceSwitchImpl extends JOCResourceImpl implements ICo
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            SOSAuthCurrentAccount shiroUser = jobschedulerUser.getSOSAuthCurrentAccount();
-            JOCPreferences jocPreferences = new JOCPreferences(shiroUser.getAccountname());
+            SOSAuthCurrentAccount sosAuthCurrentAccount = jobschedulerUser.getSOSAuthCurrentAccount();
+            JOCPreferences jocPreferences = new JOCPreferences(sosAuthCurrentAccount.getAccountname());
             String selectedInstance = controllerId;
             jocPreferences.put(WebserviceConstants.SELECTED_INSTANCE, selectedInstance);
-            SOSSessionHandler sosShiroSession = new SOSSessionHandler(shiroUser);
-            sosShiroSession.setAttribute(SESSION_KEY, selectedInstance);
+            SOSSessionHandler sosSessionHandler = new SOSSessionHandler(sosAuthCurrentAccount);
+            sosSessionHandler.setAttribute(SESSION_KEY, selectedInstance);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 

@@ -17,7 +17,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-import org.apache.shiro.session.InvalidSessionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -268,9 +267,7 @@ public class EventServiceFactory {
             return Math.max(0L, timeout - 1000L);
         } catch (SessionNotExistException e) {
             throw e;
-        } catch (InvalidSessionException e) {
-            throw new SessionNotExistException(e);
-        }
+        } 
     }
     
     protected synchronized static void signalEvent(EventCondition eventArrived) {

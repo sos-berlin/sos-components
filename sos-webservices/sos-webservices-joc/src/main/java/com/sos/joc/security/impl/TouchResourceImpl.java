@@ -11,6 +11,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.security.resource.ITouchResource;
 
 @Path("touch")
@@ -32,7 +33,7 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
             }
             try {
                  jobschedulerUser.resetTimeOut();
-            } catch (org.apache.shiro.session.InvalidSessionException e) {
+            } catch (SessionNotExistException e) {
                 LOGGER.info(e.getMessage());
             }
             return JOCDefaultResponse.responseStatusJSOk(null);

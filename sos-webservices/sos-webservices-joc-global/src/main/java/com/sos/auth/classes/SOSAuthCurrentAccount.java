@@ -1,9 +1,6 @@
 package com.sos.auth.classes;
 
 import java.io.File;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -45,7 +42,6 @@ import com.sos.joc.model.security.configuration.permissions.joc.admin.Certificat
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers;
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Customization;
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Settings;
-import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSAuthCurrentAccount {
 
@@ -57,7 +53,6 @@ public class SOSAuthCurrentAccount {
     private Map<String, String> identyServiceAccessToken;
     private boolean withAuthorization;
     private Set<String> roles;
-    private Boolean haveAnyIpPermission;
     private Set<ISOSAuthSubject> currentSubjects;
 
     private HttpServletRequest httpServletRequest;
@@ -83,20 +78,6 @@ public class SOSAuthCurrentAccount {
         }
 
         if (sosPermissionJocCockpitControllers.getControllers() != null) {
-            if (httpServletRequest != null) {
-                String ip = getCallerIpAddress();
-                String ipControllerKey = "ip=" + ip + ":" + controllerId;
-                String ipKey = "ip=" + ip;
-
-                if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(ipControllerKey)) {
-                    return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(ipControllerKey);
-                }
-
-                if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(ipKey)) {
-                    return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(ipKey);
-                }
-            }
-
             if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(controllerId)) {
                 return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(controllerId);
             } else {
@@ -201,34 +182,6 @@ public class SOSAuthCurrentAccount {
         return new Permissions(getRoles(), joc, controllerDefaults, new com.sos.joc.model.security.configuration.permissions.Controllers());
     }
 
-    private Boolean getHaveAnyIpPermission() {
-        if (this.haveAnyIpPermission == null) {
-
-            if (currentSubject != null) {
-                SOSListOfPermissions sosListOfPermissions = new SOSListOfPermissions(this, false);
-
-                this.haveAnyIpPermission = false;
-                String[] ipParts = this.getCallerIpAddress().split("\\.");
-                for (String p : sosListOfPermissions.getSosPermissionShiro().getSOSPermissions().getSOSPermission()) {
-                    if (this.haveAnyIpPermission) {
-                        break;
-                    }
-                    String es = "ip=";
-
-                    for (int i = 0; i < ipParts.length; i++) {
-                        es = es + ipParts[i];
-                        this.haveAnyIpPermission = currentSubject.isPermitted(es + ":" + p) || currentSubject.isPermitted("-" + es + ":" + p);
-                        if (this.haveAnyIpPermission) {
-                            break;
-                        }
-                        es = es + ".";
-                    }
-                }
-            }
-        }
-        return this.haveAnyIpPermission;
-    }
-
     private boolean getExcludedController(String permission, String controllerId) {
         boolean excluded = false;
         if (currentSubjects != null) {
@@ -250,79 +203,13 @@ public class SOSAuthCurrentAccount {
         return excluded;
     }
 
-    private boolean getExcludedIp(String permission, String controllerId) {
-        String[] ipParts = this.getCallerIpAddress().split("\\.");
-        boolean excluded = false;
-        String es = "";
-        for (int i = 0; i < ipParts.length; i++) {
-            es = es + ipParts[i];
-            excluded = excluded || getExcludedController(permission, "ip=" + es) || getExcludedController(permission, "ip=" + es + ":"
-                    + controllerId);
-            if (excluded) {
-                break;
-            }
-            es = es + ".";
-        }
-        return excluded;
-    }
-
-    private boolean getExcluded(String permission, String controllerId) {
-        if (this.getHaveAnyIpPermission()) {
-            return this.getExcludedController(permission, controllerId) || this.getExcludedIp(permission, controllerId);
-        } else {
-            return this.getExcludedController(permission, controllerId);
-        }
-    }
-
     public boolean testGetExcluded(String permission, String controllerId) {
-        return getExcluded(permission, controllerId);
-    }
-
-    private boolean ipPermission(String permission, String controller, String[] ipParts, int parts) {
-        boolean b = false;
-        String s = "";
-
-        for (int i = 0; i < parts; i++) {
-            s = s + ipParts[i] + ".";
-        }
-        s = s + ipParts[parts];
-
-        b = (currentSubject.isPermitted("ip=" + s + ":" + permission) || currentSubject.isPermitted("ip=" + s + ":" + controller + ":" + permission));
-        return b;
-    }
-
-    private boolean handleIpPermission(String controllerId, String permission) {
-
-        String ipAddress = this.getCallerIpAddress();
-        InetAddress inetAddress;
-        boolean ipv6 = false;
-        try {
-            inetAddress = InetAddress.getByName(ipAddress);
-            ipv6 = inetAddress instanceof Inet6Address;
-        } catch (UnknownHostException e) {
-            LOGGER.error("", e);
-        }
-
-        String[] ipParts = ipAddress.split("\\.");
-
-        if ((ipParts.length < 4) && !ipv6 || (ipParts.length < 8 && ipv6)) {
-            LOGGER.warn("Wrong ip address found: " + ipAddress);
-            return false;
-        }
-
-        return ipPermission(permission, controllerId, ipParts, 0) || ipPermission(permission, controllerId, ipParts, 1) || ipPermission(permission,
-                controllerId, ipParts, 2) || ipPermission(permission, controllerId, ipParts, 3);
-
+        return getExcludedController(permission, controllerId);
     }
 
     private boolean getPermissionFromSubject(ISOSAuthSubject subject, String controllerId, String permission) {
-        if (this.getHaveAnyIpPermission()) {
-            return (handleIpPermission(controllerId, permission) || subject.isPermitted(permission) || subject.isPermitted(controllerId + ":"
-                    + permission)) && !getExcluded(permission, controllerId);
-        } else {
-            return (subject.isPermitted(permission) || subject.isPermitted(controllerId + ":" + permission)) && !getExcluded(permission,
-                    controllerId);
-        }
+        return (subject.isPermitted(permission) || subject.isPermitted(controllerId + ":" + permission)) && !getExcludedController(permission,
+                controllerId);
     }
 
     public boolean isPermitted(String controllerId, String permission) {
@@ -382,12 +269,20 @@ public class SOSAuthCurrentAccount {
         return withAuthorization;
     }
 
-    public SOSAuthFolderPermissions getSosShiroFolderPermissions() {
+    public SOSAuthFolderPermissions getSosAuthFolderPermissions() {
         return sosAuthFolderPermissions;
     }
 
     public void setHttpServletRequest(HttpServletRequest httpServletRequest) {
         this.httpServletRequest = httpServletRequest;
+    }
+
+    public String getCallerHostName() {
+        if (httpServletRequest != null) {
+            return httpServletRequest.getRemoteHost();
+        } else {
+            return "";
+        }
     }
 
     public String getCallerIpAddress() {
@@ -400,14 +295,6 @@ public class SOSAuthCurrentAccount {
             }
         } else {
             return "0.0.0.0";
-        }
-    }
-
-    public String getCallerHostName() {
-        if (httpServletRequest != null) {
-            return httpServletRequest.getRemoteHost();
-        } else {
-            return "";
         }
     }
 
@@ -427,10 +314,4 @@ public class SOSAuthCurrentAccount {
         this.identityServices = identityServices;
     }
 
-    public boolean isShiro() {
-        if (identityServices == null) {
-            return false;
-        }
-        return identityServices.getIdentyServiceType() == IdentityServiceTypes.SHIRO;
-    }
 }

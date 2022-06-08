@@ -11,9 +11,6 @@ import java.util.Base64;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
-import org.apache.shiro.authc.credential.DefaultPasswordService;
-import org.apache.shiro.authc.credential.PasswordMatcher;
-import org.apache.shiro.crypto.hash.DefaultHashService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +19,6 @@ public class SOSPasswordHasher {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SOSPasswordHasher.class);
 
 	public static final String HASH_PREFIX = "$JS7-1.0";
-	public static final String HASH_SHIRO_PREFIX = "$shiro1$";
 	private static final String DEFAULT_PRIVATE_SALT = "Open Source JobScheduler";
 	private static final int SALT_SIZE = 16;
 	private static final int HASH_GAP = 300;
@@ -41,7 +37,7 @@ public class SOSPasswordHasher {
 	}
 
 	private static boolean isHashed(String hash) {
-		return ((hash.startsWith(HASH_SHIRO_PREFIX)) || (hash.startsWith(HASH_PREFIX)));
+		return ((hash.startsWith(HASH_PREFIX)));
 	}
 
 	private static String hash(String pwd, int iterations, byte[] randomSalt)
@@ -102,33 +98,6 @@ public class SOSPasswordHasher {
 		return hashString.contains("HASH|V1$");
 	}
 
-	private static boolean isShiroMatch(String pwd, String hash) {
-
-		String s = hash + "$$$$";
-
-		String[] hashParts = s.split("\\$");
-		if ("shiro1".equals(hashParts[1])) {
-
-			PasswordMatcher p = new PasswordMatcher();
-			DefaultPasswordService ps = new DefaultPasswordService();
-
-			DefaultHashService defaultHashService = new DefaultHashService();
-			defaultHashService.setHashAlgorithmName(hashParts[2]);
-			try {
-				defaultHashService.setHashIterations(Integer.valueOf(hashParts[3]));
-			} catch (NumberFormatException e) {
-				defaultHashService.setHashIterations(1);
-			}
-			defaultHashService.setGeneratePublicSalt(true);
-			ps.setHashService(defaultHashService);
-			ps.setHashFormat(new org.apache.shiro.crypto.hash.format.Shiro1CryptFormat());
-			p.setPasswordService(ps);
-			return p.getPasswordService().passwordsMatch(pwd, hash);
-		} else {
-			return false;
-		}
-	}
-
 	public static boolean verify(String pwd, String hashedPassword) {
 
 		String s = hashedPassword;
@@ -151,7 +120,7 @@ public class SOSPasswordHasher {
 			}
 		}
 
-		return verified || isShiroMatch(pwd, hashedPassword);
+		return verified;
 
 	}
 }

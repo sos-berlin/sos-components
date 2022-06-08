@@ -39,10 +39,10 @@ public class JobSchedulerUser {
 	public boolean resetTimeOut() throws SessionNotExistException {
 
 		if (sosAuthCurrentAccount != null) {
-			SOSSessionHandler sosShiroSession = new SOSSessionHandler(sosAuthCurrentAccount);
-			sosShiroSession.touch();
+			SOSSessionHandler sosSessionHandler = new SOSSessionHandler(sosAuthCurrentAccount);
+			sosSessionHandler.touch();
 		} else {
-			throw new org.apache.shiro.session.InvalidSessionException("Session doesn't exist");
+			throw new SessionNotExistException("Session doesn't exist");
 		}
 
 		return (sosAuthCurrentAccount != null);

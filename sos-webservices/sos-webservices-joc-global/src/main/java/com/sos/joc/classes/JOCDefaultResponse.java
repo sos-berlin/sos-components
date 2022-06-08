@@ -11,8 +11,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.shiro.session.InvalidSessionException;
-import org.slf4j.Logger;
+ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthCurrentAccount;
@@ -147,12 +146,12 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             String entityStr = String.format(ERROR_HTML, "JOC-440", StringEscapeUtils.escapeHtml4(errorOutput));
             responseBuilder.entity(entityStr);
         } else {
-            SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = new SOSAuthCurrentAccountAnswer();
-            sosShiroCurrentUserAnswer.setHasRole(false); 
-            sosShiroCurrentUserAnswer.setIsAuthenticated(false);
-            sosShiroCurrentUserAnswer.setIsPermitted(false);
-            sosShiroCurrentUserAnswer.setMessage(errorOutput);
-            responseBuilder.entity(sosShiroCurrentUserAnswer);
+            SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer();
+            sosAuthCurrentAccountAnswer.setHasRole(false); 
+            sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
+            sosAuthCurrentAccountAnswer.setIsPermitted(false);
+            sosAuthCurrentAccountAnswer.setMessage(errorOutput);
+            responseBuilder.entity(sosAuthCurrentAccountAnswer);
         }
         return new JOCDefaultResponse(responseBuilder.build());
     }
@@ -211,7 +210,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             ee.addErrorMetaInfo(err);
             return responseStatusJSError(ee, mediaType);
         }
-        if (!InvalidSessionException.class.isInstance(e) && !"".equals(err.printMetaInfo())) {
+        if (!"".equals(err.printMetaInfo())) {
             LOGGER.info(err.printMetaInfo());
         }
         return responseStatus420(getErr420(new JocError(getErrorMessage(e))), mediaType);
@@ -353,7 +352,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
 
     public static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser, JocError err) {
         SOSAuthCurrentAccountAnswer entity = new SOSAuthCurrentAccountAnswer();
-        SOSAuthCurrentAccount sosShiroCurrentUser=null;
+        SOSAuthCurrentAccount sosAuthCurrentAccountAnswer=null;
         String message = "Authentication failure";
         if (err != null && err.getMessage() != null) {
             if (err.getMessage() != null) {
@@ -364,14 +363,14 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             }
         }
         try {
-            sosShiroCurrentUser = sosJobschedulerUser.getSOSAuthCurrentAccount();
+            sosAuthCurrentAccountAnswer = sosJobschedulerUser.getSOSAuthCurrentAccount();
         } catch (SessionNotExistException e) {
             message += ": "+e.getMessage();
         }
-        if (sosShiroCurrentUser != null) {
-            entity.setAccessToken(sosShiroCurrentUser.getAccessToken());
-            entity.setAccount(sosShiroCurrentUser.getAccountname());
-            entity.setRole(String.join(", ", sosShiroCurrentUser.getRoles()));
+        if (sosAuthCurrentAccountAnswer != null) {
+            entity.setAccessToken(sosAuthCurrentAccountAnswer.getAccessToken());
+            entity.setAccount(sosAuthCurrentAccountAnswer.getAccountname());
+            entity.setRole(String.join(", ", sosAuthCurrentAccountAnswer.getRoles()));
         } else {
             entity.setAccessToken("");
             entity.setAccount("");
@@ -398,7 +397,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
     }
     
     public static String getErrorMessage(Throwable e) {
-        if (InvalidSessionException.class.isInstance(e) || SessionNotExistException.class.isInstance(e)) {
+        if (SessionNotExistException.class.isInstance(e)) {
             //LOGGER.warn(e.toString());
         } else if (JocAuthenticationException.class.isInstance(e)) {
             LOGGER.error(e.toString());

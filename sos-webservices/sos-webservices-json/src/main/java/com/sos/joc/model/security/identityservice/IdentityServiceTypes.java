@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum IdentityServiceTypes {
 
-    SHIRO("SHIRO"),
     VAULT("VAULT"),
     VAULT_JOC("VAULT-JOC"),
     VAULT_JOC_ACTIVE("VAULT-JOC-ACTIVE"),

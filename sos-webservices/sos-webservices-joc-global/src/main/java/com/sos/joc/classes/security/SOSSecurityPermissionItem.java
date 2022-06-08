@@ -33,7 +33,7 @@ public class SOSSecurityPermissionItem {
     public String getIniValue() {
         String s = "";
         if (isExcluded()) {
-            s= "-";
+            s = "-";
         }
         if (controllerId.isEmpty()) {
             return s + permission;
@@ -43,7 +43,7 @@ public class SOSSecurityPermissionItem {
             return s + controllerId + ":" + permission;
         }
     }
-    
+
     public String getController() {
         return controllerId;
     }
@@ -51,7 +51,7 @@ public class SOSSecurityPermissionItem {
     public Boolean isExcluded() {
         return excluded == Boolean.TRUE;
     }
-    
+
     public boolean isJocPermission() {
         return isJocPermission;
     }
@@ -69,7 +69,7 @@ public class SOSSecurityPermissionItem {
         if (permission.startsWith("-")) {
             s = permission.substring(1);
         }
-            
+
         if (s.startsWith("sos:products:controller")) {
             return "";
         } else if (s.matches("(.*):sos:products")) {
@@ -90,10 +90,10 @@ public class SOSSecurityPermissionItem {
         }
         return s.replaceFirst("^(?:.*:)*(sos:products(?::[^:]+)*)$", "$1");
     }
-    
+
     private boolean setIsJocPermission() {
         if (permission.matches("-?sos:products")) {
-           return true; 
+            return true;
         }
         return permission.matches("-?sos:products:joc(:[^:]+)*");
     }

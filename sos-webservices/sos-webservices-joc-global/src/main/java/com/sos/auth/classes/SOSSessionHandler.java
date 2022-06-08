@@ -2,8 +2,6 @@ package com.sos.auth.classes;
 
 import java.io.Serializable;
 
-import org.apache.shiro.session.InvalidSessionException;
-
 import com.sos.auth.interfaces.ISOSSession;
 import com.sos.joc.exceptions.SessionNotExistException;
 
@@ -17,122 +15,62 @@ public class SOSSessionHandler {
         this.sosCurrentUser = sosCurrentUser;
     }
 
-    private void initSession() {
+    private void initSession() throws SessionNotExistException {
         if (sosSession == null) {
             sosSession = sosCurrentUser.getCurrentSubject().getSession();
             sosSession.touch();
         }
+        if (sosSession == null) {
+            throw new SessionNotExistException();
+        }
+
     }
 
     public void setAttribute(String key, Object value) throws SessionNotExistException {
-        try {
-            initSession();
-            if (sosSession != null) {
-                sosSession.setAttribute(key, value);
-            }
-        } catch (InvalidSessionException e1) {
-            throw new SessionNotExistException(e1);
-        }
+        initSession();
+        sosSession.setAttribute(key, value);
     }
 
     public Object getAttribute(Object key) throws SessionNotExistException {
         initSession();
-        ISOSSession shiroSession = sosCurrentUser.getCurrentSubject().getSession();
-        try {
-            if (shiroSession != null) {
-                return shiroSession.getAttribute(key);
-            }
-        } catch (InvalidSessionException e1) {
-            throw new SessionNotExistException(e1);
-        }
+        return sosSession.getAttribute(key);
 
-        return null;
     }
 
     public String getStringAttribute(Object key) throws SessionNotExistException {
         initSession();
-        try {
-            if (sosSession != null) {
-                return (String) sosSession.getAttribute(key);
-            }
-        } catch (InvalidSessionException e1) {
-            throw new SessionNotExistException(e1);
-        }
+        return (String) sosSession.getAttribute(key);
 
-        return null;
     }
 
     public Boolean getBooleanAttribute(Object key) throws SessionNotExistException {
         initSession();
-        try {
-            if (sosSession != null) {
-                return (Boolean) sosSession.getAttribute(key);
-            }
-        } catch (InvalidSessionException e1) {
-            throw new SessionNotExistException(e1);
-        }
-
-        return null;
+        return (Boolean) sosSession.getAttribute(key);
     }
 
     public void removeAttribute(Object key) throws SessionNotExistException {
         initSession();
-        try {
-            if (sosSession != null) {
-                sosSession.removeAttribute(key);
-            }
-        } catch (InvalidSessionException e1) {
-            throw new SessionNotExistException(e1);
-        }
-
+        sosSession.removeAttribute(key);
     }
 
     public void stop() throws SessionNotExistException {
         initSession();
-        try {
-            if (sosSession != null) {
-                sosSession.stop();
-            }
-        } catch (InvalidSessionException e1) {
-            throw new SessionNotExistException(e1);
-        }
-
+        sosSession.stop();
     }
 
     public long getTimeout() throws SessionNotExistException {
         initSession();
-
-        if (sosSession != null) {
-            return sosSession.getTimeout();
-        } else {
-            throw new SessionNotExistException("Session has expired");
-        }
-
+        return sosSession.getTimeout();
     }
 
     public Serializable getAccessToken() throws SessionNotExistException {
         initSession();
-        try {
-            if (sosSession != null) {
-                return sosSession.getAccessToken();
-            } else {
-                return null;
-            }
-        } catch (InvalidSessionException e1) {
-            throw new SessionNotExistException(e1);
-        }
-
+        return sosSession.getAccessToken();
     }
 
     public void touch() throws SessionNotExistException {
         initSession();
-        try {
-            if (sosSession != null) {
-                sosSession.touch();
-            }
-        } catch (InvalidSessionException e1) {
-            throw new SessionNotExistException(e1);
-        }
+        sosSession.touch();
 
     }
 

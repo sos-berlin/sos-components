@@ -12,7 +12,6 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
-import org.apache.shiro.session.InvalidSessionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -350,7 +349,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
         }
     }
     
-    private JOCDefaultResponse init(String apiCall, byte[] filterBytes, String accessToken) throws InvalidSessionException, JsonParseException,
+    private JOCDefaultResponse init(String apiCall, byte[] filterBytes, String accessToken) throws JsonParseException,
             JsonMappingException, JocException, IOException {
         initLogging(apiCall, filterBytes, accessToken);
 

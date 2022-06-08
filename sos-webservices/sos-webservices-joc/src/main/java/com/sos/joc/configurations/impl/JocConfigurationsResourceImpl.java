@@ -67,12 +67,6 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                 configurationType = configurationsFilter.getConfigurationType().value();
                 switch (configurationsFilter.getConfigurationType()) {
                 case PROFILE:
-                    // String userName = getJobschedulerUser(accessToken).getSosShiroCurrentUser().getUsername();
-                    // if (configurationsFilter.getAccount() == null || configurationsFilter.getAccount().isEmpty()) {
-                    // configurationsFilter.setAccount(userName);
-                    // } else if (!configurationsFilter.getAccount().equals(userName)) {
-                    // throw new JocBadRequestException("You can only read your own profile.");
-                    // }
                     break;
                 case GLOBALS:
                     // read only user settings without permissions

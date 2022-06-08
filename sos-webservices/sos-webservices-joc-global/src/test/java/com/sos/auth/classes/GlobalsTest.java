@@ -7,18 +7,18 @@ public class GlobalsTest {
 
     private static final String PASSWORD = "root";
     private static final String USER = "root";
-    protected static final String SHIRO_ROLE = "all";
+    protected static final String AUTH_ROLE = "all";
     protected static SOSServicePermissionIam sosServicePermissionIam;
-    protected static SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer;
+    protected static SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer;
 
     protected static String getAccessToken() throws Exception {
         sosServicePermissionIam = new SOSServicePermissionIam();
-        sosShiroCurrentUserAnswer = (SOSAuthCurrentAccountAnswer) sosServicePermissionIam.login(null, "", "", USER, PASSWORD).getEntity();
-        return sosShiroCurrentUserAnswer.getAccessToken();
+        sosAuthCurrentAccountAnswer = (SOSAuthCurrentAccountAnswer) sosServicePermissionIam.login(null, "", "", USER, PASSWORD).getEntity();
+        return sosAuthCurrentAccountAnswer.getAccessToken();
     }
 
     protected static void logout() {
-        sosServicePermissionIam.logout(sosShiroCurrentUserAnswer.getAccessToken());
+        sosServicePermissionIam.logout(sosAuthCurrentAccountAnswer.getAccessToken());
     }
 
 }

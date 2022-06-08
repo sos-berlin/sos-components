@@ -12,7 +12,6 @@ import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.classes.SOSInitialPasswordSetting;
 import com.sos.auth.classes.SOSPasswordHasher;
-import com.sos.auth.interfaces.ISOSSecurityConfiguration;
 import com.sos.auth.vault.SOSVaultHandler;
 import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
 import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
@@ -49,7 +48,7 @@ import com.sos.joc.model.security.configuration.permissions.IniPermissions;
 import com.sos.joc.model.security.configuration.permissions.SecurityConfigurationFolders;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
-public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
+public class SOSSecurityDBConfiguration  {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecurityDBConfiguration.class);
 
@@ -298,7 +297,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         }
     }
 
-    @Override
     public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration, DBItemIamIdentityService dbItemIamIdentityService)
             throws Exception {
         SOSHibernateSession sosHibernateSession = null;
@@ -438,7 +436,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
     }
 
-    @Override
     public SecurityConfiguration readConfiguration(Long identityServiceId, String identityServiceName) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         SecurityConfiguration secConfig = new SecurityConfiguration();

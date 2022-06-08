@@ -378,11 +378,7 @@ public class JocXmlEditor {
             return;
         }
         realPath = Paths.get(System.getProperty("user.dir"), "resources/joc").normalize();
-        // if (Globals.sosShiroProperties != null) {
-        // realPath = Globals.sosShiroProperties.resolvePath(".");
-        // } else {
-        // throw new Exception("Globals.sosShiroProperties is null");
-        // }
+       
     }
 
 }

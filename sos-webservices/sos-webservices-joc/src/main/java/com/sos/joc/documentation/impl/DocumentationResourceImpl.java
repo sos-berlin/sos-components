@@ -27,6 +27,7 @@ import com.sos.joc.event.bean.documentation.DocumentationEvent;
 import com.sos.joc.event.bean.documentation.DocumentationFolderEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.SessionNotExistException;
 
 @Path("documentation")
 public class DocumentationResourceImpl extends JOCResourceImpl implements IDocumentationResource {
@@ -80,7 +81,7 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
 
             try { //simulates a touch
                 jobschedulerUser.resetTimeOut();
-            } catch (org.apache.shiro.session.InvalidSessionException e) {
+            } catch (SessionNotExistException e) {
             }
             return jocDefaultResponse;
         } catch (JocException e) {

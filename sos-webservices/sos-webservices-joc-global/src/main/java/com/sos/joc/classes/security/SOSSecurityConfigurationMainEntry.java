@@ -37,10 +37,6 @@ public class SOSSecurityConfigurationMainEntry {
 		}
 	}
 
-//	public static String removeCharInQuotesTest(String s) {
-//		return removeCharInQuotes(s, ',', '^');
-//	}
-
 	public static List<String> getMultiLineValue(String entryKey, String entryMultiLineValue) {
 		List<String> entryValue = new ArrayList<>();
 		if (entryKey.contains(".groupRolesMap")) {
@@ -77,5 +73,4 @@ public class SOSSecurityConfigurationMainEntry {
         return str.toString();
 
     }
-
 }

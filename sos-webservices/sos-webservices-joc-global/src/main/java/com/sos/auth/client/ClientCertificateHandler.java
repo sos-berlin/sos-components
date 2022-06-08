@@ -74,7 +74,7 @@ public class ClientCertificateHandler {
                 ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().ifPresent(o -> this.clientCN = o.getValue().toString());
 
                 LOGGER.debug("Client SubjectDN read from request: " + subjectDN);
-                LOGGER.debug("Client CN read from request for comparison with shiro account: " + clientCN);
+                LOGGER.debug("Client CN read from request for comparison with the account: " + clientCN);
             }
             LOGGER.debug("Certificate infos as JSON: \n" + createResponse200(cipherSuiteName, keySize));
         }

@@ -9,12 +9,10 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.interfaces.ISOSSecurityConfiguration;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.security.SOSSecurityConfiguration;
 import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
@@ -28,7 +26,6 @@ import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.SecurityConfigurationAccount;
 import com.sos.joc.model.security.configuration.SecurityConfigurationRole;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
-import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.security.resource.ISecurityConfigurationResource;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
@@ -69,14 +66,9 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                             + "> not found");
                 }
 
-                ISOSSecurityConfiguration sosSecurityConfiguration = null;
-                if (dbItemIamIdentityService == null || IdentityServiceTypes.SHIRO.name().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                    sosSecurityConfiguration = new SOSSecurityConfiguration();
-                } else {
-                    sosSecurityConfiguration = new SOSSecurityDBConfiguration();
-                }
+                SOSSecurityDBConfiguration sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
 
-                securityConfiguration = sosSecurityConfiguration.readConfiguration(dbItemIamIdentityService.getId(), dbItemIamIdentityService
+                securityConfiguration = sosSecurityDBConfiguration.readConfiguration(dbItemIamIdentityService.getId(), dbItemIamIdentityService
                         .getIdentityServiceName());
 
                 JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
@@ -132,7 +124,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 return jocDefaultResponse;
             }
 
-            ISOSSecurityConfiguration sosSecurityConfiguration = null;
+            SOSSecurityDBConfiguration sosSecurityDBConfiguration = null;
 
             SOSHibernateSession sosHibernateSession = null;
             try {
@@ -146,13 +138,9 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                     throw new JocObjectNotExistException("Object Identity Service <" + identityServiceName + "> not found");
                 }
 
-                sosSecurityConfiguration = new SOSSecurityDBConfiguration();
-                sosSecurityConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
+                sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
+                sosSecurityDBConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
 
-                if (IdentityServiceTypes.SHIRO.name().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                    sosSecurityConfiguration = new SOSSecurityConfiguration();
-                    sosSecurityConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
-                }
                 storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY);
 
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

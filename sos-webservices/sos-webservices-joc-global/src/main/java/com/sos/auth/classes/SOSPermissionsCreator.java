@@ -1,24 +1,13 @@
 package com.sos.auth.classes;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.apache.shiro.config.Ini;
-import org.apache.shiro.config.Ini.Section;
-import org.apache.shiro.config.IniSecurityManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.classes.permission.model.ObjectFactory;
-import com.sos.auth.classes.permission.model.SOSPermissionRoles;
-import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.Globals;
-import com.sos.joc.db.authentication.DBItemIamRole;
-import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.SecurityConfigurationRole;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
@@ -50,8 +39,6 @@ public class SOSPermissionsCreator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSPermissionsCreator.class);
     private SOSAuthCurrentAccount currentAccount;
-    private SOSPermissionRoles roles;
-    private Ini ini;
 
     public SOSPermissionsCreator(SOSAuthCurrentAccount currentAccount) {
         super();
@@ -60,20 +47,9 @@ public class SOSPermissionsCreator {
 
     public Map<String, List<String>> getMapOfFolder() {
         Map<String, List<String>> resultMap = new HashMap<String, List<String>>();
-        if (currentAccount.isShiro()) {
-            Section section = getIni().getSection("folders");
-            if (section != null) {
-                for (String role : section.keySet()) {
-                    if (resultMap.get(role) == null) {
-                        resultMap.put(role, new ArrayList<String>());
-                    }
-                    resultMap.get(role).add(section.get(role));
-                }
-            }
-        } else {
-            if (currentAccount.getCurrentSubject().getMapOfFolderPermissions() != null) {
-                resultMap.putAll(currentAccount.getCurrentSubject().getMapOfFolderPermissions());
-            }
+
+        if (currentAccount.getCurrentSubject().getMapOfFolderPermissions() != null) {
+            resultMap.putAll(currentAccount.getCurrentSubject().getMapOfFolderPermissions());
         }
 
         return resultMap;
@@ -182,76 +158,4 @@ public class SOSPermissionsCreator {
             }
         }
     }
-
-    private SOSPermissionRoles getRolesFromShiro() {
-        ObjectFactory o = new ObjectFactory();
-        roles = o.createSOSPermissionRoles();
-
-        ini = getIni();
-        Section s = ini.getSection("roles");
-
-        if (s != null) {
-            for (String role : s.keySet()) {
-                addRole(roles.getSOSPermissionRole(), role, false);
-            }
-        }
-
-        s = ini.getSection("folders");
-        if (s != null) {
-            for (String role : s.keySet()) {
-                String[] key = role.split("\\|");
-                if (key.length == 1) {
-                    addRole(roles.getSOSPermissionRole(), role, false);
-                }
-                if (key.length == 2) {
-                    addRole(roles.getSOSPermissionRole(), key[1], false);
-                }
-            }
-        }
-        return roles;
-
-    }
-
-    private SOSPermissionRoles getRolesFromDb(Long identityServiceId) throws SOSHibernateException {
-        SOSHibernateSession sosHibernateSession = null;
-        ObjectFactory o = new ObjectFactory();
-        roles = o.createSOSPermissionRoles();
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSPermissionCreator");
-            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-            List<DBItemIamRole> listOfRoles = iamAccountDBLayer.getListOfAllRoles(identityServiceId);
-            for (DBItemIamRole dbItemIamRole : listOfRoles) {
-                addRole(roles.getSOSPermissionRole(), dbItemIamRole.getRoleName(), false);
-            }
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-        return roles;
-
-    }
-
-    public SOSPermissionRoles getRoles(SOSAuthCurrentAccount currentAccount, boolean forAccount) {
-        if (roles == null || !forAccount) {
-
-            if (currentAccount.isShiro()) {
-                return getRolesFromShiro();
-            } else {
-                try {
-                    return getRolesFromDb(currentAccount.getIdentityServices().getIdentityServiceId());
-                } catch (SOSHibernateException e) {
-
-                }
-            }
-        }
-
-        return roles;
-    }
-
-    public Ini getIni() {
-        org.apache.shiro.config.IniSecurityManagerFactory factory = null;
-        String iniFile = Globals.getShiroIniInClassPath();
-        factory = new IniSecurityManagerFactory(Globals.getIniFileForShiro(iniFile));
-        return factory.getIni();
-    }
-
 }

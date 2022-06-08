@@ -31,16 +31,11 @@ public class SOSIdentityService {
         this.identityServiceName = dbItemIamIdentityService.getIdentityServiceName();
         this.identyServiceType = IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType());
         this.identityServiceId = dbItemIamIdentityService.getId();
-        if (identyServiceType == IdentityServiceTypes.SHIRO) {
-            this.identityServiceAuthenticationScheme = IdentityServiceAuthenticationScheme.SINGLE_FACTOR;
-            this.singleFactorCert = false;
-            this.singleFactorPwd = true;
-        } else {
-            this.identityServiceAuthenticationScheme = IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService
-                    .getAuthenticationScheme());
-            this.singleFactorCert = dbItemIamIdentityService.getSingleFactorCert();
-            this.singleFactorPwd = dbItemIamIdentityService.getSingleFactorPwd();
-        }
+
+        this.identityServiceAuthenticationScheme = IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService.getAuthenticationScheme());
+        this.singleFactorCert = dbItemIamIdentityService.getSingleFactorCert();
+        this.singleFactorPwd = dbItemIamIdentityService.getSingleFactorPwd();
+
     }
 
     public String getIdentityServiceName() {

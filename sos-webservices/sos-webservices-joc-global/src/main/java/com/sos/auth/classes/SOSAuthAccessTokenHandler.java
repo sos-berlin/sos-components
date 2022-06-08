@@ -64,7 +64,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
             SOSAuthCurrentAccount nextAccount = null;
             for (String accessToken : Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccessTokens()) {
                 SOSAuthCurrentAccount currentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
-                if (!currentAccount.isShiro() && currentAccount.isAuthenticated() && (IdentityServiceTypes.VAULT.equals(currentAccount
+                if (currentAccount.isAuthenticated() && (IdentityServiceTypes.VAULT.equals(currentAccount
                         .getIdentityServices().getIdentyServiceType()) || IdentityServiceTypes.VAULT_JOC.equals(currentAccount.getIdentityServices()
                                 .getIdentyServiceType()) || IdentityServiceTypes.VAULT_JOC_ACTIVE.equals(currentAccount.getIdentityServices()
                                         .getIdentyServiceType()))) {

@@ -4,14 +4,13 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sos.joc.exceptions.SessionNotExistException;
 
-public class TestSOSServicePermissionShiro {
+public class TestSOSServicePermissionAuth {
 
     private static String accessToken;
 
@@ -20,14 +19,12 @@ public class TestSOSServicePermissionShiro {
         accessToken = GlobalsTest.getAccessToken();
     }
 
-  
-
     @Ignore
     @Test
     public void testHasRole() throws SessionNotExistException {
-        SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = GlobalsTest.sosServicePermissionIam.hasRoleTest(accessToken, GlobalsTest.SHIRO_ROLE);
-        assertEquals("testCurrentUserAnswer is authenticated", true, sosShiroCurrentUserAnswer.getIsAuthenticated());
-        assertEquals("testCurrentUserAnswer is has role " + GlobalsTest.SHIRO_ROLE, true, sosShiroCurrentUserAnswer.hasRole());
+        SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = GlobalsTest.sosServicePermissionIam.hasRoleTest(accessToken, GlobalsTest.AUTH_ROLE);
+        assertEquals("testCurrentUserAnswer is authenticated", true, sosAuthCurrentAccountAnswer.getIsAuthenticated());
+        assertEquals("testCurrentUserAnswer is has role " + GlobalsTest.AUTH_ROLE, true, sosAuthCurrentAccountAnswer.hasRole());
     }
 
     @Ignore
@@ -39,7 +36,7 @@ public class TestSOSServicePermissionShiro {
                     assertEquals("testCurrentUserAnswer is permitted -> " + permission, true, isPermitted(permission));
                 });
     }
-    
+
     private static boolean isPermitted(String permission) {
         return GlobalsTest.sosServicePermissionIam.isPermittedTest(accessToken, permission).isPermitted();
     }

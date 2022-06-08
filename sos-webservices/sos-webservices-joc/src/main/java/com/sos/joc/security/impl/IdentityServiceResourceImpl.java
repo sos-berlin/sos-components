@@ -296,7 +296,6 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.JOC);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.LDAP);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.LDAP_JOC);
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.SHIRO);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.VAULT);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.VAULT_JOC);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.VAULT_JOC_ACTIVE);

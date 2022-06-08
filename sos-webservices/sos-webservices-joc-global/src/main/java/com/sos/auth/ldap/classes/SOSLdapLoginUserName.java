@@ -1,4 +1,4 @@
-package com.sos.auth.shiro;
+package com.sos.auth.ldap.classes;
 
 public class SOSLdapLoginUserName {
 

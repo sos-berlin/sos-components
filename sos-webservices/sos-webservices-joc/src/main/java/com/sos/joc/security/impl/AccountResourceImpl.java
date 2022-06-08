@@ -24,8 +24,6 @@ import com.sos.auth.classes.SOSPermissionsCreator;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.ldap.classes.SOSLdapLogin;
-import com.sos.auth.shiro.classes.SOSShiroIniShare;
-import com.sos.auth.shiro.classes.SOSShiroLogin;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.auth.vault.SOSVaultHandler;
 import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
@@ -479,16 +477,6 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityServiceEntry);
 
                 switch (sosIdentityService.getIdentyServiceType()) {
-                case SHIRO:
-                    try {
-                        SOSShiroIniShare sosShiroIniShare = new SOSShiroIniShare(sosHibernateSession);
-                        sosShiroIniShare.provideIniFile();
-                    } finally {
-                        Globals.disconnect(sosHibernateSession);
-                    }
-                    sosLogin = new SOSShiroLogin(Globals.getShiroIniSecurityManagerFactory());
-                    LOGGER.debug("Login with idendity service shiro");
-                    break;
                 case LDAP:
                 case LDAP_JOC:
                     sosLogin = new SOSLdapLogin();

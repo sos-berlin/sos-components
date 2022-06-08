@@ -12,11 +12,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.session.InvalidSessionException;
-import org.apache.shiro.session.Session;
-import org.apache.shiro.session.mgt.DefaultSessionKey;
-import org.apache.shiro.session.mgt.SessionKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,17 +22,11 @@ import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.settings.ClusterSettings;
-import com.sos.joc.db.configuration.JocConfigurationDbLayer;
-import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
@@ -49,19 +38,18 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
- 
+
 public class JOCResourceImpl {
 
     protected JobSchedulerUser jobschedulerUser;
     protected SOSAuthFolderPermissions folderPermissions;
-    private static final String SHIRO_SESSION = "SHIRO_SESSION";
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
     private String accessToken;
     private JocAuditLog jocAuditLog;
 
     private JocError jocError = new JocError();
 
-    private void initGetPermissions(String accessToken) throws JocException, InvalidSessionException {
+    private void initGetPermissions(String accessToken) throws JocException {
         if (jobschedulerUser == null) {
             this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
             jobschedulerUser = new JobSchedulerUser(accessToken);
@@ -71,27 +59,19 @@ public class JOCResourceImpl {
     }
 
     private String getMasterId(String masterId) throws SessionNotExistException {
-        // TODO why we need this?
-        // it should be part of the webservice if the controllerId is required or not
-        // Here, the last selected controllId is returnd in the case where not no controllerId is given.
-        // I think that's wrong
-        // if (masterId == null || masterId.isEmpty()) {
-        // SOSShiroSession sosShiroSession = new SOSShiroSession(jobschedulerUser.getSosShiroCurrentUser());
-        // masterId = sosShiroSession.getStringAttribute(SESSION_KEY);
-        // }
         if (masterId == null) {
             masterId = "";
         }
         return masterId;
     }
 
-    protected ControllerPermissions getControllerPermissions(String masterId, String accessToken) throws JocException, InvalidSessionException {
+    protected ControllerPermissions getControllerPermissions(String masterId, String accessToken) throws JocException {
         initGetPermissions(accessToken);
         masterId = getMasterId(masterId);
         return jobschedulerUser.getSOSAuthCurrentAccount().getControllerPermissions(masterId);
     }
 
-    protected JocPermissions getJocPermissions(String accessToken) throws JocException, InvalidSessionException {
+    protected JocPermissions getJocPermissions(String accessToken) throws JocException {
         initGetPermissions(accessToken);
         return jobschedulerUser.getSOSAuthCurrentAccount().getJocPermissions();
     }
@@ -135,7 +115,7 @@ public class JOCResourceImpl {
     }
 
     public JOCDefaultResponse init(String request, Object body, String accessToken, String controllerId, boolean permission) throws JocException,
-            InvalidSessionException, JsonParseException, JsonMappingException, IOException {
+            JsonParseException, JsonMappingException, IOException {
         this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);
@@ -280,61 +260,21 @@ public class JOCResourceImpl {
         return JOCDefaultResponse.responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
     }
 
-    private boolean sessionExistInDb(String sessionIdString) {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("JOCResourceImpl");
-
-            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-            JocConfigurationFilter filter = new JocConfigurationFilter();
-
-            filter.setAccount(".");
-            filter.setName(sessionIdString);
-            filter.setConfigurationType(SHIRO_SESSION);
-
-            return jocConfigurationDBLayer.jocConfigurationExists(filter);
-        } catch (SOSHibernateInvalidSessionException e) {
-            throw new DBConnectionRefusedException(e);
-        } catch (SOSHibernateException e) {
-            throw new DBInvalidDataException(e);
-        } catch (JocException e) {
-            throw e;
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-    }
-
-    public void initLogging(String request, byte[] body, String accessToken) throws JocException, InvalidSessionException, JsonParseException,
-            JsonMappingException, IOException {
+    public void initLogging(String request, byte[] body, String accessToken) throws JocException, JsonParseException, JsonMappingException,
+            IOException {
         this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);
         }
         initLogging(request, body);
 
-        if (Globals.jocWebserviceDataContainer != null && Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
-            SOSAuthCurrentAccount currentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
-            if (currentAccount != null && currentAccount.isShiro()) {
-                SessionKey s = new DefaultSessionKey(this.accessToken);
-
-                Session session = null;
-                session = SecurityUtils.getSecurityManager().getSession(s);
-
-                if (session != null && "true".equals(session.getAttribute("dao"))) {
-                    if (!sessionExistInDb(accessToken)) {
-                        Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(accessToken);
-                    }
-                }
-            }
-        }
-
         if (Globals.jocWebserviceDataContainer == null || Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
             throw new SessionNotExistException("Session is broken and no longer valid. New login is neccessary");
         }
 
-        SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccountByToken(
+        SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccountByToken(
                 accessToken);
-        if (sosShiroCurrentUserAnswer.getSessionTimeout() == 0L) {
+        if (sosAuthCurrentAccountAnswer.getSessionTimeout() == 0L) {
             throw new SessionNotExistException("Session has expired. New login is neccessary");
         }
 
@@ -399,7 +339,7 @@ public class JOCResourceImpl {
         if (!permission) {
             return accessDeniedResponse();
         }
-        folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosShiroFolderPermissions();
+        folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
         folderPermissions.setSchedulerId(controllerId);
         return jocDefaultResponse;
     }

@@ -5,7 +5,6 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -13,14 +12,6 @@ import java.util.TimeZone;
 import javax.json.Json;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.UnavailableSecurityManagerException;
-import org.apache.shiro.config.Ini;
-import org.apache.shiro.config.Ini.Section;
-import org.apache.shiro.config.IniSecurityManagerFactory;
-import org.apache.shiro.mgt.RealmSecurityManager;
-import org.apache.shiro.realm.Realm;
-import org.apache.shiro.realm.text.IniRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,14 +39,8 @@ import com.sos.joc.model.common.JocSecurityLevel;
 
 public class Globals {
 
-    private static final String MAIN_SECTION = "main";
-    public static final String DEFAULT_SHIRO_INI_PATH = "classpath:shiro.ini";
-    public static final String DEFAULT_SHIRO_INI_FILENAME = "shiro.ini";
-
     public static SOSHibernateFactory sosHibernateFactory;
     public static JocWebserviceDataContainer jocWebserviceDataContainer = JocWebserviceDataContainer.getInstance();
-    @SuppressWarnings("deprecation")
-    public static org.apache.shiro.config.IniSecurityManagerFactory factory = null;
     public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
     public static ObjectMapper prettyPrintObjectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -79,12 +64,10 @@ public class Globals {
     public static int maxResponseDuration = 55;
     public static boolean withHostnameVerification = false;
 
-    private static final String SHIRO_INI_FILENAME = "shiro.ini";
     private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
     private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
     private static JocSecurityLevel jocSecurityLevel = null;
     public static Integer iamSessionTimeout;
-    public static boolean shiroIsActive = false;
 
     public static synchronized SOSHibernateFactory getHibernateFactory() throws JocConfigurationException {
         if (sosHibernateFactory == null || sosHibernateFactory.getSessionFactory() == null) {
@@ -111,75 +94,6 @@ public class Globals {
         } catch (SOSHibernateOpenSessionException e) {
             throw new DBOpenSessionException(e);
         }
-    }
-
-    private static boolean shiroNeedFactoryReloadAfterIniChanged(Ini oldShiroIni, Ini currentShiroIni) {
-        try {
-            RealmSecurityManager mgr = (RealmSecurityManager) SecurityUtils.getSecurityManager();
-
-            Collection<Realm> realmCollection = mgr.getRealms();
-            if (realmCollection != null) {
-                for (Realm realm : realmCollection) {
-                    if (realm instanceof IniRealm) {
-                        return true;
-                    }
-                }
-            }
-            Section oldMain = oldShiroIni.getSection(MAIN_SECTION);
-            Section currentMain = currentShiroIni.getSection(MAIN_SECTION);
-            if (!oldMain.equals(currentMain)) {
-                return true;
-            }
-            return false;
-        } catch (UnavailableSecurityManagerException e) {
-            return false;
-        }
-    }
-
-    @SuppressWarnings("deprecation")
-    public static IniSecurityManagerFactory getShiroIniSecurityManagerFactory() {
-        String iniFile = getShiroIniInClassPath();
-        if (factory == null) {
-            factory = new IniSecurityManagerFactory(getIniFileForShiro(iniFile));
-        } else {
-            Ini oldShiroIni = factory.getIni();
-            Ini currentShiroIni = Ini.fromResourcePath(getIniFileForShiro(iniFile));
-            if ((oldShiroIni != null) && shiroNeedFactoryReloadAfterIniChanged(oldShiroIni, currentShiroIni) && !oldShiroIni.equals(
-                    currentShiroIni)) {
-                LOGGER.debug(getIniFileForShiro(iniFile) + " is changed");
-                factory = new IniSecurityManagerFactory();
-                factory.setIni(currentShiroIni);
-            }
-        }
-        return factory;
-    }
-
-    @SuppressWarnings("deprecation")
-    public static Ini getIniFromSecurityManagerFactory() {
-        if (factory == null) {
-            String iniFile = getShiroIniInClassPath();
-            factory = new IniSecurityManagerFactory(getIniFileForShiro(iniFile));
-        }
-        return factory.getIni();
-    }
-
-    public static String getIniFileForShiro(String iniFile) {
-        return iniFile + ".active";
-    }
-
-    public static String getShiroIniInClassPath() {
-        if (sosCockpitProperties != null) {
-            Path p = sosCockpitProperties.resolvePath(SHIRO_INI_FILENAME);
-            return "file:" + p.toString().replace('\\', '/');
-        }
-        return DEFAULT_SHIRO_INI_PATH;
-    }
-
-    public static Path getShiroIniFile() {
-        if (sosCockpitProperties != null) {
-            return sosCockpitProperties.resolvePath(getIniFileForShiro(SHIRO_INI_FILENAME));
-        }
-        return Paths.get(getIniFileForShiro(DEFAULT_SHIRO_INI_FILENAME));
     }
 
     public static void readUnmodifiables() {

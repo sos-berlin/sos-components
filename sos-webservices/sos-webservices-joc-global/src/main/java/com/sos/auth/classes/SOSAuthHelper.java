@@ -37,11 +37,12 @@ import com.sos.joc.exceptions.JocException;
 
 public class SOSAuthHelper {
 
+    public static final String INITIAL = "initial";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthHelper.class);
 
     public static final Long HASH_GAP = 300L;
     public static final String HASH_PREFIX = "$JS7-2.2.2$";
-    public static final String HASH_SHIRO_PREFIX = "$shiro1$";
     public static final String EMERGENCY_ROLE = "all";
     public static final String EMERGENCY_PERMISSION = "sos:products";
     public static final String EMERGENY_KEY = "sos_emergency_key";
@@ -144,8 +145,8 @@ public class SOSAuthHelper {
                 minPasswordLength = properties.getMinPasswordLength();
             }
             if (initialPassword == null) {
-                initialPassword = "initial";
-                LOGGER.warn("Missing initial password settings. Using default value=initial");
+                initialPassword = INITIAL;
+                LOGGER.warn("Missing initial password settings. Using default value=" + INITIAL);
             } else {
                 if (initialPassword.length() < minPasswordLength) {
                     JocError error = new JocError();
@@ -154,7 +155,7 @@ public class SOSAuthHelper {
                 }
             }
         } else {
-            initialPassword = "initial";
+            initialPassword = INITIAL;
             minPasswordLength = 0L;
         }
         sosInitialPasswordSetting.setInitialPassword(initialPassword);

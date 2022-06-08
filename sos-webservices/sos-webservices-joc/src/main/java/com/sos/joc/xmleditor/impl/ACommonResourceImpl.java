@@ -2,8 +2,6 @@ package com.sos.joc.xmleditor.impl;
 
 import java.io.IOException;
 
-import org.apache.shiro.session.InvalidSessionException;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -17,8 +15,7 @@ public class ACommonResourceImpl extends JOCResourceImpl {
         VIEW, MANAGE
     }
 
-    public JOCDefaultResponse initPermissions(String controllerId, String accessToken, ObjectType type, Role role) throws InvalidSessionException,
-            JsonParseException, JsonMappingException, JocException, IOException {
+    public JOCDefaultResponse initPermissions(String controllerId, String accessToken, ObjectType type, Role role) throws JsonParseException, JsonMappingException, JocException, IOException {
         boolean permissions = false;
         switch (type) {
         case YADE:
