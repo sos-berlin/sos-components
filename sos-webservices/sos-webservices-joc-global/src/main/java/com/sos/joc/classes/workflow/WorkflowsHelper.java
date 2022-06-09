@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -47,15 +48,19 @@ import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.classes.audit.AuditLogDetail;
+import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.model.audit.ObjectType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
-import com.sos.joc.model.workflow.WorkflowIdsFilter;
+import com.sos.joc.model.workflow.WorkflowOrderCountFilter;
 import com.sos.joc.model.workflow.WorkflowsFilter;
 
 import io.vavr.control.Either;
@@ -112,9 +117,9 @@ public class WorkflowsHelper {
                 .workflowId().path().string(), o.workflowId().versionId().string()));
     }
 
-    private static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
-        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(JOrder::workflowId);
-    }
+//    private static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
+//        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(JOrder::workflowId);
+//    }
 
     public static ImplicitEnd createImplicitEndInstruction() {
         ImplicitEnd i = new ImplicitEnd();
@@ -168,7 +173,7 @@ public class WorkflowsHelper {
         return r;
     }
     
-    public static Set<VersionedItemId<WorkflowPath>> getWorkflowIdsFromFolders(String controllerId, List<Folder> folders, JControllerState currentstate,
+    public static Stream<JWorkflowId> getWorkflowIdsStreamFromFolders(String controllerId, List<Folder> folders, JControllerState currentstate,
             Set<Folder> permittedFolders) {
 
         WorkflowsFilter workflowsFilter = new WorkflowsFilter();
@@ -179,11 +184,25 @@ public class WorkflowsHelper {
             connection = Globals.createSosHibernateStatelessConnection("getWorkflowIdsFromFolder");
             List<DeployedContent> contents = WorkflowsHelper.getDeployedContents(workflowsFilter, new DeployedConfigurationDBLayer(connection),
                     currentstate, permittedFolders);
-            return contents.parallelStream().map(w -> currentstate.repo().idToWorkflow(JWorkflowId.of(w.getName(), w.getCommitId()))).filter(
-                    Either::isRight).map(Either::get).map(JWorkflow::id).map(JWorkflowId::asScala).collect(Collectors.toSet());
+            return contents.parallelStream().map(w -> currentstate.repo().idToCheckedWorkflow(JWorkflowId.of(w.getName(), w.getCommitId()))).filter(
+                    Either::isRight).map(Either::get).map(JWorkflow::id);
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    public static Set<VersionedItemId<WorkflowPath>> getWorkflowIdsFromFolders(String controllerId, List<Folder> folders,
+            JControllerState currentstate, Set<Folder> permittedFolders) {
+
+        return getWorkflowIdsStreamFromFolders(controllerId, folders, currentstate, permittedFolders).map(JWorkflowId::asScala).collect(Collectors
+                .toSet());
+    }
+    
+    public static Set<WorkflowPath> getWorkflowPathsFromFolders(String controllerId, List<Folder> folders,
+            JControllerState currentstate, Set<Folder> permittedFolders) {
+
+        return getWorkflowIdsStreamFromFolders(controllerId, folders, currentstate, permittedFolders).map(JWorkflowId::path).collect(Collectors
+                .toSet());
     }
     
     public static List<DeployedContent> getDeployedContents(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer,
@@ -306,7 +325,7 @@ public class WorkflowsHelper {
                 return Collections.emptyList();
             }
             
-            //List<String> jsons = oldJWorkflowIds(currentState).map(wId -> currentState.repo().idToWorkflow(wId)).filter(Either::isRight).map(Either::get).map(JWorkflow::toJson).collect(Collectors.toList());
+            //List<String> jsons = oldJWorkflowIds(currentState).map(wId -> currentState.repo().idToCheckedWorkflow(wId)).filter(Either::isRight).map(Either::get).map(JWorkflow::toJson).collect(Collectors.toList());
             
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
             dbFilter.setControllerId(workflowsFilter.getControllerId());
@@ -561,7 +580,7 @@ public class WorkflowsHelper {
         SyncStateText stateText = SyncStateText.UNKNOWN;
         if (currentstate != null) {
             stateText = SyncStateText.NOT_IN_SYNC;
-            Either<Problem, JWorkflow> workflowV = currentstate.repo().idToWorkflow(JWorkflowId.of(JocInventory.pathToName(workflow.getPath()),
+            Either<Problem, JWorkflow> workflowV = currentstate.repo().idToCheckedWorkflow(JWorkflowId.of(JocInventory.pathToName(workflow.getPath()),
                     workflow.getVersionId()));
             // ProblemHelper.throwProblemIfExist(workflowV);
             if (workflowV != null && workflowV.isRight()) {
@@ -571,10 +590,10 @@ public class WorkflowsHelper {
         return SyncStateHelper.getState(stateText);
     }
 
-    public static Boolean workflowCurrentlyExists(JControllerState currentstate, String workflow) {
+    public static Boolean workflowCurrentlyExists(JControllerState currentstate, WorkflowPath workflowPath) {
         Boolean exists = false;
         if (currentstate != null) {
-            Either<Problem, JWorkflow> workflowV = currentstate.repo().pathToWorkflow(WorkflowPath.of(workflow));
+            Either<Problem, JWorkflow> workflowV = currentstate.repo().pathToCheckedWorkflow(workflowPath);
             if (workflowV != null && workflowV.isRight()) {
                 exists = true;
             }
@@ -582,10 +601,14 @@ public class WorkflowsHelper {
         return exists;
     }
     
+    public static Boolean workflowCurrentlyExists(JControllerState currentstate, String workflow) {
+        return workflowCurrentlyExists(currentstate, WorkflowPath.of(workflow));
+    }
+    
     public static Map<String, List<FileOrderSource>> workflowToFileOrderSources(JControllerState controllerState, String controllerId,
             Set<String> workflowNames, DeployedConfigurationDBLayer dbLayer) {
-        Set<String> syncFileOrderSources = controllerState == null ? Collections.emptySet() : controllerState.fileWatches().stream().parallel().map(
-                f -> f.workflowPath().string()).collect(Collectors.toSet());
+        Set<String> syncFileOrderSources = controllerState == null ? Collections.emptySet() : controllerState.pathToFileWatch().values().stream()
+                .parallel().map(f -> f.workflowPath().string()).collect(Collectors.toSet());
 
         DeployedConfigurationFilter filter = new DeployedConfigurationFilter();
         filter.setControllerId(controllerId);
@@ -641,12 +664,12 @@ public class WorkflowsHelper {
     }
     
     private static Set<String> workflowToFileWatchNames(JControllerState controllerState, String workflowName) {
-        return controllerState.fileWatches().stream().parallel().filter(f -> f.workflowPath().string().equals(workflowName)).map(f -> f.path()
+        return controllerState.pathToFileWatch().values().stream().parallel().filter(f -> f.workflowPath().string().equals(workflowName)).map(f -> f.path()
                 .string()).collect(Collectors.toSet());
     }
     
     public static ConcurrentMap<JWorkflowId, Map<OrderStateText, Integer>> getGroupedOrdersCountPerWorkflow(JControllerState currentstate,
-            WorkflowIdsFilter workflowsFilter, Set<Folder> permittedFolders) {
+            WorkflowOrderCountFilter workflowsFilter, Set<Folder> permittedFolders) {
 
         final Instant surveyInstant = currentstate.instant();
         long surveyDateMillis = surveyInstant.toEpochMilli();
@@ -675,9 +698,9 @@ public class WorkflowsHelper {
         Set<VersionedItemId<WorkflowPath>> workflows2 = workflowsFilter.getWorkflowIds().parallelStream().filter(w -> JOCResourceImpl.canAdd(
                 WorkflowPaths.getPath(w), permittedFolders)).map(w -> {
                     if (w.getVersionId() == null || w.getVersionId().isEmpty()) {
-                        return currentstate.repo().pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(w.getPath())));
+                        return currentstate.repo().pathToCheckedWorkflow(WorkflowPath.of(JocInventory.pathToName(w.getPath())));
                     } else {
-                        return currentstate.repo().idToWorkflow(JWorkflowId.of(JocInventory.pathToName(w.getPath()), w.getVersionId()));
+                        return currentstate.repo().idToCheckedWorkflow(JWorkflowId.of(JocInventory.pathToName(w.getPath()), w.getVersionId()));
                     }
                 }).filter(Either::isRight).map(Either::get).map(JWorkflow::id).map(JWorkflowId::asScala).collect(Collectors.toSet());
 
@@ -736,6 +759,19 @@ public class WorkflowsHelper {
             }
         }
         return groupedState;
+    }
+    
+    public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromWorkflowPath(WorkflowPath workflowPath,
+            DBItemJocAuditLog dbAuditLog, String controllerId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(WorkflowPaths.getPath(workflowPath.string()), ObjectType.WORKFLOW.intValue(),
+                        controllerId), null, dbAuditLog);
+                return Either.right(null);
+            } catch (Exception e) {
+                return Either.left(e);
+            }
+        });
     }
     
 }

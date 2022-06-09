@@ -3,6 +3,7 @@ package com.sos.joc.classes.event;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -93,8 +94,8 @@ import js7.data.order.OrderEvent.OrderSuspensionMarked;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
 import js7.data.subagent.SubagentId;
-import js7.data.subagent.SubagentSelectionId;
 import js7.data.subagent.SubagentItemStateEvent;
+import js7.data.subagent.SubagentSelectionId;
 import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.instructions.BoardInstruction;
 import js7.data_for_java.controller.JControllerState;
@@ -374,12 +375,10 @@ public class EventService {
                         addEvent(createTaskEventOfOrder(eventId, w));
                     } else if (evt instanceof OrderLockEvent) {
                         OrderLockEvent lockEvt = (OrderLockEvent) evt;
-                        JavaConverters.asJava(lockEvt.lockPaths()).forEach(lock -> {
-                            addEvent(createLockEvent(eventId, lock.string()));
-                        });
+                        JavaConverters.asJava(lockEvt.lockPaths()).forEach(lock -> addEvent(createLockEvent(eventId, lock.string())));
                     } else if (evt instanceof OrderNoticeEvent) {
-                        orderPositionToBoardPath(optOrder, currentState).ifPresent(boardPath -> addEvent(createBoardEvent(eventId,
-                                boardPath.string())));
+                        orderPositionToBoardPaths(optOrder, currentState).ifPresent(boardPaths -> boardPaths.forEach(boardPath -> createBoardEvent(
+                                eventId, boardPath.string())));
                     }
                 } else {
                     //LOGGER.info("Order is not in current state");
@@ -464,10 +463,10 @@ public class EventService {
         }
     };
     
-    private static Optional<BoardPath> orderPositionToBoardPath(JOrder order, JControllerState controllerState) {
+    private static Optional<Set<BoardPath>> orderPositionToBoardPaths(JOrder order, JControllerState controllerState) {
         Optional<JOrder> orderOpt = order == null ? Optional.empty() : Optional.of(order);
         return orderOpt.map(o -> controllerState.asScala().instruction(o.asScala().workflowPosition())).flatMap(instruction -> tryCast(
-                BoardInstruction.class, instruction)).map(postNotice -> postNotice.boardPath());
+                BoardInstruction.class, instruction)).map(postNotice -> JavaConverters.asJava(postNotice.referencedBoardPaths()));
     }
 
     @SuppressWarnings("unchecked")

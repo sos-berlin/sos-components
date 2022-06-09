@@ -87,7 +87,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     } else {
                         CheckJavaVariableName.test("orderName", order.getOrderName());
                     }
-                    Either<Problem, JWorkflow> e = currentState.repo().pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())));
+                    Either<Problem, JWorkflow> e = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())));
                     ProblemHelper.throwProblemIfExist(e);
                     Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
                     order.setArguments(OrdersHelper.checkArguments(order.getArguments(), JsonConverter.signOrderPreparationToInvOrderPreparation(

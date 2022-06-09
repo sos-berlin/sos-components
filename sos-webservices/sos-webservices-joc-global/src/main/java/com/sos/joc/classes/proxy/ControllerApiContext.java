@@ -12,6 +12,7 @@ import js7.data_for_java.auth.JAdmission;
 import js7.data_for_java.auth.JHttpsConfig;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JProxyContext;
+import scala.collection.JavaConverters;
 
 public class ControllerApiContext {
 
@@ -48,7 +49,7 @@ public class ControllerApiContext {
         } else if (credentials.getUrl().startsWith("https://") || (credentials.getBackupUrl() != null && credentials.getBackupUrl().startsWith(
                 "https://"))) {
             JHttpsConfig httpsConfig = credentials.getHttpsConfig();
-            if (httpsConfig.asScala().trustStoreRefs() == null || httpsConfig.asScala().trustStoreRefs().toIterable().isEmpty()) {
+            if (httpsConfig.asScala().trustStoreRefs() == null || JavaConverters.asJava(httpsConfig.asScala().trustStoreRefs()).isEmpty()) {
                 throw new ControllerConnectionRefusedException("Required truststore not found");
             } else if (credentials.getAccount().toScala().isEmpty() && !httpsConfig.asScala().keyStoreRef().nonEmpty()) {
                 throw new ControllerConnectionRefusedException("Neither account is specified nor client certificate was found");

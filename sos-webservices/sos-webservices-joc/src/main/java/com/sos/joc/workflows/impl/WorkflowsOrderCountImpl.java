@@ -17,16 +17,16 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersSummary;
-import com.sos.joc.model.workflow.WorkflowIdsFilter;
+import com.sos.joc.model.workflow.WorkflowOrderCountFilter;
 import com.sos.joc.model.workflow.WorkflowOrderCount;
 import com.sos.joc.model.workflow.WorkflowsOrderCount;
-import com.sos.joc.workflows.resource.IWorkflowsOrderCountResource;
+import com.sos.joc.workflows.resource.IWorkflowsOrderCount;
 import com.sos.schema.JsonValidator;
 
 import js7.data_for_java.controller.JControllerState;
 
 @Path("workflows")
-public class WorkflowsOrderCountResourceImpl extends JOCResourceImpl implements IWorkflowsOrderCountResource {
+public class WorkflowsOrderCountImpl extends JOCResourceImpl implements IWorkflowsOrderCount {
 
     private static final String API_CALL = "./workflows/order_count";
 
@@ -34,8 +34,8 @@ public class WorkflowsOrderCountResourceImpl extends JOCResourceImpl implements 
     public JOCDefaultResponse postOrderCount(String accessToken, byte[] filterBytes) {
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, WorkflowIdsFilter.class);
-            WorkflowIdsFilter workflowsFilter = Globals.objectMapper.readValue(filterBytes, WorkflowIdsFilter.class);
+            JsonValidator.validateFailFast(filterBytes, WorkflowOrderCountFilter.class);
+            WorkflowOrderCountFilter workflowsFilter = Globals.objectMapper.readValue(filterBytes, WorkflowOrderCountFilter.class);
             String controllerId = workflowsFilter.getControllerId();
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getWorkflows()
                     .getView());

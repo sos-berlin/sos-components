@@ -54,7 +54,7 @@ public class SyncStateHelper {
                 stateText = SyncStateText.NOT_DEPLOYED;
             } else {
                 if (currentstate != null) {
-                    stateText = getState(currentstate.repo().pathToWorkflow(WorkflowPath.of(deployedNames.get(invCId))));
+                    stateText = getState(currentstate.repo().pathToCheckedWorkflow(WorkflowPath.of(deployedNames.get(invCId))));
                 }
             }
             break;
@@ -111,7 +111,7 @@ public class SyncStateHelper {
         }
         switch (type) {
         case WORKFLOW:
-            return isNotInSync(currentstate.repo().pathToWorkflow(WorkflowPath.of(name)));
+            return isNotInSync(currentstate.repo().pathToCheckedWorkflow(WorkflowPath.of(name)));
         case JOBRESOURCE:
             return currentstate.pathToJobResource().get(JobResourcePath.of(name)) != null;
         case LOCK:

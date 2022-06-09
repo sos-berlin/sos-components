@@ -31,6 +31,7 @@ import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
+import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersPositions;
@@ -74,6 +75,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
         //
     }
     
+    @SuppressWarnings("unlikely-arg-type")
     @JsonIgnore
     public CheckedOrdersPositions get(Set<String> orders, JControllerState currentState, Set<Folder> permittedFolders) throws JsonParseException,
             JsonMappingException, IOException, JocException {
@@ -120,7 +122,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
         } else {
 
             JWorkflowId workflowId = suspendedOrFailedOrders.keySet().iterator().next();
-            Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(workflowId);
+            Either<Problem, JWorkflow> e = currentState.repo().idToCheckedWorkflow(workflowId);
             ProblemHelper.throwProblemIfExist(e);
             JsonNode node = Globals.objectMapper.readTree(e.get().withPositions().toJson());
             List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
@@ -173,10 +175,10 @@ public class CheckedOrdersPositions extends OrdersPositions {
             boolean withStatusCheck) throws JsonParseException, JsonMappingException, IOException, JocBadRequestException,
             JocFolderPermissionsException {
 
-        Either<Problem, JOrder> orderE = currentState.idToCheckedOrder(OrderId.of(order));
-        ProblemHelper.throwProblemIfExist(orderE);
-        
-        JOrder jOrder = orderE.get();
+        JOrder jOrder = currentState.idToOrder().get(OrderId.of(order));
+        if (jOrder == null) {
+            throw new JocObjectNotExistException(String.format("Unknown OrderId: %s", order));
+        }
         jOrders = Collections.singleton(jOrder);
         boolean isSuspendedOrFailed = OrdersHelper.isSuspendedOrFailed(jOrder);
         if (withStatusCheck && !isSuspendedOrFailed) {
@@ -188,7 +190,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
         }
 
         JWorkflowId workflowId = jOrder.workflowId();
-        Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(workflowId);
+        Either<Problem, JWorkflow> e = currentState.repo().idToCheckedWorkflow(workflowId);
         ProblemHelper.throwProblemIfExist(e);
         JsonNode node = Globals.objectMapper.readTree(e.get().withPositions().toJson());
         List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));

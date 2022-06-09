@@ -145,11 +145,10 @@ public class FavoriteDBLayer extends DBLayer {
                 }
             }
             item.setModified(now);
-            if (FavoriteType.AGENT.equals(storeFavorite.getType())) {
-                item.setFavorite(null);
-            } else {
-                item.setFavorite(storeFavorite.getContent());
+            if (storeFavorite.getContent() != null && storeFavorite.getContent().isEmpty()) {
+                storeFavorite.setContent(null); 
             }
+            item.setFavorite(storeFavorite.getContent());
             if (isNew) {
                 getSession().save(item);
                 ordering++;

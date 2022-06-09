@@ -9,7 +9,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IWorkflowsOrderCountResource {
+public interface IWorkflowsOrderCount {
 
     @POST
     @Path("order_count")

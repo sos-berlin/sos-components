@@ -41,7 +41,7 @@ import com.sos.joc.model.common.Folder;
 import js7.data.board.BoardPath;
 import js7.data.board.BoardState;
 import js7.data.order.Order;
-import js7.data.workflow.instructions.ExpectNotice;
+import js7.data.workflow.instructions.ExpectNotices;
 import js7.data_for_java.board.JBoardState;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
@@ -183,21 +183,26 @@ public class BoardHelper {
         if (controllerState == null || boardPaths == null || boardPaths.isEmpty()) {
             return Stream.empty();
         }
-        Function<JOrder, ExpectingOrder> mapper = order -> {
-            BoardPath boardPath = ((ExpectNotice) controllerState.asScala().instruction(order.asScala().workflowPosition())).boardPath();
-            if (boardPaths.contains(boardPath.string())) {
-                return new ExpectingOrder(order, boardPath);
-            }
-            return null;
+        Function<JOrder, Stream<ExpectingOrder>> mapper = order -> {    
+            Set<BoardPath> refBoardPaths = JavaConverters.asJava(((ExpectNotices) controllerState.asScala().instruction(order.asScala()
+                    .workflowPosition())).boardPathExpr().boardPaths());
+            return refBoardPaths.stream().filter(bp -> boardPaths.contains(bp.string())).map(bp -> new ExpectingOrder(order, bp));
         };
+//        Function<JOrder, ExpectingOrder> mapper = order -> {
+//            BoardPath boardPath = ((ExpectNotice) controllerState.asScala().instruction(order.asScala().workflowPosition())).boardPath();
+//            if (boardPaths.contains(boardPath.string())) {
+//                return new ExpectingOrder(order, boardPath);
+//            }
+//            return null;
+//        };
         if (permittedFolders == null || permittedFolders.isEmpty()) {
-            return controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotice.class)).parallel().map(mapper).filter(
+            return controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotices.class)).parallel().flatMap(mapper).filter(
                     Objects::nonNull);
         }
         ConcurrentMap<JWorkflowId, List<JOrder>> ordersPerWorkflow = controllerState.ordersBy(JOrderPredicates.byOrderState(
-                Order.ExpectingNotice.class)).parallel().collect(Collectors.groupingByConcurrent(JOrder::workflowId));
+                Order.ExpectingNotices.class)).parallel().collect(Collectors.groupingByConcurrent(JOrder::workflowId));
         return ordersPerWorkflow.entrySet().parallelStream().filter(e -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
-                permittedFolders)).flatMap(e -> e.getValue().stream()).map(mapper).filter(Objects::nonNull);
+                permittedFolders)).flatMap(e -> e.getValue().stream()).flatMap(mapper).filter(Objects::nonNull);
     }
     
     private static Board init(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {

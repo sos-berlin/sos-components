@@ -249,7 +249,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         }
         return workflowStream.map(wId -> {
             if (wId.getVersionId() == null) {
-                Either<Problem, JWorkflow> wE = controllerState.repo().pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(wId.getPath())));
+                Either<Problem, JWorkflow> wE = controllerState.repo().pathToCheckedWorkflow(WorkflowPath.of(JocInventory.pathToName(wId.getPath())));
                 if (wE.isRight()) {
                     return wE.get().id().asScala();
                 } else {

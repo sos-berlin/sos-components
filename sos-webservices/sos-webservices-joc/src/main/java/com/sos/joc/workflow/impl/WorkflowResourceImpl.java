@@ -29,7 +29,6 @@ import com.sos.joc.workflow.resource.IWorkflowResource;
 import com.sos.schema.JsonValidator;
 
 import js7.data_for_java.controller.JControllerState;
-import js7.data_for_java.workflow.JWorkflowId;
 
 @Path("workflow")
 public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowResource {
@@ -59,7 +58,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             final JControllerState currentstate = getCurrentState(controllerId);
             if (currentstate != null) {
                 entity.setSurveyDate(Date.from(currentstate.instant()));
-                //LOGGER.info(currentstate.repo().idToWorkflow(JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId)).get().withPositions().toJson());
+                //LOGGER.info(currentstate.repo().idToCheckedWorkflow(JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId)).get().withPositions().toJson());
             }
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);

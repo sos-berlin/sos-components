@@ -74,6 +74,7 @@ public class ProxyTest {
                     put(Order.DelayedAfterError.class, "waiting");
                     put(Order.Forked.class, "waiting");
                     put(Order.ExpectingNotice.class, "waiting");
+                    put(Order.ExpectingNotices.class, "waiting");
                     put(Order.BetweenCycles.class, "waiting");
                     put(Order.WaitingForLock$.class, "waiting");
                     put(Order.Broken.class, "failed");
@@ -298,9 +299,9 @@ public class ProxyTest {
             JControllerProxy controllerProxy = Proxy.of(credential);
             LOGGER.info(Instant.now().toString());
             JControllerState state = controllerProxy.currentState();
-            //LOGGER.info("++++++"+state.repo().idToWorkflow(JWorkflowId.of("/workflow2", "05294efb-9f3e-45ac-881f-0e2e027ed712")).get().toJson());
+            //LOGGER.info("++++++"+state.repo().idToCheckedWorkflow(JWorkflowId.of("/workflow2", "05294efb-9f3e-45ac-881f-0e2e027ed712")).get().toJson());
             //LOGGER.info("++++++"+state.underlying().repo().currentItems().size());
-            //LOGGER.info("++++++"+state.repo().pathToWorkflow(WorkflowPath.of("/workflow2")).get().toJson());
+            //LOGGER.info("++++++"+state.repo().pathToCheckedWorkflow(WorkflowPath.of("/workflow2")).get().toJson());
             JClusterState clusterState = state.clusterState();
             LOGGER.info(clusterState.toJson());
 

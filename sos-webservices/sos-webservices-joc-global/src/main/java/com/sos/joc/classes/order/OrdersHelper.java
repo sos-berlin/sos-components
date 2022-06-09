@@ -123,7 +123,8 @@ public class OrdersHelper {
 
                 {
                     put(Order.Fresh$.class, OrderStateText.SCHEDULED);
-                    put(Order.ExpectingNotice.class, OrderStateText.WAITING);
+                    put(Order.ExpectingNotice.class, OrderStateText.WAITING); // only until 2.3
+                    put(Order.ExpectingNotices.class, OrderStateText.WAITING);
                     put(Order.DelayedAfterError.class, OrderStateText.WAITING);
                     put(Order.Forked.class, OrderStateText.WAITING);
                     put(Order.WaitingForLock$.class, OrderStateText.WAITING);
@@ -153,6 +154,7 @@ public class OrdersHelper {
             put("DelayedAfterError", OrderStateText.WAITING);
             put("Forked", OrderStateText.WAITING);
             put("ExpectingNotice", OrderStateText.WAITING);
+            put("ExpectingNotices", OrderStateText.WAITING);
             put("WaitingForLock", OrderStateText.WAITING);
             put("BetweenCycles", OrderStateText.WAITING);
             put("Broken", OrderStateText.FAILED);
@@ -179,6 +181,7 @@ public class OrdersHelper {
             put("DelayedAfterError", OrderWaitingReason.DELAYED_AFTER_ERROR);
             put("Forked", OrderWaitingReason.FORKED);
             put("ExpectingNotice", OrderWaitingReason.EXPECTING_NOTICE);
+            put("ExpectingNotices", OrderWaitingReason.EXPECTING_NOTICE); // TODO introduce plural in OrderWaitingReason??
             put("WaitingForLock", OrderWaitingReason.WAITING_FOR_LOCK);
             put("BetweenCycles", OrderWaitingReason.BETWEEN_CYCLES);
         }
@@ -464,7 +467,7 @@ public class OrdersHelper {
 
     public static OrderPreparation getOrderPreparation(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
             IOException {
-        Either<Problem, JWorkflow> eW = currentState.repo().idToWorkflow(jOrder.workflowId());
+        Either<Problem, JWorkflow> eW = currentState.repo().idToCheckedWorkflow(jOrder.workflowId());
         ProblemHelper.throwProblemIfExist(eW);
         return Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderPreparation();
     }
@@ -476,7 +479,7 @@ public class OrdersHelper {
 
     public static List<String> getFinalParameters(JWorkflowId jWorkflowId, JControllerState currentState) {
         try {
-            Either<Problem, JWorkflow> eW = currentState.repo().idToWorkflow(jWorkflowId);
+            Either<Problem, JWorkflow> eW = currentState.repo().idToCheckedWorkflow(jWorkflowId);
             ProblemHelper.throwProblemIfExist(eW);
             OrderPreparation op = Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderPreparation();
             if (op != null && op.getParameters() != null && op.getParameters().getAdditionalProperties() != null) {
@@ -694,7 +697,7 @@ public class OrdersHelper {
             Either<Err419, FreshOrder> either = null;
             try {
                 Map<String, Value> args = order.arguments();
-                Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(order.workflowId());
+                Either<Problem, JWorkflow> e = currentState.repo().idToCheckedWorkflow(order.workflowId());
                 ProblemHelper.throwProblemIfExist(e);
                 String workflowPath = WorkflowPaths.getPath(e.get().id());
                 if (!folderPermissions.isPermittedForFolder(Paths.get(workflowPath).getParent().toString().replace('\\', '/'))) {
