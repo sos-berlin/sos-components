@@ -7,7 +7,7 @@ public class SOSInitialPasswordSetting {
 
     public String getInitialPassword() {
         if (initialPassword == null) {
-            return "initial";
+            return SOSAuthHelper.INITIAL;
         }
         return initialPassword;
     }

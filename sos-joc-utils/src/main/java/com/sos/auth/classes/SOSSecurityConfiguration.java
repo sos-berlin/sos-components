@@ -1,4 +1,4 @@
-package com.sos.joc.utils;
+package com.sos.auth.classes;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSInitialPasswordSetting;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.classes.security.SOSPermissionMapTable;
 import com.sos.joc.classes.security.SOSSecurityConfigurationAccountEntry;
@@ -57,11 +58,11 @@ public class SOSSecurityConfiguration {
         ini = Ini.fromResourcePath(iniFileName);
     }
 
-    private void getInitialPassword() {
+    private void getInitialPassword(SOSHibernateSession sosHibernateSession) {
         if (initialPassword == null) {
+
             try {
-                SOSInitialPasswordSetting sosInitialPasswordSetting;
-                sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(null);
+                SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
                 initialPassword = sosInitialPasswordSetting.getInitialPassword();
             } catch (SOSHibernateException | IOException e) {
                 initialPassword = SOSAuthHelper.INITIAL;
@@ -69,13 +70,14 @@ public class SOSSecurityConfiguration {
         }
     }
 
-    private List<SecurityConfigurationAccount> getAccounts() {
+    private List<SecurityConfigurationAccount> getAccounts(SOSHibernateSession sosHibernateSession) {
 
         final Section s = getSection(SECTION_USERS);
 
         if (s != null) {
             Long identityServiceId = 0L;
-            getInitialPassword();
+            getInitialPassword(sosHibernateSession);
+
             return s.entrySet().stream().map(entry -> {
                 SecurityConfigurationAccount securityConfigurationAccount = new SecurityConfigurationAccount();
                 SOSSecurityConfigurationAccountEntry sosSecurityConfigurationAccountEntry = new SOSSecurityConfigurationAccountEntry(entry
@@ -217,16 +219,20 @@ public class SOSSecurityConfiguration {
         return s;
     }
 
-    public SecurityConfiguration readConfigurationFromFilesystem(Path iniFilename) throws InvalidFileFormatException, IOException, JocException {
+    public SecurityConfiguration readConfigurationFromFilesystem(SOSHibernateSession sosHibernateSession, Path iniFilename)
+            throws InvalidFileFormatException, IOException, JocException {
         writeIni = new Wini(iniFilename.toFile());
 
         SecurityConfiguration secConfig = new SecurityConfiguration();
 
         secConfig.setMain(getMain());
-        secConfig.setAccounts(getAccounts());
+        secConfig.setAccounts(getAccounts(sosHibernateSession));
         secConfig.setRoles(getRoles());
 
         return secConfig;
     }
 
+    public static boolean haveShiro() {
+        return true;
+    }
 }

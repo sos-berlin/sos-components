@@ -146,7 +146,7 @@ public class SOSAuthHelper {
             }
             if (initialPassword == null) {
                 initialPassword = INITIAL;
-                LOGGER.warn("Missing initial password settings. Using default value=" + INITIAL);
+                LOGGER.debug("Missing initial password settings. Using default value=" + INITIAL);
             } else {
                 if (initialPassword.length() < minPasswordLength) {
                     JocError error = new JocError();
