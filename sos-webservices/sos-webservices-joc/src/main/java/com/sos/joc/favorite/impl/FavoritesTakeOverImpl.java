@@ -2,6 +2,9 @@ package com.sos.joc.favorite.impl;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -14,6 +17,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.favorite.resource.IFavoritesTakeOver;
 import com.sos.joc.model.favorite.FavoriteSharedIdentifier;
 import com.sos.joc.model.favorite.FavoriteSharedIdentifiers;
+import com.sos.joc.model.favorite.FavoriteType;
 import com.sos.schema.JsonValidator;
 
 @Path("inventory/favorites")
@@ -40,10 +44,15 @@ public class FavoritesTakeOverImpl extends JOCResourceImpl implements IFavorites
             connection.beginTransaction();
             FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, account);
             
+            Map<FavoriteType, Set<FavoriteSharedIdentifier>> favoritesMap = favorites.getSharedFavoriteIds().stream().collect(Collectors.groupingBy(
+                    FavoriteSharedIdentifier::getType, Collectors.toSet()));
             Date now = Date.from(Instant.now());
-            int position = dbLayer.maxOrdering();
-            for (FavoriteSharedIdentifier f : favorites.getSharedFavoriteIds()) {
-                dbLayer.takeOverFavorite(f, now, ++position);
+            for (Map.Entry<FavoriteType, Set<FavoriteSharedIdentifier>> entry : favoritesMap.entrySet()) {
+                int position = dbLayer.maxOrdering(entry.getKey());
+                position++;
+                for (FavoriteSharedIdentifier f : entry.getValue()) {
+                    position = dbLayer.takeOverFavorite(f, now, position);
+                }
             }
             
             Globals.commit(connection);

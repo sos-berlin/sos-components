@@ -137,9 +137,10 @@ public class JsonValidator {
             
             put("com.sos.joc.model.favorite.FavoriteIdentifiers", "favorite/identifiers-schema.json");
             put("com.sos.joc.model.favorite.FavoriteSharedIdentifiers", "favorite/sharedIdentifiers-schema.json");
-            put("com.sos.joc.model.agent.OrderingFavorites", "favorite/orderingFavorite-schema.json");
+            put("com.sos.joc.model.favorite.OrderingFavorites", "favorite/orderingFavorite-schema.json");
             put("com.sos.joc.model.favorite.StoreFavorites", "favorite/storeFavorites-schema.json");
             put("com.sos.joc.model.favorite.ReadFavoritesFilter", "favorite/readFavoritesFilter-schema.json");
+            put("com.sos.joc.model.favorite.RenameFavorites", "favorite/renameFavorites-schema.json");
 
             put("ReleaseFilter", "inventory/release/release-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFolder", "inventory/common/request-folder-schema.json");

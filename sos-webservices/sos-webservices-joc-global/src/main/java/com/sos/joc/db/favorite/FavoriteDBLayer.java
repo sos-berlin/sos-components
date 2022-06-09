@@ -1,6 +1,5 @@
 package com.sos.joc.db.favorite;
 
-import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
@@ -96,7 +95,7 @@ public class FavoriteDBLayer extends DBLayer {
         }
     }
     
-    public void takeOverFavorite(FavoriteSharedIdentifier sharedFavorite, Date now, Integer ordering) {
+    public Integer takeOverFavorite(FavoriteSharedIdentifier sharedFavorite, Date now, Integer ordering) {
         try {
             DBItemInventoryFavorite sharedItem = getSharedFavorite(sharedFavorite);
             DBItemInventoryFavorite item = getFavorite(sharedFavorite);
@@ -115,9 +114,11 @@ public class FavoriteDBLayer extends DBLayer {
             item.setFavorite(sharedItem.getFavorite());
             if (isNew) {
                 getSession().save(item);
+                ordering++;
             } else {
                 getSession().update(item);
             }
+            return ordering;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -125,10 +126,9 @@ public class FavoriteDBLayer extends DBLayer {
         }
     }
     
-    public void storeFavorite(StoreFavorite storeFavorite, Integer ordering) {
+    public Integer storeFavorite(StoreFavorite storeFavorite, Date now, Integer ordering) {
         try {
             DBItemInventoryFavorite item = getFavorite(storeFavorite.getName(), storeFavorite.getType());
-            Date now = Date.from(Instant.now());
             boolean isNew = (item == null);
             if (isNew) {
                 item = new DBItemInventoryFavorite();
@@ -145,12 +145,18 @@ public class FavoriteDBLayer extends DBLayer {
                 }
             }
             item.setModified(now);
-            item.setFavorite(storeFavorite.getContent());
+            if (FavoriteType.AGENT.equals(storeFavorite.getType())) {
+                item.setFavorite(null);
+            } else {
+                item.setFavorite(storeFavorite.getContent());
+            }
             if (isNew) {
                 getSession().save(item);
+                ordering++;
             } else {
                 getSession().update(item);
             }
+            return ordering;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -267,11 +273,14 @@ public class FavoriteDBLayer extends DBLayer {
         }
     }
 
-    public int maxOrdering() throws SOSHibernateException {
+    public int maxOrdering(FavoriteType type) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select max(ordering) from ").append(DBLayer.DBITEM_INV_FAVORITES);
-        hql.append(" where account != :account");
+        hql.append(" where account = :account");
+        hql.append(" and type = :type");
+        
         Query<Integer> query = getSession().createQuery(hql.toString());
         query.setParameter("account", account);
+        query.setParameter("type", type.intValue());
         Integer result = getSession().getSingleResult(query);
         if (result == null) {
             return -1;

@@ -51,7 +51,7 @@ public class FavoritesResourceImpl extends JOCResourceImpl implements IFavorites
             List<Favorite> ownFavs = new ArrayList<>();
             List<Favorite> sharedFavs = new ArrayList<>();
 
-            if (favoritesFilter.getFavoriteIds() != null) {
+            if (favoritesFilter.getFavoriteIds() != null && !favoritesFilter.getFavoriteIds().isEmpty()) {
                 Map<FavoriteType, Set<String>> favoriteMap = favoritesFilter.getFavoriteIds().stream().collect(Collectors.groupingBy(
                         FavoriteIdentifier::getType, Collectors.mapping(FavoriteIdentifier::getName, Collectors.toSet())));
                 for (Map.Entry<FavoriteType, Set<String>> f : favoriteMap.entrySet()) {
