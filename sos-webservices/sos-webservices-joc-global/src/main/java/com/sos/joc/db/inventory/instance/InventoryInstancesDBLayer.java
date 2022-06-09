@@ -119,7 +119,11 @@ public class InventoryInstancesDBLayer {
                 query.setParameter("controllerId", controllerId);
             }
             query.setParameter("securityLevel", level.intValue());
-            return session.getResultList(query);
+            List<DBItemInventoryJSInstance> result = session.getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
