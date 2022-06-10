@@ -96,6 +96,7 @@ import js7.data.order.OrderId;
 import js7.data.subagent.SubagentId;
 import js7.data.subagent.SubagentItemStateEvent;
 import js7.data.subagent.SubagentSelectionId;
+import js7.data.workflow.WorkflowControlEvent;
 import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.instructions.BoardInstruction;
 import js7.data_for_java.controller.JControllerState;
@@ -118,7 +119,8 @@ public class EventService {
             OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, 
             OrderPrompted.class, OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, 
             VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, ItemDeleted.class, BoardEvent.class,
-            OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class, OrderNoticeEvent.class, SubagentItemStateEvent.class);
+            OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class, OrderNoticeEvent.class, SubagentItemStateEvent.class,
+            WorkflowControlEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
@@ -454,6 +456,9 @@ public class EventService {
             } else if (evt instanceof SubagentItemStateEvent && !(evt instanceof SubagentItemStateEvent.SubagentEventsObserved$)) {
                 addEvent(createAgentEvent(eventId, ((SubagentId) key).string()));
                 
+            } else if (evt instanceof WorkflowControlEvent) {
+                addEvent(createWorkflowEvent(eventId, ((WorkflowPath) key).string()));
+                
             } else if (evt instanceof BoardEvent) {
                 addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
             }
@@ -595,6 +600,10 @@ public class EventService {
 //        evt.setObjectType(EventType.JOBRESOURCE);
 //        return evt;
 //    }
+    
+    private EventSnapshot createWorkflowEvent(long eventId, String path) {
+        return createWorkflowEvent(eventId, path, "WorkflowStateChanged");
+    }
     
     private EventSnapshot createWorkflowEvent(long eventId, String path, String eventType) {
         EventSnapshot evt = new EventSnapshot();
