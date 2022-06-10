@@ -23,7 +23,7 @@ import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
- 
+
 public class IamIdentityServiceDBLayer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IamIdentityServiceDBLayer.class);
@@ -198,7 +198,6 @@ public class IamIdentityServiceDBLayer {
         int count = identityServices2BeDeleted.size();
         if (count > 0) {
             count = this.delete(filter);
-
             for (DBItemIamIdentityService dbItemIamIdentityService : identityServices2BeDeleted) {
                 Long identityServiceId = dbItemIamIdentityService.getId();
                 List<DBItemIamAccount> listOfDeletedAccounts = deleteAccountsByServiceId(identityServiceId);
@@ -211,6 +210,9 @@ public class IamIdentityServiceDBLayer {
                         deleteInVault(accounts, dbItemIamIdentityService.getId(), dbItemIamIdentityService.getIdentityServiceName(),
                                 IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
                     }
+                } catch (IllegalArgumentException e) {
+                    LOGGER.warn("Unknown Identity Service found" + dbItemIamIdentityService.getIdentityServiceType());
+
                 } catch (AccessDeniedException e) {
                     LOGGER.warn(e.getCause() + " -> file:" + e.getFile());
 

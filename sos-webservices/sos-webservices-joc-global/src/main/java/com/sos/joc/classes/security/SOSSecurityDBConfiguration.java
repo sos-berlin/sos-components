@@ -48,7 +48,7 @@ import com.sos.joc.model.security.configuration.permissions.IniPermissions;
 import com.sos.joc.model.security.configuration.permissions.SecurityConfigurationFolders;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
-public class SOSSecurityDBConfiguration  {
+public class SOSSecurityDBConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecurityDBConfiguration.class);
 
@@ -179,8 +179,7 @@ public class SOSSecurityDBConfiguration  {
             }
 
             if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                storeInVault(webserviceCredentials, securityConfigurationAccount, password, IdentityServiceTypes.fromValue(dbItemIamIdentityService
-                        .getIdentityServiceType()));
+                storeInVault(webserviceCredentials, securityConfigurationAccount, password, IdentityServiceTypes.VAULT_JOC_ACTIVE);
             }
         }
     }
@@ -200,7 +199,6 @@ public class SOSSecurityDBConfiguration  {
             }
         }
     }
-
 
     private void storePermissions(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService) throws SOSHibernateException {
@@ -318,7 +316,6 @@ public class SOSSecurityDBConfiguration  {
         }
 
     }
-
 
     public SecurityConfiguration importConfiguration(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {

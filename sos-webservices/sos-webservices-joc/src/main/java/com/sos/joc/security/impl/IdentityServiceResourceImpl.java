@@ -70,7 +70,13 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             if (dbItemIamIdentityService != null) {
                 identityService.setDisabled(dbItemIamIdentityService.getDisabled());
                 identityService.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
-                identityService.setIdentityServiceType(IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
+                try {
+                    identityService.setIdentityServiceType(IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
+                } catch (IllegalArgumentException e) {
+                    identityService.setIdentityServiceType(IdentityServiceTypes.UNKNOWN);
+                    LOGGER.warn("Unknown Identity Service found" + dbItemIamIdentityService.getIdentityServiceType());
+                }
+
                 identityService.setServiceAuthenticationScheme(IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService
                         .getAuthenticationScheme()));
                 identityService.setSingleFactorCert(dbItemIamIdentityService.getSingleFactorCert());
@@ -309,7 +315,12 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 IdentityService identityService = new IdentityService();
                 identityService.setDisabled(dbItemIamIdentityService.getDisabled());
                 identityService.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
-                identityService.setIdentityServiceType(IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
+                try {
+                    identityService.setIdentityServiceType(IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
+                } catch (IllegalArgumentException e) {
+                    identityService.setIdentityServiceType(IdentityServiceTypes.UNKNOWN);
+                    LOGGER.warn("Unknown Identity Service found" + dbItemIamIdentityService.getIdentityServiceType());
+                }
                 identityService.setServiceAuthenticationScheme(IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService
                         .getAuthenticationScheme()));
                 identityService.setSingleFactorCert(dbItemIamIdentityService.getSingleFactorCert());

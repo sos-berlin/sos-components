@@ -29,9 +29,12 @@ public class SOSIdentityService {
     public SOSIdentityService(DBItemIamIdentityService dbItemIamIdentityService) {
         super();
         this.identityServiceName = dbItemIamIdentityService.getIdentityServiceName();
-        this.identyServiceType = IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType());
+        try {
+            this.identyServiceType = IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType());
+        } catch (IllegalArgumentException e) {
+            this.identyServiceType = IdentityServiceTypes.UNKNOWN;
+        }
         this.identityServiceId = dbItemIamIdentityService.getId();
-
         this.identityServiceAuthenticationScheme = IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService.getAuthenticationScheme());
         this.singleFactorCert = dbItemIamIdentityService.getSingleFactorCert();
         this.singleFactorPwd = dbItemIamIdentityService.getSingleFactorPwd();
