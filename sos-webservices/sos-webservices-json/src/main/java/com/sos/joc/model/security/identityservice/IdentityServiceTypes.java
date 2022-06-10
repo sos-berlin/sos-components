@@ -13,6 +13,7 @@ public enum IdentityServiceTypes {
     VAULT_JOC_ACTIVE("VAULT-JOC-ACTIVE"),
     LDAP("LDAP"),
     LDAP_JOC("LDAP-JOC"),
+    UNKNOWN("UNKNOWN"),
     JOC("JOC");
     private final String value;
     private final static Map<String, IdentityServiceTypes> CONSTANTS = new HashMap<String, IdentityServiceTypes>();
