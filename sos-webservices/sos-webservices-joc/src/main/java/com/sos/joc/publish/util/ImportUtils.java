@@ -697,7 +697,7 @@ public class ImportUtils {
                     wdcEdit.setPath(normalizedPath);
                     wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
                     return wdcEdit;
-                } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
+                } else if (CalendarType.NONWORKINGDAYSCALENDAR.equals(cal.getType())) {
                     NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
                     nwdcEdit.setConfiguration(cal);
                     nwdcEdit.setName(Paths.get(normalizedPath).getFileName().toString());

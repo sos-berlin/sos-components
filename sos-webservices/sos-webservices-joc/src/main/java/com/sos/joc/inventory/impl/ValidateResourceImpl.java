@@ -31,6 +31,9 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             checkRequiredParameter("objectType", objectType);
             Validate entity = new Validate();
             try {
+                if (objectType.toUpperCase().equals("CALENDAR")) {
+                    objectType = ConfigurationType.WORKINGDAYSCALENDAR.value(); 
+                }
                 ConfigurationType type = ConfigurationType.fromValue(objectType.toUpperCase());
                 if (ConfigurationType.FOLDER.equals(type)) {
                     throw new ControllerInvalidResponseDataException("Unsupported objectType:" + objectType);
