@@ -41,6 +41,7 @@ import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
@@ -124,7 +125,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             if (!requestWithEmptyControllerId) { // try update controllers with given controllerId
                 Integer securityLevel = instanceDBLayer.getSecurityLevel(controllerId);
                 if (securityLevel != null && securityLevel != Globals.getJocSecurityLevel().intValue()) {
-                    throw new JocObjectAlreadyExistException(String.format("Controller with Id '%s' is already configured with a different security level '%s'.",
+                    throw new JocObjectAlreadyExistException(String.format("Controller with ID '%s' is already configured with a different security level '%s'.",
                             controllerId, JocSecurityLevel.fromValue(securityLevel)));
                 }
             }
@@ -154,8 +155,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             List<DBItemInventoryJSInstance> dbControllers = instanceDBLayer.getInventoryInstancesByControllerId(controllerId);
             
             if (requestWithEmptyControllerId) { // try insert of new Controllers
-                if (dbControllers != null && !dbControllers.isEmpty()) {
-                    throw new JocObjectAlreadyExistException(String.format("Controller(s) with id '%s' already exists", controllerId));
+                if (!dbControllers.isEmpty()) {
+                    throw new JocObjectAlreadyExistException(String.format("Controller(s) with ID '%s' already exists", controllerId));
                 }
                 if (body.getControllers().size() == 1) {  // standalone
                     RegisterParameter controller = body.getControllers().get(0);
@@ -168,6 +169,9 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 }
                 
             } else { // try update controllers with given controllerId
+                if (dbControllers.isEmpty()) {
+                    throw new DBMissingDataException(String.format("Controller(s) with ID '%s' not found. Don't specify the \"controllerId\" in the request for a new registration.", controllerId));
+                }
                 if (body.getControllers().size() == 1) {  // standalone from request
                     RegisterParameter controller = body.getControllers().get(0);
                     controller.setRole(Role.STANDALONE);
@@ -496,11 +500,11 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             if (!controllerId.isEmpty() && !controllerId.equals(answer.getId())) {
                 if (otherControllerURI != null) {
                     throw new ControllerInvalidResponseDataException(String.format(
-                            "The cluster members must have the same Controller Id: %1$s -> %2$s, %3$s -> %4$s", otherControllerURI.toString(),
+                            "The cluster members must have the same Controller ID: %1$s -> %2$s, %3$s -> %4$s", otherControllerURI.toString(),
                             controllerId, controllerURI, answer.getId()));
                 } else {
                     throw new ControllerInvalidResponseDataException(String.format(
-                            "Connection was successful but controllerId '%s' of URL '%s' is not the expected controllerId '%s'", answer.getId(),
+                            "Connection was successful but Controller ID '%s' of URL '%s' is not the expected Controller ID '%s'", answer.getId(),
                             jobScheduler.getUrl(), controllerId));
                 }
             }
