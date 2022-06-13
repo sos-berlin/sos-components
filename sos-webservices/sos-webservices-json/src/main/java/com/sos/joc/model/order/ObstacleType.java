@@ -10,7 +10,8 @@ public enum ObstacleType {
 
     OrderNotExisting("OrderNotExisting"),
     WaitingForAdmission("WaitingForAdmission"),
-    JobParallelismLimitReached("JobParallelismLimitReached");
+    JobParallelismLimitReached("JobParallelismLimitReached"),
+    WorkflowIsSuspended("WorkflowIsSuspended");
     private final String value;
     private final static Map<String, ObstacleType> CONSTANTS = new HashMap<String, ObstacleType>();
 

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.fileordersource.FileOrderSource;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
@@ -70,25 +71,27 @@ public class WorkflowDeps
      * @param jobResourceNames
      * @param jobs
      * @param timeZone
+     * @param tYPE
      * @param title
      * @param versionDate
      * @param version
      * @param addOrderToWorkflows
+     * @param suspended
      * @param postNoticeBoards
      * @param orderPreparation
      * @param path
      * @param fileOrderSources
-     * @param hasAddOrderDependencies
      * @param versionId
      * @param forkListVariables
      * @param expectedNoticeBoards
      * @param isCurrentVersion
      * @param state
+     * @param hasAddOrderDependencies
      * @param documentationName
      * @param addOrderFromWorkflows
      */
-    public WorkflowDeps(BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, List<Workflow> addOrderToWorkflows, List<Workflow> addOrderFromWorkflows, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasAddOrderDependencies, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
-        super(path, isCurrentVersion, versionDate, state, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, hasAddOrderDependencies, version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
+    public WorkflowDeps(BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, List<Workflow> addOrderToWorkflows, List<Workflow> addOrderFromWorkflows, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasAddOrderDependencies, DeployType tYPE, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
+        super(path, isCurrentVersion, versionDate, state, suspended, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, hasAddOrderDependencies, tYPE, version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
         this.expectedNoticeBoards = expectedNoticeBoards;
         this.postNoticeBoards = postNoticeBoards;
         this.addOrderToWorkflows = addOrderToWorkflows;

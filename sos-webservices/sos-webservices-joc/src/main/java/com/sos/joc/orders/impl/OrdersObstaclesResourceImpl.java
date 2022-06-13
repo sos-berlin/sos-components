@@ -28,8 +28,12 @@ import com.sos.schema.JsonValidator;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
+import js7.data.workflow.WorkflowControlState;
+import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderObstacle;
+import scala.collection.JavaConverters;
 
 @Path("orders")
 public class OrdersObstaclesResourceImpl extends JOCResourceImpl implements IOrdersObstaclesResource {
@@ -58,7 +62,9 @@ public class OrdersObstaclesResourceImpl extends JOCResourceImpl implements IOrd
             }
             Either<Problem, Map<OrderId, Set<JOrderObstacle>>> obstaclesE = currentState.ordersToObstacles(orderIds, surveyDateInstant);
             ProblemHelper.throwProblemIfExist(obstaclesE);
-            
+
+            Map<WorkflowPath, WorkflowControlState> controlStates = JavaConverters.asJava(currentState.asScala().pathToWorkflowControlState_());
+
             Obstacles200 entry = new Obstacles200();
             entry.setSurveyDate(Date.from(surveyDateInstant));
             List<Obstacles> obstaclesSet = new ArrayList<>();
@@ -67,6 +73,15 @@ public class OrdersObstaclesResourceImpl extends JOCResourceImpl implements IOrd
                 Obstacles obs = new Obstacles();
                 obs.setOrderId(obstacles.getKey().string());
                 Set<Obstacle> obstacleSet = new HashSet<>();
+                
+                JOrder order = currentState.idToOrder().get(obstacles.getKey());
+                if (order != null) {
+                    WorkflowControlState controlState = controlStates.get(order.workflowId().path());
+                    if (controlState != null && controlState.workflowControl().suspended()) {
+                        Obstacle ob = new Obstacle();
+                        ob.setType(ObstacleType.WorkflowIsSuspended);
+                    }
+                }
                 for (JOrderObstacle obstacle : obstacles.getValue()) {
                     Obstacle ob = new Obstacle();
                     if (obstacle instanceof JOrderObstacle.WaitingForAdmission) {

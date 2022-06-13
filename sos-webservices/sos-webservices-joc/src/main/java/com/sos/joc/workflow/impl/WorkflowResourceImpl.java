@@ -58,7 +58,14 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             final JControllerState currentstate = getCurrentState(controllerId);
             if (currentstate != null) {
                 entity.setSurveyDate(Date.from(currentstate.instant()));
-                //LOGGER.info(currentstate.repo().idToCheckedWorkflow(JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId)).get().withPositions().toJson());
+//                WorkflowControlState controlState = JavaConverters.asJava(currentstate.asScala().pathToWorkflowControlState_()).get(WorkflowPath.of(workflowPath));
+//                if (controlState != null) {
+//                    LOGGER.info(JavaConverters.asJava(controlState.attachedToAgents()).toString());
+//                    LOGGER.info(controlState.workflowControl().suspended() + "");
+//                    LOGGER.info(JavaConverters.asJava(currentstate.repo().idToCheckedWorkflow(JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId))
+//                            .get().asScala().nameToJob()).values().stream().map(j -> j.agentPath()).distinct().collect(Collectors.toList()).toString());
+//                }
+//                LOGGER.info(currentstate.repo().idToCheckedWorkflow(JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId)).get().withPositions().toJson());
             }
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -74,6 +81,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 workflow.setVersionDate(content.getCreated());
                 workflow.setVersionId(content.getCommitId());
                 workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
+                workflow.setSuspended(WorkflowsHelper.getSuspended(workflow.getState()));
                 
                 if (versionId == null || versionId.isEmpty()) {
                     workflow.setIsCurrentVersion(true);

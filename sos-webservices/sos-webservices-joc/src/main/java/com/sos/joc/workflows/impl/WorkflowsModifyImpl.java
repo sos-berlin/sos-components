@@ -5,9 +5,11 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -29,9 +31,14 @@ import com.sos.joc.workflows.resource.IWorkflowsModify;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
+import js7.data.workflow.WorkflowControlState;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.workflow.JWorkflowId;
+import scala.collection.JavaConverters;
 
 @Path("workflows")
 public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsModify {
@@ -86,23 +93,25 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
         DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyWorkflows.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
         List<String> workflowPaths = modifyWorkflows.getWorkflowPaths();
+        boolean withWorkflowPaths = workflowPaths != null && !workflowPaths.isEmpty();
         boolean withFolderFilter = modifyWorkflows.getFolders() != null && !modifyWorkflows.getFolders().isEmpty();
         Set<Folder> permittedFolders = addPermittedFolder(modifyWorkflows.getFolders());
 
         JControllerState currentState = Proxy.of(controllerId).currentState();
 
-        Set<WorkflowPath> workflowPaths2 = Collections.emptySet();
-        if (workflowPaths != null && !workflowPaths.isEmpty()) {
-            workflowPaths2 = workflowPaths.stream().map(w -> WorkflowPath.of(JocInventory.pathToName(w))).filter(w -> WorkflowsHelper
-                    .workflowCurrentlyExists(currentState, w)).collect(Collectors.toSet());
+        Stream<WorkflowPath> workflowsStream = Stream.empty();
+        if (withWorkflowPaths) {
+            workflowsStream = workflowPaths.stream().map(w -> WorkflowPath.of(JocInventory.pathToName(w))).filter(w -> WorkflowsHelper
+                    .workflowCurrentlyExists(currentState, w));
 
         } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
             // no permission
         } else if (withFolderFilter && permittedFolders != null && !permittedFolders.isEmpty()) {
-            workflowPaths2 = WorkflowsHelper.getWorkflowPathsFromFolders(controllerId, permittedFolders.stream().collect(Collectors.toList()), currentState, permittedFolders);
+            workflowsStream = WorkflowsHelper.getWorkflowIdsStreamFromFolders(controllerId, permittedFolders.stream().collect(Collectors.toList()),
+                    currentState, permittedFolders).map(JWorkflowId::path);
         }
         
-        // TODO check resume only for suspended Workflows
+        Set<WorkflowPath> workflowPaths2 = getCheckedWorkflows(action, workflowsStream, currentState, controllerId, withWorkflowPaths);
 
         if (!workflowPaths2.isEmpty()) {
             // TODO we need plural function controlWorkflows
@@ -117,9 +126,42 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
         case RESUME:
             throw new ControllerObjectNotExistException("No suspended workflows found.");
         default:
-            throw new ControllerObjectNotExistException("No workflows found.");
+            throw new ControllerObjectNotExistException("No unsuspended workflows found.");
         }
 
+    }
+    
+    private Set<WorkflowPath> getCheckedWorkflows(Action action, Stream<WorkflowPath> workflowsStream, JControllerState currentState,
+            String controllerId, boolean withPostProblem) {
+        Set<WorkflowPath> suspendedWorkflowsAtController = JavaConverters.asJava(currentState.asScala().pathToWorkflowControlState_()).values()
+                .stream().filter(c -> c.workflowControl().suspended()).map(WorkflowControlState::workflowPath).collect(Collectors.toSet());
+
+        Map<Boolean, Set<WorkflowPath>> suspendedWorkflows = workflowsStream.collect(Collectors.groupingBy(w -> suspendedWorkflowsAtController
+                .contains(w), Collectors.toSet()));
+
+        switch (action) {
+        case RESUME:
+            if (suspendedWorkflows.containsKey(Boolean.FALSE)) {
+                String msg = suspendedWorkflows.get(Boolean.FALSE).stream().map(WorkflowPath::string).collect(Collectors.joining("', '", "Workflows '",
+                        "' are not suspended"));
+                if (withPostProblem) {
+                    ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+                }
+            }
+            return suspendedWorkflows.getOrDefault(Boolean.TRUE, Collections.emptySet());
+        case SUSPEND:
+            if (suspendedWorkflows.containsKey(Boolean.TRUE)) {
+                String msg = suspendedWorkflows.get(Boolean.TRUE).stream().map(WorkflowPath::string).collect(Collectors.joining("', '", "Workflows '",
+                        "' are already suspended"));
+                if (withPostProblem) {
+                    ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+                }
+            }
+
+            return suspendedWorkflows.getOrDefault(Boolean.FALSE, Collections.emptySet());
+        default:
+            return workflowsStream.collect(Collectors.toSet());
+        }
     }
 
     private CompletableFuture<Void> command(String controllerId, Action action, WorkflowPath workflowPath, DBItemJocAuditLog dbAuditLog) {

@@ -17,9 +17,12 @@ import js7.data.board.BoardPath;
 import js7.data.job.JobResourcePath;
 import js7.data.lock.LockPath;
 import js7.data.orderwatch.OrderWatchPath;
+import js7.data.workflow.WorkflowControlState;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.common.JJsonable;
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.workflow.JWorkflow;
+import scala.collection.JavaConverters;
 
 public class SyncStateHelper {
     
@@ -31,6 +34,9 @@ public class SyncStateHelper {
             put(SyncStateText.IN_SYNC, 6);
             put(SyncStateText.NOT_IN_SYNC, 5);
             put(SyncStateText.NOT_DEPLOYED, 4);
+            put(SyncStateText.SUSPENDED, 5);
+            put(SyncStateText.SUSPENDING, 5);
+            put(SyncStateText.RESUMING, 0);
             put(SyncStateText.UNKNOWN, 2);
         }
     });
@@ -54,7 +60,9 @@ public class SyncStateHelper {
                 stateText = SyncStateText.NOT_DEPLOYED;
             } else {
                 if (currentstate != null) {
-                    stateText = getState(currentstate.repo().pathToCheckedWorkflow(WorkflowPath.of(deployedNames.get(invCId))));
+                    WorkflowPath wPath = WorkflowPath.of(deployedNames.get(invCId));
+                    stateText = getWorkflowState(currentstate.repo().pathToCheckedWorkflow(wPath), JavaConverters.asJava(currentstate.asScala()
+                            .pathToWorkflowControlState_()).get(wPath));
                 }
             }
             break;
@@ -125,10 +133,24 @@ public class SyncStateHelper {
         }
     }
     
-    private static SyncStateText getState(Either<Problem, ?> either) {
+    public static SyncStateText getWorkflowState(Either<Problem, JWorkflow> either, WorkflowControlState controlState) {
         SyncStateText stateText = SyncStateText.NOT_IN_SYNC;
         if (either != null && either.isRight()) {
             stateText = SyncStateText.IN_SYNC;
+            if (controlState != null) {
+                int numOfAgentsThatConfirmedSuspendOrResume = JavaConverters.asJava(controlState.attachedToAgents()).size();
+                int totalNumOfAgents = JavaConverters.asJava(either.get().asScala().nameToJob()).values().stream().map(j -> j.agentPath()).distinct()
+                        .mapToInt(e -> 1).sum();
+                if (controlState.workflowControl().suspended()) {
+                    if (numOfAgentsThatConfirmedSuspendOrResume == totalNumOfAgents) {
+                        stateText = SyncStateText.SUSPENDED;
+                    } else {
+                        stateText = SyncStateText.SUSPENDING;
+                    }
+                } else if (numOfAgentsThatConfirmedSuspendOrResume != totalNumOfAgents) {
+                    stateText = SyncStateText.RESUMING;
+                }
+            }
         }
         return stateText;
     }

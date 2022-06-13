@@ -104,6 +104,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 workflow.setIsCurrentVersion(w.isCurrentVersion());
                 workflow.setVersionDate(w.getCreated());
                 workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
+                workflow.setSuspended(WorkflowsHelper.getSuspended(workflow.getState()));
                 if (workflow.getIsCurrentVersion() && fileOrderSources != null) {
                     workflow.setFileOrderSources(fileOrderSources.get(JocInventory.pathToName(w.getPath())));
                 }
