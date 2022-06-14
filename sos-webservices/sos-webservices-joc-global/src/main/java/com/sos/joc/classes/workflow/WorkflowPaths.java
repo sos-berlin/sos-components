@@ -14,6 +14,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.items.InventoryNamePath;
 import com.sos.joc.event.EventBus;
@@ -27,7 +28,6 @@ public class WorkflowPaths {
 
     private static WorkflowPaths instance;
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowPaths.class);
-    //private volatile ConcurrentMap<WorkflowId, String> workflowIdPathMap = new ConcurrentHashMap<>();
     private volatile ConcurrentMap<String, String> namePathMap = new ConcurrentHashMap<>();
 
     private WorkflowPaths() {
@@ -43,27 +43,19 @@ public class WorkflowPaths {
 
     @Subscribe({ DeployHistoryWorkflowEvent.class })
     public void updateMap(DeployHistoryWorkflowEvent evt) {
-        // LOGGER.debug(String.format("add Workflow from event: %s/%s/%s", evt.getName(), evt.getCommitId(), evt.getPath()));
         namePathMap.put(evt.getName(), evt.getPath());
-        //workflowIdPathMap.put(new WorkflowId(evt.getName(), evt.getCommitId()), evt.getPath());
     }
-
-//    public static ConcurrentMap<WorkflowId, String> getWorkflowPathMap() {
-//        return WorkflowPaths.getInstance()._getWorkflowPathMap();
-//    }
 
     public static ConcurrentMap<String, String> getNamePathMap() {
         return WorkflowPaths.getInstance()._getNamePathMap();
     }
 
     public static String getPath(WorkflowId workflowId) {
-        return WorkflowPaths.getInstance()._getPath(workflowId.getPath());
-//        return WorkflowPaths.getInstance()._getPath(workflowId);
+        return WorkflowPaths.getInstance()._getPath(JocInventory.pathToName(workflowId.getPath()));
     }
 
     public static String getPath(JWorkflowId workflowId) {
         return WorkflowPaths.getInstance()._getPath(workflowId.path().string());
-//        return WorkflowPaths.getInstance()._getPath(new WorkflowId(workflowId.path().string(), workflowId.versionId().string()));
     }
 
     public static String getPath(String name) {
@@ -90,18 +82,9 @@ public class WorkflowPaths {
         }
     }
 
-//    private ConcurrentMap<WorkflowId, String> _getWorkflowPathMap() {
-//        return workflowIdPathMap;
-//    }
-
     private ConcurrentMap<String, String> _getNamePathMap() {
         return namePathMap;
     }
-
-//    private String _getPath(WorkflowId workflowId) {
-//        String w = workflowIdPathMap.get(workflowId);
-//        return w == null ? getDBWorkflowId(workflowId) : w;
-//    }
 
     private String _getPath(String name) {
         String w = namePathMap.get(name);
@@ -117,26 +100,7 @@ public class WorkflowPaths {
     private void _init(SOSHibernateSession connection) {
         LOGGER.info("... init workflow name->path mapping");
         _initNamePath(connection);
-//        _initWorkflowIdPath(connection);
     }
-
-//    private void _initWorkflowIdPath(SOSHibernateSession connection) {
-//        try {
-//            StringBuilder hql = new StringBuilder("select new ").append(InventoryNamePath.class.getName());
-//            hql.append("(name, commitId, path) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-//            hql.append(" where type=:type and operation=:operation and state=0");
-//            Query<InventoryNamePath> query = connection.createQuery(hql.toString());
-//            query.setParameter("type", DeployType.WORKFLOW.intValue());
-//            query.setParameter("operation", OperationType.UPDATE.value());
-//            List<InventoryNamePath> result = connection.getResultList(query);
-//            if (result != null) {
-//                workflowIdPathMap = result.stream().distinct().collect(Collectors.toConcurrentMap(InventoryNamePath::getWorkflowId,
-//                        InventoryNamePath::getPath));
-//            }
-//        } catch (SOSHibernateException e) {
-//            LOGGER.warn(e.toString());
-//        }
-//    }
 
     private void _initNamePath(SOSHibernateSession connection) {
         try {
@@ -179,38 +143,5 @@ public class WorkflowPaths {
         }
         return name;
     }
-
-//    private String getDBWorkflowId(WorkflowId workflowId) {
-//        String name = workflowId.getPath();
-//        if (workflowId == null || name == null || name.isEmpty() || name.startsWith("/")) {
-//            return name;
-//        }
-//        if (workflowId.getVersionId() == null || workflowId.getVersionId().isEmpty()) {
-//            return getDBPath(name);
-//        }
-//        SOSHibernateSession session = null;
-//        try {
-//            session = Globals.createSosHibernateStatelessConnection(WorkflowPaths.class.getSimpleName());
-//            StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_DEP_HISTORY);
-//            hql.append(" where type=:type and operation=:operation and state=0 and name=:name and commitId=:commitId");
-//            Query<String> query = session.createQuery(hql.toString());
-//            query.setParameter("type", DeployType.WORKFLOW.intValue());
-//            query.setParameter("operation", OperationType.UPDATE.value());
-//            query.setParameter("name", name);
-//            query.setParameter("commitId", workflowId.getVersionId());
-//            query.setMaxResults(1);
-//            String result = session.getSingleResult(query);
-//            if (result != null) {
-//                namePathMap.put(name, result);
-//                workflowIdPathMap.put(workflowId, result);
-//                return result;
-//            }
-//        } catch (SOSHibernateException e) {
-//            LOGGER.warn(e.toString());
-//        } finally {
-//            Globals.disconnect(session);
-//        }
-//        return name;
-//    }
 
 }

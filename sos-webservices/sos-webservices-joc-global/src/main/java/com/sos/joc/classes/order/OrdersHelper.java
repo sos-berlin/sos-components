@@ -272,6 +272,11 @@ public class OrdersHelper {
         }
         return getGroupedState(o.state().getClass());
     }
+    
+    public static boolean isFresh(JOrder order) {
+        Order<Order.State> o = order.asScala();
+        return OrderStateText.SCHEDULED.equals(getGroupedState(o.state().getClass()));
+    }
 
     public static boolean isSuspendedOrFailed(JOrder order) {
         Order<Order.State> o = order.asScala();
@@ -728,8 +733,9 @@ public class OrdersHelper {
                 if (!scheduledFor.isPresent()) {
                     scheduledFor = Optional.of(now);
                 }
-
-                FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor);
+                
+                FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, order.workflowPosition().position(), order
+                        .asScala().stopPosition());
                 auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string(), controllerId));
                 either = Either.right(o);
             } catch (Exception ex) {
@@ -824,18 +830,19 @@ public class OrdersHelper {
         return oldOrderId.replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10,11}(-.+)$", "$1" + newUniqueOrderIdPart + "$2");
     }
 
-    public static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd) {
+    public static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd, Optional<JPosition> startPos, Optional<JPosition> endPos) {
         String orderId = String.format("#%s#T%s-%s", yyyymmdd, getUniqueOrderId(), order.getOrderName());
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
         // if (!scheduledFor.isPresent()) {
         // scheduledFor = Optional.of(Instant.now());
         // }
         return mapToFreshOrder(OrderId.of(orderId), WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())),
-                variablesToScalaValuedArguments(order.getArguments()), scheduledFor);
+                variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPos);
     }
 
-    private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor) {
-        return JFreshOrder.of(orderId, workflowPath, scheduledFor, args, true);
+    private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor,
+            Optional<JPosition> startPos, Optional<JPosition> endPos) {
+        return JFreshOrder.of(orderId, workflowPath, scheduledFor, args, true, startPos, endPos);
     }
 
     public static Map<String, Value> variablesToScalaValuedArguments(Variables vars) {

@@ -6,7 +6,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.order.CheckedOrdersPositions;
+import com.sos.joc.classes.order.CheckedResumeOrdersPositions;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrderVariablesFilter;
@@ -41,7 +41,7 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
                 position = jPos.get().toString();
             }
 
-            CheckedOrdersPositions cop = new CheckedOrdersPositions();
+            CheckedResumeOrdersPositions cop = new CheckedResumeOrdersPositions();
             cop.get(orderFilter.getOrderId(), Proxy.of(controllerId).currentState(), folderPermissions.getListOfFolders(), position, false);
             cop.setOrderIds(null);
             cop.setDisabledPositionChange(null);

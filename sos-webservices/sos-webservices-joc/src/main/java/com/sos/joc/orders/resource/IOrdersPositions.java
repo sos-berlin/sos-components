@@ -14,6 +14,11 @@ public interface IOrdersPositions {
     @POST
     @Path("resume/positions")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postOrderPositions(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse resumeOrderPositions(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("add/positions")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse addOrderPositions(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }

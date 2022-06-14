@@ -23,7 +23,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "workflowPath",
     "scheduledFor",
     "timeZone",
-    "arguments"
+    "arguments",
+    "startPosition",
+    "endPosition"
 })
 public class AddOrder {
 
@@ -65,6 +67,22 @@ public class AddOrder {
     @JsonProperty("arguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables arguments;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("startPosition")
+    private String startPosition;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("endPosition")
+    private String endPosition;
 
     @JsonProperty("orderName")
     public String getOrderName() {
@@ -166,14 +184,58 @@ public class AddOrder {
         this.arguments = arguments;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("startPosition")
+    public String getStartPosition() {
+        return startPosition;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("startPosition")
+    public void setStartPosition(String startPosition) {
+        this.startPosition = startPosition;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("endPosition")
+    public String getEndPosition() {
+        return endPosition;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("endPosition")
+    public void setEndPosition(String endPosition) {
+        this.endPosition = endPosition;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("orderName", orderName).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("timeZone", timeZone).append("arguments", arguments).toString();
+        return new ToStringBuilder(this).append("orderName", orderName).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("timeZone", timeZone).append("arguments", arguments).append("startPosition", startPosition).append("endPosition", endPosition).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(timeZone).append(arguments).append(workflowPath).append(orderName).append(scheduledFor).toHashCode();
+        return new HashCodeBuilder().append(workflowPath).append(endPosition).append(scheduledFor).append(timeZone).append(arguments).append(startPosition).append(orderName).toHashCode();
     }
 
     @Override
@@ -185,7 +247,7 @@ public class AddOrder {
             return false;
         }
         AddOrder rhs = ((AddOrder) other);
-        return new EqualsBuilder().append(timeZone, rhs.timeZone).append(arguments, rhs.arguments).append(workflowPath, rhs.workflowPath).append(orderName, rhs.orderName).append(scheduledFor, rhs.scheduledFor).isEquals();
+        return new EqualsBuilder().append(workflowPath, rhs.workflowPath).append(endPosition, rhs.endPosition).append(scheduledFor, rhs.scheduledFor).append(timeZone, rhs.timeZone).append(arguments, rhs.arguments).append(startPosition, rhs.startPosition).append(orderName, rhs.orderName).isEquals();
     }
 
 }

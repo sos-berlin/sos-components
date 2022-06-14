@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -26,6 +27,7 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
@@ -41,9 +43,11 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
+import js7.data.workflow.position.Position;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.workflow.JWorkflow;
+import js7.data_for_java.workflow.position.JPosition;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
@@ -92,7 +96,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
                     order.setArguments(OrdersHelper.checkArguments(order.getArguments(), JsonConverter.signOrderPreparationToInvOrderPreparation(
                             workflow.getOrderPreparation())));
-                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd);
+                    Optional<JPosition> startPos = getStartPosition(order.getStartPosition());
+                    Optional<JPosition> endPos = getEndPosition(order.getEndPosition());
+                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd, startPos, endPos);
                     auditLogDetails.add(new AuditLogDetail(order.getWorkflowPath(), o.id().string(), controllerId));
                     either = Either.right(o);
                 } catch (Exception ex) {
@@ -135,6 +141,34 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
+    }
+    
+    private static Optional<JPosition> getStartPosition(String pos) {
+        Optional<JPosition> startPos = Optional.empty();
+        if (pos != null && !pos.isEmpty() && !pos.equals(JPosition.apply(Position.First()).toString())) {
+            if (pos.matches("[0-9][1-9]*(/try:[0-9][1-9]*)?")) {
+                Either<Problem, JPosition> startPosE = JPosition.fromJson(pos);
+                ProblemHelper.throwProblemIfExist(startPosE);
+                startPos = Optional.of(startPosE.get());
+            } else {
+                throw new JocBadRequestException("Invalid end position '" + pos + "'");
+            }
+        }
+        return startPos;
+    }
+    
+    private static Optional<JPosition> getEndPosition(String pos) {
+        Optional<JPosition> endPos = Optional.empty();
+        if (pos != null && !pos.isEmpty()) {
+            if (pos.matches("[0-9][1-9]*(/try:[0-9][1-9]*)?")) {
+                Either<Problem, JPosition> endPosE = JPosition.fromJson(pos);
+                ProblemHelper.throwProblemIfExist(endPosE);
+                endPos = Optional.of(endPosE.get());
+            } else {
+                throw new JocBadRequestException("Invalid end position '" + pos + "'");
+            }
+        }
+        return endPos;
     }
 
 }

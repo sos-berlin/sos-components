@@ -34,7 +34,7 @@ import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
-import com.sos.joc.model.order.OrdersPositions;
+import com.sos.joc.model.order.OrdersResumePositions;
 import com.sos.joc.model.order.PositionChange;
 import com.sos.joc.model.order.PositionChangeCode;
 import com.sos.joc.model.order.Positions;
@@ -51,10 +51,7 @@ import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import scala.Function1;
 
-public class CheckedOrdersPositions extends OrdersPositions {
-    
-    @JsonIgnore
-    private Set<JOrder> notSuspendedOrFailedOrders = Collections.emptySet();
+public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     
     @JsonIgnore
     private boolean singleOrder = false;
@@ -71,13 +68,12 @@ public class CheckedOrdersPositions extends OrdersPositions {
     @JsonIgnore
     private Set<Positions> positionsWithImplicitEnds = new LinkedHashSet<>();
     
-    public CheckedOrdersPositions() {
+    public CheckedResumeOrdersPositions() {
         //
     }
     
-    @SuppressWarnings("unlikely-arg-type")
     @JsonIgnore
-    public CheckedOrdersPositions get(Set<String> orders, JControllerState currentState, Set<Folder> permittedFolders) throws JsonParseException,
+    public CheckedResumeOrdersPositions get(Set<String> orders, JControllerState currentState, Set<Folder> permittedFolders) throws JsonParseException,
             JsonMappingException, IOException, JocException {
         
         if (orders.size() == 1) {
@@ -117,7 +113,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
             pc.setMessage("The orders must be from the same workflow. Found workflows are: " + suspendedOrFailedOrders.keySet().toString());
             setDisabledPositionChange(pc);
             setOrderIds(orders);
-            jOrders = suspendedOrFailedOrders.values().stream().flatMap(l -> l.stream()).collect(Collectors.toSet());
+            jOrders = suspendedOrFailedOrders.values().stream().flatMap(Set::stream).collect(Collectors.toSet());
             //throw new JocBadRequestException("The orders must be from the same workflow. Found workflows are: " + map.keySet().toString());
         } else {
 
@@ -163,15 +159,11 @@ public class CheckedOrdersPositions extends OrdersPositions {
         setDeliveryDate(Date.from(Instant.now()));
         setSurveyDate(Date.from(currentState.instant()));
         
-        if (suspendedOrFailedOrders.containsKey(Boolean.FALSE)) {
-            notSuspendedOrFailedOrders = suspendedOrFailedOrders.get(Boolean.FALSE);
-        }
-        
         return this;
     }
     
     @JsonIgnore
-    public CheckedOrdersPositions get(String order, JControllerState currentState, Set<Folder> permittedFolders, String position,
+    public CheckedResumeOrdersPositions get(String order, JControllerState currentState, Set<Folder> permittedFolders, String position,
             boolean withStatusCheck) throws JsonParseException, JsonMappingException, IOException, JocBadRequestException,
             JocFolderPermissionsException {
 
@@ -240,10 +232,6 @@ public class CheckedOrdersPositions extends OrdersPositions {
         }
     }
     
-    public boolean hasNotSuspendedOrFailedOrders() {
-        return !notSuspendedOrFailedOrders.isEmpty();
-    }
-    
     @JsonIgnore
     public boolean isSingleOrder() {
         return singleOrder;
@@ -286,15 +274,6 @@ public class CheckedOrdersPositions extends OrdersPositions {
             return Collections.emptyList();
         }
         return historicOutcomes;
-    }
-    
-    @JsonIgnore
-    public String getNotSuspendedOrFailedOrdersMessage() {
-        if (hasNotSuspendedOrFailedOrders()) {
-            return notSuspendedOrFailedOrders.stream().map(o -> o.id().string()).collect(Collectors.joining("', '", "Orders '",
-                    "' not failed or suspended"));
-        }
-        return "";
     }
     
     @JsonIgnore

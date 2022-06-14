@@ -38,7 +38,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.classes.order.CheckedOrdersPositions;
+import com.sos.joc.classes.order.CheckedResumeOrdersPositions;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
@@ -398,7 +398,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         boolean withVariables = modifyOrders.getVariables() != null && modifyOrders.getVariables().getAdditionalProperties() != null && !modifyOrders
                 .getVariables().getAdditionalProperties().isEmpty();
 
-        CheckedOrdersPositions cop = new CheckedOrdersPositions().get(orders, currentState, folderPermissions.getListOfFolders());
+        CheckedResumeOrdersPositions cop = new CheckedResumeOrdersPositions().get(orders, currentState, folderPermissions.getListOfFolders());
         final Set<JOrder> jOrders = cop.getJOrders();
         List<JHistoryOperation> historyOperations = Collections.emptyList();
         Set<String> allowedPositions = cop.getPositions().stream().map(Positions::getPositionString).collect(Collectors.toCollection(
@@ -510,11 +510,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     }
                 });
             }
-        }
-
-        if (cop.hasNotSuspendedOrFailedOrders()) {
-            String msg = cop.getNotSuspendedOrFailedOrdersMessage();
-            ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
         }
     }
 

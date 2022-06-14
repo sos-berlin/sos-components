@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.inventory.model.common.Variables;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -26,12 +25,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "deliveryDate",
     "surveyDate",
-    "orderIds",
     "workflowId",
-    "positions",
-    "disabledPositionChange",
-    "variables",
-    "variablesNotSettable"
+    "positions"
 })
 public class OrdersPositions {
 
@@ -54,9 +49,6 @@ public class OrdersPositions {
     @JsonProperty("surveyDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
-    @JsonProperty("orderIds")
-    @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<String> orderIds = new LinkedHashSet<String>();
     /**
      * workflowId
      * <p>
@@ -68,31 +60,6 @@ public class OrdersPositions {
     @JsonProperty("positions")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<Positions> positions = new LinkedHashSet<Positions>();
-    /**
-     * error
-     * <p>
-     * reasons that disallow the position change
-     * 
-     */
-    @JsonProperty("disabledPositionChange")
-    @JsonPropertyDescription("reasons that disallow the position change")
-    private PositionChange disabledPositionChange;
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
-    @JsonProperty("variables")
-    @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Variables variables;
-    /**
-     * only relevant for resuming a single order. Occurs if order starts from the beginning in its scope
-     * 
-     */
-    @JsonProperty("variablesNotSettable")
-    @JsonPropertyDescription("only relevant for resuming a single order. Occurs if order starts from the beginning in its scope")
-    private Boolean variablesNotSettable;
 
     /**
      * timestamp
@@ -140,16 +107,6 @@ public class OrdersPositions {
         this.surveyDate = surveyDate;
     }
 
-    @JsonProperty("orderIds")
-    public Set<String> getOrderIds() {
-        return orderIds;
-    }
-
-    @JsonProperty("orderIds")
-    public void setOrderIds(Set<String> orderIds) {
-        this.orderIds = orderIds;
-    }
-
     /**
      * workflowId
      * <p>
@@ -182,76 +139,14 @@ public class OrdersPositions {
         this.positions = positions;
     }
 
-    /**
-     * error
-     * <p>
-     * reasons that disallow the position change
-     * 
-     */
-    @JsonProperty("disabledPositionChange")
-    public PositionChange getDisabledPositionChange() {
-        return disabledPositionChange;
-    }
-
-    /**
-     * error
-     * <p>
-     * reasons that disallow the position change
-     * 
-     */
-    @JsonProperty("disabledPositionChange")
-    public void setDisabledPositionChange(PositionChange disabledPositionChange) {
-        this.disabledPositionChange = disabledPositionChange;
-    }
-
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
-    @JsonProperty("variables")
-    public Variables getVariables() {
-        return variables;
-    }
-
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
-    @JsonProperty("variables")
-    public void setVariables(Variables variables) {
-        this.variables = variables;
-    }
-
-    /**
-     * only relevant for resuming a single order. Occurs if order starts from the beginning in its scope
-     * 
-     */
-    @JsonProperty("variablesNotSettable")
-    public Boolean getVariablesNotSettable() {
-        return variablesNotSettable;
-    }
-
-    /**
-     * only relevant for resuming a single order. Occurs if order starts from the beginning in its scope
-     * 
-     */
-    @JsonProperty("variablesNotSettable")
-    public void setVariablesNotSettable(Boolean variablesNotSettable) {
-        this.variablesNotSettable = variablesNotSettable;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderIds", orderIds).append("workflowId", workflowId).append("positions", positions).append("disabledPositionChange", disabledPositionChange).append("variables", variables).append("variablesNotSettable", variablesNotSettable).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("workflowId", workflowId).append("positions", positions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(surveyDate).append(variablesNotSettable).append(positions).append(orderIds).append(disabledPositionChange).append(deliveryDate).append(workflowId).toHashCode();
+        return new HashCodeBuilder().append(positions).append(deliveryDate).append(surveyDate).append(workflowId).toHashCode();
     }
 
     @Override
@@ -263,7 +158,7 @@ public class OrdersPositions {
             return false;
         }
         OrdersPositions rhs = ((OrdersPositions) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(surveyDate, rhs.surveyDate).append(variablesNotSettable, rhs.variablesNotSettable).append(positions, rhs.positions).append(orderIds, rhs.orderIds).append(disabledPositionChange, rhs.disabledPositionChange).append(deliveryDate, rhs.deliveryDate).append(workflowId, rhs.workflowId).isEquals();
+        return new EqualsBuilder().append(positions, rhs.positions).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(workflowId, rhs.workflowId).isEquals();
     }
 
 }
