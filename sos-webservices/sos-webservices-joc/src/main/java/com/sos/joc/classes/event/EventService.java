@@ -457,7 +457,7 @@ public class EventService {
                 addEvent(createAgentEvent(eventId, ((SubagentId) key).string()));
                 
             } else if (evt instanceof WorkflowControlEvent) {
-                addEvent(createWorkflowEvent(eventId, ((WorkflowPath) key).string()));
+                addEvent(createWorkflowControlEvent(eventId, ((WorkflowPath) key).string()));
                 
             } else if (evt instanceof BoardEvent) {
                 addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
@@ -601,8 +601,8 @@ public class EventService {
 //        return evt;
 //    }
     
-    private EventSnapshot createWorkflowEvent(long eventId, String path) {
-        return createWorkflowEvent(eventId, path, "WorkflowStateChanged");
+    private EventSnapshot createWorkflowControlEvent(long eventId, String path) {
+        return createWorkflowEvent(eventId, path, "WorkflowUpdated");
     }
     
     private EventSnapshot createWorkflowEvent(long eventId, String path, String eventType) {
