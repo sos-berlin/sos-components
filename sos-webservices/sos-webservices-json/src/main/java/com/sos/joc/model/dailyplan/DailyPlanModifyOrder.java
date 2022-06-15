@@ -29,6 +29,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "removeVariables",
     "orderIds",
     "dailyPlanDate",
+    "startPosition",
+    "startPositionString",
+    "endPosition",
+    "endPositionString",
     "auditLog"
 })
 public class DailyPlanModifyOrder {
@@ -95,6 +99,40 @@ public class DailyPlanModifyOrder {
     @JsonProperty("dailyPlanDate")
     @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String dailyPlanDate;
+    /**
+     * position
+     * <p>
+     * Actually, each even item is a string, each odd item is an integer
+     * 
+     */
+    @JsonProperty("startPosition")
+    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
+    private List<Object> startPosition = null;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("startPositionString")
+    private String startPositionString;
+    /**
+     * position
+     * <p>
+     * Actually, each even item is a string, each odd item is an integer
+     * 
+     */
+    @JsonProperty("endPosition")
+    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
+    private List<Object> endPosition = null;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("endPositionString")
+    private String endPositionString;
     /**
      * auditParams
      * <p>
@@ -269,6 +307,94 @@ public class DailyPlanModifyOrder {
     }
 
     /**
+     * position
+     * <p>
+     * Actually, each even item is a string, each odd item is an integer
+     * 
+     */
+    @JsonProperty("startPosition")
+    public List<Object> getStartPosition() {
+        return startPosition;
+    }
+
+    /**
+     * position
+     * <p>
+     * Actually, each even item is a string, each odd item is an integer
+     * 
+     */
+    @JsonProperty("startPosition")
+    public void setStartPosition(List<Object> startPosition) {
+        this.startPosition = startPosition;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("startPositionString")
+    public String getStartPositionString() {
+        return startPositionString;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("startPositionString")
+    public void setStartPositionString(String startPositionString) {
+        this.startPositionString = startPositionString;
+    }
+
+    /**
+     * position
+     * <p>
+     * Actually, each even item is a string, each odd item is an integer
+     * 
+     */
+    @JsonProperty("endPosition")
+    public List<Object> getEndPosition() {
+        return endPosition;
+    }
+
+    /**
+     * position
+     * <p>
+     * Actually, each even item is a string, each odd item is an integer
+     * 
+     */
+    @JsonProperty("endPosition")
+    public void setEndPosition(List<Object> endPosition) {
+        this.endPosition = endPosition;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("endPositionString")
+    public String getEndPositionString() {
+        return endPositionString;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("endPositionString")
+    public void setEndPositionString(String endPositionString) {
+        this.endPositionString = endPositionString;
+    }
+
+    /**
      * auditParams
      * <p>
      * 
@@ -292,12 +418,12 @@ public class DailyPlanModifyOrder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("scheduledFor", scheduledFor).append("cycle", cycle).append("timeZone", timeZone).append("variables", variables).append("removeVariables", removeVariables).append("orderIds", orderIds).append("dailyPlanDate", dailyPlanDate).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("scheduledFor", scheduledFor).append("cycle", cycle).append("timeZone", timeZone).append("variables", variables).append("removeVariables", removeVariables).append("orderIds", orderIds).append("dailyPlanDate", dailyPlanDate).append("startPosition", startPosition).append("startPositionString", startPositionString).append("endPosition", endPosition).append("endPositionString", endPositionString).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(removeVariables).append(dailyPlanDate).append(controllerId).append(auditLog).append(scheduledFor).append(timeZone).append(orderIds).append(cycle).toHashCode();
+        return new HashCodeBuilder().append(variables).append(removeVariables).append(startPositionString).append(dailyPlanDate).append(controllerId).append(auditLog).append(timeZone).append(cycle).append(startPosition).append(endPosition).append(endPositionString).append(scheduledFor).append(orderIds).toHashCode();
     }
 
     @Override
@@ -309,7 +435,7 @@ public class DailyPlanModifyOrder {
             return false;
         }
         DailyPlanModifyOrder rhs = ((DailyPlanModifyOrder) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(removeVariables, rhs.removeVariables).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(scheduledFor, rhs.scheduledFor).append(timeZone, rhs.timeZone).append(orderIds, rhs.orderIds).append(cycle, rhs.cycle).isEquals();
+        return new EqualsBuilder().append(variables, rhs.variables).append(removeVariables, rhs.removeVariables).append(startPositionString, rhs.startPositionString).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(timeZone, rhs.timeZone).append(cycle, rhs.cycle).append(startPosition, rhs.startPosition).append(endPosition, rhs.endPosition).append(endPositionString, rhs.endPositionString).append(scheduledFor, rhs.scheduledFor).append(orderIds, rhs.orderIds).isEquals();
     }
 
 }

@@ -46,12 +46,34 @@ public class FreshOrder {
         this.workflowPath = workflowPath;
         this.args = args;
         this.scheduledFor = scheduledFor;
-        if (startPos.toString().equals("0")) {
+        if (!startPos.toString().equals("0")) {
             this.startPos = Optional.of(startPos);
         }
         if (endPos.nonEmpty()) {
             this.endPos = Optional.of(JPosition.apply(endPos.get()));
         }
+    }
+    
+    public FreshOrder(OrderId oldOrderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor,
+            Optional<JPosition> startPos, Optional<JPosition> endPos) {
+        this.oldOrderId = oldOrderId;
+        this.newOrderId = generateNewFromOldOrderId(oldOrderId);
+        this.workflowPath = workflowPath;
+        this.args = args;
+        this.scheduledFor = scheduledFor;
+        this.startPos = startPos;
+        this.endPos = endPos;
+    }
+    
+    public FreshOrder(OrderId oldOrderId, OrderId newOrderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor,
+            Optional<JPosition> startPos, Optional<JPosition> endPos) {
+        this.oldOrderId = oldOrderId;
+        this.newOrderId = newOrderId;
+        this.workflowPath = workflowPath;
+        this.args = args;
+        this.scheduledFor = scheduledFor;
+        this.startPos = startPos;
+        this.endPos = endPos;
     }
 
     public OrderId getOldOrderId() {

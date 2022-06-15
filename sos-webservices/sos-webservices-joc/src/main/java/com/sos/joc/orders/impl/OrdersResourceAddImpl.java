@@ -28,7 +28,6 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
-import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
@@ -44,7 +43,6 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
-import js7.data.workflow.position.Position;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.workflow.JWorkflow;
@@ -98,8 +96,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     order.setArguments(OrdersHelper.checkArguments(order.getArguments(), JsonConverter.signOrderPreparationToInvOrderPreparation(
                             workflow.getOrderPreparation())));
                     Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
-                    Optional<JPosition> startPos = getStartPosition(order.getStartPosition(), order.getStartPositionString(), reachablePositions);
-                    Optional<JPosition> endPos = getEndPosition(order.getEndPosition(), order.getEndPositionString(), reachablePositions);
+                    Optional<JPosition> startPos = OrdersHelper.getStartPosition(order.getStartPosition(), order.getStartPositionString(), reachablePositions);
+                    Optional<JPosition> endPos = OrdersHelper.getEndPosition(order.getEndPosition(), order.getEndPositionString(), reachablePositions);
                     // TODO check if endPos not before startPos
                     
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd, startPos, endPos);
@@ -145,42 +143,6 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
-    }
-    
-    private static Optional<JPosition> getStartPosition(List<Object> pos, String posString, Set<String> reachablePositions) {
-        Optional<JPosition> posOpt = Optional.empty();
-        if ((pos == null || pos.isEmpty())) {
-            pos = OrdersHelper.stringPositionToList(posString);
-        }
-        if (pos != null && !pos.isEmpty()) {
-            Either<Problem, JPosition> posE = JPosition.fromList(pos);
-            ProblemHelper.throwProblemIfExist(posE);
-            if (!JPosition.apply(Position.First()).equals(posE.get())) {
-                if (reachablePositions.contains(posE.get().toString())) {
-                    return Optional.of(posE.get());
-                } else {
-                    throw new JocBadRequestException("Invalid start position '" + pos.toString() + "'");
-                }
-            }
-        }
-        return posOpt;
-    }
-    
-    private static Optional<JPosition> getEndPosition(List<Object> pos, String posString, Set<String> reachablePositions) {
-        Optional<JPosition> posOpt = Optional.empty();
-        if ((pos == null || pos.isEmpty())) {
-            pos = OrdersHelper.stringPositionToList(posString);
-        }
-        if (pos != null && !pos.isEmpty()) {
-            Either<Problem, JPosition> posE = JPosition.fromList(pos);
-            ProblemHelper.throwProblemIfExist(posE);
-            if (reachablePositions.contains(posE.get().toString())) {
-                return Optional.of(posE.get());
-            } else {
-                throw new JocBadRequestException("Invalid end position '" + pos.toString() + "'");
-            }
-        }
-        return posOpt;
     }
 
 }
