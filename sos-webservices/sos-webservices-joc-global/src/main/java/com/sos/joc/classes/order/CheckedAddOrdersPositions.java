@@ -4,21 +4,15 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.inventory.model.instruction.Instruction;
-import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.workflow.WorkflowPaths;
-import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.common.Folder;
@@ -36,8 +30,8 @@ import js7.data_for_java.workflow.position.JPosition;
 
 public class CheckedAddOrdersPositions extends OrdersPositions {
     
-    @JsonIgnore
-    private Set<Positions> positionsWithImplicitEnds = new LinkedHashSet<>();
+//    @JsonIgnore
+//    private Set<Positions> positionsWithImplicitEnds = new LinkedHashSet<>();
     
     public CheckedAddOrdersPositions() {
         //
@@ -63,10 +57,10 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
             e = currentState.repo().pathToCheckedWorkflow(wPath);
         }
         ProblemHelper.throwProblemIfExist(e);
-        JsonNode node = Globals.objectMapper.readTree(e.get().withPositions().toJson());
-        List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
+        //JsonNode node = Globals.objectMapper.readTree(e.get().withPositions().toJson());
+        //List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
         // List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
-        Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(instructions);
+        //Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(instructions);
 
         final Set<Positions> pos = new LinkedHashSet<>();
         JPosition pos0 = JPosition.apply(Position.First());
@@ -79,10 +73,10 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
                 Positions p = new Positions();
                 p.setPosition(jPos.toList());
                 p.setPositionString(positionString);
-                positionsWithImplicitEnds.add(p);
-                if (!implicitEnds.contains(p.getPositionString())) {
+                //positionsWithImplicitEnds.add(p);
+                //if (!implicitEnds.contains(p.getPositionString())) {
                     pos.add(p);
-                }
+                //}
             }
         });
 
@@ -95,9 +89,22 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         return this;
     }
     
+//    @JsonIgnore
+//    public Set<Positions> getPositionsWithImplicitEnds() {
+//        return positionsWithImplicitEnds;
+//    }
+    
     @JsonIgnore
-    public Set<Positions> getPositionsWithImplicitEnds() {
-        return positionsWithImplicitEnds;
+    public static Set<String> getReachablePositions(JWorkflow workflow) {
+        Set<String> pos = new LinkedHashSet<>();
+        workflow.reachablePositions(JPosition.apply(Position.First())).stream().forEachOrdered(jPos -> {
+            // only root level position or first level inside a "(re)try" instruction
+            // if (jPos.toList().size() == 1 || (jPos.toList().size() == 3 && ((String) jPos.toList().get(1)).contains("try"))) {
+            if (jPos.toList().size() == 1) { // only root level position is yet implemented
+                pos.add(jPos.toString());
+            }
+        });
+        return pos;
     }
 
 }

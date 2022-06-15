@@ -397,6 +397,15 @@ public class OrdersHelper {
         JPosition pos = JPosition.fromJson(jsonPos).get();
         o.setPosition(pos.toList());
         o.setPositionString(pos.toString());
+        
+        if (!jOrder.asScala().stopPosition().isEmpty()) {
+            JPosition origStopPos = JPosition.apply(jOrder.asScala().stopPosition().get());
+            String jsonStopPos = origStopPos.toJson().replaceAll("\"(try|catch|cycle)\\+?[^\"]*", "\"$1");
+            JPosition stopPos = JPosition.fromJson(jsonStopPos).get();
+            o.setEndPosition(stopPos.toList());
+            o.setEndPositionString(stopPos.toString());
+        }
+        
         o.setCycleState(oItem.getState().getCycleState());
         int positionsSize = o.getPosition().size();
         if ("Processing".equals(oItem.getState().getTYPE())) {
@@ -1032,6 +1041,27 @@ public class OrdersHelper {
 
     public static ToLongFunction<JOrder> getCompareScheduledFor(long surveyDateMillis) {
         return o -> getScheduledForMillis(o, surveyDateMillis);
+    }
+    
+    public static List<Object> stringPositionToList(String pos) {
+        if (pos == null || pos.isEmpty()) {
+            return null;
+        }
+        String[] posArr = pos.split("/:");
+        List<Object> posList = null;
+        if (posArr.length == 1) {
+            posList = Collections.singletonList(Integer.valueOf(posArr[0]));
+        } else {
+            posList = new ArrayList<>();
+            for (int i = 0; i < posArr.length; i++) {
+                if (i % 2 == 0) {
+                    posList.add(Integer.valueOf(posArr[i]));
+                } else {
+                    posList.add(posArr[i]);
+                }
+            }
+        }
+        return posList;
     }
 
 }

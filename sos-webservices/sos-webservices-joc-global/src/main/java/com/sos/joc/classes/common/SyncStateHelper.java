@@ -31,12 +31,12 @@ public class SyncStateHelper {
         private static final long serialVersionUID = 1L;
 
         {
-            put(SyncStateText.IN_SYNC, 6);
-            put(SyncStateText.NOT_IN_SYNC, 5);
+            put(SyncStateText.IN_SYNC, 6); //blue
+            put(SyncStateText.NOT_IN_SYNC, 5); //orange
             put(SyncStateText.NOT_DEPLOYED, 4);
-            put(SyncStateText.SUSPENDED, 5);
-            put(SyncStateText.SUSPENDING, 5);
-            put(SyncStateText.RESUMING, 0);
+            put(SyncStateText.SUSPENDED, 10); //lightorange
+            put(SyncStateText.SUSPENDING, 10);//lightorange
+            put(SyncStateText.RESUMING, 3); //lightblue
             put(SyncStateText.UNKNOWN, 2);
         }
     });

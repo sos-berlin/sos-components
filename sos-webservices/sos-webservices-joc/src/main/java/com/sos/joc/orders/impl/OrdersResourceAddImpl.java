@@ -23,6 +23,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
+import com.sos.joc.classes.order.CheckedAddOrdersPositions;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -96,8 +97,11 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
                     order.setArguments(OrdersHelper.checkArguments(order.getArguments(), JsonConverter.signOrderPreparationToInvOrderPreparation(
                             workflow.getOrderPreparation())));
-                    Optional<JPosition> startPos = getStartPosition(order.getStartPosition());
-                    Optional<JPosition> endPos = getEndPosition(order.getEndPosition());
+                    Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
+                    Optional<JPosition> startPos = getStartPosition(order.getStartPosition(), order.getStartPositionString(), reachablePositions);
+                    Optional<JPosition> endPos = getEndPosition(order.getEndPosition(), order.getEndPositionString(), reachablePositions);
+                    // TODO check if endPos not before startPos
+                    
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd, startPos, endPos);
                     auditLogDetails.add(new AuditLogDetail(order.getWorkflowPath(), o.id().string(), controllerId));
                     either = Either.right(o);
@@ -143,32 +147,40 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
         }
     }
     
-    private static Optional<JPosition> getStartPosition(String pos) {
-        Optional<JPosition> startPos = Optional.empty();
-        if (pos != null && !pos.isEmpty() && !pos.equals(JPosition.apply(Position.First()).toString())) {
-            if (pos.matches("[0-9][1-9]*(/try:[0-9][1-9]*)?")) {
-                Either<Problem, JPosition> startPosE = JPosition.fromJson(pos);
-                ProblemHelper.throwProblemIfExist(startPosE);
-                startPos = Optional.of(startPosE.get());
-            } else {
-                throw new JocBadRequestException("Invalid end position '" + pos + "'");
+    private static Optional<JPosition> getStartPosition(List<Object> pos, String posString, Set<String> reachablePositions) {
+        Optional<JPosition> posOpt = Optional.empty();
+        if ((pos == null || pos.isEmpty())) {
+            pos = OrdersHelper.stringPositionToList(posString);
+        }
+        if (pos != null && !pos.isEmpty()) {
+            Either<Problem, JPosition> posE = JPosition.fromList(pos);
+            ProblemHelper.throwProblemIfExist(posE);
+            if (!JPosition.apply(Position.First()).equals(posE.get())) {
+                if (reachablePositions.contains(posE.get().toString())) {
+                    return Optional.of(posE.get());
+                } else {
+                    throw new JocBadRequestException("Invalid start position '" + pos.toString() + "'");
+                }
             }
         }
-        return startPos;
+        return posOpt;
     }
     
-    private static Optional<JPosition> getEndPosition(String pos) {
-        Optional<JPosition> endPos = Optional.empty();
+    private static Optional<JPosition> getEndPosition(List<Object> pos, String posString, Set<String> reachablePositions) {
+        Optional<JPosition> posOpt = Optional.empty();
+        if ((pos == null || pos.isEmpty())) {
+            pos = OrdersHelper.stringPositionToList(posString);
+        }
         if (pos != null && !pos.isEmpty()) {
-            if (pos.matches("[0-9][1-9]*(/try:[0-9][1-9]*)?")) {
-                Either<Problem, JPosition> endPosE = JPosition.fromJson(pos);
-                ProblemHelper.throwProblemIfExist(endPosE);
-                endPos = Optional.of(endPosE.get());
+            Either<Problem, JPosition> posE = JPosition.fromList(pos);
+            ProblemHelper.throwProblemIfExist(posE);
+            if (reachablePositions.contains(posE.get().toString())) {
+                return Optional.of(posE.get());
             } else {
-                throw new JocBadRequestException("Invalid end position '" + pos + "'");
+                throw new JocBadRequestException("Invalid end position '" + pos.toString() + "'");
             }
         }
-        return endPos;
+        return posOpt;
     }
 
 }
