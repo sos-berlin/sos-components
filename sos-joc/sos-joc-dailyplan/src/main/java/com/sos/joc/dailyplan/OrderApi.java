@@ -41,10 +41,12 @@ import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.common.Err419;
 
 import io.vavr.control.Either;
+import js7.base.problem.Problem;
 import js7.data.order.OrderId;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.order.JFreshOrder;
+import js7.data_for_java.workflow.position.JPosition;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
@@ -60,8 +62,20 @@ public class OrderApi {
         } else {
             scheduledFor = Optional.of(Instant.now());
         }
+        Optional<JPosition> startPos = Optional.empty();
+        if (order.getStartPosition() != null && !order.getStartPosition().isEmpty()) {
+            Either<Problem, JPosition> startPosE = JPosition.fromList(order.getStartPosition());
+            ProblemHelper.throwProblemIfExist(startPosE);
+            startPos = Optional.of(startPosE.get());
+        }
+        Optional<JPosition> endPos = Optional.empty();
+        if (order.getEndPosition() != null && !order.getEndPosition().isEmpty()) {
+            Either<Problem, JPosition> endPosE = JPosition.fromList(order.getEndPosition());
+            ProblemHelper.throwProblemIfExist(endPosE);
+            endPos = Optional.of(endPosE.get());
+        }
         Map<String, Value> arguments = OrdersHelper.variablesToScalaValuedArguments(order.getArguments());
-        return JFreshOrder.of(OrderId.of(order.getId()), WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
+        return JFreshOrder.of(OrderId.of(order.getId()), WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments, false, startPos, endPos);
     }
 
     public static Set<PlannedOrder> addOrdersToController(StartupMode startupMode, String controllerId, String dailyPlanDate,

@@ -391,6 +391,9 @@ public class DailyPlanRunner extends TimerTask {
                 }
 
                 VariableSet variableSet = new VariableSet();
+                // TODO order positions
+//                variableSet.setStartPosition(null);
+//                variableSet.setEndPosition(null);
                 variableSet.setVariables(variables);
                 schedule.getVariableSets().add(variableSet);
 
@@ -680,6 +683,8 @@ public class DailyPlanRunner extends TimerTask {
         order.setScheduledFor(startTime);
         order.setArguments(variableSet.getVariables());
         order.setWorkflowPath(scheduleWorkflow.getName());
+        order.setStartPosition(variableSet.getStartPosition());
+        order.setEndPosition(variableSet.getEndPosition());
         return order;
     }
 

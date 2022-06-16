@@ -34,11 +34,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "planOrderAutomatically",
     "calendars",
     "nonWorkingDayCalendars",
-    "variableSets",
-    "startPosition",
-    "startPositionString",
-    "endPosition",
-    "endPositionString"
+    "variableSets"
 })
 public class Schedule implements IInventoryObject, IConfigurationObject, IReleaseObject
 {
@@ -109,40 +105,6 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
     private List<AssignedNonWorkingDayCalendars> nonWorkingDayCalendars = null;
     @JsonProperty("variableSets")
     private List<VariableSet> variableSets = null;
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("startPosition")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> startPosition = null;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("startPositionString")
-    private String startPositionString;
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("endPosition")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> endPosition = null;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("endPositionString")
-    private String endPositionString;
 
     /**
      * inventory repository version
@@ -338,102 +300,14 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
         this.variableSets = variableSets;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("startPosition")
-    public List<Object> getStartPosition() {
-        return startPosition;
-    }
-
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("startPosition")
-    public void setStartPosition(List<Object> startPosition) {
-        this.startPosition = startPosition;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("startPositionString")
-    public String getStartPositionString() {
-        return startPositionString;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("startPositionString")
-    public void setStartPositionString(String startPositionString) {
-        this.startPositionString = startPositionString;
-    }
-
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("endPosition")
-    public List<Object> getEndPosition() {
-        return endPosition;
-    }
-
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("endPosition")
-    public void setEndPosition(List<Object> endPosition) {
-        this.endPosition = endPosition;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("endPositionString")
-    public String getEndPositionString() {
-        return endPositionString;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("endPositionString")
-    public void setEndPositionString(String endPositionString) {
-        this.endPositionString = endPositionString;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("path", path).append("workflowName", workflowName).append("workflowNames", workflowNames).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingDayCalendars", nonWorkingDayCalendars).append("variableSets", variableSets).append("startPosition", startPosition).append("startPositionString", startPositionString).append("endPosition", endPosition).append("endPositionString", endPositionString).toString();
+        return new ToStringBuilder(this).append("version", version).append("path", path).append("workflowName", workflowName).append("workflowNames", workflowNames).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingDayCalendars", nonWorkingDayCalendars).append("variableSets", variableSets).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(startPositionString).append(nonWorkingDayCalendars).append(workflowName).append(variableSets).append(title).append(version).append(startPosition).append(workflowNames).append(planOrderAutomatically).append(path).append(calendars).append(endPosition).append(submitOrderToControllerWhenPlanned).append(endPositionString).append(documentationName).toHashCode();
+        return new HashCodeBuilder().append(workflowNames).append(planOrderAutomatically).append(path).append(calendars).append(submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars).append(workflowName).append(documentationName).append(variableSets).append(title).append(version).toHashCode();
     }
 
     @Override
@@ -445,7 +319,7 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
             return false;
         }
         Schedule rhs = ((Schedule) other);
-        return new EqualsBuilder().append(startPositionString, rhs.startPositionString).append(nonWorkingDayCalendars, rhs.nonWorkingDayCalendars).append(workflowName, rhs.workflowName).append(variableSets, rhs.variableSets).append(title, rhs.title).append(version, rhs.version).append(startPosition, rhs.startPosition).append(workflowNames, rhs.workflowNames).append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(calendars, rhs.calendars).append(endPosition, rhs.endPosition).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(endPositionString, rhs.endPositionString).append(documentationName, rhs.documentationName).isEquals();
+        return new EqualsBuilder().append(workflowNames, rhs.workflowNames).append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars, rhs.nonWorkingDayCalendars).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(variableSets, rhs.variableSets).append(title, rhs.title).append(version, rhs.version).isEquals();
     }
 
 }

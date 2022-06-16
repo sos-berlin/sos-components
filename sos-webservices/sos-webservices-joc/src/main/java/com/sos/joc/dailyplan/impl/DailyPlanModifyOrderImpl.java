@@ -715,6 +715,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             if (variable != null && variable.getVariableValue() != null) {
                 variables = Globals.objectMapper.readValue(variable.getVariableValue(), Variables.class);
             }
+            // TODO order positions??
+//            variableSet.setStartPosition(null);
+//            variableSet.setEndPosition(null);
             variableSet.setVariables(variables);
             if (variableSet.getVariables().getAdditionalProperties().size() > 0) {
                 schedule.getVariableSets().add(variableSet);
