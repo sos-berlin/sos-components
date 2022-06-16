@@ -321,8 +321,8 @@ public class ImportUtils {
     
     public static List<ConfigurationType> getImportOrder() {
         return Arrays.asList(ConfigurationType.LOCK,  ConfigurationType.NOTICEBOARD, 
-                ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, 
-                ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
+                ConfigurationType.JOBRESOURCE, ConfigurationType.INCLUDESCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR,
+                ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
     }
 
     public static Map<ControllerObject, SignaturePath> readZipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo)
