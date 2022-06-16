@@ -218,6 +218,7 @@ public class WorkflowsHelper {
         if (workflowIds != null && !workflowIds.isEmpty()) {
             workflowsFilter.setFolders(null);
             workflowsFilter.setRegex(null);
+            workflowsFilter.setStates(null);
         }
         
         return contents;
@@ -232,6 +233,7 @@ public class WorkflowsHelper {
         if (withoutFilter) {
             contentsStream = contentsStream.filter(w -> JOCResourceImpl.canAdd(w.getPath(), permittedFolders));
         }
+        // TODO instead workflowName as glob
         if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
             Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
             contentsStream = contentsStream.filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));

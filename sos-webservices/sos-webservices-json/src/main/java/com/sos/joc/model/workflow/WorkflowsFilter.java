@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.controller.model.common.SyncStateText;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -26,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "workflowIds",
     "compact",
     "folders",
+    "states",
     "regex"
 })
 public class WorkflowsFilter {
@@ -58,6 +60,8 @@ public class WorkflowsFilter {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    @JsonProperty("states")
+    private List<SyncStateText> states = new ArrayList<SyncStateText>();
     /**
      * filter with regex
      * <p>
@@ -146,6 +150,16 @@ public class WorkflowsFilter {
         this.folders = folders;
     }
 
+    @JsonProperty("states")
+    public List<SyncStateText> getStates() {
+        return states;
+    }
+
+    @JsonProperty("states")
+    public void setStates(List<SyncStateText> states) {
+        this.states = states;
+    }
+
     /**
      * filter with regex
      * <p>
@@ -170,12 +184,12 @@ public class WorkflowsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflowIds", workflowIds).append("compact", compact).append("folders", folders).append("regex", regex).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflowIds", workflowIds).append("compact", compact).append("folders", folders).append("states", states).append("regex", regex).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(regex).append(folders).append(controllerId).append(compact).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(regex).append(folders).append(controllerId).append(compact).append(states).toHashCode();
     }
 
     @Override
@@ -187,7 +201,7 @@ public class WorkflowsFilter {
             return false;
         }
         WorkflowsFilter rhs = ((WorkflowsFilter) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(states, rhs.states).isEquals();
     }
 
 }

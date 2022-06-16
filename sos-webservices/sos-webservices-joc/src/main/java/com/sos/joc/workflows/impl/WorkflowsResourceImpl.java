@@ -89,6 +89,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         
         String controllerId = workflowsFilter.getControllerId();
         Set<String> workflowNamesWithAddOrders = dbLayer.getAddOrderWorkflows(controllerId);
+        boolean withStatesFilter = workflowsFilter.getStates() != null && !workflowsFilter.getStates().isEmpty();
 
         Map<String, List<FileOrderSource>> fileOrderSources = (workflowsFilter.getCompact() == Boolean.TRUE) ? null : WorkflowsHelper
                 .workflowToFileOrderSources(currentstate, controllerId, contents.parallelStream().filter(DeployedContent::isCurrentVersion).map(
@@ -104,6 +105,9 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 workflow.setIsCurrentVersion(w.isCurrentVersion());
                 workflow.setVersionDate(w.getCreated());
                 workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
+                if (withStatesFilter && !workflowsFilter.getStates().contains(workflow.getState().get_text())) {
+                    return null;
+                }
                 workflow.setSuspended(WorkflowsHelper.getSuspended(workflow.getState()));
                 if (workflow.getIsCurrentVersion() && fileOrderSources != null) {
                     workflow.setFileOrderSources(fileOrderSources.get(JocInventory.pathToName(w.getPath())));
