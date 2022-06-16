@@ -1,0 +1,31 @@
+{
+  "title": "PostNotices",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.PostNotices",
+  "type": "object",
+  "required": [
+  	"boardPaths"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'PostNotices'",
+  "propertyOrder": [
+  	"TYPE",
+    "boardPaths"
+  ],
+  "properties": {
+    "boardPaths": {
+    	"alias": "noticeBoardNames",
+    	"type": "array",
+    	"items": {
+    		"type": "string",
+    		"pattern": "^[^<>]*$",
+  			"maxLength": 255,
+  			"minLength": 1
+  		}
+    }
+  },
+  "additionalProperties": false
+}

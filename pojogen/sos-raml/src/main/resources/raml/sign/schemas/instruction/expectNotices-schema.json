@@ -1,0 +1,28 @@
+{
+  "title": "ExpectNotices",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.ExpectNotices",
+  "type": "object",
+  "required": [
+  	"boardPaths"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'ExpectNotices'",
+  "propertyOrder": [
+  	"TYPE",
+    "boardPaths"
+  ],
+  "properties": {
+    "boardPaths": {
+    	"alias": "noticeBoardNames",
+    	"type": "string",
+    	"pattern": "^[^<>]*$",
+  		"maxLength": 255,
+  		"minLength": 1
+    }
+  },
+  "additionalProperties": false
+}
