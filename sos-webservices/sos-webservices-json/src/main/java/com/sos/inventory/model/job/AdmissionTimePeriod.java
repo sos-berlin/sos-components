@@ -31,7 +31,11 @@ import com.sos.inventory.model.common.ClassHelper;
 		property = "TYPE",
 		visible = true)
 @JsonSubTypes({ 
-		@JsonSubTypes.Type(value = WeekdayPeriod.class, name = "WeekdayPeriod"),
+        @JsonSubTypes.Type(value = MonthlyDatePeriod.class, name = "MonthlyDatePeriod"),
+        @JsonSubTypes.Type(value = MonthlyWeekdayPeriod.class, name = "MonthlyWeekdayPeriod"),
+        @JsonSubTypes.Type(value = MonthlyLastDatePeriod.class, name = "MonthlyLastDatePeriod"),
+        @JsonSubTypes.Type(value = MonthlyLastWeekdayPeriod.class, name = "MonthlyLastWeekdayPeriod"),
+        @JsonSubTypes.Type(value = WeekdayPeriod.class, name = "WeekdayPeriod"),
 		@JsonSubTypes.Type(value = DailyPeriod.class, name = "DailyPeriod")})
 public abstract class AdmissionTimePeriod
     extends ClassHelper

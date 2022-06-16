@@ -11,16 +11,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * admission time DailyPeriod
+ * admission time MonthlyLastDatePeriod
  * <p>
- * admission time period with fixed property 'TYPE':'DailyPeriod'
+ * admission time period with fixed property 'TYPE':'MonthlyLastDatePeriod'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "secondOfDay"
+    "lastSecondOfMonth"
 })
-public class DailyPeriod
+public class MonthlyLastDatePeriod
     extends AdmissionTimePeriod
 {
 
@@ -29,24 +29,24 @@ public class DailyPeriod
      * (Required)
      * 
      */
-    @JsonProperty("secondOfDay")
+    @JsonProperty("lastSecondOfMonth")
     @JsonPropertyDescription("in seconds")
-    private Long secondOfDay;
+    private Long lastSecondOfMonth;
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public DailyPeriod() {
+    public MonthlyLastDatePeriod() {
     }
 
     /**
      * 
-     * @param secondOfDay
+     * @param lastSecondOfMonth
      */
-    public DailyPeriod(Long secondOfDay) {
+    public MonthlyLastDatePeriod(Long lastSecondOfMonth) {
         super();
-        this.secondOfDay = secondOfDay;
+        this.lastSecondOfMonth = lastSecondOfMonth;
     }
 
     /**
@@ -54,9 +54,9 @@ public class DailyPeriod
      * (Required)
      * 
      */
-    @JsonProperty("secondOfDay")
-    public Long getSecondOfDay() {
-        return secondOfDay;
+    @JsonProperty("lastSecondOfMonth")
+    public Long getLastSecondOfMonth() {
+        return lastSecondOfMonth;
     }
 
     /**
@@ -64,19 +64,19 @@ public class DailyPeriod
      * (Required)
      * 
      */
-    @JsonProperty("secondOfDay")
-    public void setSecondOfDay(Long secondOfDay) {
-        this.secondOfDay = secondOfDay;
+    @JsonProperty("lastSecondOfMonth")
+    public void setLastSecondOfMonth(Long lastSecondOfMonth) {
+        this.lastSecondOfMonth = lastSecondOfMonth;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("secondOfDay", secondOfDay).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("lastSecondOfMonth", lastSecondOfMonth).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(secondOfDay).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(lastSecondOfMonth).toHashCode();
     }
 
     @Override
@@ -84,11 +84,11 @@ public class DailyPeriod
         if (other == this) {
             return true;
         }
-        if ((other instanceof DailyPeriod) == false) {
+        if ((other instanceof MonthlyLastDatePeriod) == false) {
             return false;
         }
-        DailyPeriod rhs = ((DailyPeriod) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(secondOfDay, rhs.secondOfDay).isEquals();
+        MonthlyLastDatePeriod rhs = ((MonthlyLastDatePeriod) other);
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(lastSecondOfMonth, rhs.lastSecondOfMonth).isEquals();
     }
 
 }
