@@ -1,4 +1,4 @@
-package com.sos.auth.vault;
+package com.sos.auth.keycloak;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -13,25 +13,25 @@ import org.slf4j.LoggerFactory;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSSession;
 import com.sos.auth.keycloak.classes.SOSKeycloakAccountAccessToken;
+import com.sos.auth.keycloak.classes.SOSKeycloakWebserviceCredentials;
 import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
-import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
 
-public class SOSVaultSession implements ISOSSession {
+public class SOSKeycloakSession implements ISOSSession {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSVaultSession.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSKeycloakSession.class);
 
-    private SOSVaultAccountAccessToken accessToken;
+    private SOSKeycloakAccountAccessToken accessToken;
     private Long startSession;
     private Long lastTouch;
     private Long initSessionTimeout;
-    private SOSVaultHandler sosVaultHandler;
+    private SOSKeycloakHandler sosKeycloakHandler;
 
     private Map<String, Object> attributes;
 
-    public SOSVaultSession(SOSIdentityService identityService) {
+    public SOSKeycloakSession(SOSIdentityService identityService) {
         super();
         initSession(identityService);
     }
@@ -44,9 +44,9 @@ public class SOSVaultSession implements ISOSSession {
     }
 
     private void initSession(SOSIdentityService identityService) {
-        if (sosVaultHandler == null) {
+        if (sosKeycloakHandler == null) {
             KeyStore trustStore = null;
-            SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
+            SOSKeycloakWebserviceCredentials webserviceCredentials = new SOSKeycloakWebserviceCredentials();
             try {
                 webserviceCredentials.setValuesFromProfile(identityService);
 
@@ -54,7 +54,7 @@ public class SOSVaultSession implements ISOSSession {
                         webserviceCredentials.getTruststorePassword());
 
                 webserviceCredentials.setAccount("");
-                sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
+                sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, trustStore,identityService);
                 startSession = Instant.now().toEpochMilli();
 
             } catch (Exception e) {
@@ -99,7 +99,7 @@ public class SOSVaultSession implements ISOSSession {
 
     @Override
     public Serializable getAccessToken() {
-        return accessToken.getAuth().getClient_token();
+        return accessToken.getAccess_token();
 
     }
 
@@ -118,19 +118,19 @@ public class SOSVaultSession implements ISOSSession {
     }
 
     @Override
-    public SOSVaultAccountAccessToken getSOSVaultAccountAccessToken() {
+    public SOSKeycloakAccountAccessToken getSOSKeycloakAccountAccessToken() {
         return accessToken;
     }
 
-    public void setAccessToken(SOSVaultAccountAccessToken accessToken) {
+    public void setAccessToken(SOSKeycloakAccountAccessToken accessToken) {
         this.accessToken = accessToken;
     }
 
     @Override
     public boolean renew() {
         try {
-            if (sosVaultHandler.accountAccessTokenIsValid(accessToken)) {
-                sosVaultHandler.renewAccountAccess(accessToken);
+            if (sosKeycloakHandler.accountAccessTokenIsValid(accessToken)) {
+                sosKeycloakHandler.renewAccountAccess(accessToken);
                 startSession = Instant.now().toEpochMilli();
                 return true;
             } else {
@@ -148,7 +148,7 @@ public class SOSVaultSession implements ISOSSession {
     }
 
     @Override
-    public SOSKeycloakAccountAccessToken getSOSKeycloakAccountAccessToken() {
+    public SOSVaultAccountAccessToken getSOSVaultAccountAccessToken() {
         return null;
     }
 }

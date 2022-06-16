@@ -175,7 +175,6 @@ public class SOSVaultHandler {
     public boolean accountAccessTokenIsValid(SOSVaultAccountAccessToken sosVaultAccountAccessToken) throws JsonParseException, JsonMappingException,
             IOException, SOSException {
 
-        // String body = "{\"token\":\"" + sosVaultAccountAccessToken.getAuth().getClient_token() + "\"}";
         String response = getResponse(GET, "/v1/auth/token/lookup-self", "", sosVaultAccountAccessToken.getAuth().getClient_token());
 
         LOGGER.debug(response);
@@ -187,7 +186,6 @@ public class SOSVaultHandler {
 
     public void renewAccountAccess(SOSVaultAccountAccessToken sosVaultAccountAccessToken) throws SOSException, SocketException {
         if (sosVaultAccountAccessToken != null && sosVaultAccountAccessToken.getAuth().isRenewable()) {
-            // String body = "{\"token\":\"" + sosVaultAccountAccessToken.getAuth().getClient_token() + "\"}";
             String response = getResponse(POST, "/v1/auth/token/renew-self", "", sosVaultAccountAccessToken.getAuth().getClient_token());
             LOGGER.debug(response);
         }

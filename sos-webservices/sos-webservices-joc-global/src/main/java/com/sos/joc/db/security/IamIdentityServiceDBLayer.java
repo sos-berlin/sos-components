@@ -211,7 +211,7 @@ public class IamIdentityServiceDBLayer {
                                 IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
                     }
                 } catch (IllegalArgumentException e) {
-                    LOGGER.warn("Unknown Identity Service found" + dbItemIamIdentityService.getIdentityServiceType());
+                    LOGGER.warn("Unknown Identity Service found:" + dbItemIamIdentityService.getIdentityServiceType());
 
                 } catch (AccessDeniedException e) {
                     LOGGER.warn(e.getCause() + " -> file:" + e.getFile());

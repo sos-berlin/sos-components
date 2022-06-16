@@ -17,7 +17,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
-import com.sos.joc.model.security.ldap.LdapGroupRolesMappingItem;
+import com.sos.joc.model.security.properties.ldap.LdapGroupRolesMappingItem;
 
 public class SOSLdapWebserviceCredentials {
 
@@ -161,8 +161,8 @@ public class SOSLdapWebserviceCredentials {
 
             if (dbItem != null) {
 
-                com.sos.joc.model.security.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
-                        com.sos.joc.model.security.Properties.class);
+                com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
+                        com.sos.joc.model.security.properties.Properties.class);
 
                 if (ldapServerUrl == null || ldapServerUrl.isEmpty()) {
                     ldapServerUrl = getProperty(properties.getLdap().getExpert().getIamLdapServerUrl(), "http://localhost:389");

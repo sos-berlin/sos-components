@@ -1,10 +1,9 @@
-package com.sos.auth.vault.classes;
+package com.sos.auth.keycloak.classes;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,28 +18,29 @@ import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 
-public class SOSVaultWebserviceCredentials {
+public class SOSKeycloakWebserviceCredentials {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSVaultWebserviceCredentials.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSKeycloakWebserviceCredentials.class);
 
     private String account = "";
     private String accessToken = "";
-    private String decodedAccount = "";
     private String serviceUrl;
-    private String authenticationMethodPath;
 
     private String truststorePath = "";
     private String truststorePassword = "";
     private KeystoreType truststoreType = null;
 
-    private String applicationToken;
-    private String vaultAccount;
+    private String adminAccount;
+    private String adminPassword;
+    private String clientSecret;
+    private String clientId;
+    private String realm;
 
     public String getServiceUrl() {
         return serviceUrl;
     }
 
-    public SOSVaultWebserviceCredentials() {
+    public SOSKeycloakWebserviceCredentials() {
         super();
     }
 
@@ -68,6 +68,26 @@ public class SOSVaultWebserviceCredentials {
         return truststoreType;
     }
 
+    public String getClientSecret() {
+        return clientSecret;
+    }
+
+    public String getRealm() {
+        return realm;
+    }
+
+    public String getAdminAccount() {
+        return adminAccount;
+    }
+
+    public String getAdminPassword() {
+        return adminPassword;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
     private String getProperty(String value, String defaultValue) {
         if (value == null || value.isEmpty()) {
             return defaultValue;
@@ -77,27 +97,11 @@ public class SOSVaultWebserviceCredentials {
 
     }
 
-    public String getApplicationToken() {
-        return applicationToken;
-    }
-
-    public void setApplicationToken(String applicationToken) {
-        this.applicationToken = applicationToken;
-    }
-
-    public String getVaultAccount() {
-        return vaultAccount;
-    }
-
-    public String getAuthenticationMethodPath() {
-        return authenticationMethodPath;
-    }
-
     public void setValuesFromProfile(SOSIdentityService sosIdentityService) {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSVaultWebserviceCredentials");
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSKeycloakWebserviceCredentials");
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
             JocConfigurationFilter filter = new JocConfigurationFilter();
             filter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
@@ -119,16 +123,32 @@ public class SOSVaultWebserviceCredentials {
                         com.sos.joc.model.security.properties.Properties.class);
 
                 if (serviceUrl == null || serviceUrl.isEmpty()) {
-                    serviceUrl = getProperty(properties.getVault().getIamVaultUrl(), "https://vault:8200");
+                    serviceUrl = getProperty(properties.getKeycloak().getIamKeycloakUrl(), "https://keycloak:8283");
                 }
 
-                if (authenticationMethodPath == null || authenticationMethodPath.isEmpty()) {
-                    authenticationMethodPath = getProperty(properties.getVault().getIamVaultAuthenticationMethodPath(), "userpass");
+                if (realm == null || realm.isEmpty()) {
+                    realm = getProperty(properties.getKeycloak().getIamKeycloakRealm(), "master");
                 }
 
-                String truststorePathGui = getProperty(properties.getVault().getIamVaultTruststorePath(), "");
-                String truststorePassGui = getProperty(properties.getVault().getIamVaultTruststorePassword(), "");
-                String tTypeGui = getProperty(properties.getVault().getIamVaultTruststoreType(), "");
+                if (clientSecret == null) {
+                    clientSecret = getProperty(properties.getKeycloak().getIamKeycloakClientSecret(), "");
+                }
+
+                if (clientId == null) {
+                    clientId = getProperty(properties.getKeycloak().getIamKeycloakClientId(), "");
+                }
+
+                if (adminAccount == null) {
+                    adminAccount = getProperty(properties.getKeycloak().getIamKeycloakAdminAccount(), "");
+                }
+
+                if (adminPassword == null) {
+                    adminPassword = getProperty(properties.getKeycloak().getIamKeycloakAdminPassword(), "");
+                }
+
+                String truststorePathGui = getProperty(properties.getKeycloak().getIamKeycloakTruststorePath(), "");
+                String truststorePassGui = getProperty(properties.getKeycloak().getIamKeycloakTruststorePassword(), "");
+                String tTypeGui = getProperty(properties.getKeycloak().getIamKeycloakTruststoreType(), "");
 
                 String truststorePathDefault = getProperty(System.getProperty("javax.net.ssl.trustStore"), "");
                 String truststoreTypeDefault = getProperty(System.getProperty("javax.net.ssl.trustStoreType"), "");
@@ -166,10 +186,6 @@ public class SOSVaultWebserviceCredentials {
                     truststorePath = p.toString();
                 }
 
-                if (applicationToken == null) {
-                    applicationToken = getProperty(properties.getVault().getIamVaultApplicationToken(), "");
-                }
-
             }
         } catch (SOSHibernateException | IOException e) {
             LOGGER.error("", e);
@@ -181,9 +197,10 @@ public class SOSVaultWebserviceCredentials {
 
     @Override
     public String toString() {
-        return "SOSVaultWebserviceCredentials [account=" + account + ", accessToken=" + accessToken + ", decodedAccount=" + decodedAccount
-                + ", serviceUrl=" + serviceUrl + ", truststorePath=" + truststorePath + ", truststorePassword=" + truststorePassword
-                + ", truststoreType=" + truststoreType + ", applicationToken=" + applicationToken + ", vaultAccount=" + vaultAccount + "]";
+        return "SOSKeycloakWebserviceCredentials [account=" + account + ", accessToken=" + accessToken + ", serviceUrl=" + serviceUrl
+                + ", truststorePath=" + truststorePath + ", truststorePassword=" + truststorePassword + ", truststoreType=" + truststoreType
+                + ", adminAccount=" + adminAccount + ", adminPassword=" + adminPassword + ", clientSecret=" + clientSecret + ", clientId="
+                + clientId + ", realm=" + realm + "]";
     }
 
 }

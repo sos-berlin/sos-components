@@ -74,7 +74,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                     identityService.setIdentityServiceType(IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
                 } catch (IllegalArgumentException e) {
                     identityService.setIdentityServiceType(IdentityServiceTypes.UNKNOWN);
-                    LOGGER.warn("Unknown Identity Service found" + dbItemIamIdentityService.getIdentityServiceType());
+                    LOGGER.warn("Unknown Identity Service found:" + dbItemIamIdentityService.getIdentityServiceType());
                 }
 
                 identityService.setServiceAuthenticationScheme(IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService
@@ -305,6 +305,8 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.VAULT);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.VAULT_JOC);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.VAULT_JOC_ACTIVE);
+            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.KEYCLOAK);
+            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.KEYCLOAK_JOC);
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_READ);
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
@@ -319,7 +321,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                     identityService.setIdentityServiceType(IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
                 } catch (IllegalArgumentException e) {
                     identityService.setIdentityServiceType(IdentityServiceTypes.UNKNOWN);
-                    LOGGER.warn("Unknown Identity Service found" + dbItemIamIdentityService.getIdentityServiceType());
+                    LOGGER.warn("Unknown Identity Service found:" + dbItemIamIdentityService.getIdentityServiceType());
                 }
                 identityService.setServiceAuthenticationScheme(IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService
                         .getAuthenticationScheme()));

@@ -1,5 +1,7 @@
-package com.sos.auth.vault.classes;
+package com.sos.auth.keycloak.classes;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +14,7 @@ import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSSession;
-import com.sos.auth.vault.SOSVaultSession;
+import com.sos.auth.keycloak.SOSKeycloakSession;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -20,11 +22,11 @@ import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
-public class SOSVaultSubject implements ISOSAuthSubject {
+public class SOSKeycloakSubject implements ISOSAuthSubject {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSVaultSubject.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSKeycloakSubject.class);
 
-    private SOSVaultSession session;
+    private SOSKeycloakSession session;
     private Boolean authenticated;
     private Map<String, List<String>> mapOfFolderPermissions;
     private Set<String> setOfAccountPermissions;
@@ -32,7 +34,7 @@ public class SOSVaultSubject implements ISOSAuthSubject {
     private SOSIdentityService identityService;
     private String account;
 
-    public SOSVaultSubject(String account, SOSIdentityService identityService) {
+    public SOSKeycloakSubject(String account, SOSIdentityService identityService) {
         super();
         this.identityService = identityService;
         this.account = account;
@@ -64,24 +66,23 @@ public class SOSVaultSubject implements ISOSAuthSubject {
         this.authenticated = authenticated;
     }
 
-    private SOSVaultSession getVaultSession() {
+    private SOSKeycloakSession getKeycloakSession() {
         if (session == null) {
-            session = new SOSVaultSession(identityService);
+            session = new SOSKeycloakSession(identityService);
         }
         return session;
     }
 
     @Override
     public ISOSSession getSession() {
-        return getVaultSession();
+        return getKeycloakSession();
     }
 
-    public void setAccessToken(SOSVaultAccountAccessToken accessToken) {
-        getVaultSession().setAccessToken(accessToken);
+    public void setAccessToken(SOSKeycloakAccountAccessToken accessToken) {
+        getKeycloakSession().setAccessToken(accessToken);
     }
 
-    public void setPermissionAndRoles(List<String> listOfTokenRoles, String accountName)
-            throws SOSHibernateException {
+    public void setPermissionAndRoles(Set<String> setOfTokenRoles, String accountName) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             setOfRoles = new HashSet<String>();
@@ -89,22 +90,22 @@ public class SOSVaultSubject implements ISOSAuthSubject {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
-            if (IdentityServiceTypes.VAULT_JOC == identityService.getIdentyServiceType() || IdentityServiceTypes.VAULT_JOC_ACTIVE == identityService
-                    .getIdentyServiceType()) {
+            if (IdentityServiceTypes.KEYCLOAK_JOC == identityService.getIdentyServiceType()
+                    || IdentityServiceTypes.KEYCLOAK_JOC_ACTIVE == identityService.getIdentyServiceType()) {
                 List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(accountName, identityService
                         .getIdentityServiceId());
                 for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
                     setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
                 }
             } else {
-                setOfRoles.addAll(listOfTokenRoles);
+                setOfRoles.addAll(setOfTokenRoles);
             }
 
             List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, identityService
                     .getIdentityServiceId());
             mapOfFolderPermissions = SOSAuthHelper.getMapOfFolderPermissions(listOfPermissions);
             setOfAccountPermissions = SOSAuthHelper.getSetOfPermissions(listOfPermissions);
-           
+
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

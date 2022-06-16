@@ -136,8 +136,8 @@ public class SOSAuthHelper {
         String initialPassword;
         Long minPasswordLength;
         if (result.size() == 1) {
-            com.sos.joc.model.security.Properties properties = Globals.objectMapper.readValue(result.get(0).getConfigurationItem(),
-                    com.sos.joc.model.security.Properties.class);
+            com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(result.get(0).getConfigurationItem(),
+                    com.sos.joc.model.security.properties.Properties.class);
             initialPassword = properties.getInitialPassword();
             if (properties.getMinPasswordLength() == null) {
                 minPasswordLength = 0L;

@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.security.ldap;
+package com.sos.joc.model.security.properties.ldap;
 
 import java.util.HashMap;
 import java.util.Map;

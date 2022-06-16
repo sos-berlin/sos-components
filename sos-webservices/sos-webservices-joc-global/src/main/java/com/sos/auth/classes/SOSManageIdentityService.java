@@ -1,7 +1,6 @@
 package com.sos.auth.classes;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,12 +16,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.auth.classes.SOSPasswordHasher;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.db.DBLayer;
@@ -35,10 +32,10 @@ import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.SecurityConfigurationAccount;
 import com.sos.joc.model.security.configuration.SecurityConfigurationMainEntry;
-import com.sos.joc.model.security.ldap.LdapExpertProperties;
-import com.sos.joc.model.security.ldap.LdapGroupRolesMapping;
-import com.sos.joc.model.security.ldap.LdapGroupRolesMappingItem;
-import com.sos.joc.model.security.ldap.LdapProperties;;
+import com.sos.joc.model.security.properties.ldap.LdapExpertProperties;
+import com.sos.joc.model.security.properties.ldap.LdapGroupRolesMapping;
+import com.sos.joc.model.security.properties.ldap.LdapGroupRolesMappingItem;
+import com.sos.joc.model.security.properties.ldap.LdapProperties;;
 
 public class SOSManageIdentityService {
 
@@ -174,7 +171,7 @@ public class SOSManageIdentityService {
         dbItem.setAccount(ConfigurationGlobals.ACCOUNT);
         dbItem.setShared(ConfigurationGlobals.SHARED);
 
-        com.sos.joc.model.security.Properties properties = new com.sos.joc.model.security.Properties();
+        com.sos.joc.model.security.properties.Properties properties = new com.sos.joc.model.security.properties.Properties();
         properties.setLdap(new LdapProperties());
         LdapExpertProperties ldapExpertProperties = new LdapExpertProperties();
 

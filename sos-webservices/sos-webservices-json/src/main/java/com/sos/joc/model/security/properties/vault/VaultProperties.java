@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.security.ldap;
+package com.sos.joc.model.security.properties.vault;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

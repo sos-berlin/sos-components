@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.sos.auth.interfaces.ISOSSession;
+import com.sos.auth.keycloak.classes.SOSKeycloakAccountAccessToken;
 import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
 import com.sos.joc.Globals;
 
@@ -104,5 +105,10 @@ public class SOSInternAuthSession implements ISOSSession {
     @Override
     public Long getStartSession() {
         return startSession;
+    }
+
+    @Override
+    public SOSKeycloakAccountAccessToken getSOSKeycloakAccountAccessToken() {
+        return null;
     }
 }

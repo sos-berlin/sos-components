@@ -28,6 +28,7 @@ import org.slf4j.MDC;
 import com.sos.auth.client.ClientCertificateHandler;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
+import com.sos.auth.keycloak.classes.SOSKeycloakLogin;
 import com.sos.auth.ldap.classes.SOSLdapLogin;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.auth.vault.classes.SOSVaultLogin;
@@ -53,12 +54,9 @@ import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
-@SuppressWarnings("deprecation")
 @Path("/authentication")
 public class SOSServicePermissionIam {
 
-    private static final String CREATE_ACCOUNT = "createAccount";
-    // private static final String JOC_COCKPIT_CLIENT_ID = "JOC Cockpit";
     private static final String ACCESS_TOKEN = "access_token";
     private static final String X_ACCESS_TOKEN = "X-Access-Token";
     private static final String UTC = "UTC";
@@ -375,6 +373,25 @@ public class SOSServicePermissionIam {
         return currentAccount;
     }
 
+    @POST
+    @Path("/permissions")
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse getPermissions(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,
+            @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery) throws SessionNotExistException {
+
+        MDC.put("context", ThreadCtx);
+        try {
+            String accessToken = this.getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
+            SOSAuthCurrentAccount currentAccount = this.getCurrentAccount(accessToken);
+            SOSListOfPermissions sosListOfPermissions = new SOSListOfPermissions(currentAccount);
+            return JOCDefaultResponse.responseStatus200(sosListOfPermissions.getSosPermissionShiro());
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } finally {
+            MDC.remove("context");
+        }
+    }
+
     private String getAccessToken(String xAccessTokenFromHeader, String accessTokenFromQuery) {
         if (xAccessTokenFromHeader != null && !xAccessTokenFromHeader.isEmpty()) {
             accessTokenFromQuery = xAccessTokenFromHeader;
@@ -387,65 +404,78 @@ public class SOSServicePermissionIam {
         if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
             Globals.jocWebserviceDataContainer.setCurrentAccountsList(new SOSAuthCurrentAccountsList());
         }
-
-        IdentityServiceTypes identityServiceType = IdentityServiceTypes.fromValue(dbItemIdentityService.getIdentityServiceType());
-        String identityServiceName = dbItemIdentityService.getIdentityServiceName();
-
-        ISOSLogin sosLogin = null;
-
-        switch (identityServiceType) {
-
-        case LDAP:
-        case LDAP_JOC:
-            sosLogin = new SOSLdapLogin();
-            LOGGER.debug("Login with idendity service ldap");
-            break;
-        case VAULT:
-        case VAULT_JOC:
-        case VAULT_JOC_ACTIVE:
-            sosLogin = new SOSVaultLogin();
-            LOGGER.debug("Login with idendity service vault");
-            break;
-        case JOC:
-            sosLogin = new SOSInternAuthLogin();
-            LOGGER.debug("Login with idendity service sosintern");
-            break;
-        default:
-            sosLogin = new SOSInternAuthLogin();
-            LOGGER.debug("Login with idendity service sosintern");
+        IdentityServiceTypes identityServiceType = null;
+        try {
+            identityServiceType = IdentityServiceTypes.fromValue(dbItemIdentityService.getIdentityServiceType());
+        } catch (IllegalArgumentException e) {
         }
 
-        sosLogin.setIdentityService(new SOSIdentityService(dbItemIdentityService));
-        sosLogin.login(currentAccount.getAccountname(), password, currentAccount.getHttpServletRequest());
+        if (identityServiceType != null) {
+            String identityServiceName = dbItemIdentityService.getIdentityServiceName();
 
-        ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
+            ISOSLogin sosLogin = null;
 
-        currentAccount.setCurrentSubject(sosAuthSubject);
-        currentAccount.setIdentityServices(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
-                identityServiceType));
+            switch (identityServiceType) {
 
-        if (sosAuthSubject == null || !sosAuthSubject.isAuthenticated()) {
-            SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
-            sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
-            sosAuthCurrentAccountAnswer.setMessage(sosLogin.getMsg());
-            sosAuthCurrentAccountAnswer.setIdentityService(identityServiceType.name() + ":" + identityServiceName);
-            currentAccount.setCurrentSubject(null);
+            case LDAP:
+            case LDAP_JOC:
+                sosLogin = new SOSLdapLogin();
+                LOGGER.debug("Login with idendity service ldap");
+                break;
+            case VAULT:
+            case VAULT_JOC:
+            case VAULT_JOC_ACTIVE:
+                sosLogin = new SOSVaultLogin();
+                LOGGER.debug("Login with idendity service vault");
+                break;
+            case KEYCLOAK:
+            case KEYCLOAK_JOC:
+            case KEYCLOAK_JOC_ACTIVE:
+                sosLogin = new SOSKeycloakLogin();
+                LOGGER.debug("Login with idendity service keycloak");
+                break;
+            case JOC:
+                sosLogin = new SOSInternAuthLogin();
+                LOGGER.debug("Login with idendity service sosintern");
+                break;
+            default:
+                sosLogin = new SOSInternAuthLogin();
+                LOGGER.debug("Login with idendity service sosintern");
+            }
 
-            throw new JocAuthenticationException(sosAuthCurrentAccountAnswer);
+            sosLogin.setIdentityService(new SOSIdentityService(dbItemIdentityService));
+            sosLogin.login(currentAccount.getAccountname(), password, currentAccount.getHttpServletRequest());
+
+            ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
+
+            currentAccount.setCurrentSubject(sosAuthSubject);
+            currentAccount.setIdentityServices(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
+                    identityServiceType));
+
+            if (sosAuthSubject == null || !sosAuthSubject.isAuthenticated()) {
+                SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
+                sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
+                sosAuthCurrentAccountAnswer.setMessage(sosLogin.getMsg());
+                sosAuthCurrentAccountAnswer.setIdentityService(identityServiceType.name() + ":" + identityServiceName);
+                currentAccount.setCurrentSubject(null);
+
+                throw new JocAuthenticationException(sosAuthCurrentAccountAnswer);
+            }
+            SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
+            String accessToken = sosSessionHandler.getAccessToken().toString();
+
+            currentAccount.setAccessToken(identityServiceName, accessToken);
+            Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
+
+            resetTimeOut(currentAccount);
+
+            if (Globals.sosCockpitProperties == null) {
+                Globals.sosCockpitProperties = new JocCockpitProperties();
+            }
+            return sosLogin.getMsg();
+        } else {
+            return "Unknown Identity Service found: " + dbItemIdentityService.getIdentityServiceType();
         }
-        SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
-        String accessToken = sosSessionHandler.getAccessToken().toString();
-
-        currentAccount.setAccessToken(identityServiceName, accessToken);
-        Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
-
-        resetTimeOut(currentAccount);
-
-        if (Globals.sosCockpitProperties == null) {
-            Globals.sosCockpitProperties = new JocCockpitProperties();
-        }
-
-        return sosLogin.getMsg();
 
     }
 
@@ -537,16 +567,15 @@ public class SOSServicePermissionIam {
 
                 for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
                     msg = createAccount(currentAccount, password, dbItemIamIdentityService);
-                    SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
-                            dbItemIamIdentityService));
-                    currentAccount.setRoles(securityConfiguration);
-                    setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
-                    if (!msg.isEmpty()) {
+                    if (msg.isEmpty()) {
+                        SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
+                                dbItemIamIdentityService));
+                        currentAccount.setRoles(securityConfiguration);
+                        setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
+                        addFolder(currentAccount);
+                    } else {
                         LOGGER.info("Login with required Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed." + msg);
                     }
-
-                    addFolder(currentAccount);
-
                 }
 
                 if (currentAccount.getCurrentSubject() == null) {
@@ -673,8 +702,8 @@ public class SOSServicePermissionIam {
             List<DBItemJocConfiguration> listOfDbItemJocConfiguration = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
             if (listOfDbItemJocConfiguration.size() == 1) {
                 dbItem = listOfDbItemJocConfiguration.get(0);
-                com.sos.joc.model.security.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
-                        com.sos.joc.model.security.Properties.class);
+                com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
+                        com.sos.joc.model.security.properties.Properties.class);
                 Globals.iamSessionTimeout = properties.getSessionTimeout();
             }
         } catch (Exception e) {

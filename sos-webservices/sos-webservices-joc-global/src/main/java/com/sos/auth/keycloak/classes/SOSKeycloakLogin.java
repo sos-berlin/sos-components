@@ -1,11 +1,11 @@
-package com.sos.auth.vault.classes;
+package com.sos.auth.keycloak.classes;
 
 import java.io.IOException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
+import java.util.HashSet;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -16,22 +16,22 @@ import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
-import com.sos.auth.vault.SOSVaultHandler;
+import com.sos.auth.keycloak.SOSKeycloakHandler;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
-public class SOSVaultLogin implements ISOSLogin {
+public class SOSKeycloakLogin implements ISOSLogin {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSVaultLogin.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSKeycloakLogin.class);
 
     private String msg = "";
     private SOSIdentityService identityService;
 
-    SOSVaultSubject sosVaultSubject;
+    SOSKeycloakSubject sosKeycloakSubject;
 
-    public SOSVaultLogin() {
+    public SOSKeycloakLogin() {
 
     }
 
@@ -39,34 +39,40 @@ public class SOSVaultLogin implements ISOSLogin {
         KeyStore trustStore = null;
 
         try {
-            SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
+            SOSKeycloakWebserviceCredentials webserviceCredentials = new SOSKeycloakWebserviceCredentials();
             webserviceCredentials.setValuesFromProfile(identityService);
 
             trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
                     webserviceCredentials.getTruststorePassword());
 
             webserviceCredentials.setAccount(account);
-            SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
+            SOSKeycloakHandler sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, trustStore, identityService);
 
-            SOSVaultAccountAccessToken sosVaultAccountAccessToken = null;
+            SOSKeycloakAccountAccessToken sosKeycloakAccountAccessToken = null;
 
             boolean disabled;
 
             disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), account);
 
             if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
-                sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
+                sosKeycloakAccountAccessToken = sosKeycloakHandler.login(pwd);
             }
 
-            sosVaultSubject = new SOSVaultSubject(account, identityService);
+            sosKeycloakSubject = new SOSKeycloakSubject(account, identityService);
 
-            if (sosVaultAccountAccessToken.getAuth() == null) {
-                sosVaultSubject.setAuthenticated(false);
+            if (sosKeycloakAccountAccessToken.getAccess_token() == null || sosKeycloakAccountAccessToken.getAccess_token().isEmpty()) {
+                sosKeycloakSubject.setAuthenticated(false);
                 setMsg("There is no user with the given account/password combination");
             } else {
-                sosVaultSubject.setAuthenticated(true);
-                sosVaultSubject.setAccessToken(sosVaultAccountAccessToken);
-                sosVaultSubject.setPermissionAndRoles(sosVaultAccountAccessToken.getAuth().getToken_policies(), account);
+                sosKeycloakSubject.setAuthenticated(true);
+                sosKeycloakSubject.setAccessToken(sosKeycloakAccountAccessToken);
+
+                if (IdentityServiceTypes.KEYCLOAK_JOC == identityService.getIdentyServiceType()
+                        || IdentityServiceTypes.KEYCLOAK_JOC_ACTIVE == identityService.getIdentyServiceType()) {
+                    sosKeycloakSubject.setPermissionAndRoles(null, account);
+                } else {
+                    sosKeycloakSubject.setPermissionAndRoles(sosKeycloakHandler.getTokenRoles(), account);
+                }
             }
 
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
@@ -74,7 +80,7 @@ public class SOSVaultLogin implements ISOSLogin {
         } catch (SOSException e) {
             LOGGER.error("", e);
         } catch (JocException e) {
-            LOGGER.info("VAULT:" + e.getMessage());
+            LOGGER.info("KEYCLOAK:" + e.getMessage());
         } catch (Exception e) {
             LOGGER.error("", e);
         }
@@ -83,12 +89,12 @@ public class SOSVaultLogin implements ISOSLogin {
     public void simulateLogin(String account) {
 
         try {
-            sosVaultSubject = new SOSVaultSubject(account, identityService);
-            sosVaultSubject.setAuthenticated(true);
+            sosKeycloakSubject = new SOSKeycloakSubject(account, identityService);
+            sosKeycloakSubject.setAuthenticated(true);
 
             if (IdentityServiceTypes.VAULT_JOC == identityService.getIdentyServiceType() || IdentityServiceTypes.VAULT_JOC_ACTIVE == identityService
                     .getIdentyServiceType()) {
-                sosVaultSubject.setPermissionAndRoles(new ArrayList<String>(), account);
+                sosKeycloakSubject.setPermissionAndRoles(new HashSet<String>(), account);
             }
 
         } catch (SOSException e) {
@@ -115,7 +121,7 @@ public class SOSVaultLogin implements ISOSLogin {
 
     @Override
     public ISOSAuthSubject getCurrentSubject() {
-        return sosVaultSubject;
+        return sosKeycloakSubject;
     }
 
     @Override

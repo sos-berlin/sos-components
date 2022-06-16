@@ -3,9 +3,11 @@ package com.sos.commons.httpclient;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -99,6 +101,7 @@ public class SOSRestApiClient {
     }
 
     public HttpResponse getHttpResponse() {
+
         return httpResponse;
     }
 
@@ -578,11 +581,35 @@ public class SOSRestApiClient {
         }
     }
 
+    private String getDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (entry.getKey() != null && entry.getValue() != null) {
+                if (first) {
+                    first = false;
+                } else {
+                    result.append("&");
+                }
+                result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
+                result.append("=");
+                result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+            }
+        }
+        return result.toString();
+    }
+
     private <B> HttpEntity getEntity(B body) throws SOSBadRequestException {
         HttpEntity entity = null;
         if (body != null) {
             try {
-                if (body instanceof String) {
+                if (body instanceof HashMap) {
+                    @SuppressWarnings("unchecked")
+                    String b = getDataString((HashMap<String, String>) body);
+                    if (!b.isEmpty()) {
+                        entity = new StringEntity(b, StandardCharsets.UTF_8);
+                    }
+                } else if (body instanceof String) {
                     String b = (String) body;
                     if (!b.isEmpty()) {
                         entity = new StringEntity(b, StandardCharsets.UTF_8);
