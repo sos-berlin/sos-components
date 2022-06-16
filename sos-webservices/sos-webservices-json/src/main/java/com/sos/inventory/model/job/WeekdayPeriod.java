@@ -3,6 +3,7 @@ package com.sos.inventory.model.job;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -24,13 +25,12 @@ public class WeekdayPeriod
 {
 
     /**
-     * non negative long
-     * <p>
-     * 
+     * in seconds
      * (Required)
      * 
      */
     @JsonProperty("secondOfWeek")
+    @JsonPropertyDescription("in seconds")
     private Long secondOfWeek;
 
     /**
@@ -50,9 +50,7 @@ public class WeekdayPeriod
     }
 
     /**
-     * non negative long
-     * <p>
-     * 
+     * in seconds
      * (Required)
      * 
      */
@@ -62,9 +60,7 @@ public class WeekdayPeriod
     }
 
     /**
-     * non negative long
-     * <p>
-     * 
+     * in seconds
      * (Required)
      * 
      */

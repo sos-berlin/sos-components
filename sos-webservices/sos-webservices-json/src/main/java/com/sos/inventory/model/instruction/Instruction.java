@@ -47,8 +47,10 @@ import com.sos.inventory.model.common.ClassHelper;
 		@JsonSubTypes.Type(value = Lock.class, name = "Lock"),
 		@JsonSubTypes.Type(value = Prompt.class, name = "Prompt"),
 		@JsonSubTypes.Type(value = PostNotice.class, name = "PostNotice"),
-		@JsonSubTypes.Type(value = ExpectNotice.class, name = "ExpectNotice"),
-		@JsonSubTypes.Type(value = ImplicitEnd.class, name = "ImplicitEnd"),
+		@JsonSubTypes.Type(value = PostNotices.class, name = "PostNotices"),
+        @JsonSubTypes.Type(value = ExpectNotice.class, name = "ExpectNotice"),
+		@JsonSubTypes.Type(value = ExpectNotices.class, name = "ExpectNotices"),
+        @JsonSubTypes.Type(value = ImplicitEnd.class, name = "ImplicitEnd"),
         @JsonSubTypes.Type(value = AddOrder.class, name = "AddOrder"),
         @JsonSubTypes.Type(value = Cycle.class, name = "Cycle")})
 public abstract class Instruction

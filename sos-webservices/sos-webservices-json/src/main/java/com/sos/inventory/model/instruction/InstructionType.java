@@ -19,7 +19,9 @@ public enum InstructionType {
     LOCK("Lock"),
     PROMPT("Prompt"),
     POST_NOTICE("PostNotice"),
+    POST_NOTICES("PostNotices"),
     EXPECT_NOTICE("ExpectNotice"),
+    EXPECT_NOTICES("ExpectNotices"),
     IMPLICIT_END("ImplicitEnd"),
     ADD_ORDER("AddOrder"),
     CYCLE("Cycle");

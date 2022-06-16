@@ -11,16 +11,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * admission time DailyPeriod
+ * admission time MonthlyWeekdayPeriod
  * <p>
- * admission time period with fixed property 'TYPE':'DailyPeriod'
+ * admission time period with fixed property 'TYPE':'MonthlyWeekdayPeriod'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "secondOfDay"
+    "secondOfWeeks"
 })
-public class DailyPeriod
+public class MonthlyWeekdayPeriod
     extends AdmissionTimePeriod
 {
 
@@ -29,24 +29,24 @@ public class DailyPeriod
      * (Required)
      * 
      */
-    @JsonProperty("secondOfDay")
+    @JsonProperty("secondOfWeeks")
     @JsonPropertyDescription("in seconds")
-    private Long secondOfDay;
+    private Long secondOfWeeks;
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public DailyPeriod() {
+    public MonthlyWeekdayPeriod() {
     }
 
     /**
      * 
-     * @param secondOfDay
+     * @param secondOfWeeks
      */
-    public DailyPeriod(Long secondOfDay) {
+    public MonthlyWeekdayPeriod(Long secondOfWeeks) {
         super();
-        this.secondOfDay = secondOfDay;
+        this.secondOfWeeks = secondOfWeeks;
     }
 
     /**
@@ -54,9 +54,9 @@ public class DailyPeriod
      * (Required)
      * 
      */
-    @JsonProperty("secondOfDay")
-    public Long getSecondOfDay() {
-        return secondOfDay;
+    @JsonProperty("secondOfWeeks")
+    public Long getSecondOfWeeks() {
+        return secondOfWeeks;
     }
 
     /**
@@ -64,19 +64,19 @@ public class DailyPeriod
      * (Required)
      * 
      */
-    @JsonProperty("secondOfDay")
-    public void setSecondOfDay(Long secondOfDay) {
-        this.secondOfDay = secondOfDay;
+    @JsonProperty("secondOfWeeks")
+    public void setSecondOfWeeks(Long secondOfWeeks) {
+        this.secondOfWeeks = secondOfWeeks;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("secondOfDay", secondOfDay).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("secondOfWeeks", secondOfWeeks).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(secondOfDay).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(secondOfWeeks).toHashCode();
     }
 
     @Override
@@ -84,11 +84,11 @@ public class DailyPeriod
         if (other == this) {
             return true;
         }
-        if ((other instanceof DailyPeriod) == false) {
+        if ((other instanceof MonthlyWeekdayPeriod) == false) {
             return false;
         }
-        DailyPeriod rhs = ((DailyPeriod) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(secondOfDay, rhs.secondOfDay).isEquals();
+        MonthlyWeekdayPeriod rhs = ((MonthlyWeekdayPeriod) other);
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(secondOfWeeks, rhs.secondOfWeeks).isEquals();
     }
 
 }

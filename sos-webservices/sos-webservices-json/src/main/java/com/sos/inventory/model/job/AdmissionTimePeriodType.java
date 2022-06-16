@@ -8,6 +8,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum AdmissionTimePeriodType {
 
+    MONTHLY_DATE_PERIOD("MonthlyDatePeriod"),
+    MONTHLY_LAST_DATE_PERIOD("MonthlyLastDatePeriod"),
+    MONTHLY_WEEKDAY_PERIOD("MonthlyWeekdayPeriod"),
+    MONTHLY_LAST_WEEKDAY_PERIOD("MonthlyLastWeekdayPeriod"),
     WEEKDAY_PERIOD("WeekdayPeriod"),
     DAILY_PERIOD("DailyPeriod");
     private final String value;
