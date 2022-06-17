@@ -1,4 +1,4 @@
-package com.sos.js7.converter.js1.output;
+package com.sos.js7.converter.js1.output.js7;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -20,12 +20,17 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.controller.model.workflow.Workflow;
 import com.sos.inventory.model.calendar.AssignedCalendars;
+import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
+import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.job.AdmissionTimePeriod;
+import com.sos.inventory.model.job.AdmissionTimeScheme;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
@@ -53,6 +58,7 @@ import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 import com.sos.js7.converter.js1.common.Folder;
 import com.sos.js7.converter.js1.common.Include;
 import com.sos.js7.converter.js1.common.Params;
+import com.sos.js7.converter.js1.common.RunTime;
 import com.sos.js7.converter.js1.common.job.ACommonJob;
 import com.sos.js7.converter.js1.common.job.ACommonJob.DelayAfterError;
 import com.sos.js7.converter.js1.common.job.OrderJob;
@@ -64,22 +70,37 @@ import com.sos.js7.converter.js1.common.jobchain.node.JobChainNode;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeFileOrderSink;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeFileOrderSource;
 import com.sos.js7.converter.js1.common.json.calendar.JS1Calendar;
+import com.sos.js7.converter.js1.common.json.calendar.JS1Calendars;
 import com.sos.js7.converter.js1.common.processclass.ProcessClass;
 import com.sos.js7.converter.js1.input.DirectoryParser;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 
 /** <br/>
- * TODO<br/>
- * Locks<br/>
- * Schedule - convert from files and not from a jobscheduler answer ...<br/>
- * JobChainNodes:<br/>
- * job_chain_node.job_chain, file_order_sink, job_chain_node.end<br/>
- * multiple file_order_source with different next_state ???<br/>
- * Java: Split/Join<br/>
+ * TODO Locks<br/>
+ * --- current JS7 state - 1 Lock support - generate 1 Lock, ignore/report following<br/>
+ * TODO JobChain .config.xml - <br/>
+ * --- params as node instructions<br/>
+ * --- ... substitute variables <br/>
+ * TODO JobChainNodes:<br/>
+ * ---- job_chain_node.job_chain<br/>
+ * ---- file_order_sink - generate a fileOrderSing JITL Job(Move,Remove)<br/>
+ * -------- use $FILE<br/>
+ * -------- WARN if the file not exists(grace argument?)<br/>
+ * -------- otherwise exception (can't be moved/removed: permission denied etc)<br/>
+ * ---- job_chain_node.end - ignore/report<br/>
+ * ---- multiple file_order_source with different next_state ???<br/>
+ * ------- generate a File Order Source per file_order_source for th given workflow<br/>
+ * ------- current JS7 state - workflow position not supported - will be implemented later ...<br/>
+ * TODO Schedule substitute - ignore/report<br/>
+ * TODO Schedule - create one schedule for multiple workflows<br/>
+ * TODO Cyclic Workflows Instructions<br/>
+ * TODO Job (order) AdmissionTimes<br/>
+ * ---- RunTime - without calendars or job chain jobs with a run time ...<br/>
+ * TODO Java: Split/Join<br/>
  */
-public class JS12JS7Converter {
+public class JS7Converter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JS12JS7Converter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JS7Converter.class);
 
     public static JS7ConverterConfig CONFIG = new JS7ConverterConfig();
 
@@ -92,7 +113,8 @@ public class JS12JS7Converter {
     private Map<String, Integer> jobResourcesDuplicates = new HashMap<>();
     private Map<Path, OrderJob> orderJobs = new HashMap<>();
 
-    private Map<String, List<ACommonJob>> jobsByLanguage = new HashMap<>();
+    private Map<String, List<ACommonJob>> js1JobsByLanguage = new HashMap<>();
+    private Map<String, List<RunTime>> js1Calendars = new HashMap<>();
 
     public static void convert(Path input, Path outputDir, Path reportDir) throws IOException {
 
@@ -166,7 +188,7 @@ public class JS12JS7Converter {
     private static JS7ConverterResult convert(DirectoryParserResult pr) {
         JS7ConverterResult result = new JS7ConverterResult();
 
-        JS12JS7Converter c = new JS12JS7Converter();
+        JS7Converter c = new JS7Converter();
         c.inputDirPath = pr.getRoot().getPath().toString();
         c.converterObjects = c.getConverterObjects(pr.getRoot());
 
@@ -180,16 +202,30 @@ public class JS12JS7Converter {
     }
 
     private void analyzerReport() {
-        jobsByLanguage.entrySet().forEach(e -> {
-            ParserReport.INSTANCE.addAnalyzerRecord(e.getKey().toUpperCase(), "");
-            for (ACommonJob job : e.getValue()) {
-                String className = null;
-                if (job.getScript() != null && job.getScript().getJavaClass() != null) {
-                    className = job.getScript().getJavaClass();
+        if (js1JobsByLanguage.size() > 0) {
+            ParserReport.INSTANCE.addAnalyzerRecord("JOBS BY LANGUAGE", "START");
+            js1JobsByLanguage.entrySet().forEach(e -> {
+                ParserReport.INSTANCE.addAnalyzerRecord(e.getKey().toUpperCase(), "");
+                for (ACommonJob job : e.getValue()) {
+                    String className = null;
+                    if (job.getScript() != null && job.getScript().getJavaClass() != null) {
+                        className = job.getScript().getJavaClass();
+                    }
+                    ParserReport.INSTANCE.addAnalyzerRecord(job.getPath(), job.getType().toString(), className);
                 }
-                ParserReport.INSTANCE.addAnalyzerRecord(job.getPath(), job.getType().toString(), className);
-            }
-        });
+            });
+            ParserReport.INSTANCE.addAnalyzerRecord("JOBS BY LANGUAGE", "END");
+        }
+        if (js1Calendars.size() > 0) {
+            ParserReport.INSTANCE.addAnalyzerRecord("CALENDARS", "START");
+            js1Calendars.entrySet().forEach(e -> {
+                ParserReport.INSTANCE.addAnalyzerRecord(e.getKey().toUpperCase(), "");
+                for (RunTime r : e.getValue()) {
+                    ParserReport.INSTANCE.addAnalyzerRecord(r.getCurrentPath(), r.getNodeText(), "");
+                }
+            });
+            ParserReport.INSTANCE.addAnalyzerRecord("CALENDARS", "END");
+        }
     }
 
     private void addJobResources(JS7ConverterResult result) {
@@ -231,34 +267,149 @@ public class JS12JS7Converter {
         }
     }
 
-    private void convertStandaloneWorkflow(JS7ConverterResult result, StandaloneJob job, int counter) {
-        LOGGER.info("[convertStandaloneWorkflow]" + job.getPath());
+    private void convertStandaloneWorkflow(JS7ConverterResult result, StandaloneJob js1Job, int counter) {
+        LOGGER.info("[convertStandaloneWorkflow]" + js1Job.getPath());
 
         // WORKFLOW
         Workflow w = new Workflow();
-        w.setTitle(job.getTitle());
+        w.setTitle(js1Job.getTitle());
         w.setTimeZone(CONFIG.getWorkflowConfig().getDefaultTimeZone());
 
         Jobs js = new Jobs();
-        js.setAdditionalProperty(job.getName(), getJob(result, job));
+        js.setAdditionalProperty(js1Job.getName(), getJob(result, js1Job));
         w.setJobs(js);
 
         List<Instruction> in = new ArrayList<>();
-        in.add(getNamedJobInstruction(job.getName()));
-        in = getRetryInstructions(job, in);
-        in = getCyclicWorkflowInstructions(job, in);
+        in.add(getNamedJobInstruction(js1Job.getName()));
+        in = getRetryInstructions(js1Job, in);
+        in = getCyclicWorkflowInstructions(js1Job, in);
         w.setInstructions(in);
-        Path workflowPath = getWorkflowPath(result, job, counter);
-        result.add(workflowPath, w);
 
-        convertSchedule(result, job, workflowPath);
+        Path workflowPath = getWorkflowPath(result, js1Job, counter);
+        String workflowName = getWorkflowName(workflowPath);
+
+        ScheduleHelper sh = convertRunTime2Schedule("STANDALONE", js1Job.getRunTime(), workflowPath, workflowName, "");
+        if (sh != null) {
+            result.add(sh.path, sh.schedule);
+        }
+        result.add(workflowPath, w);
     }
 
-    private void convertSchedule(JS7ConverterResult result, StandaloneJob job, Path workflowPath) {
-        if (job.getRunTime() != null && !job.getRunTime().isEmpty()) {
-            LOGGER.info("RunTime=" + job.getPath());
-            ConverterReport.INSTANCE.addWarningRecord(workflowPath, "[STANDALONE][run time]" + job.getRunTime().getNodeText(), "not implemented yet");
+    private ScheduleHelper convertRunTime2Schedule(String range, RunTime runTime, Path workflowPath, String workflowName, String additionalName) {
+        if (runTime != null && !runTime.isEmpty()) {
+            if (runTime.hasCalendars() || runTime.getSchedule() != null) {
+                JS1Calendars calendars = runTime.getCalendars();
+                if (calendars == null) {
+                    calendars = runTime.getSchedule().getCalendars();
+                }
+                if (calendars == null || calendars.getCalendars() == null) {
+                    ConverterReport.INSTANCE.addWarningRecord(workflowPath, "[" + range + "][not empty run time][with calendars or schedule]"
+                            + runTime.getNodeText(), "calendars are null");
+                } else {
+                    List<AssignedCalendars> working = new ArrayList<>();
+                    List<AssignedNonWorkingDayCalendars> nonWorking = new ArrayList<>();
+                    for (JS1Calendar js1 : calendars.getCalendars()) {
+                        if (js1.getBasedOn() != null) {
+                            List<RunTime> al = new ArrayList<>();
+                            if (js1Calendars.containsKey(js1.getBasedOn())) {
+                                al = js1Calendars.get(js1.getBasedOn());
+                            }
+                            al.add(runTime);
+                            js1Calendars.put(js1.getBasedOn(), al);
+                        }
+
+                        Calendar cal = JS7CalendarConverter.convert(CONFIG, js1);
+                        if (cal == null) {
+                            ConverterReport.INSTANCE.addWarningRecord(workflowPath, "[" + range + "][run time][calendars is null]" + runTime
+                                    .getNodeText(), "calendars is null");
+                            continue;
+                        }
+
+                        List<Period> periods = JS7CalendarConverter.convertPeriods(js1.getPeriods());
+                        switch (cal.getType()) {
+                        case NONWORKINGDAYSCALENDAR:
+                            AssignedNonWorkingDayCalendars nc = new AssignedNonWorkingDayCalendars();
+                            nc.setCalendarName(cal.getName());
+                            nonWorking.add(nc);
+                            break;
+                        case WORKINGDAYSCALENDAR:
+                            AssignedCalendars c = new AssignedCalendars();
+                            c.setCalendarName(cal.getName());
+                            c.setTimeZone(runTime.getTimeZone());
+
+                            c.setPeriods(periods);
+                            c.setIncludes(cal.getIncludes());
+                            c.setExcludes(cal.getExcludes());
+                            working.add(c);
+                            break;
+                        }
+
+                    }
+
+                    Schedule s = new Schedule();
+                    s.setWorkflowNames(Collections.singletonList(workflowName));
+                    s.setCalendars(working.size() == 0 ? null : working);
+                    s.setNonWorkingDayCalendars(nonWorking.size() == 0 ? null : nonWorking);
+                    s.setPlanOrderAutomatically(CONFIG.getScheduleConfig().planOrders());
+                    s.setSubmitOrderToControllerWhenPlanned(CONFIG.getScheduleConfig().submitOrders());
+
+                    return new ScheduleHelper(getSchedulePath(workflowPath, workflowName, additionalName), s);
+                }
+
+            } else {
+                AdmissionTimeScheme ats = runTimeToAdmissionTime(runTime);
+                if (ats == null) {
+                    ConverterReport.INSTANCE.addWarningRecord(workflowPath, "[" + range + "][not empty run time][without calendars or schedule]"
+                            + runTime.getNodeText(), "not implemented yet");
+                }
+            }
         }
+        return null;
+    }
+
+    private AdmissionTimeScheme runTimeToAdmissionTime(RunTime runTime) {
+        List<AdmissionTimePeriod> periods = new ArrayList<>();
+        if (runTime.getWeekDays() != null && runTime.getWeekDays().size() > 0) {
+            for (com.sos.js7.converter.js1.common.RunTime.WeekDays wd : runTime.getWeekDays()) {
+                if (wd.getDays() != null) {
+                    for (com.sos.js7.converter.js1.common.RunTime.Day d : wd.getDays()) {
+                        List<Integer> days = d.getDays();
+                        if (days != null && days.size() > 0) {
+                            // WeekdayPeriod wdp = new WeekdayPeriod(null);
+                            // wdp.setSecondOfWeek(null);
+                            // wdp.setDuration(null);
+
+                            if (d.getPeriods() != null) {
+                                for (com.sos.js7.converter.js1.common.RunTime.Period p : d.getPeriods()) {
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return periods.size() > 0 ? new AdmissionTimeScheme(periods) : null;
+    }
+
+    private Path getSchedulePath(Path workflowPath, String workflowName, String additionalName) {
+        Path parent = workflowPath.getParent();
+        if (parent == null) {
+            parent = Paths.get("");
+        }
+        return parent.resolve(workflowName + additionalName + ".schedule.json");
+    }
+
+    private Path getFileOrderSourcePath(Path workflowPath, String workflowName) {
+        Path parent = workflowPath.getParent();
+        if (parent == null) {
+            parent = Paths.get("");
+        }
+        return parent.resolve(workflowName + ".fileordersource.json");
+    }
+
+    private String getWorkflowName(Path workflowPath) {
+        return workflowPath.getFileName().toString().replace(".workflow.json", "");
     }
 
     private Path getWorkflowPath(JS7ConverterResult result, StandaloneJob job, int counter) {
@@ -349,11 +500,8 @@ public class JS12JS7Converter {
         if (CONFIG.getAgentConfig().getForcedName() != null) {
             name = CONFIG.getAgentConfig().getForcedName();
         } else {
-            if (job.getProcessClass() != null) {
-                name = getFileName(job.getProcessClass());
-                if (converterObjects.processClasses.unique.containsKey(name)) {
-                    // TODO parse file to check if remote scheduler
-                }
+            if (job.getProcessClass() != null && job.getProcessClass().isAgent()) {
+                name = job.getProcessClass().getName();
             }
         }
         if (name == null) {
@@ -377,92 +525,19 @@ public class JS12JS7Converter {
     }
 
     private Job setExecutable(Job j, ACommonJob job) {
-        boolean isYADE = false;
-        String javaClassName = null;
+        JS7ScriptLanguageConverter c = new JS7ScriptLanguageConverter(job);
 
-        String language = job.getScript().getLanguage() == null ? "shell" : job.getScript().getLanguage();
-
-        List<ACommonJob> jbt = jobsByLanguage.get(language);
+        List<ACommonJob> jbt = js1JobsByLanguage.get(c.getLanguage());
         if (jbt == null) {
             jbt = new ArrayList<>();
         }
         jbt.add(job);
-        jobsByLanguage.put(language, jbt);
+        js1JobsByLanguage.put(c.getLanguage(), jbt);
 
-        String className = null;
-        switch (language) {
-        case "java":
-            String jc = job.getScript().getJavaClass();
-            switch (jc) {
-            // DB
-            case "com.sos.jitl.extract.job.ResultSet2CSVJobJSAdapterClass":
-            case "com.sos.jitl.managed.job.ManagedDatabaseJob":
-                javaClassName = "com.sos.jitl.jobs.db.SQLExecutorJob";
-                break;
-            case "sos.scheduler.db.JobSchedulerPLSQLJobJSAdapterClass":
-                javaClassName = "com.sos.jitl.jobs.db.oracle.PLSQLJob";
-                break;
-            case "sos.scheduler.db.SOSSQLPlusJobJSAdapterClass":
-                javaClassName = "com.sos.jitl.jobs.db.oracle.SQLPLUSJob";
-                break;
-            // CHECKHISTORY:
-            case "com.sos.jitl.checkhistory.JobSchedulerCheckHistoryJSAdapterClass":
-                javaClassName = "com.sos.jitl.jobs.checkhistory.CheckHistoryJob";
-                break;
-            // FILE Operations
-            case "sos.scheduler.file.JobSchedulerExistsFile":
-                javaClassName = "com.sos.jitl.jobs.file.FileExistsJob";
-                break;
-            case "sos.scheduler.file.JobSchedulerCanWrite":
-                javaClassName = "com.sos.jitl.jobs.file.CanWriteJob";
-                break;
-            case "sos.scheduler.file.JobSchedulerCopyFile":
-                javaClassName = "com.sos.jitl.jobs.file.CopyFileJob";
-                break;
-            case "sos.scheduler.file.JobSchedulerNotExistsFile":
-                javaClassName = "com.sos.jitl.jobs.file.FileNotExistsJob";
-                break;
-            case "sos.scheduler.file.JobSchedulerRemoveFile":
-                javaClassName = "com.sos.jitl.jobs.file.RemoveFileJob";
-                break;
-            case "sos.scheduler.file.JobSchedulerRenameFile":
-                javaClassName = "com.sos.jitl.jobs.file.RenameFileJob";
-                break;
-            // MAIL
-            case "sos.mail.SOSMailProcessInbox":
-            case "com.sos.jitl.mailprocessor.SOSMailProcessInboxJSAdapterClass":
-                javaClassName = "com.sos.jitl.jobs.mail.MailInboxJob";
-                break;
-            case "sos.scheduler.job.JobSchedulerDequeueMailJob":
-            case "com.sos.jitl.housekeeping.dequeuemail.JobSchedulerDequeueMailJobJSAdapterClass":
-                javaClassName = "com.sos.jitl.jobs.mail.MailJob";
-                break;
-            // SSH
-            case "sos.scheduler.job.SOSSSHJob2JSAdapter":
-                javaClassName = "com.sos.jitl.jobs.ssh.SSHJob";
-                break;
-            // YADE
-            case "sos.scheduler.jade.JadeJob":
-            case "sos.scheduler.jade.SOSJade4DMZJSAdapter":
-                className = jc;
-                isYADE = true;
-                break;
-            // SPLIT/JOIN
-            case "com.sos.jitl.splitter.JobChainSplitterJSAdapterClass":
-            case "com.sos.jitl.join.JobSchedulerJoinOrdersJSAdapterClass":
-                className = jc;
-                ConverterReport.INSTANCE.addWarningRecord(job.getPath(), "[job " + className + "]", "not implemented yet");
-                break;
-            default:
-                className = jc;
-                break;
-            }
+        c.process();
 
-            break;
-        }
-
-        j.setExecutable(javaClassName == null ? getExecutableScript(j, job, language, className, isYADE) : getInternalExecutable(j, job,
-                javaClassName));
+        j.setExecutable(c.getJavaClassName() == null ? getExecutableScript(j, job, c.getLanguage(), c.getClassName(), c.isYADE())
+                : getInternalExecutable(j, job, c.getJavaClassName()));
         return j;
     }
 
@@ -530,7 +605,7 @@ public class JS12JS7Converter {
             // JOB RESOURCES
             List<String> names = new ArrayList<>();
             for (Include i : job.getParams().getIncludes()) {
-                Path p = findIncludeFile(job.getPath(), i.getIncludeFile());
+                Path p = findIncludeFile(pr, job.getPath(), i.getIncludeFile());
                 String name = resolveJobResource(p);
                 if (name != null) {
                     names.add(name);
@@ -568,16 +643,20 @@ public class JS12JS7Converter {
         return name;
     }
 
-    private Path findIncludeFile(Path jobPath, Path p) {
-        if (p.isAbsolute()) {
-            return p;
+    public static Path findIncludeFile(DirectoryParserResult pr, Path currentPath, Path include) {
+        String logPrefix = "[findIncludeFile][" + currentPath + "]";
+        if (include.isAbsolute()) {
+            LOGGER.debug(logPrefix + "[absolute]" + include);
+            return include;
         }
         Path includePath = null;
-        String ps = p.toString();
+        String ps = include.toString();
         if (ps.startsWith("/") || ps.startsWith("\\")) {
-            includePath = pr.getRoot().getPath().resolve(p).normalize();
+            includePath = pr.getRoot().getPath().resolve(ps.substring(1)).normalize();
+            LOGGER.debug(logPrefix + "[starts with / or \\][include=" + include + "]" + includePath);
         } else {
-            includePath = jobPath.getParent().resolve(p).normalize();
+            includePath = currentPath.getParent().resolve(include).normalize();
+            LOGGER.debug(logPrefix + "[relative]" + includePath);
         }
         return includePath;
     }
@@ -656,7 +735,7 @@ public class JS12JS7Converter {
             // JOB RESOURCES
             List<String> names = new ArrayList<>();
             for (Include i : o.getParams().getIncludes()) {
-                Path p = findIncludeFile(o.getPath(), i.getIncludeFile());
+                Path p = findIncludeFile(pr, o.getPath(), i.getIncludeFile());
                 String name = resolveJobResource(p);
                 if (name != null) {
                     names.add(name);
@@ -698,7 +777,7 @@ public class JS12JS7Converter {
                         states.put(jcn.getState(), new JobChainStateHelper(jcn, null));
                     }
                 } else {
-                    Path job = findIncludeFile(jobChain.getPath(), Paths.get(jcn.getJob() + EConfigFileExtensions.JOB.extension()));
+                    Path job = findIncludeFile(pr, jobChain.getPath(), Paths.get(jcn.getJob() + EConfigFileExtensions.JOB.extension()));
                     // TODO NPE when not exists or wrong findIncludeFile handling ...
                     try {
                         OrderJob oj = orderJobs.get(job);
@@ -764,7 +843,7 @@ public class JS12JS7Converter {
         Path workflowPath = getWorkflowPath(result, jobChain, counter);
         result.add(workflowPath, w);
 
-        String workflowName = workflowPath.getFileName().toString().replace(".workflow.json", "");
+        String workflowName = getWorkflowName(workflowPath);
         convertJobChainOrders(result, jobChain, workflowPath, workflowName);
         convertJobChainFileOrderSources(result, jobChain, fileOrderSources, workflowPath, workflowName);
 
@@ -784,8 +863,8 @@ public class JS12JS7Converter {
                 fos.setAgentName(CONFIG.getAgentConfig().getForcedName() == null ? CONFIG.getAgentConfig().getDefaultName() : CONFIG.getAgentConfig()
                         .getForcedName());
                 fos.setTimeZone(CONFIG.getWorkflowConfig().getDefaultTimeZone());
-                fos.setDirectory(n.getDirectory());
-                fos.setDirectoryExpr(n.getRegex());
+                fos.setDirectoryExpr(n.getDirectory());
+                fos.setPattern(n.getRegex());
                 Long delay = null;
                 if (n.getRepeat() != null && !n.getRepeat().toLowerCase().equals("no")) {
                     try {
@@ -798,57 +877,40 @@ public class JS12JS7Converter {
                     }
                 }
                 fos.setDelay(delay);
-                Path fosPath = workflowPath.getParent();
-                if (fosPath == null) {
-                    fosPath = Paths.get("");
-                }
-                result.add(fosPath.resolve(workflowName + ".fileordersource.json"), fos);
+                result.add(getFileOrderSourcePath(workflowPath, workflowName), fos);
             }
         }
     }
 
     private void convertJobChainOrders(JS7ConverterResult result, JobChain jobChain, Path workflowPath, String workflowName) {
-        if (jobChain.getOrders().size() > 0 && CONFIG.getGenerateConfig().getSchedules()) {
+        if (jobChain.getOrders().size() > 0) {
             List<JobChainOrder> orders = jobChain.getOrders().stream().filter(o -> o.getRunTime() != null && !o.getRunTime().isEmpty()).collect(
                     Collectors.toList());
             if (orders.size() > 0) {
-                Schedule s = new Schedule();
-                AssignedCalendars ac = new AssignedCalendars();
-                ac.setCalendarName(CONFIG.getScheduleConfig().getDefaultCalendarName() == null ? "TODO" : CONFIG.getScheduleConfig()
-                        .getDefaultCalendarName());
-                s.setCalendars(Collections.singletonList(ac));
-
-                s.setPlanOrderAutomatically(CONFIG.getScheduleConfig().planOrders());
-                s.setSubmitOrderToControllerWhenPlanned(CONFIG.getScheduleConfig().submitOrders());
-
-                List<OrderParameterisation> l = new ArrayList<>();
                 for (JobChainOrder o : orders) {
-                    if (o.getParams() != null && o.getParams().hasParams()) {
-                        OrderParameterisation set = new OrderParameterisation();
-                        set.setOrderName(o.getName());
+                    ScheduleHelper sh = convertRunTime2Schedule("ORDER", o.getRunTime(), workflowPath, workflowName, "_" + o.getName());
+                    if (sh != null) {
+                        Schedule s = sh.schedule;
+                        s.setTitle(o.getTitle());
 
-                        Variables vs = new Variables();
-                        o.getParams().getParams().entrySet().forEach(e -> {
-                            vs.setAdditionalProperty(e.getKey(), e.getValue());
-                        });
-                        set.setVariables(vs);
-                        l.add(set);
-                    }
-                    if (o.getRunTime().getCalendars() != null && o.getRunTime().getCalendars().getCalendars() != null) {
-                        for (JS1Calendar c : o.getRunTime().getCalendars().getCalendars()) {
-                            // LOGGER.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+                        List<OrderParameterisation> l = new ArrayList<>();
+                        if (o.getParams() != null && o.getParams().hasParams()) {
+                            OrderParameterisation set = new OrderParameterisation();
+                            set.setOrderName(o.getName());
+
+                            Variables vs = new Variables();
+                            o.getParams().getParams().entrySet().forEach(e -> {
+                                vs.setAdditionalProperty(e.getKey(), e.getValue());
+                            });
+                            set.setVariables(vs);
+                            l.add(set);
                         }
+                        if (l.size() > 0) {
+                            s.setOrderParameterisations(l);
+                        }
+                        result.add(sh.path, s);
                     }
                 }
-                if (l.size() > 0) {
-                    s.setOrderParameterisations(l);
-                }
-                s.setWorkflowNames(Collections.singletonList(workflowName));
-                Path schedulePath = workflowPath.getParent();
-                if (schedulePath == null) {
-                    schedulePath = Paths.get("");
-                }
-                result.add(schedulePath.resolve(workflowName + ".schedule.json"), s);
             }
         }
     }
@@ -1001,6 +1063,17 @@ public class JS12JS7Converter {
             this.errorState = node.getErrorState() == null ? "" : node.getErrorState();
             this.onError = node.getOnError() == null ? "" : node.getOnError();
             this.jobName = jobName;
+        }
+    }
+
+    private class ScheduleHelper {
+
+        private final Path path;
+        private final Schedule schedule;
+
+        private ScheduleHelper(Path path, Schedule schedule) {
+            this.path = path;
+            this.schedule = schedule;
         }
     }
 

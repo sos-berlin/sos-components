@@ -1,4 +1,4 @@
-package com.sos.js7.converter.autosys.output;
+package com.sos.js7.converter.autosys.output.js7;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -74,9 +74,9 @@ import com.sos.js7.converter.commons.report.ConverterReportWriter;
  * --- post/expected notices - box and box job<br/>
  * , TODO Report<br/>
  */
-public class Autosys2JS7Converter {
+public class JS7Converter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Autosys2JS7Converter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JS7Converter.class);
 
     public static JS7ConverterConfig CONFIG = new JS7ConverterConfig();
 
@@ -629,7 +629,7 @@ public class Autosys2JS7Converter {
     private static void convertSchedule(JS7ConverterResult result, ACommonJob jilJob) {
         String calendarName = getCalendarName(result, jilJob);
         if (calendarName == null) {
-            calendarName = getCalendarName(CONFIG);
+            calendarName = getWorkingCalendarName(CONFIG);
         }
         if (calendarName == null) {
             return;
@@ -687,10 +687,10 @@ public class Autosys2JS7Converter {
         return name;
     }
 
-    private static String getCalendarName(JS7ConverterConfig config) {
+    private static String getWorkingCalendarName(JS7ConverterConfig config) {
         String name = null;
-        if (config.getScheduleConfig().getDefaultCalendarName() != null) {
-            name = config.getScheduleConfig().getDefaultCalendarName();
+        if (config.getScheduleConfig().getDefaultWorkingCalendarName() != null) {
+            name = config.getScheduleConfig().getDefaultWorkingCalendarName();
         }
         return name;
     }

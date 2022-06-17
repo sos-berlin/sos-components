@@ -11,6 +11,7 @@ import org.w3c.dom.NodeList;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 import com.sos.js7.converter.js1.common.jobchain.node.AJobChainNode;
+import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 
 public class JobChain {
 
@@ -38,10 +39,10 @@ public class JobChain {
     private Boolean distributed; // yes|no
     private String visible; // yes|no|never
 
-    public JobChain(String name, List<Path> jobChainFiles) throws Exception {
+    public JobChain(DirectoryParserResult pr, String name, List<Path> jobChainFiles) throws Exception {
         this.name = name;
 
-        Path jobChainFile = handleFiles(jobChainFiles);
+        Path jobChainFile = handleFiles(pr, jobChainFiles);
         if (jobChainFile == null) {
             throw new Exception("missing job chain file");
         }
@@ -75,12 +76,12 @@ public class JobChain {
         }
     }
 
-    private Path handleFiles(List<Path> files) throws Exception {
+    private Path handleFiles(DirectoryParserResult pr, List<Path> files) throws Exception {
         Path jobChainFile = null;
         for (Path file : files) {
             String fileName = file.getFileName().toString();
             if (fileName.endsWith(EConfigFileExtensions.ORDER.extension())) {
-                orders.add(new JobChainOrder(file));
+                orders.add(new JobChainOrder(pr, file));
             } else if (fileName.endsWith(EConfigFileExtensions.JOB_CHAIN.extension())) {
                 jobChainFile = file;
             } else if (fileName.endsWith(EConfigFileExtensions.JOB_CHAIN_CONFIG.extension())) {

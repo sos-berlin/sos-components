@@ -28,7 +28,7 @@ public class ProcessClasses {
         if (l != null && l.getLength() > 0) {
             this.processClasses = new ArrayList<>();
             for (int i = 0; i < l.getLength(); i++) {
-                this.processClasses.add(new ProcessClass(xpath, l.item(i)));
+                //this.processClasses.add(new ProcessClass(xpath, l.item(i)));
             }
         }
     }

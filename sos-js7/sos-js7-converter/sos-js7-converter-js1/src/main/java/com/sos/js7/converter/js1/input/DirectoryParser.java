@@ -55,12 +55,11 @@ public class DirectoryParser {
         }
 
         ParserReport.INSTANCE.addSummaryRecord("TOTAL FOLDERS", r.getCountFolders());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB files", r.getCountJobs());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB(STANDALONE) files", r.getCountStandaloneJobs());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB(ORDER) files", r.getCountOrderJobs());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB files", r.getCountJobs() + ", STANDALONE=" + r.getCountStandaloneJobs() + ", ORDER=" + r
+                .getCountOrderJobs());
         ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN files", r.getCountJobChains());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN ORDER files", r.getCountOrders());
         ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN CONFIG files", r.getCountJobChainConfigs());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL ORDER files", r.getCountOrders());
         ParserReport.INSTANCE.addSummaryRecord("TOTAL LOCK files", r.getCountLocks());
         ParserReport.INSTANCE.addSummaryRecord("TOTAL PROCESS CLASS files", r.getCountProcessClasses());
         ParserReport.INSTANCE.addSummaryRecord("TOTAL SCHEDULE files", r.getCountSchedules());
@@ -93,7 +92,7 @@ public class DirectoryParser {
                 jobChains = addJobChainFile(jobChains, file, EConfigFileExtensions.getName(EConfigFileExtensions.JOB_CHAIN_CONFIG, fileName));
             } else if (fileName.endsWith(EConfigFileExtensions.JOB.extension())) {
                 r.addCountJobs();
-                folder.addJob(file.toPath());
+                folder.addJob(r, file.toPath());
             } else if (fileName.endsWith(EConfigFileExtensions.LOCK.extension())) {
                 r.addCountLocks();
                 try {
@@ -113,7 +112,7 @@ public class DirectoryParser {
             } else if (fileName.endsWith(EConfigFileExtensions.SCHEDULE.extension())) {
                 r.addCountSchedules();
                 try {
-                    folder.addSchedule(file.toPath());
+                    folder.addSchedule(r, file.toPath());
                 } catch (Exception e) {
                     LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
                     ParserReport.INSTANCE.addErrorRecord(file.toPath(), null, e);
@@ -129,7 +128,7 @@ public class DirectoryParser {
 
         for (Map.Entry<String, List<Path>> entry : jobChains.entrySet()) {
             try {
-                folder.addJobChain(entry.getKey(), entry.getValue());
+                folder.addJobChain(r, entry.getKey(), entry.getValue());
             } catch (Throwable e) {
                 LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
                 ParserReport.INSTANCE.addErrorRecord(folder.getPath(), "job chain=" + entry.getKey(), e);

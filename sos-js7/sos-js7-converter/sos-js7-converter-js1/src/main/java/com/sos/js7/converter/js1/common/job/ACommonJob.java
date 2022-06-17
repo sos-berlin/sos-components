@@ -1,6 +1,7 @@
 package com.sos.js7.converter.js1.common.job;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -9,10 +10,12 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
 import com.sos.commons.xml.exception.SOSXMLXPathException;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 import com.sos.js7.converter.js1.common.Include;
 import com.sos.js7.converter.js1.common.Monitor;
@@ -20,6 +23,9 @@ import com.sos.js7.converter.js1.common.Params;
 import com.sos.js7.converter.js1.common.RunTime;
 import com.sos.js7.converter.js1.common.Script;
 import com.sos.js7.converter.js1.common.lock.LockUse;
+import com.sos.js7.converter.js1.common.processclass.ProcessClass;
+import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
+import com.sos.js7.converter.js1.output.js7.JS7Converter;
 
 public abstract class ACommonJob {
 
@@ -71,6 +77,7 @@ public abstract class ACommonJob {
     private List<StartWhenDirectoryChanged> startWhenDirectoryChanged = new ArrayList<>();
     private List<DelayAfterError> delayAfterError = new ArrayList<>(); // delayOrderAfterSetback is declared in the OrderJob
     private RunTime runTime;
+    private ProcessClass processClass;
 
     // ATTRIBUTE
     private String name;
@@ -79,7 +86,6 @@ public abstract class ACommonJob {
     private Integer minTasks; // The minimum number of tasks kept running
     private Integer tasks;
 
-    private String processClass;
     // This attribute can be given the following values: idle, below_normal, normal, above_normal and high or
     // the numerical values allowed for the operating system being used.
     private String priority;
@@ -99,7 +105,7 @@ public abstract class ACommonJob {
     private Boolean temporary; // yes_no
     private String visible; // yes|no|never
 
-    public static ACommonJob parse(Path file) throws Exception {
+    public static ACommonJob parse(DirectoryParserResult pr, Path file) throws Exception {
         Node node = JS7ConverterHelper.getDocumentRoot(file);
 
         ACommonJob job = null;
@@ -112,13 +118,13 @@ public abstract class ACommonJob {
         }
         job.name = EConfigFileExtensions.getName(EConfigFileExtensions.JOB, file.getFileName().toString());
         job.path = file;
-        job.parse(node, map);
+        job.parse(pr, node, map, file);
         return job;
     }
 
-    public SOSXMLXPath parse(Node node, Map<String, String> attributes) throws Exception {
+    public SOSXMLXPath parse(DirectoryParserResult pr, Node node, Map<String, String> attributes, Path currentPath) throws Exception {
         // ATTRIBUTES ...
-        setAttributes(attributes);
+        setAttributes(pr, attributes, currentPath);
 
         // ELEMENTS
         SOSXMLXPath xpath = SOSXML.newXPath();
@@ -176,12 +182,12 @@ public abstract class ACommonJob {
 
         Node runTime = xpath.selectNode(node, "./" + ELEMENT_RUN_TIME);
         if (runTime != null) {
-            this.runTime = new RunTime(xpath, runTime);
+            this.runTime = new RunTime(pr, xpath, runTime, currentPath);
         }
         return xpath;
     }
 
-    private void setAttributes(Map<String, String> attributes) {
+    private void setAttributes(DirectoryParserResult pr, Map<String, String> attributes, Path currentPath) {
         String name = JS7ConverterHelper.stringValue(attributes.get(ATTR_NAME));
         if (name != null) { // overwrite the this.name from file name
             this.name = name;
@@ -191,7 +197,7 @@ public abstract class ACommonJob {
         minTasks = JS7ConverterHelper.integerValue(attributes.get(ATTR_MIN_TASKS));
         tasks = JS7ConverterHelper.integerValue(attributes.get(ATTR_TASKS));
 
-        processClass = JS7ConverterHelper.stringValue(attributes.get(ATTR_PROCESS_CLASS));
+        processClass = convertProcessClass(pr, currentPath, attributes);
         priority = JS7ConverterHelper.stringValue(attributes.get(ATTR_PRIORITY));
         javaOptions = JS7ConverterHelper.stringValue(attributes.get(ATTR_JAVA_OPTIONS));
         timeout = JS7ConverterHelper.stringValue(attributes.get(ATTR_TIMEOUT));
@@ -205,7 +211,20 @@ public abstract class ACommonJob {
         stopOnError = JS7ConverterHelper.booleanValue(attributes.get(ATTR_STOP_ON_ERROR), true);
         temporary = JS7ConverterHelper.booleanValue(attributes.get(ATTR_TEMPORARY));
         visible = JS7ConverterHelper.stringValue(attributes.get(ATTR_VISIBLE));
+    }
 
+    private ProcessClass convertProcessClass(DirectoryParserResult pr, Path currentPath, Map<String, String> m) {
+        String includePath = JS7ConverterHelper.stringValue(m.get(ATTR_PROCESS_CLASS));
+        if (SOSString.isEmpty(includePath)) {
+            return null;
+        }
+        try {
+            return new ProcessClass(JS7Converter.findIncludeFile(pr, currentPath, Paths.get(includePath + EConfigFileExtensions.PROCESS_CLASS
+                    .extension())));
+        } catch (Throwable e) {
+            ParserReport.INSTANCE.addErrorRecord(currentPath, "[attribute=" + ATTR_PROCESS_CLASS + "]ProcessClass not found=" + includePath, e);
+            return null;
+        }
     }
 
     public ACommonJob(Type type) {
@@ -280,7 +299,7 @@ public abstract class ACommonJob {
         return tasks;
     }
 
-    public String getProcessClass() {
+    public ProcessClass getProcessClass() {
         return processClass;
     }
 

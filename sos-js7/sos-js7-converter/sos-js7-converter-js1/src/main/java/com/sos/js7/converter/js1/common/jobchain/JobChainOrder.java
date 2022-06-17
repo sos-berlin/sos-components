@@ -11,6 +11,7 @@ import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 import com.sos.js7.converter.js1.common.Params;
 import com.sos.js7.converter.js1.common.RunTime;
+import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 
 public class JobChainOrder {
 
@@ -30,7 +31,7 @@ public class JobChainOrder {
     private final Integer priority;
     private final String title;
 
-    public JobChainOrder(Path file) throws Exception {
+    public JobChainOrder(DirectoryParserResult pr, Path file) throws Exception {
         this.path = file;
         this.name = EConfigFileExtensions.getOrderName(file);
         Node node = JS7ConverterHelper.getDocumentRoot(file);
@@ -45,7 +46,7 @@ public class JobChainOrder {
         }
         Node runTime = xpath.selectNode(node, "./" + ELEMENT_RUN_TIME);
         if (runTime != null) {
-            this.runTime = new RunTime(xpath, runTime);
+            this.runTime = new RunTime(pr, xpath, runTime, file);
         }
     }
 

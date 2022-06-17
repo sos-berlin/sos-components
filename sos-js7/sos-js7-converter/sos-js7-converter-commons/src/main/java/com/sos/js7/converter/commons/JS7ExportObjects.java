@@ -133,7 +133,6 @@ public class JS7ExportObjects<T> {
             this.object = object;
             this.originalPath = new JS7ExportObjectPath(originalPath);
             this.uniquePath = new JS7ExportObjectPath(uniquePath);
-
         }
 
         public T getObject() {

@@ -1,5 +1,7 @@
 package com.sos.js7.converter.js1.common;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -7,12 +9,15 @@ import java.util.Map;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
 import com.sos.commons.xml.exception.SOSXMLXPathException;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.json.calendar.JS1Calendars;
+import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
+import com.sos.js7.converter.js1.output.js7.JS7Converter;
 
 public class RunTime {
 
@@ -54,23 +59,25 @@ public class RunTime {
     private String end; // hh:mm[:ss]
     private String repeat; // hh:mm[:ss] or seconds
 
-    private String schedule;
+    private Schedule schedule;
     private String timeZone;
     private String whenHoliday;
 
     private String letRun; // yes_no
     private String once; // yes_no
     private JS1Calendars calendars;
+    private Path currentPath;
 
-    public RunTime(SOSXMLXPath xpath, Node node) throws Exception {
+    public RunTime(DirectoryParserResult pr, SOSXMLXPath xpath, Node node, Path currentPath) throws Exception {
         this.nodeText = JS7ConverterHelper.nodeToString(node);
+        this.currentPath = currentPath;
 
         Map<String, String> m = JS7ConverterHelper.attribute2map(node);
         this.singleStart = JS7ConverterHelper.stringValue(m.get(ATTR_SINGLE_START));
         this.begin = JS7ConverterHelper.stringValue(m.get(ATTR_BEGIN));
         this.end = JS7ConverterHelper.stringValue(m.get(ATTR_END));
         this.repeat = JS7ConverterHelper.stringValue(m.get(ATTR_REPEAT));
-        this.schedule = JS7ConverterHelper.stringValue(m.get(ATTR_SCHEDULE));
+        this.schedule = convertSchedule(pr, xpath, node, m, currentPath);
         this.timeZone = JS7ConverterHelper.stringValue(m.get(ATTR_TIME_ZONE));
         this.whenHoliday = JS7ConverterHelper.stringValue(m.get(ATTR_WHEN_HOLIDAY));
         this.letRun = JS7ConverterHelper.stringValue(m.get(ATTR_LET_RUN));
@@ -83,12 +90,35 @@ public class RunTime {
         this.monthDays = convertMonthDays(xpath, node);
         this.months = convertMonth(xpath, node);
         this.holidays = convertHolidays(xpath, node);
-        this.calendars = convertCalendars(xpath, node);
+        this.calendars = convertCalendars(xpath, node, nodeText);
     }
 
     public boolean isEmpty() {
         return singleStart == null && begin == null && end == null && repeat == null && schedule == null && periods == null && ats == null
                 && dates == null && weekDays == null && monthDays == null && months == null && holidays == null && calendars == null;
+    }
+
+    public boolean hasCalendars() {
+        return calendars != null && calendars.getCalendars() != null && calendars.getCalendars().size() > 0;
+    }
+
+    private Schedule convertSchedule(DirectoryParserResult pr, SOSXMLXPath xpath, Node node, Map<String, String> m, Path currentPath)
+            throws Exception {
+        String includePath = JS7ConverterHelper.stringValue(m.get(ATTR_SCHEDULE));
+        if (SOSString.isEmpty(includePath)) {
+            return null;
+        }
+        return newSchedule(pr, currentPath, includePath, ATTR_SCHEDULE);
+    }
+
+    public static Schedule newSchedule(DirectoryParserResult pr, Path currentPath, String includePath, String attrName) {
+        try {
+            return new Schedule(pr, JS7Converter.findIncludeFile(pr, currentPath, Paths.get(includePath + EConfigFileExtensions.SCHEDULE
+                    .extension())));
+        } catch (Throwable e) {
+            ParserReport.INSTANCE.addErrorRecord(currentPath, "[attribute=" + attrName + "]Schedule not found=" + includePath, e);
+            return null;
+        }
     }
 
     private List<Period> convertPeriod(SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
@@ -103,13 +133,13 @@ public class RunTime {
         return result;
     }
 
-    private JS1Calendars convertCalendars(SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
+    public static JS1Calendars convertCalendars(SOSXMLXPath xpath, Node node, String nodeText) throws SOSXMLXPathException {
         String c = SOSXML.getValue(xpath.selectNode(node, "./" + ELEMENT_CALENDARS));
         if (c != null) {
             try {
                 return JS7ConverterHelper.JSON_OM.readValue(c, JS1Calendars.class);
             } catch (Throwable e) {
-                ParserReport.INSTANCE.addErrorRecord(null, "[runtime][covertCalendar]" + nodeText, e);
+                ParserReport.INSTANCE.addErrorRecord(null, "[runtime][covertCalendars]" + nodeText, e);
             }
         }
         return null;
@@ -224,6 +254,10 @@ public class RunTime {
         return nodeText;
     }
 
+    public Path getCurrentPath() {
+        return currentPath;
+    }
+
     public JS1Calendars getCalendars() {
         return calendars;
     }
@@ -276,7 +310,7 @@ public class RunTime {
         return repeat;
     }
 
-    public String getSchedule() {
+    public Schedule getSchedule() {
         return schedule;
     }
 
@@ -430,6 +464,15 @@ public class RunTime {
 
         public String getDay() {
             return day;
+        }
+
+        public List<Integer> getDays() {
+            try {
+                return JS7ConverterHelper.integerListValue(day, " ");
+            } catch (Throwable e) {
+                ParserReport.INSTANCE.addErrorRecord(currentPath, "convert day=" + day + " to integer days", e);
+                return null;
+            }
         }
 
     }
