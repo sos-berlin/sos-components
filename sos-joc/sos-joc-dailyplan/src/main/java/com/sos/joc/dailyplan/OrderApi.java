@@ -63,16 +63,18 @@ public class OrderApi {
             scheduledFor = Optional.of(Instant.now());
         }
         Optional<JPosition> startPos = Optional.empty();
-        if (order.getStartPosition() != null && !order.getStartPosition().isEmpty()) {
-            Either<Problem, JPosition> startPosE = JPosition.fromList(order.getStartPosition());
-            ProblemHelper.throwProblemIfExist(startPosE);
-            startPos = Optional.of(startPosE.get());
-        }
         Optional<JPosition> endPos = Optional.empty();
-        if (order.getEndPosition() != null && !order.getEndPosition().isEmpty()) {
-            Either<Problem, JPosition> endPosE = JPosition.fromList(order.getEndPosition());
-            ProblemHelper.throwProblemIfExist(endPosE);
-            endPos = Optional.of(endPosE.get());
+        if (order.getPositions() != null) {
+            if (order.getPositions().getStartPosition() != null && !order.getPositions().getStartPosition().isEmpty()) {
+                Either<Problem, JPosition> startPosE = JPosition.fromList(order.getPositions().getStartPosition());
+                ProblemHelper.throwProblemIfExist(startPosE);
+                startPos = Optional.of(startPosE.get());
+            }
+            if (order.getPositions().getEndPosition() != null && !order.getPositions().getEndPosition().isEmpty()) {
+                Either<Problem, JPosition> endPosE = JPosition.fromList(order.getPositions().getEndPosition());
+                ProblemHelper.throwProblemIfExist(endPosE);
+                endPos = Optional.of(endPosE.get());
+            }
         }
         Map<String, Value> arguments = OrdersHelper.variablesToScalaValuedArguments(order.getArguments());
         return JFreshOrder.of(OrderId.of(order.getId()), WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments, false, startPos, endPos);

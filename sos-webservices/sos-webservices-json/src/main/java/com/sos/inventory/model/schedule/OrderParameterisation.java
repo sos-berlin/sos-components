@@ -1,7 +1,6 @@
 
 package com.sos.inventory.model.schedule;
 
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -22,8 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "orderName",
     "variables",
-    "startPosition",
-    "endPosition"
+    "positions"
 })
 public class OrderParameterisation {
 
@@ -45,23 +43,14 @@ public class OrderParameterisation {
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables variables;
     /**
-     * position
+     * positions
      * <p>
-     * Actually, each even item is a string, each odd item is an integer
+     * start and end position
      * 
      */
-    @JsonProperty("startPosition")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> startPosition = null;
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("endPosition")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> endPosition = null;
+    @JsonProperty("positions")
+    @JsonPropertyDescription("start and end position")
+    private OrderPositions positions;
 
     /**
      * string without < and >
@@ -108,57 +97,35 @@ public class OrderParameterisation {
     }
 
     /**
-     * position
+     * positions
      * <p>
-     * Actually, each even item is a string, each odd item is an integer
+     * start and end position
      * 
      */
-    @JsonProperty("startPosition")
-    public List<Object> getStartPosition() {
-        return startPosition;
+    @JsonProperty("positions")
+    public OrderPositions getPositions() {
+        return positions;
     }
 
     /**
-     * position
+     * positions
      * <p>
-     * Actually, each even item is a string, each odd item is an integer
+     * start and end position
      * 
      */
-    @JsonProperty("startPosition")
-    public void setStartPosition(List<Object> startPosition) {
-        this.startPosition = startPosition;
-    }
-
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("endPosition")
-    public List<Object> getEndPosition() {
-        return endPosition;
-    }
-
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("endPosition")
-    public void setEndPosition(List<Object> endPosition) {
-        this.endPosition = endPosition;
+    @JsonProperty("positions")
+    public void setPositions(OrderPositions positions) {
+        this.positions = positions;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("orderName", orderName).append("variables", variables).append("startPosition", startPosition).append("endPosition", endPosition).toString();
+        return new ToStringBuilder(this).append("orderName", orderName).append("variables", variables).append("positions", positions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(startPosition).append(endPosition).append(orderName).toHashCode();
+        return new HashCodeBuilder().append(variables).append(positions).append(orderName).toHashCode();
     }
 
     @Override
@@ -170,7 +137,7 @@ public class OrderParameterisation {
             return false;
         }
         OrderParameterisation rhs = ((OrderParameterisation) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(startPosition, rhs.startPosition).append(endPosition, rhs.endPosition).append(orderName, rhs.orderName).isEquals();
+        return new EqualsBuilder().append(variables, rhs.variables).append(positions, rhs.positions).append(orderName, rhs.orderName).isEquals();
     }
 
 }

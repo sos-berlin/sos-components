@@ -1,12 +1,12 @@
 
 package com.sos.controller.model.order;
 
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.schedule.OrderPositions;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -24,8 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "workflowPath",
     "scheduledFor",
     "arguments",
-    "startPosition",
-    "endPosition"
+    "positions"
 })
 public class FreshOrder {
 
@@ -63,23 +62,14 @@ public class FreshOrder {
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables arguments;
     /**
-     * position
+     * positions
      * <p>
-     * Actually, each even item is a string, each odd item is an integer
+     * start and end position
      * 
      */
-    @JsonProperty("startPosition")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> startPosition = null;
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("endPosition")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> endPosition = null;
+    @JsonProperty("positions")
+    @JsonPropertyDescription("start and end position")
+    private OrderPositions positions;
 
     /**
      * No args constructor for use in serialization
@@ -91,20 +81,18 @@ public class FreshOrder {
     /**
      * 
      * @param workflowPath
-     * @param endPosition
      * @param scheduledFor
      * @param arguments
+     * @param positions
      * @param id
-     * @param startPosition
      */
-    public FreshOrder(String id, String workflowPath, Long scheduledFor, Variables arguments, List<Object> startPosition, List<Object> endPosition) {
+    public FreshOrder(String id, String workflowPath, Long scheduledFor, Variables arguments, OrderPositions positions) {
         super();
         this.id = id;
         this.workflowPath = workflowPath;
         this.scheduledFor = scheduledFor;
         this.arguments = arguments;
-        this.startPosition = startPosition;
-        this.endPosition = endPosition;
+        this.positions = positions;
     }
 
     /**
@@ -196,57 +184,35 @@ public class FreshOrder {
     }
 
     /**
-     * position
+     * positions
      * <p>
-     * Actually, each even item is a string, each odd item is an integer
+     * start and end position
      * 
      */
-    @JsonProperty("startPosition")
-    public List<Object> getStartPosition() {
-        return startPosition;
+    @JsonProperty("positions")
+    public OrderPositions getPositions() {
+        return positions;
     }
 
     /**
-     * position
+     * positions
      * <p>
-     * Actually, each even item is a string, each odd item is an integer
+     * start and end position
      * 
      */
-    @JsonProperty("startPosition")
-    public void setStartPosition(List<Object> startPosition) {
-        this.startPosition = startPosition;
-    }
-
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("endPosition")
-    public List<Object> getEndPosition() {
-        return endPosition;
-    }
-
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("endPosition")
-    public void setEndPosition(List<Object> endPosition) {
-        this.endPosition = endPosition;
+    @JsonProperty("positions")
+    public void setPositions(OrderPositions positions) {
+        this.positions = positions;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("arguments", arguments).append("startPosition", startPosition).append("endPosition", endPosition).toString();
+        return new ToStringBuilder(this).append("id", id).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("arguments", arguments).append("positions", positions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowPath).append(endPosition).append(scheduledFor).append(arguments).append(id).append(startPosition).toHashCode();
+        return new HashCodeBuilder().append(arguments).append(positions).append(id).append(workflowPath).append(scheduledFor).toHashCode();
     }
 
     @Override
@@ -258,7 +224,7 @@ public class FreshOrder {
             return false;
         }
         FreshOrder rhs = ((FreshOrder) other);
-        return new EqualsBuilder().append(workflowPath, rhs.workflowPath).append(endPosition, rhs.endPosition).append(scheduledFor, rhs.scheduledFor).append(arguments, rhs.arguments).append(id, rhs.id).append(startPosition, rhs.startPosition).isEquals();
+        return new EqualsBuilder().append(arguments, rhs.arguments).append(positions, rhs.positions).append(id, rhs.id).append(workflowPath, rhs.workflowPath).append(scheduledFor, rhs.scheduledFor).isEquals();
     }
 
 }

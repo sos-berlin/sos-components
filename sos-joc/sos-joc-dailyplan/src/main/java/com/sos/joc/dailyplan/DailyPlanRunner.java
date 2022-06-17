@@ -392,8 +392,10 @@ public class DailyPlanRunner extends TimerTask {
 
                 OrderParameterisation orderParameterisation = new OrderParameterisation();
                 // TODO order positions
-//                orderParameterisation.setStartPosition(null);
-//                orderParameterisation.setEndPosition(null);
+//                OrderPositions positions = new OrderPositions();
+//                positions.setStartPosition(null);
+//                positions.setEndPosition(null);
+//                orderParameterisation.setPositions(positions);
                 orderParameterisation.setVariables(variables);
                 schedule.getOrderParameterisations().add(orderParameterisation);
 
@@ -683,8 +685,7 @@ public class DailyPlanRunner extends TimerTask {
         order.setScheduledFor(startTime);
         order.setArguments(orderParameterisation.getVariables());
         order.setWorkflowPath(scheduleWorkflow.getName());
-        order.setStartPosition(orderParameterisation.getStartPosition());
-        order.setEndPosition(orderParameterisation.getEndPosition());
+        order.setPositions(orderParameterisation.getPositions());
         return order;
     }
 
