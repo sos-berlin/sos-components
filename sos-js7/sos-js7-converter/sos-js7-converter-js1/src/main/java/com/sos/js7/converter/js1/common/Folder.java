@@ -14,6 +14,7 @@ import com.sos.js7.converter.js1.common.job.StandaloneJob;
 import com.sos.js7.converter.js1.common.jobchain.JobChain;
 import com.sos.js7.converter.js1.common.lock.Lock;
 import com.sos.js7.converter.js1.common.processclass.ProcessClass;
+import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 
 public class Folder {
 
@@ -58,10 +59,10 @@ public class Folder {
         folders.add(folder);
     }
 
-    public void addJob(Path file) {
+    public void addJob(DirectoryParserResult pr, Path file) {
         ACommonJob job;
         try {
-            job = ACommonJob.parse(file);
+            job = ACommonJob.parse(pr, file);
             if (job != null) {
                 if (job instanceof StandaloneJob) {
                     standaloneJobs.add((StandaloneJob) job);
@@ -75,8 +76,8 @@ public class Folder {
         }
     }
 
-    public void addJobChain(String name, List<Path> jobChainFiles) throws Exception {
-        jobChains.add(new JobChain(name, jobChainFiles));
+    public void addJobChain(DirectoryParserResult pr, String name, List<Path> jobChainFiles) throws Exception {
+        jobChains.add(new JobChain(pr, name, jobChainFiles));
     }
 
     public void addLock(Path file) throws Exception {
@@ -87,8 +88,8 @@ public class Folder {
         processClasses.add(new ProcessClass(processClass));
     }
 
-    public void addSchedule(Path schedule) throws Exception {
-        schedules.add(new Schedule(schedule));
+    public void addSchedule(DirectoryParserResult pr, Path schedule) throws Exception {
+        schedules.add(new Schedule(pr, schedule));
     }
 
     public void addMonitor(Monitor monitor) {

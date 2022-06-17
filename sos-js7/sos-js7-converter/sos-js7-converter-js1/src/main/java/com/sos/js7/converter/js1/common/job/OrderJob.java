@@ -1,5 +1,6 @@
 package com.sos.js7.converter.js1.common.job;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import org.w3c.dom.NodeList;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
 import com.sos.commons.xml.exception.SOSXMLXPathException;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 
 public class OrderJob extends ACommonJob {
 
@@ -24,8 +26,8 @@ public class OrderJob extends ACommonJob {
         super(Type.ORDER);
     }
 
-    public SOSXMLXPath parse(Document doc, Map<String, String> attributes) throws Exception {
-        SOSXMLXPath xpath = super.parse(doc, attributes);
+    public SOSXMLXPath parse(DirectoryParserResult pr, Document doc, Map<String, String> attributes, Path currentPath) throws Exception {
+        SOSXMLXPath xpath = super.parse(pr, doc, attributes, currentPath);
         idleTimeout = JS7ConverterHelper.stringValue(attributes.get(ATTR_IDLE_TIMEOUT));
 
         NodeList l = xpath.selectNodes(doc, "./" + ELEMENT_DELAY_ORDER_AFTER_SETBACK);

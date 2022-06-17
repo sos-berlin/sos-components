@@ -105,8 +105,17 @@ public class JS7ConverterConfig {
                         mockConfig.script = val;
                         break;
                     // SCHEDULE
-                    case "scheduleConfig.defaultCalendarName":
-                        scheduleConfig.defaultCalendarName = val;
+                    case "scheduleConfig.forcedWorkingCalendarName":
+                        scheduleConfig.forcedWorkingCalendarName = val;
+                        break;
+                    case "scheduleConfig.forcedNonWorkingCalendarName":
+                        scheduleConfig.forcedNonWorkingCalendarName = val;
+                        break;
+                    case "scheduleConfig.defaultWorkingCalendarName":
+                        scheduleConfig.defaultWorkingCalendarName = val;
+                        break;
+                    case "scheduleConfig.defaultNonWorkingCalendarName":
+                        scheduleConfig.defaultNonWorkingCalendarName = val;
                         break;
                     case "scheduleConfig.defaultTimeZone":
                         scheduleConfig.defaultTimeZone = val;
@@ -273,8 +282,8 @@ public class JS7ConverterConfig {
 
         private String defaultTimeZone = "Etc/UTC";
 
-        public WorkflowConfig withDefaultTimeZone(String defaultTimeZone) {
-            this.defaultTimeZone = defaultTimeZone;
+        public WorkflowConfig withDefaultTimeZone(String timeZone) {
+            this.defaultTimeZone = timeZone;
             return this;
         }
 
@@ -417,18 +426,37 @@ public class JS7ConverterConfig {
 
     public class ScheduleConfig {
 
-        private String defaultCalendarName;
+        private String forcedWorkingCalendarName;
+        private String forcedNonWorkingCalendarName;
+        private String defaultWorkingCalendarName;
+        private String defaultNonWorkingCalendarName;
+
         private String defaultTimeZone = "Etc/UTC";
         private Boolean planOrders;
         private Boolean submitOrders;
 
-        public ScheduleConfig withDefaultCalendarName(String defaultCalendarName) {
-            this.defaultCalendarName = defaultCalendarName;
+        public ScheduleConfig withForcedWorkingCalendarName(String calendarName) {
+            this.forcedWorkingCalendarName = calendarName;
             return this;
         }
 
-        public ScheduleConfig withDefaultTimeZone(String defaultTimeZone) {
-            this.defaultTimeZone = defaultTimeZone;
+        public ScheduleConfig withForcedNonWorkingCalendarName(String calendarName) {
+            this.forcedNonWorkingCalendarName = calendarName;
+            return this;
+        }
+
+        public ScheduleConfig withDefaultWorkingCalendarName(String calendarName) {
+            this.defaultWorkingCalendarName = calendarName;
+            return this;
+        }
+
+        public ScheduleConfig withDefaultNonWorkingCalendarName(String calendarName) {
+            this.defaultNonWorkingCalendarName = calendarName;
+            return this;
+        }
+
+        public ScheduleConfig withDefaultTimeZone(String timeZone) {
+            this.defaultTimeZone = timeZone;
             return this;
         }
 
@@ -442,8 +470,20 @@ public class JS7ConverterConfig {
             return this;
         }
 
-        public String getDefaultCalendarName() {
-            return defaultCalendarName;
+        public String getForcedWorkingCalendarName() {
+            return forcedWorkingCalendarName;
+        }
+
+        public String getForcedNonWorkingCalendarName() {
+            return forcedNonWorkingCalendarName;
+        }
+
+        public String getDefaultWorkingCalendarName() {
+            return defaultWorkingCalendarName;
+        }
+
+        public String getDefaultNonWorkingCalendarName() {
+            return defaultNonWorkingCalendarName;
         }
 
         public String getDefaultTimeZone() {
@@ -459,7 +499,7 @@ public class JS7ConverterConfig {
         }
 
         public boolean isEmpty() {
-            return defaultCalendarName == null && planOrders == null && submitOrders == null;
+            return defaultWorkingCalendarName == null && defaultNonWorkingCalendarName == null && planOrders == null && submitOrders == null;
         }
     }
 
