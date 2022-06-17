@@ -71,7 +71,7 @@ import scala.compat.java8.OptionConverters;
 
 @Path("agents")
 public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsResourceState {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(AgentsResourceStateImpl.class);
     private static final String API_CALL = "./agents";
     private static final Map<AgentStateText, Integer> agentStates = Collections.unmodifiableMap(new HashMap<AgentStateText, Integer>() {
@@ -85,6 +85,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             put(AgentStateText.COUPLINGFAILED, 2);
             put(AgentStateText.SHUTDOWN, 2);
             put(AgentStateText.UNKNOWN, 2);
+            put(AgentStateText.NEVER_STARTED, 4);
         }
     });
     private static final Map<AgentClusterStateText, Integer> agentHealthStates = Collections.unmodifiableMap(
@@ -443,9 +444,16 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             return AgentStateText.COUPLINGFAILED;
         } else if (couplingState instanceof DelegateCouplingState.Coupled$) {
             return AgentStateText.COUPLED;
-        } else if (couplingState instanceof DelegateCouplingState.Resetting$) {
+        } else if (couplingState instanceof DelegateCouplingState.Resetting) {
             return AgentStateText.RESETTING;
-        } else if (couplingState instanceof DelegateCouplingState.Reset$) {
+        } else if (couplingState instanceof DelegateCouplingState.Reset) {
+            // DelegateCouplingState.Reset.reason.string sollte dir in Java den Grund als String liefern, also Fresh, Shutdown, Restart und ResetCommand.
+            String reason = ((DelegateCouplingState.Reset) couplingState).reason().string();
+            if (reason.equals("Fresh")) {
+                return AgentStateText.NEVER_STARTED;
+            } else if (reason.equals("Shutdown")) {
+                return AgentStateText.SHUTDOWN;
+            }
             return AgentStateText.RESET;
         }
         return AgentStateText.UNKNOWN;

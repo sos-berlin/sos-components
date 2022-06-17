@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum AgentStateText {
 
+    NEVER_STARTED("NEVER_STARTED"),
     COUPLED("COUPLED"),
     RESETTING("RESETTING"),
     RESET("RESET"),
