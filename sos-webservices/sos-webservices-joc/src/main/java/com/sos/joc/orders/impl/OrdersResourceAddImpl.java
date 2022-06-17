@@ -96,8 +96,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     order.setArguments(OrdersHelper.checkArguments(order.getArguments(), JsonConverter.signOrderPreparationToInvOrderPreparation(
                             workflow.getOrderPreparation())));
                     Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
-                    Optional<JPosition> startPos = OrdersHelper.getStartPosition(order.getStartPosition(), order.getStartPositionString(), reachablePositions);
-                    Optional<JPosition> endPos = OrdersHelper.getEndPosition(order.getEndPosition(), order.getEndPositionString(), reachablePositions);
+                    Optional<JPosition> startPos = OrdersHelper.getStartPosition(order.getStartPosition(), reachablePositions);
+                    Optional<JPosition> endPos = OrdersHelper.getEndPosition(order.getEndPositions(), reachablePositions);
                     // TODO check if endPos not before startPos
                     
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd, startPos, endPos);

@@ -746,10 +746,10 @@ public class OrdersHelper {
                 }
                 // modify start/end positions
                 Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
-                Optional<JPosition> startPos = getStartPosition(dailyplanModifyOrder.getStartPosition(), dailyplanModifyOrder
-                        .getStartPositionString(), reachablePositions, order.workflowPosition().position());
-                Optional<JPosition> endPos = getEndPosition(dailyplanModifyOrder.getEndPosition(), dailyplanModifyOrder.getEndPositionString(),
-                        reachablePositions, order.asScala().stopPosition());
+                Optional<JPosition> startPos = getStartPosition(dailyplanModifyOrder.getStartPosition(), reachablePositions, order.workflowPosition()
+                        .position());
+                Optional<JPosition> endPos = getEndPosition(dailyplanModifyOrder.getEndPositions(), reachablePositions, order.asScala()
+                        .stopPosition());
 
                 FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, startPos, endPos);
                 auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string(), controllerId));
@@ -1071,18 +1071,15 @@ public class OrdersHelper {
         return posList;
     }
     
-    public static Optional<JPosition> getStartPosition(List<Object> pos, String posString, Set<String> reachablePositions) {
-        return getStartPosition(pos, posString, reachablePositions, null);
+    public static Optional<JPosition> getStartPosition(List<Object> pos, Set<String> reachablePositions) {
+        return getStartPosition(pos, reachablePositions, null);
     }
 
-    public static Optional<JPosition> getStartPosition(List<Object> pos, String posString, Set<String> reachablePositions,
+    public static Optional<JPosition> getStartPosition(List<Object> pos, Set<String> reachablePositions,
             JPosition defaultPosition) {
         Optional<JPosition> posOpt = Optional.empty();
         if (defaultPosition != null && !JPosition.apply(Position.First()).equals(defaultPosition)) {
             posOpt = Optional.of(defaultPosition);
-        }
-        if ((pos == null || pos.isEmpty())) {
-            pos = stringPositionToList(posString);
         }
         if (pos != null && !pos.isEmpty()) {
             Either<Problem, JPosition> posE = JPosition.fromList(pos);
@@ -1098,20 +1095,18 @@ public class OrdersHelper {
         return posOpt;
     }
     
-    public static Optional<JPosition> getEndPosition(List<Object> pos, String posString, Set<String> reachablePositions) {
-        return getEndPosition(pos, posString, reachablePositions, Option.empty());
+    public static Optional<JPosition> getEndPosition(List<List<Object>> poss, Set<String> reachablePositions) {
+        return getEndPosition(poss, reachablePositions, Option.empty());
     }
 
-    public static Optional<JPosition> getEndPosition(List<Object> pos, String posString, Set<String> reachablePositions,
-            Option<Position> defaultPosition) {
+    public static Optional<JPosition> getEndPosition(List<List<Object>> poss, Set<String> reachablePositions, Option<Position> defaultPosition) {
         Optional<JPosition> posOpt = Optional.empty();
         if (!defaultPosition.isEmpty()) {
             posOpt = Optional.of(JPosition.apply(defaultPosition.get()));
         }
-        if ((pos == null || pos.isEmpty())) {
-            pos = stringPositionToList(posString);
-        }
-        if (pos != null && !pos.isEmpty()) {
+        
+        if (poss != null && !poss.isEmpty()) {
+            List<Object> pos = poss.get(0);
             Either<Problem, JPosition> posE = JPosition.fromList(pos);
             ProblemHelper.throwProblemIfExist(posE);
             if (reachablePositions.contains(posE.get().toString())) {
@@ -1121,6 +1116,22 @@ public class OrdersHelper {
             }
         }
         return posOpt;
+    }
+    
+    public static boolean endPositionBeforeStartPosition(JPosition start, JPosition end) {
+        List<Object> startPos = start.toList();
+        List<Object> endPos = end.toList();
+        int compareFirstLevel = ((Integer) endPos.get(0)).compareTo((Integer) startPos.get(0));
+        if (compareFirstLevel == -1) {
+            return true;
+        }
+        if (compareFirstLevel == 0 && startPos.size() == endPos.size() && startPos.size() == 3) {
+            int compareSecondLevel = ((Integer) endPos.get(2)).compareTo((Integer) startPos.get(2));
+            if (compareSecondLevel == -1) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

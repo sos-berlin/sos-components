@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "startPosition",
-    "endPosition"
+    "endPositions"
 })
 public class OrderPositions {
 
@@ -33,15 +33,8 @@ public class OrderPositions {
     @JsonProperty("startPosition")
     @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
     private List<Object> startPosition = null;
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("endPosition")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> endPosition = null;
+    @JsonProperty("endPositions")
+    private List<List<Object>> endPositions = null;
 
     /**
      * position
@@ -65,36 +58,24 @@ public class OrderPositions {
         this.startPosition = startPosition;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("endPosition")
-    public List<Object> getEndPosition() {
-        return endPosition;
+    @JsonProperty("endPositions")
+    public List<List<Object>> getEndPositions() {
+        return endPositions;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("endPosition")
-    public void setEndPosition(List<Object> endPosition) {
-        this.endPosition = endPosition;
+    @JsonProperty("endPositions")
+    public void setEndPositions(List<List<Object>> endPositions) {
+        this.endPositions = endPositions;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("startPosition", startPosition).append("endPosition", endPosition).toString();
+        return new ToStringBuilder(this).append("startPosition", startPosition).append("endPositions", endPositions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(startPosition).append(endPosition).toHashCode();
+        return new HashCodeBuilder().append(startPosition).append(endPositions).toHashCode();
     }
 
     @Override
@@ -106,7 +87,7 @@ public class OrderPositions {
             return false;
         }
         OrderPositions rhs = ((OrderPositions) other);
-        return new EqualsBuilder().append(startPosition, rhs.startPosition).append(endPosition, rhs.endPosition).isEquals();
+        return new EqualsBuilder().append(startPosition, rhs.startPosition).append(endPositions, rhs.endPositions).isEquals();
     }
 
 }

@@ -70,8 +70,8 @@ public class OrderApi {
                 ProblemHelper.throwProblemIfExist(startPosE);
                 startPos = Optional.of(startPosE.get());
             }
-            if (order.getPositions().getEndPosition() != null && !order.getPositions().getEndPosition().isEmpty()) {
-                Either<Problem, JPosition> endPosE = JPosition.fromList(order.getPositions().getEndPosition());
+            if (order.getPositions().getEndPositions() != null && !order.getPositions().getEndPositions().isEmpty()) {
+                Either<Problem, JPosition> endPosE = JPosition.fromList(order.getPositions().getEndPositions().get(0));
                 ProblemHelper.throwProblemIfExist(endPosE);
                 endPos = Optional.of(endPosE.get());
             }
