@@ -13,9 +13,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Variable-Set
+ * orderParameterisation
  * <p>
- * A variable set for a schedule incl. optional start and end position
+ * Parameterisation with variable set for a schedule and optional start and end position
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -25,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "startPosition",
     "endPosition"
 })
-public class VariableSet {
+public class OrderParameterisation {
 
     /**
      * string without < and >
@@ -166,10 +166,10 @@ public class VariableSet {
         if (other == this) {
             return true;
         }
-        if ((other instanceof VariableSet) == false) {
+        if ((other instanceof OrderParameterisation) == false) {
             return false;
         }
-        VariableSet rhs = ((VariableSet) other);
+        OrderParameterisation rhs = ((OrderParameterisation) other);
         return new EqualsBuilder().append(variables, rhs.variables).append(startPosition, rhs.startPosition).append(endPosition, rhs.endPosition).append(orderName, rhs.orderName).isEquals();
     }
 

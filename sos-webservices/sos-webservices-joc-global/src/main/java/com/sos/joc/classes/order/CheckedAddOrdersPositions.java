@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -38,9 +39,15 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
     }
     
     @JsonIgnore
-    public CheckedAddOrdersPositions get(WorkflowId workflowId, JControllerState currentState, Set<Folder> permittedFolders) throws JsonParseException,
-            JsonMappingException, IOException, JocException {
-        
+    public CheckedAddOrdersPositions get(WorkflowId workflowId, JControllerState currentState, Set<Folder> permittedFolders)
+            throws JsonParseException, JsonMappingException, IOException, JocException {
+        return get(workflowId, currentState, permittedFolders, null);
+    }
+    
+    @JsonIgnore
+    public CheckedAddOrdersPositions get(WorkflowId workflowId, JControllerState currentState, Set<Folder> permittedFolders,
+            List<Object> afterPosition) throws JsonParseException, JsonMappingException, IOException, JocException {
+
         WorkflowPath wPath = WorkflowPath.of(JocInventory.pathToName(workflowId.getPath()));
         String path = WorkflowPaths.getPath(wPath.string());
         workflowId.setPath(path);
@@ -57,6 +64,8 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
             e = currentState.repo().pathToCheckedWorkflow(wPath);
         }
         ProblemHelper.throwProblemIfExist(e);
+//        final JPosition afterPos = getAfterPos(afterPosition);
+
         //JsonNode node = Globals.objectMapper.readTree(e.get().withPositions().toJson());
         //List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
         // List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
@@ -64,7 +73,7 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
 
         final Set<Positions> pos = new LinkedHashSet<>();
         JPosition pos0 = JPosition.apply(Position.First());
-
+        
         e.get().reachablePositions(pos0).stream().forEachOrdered(jPos -> {
             // only root level position or first level inside a "(re)try" instruction
             // if (jPos.toList().size() == 1 || (jPos.toList().size() == 3 && ((String) jPos.toList().get(1)).contains("try"))) {
@@ -79,6 +88,10 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
                 //}
             }
         });
+        
+//        TODO if (afterPos != null) {
+//            
+//        }
 
         setWorkflowId(workflowId);
         setPositions(pos);
@@ -106,5 +119,15 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         });
         return pos;
     }
+    
+//    @JsonIgnore
+//    private static JPosition getAfterPos(List<Object> afterPosition) {
+//        if (afterPosition != null) {
+//            Either<Problem, JPosition> afterPosE = JPosition.fromList(afterPosition);
+//            ProblemHelper.throwProblemIfExist(afterPosE);
+//            return afterPosE.get();
+//        }
+//        return null;
+//    }
 
 }

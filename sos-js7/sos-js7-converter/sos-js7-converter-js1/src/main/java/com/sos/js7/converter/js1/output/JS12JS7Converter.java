@@ -34,8 +34,8 @@ import com.sos.inventory.model.job.notification.JobNotification;
 import com.sos.inventory.model.job.notification.JobNotificationMail;
 import com.sos.inventory.model.job.notification.JobNotificationType;
 import com.sos.inventory.model.jobresource.JobResource;
+import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
-import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.ParameterType;
@@ -821,10 +821,10 @@ public class JS12JS7Converter {
                 s.setPlanOrderAutomatically(CONFIG.getScheduleConfig().planOrders());
                 s.setSubmitOrderToControllerWhenPlanned(CONFIG.getScheduleConfig().submitOrders());
 
-                List<VariableSet> l = new ArrayList<>();
+                List<OrderParameterisation> l = new ArrayList<>();
                 for (JobChainOrder o : orders) {
                     if (o.getParams() != null && o.getParams().hasParams()) {
-                        VariableSet set = new VariableSet();
+                        OrderParameterisation set = new OrderParameterisation();
                         set.setOrderName(o.getName());
 
                         Variables vs = new Variables();
@@ -841,7 +841,7 @@ public class JS12JS7Converter {
                     }
                 }
                 if (l.size() > 0) {
-                    s.setVariableSets(l);
+                    s.setOrderParameterisations(l);
                 }
                 s.setWorkflowNames(Collections.singletonList(workflowName));
                 Path schedulePath = workflowPath.getParent();

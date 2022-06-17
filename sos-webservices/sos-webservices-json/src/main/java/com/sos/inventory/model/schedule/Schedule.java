@@ -2,6 +2,7 @@
 package com.sos.inventory.model.schedule;
 
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -34,7 +35,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "planOrderAutomatically",
     "calendars",
     "nonWorkingDayCalendars",
-    "variableSets"
+    "orderParameterisations"
 })
 public class Schedule implements IInventoryObject, IConfigurationObject, IReleaseObject
 {
@@ -103,8 +104,11 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
      */
     @JsonProperty("nonWorkingDayCalendars")
     private List<AssignedNonWorkingDayCalendars> nonWorkingDayCalendars = null;
-    @JsonProperty("variableSets")
-    private List<VariableSet> variableSets = null;
+    @JsonProperty("orderParameterisations")
+    @JsonAlias({
+        "variableSets"
+    })
+    private List<OrderParameterisation> orderParameterisations = null;
 
     /**
      * inventory repository version
@@ -290,24 +294,24 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
         this.nonWorkingDayCalendars = nonWorkingDayCalendars;
     }
 
-    @JsonProperty("variableSets")
-    public List<VariableSet> getVariableSets() {
-        return variableSets;
+    @JsonProperty("orderParameterisations")
+    public List<OrderParameterisation> getOrderParameterisations() {
+        return orderParameterisations;
     }
 
-    @JsonProperty("variableSets")
-    public void setVariableSets(List<VariableSet> variableSets) {
-        this.variableSets = variableSets;
+    @JsonProperty("orderParameterisations")
+    public void setOrderParameterisations(List<OrderParameterisation> orderParameterisations) {
+        this.orderParameterisations = orderParameterisations;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("path", path).append("workflowName", workflowName).append("workflowNames", workflowNames).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingDayCalendars", nonWorkingDayCalendars).append("variableSets", variableSets).toString();
+        return new ToStringBuilder(this).append("version", version).append("path", path).append("workflowName", workflowName).append("workflowNames", workflowNames).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingDayCalendars", nonWorkingDayCalendars).append("orderParameterisations", orderParameterisations).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowNames).append(planOrderAutomatically).append(path).append(calendars).append(submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars).append(workflowName).append(documentationName).append(variableSets).append(title).append(version).toHashCode();
+        return new HashCodeBuilder().append(workflowNames).append(planOrderAutomatically).append(path).append(calendars).append(submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars).append(workflowName).append(documentationName).append(title).append(orderParameterisations).append(version).toHashCode();
     }
 
     @Override
@@ -319,7 +323,7 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
             return false;
         }
         Schedule rhs = ((Schedule) other);
-        return new EqualsBuilder().append(workflowNames, rhs.workflowNames).append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars, rhs.nonWorkingDayCalendars).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(variableSets, rhs.variableSets).append(title, rhs.title).append(version, rhs.version).isEquals();
+        return new EqualsBuilder().append(workflowNames, rhs.workflowNames).append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars, rhs.nonWorkingDayCalendars).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(title, rhs.title).append(orderParameterisations, rhs.orderParameterisations).append(version, rhs.version).isEquals();
     }
 
 }

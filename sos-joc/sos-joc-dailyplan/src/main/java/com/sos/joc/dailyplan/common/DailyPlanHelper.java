@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
-import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 
 public class DailyPlanHelper {
@@ -176,17 +176,17 @@ public class DailyPlanHelper {
         return format.format(startCalendar.getTime());
     }
 
-    public static String buildOrderId(String dailyPlanDate, Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode)
+    public static String buildOrderId(String dailyPlanDate, Schedule schedule, OrderParameterisation orderParameterisation, Long startTime, Integer startMode)
             throws SOSInvalidDataException {
-        return buildOrderId(dailyPlanDate, getOrderName(schedule, variableSet), startTime, startMode);
+        return buildOrderId(dailyPlanDate, getOrderName(schedule, orderParameterisation), startTime, startMode);
     }
 
-    public static String getOrderName(Schedule schedule, VariableSet variableSet) {
+    public static String getOrderName(Schedule schedule, OrderParameterisation orderParameterisation) {
         String orderName = "";
-        if (SOSString.isEmpty(variableSet.getOrderName())) {
+        if (SOSString.isEmpty(orderParameterisation.getOrderName())) {
             orderName = Paths.get(schedule.getPath()).getFileName().toString();
         } else {
-            orderName = variableSet.getOrderName();
+            orderName = orderParameterisation.getOrderName();
         }
         if (orderName.length() > 30) {
             orderName = orderName.substring(0, 30);

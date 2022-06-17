@@ -42,8 +42,8 @@ import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobresource.JobResource;
+import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
-import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.BranchWorkflow;
 import com.sos.inventory.model.workflow.Jobs;
@@ -178,7 +178,7 @@ public class Validator {
                                         position, schedule.getPath(), workflowName, r.getParameters().getAdditionalProperties().size()));
                             }
                         }
-                        validateVariableSets(schedule.getVariableSets(), r, "$.variableSets");
+                        validateOrderParameterisations(schedule.getOrderParameterisations(), r, "$.variableSets");
                     }
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
@@ -663,13 +663,13 @@ public class Validator {
     }
 
     @SuppressWarnings("unused")
-    private static void validateVariableSets(List<VariableSet> variableSets, Requirements orderPreparation, String position)
+    private static void validateOrderParameterisations(List<OrderParameterisation> variableSets, Requirements orderPreparation, String position)
             throws JocConfigurationException {
         if (variableSets != null) {
-            if (variableSets.size() != variableSets.stream().map(VariableSet::getOrderName).distinct().mapToInt(e -> 1).sum()) {
+            if (variableSets.size() != variableSets.stream().map(OrderParameterisation::getOrderName).distinct().mapToInt(e -> 1).sum()) {
                 throw new JocConfigurationException(position + ": Order names has to be unique");
             }
-            variableSets.stream().map(VariableSet::getVariables).filter(Objects::nonNull).forEach(v -> {
+            variableSets.stream().map(OrderParameterisation::getVariables).filter(Objects::nonNull).forEach(v -> {
                 try {
                     OrdersHelper.checkArguments(v, orderPreparation);
                 } catch (Exception e1) {

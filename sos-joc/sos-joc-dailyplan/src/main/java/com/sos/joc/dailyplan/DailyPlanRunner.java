@@ -42,8 +42,8 @@ import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
-import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
@@ -371,7 +371,7 @@ public class DailyPlanRunner extends TimerTask {
                 schedule.setPath(item.getSchedulePath());
                 schedule.setWorkflowNames(Arrays.asList(item.getWorkflowName()));
                 schedule.setSubmitOrderToControllerWhenPlanned(true);
-                schedule.setVariableSets(new ArrayList<VariableSet>());
+                schedule.setOrderParameterisations(new ArrayList<OrderParameterisation>());
 
                 DBItemDailyPlanVariable orderVariable = null;
                 if (item.isCyclic()) {
@@ -390,16 +390,16 @@ public class DailyPlanRunner extends TimerTask {
                     variables = Globals.objectMapper.readValue(orderVariable.getVariableValue(), Variables.class);
                 }
 
-                VariableSet variableSet = new VariableSet();
+                OrderParameterisation orderParameterisation = new OrderParameterisation();
                 // TODO order positions
-//                variableSet.setStartPosition(null);
-//                variableSet.setEndPosition(null);
-                variableSet.setVariables(variables);
-                schedule.getVariableSets().add(variableSet);
+//                orderParameterisation.setStartPosition(null);
+//                orderParameterisation.setEndPosition(null);
+                orderParameterisation.setVariables(variables);
+                schedule.getOrderParameterisations().add(orderParameterisation);
 
                 DailyPlanScheduleWorkflow dailyPlanScheduleWorkflow = new DailyPlanScheduleWorkflow(item.getWorkflowName(), item.getWorkflowPath(),
                         null);
-                FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, schedule, dailyPlanScheduleWorkflow, variableSet, item.getPlannedStart()
+                FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, schedule, dailyPlanScheduleWorkflow, orderParameterisation, item.getPlannedStart()
                         .getTime(), item.getStartMode());
                 freshOrder.setId(item.getOrderId());
 
@@ -676,15 +676,15 @@ public class DailyPlanRunner extends TimerTask {
         }
     }
 
-    private FreshOrder buildFreshOrder(String dailyPlanDate, Schedule schedule, DailyPlanScheduleWorkflow scheduleWorkflow, VariableSet variableSet,
-            Long startTime, Integer startMode) throws SOSInvalidDataException {
+    private FreshOrder buildFreshOrder(String dailyPlanDate, Schedule schedule, DailyPlanScheduleWorkflow scheduleWorkflow,
+            OrderParameterisation orderParameterisation, Long startTime, Integer startMode) throws SOSInvalidDataException {
         FreshOrder order = new FreshOrder();
-        order.setId(DailyPlanHelper.buildOrderId(dailyPlanDate, schedule, variableSet, startTime, startMode));
+        order.setId(DailyPlanHelper.buildOrderId(dailyPlanDate, schedule, orderParameterisation, startTime, startMode));
         order.setScheduledFor(startTime);
-        order.setArguments(variableSet.getVariables());
+        order.setArguments(orderParameterisation.getVariables());
         order.setWorkflowPath(scheduleWorkflow.getName());
-        order.setStartPosition(variableSet.getStartPosition());
-        order.setEndPosition(variableSet.getEndPosition());
+        order.setStartPosition(orderParameterisation.getStartPosition());
+        order.setEndPosition(orderParameterisation.getEndPosition());
         return order;
     }
 
@@ -868,17 +868,17 @@ public class DailyPlanRunner extends TimerTask {
                                         startMode = 0;
                                     }
 
-                                    if (schedule.getVariableSets() == null || schedule.getVariableSets().size() == 0) {
-                                        VariableSet variableSet = new VariableSet();
-                                        schedule.setVariableSets(new ArrayList<VariableSet>());
-                                        schedule.getVariableSets().add(variableSet);
+                                    if (schedule.getOrderParameterisations() == null || schedule.getOrderParameterisations().size() == 0) {
+                                        OrderParameterisation orderParameterisation = new OrderParameterisation();
+                                        schedule.setOrderParameterisations(new ArrayList<OrderParameterisation>());
+                                        schedule.getOrderParameterisations().add(orderParameterisation);
                                     }
 
-                                    for (VariableSet variableSet : schedule.getVariableSets()) {
+                                    for (OrderParameterisation orderParameterisation : schedule.getOrderParameterisations()) {
                                         for (DailyPlanScheduleWorkflow sw : dailyPlanSchedule.getWorkflows()) {
 
-                                            FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, dailyPlanSchedule.getSchedule(), sw, variableSet,
-                                                    periodEntry.getKey(), startMode);
+                                            FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, dailyPlanSchedule.getSchedule(), sw,
+                                                    orderParameterisation, periodEntry.getKey(), startMode);
 
                                             if (!fromService) {
                                                 schedule.setSubmitOrderToControllerWhenPlanned(settings.isSubmit());
@@ -892,7 +892,7 @@ public class DailyPlanRunner extends TimerTask {
                                                     .getId());
                                             plannedOrder.setPeriod(periodEntry.getValue());
                                             plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
-                                            plannedOrder.setOrderName(DailyPlanHelper.getOrderName(schedule, variableSet));
+                                            plannedOrder.setOrderName(DailyPlanHelper.getOrderName(schedule, orderParameterisation));
                                             synchronizer.add(startupMode, plannedOrder, controllerId, dailyPlanDate);
                                             plannedOrdersCount++;
                                         }

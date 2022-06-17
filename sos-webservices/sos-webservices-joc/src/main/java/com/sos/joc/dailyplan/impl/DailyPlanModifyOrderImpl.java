@@ -39,8 +39,8 @@ import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
-import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JobSchedulerDate;
@@ -708,19 +708,19 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             schedule.setDocumentationName("");
             schedule.setSubmitOrderToControllerWhenPlanned(mainItem.getSubmitted());
             schedule.setPlanOrderAutomatically(true);
-            schedule.setVariableSets(new ArrayList<VariableSet>());
-            VariableSet variableSet = new VariableSet();
-            variableSet.setOrderName(mainItem.getOrderName());
+            schedule.setOrderParameterisations(new ArrayList<OrderParameterisation>());
+            OrderParameterisation orderParameterisation = new OrderParameterisation();
+            orderParameterisation.setOrderName(mainItem.getOrderName());
             Variables variables = new Variables();
             if (variable != null && variable.getVariableValue() != null) {
                 variables = Globals.objectMapper.readValue(variable.getVariableValue(), Variables.class);
             }
             // TODO order positions??
-//            variableSet.setStartPosition(null);
-//            variableSet.setEndPosition(null);
-            variableSet.setVariables(variables);
-            if (variableSet.getVariables().getAdditionalProperties().size() > 0) {
-                schedule.getVariableSets().add(variableSet);
+//            orderParameterisation.setStartPosition(null);
+//            orderParameterisation.setEndPosition(null);
+            orderParameterisation.setVariables(variables);
+            if (orderParameterisation.getVariables().getAdditionalProperties().size() > 0) {
+                schedule.getOrderParameterisations().add(orderParameterisation);
             }
 
             schedule.setCalendars(new ArrayList<AssignedCalendars>());
