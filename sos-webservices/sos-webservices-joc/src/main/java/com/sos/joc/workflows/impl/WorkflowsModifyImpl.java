@@ -13,6 +13,8 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -21,6 +23,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
@@ -43,7 +46,7 @@ import scala.collection.JavaConverters;
 @Path("workflows")
 public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsModify {
 
-    private static final String API_CALL = "./workflows";
+    private static final String API_CALL = "./workflows/";
 
     private enum Action {
         SUSPEND, RESUME
@@ -87,22 +90,41 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
         }
     }
 
-    public void postWorkflowsModify(Action action, ModifyWorkflows modifyWorkflows) throws Exception {
+    private void postWorkflowsModify(Action action, ModifyWorkflows modifyWorkflows) throws Exception {
         
         String controllerId = modifyWorkflows.getControllerId();
         DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyWorkflows.getAuditLog(), controllerId, CategoryType.CONTROLLER);
-
+        
+        if (modifyWorkflows.getAll() == Boolean.TRUE) {
+            modifyWorkflows.setWorkflowPaths(null);
+            modifyWorkflows.setFolders(null);
+        }
         List<String> workflowPaths = modifyWorkflows.getWorkflowPaths();
         boolean withWorkflowPaths = workflowPaths != null && !workflowPaths.isEmpty();
+        if (withWorkflowPaths) {
+            modifyWorkflows.setFolders(null);
+        }
+        
         boolean withFolderFilter = modifyWorkflows.getFolders() != null && !modifyWorkflows.getFolders().isEmpty();
         Set<Folder> permittedFolders = addPermittedFolder(modifyWorkflows.getFolders());
 
         JControllerState currentState = Proxy.of(controllerId).currentState();
 
         Stream<WorkflowPath> workflowsStream = Stream.empty();
-        if (withWorkflowPaths) {
-            workflowsStream = workflowPaths.stream().map(w -> WorkflowPath.of(JocInventory.pathToName(w))).filter(w -> WorkflowsHelper
-                    .workflowCurrentlyExists(currentState, w));
+        if (modifyWorkflows.getAll() == Boolean.TRUE) {
+            SOSHibernateSession connection = null;
+            try {
+                connection = Globals.createSosHibernateStatelessConnection(API_CALL + action.name().toLowerCase());
+                DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+                workflowsStream = dbLayer.getWorkflowsIds(null, controllerId).stream().map(WorkflowId::getPath).filter(w -> canAdd(w,
+                        permittedFolders)).map(JocInventory::pathToName).map(WorkflowPath::of).filter(w -> WorkflowsHelper.workflowCurrentlyExists(
+                                currentState, w));
+            } finally {
+                Globals.disconnect(connection);
+            }
+        } else if (withWorkflowPaths) {
+            workflowsStream = workflowPaths.stream().map(JocInventory::pathToName).filter(w -> canAdd(w, permittedFolders)).map(WorkflowPath::of)
+                    .filter(w -> WorkflowsHelper.workflowCurrentlyExists(currentState, w));
 
         } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
             // no permission
@@ -128,7 +150,6 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
         default:
             throw new ControllerObjectNotExistException("No unsuspended workflows found.");
         }
-
     }
     
     private Set<WorkflowPath> getCheckedWorkflows(Action action, Stream<WorkflowPath> workflowsStream, JControllerState currentState,
@@ -141,23 +162,18 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
 
         switch (action) {
         case RESUME:
-            if (suspendedWorkflows.containsKey(Boolean.FALSE)) {
-                String msg = suspendedWorkflows.get(Boolean.FALSE).stream().map(WorkflowPath::string).collect(Collectors.joining("', '", "Workflows '",
-                        "' are not suspended"));
-                if (withPostProblem) {
-                    ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
-                }
+            if (withPostProblem && suspendedWorkflows.containsKey(Boolean.FALSE)) {
+                String msg = suspendedWorkflows.get(Boolean.FALSE).stream().map(WorkflowPath::string).collect(Collectors.joining("', '",
+                        "Workflows '", "' are not suspended"));
+                ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
             }
             return suspendedWorkflows.getOrDefault(Boolean.TRUE, Collections.emptySet());
         case SUSPEND:
-            if (suspendedWorkflows.containsKey(Boolean.TRUE)) {
+            if (withPostProblem && suspendedWorkflows.containsKey(Boolean.TRUE)) {
                 String msg = suspendedWorkflows.get(Boolean.TRUE).stream().map(WorkflowPath::string).collect(Collectors.joining("', '", "Workflows '",
                         "' are already suspended"));
-                if (withPostProblem) {
-                    ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
-                }
+                ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
             }
-
             return suspendedWorkflows.getOrDefault(Boolean.FALSE, Collections.emptySet());
         default:
             return workflowsStream.collect(Collectors.toSet());
@@ -178,7 +194,7 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
     }
 
     private ModifyWorkflows initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
-        initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
+        initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validate(filterBytes, ModifyWorkflows.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyWorkflows.class);
     }

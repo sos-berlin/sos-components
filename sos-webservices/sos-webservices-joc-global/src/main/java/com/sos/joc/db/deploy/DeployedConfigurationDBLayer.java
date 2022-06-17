@@ -526,7 +526,7 @@ public class DeployedConfigurationDBLayer {
 
     public List<WorkflowId> getWorkflowsIds(List<String> workflowNames, String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        if (workflowNames.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+        if (workflowNames != null && workflowNames.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             List<WorkflowId> result = new ArrayList<>();
             for (int i = 0; i < workflowNames.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
                 result.addAll(getWorkflowsIds(SOSHibernate.getInClausePartition(i, workflowNames), controllerId));
@@ -538,12 +538,16 @@ public class DeployedConfigurationDBLayer {
                 hql.append("(path, commitId) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
                 hql.append(" where type=:type");
                 hql.append(" and controllerId=:controllerId");
-                hql.append(" and name in (:workflowNames)");
+                if (workflowNames != null && !workflowNames.isEmpty()) {
+                    hql.append(" and name in (:workflowNames)");
+                }
 
                 Query<WorkflowId> query = session.createQuery(hql.toString());
                 query.setParameter("type", DeployType.WORKFLOW.intValue());
                 query.setParameter("controllerId", controllerId);
-                query.setParameterList("workflowNames", workflowNames);
+                if (workflowNames != null && !workflowNames.isEmpty()) {
+                    query.setParameterList("workflowNames", workflowNames);
+                }
                 List<WorkflowId> result = session.getResultList(query);
                 if (result == null) {
                     return Collections.emptyList();

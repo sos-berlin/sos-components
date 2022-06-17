@@ -24,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "workflowPaths",
     "folders",
+    "all",
     "auditLog"
 })
 public class ModifyWorkflows {
@@ -47,6 +48,8 @@ public class ModifyWorkflows {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    @JsonProperty("all")
+    private Boolean all = false;
     /**
      * auditParams
      * <p>
@@ -112,6 +115,16 @@ public class ModifyWorkflows {
         this.folders = folders;
     }
 
+    @JsonProperty("all")
+    public Boolean getAll() {
+        return all;
+    }
+
+    @JsonProperty("all")
+    public void setAll(Boolean all) {
+        this.all = all;
+    }
+
     /**
      * auditParams
      * <p>
@@ -136,12 +149,12 @@ public class ModifyWorkflows {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflowPaths", workflowPaths).append("folders", folders).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflowPaths", workflowPaths).append("folders", folders).append("all", all).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowPaths).append(folders).append(controllerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(all).append(workflowPaths).append(folders).append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -153,7 +166,7 @@ public class ModifyWorkflows {
             return false;
         }
         ModifyWorkflows rhs = ((ModifyWorkflows) other);
-        return new EqualsBuilder().append(workflowPaths, rhs.workflowPaths).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(all, rhs.all).append(workflowPaths, rhs.workflowPaths).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }
