@@ -8,15 +8,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum IdentityServiceTypes {
 
+    UNKNOWN("UNKNOWN"),
     VAULT("VAULT"),
     VAULT_JOC("VAULT-JOC"),
     VAULT_JOC_ACTIVE("VAULT-JOC-ACTIVE"),
     KEYCLOAK("KEYCLOAK"),
     KEYCLOAK_JOC("KEYCLOAK-JOC"),
-    KEYCLOAK_JOC_ACTIVE("KEYCLOAK-JOC-ACTIVE"),
     LDAP("LDAP"),
     LDAP_JOC("LDAP-JOC"),
-    UNKNOWN("UNKNOWN"),
     JOC("JOC");
     private final String value;
     private final static Map<String, IdentityServiceTypes> CONSTANTS = new HashMap<String, IdentityServiceTypes>();

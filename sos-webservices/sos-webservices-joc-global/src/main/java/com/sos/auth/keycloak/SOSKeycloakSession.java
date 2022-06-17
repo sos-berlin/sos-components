@@ -54,7 +54,7 @@ public class SOSKeycloakSession implements ISOSSession {
                         webserviceCredentials.getTruststorePassword());
 
                 webserviceCredentials.setAccount("");
-                sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, trustStore,identityService);
+                sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, trustStore);
                 startSession = Instant.now().toEpochMilli();
 
             } catch (Exception e) {

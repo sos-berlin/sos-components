@@ -1,7 +1,5 @@
 package com.sos.auth.keycloak.classes;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -90,8 +88,7 @@ public class SOSKeycloakSubject implements ISOSAuthSubject {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
-            if (IdentityServiceTypes.KEYCLOAK_JOC == identityService.getIdentyServiceType()
-                    || IdentityServiceTypes.KEYCLOAK_JOC_ACTIVE == identityService.getIdentyServiceType()) {
+            if (IdentityServiceTypes.KEYCLOAK_JOC == identityService.getIdentyServiceType()) {
                 List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(accountName, identityService
                         .getIdentityServiceId());
                 for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {

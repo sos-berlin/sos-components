@@ -46,7 +46,7 @@ public class SOSKeycloakLogin implements ISOSLogin {
                     webserviceCredentials.getTruststorePassword());
 
             webserviceCredentials.setAccount(account);
-            SOSKeycloakHandler sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, trustStore, identityService);
+            SOSKeycloakHandler sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, trustStore);
 
             SOSKeycloakAccountAccessToken sosKeycloakAccountAccessToken = null;
 
@@ -67,8 +67,7 @@ public class SOSKeycloakLogin implements ISOSLogin {
                 sosKeycloakSubject.setAuthenticated(true);
                 sosKeycloakSubject.setAccessToken(sosKeycloakAccountAccessToken);
 
-                if (IdentityServiceTypes.KEYCLOAK_JOC == identityService.getIdentyServiceType()
-                        || IdentityServiceTypes.KEYCLOAK_JOC_ACTIVE == identityService.getIdentyServiceType()) {
+                if (IdentityServiceTypes.KEYCLOAK_JOC == identityService.getIdentyServiceType()) {
                     sosKeycloakSubject.setPermissionAndRoles(null, account);
                 } else {
                     sosKeycloakSubject.setPermissionAndRoles(sosKeycloakHandler.getTokenRoles(), account);
@@ -92,8 +91,7 @@ public class SOSKeycloakLogin implements ISOSLogin {
             sosKeycloakSubject = new SOSKeycloakSubject(account, identityService);
             sosKeycloakSubject.setAuthenticated(true);
 
-            if (IdentityServiceTypes.VAULT_JOC == identityService.getIdentyServiceType() || IdentityServiceTypes.VAULT_JOC_ACTIVE == identityService
-                    .getIdentyServiceType()) {
+            if (IdentityServiceTypes.KEYCLOAK_JOC == identityService.getIdentyServiceType()) {
                 sosKeycloakSubject.setPermissionAndRoles(new HashSet<String>(), account);
             }
 

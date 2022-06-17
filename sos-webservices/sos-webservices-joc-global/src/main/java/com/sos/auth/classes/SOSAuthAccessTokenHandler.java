@@ -70,7 +70,6 @@ public class SOSAuthAccessTokenHandler extends Thread {
 
                     case KEYCLOAK:
                     case KEYCLOAK_JOC:
-                    case KEYCLOAK_JOC_ACTIVE:
                         if (currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken() != null) {
                             long leaseDuration = currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken()
                                     .getRefresh_expires_in() * 1000;

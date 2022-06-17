@@ -430,7 +430,6 @@ public class SOSServicePermissionIam {
                 break;
             case KEYCLOAK:
             case KEYCLOAK_JOC:
-            case KEYCLOAK_JOC_ACTIVE:
                 sosLogin = new SOSKeycloakLogin();
                 LOGGER.debug("Login with idendity service keycloak");
                 break;
