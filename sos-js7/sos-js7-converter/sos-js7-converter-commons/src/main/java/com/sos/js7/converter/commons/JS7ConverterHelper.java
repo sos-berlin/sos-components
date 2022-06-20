@@ -203,4 +203,10 @@ public class JS7ConverterHelper {
         }
     }
 
+    public static String asJS7OrderPreparationStringValue(String val) {
+        if (SOSString.isEmpty(val)) {
+            return val;
+        }
+        return "\"" + val.replaceAll("\\\\", "\\\\\\\\") + "\"";
+    }
 }

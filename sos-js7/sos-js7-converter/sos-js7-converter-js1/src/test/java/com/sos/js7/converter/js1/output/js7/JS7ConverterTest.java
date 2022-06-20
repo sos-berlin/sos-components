@@ -8,6 +8,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sos.js7.converter.commons.JS7ConverterConfig.Platform;
+import com.sos.js7.converter.commons.JS7ConverterMain;
 
 public class JS7ConverterTest {
 
@@ -17,6 +18,7 @@ public class JS7ConverterTest {
         Path input = Paths.get("src/test/resources/input");
         Path outputDir = Paths.get("src/test/resources/output");
         Path reportDir = Paths.get("src/test/resources/report");
+        Path archive = Paths.get("src/test/resources/js7_converted.tar.gz");
 
         JS7Converter.CONFIG.getGenerateConfig().withWorkflows(true).withSchedules(true).withLocks(true).withCyclicOrders(false);
         JS7Converter.CONFIG.getParserConfig().withExcludedDirectoryNames(".sos-templates , .svn");
@@ -29,5 +31,7 @@ public class JS7ConverterTest {
         JS7Converter.CONFIG.getSubFolderConfig().withMapping("aapg=2; ebzc=0; wmad=0; abcd=0").withSeparator("_");
 
         JS7Converter.convert(input, outputDir, reportDir);
+        JS7ConverterMain.createArchiveFile(outputDir, archive);
+
     }
 }

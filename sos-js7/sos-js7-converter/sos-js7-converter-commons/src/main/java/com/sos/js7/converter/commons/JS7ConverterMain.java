@@ -1,15 +1,130 @@
 package com.sos.js7.converter.commons;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSGzip;
+import com.sos.commons.util.SOSGzip.SOSGzipResult;
+import com.sos.commons.util.SOSPath;
+import com.sos.js7.converter.commons.output.ZipCompress;
+
 public abstract class JS7ConverterMain {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JS7ConverterMain.class);
+
+    public abstract void doConvert(Path input, Path outputDir, Path reportDir) throws Exception;
+
+    private void printUsage() {
+        System.out.println("Usage:");
+        System.out.println("  Options:");
+        System.out.println("    --input=<location of input file or directory>                   | required argument");
+        System.out.println("    --output-dir=<location of output directory>                     | default: ./output");
+        System.out.println("    --report-dir=<location of report directory>                     | default: ./report");
+        System.out.println("    --archive=<location of resulting .zip archive for JS7 import>   | default: ./js7_converted.tar.gz | .zip");
+        System.out.println("    --config=<location of config file>                              | default: ./js7_convert.config");
+        System.out.println("    --help                                                          | displays usage");
+
+    }
+
+    public void doMain(JS7ConverterConfig config, String[] args) {
+        String argInput = null;
+        String argOutputDir = null;
+        String argReportDir = null;
+        String argArhive = null;
+        String argConfig = null;
+        String argHelp = null;
+
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i].trim();
+            if (arg.startsWith("--input=")) {
+                argInput = getOptionValue(arg);
+            } else if (arg.startsWith("--output-dir=")) {
+                argOutputDir = getOptionValue(arg);
+            } else if (arg.startsWith("--report-dir=")) {
+                argReportDir = getOptionValue(arg);
+            } else if (arg.startsWith("--archive=")) {
+                argArhive = getOptionValue(arg);
+            } else if (arg.startsWith("--config=")) {
+                argConfig = getOptionValue(arg);
+            } else if (arg.startsWith("--help")) {
+                argHelp = "help";
+            }
+        }
+        int status = 0;
+        if (argHelp != null) {
+            printUsage();
+        } else if (argInput == null) {
+            printUsage();
+            status = 1;
+        } else {
+            try {
+                Path input = SOSPath.toAbsolutePath(argInput);
+                if (!Files.exists(input)) {
+                    throw new Exception("[" + input + "]input not found");
+                }
+                Path outputDir = SOSPath.toAbsolutePath(getValue(argOutputDir, "output"));
+                Path reportDir = SOSPath.toAbsolutePath(getValue(argReportDir, "report"));
+                Path archive = SOSPath.toAbsolutePath(getValue(argArhive, "js7_converted.tar.gz"));
+                Path configFile = SOSPath.toAbsolutePath(getValue(argConfig, "js7_convert.config"));
+
+                LOGGER.info("------------------------ " + SOSDate.getCurrentDateTimeAsString());
+                LOGGER.info("--input       = " + input);
+                LOGGER.info("--output-dir  = " + outputDir);
+                LOGGER.info("--report-dir  = " + reportDir);
+                LOGGER.info("--archive     = " + archive);
+                LOGGER.info("--config      = " + configFile);
+                LOGGER.info("                " + doConfig(config, configFile));
+                LOGGER.info("------------------------");
+
+                doConvert(input, outputDir, reportDir);
+                createArchiveFile(outputDir, archive);
+            } catch (Throwable e) {
+                LOGGER.error(e.toString(), e);
+                status = 1;
+            }
+        }
+        System.exit(status);
+    }
+
+    public static void createArchiveFile(Path outputDir, Path archive) {
+        if (Files.exists(archive)) {
+            try {
+                Files.delete(archive);
+                LOGGER.info("[" + archive + "]old archive file deleted");
+            } catch (IOException e) {
+                LOGGER.warn("[" + archive + "][old archive file can not be deleted]" + e.toString(), e);
+            }
+        }
+        String fn = archive.getFileName().toString().toLowerCase();
+        boolean isTarGZ = fn.endsWith(".tar.gz");
+        boolean isZIP = fn.endsWith(".zip");
+        if (!isTarGZ && !isZIP) {
+            archive = Paths.get(archive.toString() + ".tar.gz");
+            LOGGER.info("[archive]" + archive);
+            isTarGZ = true;
+        }
+
+        if (isTarGZ) {
+            try {
+                SOSGzipResult r = SOSGzip.compress(outputDir, true);
+                Files.write(archive, r.getCompressed(), StandardOpenOption.CREATE_NEW, StandardOpenOption.TRUNCATE_EXISTING);
+                LOGGER.info("[archive][" + archive + "]file written");
+            } catch (Throwable e) {
+                LOGGER.error("[" + archive + "][error on tar.gz compressing]" + e.toString(), e);
+            }
+        } else {
+            ZipCompress.compress(outputDir, archive);
+            LOGGER.info("[archive][" + archive + "]file written");
+        }
+
+    }
 
     private JS7ConverterConfig doConfig(JS7ConverterConfig config, Path configFile) throws Exception {
         if (configFile == null) {
@@ -20,41 +135,12 @@ public abstract class JS7ConverterMain {
         return config;
     }
 
-    public abstract void doConvert(Path input, Path outputDir, Path reportDir) throws Exception;
-
-    public void doMain(JS7ConverterConfig config, String[] args) {
-        if (args.length < 4) {
-            System.out.println("usage:");
-            System.out.println("    <input dir>         - required - directory with XML files");
-            System.out.println("    <output dir>        - required - output directory with the JS7 files");
-            System.out.println("    <report dir>        - required - report directory");
-            System.out.println("    <properties file>   - required - converter configuration properties file");
-            return;
-        }
-        int status = 0;
-        try {
-            Path input = Paths.get(args[0]);
-            if (!Files.exists(input)) {
-                throw new Exception("[" + input + "]input not found");
-            }
-            Path outputDir = Paths.get(args[1]);
-            Path reportDir = Paths.get(args[2]);
-            Path configFile = Paths.get(args[3].trim());
-
-            System.out.println("------------------------");
-            System.out.println("Input   = " + input.toAbsolutePath());
-            System.out.println("Output  = " + outputDir.toAbsolutePath());
-            System.out.println("Report  = " + reportDir.toAbsolutePath());
-            System.out.println("Config  = " + configFile.toAbsolutePath());
-            System.out.println("          " + doConfig(config, configFile));
-            System.out.println("------------------------");
-
-            doConvert(input, outputDir, reportDir);
-        } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
-            status = 1;
-        }
-        System.exit(status);
+    private String getOptionValue(String argVal) {
+        String[] arr = argVal.split("=");
+        return arr.length < 2 ? null : arr[1].trim();
     }
 
+    private String getValue(String val, String defaultVal) {
+        return val == null ? defaultVal : val;
+    }
 }
