@@ -19,6 +19,7 @@ import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 
+import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.common.DailyPlanDate;
@@ -101,6 +102,9 @@ public class DBItemDailyPlanOrder extends DBItem {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[EXPECTED_END]", nullable = true)
     private Date expectedEnd;
+
+    @Column(name = "[ORDER_PARAMETERISATION]", nullable = true)
+    private String orderParameterisation;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
@@ -288,6 +292,17 @@ public class DBItemDailyPlanOrder extends DBItem {
 
     public Integer getStartMode() {
         return startMode;
+    }
+
+    public void setOrderParameterisation(String val) {
+        if (SOSString.isEmpty(val)) {
+            val = null;
+        }
+        orderParameterisation = val;
+    }
+
+    public String getOrderParameterisation() {
+        return orderParameterisation;
     }
 
     @Transient
