@@ -33,7 +33,7 @@ public abstract class JS7ConverterMain {
 
     }
 
-    public void doMain(JS7ConverterConfig config, String[] args) {
+    public void doMain(JS7ConverterConfig config, String[] args, String version) {
         String argInput = null;
         String argOutputDir = null;
         String argReportDir = null;
@@ -58,6 +58,8 @@ public abstract class JS7ConverterMain {
             }
         }
         int status = 0;
+
+        LOGGER.info("------------------------ " + version);
         if (argHelp != null) {
             printUsage();
         } else if (argInput == null) {
@@ -74,14 +76,13 @@ public abstract class JS7ConverterMain {
                 Path archive = SOSPath.toAbsolutePath(getValue(argArhive, "js7_converted.tar.gz"));
                 Path configFile = SOSPath.toAbsolutePath(getValue(argConfig, "js7_convert.config"));
 
-                LOGGER.info("------------------------ " + SOSDate.getCurrentDateTimeAsString());
+                LOGGER.info(SOSDate.getCurrentDateTimeAsString());
                 LOGGER.info("--input       = " + input);
                 LOGGER.info("--output-dir  = " + outputDir);
                 LOGGER.info("--report-dir  = " + reportDir);
                 LOGGER.info("--archive     = " + archive);
                 LOGGER.info("--config      = " + configFile);
                 LOGGER.info("                " + doConfig(config, configFile));
-                LOGGER.info("------------------------");
 
                 doConvert(input, outputDir, reportDir);
                 createArchiveFile(outputDir, archive);
@@ -90,6 +91,7 @@ public abstract class JS7ConverterMain {
                 status = 1;
             }
         }
+        LOGGER.info("------------------------");
         System.exit(status);
     }
 
