@@ -15,5 +15,10 @@ public interface IWorkflowState {
     @Path("state")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postState(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("status")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postStatus(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }

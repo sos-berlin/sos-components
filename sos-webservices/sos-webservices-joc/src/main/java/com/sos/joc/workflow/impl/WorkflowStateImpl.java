@@ -41,8 +41,13 @@ import scala.collection.JavaConverters;
 @Path("workflow")
 public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState {
 
-    private static final String API_CALL = "./workflow/state";
+    private static final String API_CALL = "./workflow/status";
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowStateImpl.class);
+    
+    @Override
+    public JOCDefaultResponse postStatus(String accessToken, byte[] filterBytes) {
+        return postState(accessToken, filterBytes);
+    }
 
     @Override
     public JOCDefaultResponse postState(String accessToken, byte[] filterBytes) {
@@ -99,19 +104,12 @@ public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState
                         }
                         
                         allAgents.removeAll(agentsThatConfirmedSuspendOrResume);
+                        Map<String, String> idNameMap = getAgentIdNameMap(controllerId);
 
-                        SOSHibernateSession connection = null;
-                        try {
-                            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-                            InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-                            Map<String, String> idNameMap = dbLayer.getAgentIdNameMap(controllerId);
-                            entity.setNotConfirmedAgentNames(allAgents.stream().map(AgentPath::string).map(a -> idNameMap.getOrDefault(a, a)).collect(
-                                    Collectors.toSet()));
-                            entity.setConfirmedAgentNames(agentsThatConfirmedSuspendOrResume.stream().map(AgentPath::string).map(a -> idNameMap
-                                    .getOrDefault(a, a)).collect(Collectors.toSet()));
-                        } finally {
-                            Globals.disconnect(connection);
-                        }
+                        entity.setNotConfirmedAgentNames(allAgents.stream().map(AgentPath::string).map(a -> idNameMap.getOrDefault(a, a)).collect(
+                                Collectors.toSet()));
+                        entity.setConfirmedAgentNames(agentsThatConfirmedSuspendOrResume.stream().map(AgentPath::string).map(a -> idNameMap
+                                .getOrDefault(a, a)).collect(Collectors.toSet()));
                     }
                 }
             }
@@ -127,6 +125,20 @@ public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    private static Map<String, String> getAgentIdNameMap(String controllerId) {
+        SOSHibernateSession connection = null;
+        try {
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
+            return dbLayer.getAgentIdNameMap(controllerId);
+        } catch (Exception e) {
+            LOGGER.warn(e.toString());
+            return Collections.emptyMap();
+        } finally {
+            Globals.disconnect(connection);
         }
     }
     
