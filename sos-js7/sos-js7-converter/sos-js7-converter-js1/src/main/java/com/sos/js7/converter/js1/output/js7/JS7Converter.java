@@ -469,7 +469,7 @@ public class JS7Converter {
         j.setTitle(job.getTitle());
         j = setFromConfig(j);
         j = setAgent(result, j, job);
-        j = setArgumentsOrResources(j, job);
+        j = setJobJobResources(j, job);
         j = setExecutable(j, job);
         j = setJobOptions(j, job);
         j = setJobNotification(j, job);
@@ -542,9 +542,24 @@ public class JS7Converter {
     }
 
     private ExecutableJava getInternalExecutable(Job j, ACommonJob job, String javaClassName) {
-        ExecutableJava e = new ExecutableJava();
-        e.setClassName(javaClassName);
-        return e;
+        ExecutableJava ej = new ExecutableJava();
+        ej.setClassName(javaClassName);
+
+        if (job.getParams() != null && job.getParams().hasParams()) {
+            // ARGUMENTS
+            Environment env = new Environment();
+            job.getParams().getParams().entrySet().forEach(e -> {
+                try {
+                    env.setAdditionalProperty(e.getKey(), JS7ConverterHelper.asJS7OrderPreparationStringValue(e.getValue()));
+                } catch (Throwable ee) {
+                    env.setAdditionalProperty(e.getKey().toUpperCase(), e.getValue());
+                    ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "could not convert env value=" + e.getValue(), ee);
+                }
+            });
+            ej.setArguments(env);
+        }
+
+        return ej;
     }
 
     private ExecutableScript getExecutableScript(Job j, ACommonJob job, String language, String className, boolean isYADE) {
@@ -556,11 +571,11 @@ public class JS7Converter {
             scriptHeader.append("#!/bin/bash");
             scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
             if (isYADE) {
-                scriptCommand.append("$YADE_BIN -settings $settings -profile $profile");
+                scriptCommand.append("$YADE_BIN -settings $SETTINGS -profile $PROFILE");
             }
         } else {
             if (isYADE) {
-                scriptCommand.append("%YADE_BIN% -settings %settings% -profile %profile%");
+                scriptCommand.append("%YADE_BIN% -settings %SETTINGS% -profile %PROFILE%");
             }
         }
         if (!language.equals("shell")) {
@@ -588,20 +603,28 @@ public class JS7Converter {
         }
         script.append(scriptCommand);
 
-        ExecutableScript e = new ExecutableScript();
-        e.setScript(script.toString());
-        return e;
-    }
+        ExecutableScript es = new ExecutableScript();
+        es.setScript(script.toString());
 
-    private Job setArgumentsOrResources(Job j, ACommonJob job) {
         if (job.getParams() != null && job.getParams().hasParams()) {
             // ARGUMENTS
             Environment env = new Environment();
             job.getParams().getParams().entrySet().forEach(e -> {
-                env.setAdditionalProperty(e.getKey(), e.getValue());
+                try {
+                    env.setAdditionalProperty(e.getKey().toUpperCase(), JS7ConverterHelper.asJS7OrderPreparationStringValue(e.getValue()));
+                } catch (Throwable ee) {
+                    env.setAdditionalProperty(e.getKey().toUpperCase(), e.getValue());
+                    ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "could not convert env value=" + e.getValue(), ee);
+                }
             });
-            j.setDefaultArguments(env);
+            es.setEnv(env);
+        }
 
+        return es;
+    }
+
+    private Job setJobJobResources(Job j, ACommonJob job) {
+        if (job.getParams() != null && job.getParams().hasParams()) {
             // JOB RESOURCES
             List<String> names = new ArrayList<>();
             for (Include i : job.getParams().getIncludes()) {
@@ -720,14 +743,19 @@ public class JS7Converter {
         }
     }
 
-    private Workflow setArgumentsOrResources(Workflow w, JobChainOrder o) {
+    private Workflow setWorkflowOrderPreparationOrResources(Workflow w, JobChainOrder o) {
         if (o.getParams() != null && o.getParams().hasParams()) {
             // ARGUMENTS
             Parameters parameters = new Parameters();
             o.getParams().getParams().entrySet().forEach(e -> {
                 Parameter p = new Parameter();
                 p.setType(ParameterType.String);
-                p.setDefault(e.getValue());
+                // try {
+                // p.setDefault(JS7ConverterHelper.asJS7OrderPreparationStringValue(e.getValue()));
+                // } catch (Throwable ee) {
+                // p.setDefault(e.getValue());
+                // ConverterReport.INSTANCE.addErrorRecord(o.getPath(), "can't convert value=" + e.getValue(), ee);
+                // }
                 parameters.setAdditionalProperty(e.getKey(), p);
             });
             w.setOrderPreparation(new Requirements(parameters, false));
@@ -758,9 +786,9 @@ public class JS7Converter {
         if (jobChain.getOrders().size() > 0) {
             for (JobChainOrder o : jobChain.getOrders()) {
                 // see convertJobChainOrders
-                if (o.getRunTime() == null || o.getRunTime().isEmpty()) {
-                    w = setArgumentsOrResources(w, o);
-                }
+                // if (o.getRunTime() == null || o.getRunTime().isEmpty()) {
+                w = setWorkflowOrderPreparationOrResources(w, o);
+                // }
             }
         }
 

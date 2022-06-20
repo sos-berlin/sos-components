@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import com.sos.js7.converter.autosys.input.XMLJobParser;
 import com.sos.js7.converter.commons.JS7ConverterConfig.Platform;
+import com.sos.js7.converter.commons.JS7ConverterMain;
 
 public class JS7ConverterTest {
 
@@ -18,6 +19,7 @@ public class JS7ConverterTest {
         Path input = Paths.get("src/test/resources/input/xml");
         Path outputDir = Paths.get("src/test/resources/output");
         Path reportDir = Paths.get("src/test/resources/output/report");
+        Path archive = Paths.get("src/test/resources/js7_converted.tar.gz");
 
         JS7Converter.CONFIG.getGenerateConfig().withWorkflows(true).withSchedules(true).withLocks(true).withCyclicOrders(false);
         JS7Converter.CONFIG.getAgentConfig().withForcedPlatform(Platform.UNIX).withMapping("abcd=agent;xyz=agent_cluster");// .withForcedName("my_agent_name");
@@ -29,5 +31,6 @@ public class JS7ConverterTest {
         JS7Converter.CONFIG.getSubFolderConfig().withMapping("aapg=2;ebzc=0;wmad=0;abcd=0").withSeparator("_");
 
         JS7Converter.convert(new XMLJobParser(), input, outputDir, reportDir);
+        JS7ConverterMain.createArchiveFile(outputDir, archive);
     }
 }
