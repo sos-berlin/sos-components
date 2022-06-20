@@ -391,18 +391,17 @@ public class DailyPlanRunner extends TimerTask {
                 }
 
                 OrderParameterisation orderParameterisation = new OrderParameterisation();
-                // TODO order positions
-//                OrderPositions positions = new OrderPositions();
-//                positions.setStartPosition(null);
-//                positions.setEndPosition(null);
-//                orderParameterisation.setPositions(positions);
+                if (item.getOrderParameterisation() != null) {
+                    OrderParameterisation storedOP = Globals.objectMapper.readValue(item.getOrderParameterisation(), OrderParameterisation.class);
+                    orderParameterisation.setPositions(storedOP.getPositions());
+                }
                 orderParameterisation.setVariables(variables);
                 schedule.getOrderParameterisations().add(orderParameterisation);
 
                 DailyPlanScheduleWorkflow dailyPlanScheduleWorkflow = new DailyPlanScheduleWorkflow(item.getWorkflowName(), item.getWorkflowPath(),
                         null);
-                FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, schedule, dailyPlanScheduleWorkflow, orderParameterisation, item.getPlannedStart()
-                        .getTime(), item.getStartMode());
+                FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, schedule, dailyPlanScheduleWorkflow, orderParameterisation, item
+                        .getPlannedStart().getTime(), item.getStartMode());
                 freshOrder.setId(item.getOrderId());
 
                 DailyPlanSchedule dailyPlanSchedule = new DailyPlanSchedule(schedule, Arrays.asList(dailyPlanScheduleWorkflow));

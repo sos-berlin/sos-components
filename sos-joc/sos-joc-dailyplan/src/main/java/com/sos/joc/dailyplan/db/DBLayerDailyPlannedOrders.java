@@ -19,6 +19,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.schedule.OrderParameterisation;
+import com.sos.inventory.model.schedule.OrderPositions;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.order.OrdersHelper;
@@ -896,6 +898,7 @@ public class DBLayerDailyPlannedOrders {
         item.setCalendarId(plannedOrder.getCalendarId());
         item.setCreated(JobSchedulerDate.nowInUtc());
         item.setExpectedEnd(new Date(plannedOrder.getFreshOrder().getScheduledFor() + plannedOrder.getAverageDuration()));
+        item.setOrderParameterisation(getOrderParameterisation(plannedOrder.getFreshOrder().getPositions()));
         item.setModified(JobSchedulerDate.nowInUtc());
 
         if (nr != 0) {// cyclic
@@ -914,6 +917,15 @@ public class DBLayerDailyPlannedOrders {
             storeVariables(plannedOrder, item.getControllerId(), item.getOrderId());
         }
         return item;
+    }
+
+    private String getOrderParameterisation(OrderPositions p) throws JsonProcessingException {
+        if (p == null) {
+            return null;
+        }
+        OrderParameterisation op = new OrderParameterisation();
+        op.setPositions(p);
+        return Globals.objectMapper.writeValueAsString(op);
     }
 
     public int setSubmitted(FilterDailyPlannedOrders filter) throws SOSHibernateException {

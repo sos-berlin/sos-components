@@ -24,9 +24,6 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.common.DailyPlanDate;
 
-// @Table(name = DBLayer.TABLE_DPL_ORDERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[WORKFLOW_NAME]",
-// "[ORDER_ID]" }) })
-
 @Entity
 @Table(name = DBLayer.TABLE_DPL_ORDERS)
 @SequenceGenerator(name = DBLayer.TABLE_DPL_ORDERS_SEQUENCE, sequenceName = DBLayer.TABLE_DPL_ORDERS_SEQUENCE, allocationSize = 1)
@@ -46,29 +43,29 @@ public class DBItemDailyPlanOrder extends DBItem {
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
 
-    @Column(name = "[SCHEDULE_FOLDER]", nullable = false)
-    private String scheduleFolder;
-
-    @Column(name = "[WORKFLOW_FOLDER]", nullable = false)
-    private String workflowFolder;
+    @Column(name = "[WORKFLOW_NAME]", nullable = false)
+    private String workflowName;
 
     @Column(name = "[WORKFLOW_PATH]", nullable = false)
     private String workflowPath;
 
-    @Column(name = "[WORKFLOW_NAME]", nullable = false)
-    private String workflowName;
+    @Column(name = "[WORKFLOW_FOLDER]", nullable = false)
+    private String workflowFolder;
 
     @Column(name = "[ORDER_ID]", nullable = false)
     private String orderId;
 
-    @Column(name = "[SCHEDULE_PATH]", nullable = false)
-    private String schedulePath;
+    @Column(name = "[ORDER_NAME]", nullable = false)
+    private String orderName;
 
     @Column(name = "[SCHEDULE_NAME]", nullable = false)
     private String scheduleName;
 
-    @Column(name = "[ORDER_NAME]", nullable = false)
-    private String orderName;
+    @Column(name = "[SCHEDULE_PATH]", nullable = false)
+    private String schedulePath;
+
+    @Column(name = "[SCHEDULE_FOLDER]", nullable = false)
+    private String scheduleFolder;
 
     @Column(name = "[CALENDAR_ID]", nullable = false)
     private Long calendarId;
@@ -126,18 +123,6 @@ public class DBItemDailyPlanOrder extends DBItem {
         id = val;
     }
 
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    public void setControllerId(String val) {
-        controllerId = val;
-    }
-
-    public void setCalendarId(Long val) {
-        calendarId = val;
-    }
-
     public Long getSubmissionHistoryId() {
         return submissionHistoryId;
     }
@@ -146,24 +131,12 @@ public class DBItemDailyPlanOrder extends DBItem {
         submissionHistoryId = val;
     }
 
-    public Long getCalendarId() {
-        return calendarId;
+    public String getControllerId() {
+        return controllerId;
     }
 
-    public void setOrderId(String val) {
-        orderId = val;
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public void setScheduleName(String val) {
-        scheduleName = val;
-    }
-
-    public String getScheduleName() {
-        return scheduleName;
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
     public void setWorkflowName(String val) {
@@ -174,6 +147,46 @@ public class DBItemDailyPlanOrder extends DBItem {
         return workflowName;
     }
 
+    public void setWorkflowPath(String val) {
+        workflowPath = val;
+    }
+
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
+
+    public String getWorkflowFolder() {
+        return workflowFolder;
+    }
+
+    public void setWorkflowFolder(String val) {
+        workflowFolder = val;
+    }
+
+    public void setOrderId(String val) {
+        orderId = val;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public String getOrderName() {
+        return orderName;
+    }
+
+    public void setOrderName(String val) {
+        orderName = val;
+    }
+
+    public void setScheduleName(String val) {
+        scheduleName = val;
+    }
+
+    public String getScheduleName() {
+        return scheduleName;
+    }
+
     public void setSchedulePath(String val) {
         schedulePath = val;
     }
@@ -182,12 +195,28 @@ public class DBItemDailyPlanOrder extends DBItem {
         return schedulePath;
     }
 
-    public void setWorkflowPath(String val) {
-        workflowPath = val;
+    public String getScheduleFolder() {
+        return scheduleFolder;
     }
 
-    public String getWorkflowPath() {
-        return workflowPath;
+    public void setScheduleFolder(String val) {
+        scheduleFolder = val;
+    }
+
+    public void setCalendarId(Long val) {
+        calendarId = val;
+    }
+
+    public Long getCalendarId() {
+        return calendarId;
+    }
+
+    public void setStartMode(Integer val) {
+        startMode = val;
+    }
+
+    public Integer getStartMode() {
+        return startMode;
     }
 
     public void setSubmitted(boolean val) {
@@ -206,30 +235,6 @@ public class DBItemDailyPlanOrder extends DBItem {
         return submitTime;
     }
 
-    public void setPlannedStart(Date val) {
-        plannedStart = val;
-    }
-
-    public Date getPlannedStart() {
-        return plannedStart;
-    }
-
-    public void setExpectedEnd(Date val) {
-        expectedEnd = val;
-    }
-
-    public Date getExpectedEnd() {
-        return expectedEnd;
-    }
-
-    public void setRepeatInterval(Long val) {
-        repeatInterval = val;
-    }
-
-    public Long getRepeatInterval() {
-        return repeatInterval;
-    }
-
     public Date getPeriodBegin() {
         return periodBegin;
     }
@@ -246,6 +251,41 @@ public class DBItemDailyPlanOrder extends DBItem {
         periodEnd = val;
     }
 
+    public void setRepeatInterval(Long val) {
+        repeatInterval = val;
+    }
+
+    public Long getRepeatInterval() {
+        return repeatInterval;
+    }
+
+    public void setPlannedStart(Date val) {
+        plannedStart = val;
+    }
+
+    public Date getPlannedStart() {
+        return plannedStart;
+    }
+
+    public void setExpectedEnd(Date val) {
+        expectedEnd = val;
+    }
+
+    public Date getExpectedEnd() {
+        return expectedEnd;
+    }
+
+    public void setOrderParameterisation(String val) {
+        if (SOSString.isEmpty(val)) {
+            val = null;
+        }
+        orderParameterisation = val;
+    }
+
+    public String getOrderParameterisation() {
+        return orderParameterisation;
+    }
+
     public Date getCreated() {
         return created;
     }
@@ -260,49 +300,6 @@ public class DBItemDailyPlanOrder extends DBItem {
 
     public void setModified(Date val) {
         modified = val;
-    }
-
-    public String getScheduleFolder() {
-        return scheduleFolder;
-    }
-
-    public void setScheduleFolder(String val) {
-        scheduleFolder = val;
-    }
-
-    public String getWorkflowFolder() {
-        return workflowFolder;
-    }
-
-    public void setWorkflowFolder(String val) {
-        workflowFolder = val;
-    }
-
-    public String getOrderName() {
-        return orderName;
-    }
-
-    public void setOrderName(String val) {
-        orderName = val;
-    }
-
-    public void setStartMode(Integer val) {
-        startMode = val;
-    }
-
-    public Integer getStartMode() {
-        return startMode;
-    }
-
-    public void setOrderParameterisation(String val) {
-        if (SOSString.isEmpty(val)) {
-            val = null;
-        }
-        orderParameterisation = val;
-    }
-
-    public String getOrderParameterisation() {
-        return orderParameterisation;
     }
 
     @Transient
