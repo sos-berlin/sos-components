@@ -22,6 +22,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -123,8 +124,8 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
                 Globals.disconnect(connection);
             }
         } else if (withWorkflowPaths) {
-            workflowsStream = workflowPaths.stream().map(JocInventory::pathToName).filter(w -> canAdd(w, permittedFolders)).map(WorkflowPath::of)
-                    .filter(w -> WorkflowsHelper.workflowCurrentlyExists(currentState, w));
+            workflowsStream = workflowPaths.stream().map(JocInventory::pathToName).filter(w -> canAdd(WorkflowPaths.getPath(w), permittedFolders))
+                    .map(WorkflowPath::of).filter(w -> WorkflowsHelper.workflowCurrentlyExists(currentState, w));
 
         } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
             // no permission

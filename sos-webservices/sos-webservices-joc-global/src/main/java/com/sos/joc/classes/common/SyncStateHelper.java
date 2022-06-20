@@ -142,12 +142,12 @@ public class SyncStateHelper {
                 int totalNumOfAgents = JavaConverters.asJava(either.get().asScala().nameToJob()).values().stream().map(j -> j.agentPath()).distinct()
                         .mapToInt(e -> 1).sum();
                 if (controlState.workflowControl().suspended()) {
-                    if (numOfAgentsThatConfirmedSuspendOrResume == totalNumOfAgents) {
+                    if (numOfAgentsThatConfirmedSuspendOrResume >= totalNumOfAgents) {
                         stateText = SyncStateText.SUSPENDED;
                     } else {
                         stateText = SyncStateText.SUSPENDING;
                     }
-                } else if (numOfAgentsThatConfirmedSuspendOrResume != totalNumOfAgents) {
+                } else if (numOfAgentsThatConfirmedSuspendOrResume < totalNumOfAgents) {
                     stateText = SyncStateText.RESUMING;
                 }
             }

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -95,6 +96,7 @@ import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.instructions.ImplicitEnd;
 import js7.data.workflow.position.Position;
+import js7.data.workflow.position.PositionOrLabel;
 import js7.data_for_java.command.JCancellationMode;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
@@ -109,6 +111,7 @@ import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 import scala.Function1;
 import scala.Option;
+import scala.collection.JavaConverters;
 
 public class OrdersHelper {
 
@@ -400,14 +403,7 @@ public class OrdersHelper {
         o.setPosition(pos.toList());
         o.setPositionString(pos.toString());
         
-        if (!jOrder.asScala().stopPosition().isEmpty()) {
-            JPosition origStopPos = JPosition.apply(jOrder.asScala().stopPosition().get());
-            String jsonStopPos = origStopPos.toJson().replaceAll("\"(try|catch|cycle)\\+?[^\"]*", "\"$1");
-            JPosition stopPos = JPosition.fromJson(jsonStopPos).get();
-            o.setEndPosition(stopPos.toList());
-            o.setEndPositionString(stopPos.toString());
-        }
-        
+        o.setEndPositions(oItem.getStopPositions());
         o.setCycleState(oItem.getState().getCycleState());
         int positionsSize = o.getPosition().size();
         if ("Processing".equals(oItem.getState().getTYPE())) {
@@ -720,8 +716,6 @@ public class OrdersHelper {
                     throw new JocFolderPermissionsException(workflowPath);
                 }
 
-                // TODO order.asScala().deleteWhenTerminated() == true then ControllerApi.deleteOrdersWhenTerminated will not be necessary
-
                 Variables vars = scalaValuedArgumentsToVariables(args);
                 Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
                 if (dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty()) {
@@ -748,10 +742,10 @@ public class OrdersHelper {
                 Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
                 Optional<JPosition> startPos = getStartPosition(dailyplanModifyOrder.getStartPosition(), reachablePositions, order.workflowPosition()
                         .position());
-                Optional<JPosition> endPos = getEndPosition(dailyplanModifyOrder.getEndPositions(), reachablePositions, order.asScala()
-                        .stopPosition());
+                Set<JPosition> endPoss = getEndPositions(dailyplanModifyOrder.getEndPositions(), reachablePositions, JavaConverters.asJava(order.asScala()
+                        .stopPositions()));
 
-                FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, startPos, endPos);
+                FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, startPos, endPoss);
                 auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string(), controllerId));
                 either = Either.right(o);
             } catch (Exception ex) {
@@ -846,19 +840,19 @@ public class OrdersHelper {
         return oldOrderId.replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10,11}(-.+)$", "$1" + newUniqueOrderIdPart + "$2");
     }
 
-    public static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd, Optional<JPosition> startPos, Optional<JPosition> endPos) {
+    public static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd, Optional<JPosition> startPos, Set<JPosition> endPoss) {
         String orderId = String.format("#%s#T%s-%s", yyyymmdd, getUniqueOrderId(), order.getOrderName());
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
         // if (!scheduledFor.isPresent()) {
         // scheduledFor = Optional.of(Instant.now());
         // }
         return mapToFreshOrder(OrderId.of(orderId), WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())),
-                variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPos);
+                variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPoss);
     }
 
     private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor,
-            Optional<JPosition> startPos, Optional<JPosition> endPos) {
-        return JFreshOrder.of(orderId, workflowPath, scheduledFor, args, true, startPos, endPos);
+            Optional<JPosition> startPos, Set<JPosition> endPoss) {
+        return JFreshOrder.of(orderId, workflowPath, scheduledFor, args, true, startPos, endPoss);
     }
 
     public static Map<String, Value> variablesToScalaValuedArguments(Variables vars) {
@@ -1095,24 +1089,34 @@ public class OrdersHelper {
         return posOpt;
     }
     
-    public static Optional<JPosition> getEndPosition(List<List<Object>> poss, Set<String> reachablePositions) {
-        return getEndPosition(poss, reachablePositions, Option.empty());
+    public static Set<JPosition> getEndPosition(List<List<Object>> poss, Set<String> reachablePositions) {
+        return getEndPositions(poss, reachablePositions, Collections.emptySet());
     }
 
-    public static Optional<JPosition> getEndPosition(List<List<Object>> poss, Set<String> reachablePositions, Option<Position> defaultPosition) {
-        Optional<JPosition> posOpt = Optional.empty();
-        if (!defaultPosition.isEmpty()) {
-            posOpt = Optional.of(JPosition.apply(defaultPosition.get()));
-        }
-        
+    public static Set<JPosition> getEndPositions(List<List<Object>> poss, Set<String> reachablePositions, Set<PositionOrLabel> defaultPositions) {
+        Set<JPosition> posOpt = Collections.emptySet();
         if (poss != null && !poss.isEmpty()) {
-            List<Object> pos = poss.get(0);
-            Either<Problem, JPosition> posE = JPosition.fromList(pos);
-            ProblemHelper.throwProblemIfExist(posE);
-            if (reachablePositions.contains(posE.get().toString())) {
-                return Optional.of(posE.get());
-            } else {
-                throw new JocBadRequestException("Invalid end position '" + pos.toString() + "'");
+            posOpt = new HashSet<>();
+            for (List<Object> pos : poss) {
+                Either<Problem, JPosition> posE = JPosition.fromList(pos);
+                ProblemHelper.throwProblemIfExist(posE);
+                if (reachablePositions.contains(posE.get().toString())) {
+                    posOpt.add(posE.get());
+                } else {
+                    throw new JocBadRequestException("Invalid end position '" + pos.toString() + "'");
+                }
+            }
+        } else {
+            if (!defaultPositions.isEmpty()) {
+                Set<JPosition> defaultPos = defaultPositions.stream().map(Position.class::cast).map(JPosition::apply).collect(Collectors.toSet());
+//                for (PositionOrLabel defaultPosition : defaultPositions) {
+//                    if (defaultPosition instanceof Position) {
+//                        JPosition.apply((Position) defaultPosition);
+//                    } else  { //instanceof Label
+//                        // TODO
+//                    }
+//                }
+                posOpt = defaultPos;
             }
         }
         return posOpt;

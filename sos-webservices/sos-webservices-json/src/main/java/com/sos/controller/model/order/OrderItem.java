@@ -6,9 +6,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.common.Variables;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowPosition;
+import com.sos.inventory.model.common.Variables;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -30,7 +30,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "historicOutcomes",
     "scheduledFor",
     "isSuspended",
-    "removeWhenTerminated"
+    "removeWhenTerminated",
+    "stopPositions"
 })
 public class OrderItem {
 
@@ -83,6 +84,8 @@ public class OrderItem {
     private Boolean isSuspended;
     @JsonProperty("removeWhenTerminated")
     private Boolean removeWhenTerminated;
+    @JsonProperty("stopPositions")
+    private List<Object> stopPositions = null;
 
     /**
      * No args constructor for use in serialization
@@ -93,6 +96,7 @@ public class OrderItem {
 
     /**
      * 
+     * @param stopPositions
      * @param attachedState
      * @param isSuspended
      * @param historicOutcomes
@@ -103,7 +107,7 @@ public class OrderItem {
      * @param state
      * @param removeWhenTerminated
      */
-    public OrderItem(String id, Variables arguments, WorkflowPosition workflowPosition, OrderState state, OrderAttachedState attachedState, List<HistoricOutcome> historicOutcomes, Long scheduledFor, Boolean isSuspended, Boolean removeWhenTerminated) {
+    public OrderItem(String id, Variables arguments, WorkflowPosition workflowPosition, OrderState state, OrderAttachedState attachedState, List<HistoricOutcome> historicOutcomes, Long scheduledFor, Boolean isSuspended, Boolean removeWhenTerminated, List<Object> stopPositions) {
         super();
         this.id = id;
         this.arguments = arguments;
@@ -114,6 +118,7 @@ public class OrderItem {
         this.scheduledFor = scheduledFor;
         this.isSuspended = isSuspended;
         this.removeWhenTerminated = removeWhenTerminated;
+        this.stopPositions = stopPositions;
     }
 
     @JsonProperty("id")
@@ -266,14 +271,24 @@ public class OrderItem {
         this.removeWhenTerminated = removeWhenTerminated;
     }
 
+    @JsonProperty("stopPositions")
+    public List<Object> getStopPositions() {
+        return stopPositions;
+    }
+
+    @JsonProperty("stopPositions")
+    public void setStopPositions(List<Object> stopPositions) {
+        this.stopPositions = stopPositions;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("arguments", arguments).append("workflowPosition", workflowPosition).append("state", state).append("attachedState", attachedState).append("historicOutcomes", historicOutcomes).append("scheduledFor", scheduledFor).append("isSuspended", isSuspended).append("removeWhenTerminated", removeWhenTerminated).toString();
+        return new ToStringBuilder(this).append("id", id).append("arguments", arguments).append("workflowPosition", workflowPosition).append("state", state).append("attachedState", attachedState).append("historicOutcomes", historicOutcomes).append("scheduledFor", scheduledFor).append("isSuspended", isSuspended).append("removeWhenTerminated", removeWhenTerminated).append("stopPositions", stopPositions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(attachedState).append(isSuspended).append(historicOutcomes).append(scheduledFor).append(workflowPosition).append(arguments).append(id).append(state).append(removeWhenTerminated).toHashCode();
+        return new HashCodeBuilder().append(stopPositions).append(attachedState).append(isSuspended).append(historicOutcomes).append(scheduledFor).append(workflowPosition).append(arguments).append(id).append(state).append(removeWhenTerminated).toHashCode();
     }
 
     @Override
@@ -285,7 +300,7 @@ public class OrderItem {
             return false;
         }
         OrderItem rhs = ((OrderItem) other);
-        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(isSuspended, rhs.isSuspended).append(historicOutcomes, rhs.historicOutcomes).append(scheduledFor, rhs.scheduledFor).append(workflowPosition, rhs.workflowPosition).append(arguments, rhs.arguments).append(id, rhs.id).append(state, rhs.state).append(removeWhenTerminated, rhs.removeWhenTerminated).isEquals();
+        return new EqualsBuilder().append(stopPositions, rhs.stopPositions).append(attachedState, rhs.attachedState).append(isSuspended, rhs.isSuspended).append(historicOutcomes, rhs.historicOutcomes).append(scheduledFor, rhs.scheduledFor).append(workflowPosition, rhs.workflowPosition).append(arguments, rhs.arguments).append(id, rhs.id).append(state, rhs.state).append(removeWhenTerminated, rhs.removeWhenTerminated).isEquals();
     }
 
 }

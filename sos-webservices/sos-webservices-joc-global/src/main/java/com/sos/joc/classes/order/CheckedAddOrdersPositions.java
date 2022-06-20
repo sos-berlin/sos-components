@@ -75,9 +75,7 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         JPosition pos0 = JPosition.apply(Position.First());
         
         e.get().reachablePositions(pos0).stream().forEachOrdered(jPos -> {
-            // only root level position or first level inside a "(re)try" instruction
-            // if (jPos.toList().size() == 1 || (jPos.toList().size() == 3 && ((String) jPos.toList().get(1)).contains("try"))) {
-            if (jPos.toList().size() == 1) { // only root level position is yet implemented
+            if (isReachable(jPos)) {
                 String positionString = jPos.toString();
                 Positions p = new Positions();
                 p.setPosition(jPos.toList());
@@ -111,9 +109,7 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
     public static Set<String> getReachablePositions(JWorkflow workflow) {
         Set<String> pos = new LinkedHashSet<>();
         workflow.reachablePositions(JPosition.apply(Position.First())).stream().forEachOrdered(jPos -> {
-            // only root level position or first level inside a "(re)try" instruction
-            // if (jPos.toList().size() == 1 || (jPos.toList().size() == 3 && ((String) jPos.toList().get(1)).contains("try"))) {
-            if (jPos.toList().size() == 1) { // only root level position is yet implemented
+            if (isReachable(jPos)) {
                 pos.add(jPos.toString());
             }
         });
@@ -129,5 +125,11 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
 //        }
 //        return null;
 //    }
+    
+    private static boolean isReachable(JPosition jPos) {
+        // only root level position or first level inside a "(re)try" or "if" instruction
+        List<Object> posA = jPos.toList();
+        return posA.size() == 1 || (posA.size() == 3 && (((String) posA.get(1)).contains("try")) || ((String) posA.get(1)).equals("if"));
+    }
 
 }

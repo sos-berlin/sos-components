@@ -90,17 +90,18 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     } else {
                         CheckJavaVariableName.test("orderName", order.getOrderName());
                     }
-                    Either<Problem, JWorkflow> e = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())));
+                    Either<Problem, JWorkflow> e = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(JocInventory.pathToName(order
+                            .getWorkflowPath())));
                     ProblemHelper.throwProblemIfExist(e);
                     Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
                     order.setArguments(OrdersHelper.checkArguments(order.getArguments(), JsonConverter.signOrderPreparationToInvOrderPreparation(
                             workflow.getOrderPreparation())));
                     Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
                     Optional<JPosition> startPos = OrdersHelper.getStartPosition(order.getStartPosition(), reachablePositions);
-                    Optional<JPosition> endPos = OrdersHelper.getEndPosition(order.getEndPositions(), reachablePositions);
+                    Set<JPosition> endPoss = OrdersHelper.getEndPosition(order.getEndPositions(), reachablePositions);
                     // TODO check if endPos not before startPos
                     
-                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd, startPos, endPos);
+                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd, startPos, endPoss);
                     auditLogDetails.add(new AuditLogDetail(order.getWorkflowPath(), o.id().string(), controllerId));
                     either = Either.right(o);
                 } catch (Exception ex) {

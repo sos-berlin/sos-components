@@ -1,6 +1,8 @@
 package com.sos.joc.dailyplan;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,6 +19,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.order.FreshOrder;
+import com.sos.inventory.model.schedule.OrderPositions;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.order.OrdersHelper;
@@ -62,22 +65,27 @@ public class OrderApi {
         } else {
             scheduledFor = Optional.of(Instant.now());
         }
-        Optional<JPosition> startPos = Optional.empty();
-        Optional<JPosition> endPos = Optional.empty();
-        if (order.getPositions() != null) {
-            if (order.getPositions().getStartPosition() != null && !order.getPositions().getStartPosition().isEmpty()) {
-                Either<Problem, JPosition> startPosE = JPosition.fromList(order.getPositions().getStartPosition());
+        Optional<JPosition> startPosition = Optional.empty();
+        Set<JPosition> endPositions = Collections.emptySet();
+        OrderPositions positions = order.getPositions();
+        if (positions != null) {
+            if (positions.getStartPosition() != null && !positions.getStartPosition().isEmpty()) {
+                Either<Problem, JPosition> startPosE = JPosition.fromList(positions.getStartPosition());
                 ProblemHelper.throwProblemIfExist(startPosE);
-                startPos = Optional.of(startPosE.get());
+                startPosition = Optional.of(startPosE.get());
             }
-            if (order.getPositions().getEndPositions() != null && !order.getPositions().getEndPositions().isEmpty()) {
-                Either<Problem, JPosition> endPosE = JPosition.fromList(order.getPositions().getEndPositions().get(0));
-                ProblemHelper.throwProblemIfExist(endPosE);
-                endPos = Optional.of(endPosE.get());
+            if (positions.getEndPositions() != null && !positions.getEndPositions().isEmpty()) {
+                endPositions = new HashSet<>();
+                for (List<Object> endPosition : positions.getEndPositions()) {
+                    Either<Problem, JPosition> endPosE = JPosition.fromList(endPosition);
+                    ProblemHelper.throwProblemIfExist(endPosE);
+                    endPositions.add(endPosE.get());
+                }
             }
         }
         Map<String, Value> arguments = OrdersHelper.variablesToScalaValuedArguments(order.getArguments());
-        return JFreshOrder.of(OrderId.of(order.getId()), WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments, false, startPos, endPos);
+        return JFreshOrder.of(OrderId.of(order.getId()), WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments, false, startPosition,
+                endPositions);
     }
 
     public static Set<PlannedOrder> addOrdersToController(StartupMode startupMode, String controllerId, String dailyPlanDate,
