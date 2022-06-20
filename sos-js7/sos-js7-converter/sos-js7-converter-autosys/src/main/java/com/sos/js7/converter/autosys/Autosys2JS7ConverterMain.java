@@ -8,7 +8,10 @@ import com.sos.js7.converter.commons.JS7ConverterMain;
 
 public class Autosys2JS7ConverterMain extends JS7ConverterMain {
 
-    private static final String VERSION = "Autosys2JS7Converter 0.01";
+    @Override
+    public String getProductAndVersion() {
+        return "Autosys 0.01";
+    }
 
     @Override
     public void doConvert(Path input, Path outputDir, Path reportDir) throws Exception {
@@ -16,7 +19,7 @@ public class Autosys2JS7ConverterMain extends JS7ConverterMain {
     }
 
     public static void main(String[] args) {
-        new Autosys2JS7ConverterMain().doMain(JS7Converter.CONFIG, args, VERSION);
+        new Autosys2JS7ConverterMain().doMain(JS7Converter.CONFIG, args);
     }
 
 }

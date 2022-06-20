@@ -19,6 +19,8 @@ public abstract class JS7ConverterMain {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JS7ConverterMain.class);
 
+    public abstract String getProductAndVersion();
+
     public abstract void doConvert(Path input, Path outputDir, Path reportDir) throws Exception;
 
     private void printUsage() {
@@ -33,7 +35,7 @@ public abstract class JS7ConverterMain {
 
     }
 
-    public void doMain(JS7ConverterConfig config, String[] args, String version) {
+    public void doMain(JS7ConverterConfig config, String[] args) {
         String argInput = null;
         String argOutputDir = null;
         String argReportDir = null;
@@ -59,7 +61,7 @@ public abstract class JS7ConverterMain {
         }
         int status = 0;
 
-        LOGGER.info("------------------------ " + version);
+        LOGGER.info("------------------------ JS7 Converter " + getProductAndVersion());
         if (argHelp != null) {
             printUsage();
         } else if (argInput == null) {
