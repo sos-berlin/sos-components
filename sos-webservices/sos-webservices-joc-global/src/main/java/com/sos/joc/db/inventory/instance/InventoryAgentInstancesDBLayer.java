@@ -80,6 +80,33 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public Map<String, String> getAgentIdNameMap(String controllerId) throws DBInvalidDataException, DBMissingDataException,
+            DBConnectionRefusedException {
+        if (controllerId == null || controllerId.isEmpty()) {
+            return null;
+        }
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+            hql.append(" where controllerId = :controllerId");
+
+            Query<DBItemInventoryAgentInstance> query = getSession().createQuery(hql.toString());
+            query.setParameter("controllerId", controllerId);
+            List<DBItemInventoryAgentInstance> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyMap();
+            }
+            return result.stream().collect(Collectors.toMap(DBItemInventoryAgentInstance::getAgentId, DBItemInventoryAgentInstance::getAgentName, (K,
+                    V) -> V));
+        } catch (DBMissingDataException ex) {
+            throw ex;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
     public List<DBItemInventoryAgentInstance> getAgentsByControllerIds(Collection<String> controllerIds) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
