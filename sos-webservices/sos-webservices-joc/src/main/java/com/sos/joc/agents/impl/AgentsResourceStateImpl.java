@@ -366,7 +366,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         } else {
             s.set_text(AgentClusterStateText.NO_SUBAGENTS_ARE_COUPLED_AND_ENABLED);
         }
-        s.setSeverity(agentStates.get(state));
+        s.setSeverity(agentHealthStates.get(s.get_text()));
         return s;
     }
     
