@@ -991,7 +991,7 @@ public class DBLayerDeploy {
         saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, false, agentNames);
     }
 
-    public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, boolean overwrite,
+    public DBItemInventoryConfiguration saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, boolean overwrite,
             Set<String> agentNames) {
         try {
             DBItemInventoryConfiguration existingConfiguration = null;
@@ -1047,6 +1047,7 @@ public class DBLayerDeploy {
                     existingConfiguration.setDeployed(false);
                     existingConfiguration.setReleased(false);
                     JocInventory.updateConfiguration(new InventoryDBLayer(session), existingConfiguration);
+                    return existingConfiguration;
                 } else {
                     DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
                     Date now = Date.from(Instant.now());
@@ -1063,6 +1064,7 @@ public class DBLayerDeploy {
                     newConfiguration.setReleased(false);
                     newConfiguration.setValid(valid);
                     JocInventory.insertConfiguration(new InventoryDBLayer(session), newConfiguration);
+                    return newConfiguration;
                 }
             } else {
                 DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
@@ -1080,6 +1082,7 @@ public class DBLayerDeploy {
                 newConfiguration.setReleased(false);
                 newConfiguration.setValid(valid);
                 JocInventory.insertConfiguration(new InventoryDBLayer(session), newConfiguration);
+                return newConfiguration;
             }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
@@ -1088,8 +1091,8 @@ public class DBLayerDeploy {
         }
     }
 
-    public void saveNewInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, boolean overwrite,
-            Set<String> agentNames) {
+    public DBItemInventoryConfiguration saveNewInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
+            boolean overwrite, Set<String> agentNames) {
         boolean valid = false;
         try {
             Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
@@ -1130,6 +1133,7 @@ public class DBLayerDeploy {
             newConfiguration.setReleased(false);
             newConfiguration.setValid(valid);
             JocInventory.insertConfiguration(new InventoryDBLayer(session), newConfiguration);
+            return newConfiguration;
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         } catch (IOException e) {

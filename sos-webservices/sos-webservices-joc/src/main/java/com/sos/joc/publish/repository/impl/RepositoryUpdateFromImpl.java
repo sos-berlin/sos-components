@@ -3,6 +3,7 @@ package com.sos.joc.publish.repository.impl;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -29,6 +30,7 @@ import com.sos.joc.model.publish.repository.UpdateFromFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.repository.resource.IRepositoryUpdateFrom;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
+import com.sos.joc.publish.util.ImportUtils;
 import com.sos.schema.JsonValidator;
 
 @javax.ws.rs.Path("inventory/repository")
@@ -68,6 +70,7 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
                     throw new JocSosHibernateException(e);
                 }
             });
+            
             updateTopLevelFolder(dbItemsToUpdate, dbLayer);
             InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
             newDbItems.stream().forEach(item -> {
@@ -85,7 +88,10 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
                     throw new JocSosHibernateException(e);
                 }
             });
+            
             updateTopLevelFolder(newDbItems, dbLayer);
+            ImportUtils.validateAndUpdate(new ArrayList<DBItemInventoryConfiguration>(dbItemsToUpdate), null, hibernateSession);
+            ImportUtils.validateAndUpdate(new ArrayList<DBItemInventoryConfiguration>(newDbItems), null, hibernateSession);
             CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(dbItemsToUpdate.stream().map(item -> new AuditLogDetail(item.getPath(), 
                     item.getType())), dbAuditlog.getId(), dbAuditlog.getCreated()));
             CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(newDbItems.stream().map(item -> new AuditLogDetail(item.getPath(), 
