@@ -1,8 +1,10 @@
 package com.sos.joc.workflows.impl;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -16,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.controller.model.common.SyncStateText;
 import com.sos.controller.model.fileordersource.FileOrderSource;
 import com.sos.controller.model.workflow.Workflow;
 import com.sos.joc.Globals;
@@ -89,7 +92,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         
         String controllerId = workflowsFilter.getControllerId();
         Set<String> workflowNamesWithAddOrders = dbLayer.getAddOrderWorkflows(controllerId);
-        boolean withStatesFilter = workflowsFilter.getStates() != null && !workflowsFilter.getStates().isEmpty();
+        boolean withStatesFilter = withStatesFilter(workflowsFilter.getStates());
 
         Map<String, List<FileOrderSource>> fileOrderSources = (workflowsFilter.getCompact() == Boolean.TRUE) ? null : WorkflowsHelper
                 .workflowToFileOrderSources(currentstate, controllerId, contents.parallelStream().filter(DeployedContent::isCurrentVersion).map(
@@ -146,6 +149,17 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             LOGGER.warn(e.toString());
         }
         return currentstate;
+    }
+    
+    private static boolean withStatesFilter(Collection<SyncStateText> filterStates) {
+        boolean withStatesFilter = filterStates != null && !filterStates.isEmpty();
+        if (withStatesFilter) {
+            EnumSet<SyncStateText> allStates = EnumSet.allOf(SyncStateText.class);
+            allStates.remove(SyncStateText.NOT_DEPLOYED);
+            allStates.remove(SyncStateText.UNKNOWN);
+            withStatesFilter = allStates.size() != filterStates.stream().distinct().mapToInt(e -> 1).sum();
+        }
+        return withStatesFilter;
     }
 
 }

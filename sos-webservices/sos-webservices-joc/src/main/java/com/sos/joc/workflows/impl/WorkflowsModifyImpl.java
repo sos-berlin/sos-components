@@ -2,6 +2,7 @@ package com.sos.joc.workflows.impl;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
@@ -37,6 +39,7 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.data.controller.ControllerCommand.Response;
 import js7.data.workflow.WorkflowControlState;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerCommand;
@@ -134,11 +137,13 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
                     currentState, permittedFolders).map(JWorkflowId::path);
         }
         
-        Set<WorkflowPath> workflowPaths2 = getCheckedWorkflows(action, workflowsStream, currentState, controllerId, withWorkflowPaths);
+        List<WorkflowPath> workflowPaths2 = getCheckedWorkflows(action, workflowsStream, currentState, controllerId, withWorkflowPaths);
 
         if (!workflowPaths2.isEmpty()) {
             // TODO we need plural function controlWorkflows
-            workflowPaths2.forEach(w -> command(controllerId, action, w, dbAuditLog));
+            // max. 32 request possible -> We use 24
+            partition(workflowPaths2, 24).forEach(w -> command(controllerId, action, w, dbAuditLog));
+            //workflowPaths2.forEach(w -> command(controllerId, action, w, dbAuditLog));
         } else {
             throwControllerObjectNotExistException(action);
         }
@@ -153,13 +158,13 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
         }
     }
     
-    private Set<WorkflowPath> getCheckedWorkflows(Action action, Stream<WorkflowPath> workflowsStream, JControllerState currentState,
+    private List<WorkflowPath> getCheckedWorkflows(Action action, Stream<WorkflowPath> workflowsStream, JControllerState currentState,
             String controllerId, boolean withPostProblem) {
         Set<WorkflowPath> suspendedWorkflowsAtController = JavaConverters.asJava(currentState.asScala().pathToWorkflowControlState_()).values()
                 .stream().filter(c -> c.workflowControl().suspended()).map(WorkflowControlState::workflowPath).collect(Collectors.toSet());
 
-        Map<Boolean, Set<WorkflowPath>> suspendedWorkflows = workflowsStream.collect(Collectors.groupingBy(w -> suspendedWorkflowsAtController
-                .contains(w), Collectors.toSet()));
+        Map<Boolean, List<WorkflowPath>> suspendedWorkflows = workflowsStream.distinct().collect(Collectors.groupingBy(w -> suspendedWorkflowsAtController
+                .contains(w), Collectors.toList()));
 
         switch (action) {
         case RESUME:
@@ -168,36 +173,66 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
                         "Workflows '", "' are not suspended"));
                 ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
             }
-            return suspendedWorkflows.getOrDefault(Boolean.TRUE, Collections.emptySet());
+            return suspendedWorkflows.getOrDefault(Boolean.TRUE, Collections.emptyList());
         case SUSPEND:
             if (withPostProblem && suspendedWorkflows.containsKey(Boolean.TRUE)) {
                 String msg = suspendedWorkflows.get(Boolean.TRUE).stream().map(WorkflowPath::string).collect(Collectors.joining("', '", "Workflows '",
                         "' are already suspended"));
                 ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
             }
-            return suspendedWorkflows.getOrDefault(Boolean.FALSE, Collections.emptySet());
+            return suspendedWorkflows.getOrDefault(Boolean.FALSE, Collections.emptyList());
         default:
-            return workflowsStream.collect(Collectors.toSet());
+            return workflowsStream.collect(Collectors.toList());
+        }
+    }
+    
+    private void command(String controllerId, Action action, List<WorkflowPath> workflowPaths, DBItemJocAuditLog dbAuditLog) {
+        if (!workflowPaths.isEmpty()) {
+            boolean suspend = action.equals(Action.SUSPEND);
+            JControllerCommand commmand = JControllerCommand.controlWorkflow(workflowPaths.get(0), suspend);
+            ControllerApi.of(controllerId).executeCommand(commmand).thenAccept(either -> {
+                thenAcceptHandler(either, controllerId, action, workflowPaths, dbAuditLog);
+            });
         }
     }
 
-    private CompletableFuture<Void> command(String controllerId, Action action, WorkflowPath workflowPath, DBItemJocAuditLog dbAuditLog) {
-
-        boolean suspend = action.equals(Action.SUSPEND);
-        JControllerCommand commmand = JControllerCommand.controlWorkflow(workflowPath, suspend);
-        return ControllerApi.of(controllerId).executeCommand(commmand).thenAccept(either -> {
-            ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-            if (either.isRight()) {
-                WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(workflowPath, dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
-                        .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
-            }
-        });
-    }
+//    private CompletableFuture<Void> command(String controllerId, Action action, WorkflowPath workflowPath, DBItemJocAuditLog dbAuditLog) {
+//
+//        boolean suspend = action.equals(Action.SUSPEND);
+//        JControllerCommand commmand = JControllerCommand.controlWorkflow(workflowPath, suspend);
+//        return ControllerApi.of(controllerId).executeCommand(commmand).thenAccept(either -> {
+//            thenAcceptHandler(either, controllerId, workflowPath, dbAuditLog);
+//        });
+//    }
 
     private ModifyWorkflows initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
         initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validate(filterBytes, ModifyWorkflows.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyWorkflows.class);
+    }
+    
+    private void thenAcceptHandler(Either<Problem, Response> either, String controllerId, Action action, List<WorkflowPath> workflowPaths,
+            DBItemJocAuditLog dbAuditLog) {
+        WorkflowPath w = workflowPaths.remove(0);
+        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+        if (either.isRight()) {
+            WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(w, dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
+                    .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+        }
+        command(controllerId, action, workflowPaths, dbAuditLog);
+    }
+
+//    private void thenAcceptHandler(Either<Problem, Response> either, String controllerId, WorkflowPath workflowPath, DBItemJocAuditLog dbAuditLog) {
+//        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+//        if (either.isRight()) {
+//            WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(workflowPath, dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
+//                    .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+//        }
+//    }
+    
+    private static <T> Collection<List<T>> partition(List<T> collection, int n) {
+        return IntStream.range(0, collection.size()).boxed().collect(Collectors.groupingBy(i -> i % n, Collectors.mapping(collection::get, Collectors
+                .toList()))).values();
     }
 
 }
