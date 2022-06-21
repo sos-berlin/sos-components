@@ -5,8 +5,9 @@ public class SOSKeycloakIntrospectRepresentation {
     private Long exp;
     private Long iat;
     private String jti;
-    private Boolean iss;
-    private Boolean sub;
+    private String iss;
+    private String aud;
+    private String sub;
     private String typ;
     private String azp;
     private String session_state;
@@ -18,7 +19,7 @@ public class SOSKeycloakIntrospectRepresentation {
     private String client_id;
     private String username;
     private Boolean active;
-
+    
     public Long getExp() {
         return exp;
     }
@@ -31,11 +32,11 @@ public class SOSKeycloakIntrospectRepresentation {
         return jti;
     }
 
-    public Boolean getIss() {
+    public String getIss() {
         return iss;
     }
 
-    public Boolean getSub() {
+    public String getSub() {
         return sub;
     }
 
@@ -81,6 +82,11 @@ public class SOSKeycloakIntrospectRepresentation {
 
     public Boolean getActive() {
         return active;
+    }
+
+    
+    public String getAud() {
+        return aud;
     }
 
 }

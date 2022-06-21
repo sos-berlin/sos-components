@@ -40,7 +40,7 @@ public class SOSKeycloakSubject implements ISOSAuthSubject {
 
     @Override
     public Boolean hasRole(String role) {
-        return setOfRoles.contains(role);
+        return setOfRoles != null && setOfRoles.contains(role);
     }
 
     @Override

@@ -18,6 +18,7 @@ import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
+import com.sos.joc.exceptions.JocException;
 
 public class SOSKeycloakSession implements ISOSSession {
 
@@ -136,7 +137,7 @@ public class SOSKeycloakSession implements ISOSSession {
             } else {
                 return false;
             }
-        } catch (SOSException | IOException e) {
+        } catch (JocException | SOSException | IOException e) {
             LOGGER.error("", e);
             return false;
         }

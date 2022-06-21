@@ -3,11 +3,12 @@ package com.sos.auth.classes;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.slf4j.MDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
-import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSAuthAccessTokenHandler extends Thread {
 
@@ -27,6 +28,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
 
         public void run() {
             MDC.put("context", ThreadCtx);
+            LOGGER.debug("Try to renew");
             if (nextAccount != null) {
                 LOGGER.debug("Renew " + nextAccount.getAccountname());
                 boolean valid = false;
@@ -36,10 +38,11 @@ public class SOSAuthAccessTokenHandler extends Thread {
                     valid = false;
                 }
                 if (!valid) {
-                    // LOGGER.info(nextAccount.getAccountname() + " no longer valid");
-                    LOGGER.info("account is not longer valid");
+                    LOGGER.info("account is no longer valid");
                     Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(nextAccount.getAccessToken());
                 }
+            } else {
+                LOGGER.info("nextAccount is null");
             }
             getNextAccessToken();
         }
@@ -61,6 +64,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
     private void getNextAccessToken() {
         if (!stop) {
             Long next = null;
+            Long nextTime = null;
             SOSAuthCurrentAccount nextAccount = null;
             for (String accessToken : Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccessTokens()) {
                 SOSAuthCurrentAccount currentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
@@ -71,13 +75,14 @@ public class SOSAuthAccessTokenHandler extends Thread {
                     case KEYCLOAK:
                     case KEYCLOAK_JOC:
                         if (currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken() != null) {
+                            LOGGER.debug(SOSString.toString(currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken()));
                             long leaseDuration = currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken()
                                     .getRefresh_expires_in() * 1000;
 
-                            long n = currentAccount.getCurrentSubject().getSession().getStartSession() + leaseDuration  - TIME_GAP_SECONDS
-                                    * 1000;
+                            long n = currentAccount.getCurrentSubject().getSession().getStartSession() + leaseDuration - TIME_GAP_SECONDS * 1000;
 
-                            if (next == null || next > n) {
+                            if (next == null || nextTime > n) {
+                                nextTime = n;
                                 next = leaseDuration - TIME_GAP_SECONDS * 1000;
                                 nextAccount = currentAccount;
                             }
@@ -92,7 +97,8 @@ public class SOSAuthAccessTokenHandler extends Thread {
 
                             long n = currentAccount.getCurrentSubject().getSession().getStartSession() + leaseDuration - TIME_GAP_SECONDS * 1000;
 
-                            if (next == null || next > n) {
+                            if (next == null || nextTime > n) {
+                                nextTime = n;
                                 next = leaseDuration - TIME_GAP_SECONDS * 1000;
                                 nextAccount = currentAccount;
                             }
