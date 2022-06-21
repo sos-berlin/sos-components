@@ -1078,7 +1078,7 @@ public class JS7Converter {
                 fos.setAgentName(CONFIG.getAgentConfig().getForcedName() == null ? CONFIG.getAgentConfig().getDefaultName() : CONFIG.getAgentConfig()
                         .getForcedName());
                 fos.setTimeZone(CONFIG.getWorkflowConfig().getDefaultTimeZone());
-                fos.setDirectoryExpr(n.getDirectory());
+                fos.setDirectoryExpr(JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(n.getDirectory()));
                 fos.setPattern(n.getRegex());
                 Long delay = null;
                 if (n.getRepeat() != null && !n.getRepeat().toLowerCase().equals("no")) {
