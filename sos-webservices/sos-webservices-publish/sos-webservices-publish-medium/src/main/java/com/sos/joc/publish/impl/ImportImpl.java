@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -134,6 +135,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             Set<ConfigurationObject> filteredConfigurations = new HashSet<ConfigurationObject>();
             final List<ConfigurationType> importOrder = ImportUtils.getImportOrder();
+            List<DBItemInventoryConfiguration> storedConfigurations = new ArrayList<DBItemInventoryConfiguration>();
             if (!configurations.isEmpty()) {
                 if (filter.getOverwrite()) {
                     if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
@@ -147,7 +149,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                 List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
                                 if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
                                     for (ConfigurationObject configuration : configurationObjectsByType) {
-                                            dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                        storedConfigurations.add(dbLayer.saveOrUpdateInventoryConfiguration(
+                                                configuration, account, auditLogId, filter.getOverwrite(), agentNames));
                                     }
                                 }
                             }
@@ -163,7 +166,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                 List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
                                 if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
                                     for (ConfigurationObject configuration : configurationObjectsByType) {
-                                            dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                        storedConfigurations.add(dbLayer.saveOrUpdateInventoryConfiguration(
+                                                configuration, account, auditLogId, filter.getOverwrite(), agentNames));
                                     }
                                 }
                             }
@@ -188,7 +192,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                     			existingConfiguration, configuration, configurations, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(), dbLayer);
                                     	ImportUtils.replaceReferences(updateable);
                                         updatedReferencesByUpdateableConfiguration.put(updateable.getConfigurationObject(), updateable.getReferencedBy());
-                                    	dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account, auditLogId, filter.getOverwrite(), agentNames);
+                                        storedConfigurations.add(dbLayer.saveNewInventoryConfiguration(
+                                                updateable.getConfigurationObject(), account, auditLogId, filter.getOverwrite(), agentNames));
                         			}
                         		}
                     		}
@@ -224,12 +229,14 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                             }
                                             if (canAdd(configuration.getPath(), permittedFolders)) {
                                                 filteredConfigurations.add(configuration);
-                                                dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                                storedConfigurations.add(dbLayer.saveOrUpdateInventoryConfiguration(
+                                                        configuration, account, auditLogId, filter.getOverwrite(), agentNames));
                                             }
                                         } else {
                                             if (canAdd(configuration.getPath(), permittedFolders)) {
                                                 filteredConfigurations.add(configuration);
-                                                dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                                storedConfigurations.add(dbLayer.saveOrUpdateInventoryConfiguration(
+                                                        configuration, account, auditLogId, filter.getOverwrite(), agentNames));
                                             }
                                         }
                                     }
@@ -251,6 +258,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     });
                 }
             }
+            ImportUtils.validateAndUpdate(storedConfigurations, agentNames, hibernateSession);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

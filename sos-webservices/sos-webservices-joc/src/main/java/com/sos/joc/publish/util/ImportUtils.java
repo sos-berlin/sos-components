@@ -24,12 +24,14 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
@@ -42,8 +44,10 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonSerializer;
+import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -853,7 +857,26 @@ public class ImportUtils {
             return false;
         }
     }
-
+    
+    public static void validateAndUpdate (List<DBItemInventoryConfiguration> storedConfigurations, Set<String> agentNames,
+            SOSHibernateSession session) throws SOSHibernateException {
+        for (DBItemInventoryConfiguration dbItem : storedConfigurations) {
+            boolean valid = false;
+            try {
+                Validator.validate(dbItem.getTypeAsEnum(), dbItem.getContent().getBytes(), new InventoryDBLayer(session), agentNames);
+                valid = true;
+            } catch (Throwable e) {
+                valid = false;
+            }
+            StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_JOC_AUDIT_LOG_DETAILS).append(" ");
+            hql.append("set valid = :valid where id = :id");
+            Query<?> query = session.createQuery(hql.toString());
+            query.setParameter("valid", valid);
+            query.setParameter("id", dbItem.getId());
+            session.executeUpdate(query);
+        }
+    }
+    
     private static ControllerObject createControllerObjectFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String entryName)
             throws JsonParseException, JsonMappingException, IOException {
         String importedJson = outBuffer.toString(StandardCharsets.UTF_8.displayName());
