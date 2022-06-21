@@ -184,6 +184,11 @@ public abstract class ACommonJob {
         if (runTime != null) {
             this.runTime = new RunTime(pr, xpath, runTime, currentPath);
         }
+
+        if (type.equals(Type.ORDER)) {
+            OrderJob j = (OrderJob) this;
+            j.parse(pr, xpath, node, attributes, currentPath);
+        }
         return xpath;
     }
 

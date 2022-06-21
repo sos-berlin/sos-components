@@ -13,12 +13,14 @@ public class Monitor {
     private static final String ATTR_ORDERING = "ordering";
     private static final String ELEMENT_SCRIPT = "script";
 
+    private final String nodeText;
     private Script script;
 
     private String name;
     private Integer ordering;
 
     public Monitor(SOSXMLXPath xpath, Node node) throws Exception {
+        this.nodeText = JS7ConverterHelper.nodeToString(node);
         Node script = xpath.selectNode(node, "./" + ELEMENT_SCRIPT);
         if (script != null) {
             this.script = new Script(xpath, script);
@@ -27,6 +29,10 @@ public class Monitor {
         Map<String, String> attributes = JS7ConverterHelper.attribute2map(node);
         name = JS7ConverterHelper.stringValue(attributes.get(ATTR_NAME));
         ordering = JS7ConverterHelper.integerValue(attributes.get(ATTR_ORDERING));
+    }
+
+    public String getNodeText() {
+        return nodeText;
     }
 
     public Script getScript() {

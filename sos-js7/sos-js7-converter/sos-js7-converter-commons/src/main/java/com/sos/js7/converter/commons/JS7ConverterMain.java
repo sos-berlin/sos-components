@@ -32,7 +32,6 @@ public abstract class JS7ConverterMain {
         System.out.println("    --archive=<location of resulting .zip archive for JS7 import>   | default: ./js7_converted.tar.gz | .zip");
         System.out.println("    --config=<location of config file>                              | default: ./js7_convert.config");
         System.out.println("    --help                                                          | displays usage");
-
     }
 
     public void doMain(JS7ConverterConfig config, String[] args) {
@@ -71,7 +70,7 @@ public abstract class JS7ConverterMain {
             try {
                 Path input = SOSPath.toAbsolutePath(argInput);
                 if (!Files.exists(input)) {
-                    throw new Exception("[" + input + "]input not found");
+                    throw new Exception("[" + input + "]input file or directory not found");
                 }
                 Path outputDir = SOSPath.toAbsolutePath(getValue(argOutputDir, "output"));
                 Path reportDir = SOSPath.toAbsolutePath(getValue(argReportDir, "report"));
@@ -117,11 +116,11 @@ public abstract class JS7ConverterMain {
 
         if (isTarGZ) {
             try {
-                SOSGzipResult r = SOSGzip.compress(outputDir, true);
-                Files.write(archive, r.getCompressed(), StandardOpenOption.CREATE_NEW, StandardOpenOption.TRUNCATE_EXISTING);
+                SOSGzipResult r = SOSGzip.compress(outputDir, false);
+                Files.write(archive, r.getCompressed(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
                 LOGGER.info("[archive][" + archive + "]file written");
             } catch (Throwable e) {
-                LOGGER.error("[" + archive + "][error on tar.gz compressing]" + e.toString(), e);
+                LOGGER.error("[" + archive + "][tar.gz compressing]" + e.toString(), e);
             }
         } else {
             ZipCompress.compress(outputDir, archive);

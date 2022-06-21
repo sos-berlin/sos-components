@@ -20,8 +20,11 @@ public class Include {
     private final String liveFile; // path - Path to the file to be added from the configuration directory
     private final String node; // xpath - XPath expression
 
+    private String nodeText;
+
     public Include(SOSXMLXPath xpath, Node node) throws Exception {
         Map<String, String> m = JS7ConverterHelper.attribute2map(node);
+        this.nodeText = JS7ConverterHelper.nodeToString(node);
         this.file = m.get(ATTR_FILE);
         this.liveFile = m.get(ATTR_LIVE_FILE);
         this.node = m.get(ATTR_NODE);
@@ -29,6 +32,10 @@ public class Include {
         if (SOSString.isEmpty(this.file) && SOSString.isEmpty(this.liveFile)) {
             throw new Exception("missing file or live_file");
         }
+    }
+
+    public String getNodeText() {
+        return nodeText;
     }
 
     public String getFile() {

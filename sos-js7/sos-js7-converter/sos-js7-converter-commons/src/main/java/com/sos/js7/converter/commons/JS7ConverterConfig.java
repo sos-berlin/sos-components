@@ -12,9 +12,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.util.SOSString;
 
 public class JS7ConverterConfig {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JS7ConverterConfig.class);
 
     public enum Platform {
         UNIX, WINDOWS
@@ -52,19 +57,39 @@ public class JS7ConverterConfig {
                     switch (e.getKey().toString()) {
                     // GENERATE
                     case "generateConfig.workflows":
-                        generateConfig.workflows = Boolean.parseBoolean(val);
+                        try {
+                            generateConfig.workflows = Boolean.parseBoolean(val);
+                        } catch (Throwable t) {
+                            LOGGER.warn(getWarnMessage("generateConfig.workflows", "boolean", val));
+                        }
                         break;
                     case "generateConfig.locks":
-                        generateConfig.locks = Boolean.parseBoolean(val);
+                        try {
+                            generateConfig.locks = Boolean.parseBoolean(val);
+                        } catch (Throwable t) {
+                            LOGGER.warn(getWarnMessage("generateConfig.locks", "boolean", val));
+                        }
                         break;
                     case "generateConfig.schedules":
-                        generateConfig.schedules = Boolean.parseBoolean(val);
+                        try {
+                            generateConfig.schedules = Boolean.parseBoolean(val);
+                        } catch (Throwable t) {
+                            LOGGER.warn(getWarnMessage("generateConfig.schedules", "boolean", val));
+                        }
                         break;
                     case "generateConfig.calendars":
-                        generateConfig.calendars = Boolean.parseBoolean(val);
+                        try {
+                            generateConfig.calendars = Boolean.parseBoolean(val);
+                        } catch (Throwable t) {
+                            LOGGER.warn(getWarnMessage("generateConfig.calendars", "boolean", val));
+                        }
                         break;
                     case "generateConfig.cyclicOrders":
-                        generateConfig.cyclicOrders = Boolean.parseBoolean(val);
+                        try {
+                            generateConfig.cyclicOrders = Boolean.parseBoolean(val);
+                        } catch (Throwable t) {
+                            LOGGER.warn(getWarnMessage("generateConfig.cyclicOrders", "boolean", val));
+                        }
                         break;
                     // PARSER:
                     case "parserConfig.excludedDirectoryNames":
@@ -79,20 +104,43 @@ public class JS7ConverterConfig {
                         jobConfig.scriptNewLine = val;
                         break;
                     case "jobConfig.forcedGraceTimeout":
-                        jobConfig.forcedGraceTimeout = Integer.parseInt(val);
+                        try {
+                            jobConfig.forcedGraceTimeout = Integer.parseInt(val);
+                        } catch (Throwable t) {
+                            LOGGER.warn(getWarnMessage("jobConfig.forcedGraceTimeout", "integer", val));
+                        }
                         break;
                     case "jobConfig.forcedParallelism":
-                        jobConfig.forcedParallelism = Integer.parseInt(val);
+                        try {
+                            jobConfig.forcedParallelism = Integer.parseInt(val);
+                        } catch (Throwable t) {
+                            LOGGER.warn(getWarnMessage("jobConfig.forcedParallelism", "integer", val));
+                        }
                         break;
                     case "jobConfig.forcedFailOnErrWritten":
-                        jobConfig.forcedFailOnErrWritten = Boolean.parseBoolean(val);
+                        try {
+                            jobConfig.forcedFailOnErrWritten = Boolean.parseBoolean(val);
+                        } catch (Throwable t) {
+                            LOGGER.warn(getWarnMessage("jobConfig.forcedFailOnErrWritten", "boolean", val));
+                        }
+                        break;
+                    case "jobConfig.forcedV1Compatible":
+                        try {
+                            jobConfig.forcedV1Compatible = Boolean.parseBoolean(val);
+                        } catch (Throwable t) {
+                            LOGGER.warn(getWarnMessage("jobConfig.forcedV1Compatible", "boolean", val));
+                        }
                         break;
                     // AGENT
                     case "agentConfig.mapping":
                         agentConfig.withMapping(val);
                         break;
                     case "agentConfig.forcedPlatform":
-                        agentConfig.forcedPlatform = Platform.valueOf(val);
+                        try {
+                            agentConfig.forcedPlatform = Platform.valueOf(val);
+                        } catch (Throwable t) {
+                            LOGGER.warn(getWarnMessage("agentConfig.forcedPlatform", "Platform", val));
+                        }
                         break;
                     case "agentConfig.forcedName":
                         agentConfig.forcedName = val;
@@ -121,10 +169,18 @@ public class JS7ConverterConfig {
                         scheduleConfig.defaultTimeZone = val;
                         break;
                     case "scheduleConfig.planOrders":
-                        scheduleConfig.planOrders = Boolean.parseBoolean(val);
+                        try {
+                            scheduleConfig.planOrders = Boolean.parseBoolean(val);
+                        } catch (Throwable t) {
+                            LOGGER.warn(getWarnMessage("scheduleConfig.planOrders", "boolean", val));
+                        }
                         break;
                     case "scheduleConfig.submitOrders":
-                        scheduleConfig.submitOrders = Boolean.parseBoolean(val);
+                        try {
+                            scheduleConfig.submitOrders = Boolean.parseBoolean(val);
+                        } catch (Throwable t) {
+                            LOGGER.warn(getWarnMessage("scheduleConfig.submitOrders", "boolean", val));
+                        }
                         break;
                     // SubFolders
                     case "subFolderConfig.mapping":
@@ -143,6 +199,10 @@ public class JS7ConverterConfig {
             throw new Exception("[" + propertiesFile + "]propertiesFile not found");
         }
         return p;
+    }
+
+    private String getWarnMessage(String name, String type, String value) {
+        return String.format("[%s][cannot parse %s value]%s", name, type, value);
     }
 
     public GenerateConfig getGenerateConfig() {
@@ -298,6 +358,7 @@ public class JS7ConverterConfig {
         private Integer forcedGraceTimeout;
         private Integer forcedParallelism;
         private Boolean forcedFailOnErrWritten;
+        private Boolean forcedV1Compatible;
 
         public JobConfig withScriptNewLine(String newLine) {
             this.scriptNewLine = newLine;
@@ -335,8 +396,12 @@ public class JS7ConverterConfig {
             return forcedFailOnErrWritten;
         }
 
+        public Boolean getForcedV1Compatible() {
+            return forcedV1Compatible;
+        }
+
         public boolean isEmpty() {
-            return forcedGraceTimeout == null && forcedParallelism == null && forcedFailOnErrWritten == null;
+            return forcedGraceTimeout == null && forcedParallelism == null && forcedFailOnErrWritten == null && forcedV1Compatible == null;
         }
     }
 

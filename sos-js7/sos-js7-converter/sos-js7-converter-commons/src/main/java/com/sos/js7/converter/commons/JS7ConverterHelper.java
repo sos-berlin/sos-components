@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
+import com.sos.js7.converter.commons.report.ConverterReport;
 
 public class JS7ConverterHelper {
 
@@ -110,7 +111,9 @@ public class JS7ConverterHelper {
             case "su":
                 return 6;
             }
-            LOGGER.error(String.format("[getDays][unknown day]%s", d));
+            String msg = String.format("[getDays][unknown day]%s", d);
+            LOGGER.error(msg);
+            ConverterReport.INSTANCE.addErrorRecord(msg);
             return null;
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
@@ -130,7 +133,9 @@ public class JS7ConverterHelper {
             return Stream.of(time.trim().split(":")).filter(t -> t.length() == 2).map(t -> toTimePart(Integer.parseInt(t.trim()))).collect(Collectors
                     .joining(":"));
         } catch (Throwable e) {
-            LOGGER.error(String.format("[normalizeTime][time=%s]%s", time, e.toString()), e);
+            String msg = String.format("[normalizeTime][time=%s]%s", time, e.toString());
+            LOGGER.error(msg);
+            ConverterReport.INSTANCE.addErrorRecord(null, msg, e);
             return null;
         }
     }
@@ -139,12 +144,10 @@ public class JS7ConverterHelper {
         if (startMinutes == null || startMinutes.size() == 0) {
             return null;
         }
-
         // repeat every hour
         if (startMinutes.size() == 1) {
             return "01:00:00";
         }
-
         List<Integer> repeats = new ArrayList<>();
         Integer lastMinute = 0;
         for (Integer minute : startMinutes) {
@@ -170,7 +173,6 @@ public class JS7ConverterHelper {
         if (nmap == null) {
             return null;
         }
-
         Map<String, String> map = new HashMap<>();
         for (int i = 0; i < nmap.getLength(); i++) {
             Node n = nmap.item(i);
@@ -203,7 +205,10 @@ public class JS7ConverterHelper {
         }
     }
 
-    public static String asJS7OrderPreparationStringValue(String val) {
+    /** JITL Jobs arguments<br/>
+     * SHELL Jobs env<br/>
+     */
+    public static String quoteJS7StringValueWithDoubleQuotes(String val) {
         if (SOSString.isEmpty(val)) {
             return val;
         }

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -28,6 +29,7 @@ import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.RetryCatch;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.AdmissionTimePeriod;
 import com.sos.inventory.model.job.AdmissionTimeScheme;
@@ -62,6 +64,7 @@ import com.sos.js7.converter.js1.common.RunTime;
 import com.sos.js7.converter.js1.common.job.ACommonJob;
 import com.sos.js7.converter.js1.common.job.ACommonJob.DelayAfterError;
 import com.sos.js7.converter.js1.common.job.OrderJob;
+import com.sos.js7.converter.js1.common.job.OrderJob.DelayOrderAfterSetback;
 import com.sos.js7.converter.js1.common.job.StandaloneJob;
 import com.sos.js7.converter.js1.common.jobchain.JobChain;
 import com.sos.js7.converter.js1.common.jobchain.JobChainOrder;
@@ -91,6 +94,7 @@ import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
  * ---- multiple file_order_source with different next_state ???<br/>
  * ------- generate a File Order Source per file_order_source for th given workflow<br/>
  * ------- current JS7 state - workflow position not supported - will be implemented later ...<br/>
+ * ---- exit workflow e.g. next_state=error, error_state=error...<br/>
  * TODO Schedule substitute - ignore/report<br/>
  * TODO Schedule - create one schedule for multiple workflows<br/>
  * TODO Cyclic Workflows Instructions<br/>
@@ -115,6 +119,7 @@ public class JS7Converter {
 
     private Map<String, List<ACommonJob>> js1JobsByLanguage = new HashMap<>();
     private Map<String, List<RunTime>> js1Calendars = new HashMap<>();
+    private List<ACommonJob> js1JobsWithMonitors = new ArrayList<>();
 
     public static void convert(Path input, Path outputDir, Path reportDir) throws IOException {
 
@@ -189,6 +194,7 @@ public class JS7Converter {
         JS7ConverterResult result = new JS7ConverterResult();
 
         JS7Converter c = new JS7Converter();
+        c.pr = pr;
         c.inputDirPath = pr.getRoot().getPath().toString();
         c.converterObjects = c.getConverterObjects(pr.getRoot());
 
@@ -225,6 +231,14 @@ public class JS7Converter {
                 }
             });
             ParserReport.INSTANCE.addAnalyzerRecord("CALENDARS", "END");
+        }
+        if (js1JobsWithMonitors.size() > 0) {
+            ParserReport.INSTANCE.addAnalyzerRecord("JOBS WITH MONITORS", "START");
+            for (ACommonJob job : js1JobsWithMonitors) {
+                List<String> m = job.getMonitors().stream().map(e -> e.getNodeText()).collect(Collectors.toList());
+                ParserReport.INSTANCE.addAnalyzerRecord(job.getPath(), String.join(",", m), "");
+            }
+            ParserReport.INSTANCE.addAnalyzerRecord("JOBS WITH MONITORS", "END");
         }
     }
 
@@ -280,7 +294,7 @@ public class JS7Converter {
         w.setJobs(js);
 
         List<Instruction> in = new ArrayList<>();
-        in.add(getNamedJobInstruction(js1Job.getName()));
+        in.add(getNamedJobInstruction(js1Job.getName(), js1Job.getName()));
         in = getRetryInstructions(js1Job, in);
         in = getCyclicWorkflowInstructions(js1Job, in);
         w.setInstructions(in);
@@ -425,28 +439,171 @@ public class JS7Converter {
     }
 
     private List<Instruction> getRetryInstructions(ACommonJob job, List<Instruction> in) {
-        if (job.getDelayAfterError() != null && job.getDelayAfterError().size() > 0) {
-            TryCatch tryCatch = new TryCatch();
-            tryCatch.setTry(new Instructions(in));
-            tryCatch.setCatch(new Instructions(in));
+        try {
+            switch (job.getType()) {
+            case ORDER:
+                OrderJob oj = (OrderJob) job;
+                if (oj.getDelayOrderAfterSetback() != null && oj.getDelayOrderAfterSetback().size() > 0) {
+                    Optional<DelayOrderAfterSetback> maximum = oj.getDelayOrderAfterSetback().stream().filter(e -> e.getIsMaximum() != null && e
+                            .getIsMaximum() && e.getSetbackCount() != null && e.getSetbackCount() > 0).findAny();
+                    if (maximum.isPresent()) {
+                        RetryCatch tryCatch = new RetryCatch();
+                        tryCatch.setMaxTries(maximum.get().getSetbackCount());
+                        tryCatch.setTry(new Instructions(in));
 
-            List<Integer> retryDelays = new ArrayList<>();
-            for (DelayAfterError d : job.getDelayAfterError()) {
-                if (d.getDelay() != null) {
-                    if (d.getDelay().equalsIgnoreCase("stop")) {
-                        tryCatch.setMaxTries(d.getErrorCount());
-                    } else {
-                        for (int i = 0; i < d.getErrorCount(); i++) {
-                            retryDelays.add(new Long(SOSDate.getTimeAsSeconds(d.getDelay())).intValue());
+                        List<DelayOrderAfterSetback> sorted = oj.getDelayOrderAfterSetback().stream().filter(e -> e.getSetbackCount() != null).sorted(
+                                (o1, o2) -> o1.getSetbackCount().compareTo(o2.getSetbackCount())).collect(Collectors.toList());
+
+                        int lastDelay = 1;
+                        int lastSetbackCount = 1;
+                        List<Integer> setBackDelays = new ArrayList<>();
+                        for (DelayOrderAfterSetback d : sorted) {
+                            for (int i = lastSetbackCount + 1; i < d.getSetbackCount(); i++) {
+                                setBackDelays.add(lastDelay);
+                            }
+                            if (d.getDelay() != null) {
+                                int delaySeconds = new Long(SOSDate.getTimeAsSeconds(d.getDelay())).intValue();
+                                setBackDelays.add(delaySeconds);
+                                lastSetbackCount = d.getSetbackCount();
+                                lastDelay = delaySeconds;
+                            }
                         }
+                        tryCatch.setRetryDelays(setBackDelays);
+
+                        in = new ArrayList<>();
+                        in.add(tryCatch);
+                    } else {
+                        LOGGER.error(String.format("[order][%s][delay_order_after_setback]is_maximum=true not found", job.getPath()));
+                        ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "delay_order_after_setback", "is_maximum=true not found");
                     }
                 }
+                break;
+            case STANDALONE:
+                if (job.getDelayAfterError() != null && job.getDelayAfterError().size() > 0) {
+                    Optional<DelayAfterError> stop = job.getDelayAfterError().stream().filter(e -> e.getDelay() != null && e.getDelay()
+                            .equalsIgnoreCase("stop")).findAny();
+                    if (stop.isPresent()) {
+                        RetryCatch tryCatch = new RetryCatch();
+                        tryCatch.setMaxTries(stop.get().getErrorCount());
+                        tryCatch.setTry(new Instructions(in));
 
+                        List<DelayAfterError> sorted = job.getDelayAfterError().stream().filter(e -> e.getErrorCount() != null).sorted((o1, o2) -> o1
+                                .getErrorCount().compareTo(o2.getErrorCount())).collect(Collectors.toList());
+
+                        int lastDelay = 1;
+                        int lastErrorCount = 1;
+                        List<Integer> errorDelays = new ArrayList<>();
+                        for (DelayAfterError d : sorted) {
+                            for (int i = lastErrorCount + 1; i < d.getErrorCount(); i++) {
+                                errorDelays.add(lastDelay);
+                            }
+                            if (d.getDelay() != null && !d.getDelay().equalsIgnoreCase("stop")) {
+                                int delaySeconds = new Long(SOSDate.getTimeAsSeconds(d.getDelay())).intValue();
+                                errorDelays.add(delaySeconds);
+                                lastErrorCount = d.getErrorCount();
+                                lastDelay = delaySeconds;
+                            }
+                        }
+                        tryCatch.setRetryDelays(errorDelays);
+
+                        in = new ArrayList<>();
+                        in.add(tryCatch);
+                    } else {
+                        LOGGER.error(String.format("[standalone][%s][delay_after_error]STOP not found", job.getPath()));
+                        ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "delay_after_error", "STOP not found");
+                    }
+                }
+                break;
             }
-            tryCatch.setRetryDelays(retryDelays);
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][getRetryInstructions]%s", job.getPath(), e.toString()), e);
+            ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "getRetryInstructions", e);
+        }
+        return in;
+    }
 
-            in = new ArrayList<>();
-            in.add(tryCatch);
+    private List<Instruction> getRetryInstructionsXXX(ACommonJob job, List<Instruction> in) {
+        try {
+            switch (job.getType()) {
+            case ORDER:
+                OrderJob oj = (OrderJob) job;
+                if (oj.getDelayOrderAfterSetback() != null && oj.getDelayOrderAfterSetback().size() > 0) {
+                    Optional<DelayOrderAfterSetback> maximum = oj.getDelayOrderAfterSetback().stream().filter(e -> e.getIsMaximum() != null && e
+                            .getIsMaximum() && e.getSetbackCount() != null && e.getSetbackCount() > 0).findAny();
+                    if (maximum.isPresent()) {
+                        TryCatch tryCatch = new TryCatch();
+                        tryCatch.setMaxTries(maximum.get().getSetbackCount());
+                        tryCatch.setTry(new Instructions(in));
+                        tryCatch.setCatch(new Instructions(in));
+
+                        List<DelayOrderAfterSetback> sorted = oj.getDelayOrderAfterSetback().stream().filter(e -> e.getSetbackCount() != null).sorted(
+                                (o1, o2) -> o1.getSetbackCount().compareTo(o2.getSetbackCount())).collect(Collectors.toList());
+
+                        int lastDelay = 1;
+                        int lastSetbackCount = 1;
+                        List<Integer> setBackDelays = new ArrayList<>();
+                        for (DelayOrderAfterSetback d : sorted) {
+                            for (int i = lastSetbackCount + 1; i < d.getSetbackCount(); i++) {
+                                setBackDelays.add(lastDelay);
+                            }
+                            if (d.getDelay() != null) {
+                                int delaySeconds = new Long(SOSDate.getTimeAsSeconds(d.getDelay())).intValue();
+                                setBackDelays.add(delaySeconds);
+                                lastSetbackCount = d.getSetbackCount();
+                                lastDelay = delaySeconds;
+                            }
+                        }
+                        tryCatch.setRetryDelays(setBackDelays);
+
+                        in = new ArrayList<>();
+                        in.add(tryCatch);
+                    } else {
+                        LOGGER.error(String.format("[order][%s][delay_order_after_setback]is_maximum=true not found", job.getPath()));
+                        ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "delay_order_after_setback", "is_maximum=true not found");
+                    }
+                }
+                break;
+            case STANDALONE:
+                if (job.getDelayAfterError() != null && job.getDelayAfterError().size() > 0) {
+                    Optional<DelayAfterError> stop = job.getDelayAfterError().stream().filter(e -> e.getDelay() != null && e.getDelay()
+                            .equalsIgnoreCase("stop")).findAny();
+                    if (stop.isPresent()) {
+                        TryCatch tryCatch = new TryCatch();
+                        tryCatch.setMaxTries(stop.get().getErrorCount());
+                        tryCatch.setTry(new Instructions(in));
+                        tryCatch.setCatch(new Instructions(in));
+
+                        List<DelayAfterError> sorted = job.getDelayAfterError().stream().filter(e -> e.getErrorCount() != null).sorted((o1, o2) -> o1
+                                .getErrorCount().compareTo(o2.getErrorCount())).collect(Collectors.toList());
+
+                        int lastDelay = 1;
+                        int lastErrorCount = 1;
+                        List<Integer> errorDelays = new ArrayList<>();
+                        for (DelayAfterError d : sorted) {
+                            for (int i = lastErrorCount + 1; i < d.getErrorCount(); i++) {
+                                errorDelays.add(lastDelay);
+                            }
+                            if (d.getDelay() != null && !d.getDelay().equalsIgnoreCase("stop")) {
+                                int delaySeconds = new Long(SOSDate.getTimeAsSeconds(d.getDelay())).intValue();
+                                errorDelays.add(delaySeconds);
+                                lastErrorCount = d.getErrorCount();
+                                lastDelay = delaySeconds;
+                            }
+                        }
+                        tryCatch.setRetryDelays(errorDelays);
+
+                        in = new ArrayList<>();
+                        in.add(tryCatch);
+                    } else {
+                        LOGGER.error(String.format("[standalone][%s][delay_after_error]STOP not found", job.getPath()));
+                        ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "delay_after_error", "STOP not found");
+                    }
+                }
+                break;
+            }
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][getRetryInstructions]%s", job.getPath(), e.toString()), e);
+            ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "getRetryInstructions", e);
         }
         return in;
     }
@@ -465,6 +622,12 @@ public class JS7Converter {
     }
 
     private Job getJob(JS7ConverterResult result, ACommonJob job) {
+        if (job.getMonitors() != null && job.getMonitors().size() > 0) {
+            if (!js1JobsWithMonitors.contains(job)) {
+                js1JobsWithMonitors.add(job);
+            }
+        }
+
         Job j = new Job();
         j.setTitle(job.getTitle());
         j = setFromConfig(j);
@@ -476,9 +639,9 @@ public class JS7Converter {
         return j;
     }
 
-    private NamedJob getNamedJobInstruction(String jobName) {
+    private NamedJob getNamedJobInstruction(String jobName, String jobLabel) {
         NamedJob nj = new NamedJob(jobName);
-        nj.setLabel(nj.getJobName());
+        nj.setLabel(jobLabel);
         return nj;
     }
 
@@ -550,7 +713,7 @@ public class JS7Converter {
             Environment env = new Environment();
             job.getParams().getParams().entrySet().forEach(e -> {
                 try {
-                    env.setAdditionalProperty(e.getKey(), JS7ConverterHelper.asJS7OrderPreparationStringValue(e.getValue()));
+                    env.setAdditionalProperty(e.getKey(), JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(e.getValue()));
                 } catch (Throwable ee) {
                     env.setAdditionalProperty(e.getKey().toUpperCase(), e.getValue());
                     ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "could not convert env value=" + e.getValue(), ee);
@@ -605,13 +768,14 @@ public class JS7Converter {
 
         ExecutableScript es = new ExecutableScript();
         es.setScript(script.toString());
+        es.setV1Compatible(CONFIG.getJobConfig().getForcedV1Compatible());
 
         if (job.getParams() != null && job.getParams().hasParams()) {
             // ARGUMENTS
             Environment env = new Environment();
             job.getParams().getParams().entrySet().forEach(e -> {
                 try {
-                    env.setAdditionalProperty(e.getKey().toUpperCase(), JS7ConverterHelper.asJS7OrderPreparationStringValue(e.getValue()));
+                    env.setAdditionalProperty(e.getKey().toUpperCase(), JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(e.getValue()));
                 } catch (Throwable ee) {
                     env.setAdditionalProperty(e.getKey().toUpperCase(), e.getValue());
                     ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "could not convert env value=" + e.getValue(), ee);
@@ -628,7 +792,15 @@ public class JS7Converter {
             // JOB RESOURCES
             List<String> names = new ArrayList<>();
             for (Include i : job.getParams().getIncludes()) {
-                Path p = findIncludeFile(pr, job.getPath(), i.getIncludeFile());
+                Path p = null;
+                try {
+                    p = findIncludeFile(pr, job.getPath(), i.getIncludeFile());
+                } catch (Throwable e) {
+                    ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "[params][find include=" + i.getNodeText() + "]", e);
+                }
+                if (p == null) {
+                    continue;
+                }
                 String name = resolveJobResource(p);
                 if (name != null) {
                     names.add(name);
@@ -674,9 +846,10 @@ public class JS7Converter {
         }
         Path includePath = null;
         String ps = include.toString();
+        LOGGER.debug(logPrefix + "include=" + include + "=" + pr);
         if (ps.startsWith("/") || ps.startsWith("\\")) {
             includePath = pr.getRoot().getPath().resolve(ps.substring(1)).normalize();
-            LOGGER.debug(logPrefix + "[starts with / or \\][include=" + include + "]" + includePath);
+            LOGGER.debug(logPrefix + "[starts with / or \\]" + includePath);
         } else {
             includePath = currentPath.getParent().resolve(include).normalize();
             LOGGER.debug(logPrefix + "[relative]" + includePath);
@@ -763,10 +936,17 @@ public class JS7Converter {
             // JOB RESOURCES
             List<String> names = new ArrayList<>();
             for (Include i : o.getParams().getIncludes()) {
-                Path p = findIncludeFile(pr, o.getPath(), i.getIncludeFile());
-                String name = resolveJobResource(p);
-                if (name != null) {
-                    names.add(name);
+                Path p = null;
+                try {
+                    p = findIncludeFile(pr, o.getPath(), i.getIncludeFile());
+                } catch (Throwable e) {
+                    ConverterReport.INSTANCE.addErrorRecord(o.getPath(), "[order params][include=" + i.getNodeText() + "]" + e.toString(), e);
+                }
+                if (p != null) {
+                    String name = resolveJobResource(p);
+                    if (name != null) {
+                        names.add(name);
+                    }
                 }
             }
             if (names.size() > 0) {
@@ -805,30 +985,37 @@ public class JS7Converter {
                         states.put(jcn.getState(), new JobChainStateHelper(jcn, null));
                     }
                 } else {
-                    Path job = findIncludeFile(pr, jobChain.getPath(), Paths.get(jcn.getJob() + EConfigFileExtensions.JOB.extension()));
-                    // TODO NPE when not exists or wrong findIncludeFile handling ...
+                    Path job = null;
                     try {
-                        OrderJob oj = orderJobs.get(job);
-                        if (oj == null) {
-                            throw new Exception("[job " + job + "]not found");
-                        }
-                        String jobName = EConfigFileExtensions.getJobName(job);
-                        if (uniqueJobs.containsKey(jobName)) {
-                            OrderJob uoj = uniqueJobs.get(jobName);
-                            // same name but another location
-                            if (!uoj.getPath().equals(oj.getPath())) {
-                                duplicateJobCounter++;
-                                jobName = jobName + "_" + duplicateJobCounter;
+                        job = findIncludeFile(pr, jobChain.getPath(), Paths.get(jcn.getJob() + EConfigFileExtensions.JOB.extension()));
+                    } catch (Throwable e) {
+                        ConverterReport.INSTANCE.addErrorRecord(job, "[find job file][jobChain " + jobChain.getName() + "/node=" + SOSString.toString(
+                                n) + "]", e);
+                    }
+                    if (job != null) {
+                        try {
+                            OrderJob oj = orderJobs.get(job);
+                            if (oj == null) {
+                                throw new Exception("[job " + job + "]not found");
+                            }
+                            String jobName = EConfigFileExtensions.getJobName(job);
+                            if (uniqueJobs.containsKey(jobName)) {
+                                OrderJob uoj = uniqueJobs.get(jobName);
+                                // same name but another location
+                                if (!uoj.getPath().equals(oj.getPath())) {
+                                    duplicateJobCounter++;
+                                    jobName = jobName + "_" + duplicateJobCounter;
+                                    uniqueJobs.put(jobName, oj);
+                                }
+                            } else {
                                 uniqueJobs.put(jobName, oj);
                             }
-                        } else {
-                            uniqueJobs.put(jobName, oj);
+                            states.put(jcn.getState(), new JobChainStateHelper(jcn, jobName));
+                        } catch (Throwable e) {
+                            LOGGER.warn("[jobChain " + jobChain.getPath() + "/node=" + SOSString.toString(n) + "]" + e.getMessage());
+                            ConverterReport.INSTANCE.addWarningRecord(job, "[jobChain " + jobChain.getName() + "/node=" + SOSString.toString(n) + "]",
+                                    e.toString());
                         }
-                        states.put(jcn.getState(), new JobChainStateHelper(jcn, jobName));
-                    } catch (Throwable e) {
-                        LOGGER.warn("[jobChain " + jobChain.getPath() + "/node=" + SOSString.toString(n) + "]" + e.toString(), e);
-                        ConverterReport.INSTANCE.addWarningRecord(job, "[jobChain " + jobChain.getName() + "/node=" + SOSString.toString(n) + "]", e
-                                .toString());
                     }
                 }
                 break;
@@ -966,7 +1153,7 @@ public class JS7Converter {
             }
 
             List<Instruction> in = new ArrayList<>();
-            in.add(getNamedJobInstruction(job.getName()));
+            in.add(getNamedJobInstruction(job.getName(), h.state));
 
             if (h.onError.toLowerCase().equals("setback")) {
                 in = getRetryInstructions(job, in);

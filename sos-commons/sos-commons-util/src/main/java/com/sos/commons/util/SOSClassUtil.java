@@ -66,7 +66,7 @@ public class SOSClassUtil {
         try {
             StringBuilder sb = new StringBuilder();
             StackTraceElement trace[] = e.getStackTrace();
-            for (int i = 1; i < trace.length; i++) {
+            for (int i = 0; i < trace.length; i++) {
                 sb.append(trace[i].toString()).append(NEW_LINE);
             }
             return sb.toString().trim();
