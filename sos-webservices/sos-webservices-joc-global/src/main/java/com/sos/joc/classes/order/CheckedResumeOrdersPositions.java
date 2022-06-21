@@ -35,9 +35,9 @@ import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersResumePositions;
+import com.sos.joc.model.order.Position;
 import com.sos.joc.model.order.PositionChange;
 import com.sos.joc.model.order.PositionChangeCode;
-import com.sos.joc.model.order.Positions;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -66,7 +66,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     private JPosition currentPosition = null;
     
     @JsonIgnore
-    private Set<Positions> positionsWithImplicitEnds = new LinkedHashSet<>();
+    private Set<Position> positionsWithImplicitEnds = new LinkedHashSet<>();
     
     public CheckedResumeOrdersPositions() {
         //
@@ -128,14 +128,14 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             setWorkflowId(new WorkflowId(WorkflowPaths.getPath(workflowId), workflowId.versionId().string()));
 
             final Map<String, Integer> counterPerPos = new HashMap<>();
-            final Set<Positions> pos = new LinkedHashSet<>();
+            final Set<Position> pos = new LinkedHashSet<>();
             final Set<String> orderIds = new HashSet<>();
             jOrders = suspendedOrFailedOrders.get(workflowId);
             jOrders.forEach(o -> {
                 orderIds.add(o.id().string());
                 e.get().reachablePositions(o.workflowPosition().position()).stream().forEachOrdered(jPos -> {
                     String positionString = jPos.toString();
-                    Positions p = new Positions();
+                    Position p = new Position();
                     p.setPosition(jPos.toList());
                     p.setPositionString(positionString);
                     //positionsWithImplicitEnds.add(p);
@@ -191,9 +191,9 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         
         setWorkflowId(new WorkflowId(WorkflowPaths.getPath(workflowId), workflowId.versionId().string()));
 
-        final Set<Positions> pos = new LinkedHashSet<>();
+        final Set<Position> pos = new LinkedHashSet<>();
         e.get().reachablePositions(jOrder.workflowPosition().position()).stream().forEachOrdered(jPos -> {
-            Positions p = new Positions();
+            Position p = new Position();
             p.setPosition(jPos.toList());
             p.setPositionString(jPos.toString());
             boolean notImplicitEnd = !implicitEnds.contains(p.getPositionString());
@@ -238,7 +238,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     }
     
     @JsonIgnore
-    public Set<Positions> getPositionsWithImplicitEnds() {
+    public Set<Position> getPositionsWithImplicitEnds() {
         return positionsWithImplicitEnds;
     }
     
@@ -289,7 +289,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     @JsonIgnore
     public Variables getVariables(JOrder jOrder, String positionString, Set<String> implicitEnds) throws JsonParseException, JsonMappingException,
             IOException, JocBadRequestException {
-        Set<String> allowedPositions = getPositions().stream().map(Positions::getPositionString).collect(Collectors.toCollection(LinkedHashSet::new));
+        Set<String> allowedPositions = getPositions().stream().map(Position::getPositionString).collect(Collectors.toCollection(LinkedHashSet::new));
         Variables variables = new Variables();
         String positionStringWithoutCounter = positionString.replaceAll("/(try|catch|cycle)\\+?[^:]*", "/$1");
 

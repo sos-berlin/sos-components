@@ -59,7 +59,7 @@ public class OrdersPositions {
     private WorkflowId workflowId;
     @JsonProperty("positions")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<Positions> positions = new LinkedHashSet<Positions>();
+    private Set<Position> positions = new LinkedHashSet<Position>();
 
     /**
      * timestamp
@@ -130,12 +130,12 @@ public class OrdersPositions {
     }
 
     @JsonProperty("positions")
-    public Set<Positions> getPositions() {
+    public Set<Position> getPositions() {
         return positions;
     }
 
     @JsonProperty("positions")
-    public void setPositions(Set<Positions> positions) {
+    public void setPositions(Set<Position> positions) {
         this.positions = positions;
     }
 

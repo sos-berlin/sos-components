@@ -14,9 +14,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "position",
-    "positionString"
+    "positionString",
+    "type",
+    "label"
 })
-public class Positions {
+public class Position {
 
     /**
      * position
@@ -35,6 +37,22 @@ public class Positions {
      */
     @JsonProperty("positionString")
     private String positionString;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("type")
+    private String type;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("label")
+    private String label;
 
     /**
      * position
@@ -80,14 +98,58 @@ public class Positions {
         this.positionString = positionString;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("type")
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("type")
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("label")
+    public String getLabel() {
+        return label;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("label")
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("position", position).append("positionString", positionString).toString();
+        return new ToStringBuilder(this).append("position", position).append("positionString", positionString).append("type", type).append("label", label).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(position).append(positionString).toHashCode();
+        return new HashCodeBuilder().append(position).append(label).append(type).append(positionString).toHashCode();
     }
 
     @Override
@@ -95,11 +157,11 @@ public class Positions {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Positions) == false) {
+        if ((other instanceof Position) == false) {
             return false;
         }
-        Positions rhs = ((Positions) other);
-        return new EqualsBuilder().append(position, rhs.position).append(positionString, rhs.positionString).isEquals();
+        Position rhs = ((Position) other);
+        return new EqualsBuilder().append(position, rhs.position).append(label, rhs.label).append(type, rhs.type).append(positionString, rhs.positionString).isEquals();
     }
 
 }

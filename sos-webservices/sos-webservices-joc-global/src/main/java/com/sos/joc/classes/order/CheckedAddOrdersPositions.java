@@ -18,12 +18,11 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrdersPositions;
-import com.sos.joc.model.order.Positions;
+import com.sos.joc.model.order.Position;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.workflow.WorkflowPath;
-import js7.data.workflow.position.Position;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
@@ -71,13 +70,13 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         // List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
         //Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(instructions);
 
-        final Set<Positions> pos = new LinkedHashSet<>();
-        JPosition pos0 = JPosition.apply(Position.First());
+        final Set<Position> pos = new LinkedHashSet<>();
+        JPosition pos0 = JPosition.apply(js7.data.workflow.position.Position.First());
         
         e.get().reachablePositions(pos0).stream().forEachOrdered(jPos -> {
             if (isReachable(jPos)) {
                 String positionString = jPos.toString();
-                Positions p = new Positions();
+                Position p = new Position();
                 p.setPosition(jPos.toList());
                 p.setPositionString(positionString);
                 //positionsWithImplicitEnds.add(p);
@@ -108,7 +107,7 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
     @JsonIgnore
     public static Set<String> getReachablePositions(JWorkflow workflow) {
         Set<String> pos = new LinkedHashSet<>();
-        workflow.reachablePositions(JPosition.apply(Position.First())).stream().forEachOrdered(jPos -> {
+        workflow.reachablePositions(JPosition.apply(js7.data.workflow.position.Position.First())).stream().forEachOrdered(jPos -> {
             if (isReachable(jPos)) {
                 pos.add(jPos.toString());
             }

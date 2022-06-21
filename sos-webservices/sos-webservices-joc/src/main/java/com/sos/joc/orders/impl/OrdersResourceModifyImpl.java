@@ -60,7 +60,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.CancelDailyPlanOrders;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.order.OrderStateText;
-import com.sos.joc.model.order.Positions;
+import com.sos.joc.model.order.Position;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
@@ -401,7 +401,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         CheckedResumeOrdersPositions cop = new CheckedResumeOrdersPositions().get(orders, currentState, folderPermissions.getListOfFolders());
         final Set<JOrder> jOrders = cop.getJOrders();
         List<JHistoryOperation> historyOperations = Collections.emptyList();
-        Set<String> allowedPositions = cop.getPositions().stream().map(Positions::getPositionString).collect(Collectors.toCollection(
+        Set<String> allowedPositions = cop.getPositions().stream().map(Position::getPositionString).collect(Collectors.toCollection(
                 LinkedHashSet::new));
 
         if (positionOpt.isPresent()) {
@@ -439,7 +439,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         } else if (cop.isSingleOrder()) {
 
             if (withVariables) {
-                Set<String> allowedPositionsWithImplicitEnds = cop.getPositionsWithImplicitEnds().stream().map(Positions::getPositionString).collect(
+                Set<String> allowedPositionsWithImplicitEnds = cop.getPositionsWithImplicitEnds().stream().map(Position::getPositionString).collect(
                         Collectors.toCollection(LinkedHashSet::new));
                 final String positionString = positionOpt.isPresent() ? positionOpt.get().toString() : "";
                 boolean isNotFuturePosition = true;
@@ -456,7 +456,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     JOrder currentJOrder = jOrders.iterator().next();
                     Set<String> historicPositions = JavaConverters.asJava(currentJOrder.asScala().historicOutcomes()).stream().map(h -> JPosition
                             .apply(h.position())).map(p -> p.toString()).collect(Collectors.toCollection(LinkedHashSet::new));
-                    Positions prevP = getPrevious(historicPositions, cop.getPositionsWithImplicitEnds(), positionString);
+                    Position prevP = getPrevious(historicPositions, cop.getPositionsWithImplicitEnds(), positionString);
                     if (prevP != null) {
                         prevPos = prevP.getPosition();
                         prevPosString = prevP.getPositionString();
@@ -524,9 +524,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         return result;
     }
 
-    private static Positions getPrevious(Set<String> historicPositions, Set<Positions> allowedPositions, String value) {
-        Positions result = null;
-        for (Positions entry : allowedPositions) {
+    private static Position getPrevious(Set<String> historicPositions, Set<Position> allowedPositions, String value) {
+        Position result = null;
+        for (Position entry : allowedPositions) {
             if (entry.getPositionString().equals(value)) {
                 break;
             }

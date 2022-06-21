@@ -19,6 +19,7 @@ import js7.data.lock.LockPath;
 import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowControlState;
 import js7.data.workflow.WorkflowPath;
+import js7.data.workflow.instructions.executable.WorkflowJob;
 import js7.data_for_java.common.JJsonable;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
@@ -139,8 +140,8 @@ public class SyncStateHelper {
             stateText = SyncStateText.IN_SYNC;
             if (controlState != null) {
                 int numOfAgentsThatConfirmedSuspendOrResume = JavaConverters.asJava(controlState.attachedToAgents()).size();
-                int totalNumOfAgents = JavaConverters.asJava(either.get().asScala().nameToJob()).values().stream().map(j -> j.agentPath()).distinct()
-                        .mapToInt(e -> 1).sum();
+                int totalNumOfAgents = JavaConverters.asJava(either.get().asScala().nameToJob()).values().stream().map(WorkflowJob::agentPath)
+                        .distinct().mapToInt(e -> 1).sum();
                 if (controlState.workflowControl().suspended()) {
                     if (numOfAgentsThatConfirmedSuspendOrResume >= totalNumOfAgents) {
                         stateText = SyncStateText.SUSPENDED;
