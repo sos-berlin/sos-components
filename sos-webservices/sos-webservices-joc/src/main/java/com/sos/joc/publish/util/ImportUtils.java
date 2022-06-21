@@ -859,21 +859,36 @@ public class ImportUtils {
     }
     
     public static void validateAndUpdate (List<DBItemInventoryConfiguration> storedConfigurations, Set<String> agentNames,
-            SOSHibernateSession session) throws SOSHibernateException {
-        for (DBItemInventoryConfiguration dbItem : storedConfigurations) {
-            boolean valid = false;
-            try {
-                Validator.validate(dbItem.getTypeAsEnum(), dbItem.getContent().getBytes(), new InventoryDBLayer(session), agentNames);
-                valid = true;
-            } catch (Throwable e) {
-                valid = false;
+            SOSHibernateSession session) {
+        Boolean autoCommit = true; 
+        try {
+            autoCommit = session.isAutoCommit();
+            if(autoCommit) {
+                session.setAutoCommit(false);
             }
-            StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_JOC_AUDIT_LOG_DETAILS).append(" ");
-            hql.append("set valid = :valid where id = :id");
-            Query<?> query = session.createQuery(hql.toString());
-            query.setParameter("valid", valid);
-            query.setParameter("id", dbItem.getId());
-            session.executeUpdate(query);
+            Globals.beginTransaction(session);
+            for (DBItemInventoryConfiguration dbItem : storedConfigurations) {
+                boolean valid = false;
+                try {
+                    Validator.validate(dbItem.getTypeAsEnum(), dbItem.getContent().getBytes(), new InventoryDBLayer(session), agentNames);
+                    valid = true;
+                } catch (Throwable e) {
+                    valid = false;
+                }
+                StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+                hql.append("set valid = :valid where id = :id");
+                Query<?> query = session.createQuery(hql.toString());
+                query.setParameter("valid", valid);
+                query.setParameter("id", dbItem.getId());
+                session.executeUpdate(query);
+            }
+            Globals.commit(session);
+        } catch (SOSHibernateException e) {
+            Globals.rollback(session);
+        } finally {
+            try {
+                session.setAutoCommit(autoCommit);
+            } catch (SOSHibernateException e1) {}
         }
     }
     
