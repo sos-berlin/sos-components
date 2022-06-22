@@ -127,7 +127,9 @@ public class JocInventory {
                     put(InstructionType.TRY, "classpath:/raml/inventory/schemas/instruction/retry-schema.json");
                     put(InstructionType.PROMPT, "classpath:/raml/inventory/schemas/instruction/prompt-schema.json");
                     put(InstructionType.POST_NOTICE, "classpath:/raml/inventory/schemas/instruction/postNotice-schema.json");
+                    put(InstructionType.POST_NOTICES, "classpath:/raml/inventory/schemas/instruction/postNotices-schema.json");
                     put(InstructionType.EXPECT_NOTICE, "classpath:/raml/inventory/schemas/instruction/expectNotice-schema.json");
+                    put(InstructionType.EXPECT_NOTICES, "classpath:/raml/inventory/schemas/instruction/expectNotices-schema.json");
                     put(InstructionType.ADD_ORDER, "classpath:/raml/inventory/schemas/instruction/addOrder-schema.json");
                     put(InstructionType.CYCLE, "classpath:/raml/inventory/schemas/instruction/cycle-schema.json");
                 }
@@ -932,7 +934,7 @@ public class JocInventory {
             }
             break;
 
-        case NOTICEBOARD: // determine Workflows with PostNotice or ReadNotice reference
+        case NOTICEBOARD: // determine Workflows with PostNotice or ExpectNotice reference
             List<DBItemInventoryConfiguration> workflow3 = dbLayer.getUsedWorkflowsByBoardName(config.getName());
             if (workflow3 != null && !workflow3.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflow3) {

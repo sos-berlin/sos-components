@@ -148,6 +148,7 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.common.RequestFilter", "inventory/common/request-filter-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFilters", "inventory/common/request-filters-schema.json");
             put("com.sos.joc.model.inventory.read.RequestFilter", "inventory/read/request-filter-schema.json");
+            put("com.sos.joc.model.inventory.read.RequestWorkflowFilter", "inventory/read/request-workflow-filter-schema.json");
             put("com.sos.joc.model.inventory.deploy.DeployableFilter", "inventory/deploy/request-deployable-schema.json");
             put("com.sos.joc.model.inventory.deploy.DeployablesFilter", "inventory/deploy/request-deployables-schema.json");
             put("com.sos.joc.model.inventory.release.ReleasableFilter", "inventory/release/request-releasable-schema.json");
@@ -209,6 +210,7 @@ public class JsonValidator {
             put("com.sos.joc.model.dailyplan.submissions.SubmissionsRequest", "dailyplan/submissions/submissions-request-schema.json");
 
             put("com.sos.joc.model.yade.TransferFilter", "yade/transferFilter-schema.json");
+            put("com.sos.joc.model.yade.TransferId", "yade/transferId-schema.json");
             put("com.sos.joc.model.yade.FileFilter", "yade/fileFilter-schema.json");
             put("com.sos.joc.model.yade.FilesFilter", "yade/filesFilter-schema.json");
 

@@ -34,7 +34,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.inventory.items.FolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
@@ -637,6 +636,18 @@ public class InventoryDBLayer extends DBLayer {
             }
             return result;
         }
+    }
+    
+    public List<String> getBoardNames() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type=:type");
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.NOTICEBOARD.intValue());
+        List<String> result = getSession().getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return result;
     }
 
     public Integer getSuffixNumber(String suffix, String name, Integer type) throws SOSHibernateException {

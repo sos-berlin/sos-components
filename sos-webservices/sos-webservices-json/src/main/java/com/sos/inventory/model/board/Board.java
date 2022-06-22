@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "TYPE",
-    "postOrderToNoticeId ",
+    "postOrderToNoticeId",
     "endOfLife",
     "expectOrderToNoticeId",
     "version",
@@ -255,7 +255,7 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("postOrderToNoticeId_", postOrderToNoticeId).append("endOfLife", endOfLife).append("expectOrderToNoticeId", expectOrderToNoticeId).append("version", version).append("title", title).append("documentationName", documentationName).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("postOrderToNoticeId", postOrderToNoticeId).append("endOfLife", endOfLife).append("expectOrderToNoticeId", expectOrderToNoticeId).append("version", version).append("title", title).append("documentationName", documentationName).toString();
     }
 
     @Override

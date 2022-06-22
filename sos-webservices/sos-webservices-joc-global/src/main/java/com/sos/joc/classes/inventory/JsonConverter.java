@@ -20,12 +20,16 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.Cycle;
+import com.sos.inventory.model.instruction.ExpectNotice;
+import com.sos.inventory.model.instruction.ExpectNotices;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.PostNotice;
+import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.script.Script;
@@ -50,16 +54,19 @@ import js7.data_for_java.value.JExpression;
 
 public class JsonConverter {
     
-    private final static String instructionsToConvert = String.join("|", InstructionType.FORKLIST.value(), InstructionType.ADD_ORDER.value());
-    private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"").asPredicate();
-    private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"").asPredicate();
+    private final static String instructionsToConvert = String.join("|", InstructionType.FORKLIST.value(), InstructionType.ADD_ORDER.value(),
+            InstructionType.POST_NOTICE.value(), InstructionType.EXPECT_NOTICE.value());
+    private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"")
+            .asPredicate();
+    private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"")
+            .asPredicate();
     public final static String scriptIncludeComments = "(##|::|//)";
     public final static String scriptInclude = "!include";
     public final static Pattern scriptIncludePattern = Pattern.compile("^" + scriptIncludeComments + scriptInclude + "[ \t]+(\\S+)[ \t]*(.*)$",
             Pattern.DOTALL);
     public final static Predicate<String> hasScriptIncludes = Pattern.compile(scriptIncludeComments + scriptInclude + "[ \t]+").asPredicate();
-    private final static String includeScriptErrorMsg = "Script include '%s' of job '%s[%s]' has wrong format, expected format: " + scriptIncludeComments
-            + scriptInclude + " scriptname [--replace=\"search literal\",\"replacement literal\" [--replace=...]]";
+    private final static String includeScriptErrorMsg = "Script include '%s' of job '%s[%s]' has wrong format, expected format: "
+            + scriptIncludeComments + scriptInclude + " scriptname [--replace=\"search literal\",\"replacement literal\" [--replace=...]]";
 
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
 
@@ -131,7 +138,7 @@ public class JsonConverter {
         
     }
 
-    public static String replaceIncludes(String workflowName, String script, String jobName, Map<String, String> releasedScripts) {
+    private static String replaceIncludes(String workflowName, String script, String jobName, Map<String, String> releasedScripts) {
         String[] scriptLines = script.split("\n");
         for (int i = 0; i < scriptLines.length; i++) {
             String line = scriptLines[i];
@@ -305,6 +312,12 @@ public class JsonConverter {
                         convertInstructions(w, cycle.getCycleWorkflow().getInstructions(), sCycle.getCycleWorkflow().getInstructions(), addOrderIndex);
                     }
                     break;
+                case POST_NOTICE:
+                    signInstructions.set(i, NoticeToNoticesConverter.postNoticeToSignPostNotices(signInstruction.cast()));
+                    break;
+                case EXPECT_NOTICE:
+                    signInstructions.set(i, NoticeToNoticesConverter.expectNoticeToSignExpectNotices(signInstruction.cast()));
+                    break;
                 default:
                     break;
                 }
@@ -371,7 +384,7 @@ public class JsonConverter {
         return str;
     }
     
-    public static OrderPreparation invOrderPreparationToSignOrderPreparation(Requirements orderPreparation) {
+    private static OrderPreparation invOrderPreparationToSignOrderPreparation(Requirements orderPreparation) {
         if (orderPreparation == null) {
             return null;
         }

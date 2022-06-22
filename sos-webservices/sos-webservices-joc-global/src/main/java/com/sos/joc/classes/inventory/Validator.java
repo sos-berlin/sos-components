@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,12 +29,17 @@ import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.Cycle;
+import com.sos.inventory.model.instruction.ExpectNotice;
+import com.sos.inventory.model.instruction.ExpectNotices;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.PostNotice;
+import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.Prompt;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.Environment;
@@ -75,6 +81,10 @@ public class Validator {
             + "[ \t]+(\\S+)[ \t]*(.*)$", Pattern.MULTILINE);
     private final static Pattern scriptIncludeWithoutScriptPattern = Pattern.compile("^" + JsonConverter.scriptIncludeComments
             + JsonConverter.scriptInclude + "[ \t]*$", Pattern.MULTILINE);
+    private final static String noticesInstructions = String.join("|", InstructionType.POST_NOTICES.value(), InstructionType.POST_NOTICE.value(),
+            InstructionType.EXPECT_NOTICE.value(), InstructionType.EXPECT_NOTICES.value());
+    private final static Predicate<String> hasNoticesInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + noticesInstructions + ")\"")
+            .asPredicate();
 
     /** @param type
      * @param configBytes
@@ -149,11 +159,12 @@ public class Validator {
                     }
                     // JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/inventory/schemas/workflow/workflowJobs-schema.json"));
                     validateOrderPreparation(workflow.getOrderPreparation());
+                    List<String> boardNames = hasNoticesInstruction.test(json) ? dbLayer.getBoardNames() : Collections.emptyList();
                     validateInstructions(workflow.getInstructions(), "instructions", workflow.getJobs().getAdditionalProperties().keySet(), workflow
-                            .getOrderPreparation(), new HashMap<String, String>(), dbLayer);
+                            .getOrderPreparation(), new HashMap<String, String>(), boardNames, dbLayer);
                     // validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
                     validateLockRefs(json, dbLayer);
-                    validateBoardRefs(json, dbLayer);
+                    //validateBoardRefs(json, dbLayer);
                     validateJobResourceRefs(jobResources, dbLayer);
                     validateAgentRefs(json, agentDBLayer, visibleAgentNames);
                 } else if (ConfigurationType.SCHEDULE.equals(type)) {
@@ -400,7 +411,7 @@ public class Validator {
     }
 
     private static void validateInstructions(Collection<Instruction> instructions, String position, Set<String> jobNames,
-            Requirements orderPreparation, Map<String, String> labels, InventoryDBLayer dbLayer) throws SOSJsonSchemaException,
+            Requirements orderPreparation, Map<String, String> labels, List<String> boardNames, InventoryDBLayer dbLayer) throws SOSJsonSchemaException,
             JsonProcessingException, IOException, JocConfigurationException, SOSHibernateException {
         if (instructions != null) {
             int index = 0;
@@ -457,7 +468,7 @@ public class Validator {
                         String branchInstPosition = branchPosition + "[" + branchIndex + "].";
                         if (branch.getWorkflow() != null) {
                             validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobNames,
-                                    orderPreparation, labels, dbLayer);
+                                    orderPreparation, labels, boardNames, dbLayer);
                         }
                         branchIndex++;
                     }
@@ -466,7 +477,7 @@ public class Validator {
                     ForkList fl = inst.cast();
                     if (fl.getWorkflow() != null) {
                         validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "forklist.instructions", jobNames, orderPreparation,
-                                labels, dbLayer);
+                                labels, boardNames, dbLayer);
                     }
                     break;
                 case IF:
@@ -479,24 +490,24 @@ public class Validator {
                     }
                     if (ifElse.getThen() != null) {
                         validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobNames, orderPreparation,
-                                labels, dbLayer);
+                                labels, boardNames, dbLayer);
                     }
                     if (ifElse.getElse() != null) {
                         validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobNames, orderPreparation,
-                                labels, dbLayer);
+                                labels, boardNames, dbLayer);
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
                     validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobNames, orderPreparation, labels,
-                            dbLayer);
+                            boardNames, dbLayer);
                     validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", jobNames, orderPreparation,
-                            labels, dbLayer);
+                            labels, boardNames, dbLayer);
                     break;
                 case LOCK:
                     Lock lock = inst.cast();
                     validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", jobNames,
-                            orderPreparation, labels, dbLayer);
+                            orderPreparation, labels, boardNames, dbLayer);
                     break;
                 case PROMPT:
                     Prompt prompt = inst.cast();
@@ -514,10 +525,44 @@ public class Validator {
                         }
                     }
                     break;
+                case POST_NOTICE:
+                    PostNotice pn = inst.cast();
+                    String pnName = pn.getNoticeBoardName();
+                    if (boardNames.isEmpty() || !boardNames.contains(pnName)) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardName: Missing assigned Notice Board: " + pnName);
+                    }
+                    break;
+                case POST_NOTICES:
+                    PostNotices pns = inst.cast();
+                    List<String> pnsNames = pns.getNoticeBoardNames();
+                    pnsNames.removeAll(boardNames);
+                    if (boardNames.isEmpty() || !pnsNames.isEmpty()) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + pnsNames
+                                .toString());
+                    }
+                    break;
+                case EXPECT_NOTICE:
+                    ExpectNotice en = inst.cast();
+                    String enName = en.getNoticeBoardName();
+                    if (boardNames.isEmpty() || !boardNames.contains(enName)) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardName: Missing assigned Notice Board: " + enName);
+                    }
+                    break;
+                case EXPECT_NOTICES:
+                    ExpectNotices ens = inst.cast();
+                    String ensNamesExpr = ens.getNoticeBoardNames();
+                    validateExpression("$." + instPosition + "noticeBoardNames: ", ensNamesExpr);
+                    List<String> ensNames = new ArrayList<>(Arrays.asList(ensNamesExpr.replaceAll("[|&\\(\\)'\"]", " ").replaceAll("  +", " ").trim().split(" ")));
+                    ensNames.removeAll(boardNames);
+                    if (boardNames.isEmpty() || !ensNames.isEmpty()) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + ensNames
+                                .toString());
+                    }
+                    break;
                 case CYCLE:
                     Cycle cycle = inst.cast();
                     validateInstructions(cycle.getCycleWorkflow().getInstructions(), instPosition + "cycleWorkflow.instructions", jobNames,
-                            orderPreparation, labels, dbLayer);
+                            orderPreparation, labels, boardNames, dbLayer);
                     break;
                 default:
                     break;

@@ -958,8 +958,8 @@ public class OrdersHelper {
                 .collect(Collectors.toSet()), JCancellationMode.freshOnly());
     }
 
-    // #2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
-    // #2021-10-12#C4038226057-
+    // #2021-10-12#C40382260571-00012-12-dailyplan_shedule_cyclic
+    // #2021-10-12#C40382260571-
     public static String getCyclicOrderIdMainPart(String orderId) {
         return orderId.substring(0, mainOrderIdLength);
     }
