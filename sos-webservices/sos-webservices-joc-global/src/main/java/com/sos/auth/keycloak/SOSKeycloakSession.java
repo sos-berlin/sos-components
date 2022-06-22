@@ -131,7 +131,7 @@ public class SOSKeycloakSession implements ISOSSession {
     public boolean renew() {
         try {
             if (sosKeycloakHandler.accountAccessTokenIsValid(accessToken)) {
-                sosKeycloakHandler.renewAccountAccess(accessToken);
+                this.setAccessToken(sosKeycloakHandler.renewAccountAccess(accessToken));
                 startSession = Instant.now().toEpochMilli();
                 return true;
             } else {

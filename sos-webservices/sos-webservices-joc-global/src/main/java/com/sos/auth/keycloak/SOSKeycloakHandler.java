@@ -29,6 +29,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 
+import scala.collection.mutable.LinkedHashSet.Entry;
+
 public class SOSKeycloakHandler {
 
     private static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
@@ -64,7 +66,9 @@ public class SOSKeycloakHandler {
         }
         URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + api);
         if (post && body != null) {
-            LOGGER.debug(SOSString.toString(body));
+            for (java.util.Map.Entry<String, String> e : body.entrySet()) {
+                LOGGER.debug(e.getKey() + "=" + e.getValue());
+            }
         }
         LOGGER.debug(requestUri.toString());
 
@@ -146,26 +150,32 @@ public class SOSKeycloakHandler {
 
         String response = getFormResponse(POST, "/auth/realms/" + webserviceCredentials.getRealm() + "/protocol/openid-connect/token/introspect",
                 body, null);
-        LOGGER.debug("accountTokenIsValid:" + sosKeycloakAccountAccessToken.getAccess_token());
- 
+        LOGGER.debug("accountTokenIsValid");
+
         SOSKeycloakIntrospectRepresentation sosKeycloakUserAccessToken = Globals.objectMapper.readValue(response,
                 SOSKeycloakIntrospectRepresentation.class);
+
         return sosKeycloakUserAccessToken.getActive();
     }
 
-    public void renewAccountAccess(SOSKeycloakAccountAccessToken sosKeycloakAccountAccessToken) throws SOSException, SocketException {
+    public SOSKeycloakAccountAccessToken renewAccountAccess(SOSKeycloakAccountAccessToken sosKeycloakAccountAccessToken) throws SOSException,
+            SocketException, JsonMappingException, JsonProcessingException {
         if (sosKeycloakAccountAccessToken != null) {
 
             Map<String, String> body = new HashMap<String, String>();
-            body.put("username", webserviceCredentials.getAdminAccount());
-            body.put("password", webserviceCredentials.getAdminPassword());
             body.put("client_id", webserviceCredentials.getClientId());
             body.put("grant_type", "refresh_token");
             body.put("client_secret", webserviceCredentials.getClientSecret());
             body.put("refresh_token", sosKeycloakAccountAccessToken.getRefresh_token());
 
-            getFormResponse(POST, "/auth/realms/" + webserviceCredentials.getRealm() + "/protocol/openid-connect/token", body, null);
+            String response = getFormResponse(POST, "/auth/realms/" + webserviceCredentials.getRealm() + "/protocol/openid-connect/token", body,
+                    null);
+
+            SOSKeycloakAccountAccessToken newKeycloakUserAccessToken = Globals.objectMapper.readValue(response, SOSKeycloakAccountAccessToken.class);
+
+            return newKeycloakUserAccessToken;
         }
+        return sosKeycloakAccountAccessToken;
     }
 
     private SOSKeycloakAccountAccessToken getAdminAccessToken() throws SocketException, SOSException, JsonMappingException, JsonProcessingException {

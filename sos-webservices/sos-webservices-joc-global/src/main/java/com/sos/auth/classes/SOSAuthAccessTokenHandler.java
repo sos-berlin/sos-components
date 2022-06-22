@@ -42,7 +42,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
                     Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(nextAccount.getAccessToken());
                 }
             } else {
-                LOGGER.info("nextAccount is null");
+                LOGGER.debug("nextAccount is null");
             }
             getNextAccessToken();
         }
@@ -76,8 +76,14 @@ public class SOSAuthAccessTokenHandler extends Thread {
                     case KEYCLOAK_JOC:
                         if (currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken() != null) {
                             LOGGER.debug(SOSString.toString(currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken()));
-                            long leaseDuration = currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken()
-                                    .getRefresh_expires_in() * 1000;
+
+                            long r1 = currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken().getRefresh_expires_in();
+                            long r2 = currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken().getExpires_in();
+                            if (r1 > r2) {
+                                r1 = r2;
+                            }
+
+                            long leaseDuration = r1 * 1000;
 
                             long n = currentAccount.getCurrentSubject().getSession().getStartSession() + leaseDuration - TIME_GAP_SECONDS * 1000;
 
