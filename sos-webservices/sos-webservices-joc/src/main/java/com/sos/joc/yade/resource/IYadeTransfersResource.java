@@ -16,5 +16,11 @@ public interface IYadeTransfersResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postYadeTransfers(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+    
+    @POST
+    @Path("transfer")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postYadeTransfer(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 
 }

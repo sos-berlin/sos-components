@@ -24,7 +24,9 @@ import com.sos.joc.db.yade.DBItemYadeProtocol;
 import com.sos.joc.db.yade.DBItemYadeTransfer;
 import com.sos.joc.db.yade.JocDBLayerYade;
 import com.sos.joc.db.yade.JocYadeFilter;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
@@ -33,6 +35,7 @@ import com.sos.joc.model.yade.Protocol;
 import com.sos.joc.model.yade.ProtocolFragment;
 import com.sos.joc.model.yade.Transfer;
 import com.sos.joc.model.yade.TransferFilter;
+import com.sos.joc.model.yade.TransferId;
 import com.sos.joc.model.yade.TransferState;
 import com.sos.joc.model.yade.TransferStateText;
 import com.sos.joc.model.yade.Transfers;
@@ -43,14 +46,59 @@ import com.sos.yade.commons.Yade;
 @Path("yade")
 public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeTransfersResource {
 
-    private static final String IMPL_PATH = "./yade/transfers";
+    private static final String IMPL_PATH_TRANSFERS = "./yade/transfers";
+    private static final String IMPL_PATH_TRANSFER = "./yade/transfer";
     private Map<Long, ProtocolFragment> protocolFragments = new HashMap<>();
+    
+    @Override
+    public JOCDefaultResponse postYadeTransfer(String accessToken, byte[] inBytes) {
+        SOSHibernateSession session = null;
+        try {
+            initLogging(IMPL_PATH_TRANSFER, inBytes, accessToken);
+            JsonValidator.validateFailFast(inBytes, TransferId.class);
+            TransferId in = Globals.objectMapper.readValue(inBytes, TransferId.class);
+
+            Set<String> allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
+                    availableController -> getControllerPermissions(availableController, accessToken).getView()).collect(Collectors.toSet());
+
+            JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getFileTransfer().getView());
+            if (response != null) {
+                return response;
+            }
+
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_TRANSFER);
+            JocDBLayerYade dbLayer = new JocDBLayerYade(session);
+            DBItemYadeTransfer item = dbLayer.getTransfer(in.getTransferId());
+            if (item == null) {
+                throw new DBMissingDataException(String.format("Transfer with id '%1$d' not found", in.getTransferId()));
+            }
+
+            if (!allowedControllers.contains(item.getControllerId())) {
+                return accessDeniedResponse();
+            }
+            if (item.getWorkflowPath() != null && !item.getWorkflowPath().isEmpty()) {
+                Set<Folder> permittedFolders = folderPermissions.getListOfFolders(item.getControllerId());
+                if (!canAdd(item.getWorkflowPath(), permittedFolders)) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + item.getWorkflowPath().replaceFirst("/[^/]+$", "/"));
+                }
+            }
+
+            return JOCDefaultResponse.responseStatus200(fillTransfer(dbLayer, item, in.getCompact()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
 
     @Override
     public JOCDefaultResponse postYadeTransfers(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            initLogging(IMPL_PATH_TRANSFERS, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, TransferFilter.class);
             TransferFilter in = Globals.objectMapper.readValue(inBytes, TransferFilter.class);
 
@@ -74,7 +122,7 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
                 allowedControllers = Collections.emptySet();
             }
 
-            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_TRANSFERS);
 
             Integer limit = in.getLimit();
             if (limit == null) {

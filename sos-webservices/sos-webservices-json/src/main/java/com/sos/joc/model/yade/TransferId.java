@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.yade;
 
-import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -19,21 +18,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "deliveryDate",
-    "transferId"
+    "transferId",
+    "compact"
 })
 public class TransferId {
 
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
-     * 
-     */
-    @JsonProperty("deliveryDate")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date deliveryDate;
     /**
      * non negative long
      * <p>
@@ -43,30 +32,15 @@ public class TransferId {
      */
     @JsonProperty("transferId")
     private Long transferId;
-
     /**
-     * timestamp
+     * compact parameter
      * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
+     * controls if the object's data is compact or detailed
      * 
      */
-    @JsonProperty("deliveryDate")
-    public Date getDeliveryDate() {
-        return deliveryDate;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
-     * 
-     */
-    @JsonProperty("deliveryDate")
-    public void setDeliveryDate(Date deliveryDate) {
-        this.deliveryDate = deliveryDate;
-    }
+    @JsonProperty("compact")
+    @JsonPropertyDescription("controls if the object's data is compact or detailed")
+    private Boolean compact = false;
 
     /**
      * non negative long
@@ -92,14 +66,36 @@ public class TransferId {
         this.transferId = transferId;
     }
 
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    public Boolean getCompact() {
+        return compact;
+    }
+
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    public void setCompact(Boolean compact) {
+        this.compact = compact;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("transferId", transferId).toString();
+        return new ToStringBuilder(this).append("transferId", transferId).append("compact", compact).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(transferId).toHashCode();
+        return new HashCodeBuilder().append(transferId).append(compact).toHashCode();
     }
 
     @Override
@@ -111,7 +107,7 @@ public class TransferId {
             return false;
         }
         TransferId rhs = ((TransferId) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(transferId, rhs.transferId).isEquals();
+        return new EqualsBuilder().append(transferId, rhs.transferId).append(compact, rhs.compact).isEquals();
     }
 
 }

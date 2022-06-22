@@ -360,12 +360,7 @@ public class JocDBLayerYade {
     }
 
     public DBItemYadeTransfer getTransfer(Long id) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_YADE_TRANSFERS).append(" ");
-        hql.append("where id=:id");
-
-        Query<DBItemYadeTransfer> query = session.createQuery(hql.toString());
-        query.setParameter("id", id);
-        return session.getSingleResult(query);
+        return session.get(DBItemYadeTransfer.class, id);
     }
 
     public List<Long> transferIdsFilteredBySourceTargetPath(Collection<String> sourceFiles, Collection<String> targetFiles) throws SOSHibernateException {
