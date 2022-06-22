@@ -228,7 +228,9 @@ public class StoreDeployments {
                             processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
                 break;
             case SOSKeyConstants.RSA_ALGORITHM_NAME:
-                cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
+                if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
+                    cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
+                }
                 if (cert != null) {
                     verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
                     if (verified) {
