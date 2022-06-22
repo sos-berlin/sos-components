@@ -67,7 +67,11 @@ public class SOSKeycloakHandler {
         URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + api);
         if (post && body != null) {
             for (java.util.Map.Entry<String, String> e : body.entrySet()) {
-                LOGGER.debug(e.getKey() + "=" + e.getValue());
+                if (e.getKey().contains("password") || e.getKey().contains("client_secret")) {
+                    LOGGER.debug(e.getKey() + "= ********");
+                } else {
+                    LOGGER.debug(e.getKey() + "=" + e.getValue());
+                }
             }
         }
         LOGGER.debug(requestUri.toString());
