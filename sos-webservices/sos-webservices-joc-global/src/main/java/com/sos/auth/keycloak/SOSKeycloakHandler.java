@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.classes.SOSAuthAccessTokenHandler;
 import com.sos.auth.keycloak.classes.SOSKeycloakAccountAccessToken;
 import com.sos.auth.keycloak.classes.SOSKeycloakClientRepresentation;
 import com.sos.auth.keycloak.classes.SOSKeycloakGroupRepresentation;
@@ -28,8 +29,6 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-
-import scala.collection.mutable.LinkedHashSet.Entry;
 
 public class SOSKeycloakHandler {
 
@@ -159,7 +158,10 @@ public class SOSKeycloakHandler {
         SOSKeycloakIntrospectRepresentation sosKeycloakUserAccessToken = Globals.objectMapper.readValue(response,
                 SOSKeycloakIntrospectRepresentation.class);
 
-        return sosKeycloakUserAccessToken.getActive();
+        LOGGER.debug(SOSString.toString(sosKeycloakAccountAccessToken));
+        boolean valid = (sosKeycloakUserAccessToken.getActive() && sosKeycloakAccountAccessToken.getExpires_in()
+                - SOSAuthAccessTokenHandler.TIME_GAP_SECONDS > 0);
+        return valid;
     }
 
     public SOSKeycloakAccountAccessToken renewAccountAccess(SOSKeycloakAccountAccessToken sosKeycloakAccountAccessToken) throws SOSException,
@@ -177,6 +179,7 @@ public class SOSKeycloakHandler {
 
             SOSKeycloakAccountAccessToken newKeycloakUserAccessToken = Globals.objectMapper.readValue(response, SOSKeycloakAccountAccessToken.class);
 
+            LOGGER.debug(SOSString.toString(newKeycloakUserAccessToken));
             return newKeycloakUserAccessToken;
         }
         return sosKeycloakAccountAccessToken;
