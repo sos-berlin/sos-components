@@ -55,6 +55,7 @@ import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.NoticeToNoticesConverter;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
@@ -440,16 +441,18 @@ public class WorkflowsHelper {
                 case EXPECT_NOTICE:
                     ExpectNotice en = inst.cast();
                     expectedNoticeBoards.add(en.getNoticeBoardName());
+                    insts.set(i, NoticeToNoticesConverter.expectNoticeToExpectNotices(en));
                     break;
                 case EXPECT_NOTICES:
                     ExpectNotices ens = inst.cast();
                     String ensNamesExpr = ens.getNoticeBoardNames();
-                    List<String> ensNames = Arrays.asList(ensNamesExpr.replaceAll("[|&\\(\\)'\"]", " ").replaceAll("  +", " ").trim().split(" "));
+                    List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(ensNamesExpr);
                     ensNames.forEach(nb -> expectedNoticeBoards.add(nb));
                     break;
                 case POST_NOTICE:
                     PostNotice pn = inst.cast();
                     postNoticeBoards.add(pn.getNoticeBoardName());
+                    insts.set(i, NoticeToNoticesConverter.postNoticeToPostNotices(pn));
                     break;
                 case POST_NOTICES:
                     PostNotices pns = inst.cast();
@@ -537,14 +540,18 @@ public class WorkflowsHelper {
                     break;
                 case IF:
                     IfElse ie = inst.cast();
-                    setWorkflowAddOrderPositions(extendArray(pos, "then"), ie.getThen().getInstructions(), positions);
+                    if (ie.getThen() != null) {
+                        setWorkflowAddOrderPositions(extendArray(pos, "then"), ie.getThen().getInstructions(), positions);
+                    }
 //                    if (ie.getElse() != null) {
 //                        setWorkflowAddOrderPositions(extendArray(pos, "else"), ie.getElse().getInstructions(), positions);
 //                    }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
-                    setWorkflowAddOrderPositions(extendArray(pos, "try"), tc.getTry().getInstructions(), positions);
+                    if (tc.getTry() != null) {
+                        setWorkflowAddOrderPositions(extendArray(pos, "try"), tc.getTry().getInstructions(), positions);
+                    }
 //                    if (tc.getCatch() != null) {
 //                        setWorkflowAddOrderPositions(extendArray(pos, "catch"), tc.getCatch().getInstructions(), positions);
 //                    }
@@ -556,6 +563,111 @@ public class WorkflowsHelper {
                 case CYCLE:
 //                    Cycle c = inst.cast();
 //                    setWorkflowAddOrderPositions(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), positions);
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+    
+    public static void updateWorkflowBoardname(Map<String, String> oldNewBoardNames, List<Instruction> insts) {
+        if (oldNewBoardNames == null || oldNewBoardNames.isEmpty()) {
+            return;
+        }
+        if (insts != null) {
+            for (int i = 0; i < insts.size(); i++) {
+                Instruction inst = insts.get(i);
+                switch (inst.getTYPE()) {
+                case FORK:
+                    ForkJoin f = inst.cast();
+                    for (Branch b : f.getBranches()) {
+                        if (b.getWorkflow() != null) {
+                            updateWorkflowBoardname(oldNewBoardNames, b.getWorkflow().getInstructions());
+                        }
+                    }
+                    break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    if (fl.getWorkflow() != null) {
+                        updateWorkflowBoardname(oldNewBoardNames, fl.getWorkflow().getInstructions());
+                    }
+                    break;
+                case IF:
+                    IfElse ie = inst.cast();
+                    if (ie.getThen() != null) {
+                        updateWorkflowBoardname(oldNewBoardNames, ie.getThen().getInstructions());
+                    }
+                    if (ie.getElse() != null) {
+                        updateWorkflowBoardname(oldNewBoardNames, ie.getElse().getInstructions());
+                    }
+                    break;
+                case TRY:
+                    TryCatch tc = inst.cast();
+                    if (tc.getTry() != null) {
+                        updateWorkflowBoardname(oldNewBoardNames, tc.getTry().getInstructions());
+                    }
+                    if (tc.getCatch() != null) {
+                        updateWorkflowBoardname(oldNewBoardNames, tc.getCatch().getInstructions());
+                    }
+                    break;
+                case LOCK:
+                    Lock l = inst.cast();
+                    updateWorkflowBoardname(oldNewBoardNames, l.getLockedWorkflow().getInstructions());
+                    break;
+                case CYCLE:
+                    Cycle c = inst.cast();
+                    updateWorkflowBoardname(oldNewBoardNames, c.getCycleWorkflow().getInstructions());
+                    break;
+                case EXPECT_NOTICE:
+                    ExpectNotice en = inst.cast();
+                    for (Map.Entry<String, String> oldNewBoardName : oldNewBoardNames.entrySet()) {
+                        String oldBoardName = oldNewBoardName.getKey();
+                        String newBoardName = oldNewBoardName.getValue();
+                        if (newBoardName.isEmpty()) {
+                            continue;
+                        }
+                        if (oldBoardName.equals(en.getNoticeBoardName())) {
+                            en.setNoticeBoardName(newBoardName);
+                            break;
+                        }
+                    }
+                    break;
+                case EXPECT_NOTICES:
+                    ExpectNotices ens = inst.cast();
+                    String ensNamesExpr = ens.getNoticeBoardNames();
+                    List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(ensNamesExpr);
+                    for (Map.Entry<String, String> oldNewBoardName : oldNewBoardNames.entrySet()) {
+                        String oldBoardName = oldNewBoardName.getKey();
+                        String newBoardName = oldNewBoardName.getValue();
+                        if (newBoardName.isEmpty()) {
+                            continue;
+                        }
+                        if (!ensNames.isEmpty() && ensNames.contains(oldBoardName)) {
+                            ensNamesExpr = ensNamesExpr.replace("'" + oldBoardName + "'", "'" + newBoardName + "'").replace("\"" + oldBoardName
+                                    + "\"", "\"" + newBoardName + "\"");
+                        }
+                    }
+                    ens.setNoticeBoardNames(ensNamesExpr);
+                    break;
+                case POST_NOTICE:
+                    PostNotice pn = inst.cast();
+                    for (Map.Entry<String, String> oldNewBoardName : oldNewBoardNames.entrySet()) {
+                        String oldBoardName = oldNewBoardName.getKey();
+                        String newBoardName = oldNewBoardName.getValue();
+                        if (newBoardName.isEmpty()) {
+                            continue;
+                        }
+                        if (oldBoardName.equals(pn.getNoticeBoardName())) {
+                            pn.setNoticeBoardName(newBoardName);
+                            break;
+                        }
+                    }
+                    break;
+                case POST_NOTICES:
+                    PostNotices pns = inst.cast();
+                    pns.getNoticeBoardNames().removeIf(pnb -> oldNewBoardNames.keySet().contains(pnb) || oldNewBoardNames.values().contains(pnb));
+                    pns.getNoticeBoardNames().addAll(oldNewBoardNames.values().stream().filter(s -> !s.isEmpty()).collect(Collectors.toSet()));
                     break;
                 default:
                     break;

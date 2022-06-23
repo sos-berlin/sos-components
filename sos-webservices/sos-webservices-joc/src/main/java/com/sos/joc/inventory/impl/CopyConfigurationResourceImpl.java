@@ -24,6 +24,7 @@ import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -264,9 +265,12 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                                     .entrySet()) {
                                 json = json.replaceAll("(\"lockName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
                             }
-                            for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptyMap())
-                                    .entrySet()) {
-                                json = json.replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
+                            // notice, notices Instructions
+                            Map<String, String> oldNewBoardNames = oldToNewName.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptyMap());
+                            if (oldNewBoardNames.size() > 0) {
+                                Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
+                                WorkflowsHelper.updateWorkflowBoardname(oldNewBoardNames, w.getInstructions());
+                                json = Globals.objectMapper.writeValueAsString(w);
                             }
                             // addOrder Instructions
                             for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptyMap())

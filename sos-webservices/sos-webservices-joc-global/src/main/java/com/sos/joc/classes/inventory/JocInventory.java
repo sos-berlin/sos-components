@@ -51,6 +51,7 @@ import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.search.WorkflowConverter;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
@@ -272,8 +273,7 @@ public class JocInventory {
             return null;
         }
         if (type.equals(ConfigurationType.WORKFLOW.intValue())) {
-            return NoticeToNoticesConverter.convertWorkflow(content);
-            
+            return NoticeToNoticesConverter.convertInventoryWorkflow(content);
         }
         return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
     }
@@ -942,8 +942,11 @@ public class JocInventory {
             List<DBItemInventoryConfiguration> workflow3 = dbLayer.getUsedWorkflowsByBoardName(config.getName());
             if (workflow3 != null && !workflow3.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflow3) {
-                    workflow.setContent(workflow.getContent().replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + config.getName() + "\"", "$1"
-                            + newName + "\""));
+//                    workflow.setContent(workflow.getContent().replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + config.getName() + "\"", "$1"
+//                            + newName + "\""));
+                    Workflow w = Globals.objectMapper.readValue(workflow.getContent(), Workflow.class);
+                    WorkflowsHelper.updateWorkflowBoardname(Collections.singletonMap(config.getName(), newName), w.getInstructions());
+                    workflow.setContent(Globals.objectMapper.writeValueAsString(w));
                     workflow.setDeployed(false);
                     int i = items.indexOf(workflow);
                     if (i != -1) {

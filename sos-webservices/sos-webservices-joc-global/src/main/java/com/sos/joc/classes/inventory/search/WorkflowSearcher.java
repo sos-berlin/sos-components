@@ -14,6 +14,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ExpectNotice;
+import com.sos.inventory.model.instruction.ExpectNotices;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
@@ -22,6 +23,7 @@ import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.PostNotice;
+import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
@@ -237,34 +239,48 @@ public class WorkflowSearcher {
         return getJobArgumentsStream(job).filter(e -> e.getKey().matches(argNameRegex)).collect(Collectors.toMap(map -> map.getKey(), map -> map
                 .getValue()));
     }
-
+    
     public List<WorkflowInstruction<? extends Instruction>> getInstructions(InstructionType... types) {
+       return getInstructionsStream(types).collect(Collectors.toList());
+    }
+
+    public Stream<WorkflowInstruction<? extends Instruction>> getInstructionsStream(InstructionType... types) {
         setAllInstructions();
         if (types.length == 0 || instructions.isEmpty()) {
-            return instructions;
+            return Stream.empty();
         }
         List<InstructionType> typesList = Arrays.stream(types).collect(Collectors.toList());
-        return instructions.stream().filter(i -> typesList.contains(i.getInstruction().getTYPE())).collect(Collectors.toList());
+        return instructions.stream().filter(i -> typesList.contains(i.getInstruction().getTYPE()));
     }
 
     @SuppressWarnings("unchecked")
     public List<WorkflowInstruction<Lock>> getLockInstructions() {
-        return getInstructions(InstructionType.LOCK).stream().map(l -> (WorkflowInstruction<Lock>) l).collect(Collectors.toList());
+        return getInstructionsStream(InstructionType.LOCK).map(l -> (WorkflowInstruction<Lock>) l).collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")
     public List<WorkflowInstruction<PostNotice>> getPostNoticeInstructions() {
-        return getInstructions(InstructionType.POST_NOTICE).stream().map(l -> (WorkflowInstruction<PostNotice>) l).collect(Collectors.toList());
+        return getInstructionsStream(InstructionType.POST_NOTICE).map(l -> (WorkflowInstruction<PostNotice>) l).collect(Collectors.toList());
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<WorkflowInstruction<PostNotices>> getPostNoticesInstructions() {
+        return getInstructionsStream(InstructionType.POST_NOTICES).map(l -> (WorkflowInstruction<PostNotices>) l).collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")
     public List<WorkflowInstruction<ExpectNotice>> getExpectNoticeInstructions() {
-        return getInstructions(InstructionType.EXPECT_NOTICE).stream().map(l -> (WorkflowInstruction<ExpectNotice>) l).collect(Collectors.toList());
+        return getInstructionsStream(InstructionType.EXPECT_NOTICE).map(l -> (WorkflowInstruction<ExpectNotice>) l).collect(Collectors.toList());
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<WorkflowInstruction<ExpectNotices>> getExpectNoticesInstructions() {
+        return getInstructionsStream(InstructionType.EXPECT_NOTICES).map(l -> (WorkflowInstruction<ExpectNotices>) l).collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")
     public List<WorkflowInstruction<AddOrder>> getAddOrderInstructions() {
-        return getInstructions(InstructionType.ADD_ORDER).stream().map(l -> (WorkflowInstruction<AddOrder>) l).collect(Collectors.toList());
+        return getInstructionsStream(InstructionType.ADD_ORDER).map(l -> (WorkflowInstruction<AddOrder>) l).collect(Collectors.toList());
     }
 
     public List<WorkflowInstruction<Lock>> getLockInstructions(String lockIdRegex) {
@@ -363,12 +379,7 @@ public class WorkflowSearcher {
     @SuppressWarnings("unchecked")
     private void setAllJobInstructions() {
         if (jobInstructions == null) {
-            List<WorkflowInstruction<? extends Instruction>> r = getInstructions(InstructionType.EXECUTE_NAMED);
-            if (r.size() == 0) {
-                jobInstructions = new ArrayList<WorkflowInstruction<NamedJob>>();
-            } else {
-                jobInstructions = r.stream().map(i -> (WorkflowInstruction<NamedJob>) i).collect(Collectors.toList());
-            }
+            jobInstructions = getInstructionsStream(InstructionType.EXECUTE_NAMED).map(i -> (WorkflowInstruction<NamedJob>) i).collect(Collectors.toList());
         }
     }
 
@@ -461,6 +472,12 @@ public class WorkflowSearcher {
                 break;
             case EXPECT_NOTICE:
                 result.add(new WorkflowInstruction<ExpectNotice>(getPosition(parentPosition, index, null), in.cast()));
+                break;
+            case POST_NOTICES:
+                result.add(new WorkflowInstruction<PostNotices>(getPosition(parentPosition, index, null), in.cast()));
+                break;
+            case EXPECT_NOTICES:
+                result.add(new WorkflowInstruction<ExpectNotices>(getPosition(parentPosition, index, null), in.cast()));
                 break;
             case ADD_ORDER:
                 result.add(new WorkflowInstruction<AddOrder>(getPosition(parentPosition, index, null), in.cast()));

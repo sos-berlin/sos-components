@@ -1,9 +1,11 @@
 package com.sos.joc.classes.inventory;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -59,7 +61,7 @@ public class NoticeToNoticesConverter {
         return ens;
     }
     
-    public static Workflow convertWorkflow(String content) throws JsonMappingException, JsonProcessingException {
+    public static Workflow convertInventoryWorkflow(String content) throws JsonMappingException, JsonProcessingException {
         if (content != null && !content.isEmpty()) {
             // for compatibility ReadNotice -> ExpectNotice
             content = content.replaceAll("(\"TYPE\"\\s*:\\s*)\"ReadNotice\"", "$1\"ExpectNotice\"");
@@ -70,6 +72,11 @@ public class NoticeToNoticesConverter {
             return workflow;
         }
         return null;
+    }
+    
+    public static List<String> expectNoticeBoardsToList(String noticeBoardNames) {
+        return Arrays.asList(noticeBoardNames.replaceAll("[|&\\(\\)'\"]", " ").replaceAll("  +", " ").trim().split(" ")).stream().distinct().collect(
+                Collectors.toList());
     }
 
     private static void convertInstructions(List<Instruction> invInstructions) {

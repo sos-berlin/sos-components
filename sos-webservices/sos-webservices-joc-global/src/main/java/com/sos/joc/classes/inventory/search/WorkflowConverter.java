@@ -19,14 +19,17 @@ import javax.json.JsonObjectBuilder;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.ExpectNotice;
+import com.sos.inventory.model.instruction.ExpectNotices;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.PostNotice;
+import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.inventory.model.workflow.Workflow;
+import com.sos.joc.classes.inventory.NoticeToNoticesConverter;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowInstruction;
 
 public class WorkflowConverter {
@@ -411,7 +414,7 @@ public class WorkflowConverter {
         }
 
         public Set<String> getNoticeBoardNames() {
-            return Stream.of(postNotices, expectNotices).flatMap(n -> n.stream()).collect(Collectors.toSet());
+            return Stream.of(postNotices, expectNotices).flatMap(Set::stream).collect(Collectors.toSet());
         }
 
         public Set<String> getAddOrders() {
@@ -486,11 +489,28 @@ public class WorkflowConverter {
                     }
                 }
             }
+            List<WorkflowInstruction<PostNotices>> pNoticess = searcher.getPostNoticesInstructions();
+            if (pNoticess != null) {
+                for (WorkflowInstruction<PostNotices> notice : pNoticess) {
+                    if (notice.getInstruction().getNoticeBoardNames() != null) {
+                        notice.getInstruction().getNoticeBoardNames().forEach(n -> postNotices.add(n));
+                    }
+                }
+            }
             List<WorkflowInstruction<ExpectNotice>> eNotices = searcher.getExpectNoticeInstructions();
             if (eNotices != null) {
                 for (WorkflowInstruction<ExpectNotice> notice : eNotices) {
                     if (!SOSString.isEmpty(notice.getInstruction().getNoticeBoardName())) {
                         expectNotices.add(notice.getInstruction().getNoticeBoardName());
+                    }
+                }
+            }
+            List<WorkflowInstruction<ExpectNotices>> eNoticess = searcher.getExpectNoticesInstructions();
+            if (eNoticess != null) {
+                for (WorkflowInstruction<ExpectNotices> notice : eNoticess) {
+                    if (!SOSString.isEmpty(notice.getInstruction().getNoticeBoardNames())) {
+                        List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(notice.getInstruction().getNoticeBoardNames());
+                        ensNames.forEach(n -> expectNotices.add(n));
                     }
                 }
             }

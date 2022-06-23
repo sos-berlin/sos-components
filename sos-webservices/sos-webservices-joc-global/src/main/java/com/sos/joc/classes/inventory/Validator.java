@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -552,8 +551,7 @@ public class Validator {
                     ExpectNotices ens = inst.cast();
                     String ensNamesExpr = ens.getNoticeBoardNames();
                     validateExpression("$." + instPosition + "noticeBoardNames: ", ensNamesExpr);
-                    List<String> ensNames = new ArrayList<>(Arrays.asList(ensNamesExpr.replaceAll("[|&\\(\\)'\"]", " ").replaceAll("  +", " ").trim()
-                            .split(" ")));
+                    List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(ensNamesExpr);
                     ensNames.removeAll(boardNames);
                     if (boardNames.isEmpty() || !ensNames.isEmpty()) {
                         throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + ensNames
