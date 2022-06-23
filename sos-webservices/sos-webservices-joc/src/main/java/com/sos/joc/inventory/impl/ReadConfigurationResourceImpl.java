@@ -116,10 +116,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 }
             }
             
-            if (config.getType().equals(ConfigurationType.WORKFLOW.intValue())) {
-                item.setConfiguration(NoticeToNoticesConverter.convertWorkflow(config.getContent()));
-                
-            } else if (config.getType().equals(ConfigurationType.FILEORDERSOURCE.intValue())) {
+            if (config.getType().equals(ConfigurationType.FILEORDERSOURCE.intValue())) {
                 // temp. for compatibility directory -> directoryExpr
                 FileOrderSource fos = (FileOrderSource) JocInventory.content2IJSObject(config.getContent(), config.getType());
                 if (fos.getDirectoryExpr() == null) {

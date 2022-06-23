@@ -443,15 +443,17 @@ public class WorkflowsHelper {
                     break;
                 case EXPECT_NOTICES:
                     ExpectNotices ens = inst.cast();
-                    //TODO expectedNoticeBoards.add(ens.getNoticeBoardNames());
-                    break;
-                case POST_NOTICES:
-                    PostNotices pns = inst.cast();
-                    pns.getNoticeBoardNames().forEach(nb -> postNoticeBoards.add(nb));
+                    String ensNamesExpr = ens.getNoticeBoardNames();
+                    List<String> ensNames = Arrays.asList(ensNamesExpr.replaceAll("[|&\\(\\)'\"]", " ").replaceAll("  +", " ").trim().split(" "));
+                    ensNames.forEach(nb -> expectedNoticeBoards.add(nb));
                     break;
                 case POST_NOTICE:
                     PostNotice pn = inst.cast();
                     postNoticeBoards.add(pn.getNoticeBoardName());
+                    break;
+                case POST_NOTICES:
+                    PostNotices pns = inst.cast();
+                    pns.getNoticeBoardNames().forEach(nb -> postNoticeBoards.add(nb));
                     break;
                 case IF:
                     IfElse ie = inst.cast();

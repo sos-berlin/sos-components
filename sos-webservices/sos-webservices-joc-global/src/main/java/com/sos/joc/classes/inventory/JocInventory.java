@@ -271,6 +271,10 @@ public class JocInventory {
         if (SOSString.isEmpty(content) || ConfigurationType.FOLDER.equals(type)) {
             return null;
         }
+        if (type.equals(ConfigurationType.WORKFLOW.intValue())) {
+            return NoticeToNoticesConverter.convertWorkflow(content);
+            
+        }
         return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
     }
 

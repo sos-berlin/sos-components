@@ -306,27 +306,27 @@ public class Validator {
         }
     }
 
-    private static void validateBoardRefs(String json, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
-        Matcher m = Pattern.compile("\"(?:noticeB|b)oardName\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
-        Set<String> boards = new HashSet<>();
-        while (m.find()) {
-            if (m.group(1) != null && !m.group(1).isEmpty()) {
-                boards.add(m.group(1));
-            }
-        }
-        if (!boards.isEmpty()) {
-            List<DBItemInventoryConfiguration> dbBoards = dbLayer.getConfigurationByNames(boards.stream().collect(Collectors.toList()),
-                    ConfigurationType.NOTICEBOARD.intValue());
-            if (dbBoards == null || dbBoards.isEmpty()) {
-                throw new JocConfigurationException("Missing assigned Notice Boards: " + boards.toString());
-            } else {
-                boards.removeAll(dbBoards.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
-                if (!boards.isEmpty()) {
-                    throw new JocConfigurationException("Missing assigned Notice Boards: " + boards.toString());
-                }
-            }
-        }
-    }
+//    private static void validateBoardRefs(String json, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
+//        Matcher m = Pattern.compile("\"(?:noticeB|b)oardName\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
+//        Set<String> boards = new HashSet<>();
+//        while (m.find()) {
+//            if (m.group(1) != null && !m.group(1).isEmpty()) {
+//                boards.add(m.group(1));
+//            }
+//        }
+//        if (!boards.isEmpty()) {
+//            List<DBItemInventoryConfiguration> dbBoards = dbLayer.getConfigurationByNames(boards.stream().collect(Collectors.toList()),
+//                    ConfigurationType.NOTICEBOARD.intValue());
+//            if (dbBoards == null || dbBoards.isEmpty()) {
+//                throw new JocConfigurationException("Missing assigned Notice Boards: " + boards.toString());
+//            } else {
+//                boards.removeAll(dbBoards.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
+//                if (!boards.isEmpty()) {
+//                    throw new JocConfigurationException("Missing assigned Notice Boards: " + boards.toString());
+//                }
+//            }
+//        }
+//    }
 
     private static List<String> validateWorkflowJobs(Workflow workflow, Set<String> releasedScripts) throws JsonProcessingException, IOException,
             SOSJsonSchemaException {
@@ -552,7 +552,8 @@ public class Validator {
                     ExpectNotices ens = inst.cast();
                     String ensNamesExpr = ens.getNoticeBoardNames();
                     validateExpression("$." + instPosition + "noticeBoardNames: ", ensNamesExpr);
-                    List<String> ensNames = new ArrayList<>(Arrays.asList(ensNamesExpr.replaceAll("[|&\\(\\)'\"]", " ").replaceAll("  +", " ").trim().split(" ")));
+                    List<String> ensNames = new ArrayList<>(Arrays.asList(ensNamesExpr.replaceAll("[|&\\(\\)'\"]", " ").replaceAll("  +", " ").trim()
+                            .split(" ")));
                     ensNames.removeAll(boardNames);
                     if (boardNames.isEmpty() || !ensNames.isEmpty()) {
                         throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + ensNames

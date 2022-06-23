@@ -59,10 +59,7 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
-import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.inventory.model.schedule.Schedule;
-import com.sos.inventory.model.script.Script;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
@@ -2333,36 +2330,22 @@ public abstract class PublishUtils {
             // jsObject.setId(item.getId());
             jsObject.setPath(item.getPath());
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
-            switch (jsObject.getObjectType()) {
-            case WORKFLOW:
-                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getPath(), item.getContent(), releasedScripts);
-                //Workflow workflow = Globals.objectMapper.readValue(item.getContent().getBytes(), Workflow.class);
-                if (commitId != null) {
-                    workflow.setVersionId(commitId);
-                }
-                jsObject.setContent(workflow);
-                break;
-            case JOBRESOURCE:
-                JobResource jobResource = Globals.objectMapper.readValue(item.getContent().getBytes(), JobResource.class);
-                jsObject.setContent(jobResource);
-                break;
-            case LOCK:
-                Lock lock = Globals.objectMapper.readValue(item.getContent().getBytes(), Lock.class);
-                jsObject.setContent(lock);
-                break;
-            case NOTICEBOARD:
-                Board board = Globals.objectMapper.readValue(item.getContent().getBytes(), Board.class);
-                jsObject.setContent(board);
-                break;
-            case JOBCLASS:
-                JobClass jobClass = Globals.objectMapper.readValue(item.getContent().getBytes(), JobClass.class);
-                jsObject.setContent(jobClass);
-                break;
-            case FILEORDERSOURCE:
-                FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getContent(), FileOrderSource.class);
-                jsObject.setContent(fileOrderSource);
-                break;
-            }
+            jsObject.setContent(JsonConverter.readAsConvertedDeployObject(item.getPath(), item.getContent(), StoreDeployments.CLASS_MAPPING.get(
+                    item.getType()), commitId, releasedScripts));
+            
+//            switch (jsObject.getObjectType()) {
+//            case WORKFLOW:
+//                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getPath(), item.getContent(), releasedScripts);
+//                //Workflow workflow = Globals.objectMapper.readValue(item.getContent().getBytes(), Workflow.class);
+//                if (commitId != null) {
+//                    workflow.setVersionId(commitId);
+//                }
+//                jsObject.setContent(workflow);
+//                break;
+//            default:
+//                jsObject.setContent(Globals.objectMapper.readValue(item.getContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
+//                break;
+//            }
             jsObject.setAccount(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()));
             // TODO: setVersion
             // jsObject.setVersion(item.getVersion());
@@ -2377,37 +2360,23 @@ public abstract class PublishUtils {
         try {
             ControllerObject jsObject = new ControllerObject();
             jsObject.setPath(item.getPath());
-            jsObject.setObjectType(DeployType.fromValue(item.getType()));
-            switch (jsObject.getObjectType()) {
-            case WORKFLOW:
-                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getPath(), item.getInvContent(), releasedScripts);
-                //Workflow workflow = Globals.objectMapper.readValue(item.getInvContent().getBytes(), Workflow.class);
-                if (commitId != null) {
-                    workflow.setVersionId(commitId);
-                }
-                jsObject.setContent(workflow);
-                break;
-            case JOBRESOURCE:
-                JobResource jobResource = Globals.objectMapper.readValue(item.getInvContent().getBytes(), JobResource.class);
-                jsObject.setContent(jobResource);
-                break;
-            case JOBCLASS:
-                JobClass jobClass = Globals.objectMapper.readValue(item.getInvContent().getBytes(), JobClass.class);
-                jsObject.setContent(jobClass);
-                break;
-            case LOCK:
-                Lock lock = Globals.objectMapper.readValue(item.getInvContent().getBytes(), Lock.class);
-                jsObject.setContent(lock);
-                break;
-            case NOTICEBOARD:
-                Board board = Globals.objectMapper.readValue(item.getInvContent().getBytes(), Board.class);
-                jsObject.setContent(board);
-                break;
-            case FILEORDERSOURCE:
-                FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getInvContent().getBytes(), FileOrderSource.class);
-                jsObject.setContent(fileOrderSource);
-                break;
-            }
+            jsObject.setObjectType(item.getTypeAsEnum());
+            jsObject.setContent(JsonConverter.readAsConvertedDeployObject(item.getPath(), item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(
+                    item.getType()), commitId, releasedScripts));
+
+//            switch (jsObject.getObjectType()) {
+//            case WORKFLOW:
+//                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getPath(), item.getInvContent(), releasedScripts);
+//                //Workflow workflow = Globals.objectMapper.readValue(item.getInvContent().getBytes(), Workflow.class);
+//                if (commitId != null) {
+//                    workflow.setVersionId(commitId);
+//                }
+//                jsObject.setContent(workflow);
+//                break;
+//            default:
+//                jsObject.setContent(Globals.objectMapper.readValue(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
+//                break;
+//            }
             jsObject.setVersion(item.getVersion());
             jsObject.setAccount(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()));
             return jsObject;
@@ -2423,40 +2392,7 @@ public abstract class PublishUtils {
             configurationObject.setPath(item.getPath());
             configurationObject.setName(item.getName());
             configurationObject.setObjectType(ConfigurationType.fromValue(item.getType()));
-            switch (configurationObject.getObjectType()) {
-            case WORKFLOW:
-                com.sos.inventory.model.workflow.Workflow workflow = Globals.objectMapper.readValue(item.getInvContent().getBytes(),
-                        com.sos.inventory.model.workflow.Workflow.class);
-                configurationObject.setConfiguration(workflow);
-                break;
-            case JOBRESOURCE:
-                com.sos.inventory.model.jobresource.JobResource jobResource = Globals.objectMapper.readValue(item.getInvContent().getBytes(),
-                        com.sos.inventory.model.jobresource.JobResource.class);
-                configurationObject.setConfiguration(jobResource);
-                break;
-            case JOBCLASS:
-                com.sos.inventory.model.jobclass.JobClass jobClass = Globals.objectMapper.readValue(item.getInvContent().getBytes(),
-                        com.sos.inventory.model.jobclass.JobClass.class);
-                configurationObject.setConfiguration(jobClass);
-                break;
-            case LOCK:
-                com.sos.inventory.model.lock.Lock lock = Globals.objectMapper.readValue(item.getInvContent().getBytes(),
-                        com.sos.inventory.model.lock.Lock.class);
-                configurationObject.setConfiguration(lock);
-                break;
-            case NOTICEBOARD:
-                com.sos.inventory.model.board.Board board = Globals.objectMapper.readValue(item.getInvContent().getBytes(),
-                        com.sos.inventory.model.board.Board.class);
-                configurationObject.setConfiguration(board);
-                break;
-            case FILEORDERSOURCE:
-                com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getInvContent()
-                        .getBytes(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
-                configurationObject.setConfiguration(fileOrderSource);
-                break;
-            default:
-                break;
-            }
+            configurationObject.setConfiguration(JocInventory.content2IJSObject(item.getInvContent(), configurationObject.getObjectType().intValue()));
             // configurationObject.setVersion(item.getVersion());
             // configurationObject.setAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
             return configurationObject;
@@ -2470,54 +2406,9 @@ public abstract class PublishUtils {
             ConfigurationObject configuration = new ConfigurationObject();
             // configuration.setId(item.getId());
             configuration.setPath(item.getPath());
-            configuration.setObjectType(ConfigurationType.fromValue(item.getType()));
-            switch (configuration.getObjectType()) {
-            case WORKFLOW:
-                com.sos.inventory.model.workflow.Workflow workflow = Globals.objectMapper.readValue(item.getContent().getBytes(),
-                        com.sos.inventory.model.workflow.Workflow.class);
-                configuration.setConfiguration(workflow);
-                break;
-            case JOBRESOURCE:
-                com.sos.inventory.model.jobresource.JobResource jobResource = Globals.objectMapper.readValue(item.getContent().getBytes(),
-                        com.sos.inventory.model.jobresource.JobResource.class);
-                configuration.setConfiguration(jobResource);
-                break;
-            case LOCK:
-                com.sos.inventory.model.lock.Lock lock = Globals.objectMapper.readValue(item.getContent().getBytes(),
-                        com.sos.inventory.model.lock.Lock.class);
-                configuration.setConfiguration(lock);
-                break;
-            case FILEORDERSOURCE:
-                com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getContent().getBytes(),
-                        com.sos.inventory.model.fileordersource.FileOrderSource.class);
-                configuration.setConfiguration(fileOrderSource);
-                break;
-            case SCHEDULE:
-                Schedule schedule = Globals.objectMapper.readValue(item.getContent(), Schedule.class);
-                configuration.setConfiguration(schedule);
-                break;
-            case INCLUDESCRIPT:
-                Script script = Globals.objectMapper.readValue(item.getContent(), Script.class);
-                configuration.setConfiguration(script);
-                break;
-            case WORKINGDAYSCALENDAR:
-            case NONWORKINGDAYSCALENDAR:
-                Calendar calendar = Globals.objectMapper.readValue(item.getContent().getBytes(), Calendar.class);
-                configuration.setConfiguration(calendar);
-                break;
-            case JOBCLASS:
-                com.sos.inventory.model.jobclass.JobClass jobClass = Globals.objectMapper.readValue(item.getContent().getBytes(),
-                        com.sos.inventory.model.jobclass.JobClass.class);
-                configuration.setConfiguration(jobClass);
-                break;
-            case NOTICEBOARD:
-                com.sos.inventory.model.board.Board board = Globals.objectMapper.readValue(item.getContent().getBytes(),
-                        com.sos.inventory.model.board.Board.class);
-                configuration.setConfiguration(board);
-                break;
-            default:
-                break;
-            }
+            configuration.setObjectType(item.getTypeAsEnum());
+            configuration.setConfiguration(JocInventory.content2IJSObject(item.getContent(), item.getType()));
+            
             return configuration;
         } catch (IOException e) {
             throw new JocException(e);
@@ -2529,24 +2420,9 @@ public abstract class PublishUtils {
             ConfigurationObject configuration = new ConfigurationObject();
             // configuration.setId(item.getId());
             configuration.setPath(item.getPath());
-            configuration.setObjectType(ConfigurationType.fromValue(item.getType()));
-            switch (configuration.getObjectType()) {
-            case WORKINGDAYSCALENDAR:
-            case NONWORKINGDAYSCALENDAR:
-                Calendar calendar = Globals.objectMapper.readValue(item.getContent().getBytes(), Calendar.class);
-                configuration.setConfiguration(calendar);
-                break;
-            case SCHEDULE:
-                Schedule schedule = Globals.objectMapper.readValue(item.getContent(), Schedule.class);
-                configuration.setConfiguration(schedule);
-                break;
-            case INCLUDESCRIPT:
-                Script script = Globals.objectMapper.readValue(item.getContent(), Script.class);
-                configuration.setConfiguration(script);
-                break;
-            default:
-                break;
-            }
+            configuration.setObjectType(item.getTypeAsEnum());
+            configuration.setConfiguration(JocInventory.content2IJSObject(item.getContent(), item.getType()));
+            
             return configuration;
         } catch (IOException e) {
             throw new JocException(e);
