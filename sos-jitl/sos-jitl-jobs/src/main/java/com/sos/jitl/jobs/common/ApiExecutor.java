@@ -30,6 +30,10 @@ import com.typesafe.config.ConfigValue;
 
 public class ApiExecutor {
 
+    private static final String APPLICATION_JSON = "application/json";
+
+    private static final String CONTENT_TYPE = "Content-Type";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiExecutor.class);
 
     private static final String DEFAULT_TRUSTSTORE_FILENAME = "https-truststore.p12";
@@ -90,9 +94,9 @@ public class ApiExecutor {
     }
 
     public String login() throws Exception {
-    	logDebug("***ApiExecutor***");
-    	tryCreateClient();
-    	logDebug("send login to: " + jocUri.resolve(WS_API_LOGIN).toString());
+        logDebug("***ApiExecutor***");
+        tryCreateClient();
+        logDebug("send login to: " + jocUri.resolve(WS_API_LOGIN).toString());
         client.postRestService(jocUri.resolve(WS_API_LOGIN), null);
         logDebug("HTTP status code: " + client.statusCode());
         return client.getResponseHeader(ACCESS_TOKEN_HEADER);
@@ -104,6 +108,7 @@ public class ApiExecutor {
         } else {
             tryCreateClient();
             client.addHeader(ACCESS_TOKEN_HEADER, token);
+            client.addHeader(CONTENT_TYPE, APPLICATION_JSON);
             logInfo("REQUEST: " + apiUrl);
             logInfo("PARAMS: " + body);
             if(!apiUrl.toLowerCase().startsWith(WS_API_PREFIX)) {
@@ -118,7 +123,7 @@ public class ApiExecutor {
         if (token != null) {
             tryCreateClient();
             client.addHeader(ACCESS_TOKEN_HEADER, token);
-        	logDebug("send logout");
+            logDebug("send logout");
             client.postRestService(jocUri.resolve(WS_API_LOGOUT), null);
         }
     }
@@ -232,7 +237,7 @@ public class ApiExecutor {
     }
 
     public Config readConfig(Path agentConfigDirectory) {
-    	// set default com.typesafe.config.Config
+        // set default com.typesafe.config.Config
         Config defaultConfig = ConfigFactory.load();
         /*
          * set initial properties 
@@ -240,11 +245,11 @@ public class ApiExecutor {
          * 
          * */
         Properties props = new Properties();
-    	props.setProperty(PRIVATE_CONF_JS7_PARAM_CONFDIR, agentConfigDirectory.toString());
-    	Path privatFolderPath = agentConfigDirectory.resolve(PRIVATE_FOLDER_NAME);
-    	logDebug("agents private folder: " + privatFolderPath.toString());
-    	Config defaultConfigWithAgentConfDir = ConfigFactory.parseProperties(props).withFallback(defaultConfig).resolve();
-    	logDebug(PRIVATE_CONF_JS7_PARAM_CONFDIR + " (Config): " + defaultConfigWithAgentConfDir.getString(PRIVATE_CONF_JS7_PARAM_CONFDIR));
+        props.setProperty(PRIVATE_CONF_JS7_PARAM_CONFDIR, agentConfigDirectory.toString());
+        Path privatFolderPath = agentConfigDirectory.resolve(PRIVATE_FOLDER_NAME);
+        logDebug("agents private folder: " + privatFolderPath.toString());
+        Config defaultConfigWithAgentConfDir = ConfigFactory.parseProperties(props).withFallback(defaultConfig).resolve();
+        logDebug(PRIVATE_CONF_JS7_PARAM_CONFDIR + " (Config): " + defaultConfigWithAgentConfDir.getString(PRIVATE_CONF_JS7_PARAM_CONFDIR));
         return ConfigFactory.parseFile(privatFolderPath.resolve(PRIVATE_CONF_FILENAME).toFile()).withFallback(defaultConfigWithAgentConfDir)
                 .resolve();
     }
@@ -259,7 +264,7 @@ public class ApiExecutor {
     private static List<KeyStoreCredentials> readTruststoreCredentials(Config config) {
         List<KeyStoreCredentials> credentials = config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).stream().map(item -> {
             return new KeyStoreCredentials(item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH),
-            		item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD), null);
+                    item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD), null);
         }).filter(Objects::nonNull).collect(Collectors.toList());
         if (credentials != null) {
             return credentials;
@@ -269,27 +274,32 @@ public class ApiExecutor {
     }
 
     private void logInfo (String log) {
-    	if (jobLogger != null) {
-    		jobLogger.info(log);
-    	} else {
-    		LOGGER.info(log);
-    	}
+        if (jobLogger != null) {
+            jobLogger.info(log);
+        } else {
+            LOGGER.info(log);
+        }
     }
     
     private void logDebug (String log) {
-    	if (jobLogger != null) {
-    		jobLogger.debug(log);
-    	} else {
-    		LOGGER.debug(log);
-    	}
+        if (jobLogger != null) {
+            jobLogger.debug(log);
+        } else {
+            LOGGER.debug(log);
+        }
     }
     
     private void logError (String log) {
-    	if (jobLogger != null) {
-    		jobLogger.error(log);
-    	} else {
-    		LOGGER.error(log);
-    	}
+        if (jobLogger != null) {
+            jobLogger.error(log);
+        } else {
+            LOGGER.error(log);
+        }
+    }
+
+    
+    public SOSRestApiClient getClient() {
+        return client;
     }
     
 }

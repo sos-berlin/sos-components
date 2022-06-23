@@ -135,6 +135,7 @@ public class SOSKeycloakSession implements ISOSSession {
                 startSession = Instant.now().toEpochMilli();
                 return true;
             } else {
+                this.stop();
                 return false;
             }
         } catch (JocException | SOSException | IOException e) {

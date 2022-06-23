@@ -13,7 +13,7 @@ import com.sos.joc.Globals;
 public class SOSAuthAccessTokenHandler extends Thread {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthAccessTokenHandler.class);
-    private static final int TIME_GAP_SECONDS = 20;
+    public static final int TIME_GAP_SECONDS = 20;
     private static final String ThreadCtx = "authentication";
 
     private boolean stop = false;
@@ -117,9 +117,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
                 }
 
             }
-            if (nextAccount != null)
-
-            {
+            if (nextAccount != null) {
                 resetTimer(nextAccount, next);
             }
         }
