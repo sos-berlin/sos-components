@@ -43,6 +43,7 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
+import js7.data.workflow.Workflow;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
@@ -120,7 +121,9 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             JWorkflowId workflowId = suspendedOrFailedOrders.keySet().iterator().next();
             Either<Problem, JWorkflow> e = currentState.repo().idToCheckedWorkflow(workflowId);
             ProblemHelper.throwProblemIfExist(e);
-            JsonNode node = Globals.objectMapper.readTree(e.get().withPositions().toJson());
+            JWorkflow w = e.get();
+            
+            JsonNode node = Globals.objectMapper.readTree(w.withPositions().toJson());
             List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
             //List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
             Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(instructions);
@@ -133,16 +136,13 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             jOrders = suspendedOrFailedOrders.get(workflowId);
             jOrders.forEach(o -> {
                 orderIds.add(o.id().string());
-                e.get().reachablePositions(o.workflowPosition().position()).stream().forEachOrdered(jPos -> {
-                    String positionString = jPos.toString();
-                    Position p = new Position();
-                    p.setPosition(jPos.toList());
-                    p.setPositionString(positionString);
+                w.reachablePositions(o.workflowPosition().position()).stream().forEachOrdered(jPos -> {
+                    Position p = createPosition(jPos, w.asScala());
                     //positionsWithImplicitEnds.add(p);
                     if (!implicitEnds.contains(p.getPositionString())) {
                         pos.add(p);
-                        counterPerPos.putIfAbsent(positionString, 0);
-                        counterPerPos.computeIfPresent(positionString, (key, value) -> value + 1);
+                        counterPerPos.putIfAbsent(p.getPositionString(), 0);
+                        counterPerPos.computeIfPresent(p.getPositionString(), (key, value) -> value + 1);
                     }
                 });
             });
@@ -184,7 +184,9 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         JWorkflowId workflowId = jOrder.workflowId();
         Either<Problem, JWorkflow> e = currentState.repo().idToCheckedWorkflow(workflowId);
         ProblemHelper.throwProblemIfExist(e);
-        JsonNode node = Globals.objectMapper.readTree(e.get().withPositions().toJson());
+        JWorkflow w = e.get();
+        
+        JsonNode node = Globals.objectMapper.readTree(w.withPositions().toJson());
         List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
         //List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
         Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(instructions);
@@ -192,10 +194,8 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         setWorkflowId(new WorkflowId(WorkflowPaths.getPath(workflowId), workflowId.versionId().string()));
 
         final Set<Position> pos = new LinkedHashSet<>();
-        e.get().reachablePositions(jOrder.workflowPosition().position()).stream().forEachOrdered(jPos -> {
-            Position p = new Position();
-            p.setPosition(jPos.toList());
-            p.setPositionString(jPos.toString());
+        w.reachablePositions(jOrder.workflowPosition().position()).stream().forEachOrdered(jPos -> {
+            Position p = createPosition(jPos, w.asScala());
             boolean notImplicitEnd = !implicitEnds.contains(p.getPositionString());
             if (notImplicitEnd || jOrder.workflowPosition().position().toString().equals(jPos.toString())) {
                 positionsWithImplicitEnds.add(p);
@@ -319,6 +319,21 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         }
 
         return variables;
+    }
+    
+    private static Position createPosition(JPosition jPos, Workflow w) {
+        Position p = new Position();
+        p.setPosition(jPos.toList());
+        p.setPositionString(jPos.toString());
+        p.setType(w.instruction(jPos.asScala()).instructionName().replace("Execute.Named", "Job"));
+        if ("Job".equals(p.getType())) {
+            try {
+                p.setLabel(w.labeledInstruction(jPos.asScala()).toOption().get().labelString().trim().replaceFirst(":$", ""));
+            } catch (Throwable e) {
+                //
+            }
+        }
+        return p;
     }
 
 }
