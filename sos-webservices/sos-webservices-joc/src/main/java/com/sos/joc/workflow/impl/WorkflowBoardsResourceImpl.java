@@ -130,7 +130,7 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                 } else {
                     workflow.setAddOrderFromWorkflows(Collections.emptyList());
                 }
-                if (workflow.getAddOrderToWorkflows() != null) {
+                if (workflow.getAddOrderToWorkflows() != null && !workflow.getAddOrderToWorkflows().isEmpty()) {
                     f.setWorkflowIds(dbLayer.getWorkflowsIds(workflow.getAddOrderToWorkflows().stream().map(w -> w.getPath()).distinct().collect(Collectors
                             .toList()), controllerId));
                     if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
