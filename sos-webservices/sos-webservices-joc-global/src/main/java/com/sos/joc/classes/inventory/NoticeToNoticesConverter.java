@@ -36,28 +36,36 @@ public class NoticeToNoticesConverter {
     public static com.sos.sign.model.instruction.PostNotices postNoticeToSignPostNotices(com.sos.sign.model.instruction.PostNotice pn) {
         com.sos.sign.model.instruction.PostNotices pns = new com.sos.sign.model.instruction.PostNotices();
         pns.setTYPE(InstructionType.POST_NOTICES);
-        pns.setBoardPaths(Collections.singletonList(pn.getBoardPath()));
+        if (pn.getBoardPath() != null) {
+            pns.setBoardPaths(Collections.singletonList(pn.getBoardPath()));
+        }
         return pns;
     }
 
     public static com.sos.sign.model.instruction.ExpectNotices expectNoticeToSignExpectNotices(com.sos.sign.model.instruction.ExpectNotice en) {
         com.sos.sign.model.instruction.ExpectNotices ens = new com.sos.sign.model.instruction.ExpectNotices();
         ens.setTYPE(InstructionType.EXPECT_NOTICES);
-        ens.setBoardPaths(JExpression.quoteString(en.getBoardPath()));
+        if (en.getBoardPath() != null) {
+            ens.setBoardPaths(JExpression.quoteString(en.getBoardPath()));
+        }
         return ens;
     }
 
     public static PostNotices postNoticeToPostNotices(PostNotice pn) {
         PostNotices pns = new PostNotices();
         pns.setTYPE(InstructionType.POST_NOTICES);
-        pns.setNoticeBoardNames(Collections.singletonList(pn.getNoticeBoardName()));
+        if (pn.getNoticeBoardName() != null) {
+            pns.setNoticeBoardNames(Collections.singletonList(pn.getNoticeBoardName()));
+        }
         return pns;
     }
 
     public static ExpectNotices expectNoticeToExpectNotices(ExpectNotice en) {
         ExpectNotices ens = new ExpectNotices();
         ens.setTYPE(InstructionType.EXPECT_NOTICES);
-        ens.setNoticeBoardNames(JExpression.quoteString(en.getNoticeBoardName()));
+        if (en.getNoticeBoardName() != null) {
+            ens.setNoticeBoardNames(JExpression.quoteString(en.getNoticeBoardName()));
+        }
         return ens;
     }
     
