@@ -207,11 +207,42 @@ public class JS7ConverterHelper {
 
     /** JITL Jobs arguments<br/>
      * SHELL Jobs env<br/>
+     * TODO JSON quote?<br/>
      */
     public static String quoteJS7StringValueWithDoubleQuotes(String val) {
         if (SOSString.isEmpty(val)) {
             return val;
         }
-        return "\"" + val.replaceAll("\\\\", "\\\\\\\\") + "\"";
+        // if (val.equals("$FILE")) {
+        if (val.startsWith("$")) {
+            return val;
+        }
+        // return "\"" + val.replaceAll("\\\\", "\\\\\\\\") + "\"";
+        return "\"" + val + "\"";
     }
+
+    public static String quoteJS7StringValueWithSingleQuotes(String val) {
+        if (SOSString.isEmpty(val)) {
+            return val;
+        }
+        // if (val.equals("$FILE")) {
+        if (val.startsWith("$")) {
+            return val;
+        }
+        if (val.indexOf("'") > -1) {
+            return quoteJS7StringValueWithDoubleQuotes(val);
+        }
+        return "'" + val + "'";
+    }
+
+    // /sos/xxx/ -> /sos/xxx/
+    // /sos -> /sos/
+    // \sos\xxx -> /sos/xxx/
+    public static String normalizeDirectoryPath(String path) {
+        if (path == null) {
+            return null;
+        }
+        return "/" + StringUtils.strip(path.trim().replace('\\', '/'), "/").concat("/");
+    }
+
 }

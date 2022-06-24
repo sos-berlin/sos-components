@@ -709,13 +709,13 @@ public class JS7Converter {
     }
 
     private static Job setAgent(JS7ConverterResult result, Job j, JobCMD jilJob) {
-        if (CONFIG.getAgentConfig().getForcedName() != null) {
-            j.setAgentName(CONFIG.getAgentConfig().getForcedName());
+        if (CONFIG.getAgentConfig().getForcedAgent() != null) {
+            j.setAgentName(CONFIG.getAgentConfig().getForcedAgent().getName());
         } else {
             // TODO agent cluster etc
             String name = normalizeName(result, jilJob, jilJob.getMachine().getValue());
             if (CONFIG.getAgentConfig().getMapping().containsKey(name)) {
-                name = CONFIG.getAgentConfig().getMapping().get(name);
+                name = CONFIG.getAgentConfig().getMapping().get(name).getName();
             }
             j.setAgentName(name);
         }
@@ -724,14 +724,15 @@ public class JS7Converter {
 
     private static Job setExecutable(Job j, JobCMD jilJob) {
         ExecutableScript e = new ExecutableScript();
-        // TODO
+        // TODO unix/windows
         StringBuilder script = new StringBuilder("#!/bin/sh");
         script.append(CONFIG.getJobConfig().getScriptNewLine());
         if (jilJob.getProfile().getValue() != null) {
             script.append(jilJob.getProfile().getValue()).append(CONFIG.getJobConfig().getScriptNewLine());
         }
-        if (CONFIG.getMockConfig().getScript() != null) {
-            script.append(CONFIG.getMockConfig().getScript()).append(" ");
+        if (!CONFIG.getMockConfig().isEmpty()) {
+            // TODO unix/windows
+            script.append(CONFIG.getMockConfig().getUnixScript()).append(" ");
         }
         script.append(jilJob.getCommand().getValue());
         e.setScript(script.toString());

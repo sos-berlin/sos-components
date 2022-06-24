@@ -118,7 +118,7 @@ public abstract class JS7ConverterMain {
             try {
                 SOSGzipResult r = SOSGzip.compress(outputDir, false);
                 Files.write(archive, r.getCompressed(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-                LOGGER.info("[archive][" + archive + "]file written");
+                LOGGER.info("[archive][" + archive + "][written]" + r.toString());
             } catch (Throwable e) {
                 LOGGER.error("[" + archive + "][tar.gz compressing]" + e.toString(), e);
             }

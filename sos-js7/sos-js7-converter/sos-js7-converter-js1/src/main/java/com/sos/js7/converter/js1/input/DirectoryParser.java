@@ -7,13 +7,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSGzip;
+import com.sos.commons.util.SOSPath;
 import com.sos.js7.converter.commons.JS7ConverterConfig.ParserConfig;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.output.ZipCompress;
 import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 import com.sos.js7.converter.js1.common.Folder;
@@ -22,36 +26,43 @@ public class DirectoryParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryParser.class);
 
-    public static DirectoryParserResult parse(ParserConfig config, Path dir) {
+    public static DirectoryParserResult parse(ParserConfig config, Path input, Path outputDir) {
         DirectoryParserResult r = new DirectoryParser().new DirectoryParserResult();
 
         String method = "parse";
-        if (Files.exists(dir)) {
+        if (Files.exists(input)) {
+            boolean removeDir = false;
+            Path dir = null;
             try {
-                boolean checkExcluded = !config.isEmpty();
-
-                r.setRoot(parseSingleDir(r, new Folder(dir)));
-                try (Stream<Path> stream = Files.walk(dir)) {
-                    for (Path p : stream.filter(f -> Files.isDirectory(f) && !f.equals(dir)).collect(Collectors.toList())) {
-                        if (checkExcluded) {
-                            if (config.getExcludedDirectoryNames().contains(p.getFileName().toString())) {
-                                LOGGER.info(String.format("[%s][%s][skip]because excluded", method, p));
-                                continue;
-                            }
-                        }
-
-                        Folder fp = r.getRoot().findParent(p);
-                        if (fp != null) {
-                            fp.addFolder(parseSingleDir(r, new Folder(p)));
-                        }
-                    }
+                if (Files.isDirectory(input)) {
+                    dir = input;
+                } else {
+                    dir = decompressInputFile(input, outputDir);
+                    removeDir = true;
                 }
+
+                int level = 0;
+                boolean checkExcludedDirectoryNames = config.hasExcludedDirectoryNames();
+                boolean checkExcludedDirectoryPaths = config.hasExcludedDirectoryPaths();
+
+                r.setRoot(parseFiles(r, new Folder(dir)));
+                r.addCountFolders();
+                parseDirectory(config, r, r.getRoot(), level, checkExcludedDirectoryNames, checkExcludedDirectoryPaths);
             } catch (Throwable e) {
                 LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
-                ParserReport.INSTANCE.addErrorRecord(dir, null, e);
+                ParserReport.INSTANCE.addErrorRecord(input, null, e);
+            } finally {
+                if (removeDir && dir != null) {
+                    try {
+                        LOGGER.info(String.format("[temp input dir][delete]%s", dir));
+                        SOSPath.deleteIfExists(dir);
+                    } catch (Throwable e) {
+                        LOGGER.error(String.format("[temp input dir][delete][%s]%s", dir, e.toString()), e);
+                    }
+                }
             }
         } else {
-            LOGGER.info(String.format("[%s][not found]%s", method, dir));
+            LOGGER.info(String.format("[%s][not found]%s", method, input));
         }
 
         ParserReport.INSTANCE.addSummaryRecord("TOTAL FOLDERS", r.getCountFolders());
@@ -69,10 +80,74 @@ public class DirectoryParser {
         return r;
     }
 
-    private static Folder parseSingleDir(DirectoryParserResult r, Folder folder) {
-        r.addCountFolders();
+    private static Path decompressInputFile(Path inputFile, Path outputDir) throws Exception {
+        Path dir = outputDir.getParent().resolve("input-" + SOSDate.getCurrentDateTimeAsString().replaceAll(" ", "-").replaceAll(":", ""));
+        boolean isTarGZ = false;
 
-        String method = "parseSingleDir";
+        String fn = inputFile.getFileName().toString().toLowerCase();
+        if (fn.endsWith(".tar.gz")) {
+            isTarGZ = true;
+        } else if (fn.endsWith(".zip")) {
+        } else {
+            throw new Exception(String.format("[temp input dir][decompress][failed][%s]supported file extensions: .tar.gz, .zip", inputFile));
+        }
+
+        LOGGER.info(String.format("[temp input dir][decompress][%s]%s", inputFile, dir));
+        if (Files.exists(dir)) {
+            SOSPath.cleanupDirectory(dir);
+        } else {
+            Files.createDirectories(dir);
+        }
+        if (isTarGZ) {
+            SOSGzip.decompress(inputFile, dir, false);
+        } else {
+            ZipCompress.decompress(inputFile, dir);
+        }
+        return dir;
+    }
+
+    private static Folder parseDirectory(ParserConfig config, DirectoryParserResult r, Folder parentFolder, int level,
+            boolean checkExcludedDirectoryNames, boolean checkExcludedDirectoryPaths) {
+        String method = "parseDirectory";
+        LOGGER.debug(String.format("[%s][level=%s]%s", method, level, parentFolder.getPath()));
+
+        File[] childFolders = parentFolder.getPath().toAbsolutePath().toFile().listFiles(f -> f.isDirectory());
+        if (childFolders.length == 0) {
+            return parentFolder;
+        }
+
+        level += 1;
+        for (File childFolder : childFolders) {
+            if (checkExcludedDirectoryNames) {
+                if (config.getExcludedDirectoryNames().contains(childFolder.getName())) {
+                    LOGGER.info(String.format("[%s][level=%s][%s][skip]because excluded name '%s'", method, level, childFolder, childFolder
+                            .getName()));
+                    continue;
+                }
+            }
+            if (checkExcludedDirectoryPaths) {
+                Set<String> excludedPaths = config.getExcludedDirectoryPaths().get(Integer.valueOf(level));
+                if (excludedPaths != null) {
+                    String found = excludedPaths.stream().filter(e -> JS7ConverterHelper.normalizeDirectoryPath(childFolder.getPath()).endsWith(e))
+                            .findAny().orElse(null);
+                    if (found != null) {
+                        LOGGER.info(String.format("[%s][level=%s][%s][skip]because excluded path '%s'", method, level, childFolder, found));
+                        continue;
+                    }
+                }
+            }
+
+            Folder folder = new Folder(childFolder.toPath());
+            r.addCountFolders();
+            parentFolder.addFolder(parseFiles(r, folder));
+            parentFolder = parseDirectory(config, r, folder, level, checkExcludedDirectoryNames, checkExcludedDirectoryPaths);
+        }
+
+        return parentFolder;
+    }
+
+    private static Folder parseFiles(DirectoryParserResult r, Folder folder) {
+        String method = "parseFiles";
         File[] files = folder.getPath().toAbsolutePath().toFile().listFiles(f -> !f.isDirectory());
         if (files.length == 0) {
             return folder;

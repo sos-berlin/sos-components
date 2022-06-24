@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -16,10 +18,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
+import com.sos.js7.converter.commons.report.ParserReport;
 
 public class JS7ConverterConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JS7ConverterConfig.class);
+
+    private static final String LIST_VALUE_DELIMITER = ";";
 
     public enum Platform {
         UNIX, WINDOWS
@@ -95,6 +100,9 @@ public class JS7ConverterConfig {
                     case "parserConfig.excludedDirectoryNames":
                         parserConfig.withExcludedDirectoryNames(val);
                         break;
+                    case "parserConfig.excludedDirectoryPaths":
+                        parserConfig.withExcludedDirectoryPaths(val);
+                        break;
                     // WORKFLOW
                     case "workflowConfig.defaultTimeZone":
                         workflowConfig.defaultTimeZone = val;
@@ -142,15 +150,18 @@ public class JS7ConverterConfig {
                             LOGGER.warn(getWarnMessage("agentConfig.forcedPlatform", "Platform", val));
                         }
                         break;
-                    case "agentConfig.forcedName":
-                        agentConfig.forcedName = val;
+                    case "agentConfig.forcedAgent":
+                        agentConfig.withForcedAgent(val);
                         break;
-                    case "agentConfig.defaultName":
-                        agentConfig.defaultName = val;
+                    case "agentConfig.defaultAgent":
+                        agentConfig.withDefaultAgent(val);
                         break;
                     // MOCK
-                    case "mockConfig.script":
-                        mockConfig.script = val;
+                    case "mockConfig.windowsScript":
+                        mockConfig.windowsScript = val;
+                        break;
+                    case "mockConfig.unixScript":
+                        mockConfig.unixScript = val;
                         break;
                     // SCHEDULE
                     case "scheduleConfig.forcedWorkingCalendarName":
@@ -266,21 +277,56 @@ public class JS7ConverterConfig {
     public class ParserConfig {
 
         private Set<String> excludedDirectoryNames;
+        private Map<Integer, Set<String>> excludedDirectoryPaths; // level, paths
 
         public ParserConfig withExcludedDirectoryNames(String val) {
             if (!SOSString.isEmpty(val)) {
-                excludedDirectoryNames = Arrays.stream(val.split(",")).map(e -> e.trim()).collect(Collectors.toSet());
+                excludedDirectoryNames = Arrays.stream(val.split(LIST_VALUE_DELIMITER)).map(e -> e.trim()).collect(Collectors.toSet());
             }
             return this;
         }
 
+        public ParserConfig withExcludedDirectoryPaths(String val) {
+            if (!SOSString.isEmpty(val)) {
+                List<String> list = Arrays.stream(val.split(LIST_VALUE_DELIMITER)).map(e -> JS7ConverterHelper.normalizeDirectoryPath(e)).distinct()
+                        .collect(Collectors.toList());
+                excludedDirectoryPaths = new HashMap<>();
+                for (String p : list) {
+                    int arrLen = p.split("/").length;
+                    if (arrLen > 0) {
+                        Integer level = Integer.valueOf(arrLen - 1); // /sos/xxx/ <- level 2
+                        Set<String> set = excludedDirectoryPaths.get(level);
+                        if (set == null) {
+                            set = new HashSet<>();
+                        }
+                        set.add(p);
+                        excludedDirectoryPaths.put(level, set);
+                    }
+                }
+            }
+            return this;
+        }
+
+        public boolean hasExcludedDirectoryNames() {
+            return excludedDirectoryNames != null && excludedDirectoryNames.size() > 0;
+        }
+
+        public boolean hasExcludedDirectoryPaths() {
+            return excludedDirectoryPaths != null && excludedDirectoryPaths.size() > 0;
+        }
+
         public boolean isEmpty() {
-            return excludedDirectoryNames == null || excludedDirectoryNames.size() == 0;
+            return hasExcludedDirectoryNames() || hasExcludedDirectoryPaths();
         }
 
         public Set<String> getExcludedDirectoryNames() {
             return excludedDirectoryNames;
         }
+
+        public Map<Integer, Set<String>> getExcludedDirectoryPaths() {
+            return excludedDirectoryPaths;
+        }
+
     }
 
     public class GenerateConfig {
@@ -407,54 +453,60 @@ public class JS7ConverterConfig {
 
     public class AgentConfig {
 
-        private Map<String, String> mapping;
+        private Map<String, JS7Agent> mapping;
         private Platform forcedPlatform;
-        private String forcedName; // use this instead of evaluated agent name
-        private String defaultName;// when agent can't be evaluated
+        private JS7Agent forcedAgent; // use this instead of evaluated agent name
+        private JS7Agent defaultAgent;// when agent can't be evaluated
 
         public AgentConfig withForcedPlatform(Platform platform) {
             this.forcedPlatform = platform;
             return this;
         }
 
-        public AgentConfig withForcedName(String agentName) {
-            this.forcedName = agentName;
+        public AgentConfig withForcedAgent(String agent) {
+            this.forcedAgent = new JS7Agent(agent);
             return this;
         }
 
-        public AgentConfig withDefaultName(String agentName) {
-            this.defaultName = agentName;
+        public AgentConfig withDefaultAgent(String agent) {
+            this.defaultAgent = new JS7Agent(agent);
             return this;
         }
 
         /** Agent mapping<br/>
          * Example 1<br>
-         * - input map: my_agent_1 = agent; my_agent_2 = agent; my_agent_3 = cluster<br/>
+         * - input map: my_agent_1=agent=UNIX; my_agent_2=agent; my_agent_3=cluster=WINDOWS<br/>
          **/
         public AgentConfig withMapping(String mapping) {
-            Map<String, String> map = new HashMap<>();
+            Map<String, JS7Agent> map = new HashMap<>();
             if (mapping != null) {
                 // map and remove duplicates
-                map = Stream.of(mapping.trim().split(";")).map(e -> e.split("=")).filter(e -> e.length == 2).collect(Collectors.toMap(arr -> arr[0]
-                        .trim(), arr -> arr[1].trim(), (oldValue, newValue) -> oldValue));
+                map = Stream.of(mapping.trim().split(LIST_VALUE_DELIMITER)).map(e -> e.split("=")).filter(e -> e.length == 2 || e.length == 3)
+                        .collect(Collectors.toMap(arr -> arr[0].trim(), arr -> {
+                            if (arr.length == 3) {
+                                return new JS7Agent(arr[1].trim() + "=" + arr[2].trim());
+                            } else {
+                                return new JS7Agent(arr[1].trim());
+                            }
+                        }, (oldValue, newValue) -> oldValue));
             }
             return withMapping(map);
         }
 
-        public AgentConfig withMapping(Map<String, String> map) {
+        public AgentConfig withMapping(Map<String, JS7Agent> map) {
             this.mapping = map;
             return this;
         }
 
-        public String getForcedName() {
-            return forcedName;
+        public JS7Agent getForcedAgent() {
+            return forcedAgent;
         }
 
-        public String getDefaultName() {
-            return defaultName;
+        public JS7Agent getDefaultAgent() {
+            return defaultAgent;
         }
 
-        public Map<String, String> getMapping() {
+        public Map<String, JS7Agent> getMapping() {
             if (mapping == null) {
                 mapping = new HashMap<>();
             }
@@ -466,26 +518,73 @@ public class JS7ConverterConfig {
         }
 
         public boolean isEmpty() {
-            return (mapping == null || mapping.size() == 0) && forcedPlatform == null && forcedName == null && defaultName == null;
+            return (mapping == null || mapping.size() == 0) && forcedPlatform == null && forcedAgent == null && defaultAgent == null;
         }
 
     }
 
+    public JS7Agent newJS7Agent(String name, Platform platform) {
+        return new JS7Agent(name, platform);
+    }
+
+    public class JS7Agent {
+
+        private String name;
+        private Platform platform;
+
+        private JS7Agent(String val) {
+            String[] v = val.split("=");
+            if (v.length > 0) {
+                name = v[0];
+                if (v.length > 1) {
+                    try {
+                        platform = Platform.valueOf(v[1].toUpperCase());
+                    } catch (Throwable e) {
+                        ParserReport.INSTANCE.addWarningRecord("[config]cannot evaluate platform for JS7 Agent=" + name, "Platform=" + v[1]);
+                    }
+                }
+            }
+        }
+
+        private JS7Agent(String name, Platform platform) {
+            this.name = name;
+            this.platform = platform;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Platform getPlatform() {
+            return platform;
+        }
+    }
+
     public class MockConfig {
 
-        private String script;
+        private String windowsScript;
+        private String unixScript;
 
-        public MockConfig withScript(String script) {
-            this.script = script;
+        public MockConfig withWindowsScript(String script) {
+            this.windowsScript = script;
             return this;
         }
 
-        public String getScript() {
-            return script;
+        public MockConfig withUnixScript(String script) {
+            this.unixScript = script;
+            return this;
+        }
+
+        public String getWindowsScript() {
+            return windowsScript;
+        }
+
+        public String getUnixScript() {
+            return unixScript;
         }
 
         public boolean isEmpty() {
-            return script == null;
+            return windowsScript == null && unixScript == null;
         }
     }
 
@@ -585,8 +684,8 @@ public class JS7ConverterConfig {
             Map<String, Integer> map = new HashMap<>();
             if (mapping != null) {
                 // map and remove duplicates
-                map = Stream.of(mapping.trim().split(";")).map(e -> e.split("=")).filter(e -> e.length == 2).collect(Collectors.toMap(arr -> arr[0]
-                        .trim(), arr -> Integer.parseInt(arr[1].trim()), (oldValue, newValue) -> oldValue));
+                map = Stream.of(mapping.trim().split(LIST_VALUE_DELIMITER)).map(e -> e.split("=")).filter(e -> e.length == 2).collect(Collectors
+                        .toMap(arr -> arr[0].trim(), arr -> Integer.parseInt(arr[1].trim()), (oldValue, newValue) -> oldValue));
             }
             return withMapping(map);
         }

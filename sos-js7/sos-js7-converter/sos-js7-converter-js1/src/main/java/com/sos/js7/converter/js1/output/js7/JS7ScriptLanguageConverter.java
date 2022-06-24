@@ -10,11 +10,11 @@ public class JS7ScriptLanguageConverter {
 
     private String className;
     private String javaClassName;
-    private boolean isYADE;
+    private YADE yade;
 
     public JS7ScriptLanguageConverter(ACommonJob job) {
         this.job = job;
-        this.language = job.getScript().getLanguage() == null ? "shell" : job.getScript().getLanguage();
+        this.language = job.getScript().getLanguage() == null ? "shell" : job.getScript().getLanguage().toLowerCase();
     }
 
     public void process() {
@@ -71,9 +71,12 @@ public class JS7ScriptLanguageConverter {
                 break;
             // YADE
             case "sos.scheduler.jade.JadeJob":
+                className = jc;
+                yade = new YADE(false);
+                break;
             case "sos.scheduler.jade.SOSJade4DMZJSAdapter":
                 className = jc;
-                isYADE = true;
+                yade = new YADE(true);
                 break;
             // SPLIT/JOIN
             case "com.sos.jitl.splitter.JobChainSplitterJSAdapterClass":
@@ -103,8 +106,27 @@ public class JS7ScriptLanguageConverter {
         return javaClassName;
     }
 
-    public boolean isYADE() {
-        return isYADE;
+    public YADE getYADE() {
+        return yade;
+    }
+
+    public class YADE {
+
+        private final boolean dmz;
+        private final String bin;
+
+        private YADE(boolean dmz) {
+            this.dmz = dmz;
+            this.bin = this.dmz ? "JS7_YADE_DMZ_BIN" : "JS7_YADE_BIN";
+        }
+
+        public boolean isDMZ() {
+            return dmz;
+        }
+
+        public String getBin() {
+            return bin;
+        }
     }
 
 }

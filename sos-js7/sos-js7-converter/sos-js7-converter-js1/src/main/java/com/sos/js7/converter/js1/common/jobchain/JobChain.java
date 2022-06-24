@@ -85,7 +85,7 @@ public class JobChain {
             } else if (fileName.endsWith(EConfigFileExtensions.JOB_CHAIN.extension())) {
                 jobChainFile = file;
             } else if (fileName.endsWith(EConfigFileExtensions.JOB_CHAIN_CONFIG.extension())) {
-                config = new JobChainConfig(file);
+                config = new JobChainConfig(pr, file);
             }
         }
         return jobChainFile;

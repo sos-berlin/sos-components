@@ -21,10 +21,11 @@ public class DirectoryParserTest {
     @Ignore
     @Test
     public void testParser() {
-        Path dir = Paths.get("src/test/resources/input");
+        Path input = Paths.get("src/test/resources/input");
+        Path outputDir = Paths.get("src/test/resources/output");
 
         Instant start = Instant.now();
-        DirectoryParserResult r = DirectoryParser.parse(new JS7ConverterConfig().getParserConfig(), dir);
+        DirectoryParserResult r = DirectoryParser.parse(new JS7ConverterConfig().getParserConfig(), input, outputDir);
         LOGGER.info("[parse][duration]" + SOSDate.getDuration(start, Instant.now()));
 
         walk(r.getRoot());
