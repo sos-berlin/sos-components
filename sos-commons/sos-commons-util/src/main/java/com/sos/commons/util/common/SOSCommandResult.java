@@ -51,7 +51,11 @@ public class SOSCommandResult {
     }
 
     public Integer getExitCode() {
-        return exitCode;
+        if (exitCode == null) {
+            return 0;
+        } else {
+            return exitCode;
+        }
     }
 
     public void setExitCode(Integer val) {
@@ -106,7 +110,7 @@ public class SOSCommandResult {
         if (exception != null || timeoutExeeded) {
             return true;
         }
-        if (exitCode != null && exitCode > 0) {
+        if (getExitCode() > 0) {
             return true;
         }
         if (checkStdError && stdErr.length() > 0) {
