@@ -27,6 +27,7 @@ import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
+import com.sos.inventory.model.instruction.Fail;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.NamedJob;
@@ -93,6 +94,7 @@ import com.sos.js7.converter.js1.output.js7.JS7ScriptLanguageConverter.YADE;
  * -------- use $FILE<br/>
  * -------- WARN if the file not exists(grace argument?)<br/>
  * -------- otherwise exception (can't be moved/removed: permission denied etc)<br/>
+ * ---------- move - we have only a copy file job ....<br/>
  * ---- job_chain_node.end - ignore/report<br/>
  * ---- multiple file_order_source with different next_state ???<br/>
  * ------- generate a File Order Source per file_order_source for th given workflow<br/>
@@ -112,6 +114,8 @@ public class JS7Converter {
     public static JS7ConverterConfig CONFIG = new JS7ConverterConfig();
 
     private static final int INITIAL_DUPLICATE_COUNTER = 1;
+    private static final String MOVE_JOB_NAME = "fileOrderSinkMove";
+    private static final String REMOVE_JOB_NAME = "fileOrderSinkRemove";
 
     private ConverterObjects converterObjects;
     private DirectoryParserResult pr;
@@ -309,6 +313,8 @@ public class JS7Converter {
         if (rth != null) {
             if (rth.schedule != null) {
                 result.add(rth.path, rth.schedule);
+            } else if (rth.admissionTimeScheme != null) {
+
             }
         }
         result.add(workflowPath, w);
@@ -551,7 +557,7 @@ public class JS7Converter {
         j.setTitle(job.getTitle());
         setFromConfig(j);
 
-        JS7Agent js7Agent = setAgent(result, j, job);
+        JS7Agent js7Agent = setAgent(j, job);
         setJobJobResources(j, job);
         setExecutable(j, job, js7Agent);
         setJobOptions(j, job);
@@ -607,7 +613,7 @@ public class JS7Converter {
         }
     }
 
-    private JS7Agent setAgent(JS7ConverterResult result, Job j, ACommonJob job) {
+    private JS7Agent setAgent(Job j, ACommonJob job) {
         String name = null;
         Platform platform = null;
         boolean isForcedPlatform = false;
@@ -618,8 +624,10 @@ public class JS7Converter {
                 isForcedPlatform = true;
             }
         } else {
-            if (job.getProcessClass() != null && job.getProcessClass().isAgent()) {
-                name = job.getProcessClass().getName();
+            if (job != null) {
+                if (job.getProcessClass() != null && job.getProcessClass().isAgent()) {
+                    name = job.getProcessClass().getName();
+                }
             }
         }
         if (platform == null) {
@@ -700,33 +708,49 @@ public class JS7Converter {
     private ExecutableScript getExecutableScript(Job j, ACommonJob job, JS7Agent js7Agent, String language, String className, YADE yade) {
         StringBuilder scriptHeader = new StringBuilder();
         StringBuilder scriptCommand = new StringBuilder();
+        StringBuilder yadeCommand = new StringBuilder();
+        String commentBegin = "#";
+        boolean isMock = !CONFIG.getMockConfig().isEmpty();
 
         boolean isUnix = js7Agent.getPlatform().equals(Platform.UNIX);
         if (isUnix) {
-            scriptHeader.append("#!/bin/bash");
-            scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+            commentBegin = "#";
+            if (language.equals("powershell")) {
+                scriptHeader.append("#!/usr/bin/env pwsh");
+                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+            } else {
+                scriptHeader.append("#!/bin/bash");
+                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+            }
             if (yade != null) {
-                scriptCommand.append("$").append(yade.getBin()).append(" -settings $SETTINGS -profile $PROFILE");
+                yadeCommand.append("$").append(yade.getBin()).append(" -settings $SETTINGS -profile $PROFILE");
             }
         } else {
+            commentBegin = "REM";
+            if (language.equals("powershell")) {
+                scriptHeader.append("@@findstr/v \"^@@f.*&\" \"%~f0\"|pwsh.exe -&goto:eof");
+                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+            }
             if (yade != null) {
-                scriptCommand.append("%").append(yade.getBin()).append("% -settings %SETTINGS% -profile %PROFILE%");
+                yadeCommand.append("%").append(yade.getBin()).append("% -settings %SETTINGS% -profile %PROFILE%");
             }
         }
         if (!language.equals("shell")) {// language always lower case
-            if (language.equals("powershell")) {
-                scriptHeader.append((js7Agent.getPlatform().equals(Platform.UNIX) ? "#!/usr/bin/env pwsh"
-                        : "@@findstr/v \"^@@f.*&\" \"%~f0\"|pwsh.exe -&goto:eof"));
-                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
-            } else {
-                scriptHeader.append((isUnix ? "#" : "REM")).append(" language=").append(language);
-                if (className != null) {
-                    scriptHeader.append(",className=" + className);
-                }
+            scriptHeader.append(commentBegin).append(" language=").append(language);
+            if (className != null) {
+                scriptHeader.append(",className=" + className);
             }
             scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+            if (isMock) {
+                if (yade != null) {
+                    scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+                    scriptHeader.append(commentBegin).append(" ").append(yadeCommand);
+                    scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+                }
+            }
         }
-
         if (yade == null) {
             if (job.getScript().getInclude() != null) {
                 // TODO resolve include
@@ -736,14 +760,17 @@ public class JS7Converter {
             if (job.getScript().getScript() != null) {
                 scriptCommand.append(job.getScript().getScript());
             }
+        } else {
+            scriptCommand.append(yadeCommand);
         }
 
         StringBuilder script = new StringBuilder(scriptHeader);
-        if (!CONFIG.getMockConfig().isEmpty()) {
+        if (isMock) {
             script.append(isUnix ? CONFIG.getMockConfig().getUnixScript() : CONFIG.getMockConfig().getWindowsScript());
-            script.append(" ");
+            // script.append(" ");
+        } else {
+            script.append(scriptCommand);
         }
-        script.append(scriptCommand);
 
         ExecutableScript es = new ExecutableScript();
         es.setScript(script.toString());
@@ -963,8 +990,8 @@ public class JS7Converter {
 
         Map<String, OrderJob> uniqueJobs = new LinkedHashMap<>();
         Map<String, JobChainStateHelper> states = new LinkedHashMap<>();
+        Map<String, JobChainNodeFileOrderSink> fileOrderSinkStates = new HashMap<>();
         List<JobChainNodeFileOrderSource> fileOrderSources = new ArrayList<>();
-        List<JobChainNodeFileOrderSink> fileOrderSinks = new ArrayList<>();
         int duplicateJobCounter = 0;
         for (AJobChainNode n : jobChain.getNodes()) {
             switch (n.getType()) {
@@ -1010,9 +1037,16 @@ public class JS7Converter {
                 }
                 break;
             case ORDER_SINK:
-                fileOrderSinks.add((JobChainNodeFileOrderSink) n);
-                ConverterReport.INSTANCE.addWarningRecord(jobChain.getPath(), "[jobChain " + jobChain.getName() + "/node=" + SOSString.toString(n)
-                        + "]", "not implemented yet");
+                JobChainNodeFileOrderSink fos = (JobChainNodeFileOrderSink) n;
+                if (!SOSString.isEmpty(fos.getState())) {
+                    fileOrderSinkStates.put(fos.getState(), fos);
+
+                    ConverterReport.INSTANCE.addWarningRecord(jobChain.getPath(), "[jobChain " + jobChain.getName() + "/node=" + SOSString.toString(n)
+                            + "]", "not implemented yet");
+                } else {
+                    ConverterReport.INSTANCE.addWarningRecord(jobChain.getPath(), "[jobChain " + jobChain.getName() + "/node=" + SOSString.toString(n)
+                            + "]", "stae not found");
+                }
                 break;
             case ORDER_SOURCE:
                 fileOrderSources.add((JobChainNodeFileOrderSource) n);
@@ -1037,10 +1071,15 @@ public class JS7Converter {
         List<Instruction> in = new ArrayList<>();
         Map<String, List<Instruction>> workflowInstructions = new LinkedHashMap<>();
         String startState = getNodesStartState(states);
+        Map<String, String> fileOrderSinkJobs = new HashMap<>();
         if (startState != null) {
-            in.addAll(getNodesInstructions(jobChain, startState, states, uniqueJobs, workflowInstructions));
+            in.addAll(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, startState, states, fileOrderSinkStates, fileOrderSinkJobs));
         } else {
             ConverterReport.INSTANCE.addErrorRecord(jobChain.getPath(), "[jobChain " + jobChain.getName() + "]", "startState not found");
+        }
+
+        for (Map.Entry<String, String> e : fileOrderSinkJobs.entrySet()) {
+            w.getJobs().getAdditionalProperties().put(e.getKey(), getFileOrderSinkJob(e.getKey()));
         }
 
         w.setInstructions(in);
@@ -1140,8 +1179,9 @@ public class JS7Converter {
         return null;
     }
 
-    private List<Instruction> getNodesInstructions(JobChain jobChain, String startState, Map<String, JobChainStateHelper> states,
-            Map<String, OrderJob> uniqueJobs, Map<String, List<Instruction>> workflowInstructions) {
+    private List<Instruction> getNodesInstructions(Map<String, List<Instruction>> workflowInstructions, JobChain jobChain,
+            Map<String, OrderJob> uniqueJobs, String startState, Map<String, JobChainStateHelper> states,
+            Map<String, JobChainNodeFileOrderSink> fileOrderSinkStates, Map<String, String> fileOrderSinkJobs) {
         List<Instruction> result = new ArrayList<>();
 
         JobChainStateHelper h = states.get(startState);
@@ -1168,27 +1208,102 @@ public class JS7Converter {
             }
             workflowInstructions.put(h.state, in);
 
-            if (h.errorState.length() > 0 && states.get(h.errorState) != null && states.get(h.errorState).jobName != null) {
+            boolean hasErrorStateJob = states.get(h.errorState) != null && states.get(h.errorState).jobName != null;
+            if (h.errorState.length() > 0 && (hasErrorStateJob || fileOrderSinkStates.containsKey(h.errorState))) {
                 TryCatch tryCatch = new TryCatch();
                 tryCatch.setTry(new Instructions(workflowInstructions.get(h.state)));
-                tryCatch.setCatch(new Instructions(getNodesInstructions(jobChain, h.errorState, states, uniqueJobs, workflowInstructions)));
-                result.add(tryCatch);
+
+                boolean add = false;
+                if (hasErrorStateJob) {
+                    tryCatch.setCatch(new Instructions(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, h.errorState, states,
+                            fileOrderSinkStates, fileOrderSinkJobs)));
+                    add = true;
+                } else {
+                    NamedJob nj = getFileOrderSinkNamedJob(fileOrderSinkStates.get(h.errorState), h.errorState, fileOrderSinkJobs);
+                    if (nj != null) {
+                        List<Instruction> al = new ArrayList<>();
+                        al.add(nj);
+                        tryCatch.setCatch(new Instructions(al));
+                        add = true;
+                    }
+                }
+                if (add) {
+                    // TODO Fail, Finish ....
+                    boolean createFail = true;
+                    if (createFail) {
+                        Fail f = new Fail();
+                        f.setMessage("Failed because of Job(name=" + h.jobName + ",label=" + h.state
+                                + ") error. TMP solution for JS1 error_state handling ...");
+                        f.setUncatchable(false);
+                        Variables v = new Variables();
+                        v.getAdditionalProperties().put("returnCode", 1);
+                        f.setOutcome(v);
+                        tryCatch.getCatch().getInstructions().add(f);
+                    }
+
+                    result.add(tryCatch);
+                }
             } else if (workflowInstructions.get(h.state) != null) {
                 result.addAll(workflowInstructions.get(h.state));
             }
 
             if (h.nextState.length() > 0 && !h.nextState.equals(h.errorState)) {
-                h = states.get(h.nextState);
+                String nextState = h.nextState;
+                h = states.get(nextState);
                 if (h == null) {
                     //
                 } else if (h.jobName == null) {
                     h = null;
+                }
+                if (h == null && fileOrderSinkStates.containsKey(nextState)) {
+                    NamedJob nj = getFileOrderSinkNamedJob(fileOrderSinkStates.get(nextState), nextState, fileOrderSinkJobs);
+                    if (nj != null) {
+                        result.add(nj);
+                    }
                 }
             } else {
                 h = null;
             }
         }
         return result;
+    }
+
+    private NamedJob getFileOrderSinkNamedJob(JobChainNodeFileOrderSink fos, String label, Map<String, String> fileOrderSinkJobs) {
+        if (SOSString.isEmpty(fos.getMoveTo()) && fos.getRemove() == null) {
+            return null;
+        }
+        boolean isRemove = SOSString.isEmpty(fos.getMoveTo()) && fos.getRemove() != null;
+
+        NamedJob job = new NamedJob(isRemove ? REMOVE_JOB_NAME : MOVE_JOB_NAME);
+        fileOrderSinkJobs.put(job.getJobName(), job.getJobName());
+        job.setLabel(label);
+
+        Environment env = new Environment();
+        env.setAdditionalProperty("source_file", "$FILE");
+        env.setAdditionalProperty("gracious", "true");
+        if (!isRemove) {
+            env.setAdditionalProperty("target_file", fos.getMoveTo());
+        }
+        job.setDefaultArguments(env);
+        return job;
+    }
+
+    private Job getFileOrderSinkJob(String jobName) {
+        Job job = new Job();
+        setAgent(job, null);
+        setFromConfig(job);
+
+        ExecutableJava ex = new ExecutableJava();
+        switch (jobName) {
+        case MOVE_JOB_NAME:
+            ex.setClassName("com.sos.jitl.jobs.file.CopyFileJob");
+            break;
+        case REMOVE_JOB_NAME:
+            ex.setClassName("com.sos.jitl.jobs.file.RemoveFileJob");
+            break;
+        }
+        job.setExecutable(ex);
+        return job;
     }
 
     private ConverterObjects getConverterObjects(Folder root) {

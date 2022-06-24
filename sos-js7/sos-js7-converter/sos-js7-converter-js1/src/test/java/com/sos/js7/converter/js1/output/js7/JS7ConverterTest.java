@@ -23,9 +23,9 @@ public class JS7ConverterTest {
         JS7Converter.CONFIG.getGenerateConfig().withWorkflows(true).withSchedules(true).withLocks(true).withCyclicOrders(false);
         JS7Converter.CONFIG.getParserConfig().withExcludedDirectoryNames(".sos-templates;.svn;.configuration;").withExcludedDirectoryPaths(
                 "sos/;xxx/");
-        JS7Converter.CONFIG.getAgentConfig().withForcedPlatform(Platform.WINDOWS).withDefaultAgent("my_agent_name").withMapping(
+        JS7Converter.CONFIG.getAgentConfig().withForcedPlatform(Platform.UNIX).withDefaultAgent("my_agent_name").withMapping(
                 "abcd=agent;xyz=agent_cluster");
-        JS7Converter.CONFIG.getMockConfig().withUnixScript("$HOME/MockScript.sh").withWindowsScript("echo ");
+        JS7Converter.CONFIG.getMockConfig().withUnixScript("$HOME/MockScript.sh").withWindowsScript("echo 123");
         JS7Converter.CONFIG.getScheduleConfig().withDefaultWorkingCalendarName("AnyDays").withDefaultNonWorkingCalendarName(null).withPlanOrders(true)
                 .withSubmitOrders(true);
         JS7Converter.CONFIG.getJobConfig().withForcedFailOnErrWritten(true).withScriptNewLine("\n");
