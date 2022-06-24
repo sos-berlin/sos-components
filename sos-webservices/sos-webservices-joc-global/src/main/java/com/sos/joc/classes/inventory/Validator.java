@@ -550,7 +550,11 @@ public class Validator {
                 case EXPECT_NOTICES:
                     ExpectNotices ens = inst.cast();
                     String ensNamesExpr = ens.getNoticeBoardNames();
-                    validateExpression("$." + instPosition + "noticeBoardNames: ", ensNamesExpr);
+                    String ensNamesExpr2 = ensNamesExpr.replaceAll("'[^']*'", "true").replaceAll("\"[^\"]*\"", "true");
+                    Either<Problem, JExpression> e = JExpression.parse(ensNamesExpr2);
+                    if (e.isLeft()) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: " + e.getLeft().message().replace("true", "'...'"));
+                    }
                     List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(ensNamesExpr);
                     ensNames.removeAll(boardNames);
                     if (boardNames.isEmpty() || !ensNames.isEmpty()) {
