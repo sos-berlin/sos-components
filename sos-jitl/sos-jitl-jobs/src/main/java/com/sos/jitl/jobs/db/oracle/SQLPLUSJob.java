@@ -84,7 +84,7 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
             if (args.getTimeout() == 0) {
                 sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName), getAgentSystemEncoding());
             } else {
-                SOSTimeout sosTimeout = new SOSTimeout(args.getTimeout(), TimeUnit.MINUTES);
+                SOSTimeout sosTimeout = new SOSTimeout(args.getTimeout(), TimeUnit.SECONDS);
                 sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName), getAgentSystemEncoding(), sosTimeout);
             }
 
