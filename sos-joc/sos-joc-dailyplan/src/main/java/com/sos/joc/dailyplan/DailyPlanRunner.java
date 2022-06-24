@@ -821,13 +821,13 @@ public class DailyPlanRunner extends TimerTask {
                     }
 
                     int plannedOrdersCount = 0;
-                    List<String> dates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString, nextDateAsString)
-                            .getDates();
+                    List<String> frequencyResolverDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString,
+                            nextDateAsString).getDates();
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("[%s][%s][%s][%s][%s][calendar=%s][FrequencyResolver]dates=%s", startupMode, method, controllerId,
-                                dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), String.join(",", dates)));
+                                dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), String.join(",", frequencyResolverDates)));
                     }
-                    if (dates.size() > 0) {
+                    if (frequencyResolverDates.size() > 0) {
                         PeriodResolver periodResolver = new PeriodResolver(settings);
                         for (Period p : assignedCalendar.getPeriods()) {
                             Period _period = new Period();
@@ -839,25 +839,27 @@ public class DailyPlanRunner extends TimerTask {
                             periodResolver.addStartTimes(_period, dailyPlanDateAsString, assignedCalendar.getTimeZone());
                         }
 
-                        for (String d : dates) {
+                        for (String frequencyResolverDate : frequencyResolverDates) {
                             if (isTraceEnabled) {
-                                LOGGER.trace(String.format("[%s][%s][%s][%s][%s][calendar=%s]date=%s", startupMode, method, controllerId,
-                                        dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), d));
+                                LOGGER.trace(String.format("[%s][%s][%s][FrequencyResolver date=%s][%s][%s][calendar=%s]", startupMode, method,
+                                        controllerId, dailyPlanDate, frequencyResolverDate, schedule.getPath(), assignedCalendar.getCalendarName()));
                             }
-                            if (nonWorkingDays != null && nonWorkingDays.get(d) != null) {
+                            if (nonWorkingDays != null && nonWorkingDays.get(frequencyResolverDate) != null) {
                                 if (isDebugEnabled) {
-                                    LOGGER.debug(String.format("[%s][%s][%s][%s][%s][calendar=%s][date=%s][skip]date is a non working day",
-                                            startupMode, method, controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(),
-                                            d));
+                                    LOGGER.debug(String.format(
+                                            "[%s][%s][%s][%s][FrequencyResolver date=%s][%s][calendar=%s][skip]FrequencyResolver date is a non working day",
+                                            startupMode, method, controllerId, dailyPlanDate, frequencyResolverDate, schedule.getPath(),
+                                            assignedCalendar.getCalendarName()));
                                 }
                             } else {
-                                Map<Long, Period> startTimes = periodResolver.getStartTimes(d, dailyPlanDateAsString, assignedCalendar.getTimeZone());
+                                Map<Long, Period> startTimes = periodResolver.getStartTimes(frequencyResolverDate, dailyPlanDateAsString,
+                                        assignedCalendar.getTimeZone());
 
                                 if (isDebugEnabled) {
                                     LOGGER.debug(String.format(
-                                            "[%s][%s][%s][%s][%s][calendar=%s][timeZone=%s][date=%s][periodResolver]startTimes size=%s", startupMode,
-                                            method, controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(),
-                                            assignedCalendar.getTimeZone(), d, startTimes.size()));
+                                            "[%s][%s][%s][%s][FrequencyResolver date=%s][%s][calendar=%s][timeZone=%s][periodResolver]startTimes size=%s",
+                                            startupMode, method, controllerId, dailyPlanDate, frequencyResolverDate, schedule.getPath(),
+                                            assignedCalendar.getCalendarName(), assignedCalendar.getTimeZone(), startTimes.size()));
                                 }
 
                                 for (Entry<Long, Period> periodEntry : startTimes.entrySet()) {
