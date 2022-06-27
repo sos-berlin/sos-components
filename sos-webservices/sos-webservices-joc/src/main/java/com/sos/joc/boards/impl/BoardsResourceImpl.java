@@ -83,7 +83,7 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             List<DeployedContent> contents = null;
             if (paths != null && !paths.isEmpty()) {
-                dbFilter.setNames(paths.stream().map(p -> JocInventory.pathToName(p)).collect(Collectors.toSet()));
+                dbFilter.setNames(paths.stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
                 contents = dbLayer.getDeployedInventory(dbFilter);
 
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {

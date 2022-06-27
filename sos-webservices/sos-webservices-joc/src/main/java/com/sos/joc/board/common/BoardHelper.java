@@ -183,18 +183,13 @@ public class BoardHelper {
         if (controllerState == null || boardPaths == null || boardPaths.isEmpty()) {
             return Stream.empty();
         }
-        Function<JOrder, Stream<ExpectingOrder>> mapper = order -> {    
+        Function<JOrder, Stream<ExpectingOrder>> mapper = order -> {
             Set<BoardPath> refBoardPaths = JavaConverters.asJava(((ExpectNotices) controllerState.asScala().instruction(order.asScala()
                     .workflowPosition())).boardPathExpr().boardPaths());
-            return refBoardPaths.stream().filter(bp -> boardPaths.contains(bp.string())).map(bp -> new ExpectingOrder(order, bp));
+            return refBoardPaths.stream().filter(bp -> boardPaths.contains(bp.string()))
+                    .flatMap(bp -> JavaConverters.asJava(((Order.ExpectingNotices) order.asScala().state()).expected()).stream().filter(e -> e
+                            .boardPath().equals(bp)).map(e -> new ExpectingOrder(order, bp, e.noticeId().string())));
         };
-//        Function<JOrder, ExpectingOrder> mapper = order -> {
-//            BoardPath boardPath = ((ExpectNotice) controllerState.asScala().instruction(order.asScala().workflowPosition())).boardPath();
-//            if (boardPaths.contains(boardPath.string())) {
-//                return new ExpectingOrder(order, boardPath);
-//            }
-//            return null;
-//        };
         if (permittedFolders == null || permittedFolders.isEmpty()) {
             return controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotices.class)).parallel().flatMap(mapper).filter(
                     Objects::nonNull);
@@ -202,7 +197,7 @@ public class BoardHelper {
         ConcurrentMap<JWorkflowId, List<JOrder>> ordersPerWorkflow = controllerState.ordersBy(JOrderPredicates.byOrderState(
                 Order.ExpectingNotices.class)).parallel().collect(Collectors.groupingByConcurrent(JOrder::workflowId));
         return ordersPerWorkflow.entrySet().parallelStream().filter(e -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
-                permittedFolders)).flatMap(e -> e.getValue().stream()).flatMap(mapper).filter(Objects::nonNull);
+                permittedFolders)).map(Map.Entry::getValue).flatMap(List::stream).flatMap(mapper).filter(Objects::nonNull);
     }
     
     private static Board init(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {
