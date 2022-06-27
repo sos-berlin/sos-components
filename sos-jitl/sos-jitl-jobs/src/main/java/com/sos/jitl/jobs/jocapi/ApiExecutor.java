@@ -1,4 +1,4 @@
-package com.sos.jitl.jobs.common;
+package com.sos.jitl.jobs.jocapi;
 
 import java.net.URI;
 import java.nio.file.Path;
@@ -17,13 +17,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
+import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.vfs.exception.SOSAuthenticationFailedException;
+import com.sos.jitl.jobs.common.JobLogger;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValue;
@@ -37,6 +41,8 @@ public class ApiExecutor {
     private static final String WS_API_LOGOUT = "/joc/api/authentication/logout";
     private static final String WS_API_PREFIX = "/joc/api";
     private static final String ACCESS_TOKEN_HEADER = "X-Access-Token";
+    private static final String APPLICATION_JSON = "application/json";
+    private static final String CONTENT_TYPE = "Content-Type";
     private static final String AGENT_CONF_DIR_ENV_PARAM = "JS7_AGENT_CONFIG_DIR";
     private static final String PRIVATE_CONF_JS7_PARAM_CONFDIR = "js7.config-directory";
     private static final String PRIVATE_CONF_JS7_PARAM_API_SERVER = "js7.api-server";
@@ -59,10 +65,14 @@ public class ApiExecutor {
             "js7.api-server.cs-password", "js7.web.https.keystore.store-password", "js7.web.https.keystore.key-password",
             "js7.web.https.truststores"});
     private static final String DO_NOT_LOG_VAL = "store-password";
+    private static final String ACTION_LOGIN = "login";
+    private static final String ACTION_POST = "post";
+    private static final String ACTION_LOGOUT = "logout";
     
     private final String truststoreFileName;
     private SOSRestApiClient client;
     private URI jocUri;
+    private List<String> jocUris;
     private final JobLogger jobLogger;
 
     public ApiExecutor(JobLogger jobLogger) {
@@ -89,37 +99,72 @@ public class ApiExecutor {
         this.jobLogger = jobLogger;
     }
 
-    public String login() throws Exception {
+    public ApiResponse login() throws SOSAuthenticationFailedException, Exception {
     	logDebug("***ApiExecutor***");
-    	tryCreateClient();
-    	logDebug("send login to: " + jocUri.resolve(WS_API_LOGIN).toString());
-        client.postRestService(jocUri.resolve(WS_API_LOGIN), null);
-        logDebug("HTTP status code: " + client.statusCode());
-        return client.getResponseHeader(ACCESS_TOKEN_HEADER);
+    	jocUris = getUris();
+    	for(String uri : jocUris) {
+    	    try{
+    	        tryCreateClient(uri);
+    	        this.jocUri = URI.create(uri);
+    	        logDebug("send login to: " + jocUri.resolve(WS_API_LOGIN).toString());
+    	        String response = client.postRestService(jocUri.resolve(WS_API_LOGIN), null);
+    	        logDebug("HTTP status code: " + client.statusCode());
+    	        try {
+                    response = handleExitCode(ACTION_LOGIN, client, response);
+                    logDebug(String.format("Connection to URI %1$s established.", jocUri.resolve(WS_API_LOGIN).toString()));
+                    return new ApiResponse(client.statusCode(), response, null);
+                } catch (SOSConnectionRefusedException e) {
+                    logDebug(String.format("connection to URI %1$s failed, trying next Uri.", jocUri.resolve(WS_API_LOGIN).toString()));
+                    continue;
+                }
+    	    }catch (Exception e) {
+    	        logDebug(String.format("connection to URI %1$s failed, trying next Uri.", jocUri.resolve(WS_API_LOGIN).toString()));
+            }
+    	}
+        return new ApiResponse(null, null, null);
     }
     
-    public String post(String token, String apiUrl, String body) throws Exception {
+    public ApiResponse post(String token, String apiUrl, String body) throws Exception {
         if (token == null) {
             throw new SOSBadRequestException("no access token provided. permission denied.");
         } else {
-            tryCreateClient();
-            client.addHeader(ACCESS_TOKEN_HEADER, token);
-            logInfo("REQUEST: " + apiUrl);
-            logInfo("PARAMS: " + body);
-            if(!apiUrl.toLowerCase().startsWith(WS_API_PREFIX)) {
-                apiUrl = WS_API_PREFIX + apiUrl;
+            if (jocUri != null) {
+                try {
+                    client.addHeader(ACCESS_TOKEN_HEADER, token);
+                    client.addHeader(CONTENT_TYPE, APPLICATION_JSON);
+                    logInfo("REQUEST: " + apiUrl);
+                    logInfo("PARAMS: " + body);
+                    if(!apiUrl.toLowerCase().startsWith(WS_API_PREFIX)) {
+                        apiUrl = WS_API_PREFIX + apiUrl;
+                    }
+                    logDebug("resolvedUri: " + jocUri.resolve(apiUrl).toString());
+                    String response = client.postRestService(jocUri.resolve(apiUrl), body);
+                    logDebug("HTTP status code: " + client.statusCode());
+                    response = handleExitCode(ACTION_POST, client, response);
+                    return new ApiResponse(client.statusCode(), response, null);
+                } catch (SOSException e) {
+                    return new ApiResponse(client.statusCode(), null, e);
+                }
+            } else {
+                throw new SOSConnectionRefusedException("No connection established through previous login api call.");
             }
-            logDebug("resolvedUri: " + jocUri.resolve(apiUrl).toString());
-            return client.postRestService(jocUri.resolve(apiUrl), body);
         }
     }
     
-    public void logout(String token) throws Exception {
-        if (token != null) {
-            tryCreateClient();
-            client.addHeader(ACCESS_TOKEN_HEADER, token);
-        	logDebug("send logout");
-            client.postRestService(jocUri.resolve(WS_API_LOGOUT), null);
+    public ApiResponse logout(String token) throws Exception {
+        if (token != null && jocUri != null) {
+            try {
+                client.addHeader(ACCESS_TOKEN_HEADER, token);
+                logDebug("send logout");
+                String response = client.postRestService(jocUri.resolve(WS_API_LOGOUT), null);
+                logDebug("HTTP status code: " + client.statusCode());
+                response = handleExitCode(ACTION_LOGOUT, client, response);
+                return new ApiResponse(client.statusCode(), response, null);
+            } catch (SOSException e) {
+                return new ApiResponse(client.statusCode(), null, e);
+            }
+        } else {
+            throw new SOSBadRequestException("no access token provided. permission denied.");
         }
     }
 
@@ -127,21 +172,40 @@ public class ApiExecutor {
         closeClient();
     }
 
-    private void tryCreateClient() throws Exception {
-        if (client != null) {
-            return;
-        }
-        String agentConfDirPath = System.getenv(AGENT_CONF_DIR_ENV_PARAM);
-        if(agentConfDirPath == null) {
-            throw new SOSMissingDataException(
-                    String.format("Environment variable %1$s not set. Can´t read credetials from agents private.conf file.",
-                            AGENT_CONF_DIR_ENV_PARAM));
-        }
-        logDebug("agentConfDirPath: " + agentConfDirPath);
-        Path agentConfDir = Paths.get(agentConfDirPath);
-        Config config = readConfig(agentConfDir);
+    private List<String> getUris() throws SOSMissingDataException {
+        Config config = readConfig();
+        List<String> uris =  config.getConfig(PRIVATE_CONF_JS7_PARAM_API_SERVER).getStringList(PRIVATE_CONF_JS7_PARAM_URL);
+        Collections.sort(uris);
+        return uris;
         
-        logDebug("agent private folder: " + agentConfDir.resolve(PRIVATE_FOLDER_NAME).toString());
+    }
+    
+    private void applySSLContextCredentials(SOSRestApiClient client) throws Exception {
+        Config config = readConfig();
+        List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(config);
+        logDebug("read Trustore from: " + config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(
+                PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
+        KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(truststoreFileName)).map(item -> {
+            try {
+                return KeyStoreUtil.readTrustStore(item.getPath(), KeystoreType.PKCS12, item.getStorePwd());
+            } catch (Exception e) {
+                return null;
+            }
+        }).filter(Objects::nonNull).findFirst().get();
+        KeyStoreCredentials credentials = readKeystoreCredentials(config);
+        logDebug("read Keystore from: " + config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
+        KeyStore keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
+        if (keystore != null && truststore != null) {
+            client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), truststore);
+        }
+    }
+    
+    private void tryCreateClient(String jocUri) throws Exception {
+        if (client != null) {
+            client.closeHttpClient();
+        }
+        Config config = readConfig();
+        
         for (Entry<String, ConfigValue> entry : config.entrySet()) {
             if(entry.getKey().startsWith("js7")) {
                 if (!DO_NOT_LOG_KEY.contains(entry.getKey())) {
@@ -149,35 +213,27 @@ public class ApiExecutor {
                 }
             }
         }
-//        List<String> jocUris = config.getConfig(PRIVATE_CONF_JS7_PARAM_API_SERVER).getStringList("url");
-        String jocUri = config.getConfig(PRIVATE_CONF_JS7_PARAM_API_SERVER).getStringList(PRIVATE_CONF_JS7_PARAM_URL).get(0);
-        logDebug("JOC Url (private.conf): " + jocUri);
+        List<String> jocUris = getUris();
+        while(jocUris.iterator().hasNext()) {
+            String uri = jocUris.iterator().next();
+            if (!SOSString.isEmpty(uri)) {
+                this.jocUri = URI.create(uri);
+            } else {
+                throw new Exception("no uri provided for api server.");
+            }
+            
+        }
         if (!SOSString.isEmpty(jocUri)) {
             this.jocUri = URI.create(jocUri);
         }
         if (this.jocUri == null) {
-            throw new Exception("missing jocUri");
+            throw new Exception("missing JOC Uri");
         }
 
         client = new SOSRestApiClient();
         logDebug("initiate REST api client");
         if (jocUri.toLowerCase().startsWith("https:")) {
-            List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(config);
-            logDebug("read Trustore from: " + config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(
-                    PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
-            KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(truststoreFileName)).map(item -> {
-                try {
-                    return KeyStoreUtil.readTrustStore(item.getPath(), KeystoreType.PKCS12, item.getStorePwd());
-                } catch (Exception e) {
-                    return null;
-                }
-            }).filter(Objects::nonNull).findFirst().get();
-            KeyStoreCredentials credentials = readKeystoreCredentials(config);
-            logDebug("read Keystore from: " + config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
-            KeyStore keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
-            if (keystore != null && truststore != null) {
-                client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), truststore);
-            }
+            applySSLContextCredentials(client);
         } else {
             String csFile = null;
             String csKeyFile = null;
@@ -231,7 +287,15 @@ public class ApiExecutor {
         }
     }
 
-    public Config readConfig(Path agentConfigDirectory) {
+    public Config readConfig() throws SOSMissingDataException {
+        String agentConfDirPath = System.getenv(AGENT_CONF_DIR_ENV_PARAM);
+        if(agentConfDirPath == null) {
+            throw new SOSMissingDataException(
+                    String.format("Environment variable %1$s not set. Can´t read credetials from agents private.conf file.",
+                            AGENT_CONF_DIR_ENV_PARAM));
+        }
+        logDebug("agentConfDirPath: " + agentConfDirPath);
+        Path agentConfDir = Paths.get(agentConfDirPath);
     	// set default com.typesafe.config.Config
         Config defaultConfig = ConfigFactory.load();
         /*
@@ -240,8 +304,8 @@ public class ApiExecutor {
          * 
          * */
         Properties props = new Properties();
-    	props.setProperty(PRIVATE_CONF_JS7_PARAM_CONFDIR, agentConfigDirectory.toString());
-    	Path privatFolderPath = agentConfigDirectory.resolve(PRIVATE_FOLDER_NAME);
+    	props.setProperty(PRIVATE_CONF_JS7_PARAM_CONFDIR, agentConfDir.toString());
+    	Path privatFolderPath = agentConfDir.resolve(PRIVATE_FOLDER_NAME);
     	logDebug("agents private folder: " + privatFolderPath.toString());
     	Config defaultConfigWithAgentConfDir = ConfigFactory.parseProperties(props).withFallback(defaultConfig).resolve();
     	logDebug(PRIVATE_CONF_JS7_PARAM_CONFDIR + " (Config): " + defaultConfigWithAgentConfDir.getString(PRIVATE_CONF_JS7_PARAM_CONFDIR));
@@ -290,6 +354,52 @@ public class ApiExecutor {
     	} else {
     		LOGGER.error(log);
     	}
+    }
+    
+    private String handleExitCode (String action, SOSRestApiClient client, String response)
+            throws SOSAuthenticationFailedException, SOSConnectionRefusedException, SOSException {
+        if(client.statusCode() >= 500) {
+            logDebug(response);
+            throw new SOSConnectionRefusedException();
+        } else {
+            if (ACTION_LOGIN.equals(action)) {
+                return client.getResponseHeader(ACCESS_TOKEN_HEADER);
+            } else  {//if (ACTION_POST.equals(action))
+                return response;
+            }
+        }
+//        switch (client.statusCode()) {
+//        case 200:
+//            break;
+//        case 401:
+//        case 403:
+//
+//        case 419:
+//
+//        case 420:
+//        case 434:
+//
+//        case 440:
+//            logDebug("Response: " + response);
+//            if(ACTION_LOGIN.equals(action)) {
+//                throw new SOSAuthenticationFailedException();
+//            } else {
+//                throw new SOSException();
+//            }
+//        case 500:
+//        case 501:
+//        case 503:
+//        default:
+//            logDebug(response);
+//            throw new SOSConnectionRefusedException();
+//        }
+//        if (ACTION_LOGIN.equals(action)) {
+//            return client.getResponseHeader(ACCESS_TOKEN_HEADER);
+//        } else if (ACTION_POST.equals(action)) {
+//            return response;
+//        } else {
+//            return null;
+//        }
     }
     
 }

@@ -18,7 +18,7 @@ import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
-import com.sos.jitl.jobs.common.ApiExecutor;
+import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.typesafe.config.Config;
 
 public class HttpClientTests {

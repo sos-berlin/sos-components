@@ -1,10 +1,8 @@
 package com.sos.jitl.jobs.checkhistory.classes;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import com.sos.jitl.jobs.common.ApiExecutor;
 import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.jocapi.ApiExecutor;
+import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.TaskHistory;
 import com.sos.joc.model.job.TaskHistoryItem;
@@ -26,7 +24,14 @@ public class HistoryWebserviceExecuter {
     public OrderHistory getWorkflowHistoryEntry(OrdersFilter ordersFilter, String accessToken) throws Exception {
 
         String body = Globals.objectMapper.writeValueAsString(ordersFilter);
-        String answer = apiExecutor.post(accessToken, "/orders/history/", body);
+        ApiResponse apiResponse = apiExecutor.post(accessToken, "/orders/history/", body);
+        String answer = null;
+        if(apiResponse.getStatusCode() == 200) {
+            answer = apiResponse.getResponseBody();
+        } else {
+            // error handling here - apiResponse.getException();
+        }
+//        String answer = apiExecutor.post(accessToken, "/orders/history/", body);
         Globals.debug(logger, body);
         Globals.debug(logger, "answer=" + answer);
         OrderHistory orderHistory = new OrderHistory();
@@ -46,7 +51,14 @@ public class HistoryWebserviceExecuter {
     public TaskHistory getJobHistoryEntry(JobsFilter jobsFilter, String accessToken) throws Exception {
 
         String body = Globals.objectMapper.writeValueAsString(jobsFilter);
-        String answer = apiExecutor.post(accessToken, "/tasks/history", body);
+        ApiResponse apiResponse = apiExecutor.post(accessToken, "/tasks/history", body);
+        String answer = null;
+        if(apiResponse.getStatusCode() == 200) {
+            answer = apiResponse.getResponseBody();
+        } else {
+            // error handling here - apiResponse.getException();
+        }
+//        String answer = apiExecutor.post(accessToken, "/tasks/history", body);
         Globals.debug(logger, body);
         Globals.debug(logger, "answer=" + answer);
         TaskHistory taskHistory = new TaskHistory();

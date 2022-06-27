@@ -9,8 +9,9 @@ import com.sos.jitl.jobs.checkhistory.classes.HistoryFilter;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryWebserviceExecuter;
 import com.sos.jitl.jobs.checkhistory.classes.ParameterResolver;
-import com.sos.jitl.jobs.common.ApiExecutor;
 import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.jocapi.ApiExecutor;
+import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.TaskHistory;
@@ -32,7 +33,12 @@ public class HistoryInfo {
         ApiExecutor apiExecutor = new ApiExecutor(logger);
         String accessToken = null;
         try {
-            accessToken = apiExecutor.login();
+            ApiResponse apiResponse = apiExecutor.login();
+            if(apiResponse.getStatusCode() == 200) {
+                accessToken = apiResponse.getResponseBody();
+            } else {
+                // error handling here - apiResponse.getException();
+            }
 
             HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(logger, apiExecutor);
             HistoryFilter historyFilter = new HistoryFilter();
