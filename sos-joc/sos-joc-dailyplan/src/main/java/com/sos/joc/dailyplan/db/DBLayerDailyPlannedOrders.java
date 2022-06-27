@@ -857,8 +857,10 @@ public class DBLayerDailyPlannedOrders {
     }
 
     public void storeVariables(PlannedOrder order, String controllerId, String orderId) throws SOSHibernateException, JsonProcessingException {
-        DBItemDailyPlanVariable item = new DBItemDailyPlanVariable();
-        if (order.getFreshOrder().getArguments() != null) {
+        if (order.getFreshOrder().getArguments() != null && order.getFreshOrder().getArguments().getAdditionalProperties() != null && order
+                .getFreshOrder().getArguments().getAdditionalProperties().size() > 0) {
+
+            DBItemDailyPlanVariable item = new DBItemDailyPlanVariable();
             item.setControllerId(controllerId);
             item.setOrderId(orderId);
             item.setVariableValue(new ObjectMapper().writeValueAsString(order.getFreshOrder().getArguments()));
