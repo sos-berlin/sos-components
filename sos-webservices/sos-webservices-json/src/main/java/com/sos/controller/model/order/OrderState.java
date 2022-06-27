@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "noticeId",
+    "expected",
     "cycleState",
     "subagentId"
 })
@@ -28,12 +28,12 @@ public class OrderState {
     @JsonProperty("TYPE")
     private String tYPE;
     /**
-     * set if state == ExpectingNotice
+     * set if state == ExpectingNotices
      * 
      */
-    @JsonProperty("noticeId")
-    @JsonPropertyDescription("set if state == ExpectingNotice")
-    private String noticeId;
+    @JsonProperty("expected")
+    @JsonPropertyDescription("set if state == ExpectingNotices")
+    private ExpectedNotices expected;
     /**
      * OrderCycleState
      * <p>
@@ -55,15 +55,15 @@ public class OrderState {
 
     /**
      * 
+     * @param expected
      * @param subagentId
      * @param tYPE
-     * @param noticeId
      * @param cycleState
      */
-    public OrderState(String tYPE, String noticeId, OrderCycleState cycleState, String subagentId) {
+    public OrderState(String tYPE, ExpectedNotices expected, OrderCycleState cycleState, String subagentId) {
         super();
         this.tYPE = tYPE;
-        this.noticeId = noticeId;
+        this.expected = expected;
         this.cycleState = cycleState;
         this.subagentId = subagentId;
     }
@@ -79,21 +79,21 @@ public class OrderState {
     }
 
     /**
-     * set if state == ExpectingNotice
+     * set if state == ExpectingNotices
      * 
      */
-    @JsonProperty("noticeId")
-    public String getNoticeId() {
-        return noticeId;
+    @JsonProperty("expected")
+    public ExpectedNotices getExpected() {
+        return expected;
     }
 
     /**
-     * set if state == ExpectingNotice
+     * set if state == ExpectingNotices
      * 
      */
-    @JsonProperty("noticeId")
-    public void setNoticeId(String noticeId) {
-        this.noticeId = noticeId;
+    @JsonProperty("expected")
+    public void setExpected(ExpectedNotices expected) {
+        this.expected = expected;
     }
 
     /**
@@ -130,12 +130,12 @@ public class OrderState {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("noticeId", noticeId).append("cycleState", cycleState).append("subagentId", subagentId).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("expected", expected).append("cycleState", cycleState).append("subagentId", subagentId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(subagentId).append(tYPE).append(noticeId).append(cycleState).toHashCode();
+        return new HashCodeBuilder().append(subagentId).append(tYPE).append(cycleState).append(expected).toHashCode();
     }
 
     @Override
@@ -147,7 +147,7 @@ public class OrderState {
             return false;
         }
         OrderState rhs = ((OrderState) other);
-        return new EqualsBuilder().append(subagentId, rhs.subagentId).append(tYPE, rhs.tYPE).append(noticeId, rhs.noticeId).append(cycleState, rhs.cycleState).isEquals();
+        return new EqualsBuilder().append(subagentId, rhs.subagentId).append(tYPE, rhs.tYPE).append(cycleState, rhs.cycleState).append(expected, rhs.expected).isEquals();
     }
 
 }
