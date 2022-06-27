@@ -14,7 +14,12 @@ import com.sos.jitl.jobs.common.JobLogger.LogLevel;
 
 public class JobArguments {
 
+    public enum MockLevel {
+        OFF, INFO, ERROR
+    }
+
     private JobArgument<LogLevel> logLevel = new JobArgument<LogLevel>("log_level", false, LogLevel.INFO);
+    private JobArgument<MockLevel> mockLevel = new JobArgument<MockLevel>("mock_level", false, MockLevel.OFF);
 
     @SuppressWarnings("rawtypes")
     private Map<String, List<JobArgument>> appArguments;
@@ -25,6 +30,10 @@ public class JobArguments {
 
     public JobArgument<LogLevel> getLogLevel() {
         return logLevel;
+    }
+
+    public JobArgument<MockLevel> getMockLevel() {
+        return mockLevel;
     }
 
     @SuppressWarnings("rawtypes")

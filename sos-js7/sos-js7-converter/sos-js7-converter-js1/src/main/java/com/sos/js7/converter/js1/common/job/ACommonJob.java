@@ -52,6 +52,7 @@ public abstract class ACommonJob {
     private static final String ATTR_STOP_ON_ERROR = "stop_on_error";
     private static final String ATTR_TEMPORARY = "temporary";
     private static final String ATTR_VISIBLE = "visible";
+    private static final String ATTR_STDERR_LOG_LEVEL = "stderr_log_level";
 
     private static final String ELEMENT_SETTINGS = "settings";
     private static final String ELEMENT_DESCRIPTION = "description";
@@ -104,6 +105,7 @@ public abstract class ACommonJob {
     private Boolean stopOnError; // yes|no (Initial value: yes)
     private Boolean temporary; // yes_no
     private String visible; // yes|no|never
+    private String stderrLogLevel;// error|info <- default info JS-1329
 
     public static ACommonJob parse(DirectoryParserResult pr, Path file) throws Exception {
         Node node = JS7ConverterHelper.getDocumentRoot(file);
@@ -216,6 +218,7 @@ public abstract class ACommonJob {
         stopOnError = JS7ConverterHelper.booleanValue(attributes.get(ATTR_STOP_ON_ERROR), true);
         temporary = JS7ConverterHelper.booleanValue(attributes.get(ATTR_TEMPORARY));
         visible = JS7ConverterHelper.stringValue(attributes.get(ATTR_VISIBLE));
+        stderrLogLevel = JS7ConverterHelper.stringValue(attributes.get(ATTR_STDERR_LOG_LEVEL));
     }
 
     private ProcessClass convertProcessClass(DirectoryParserResult pr, Path currentPath, Map<String, String> m) {
@@ -354,6 +357,10 @@ public abstract class ACommonJob {
 
     public String getVisible() {
         return visible;
+    }
+
+    public String getStderrLogLevel() {
+        return stderrLogLevel;
     }
 
     public class Settings {

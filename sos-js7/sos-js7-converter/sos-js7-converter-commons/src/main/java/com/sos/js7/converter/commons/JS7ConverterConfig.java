@@ -140,8 +140,8 @@ public class JS7ConverterConfig {
                         }
                         break;
                     // AGENT
-                    case "agentConfig.mapping":
-                        agentConfig.withMapping(val);
+                    case "agentConfig.mappings":
+                        agentConfig.withMappings(val);
                         break;
                     case "agentConfig.forcedPlatform":
                         try {
@@ -157,11 +157,14 @@ public class JS7ConverterConfig {
                         agentConfig.withDefaultAgent(val);
                         break;
                     // MOCK
-                    case "mockConfig.windowsScript":
+                    case "mockConfig.shell.windowsScript":
                         mockConfig.windowsScript = val;
                         break;
-                    case "mockConfig.unixScript":
+                    case "mockConfig.shell.unixScript":
                         mockConfig.unixScript = val;
+                        break;
+                    case "mockConfig.jitl.mockLevel":
+                        mockConfig.jitlJobsMockLevel = val;
                         break;
                     // SCHEDULE
                     case "scheduleConfig.forcedWorkingCalendarName":
@@ -194,8 +197,8 @@ public class JS7ConverterConfig {
                         }
                         break;
                     // SubFolders
-                    case "subFolderConfig.mapping":
-                        subFolderConfig.withMapping(val);
+                    case "subFolderConfig.mappings":
+                        subFolderConfig.withMappings(val);
                         break;
                     case "subFolderConfig.separator":
                         subFolderConfig.separator = val;
@@ -453,7 +456,7 @@ public class JS7ConverterConfig {
 
     public class AgentConfig {
 
-        private Map<String, JS7Agent> mapping;
+        private Map<String, JS7Agent> mappings;
         private Platform forcedPlatform;
         private JS7Agent forcedAgent; // use this instead of evaluated agent name
         private JS7Agent defaultAgent;// when agent can't be evaluated
@@ -477,7 +480,7 @@ public class JS7ConverterConfig {
          * Example 1<br>
          * - input map: my_agent_1=agent=UNIX; my_agent_2=agent; my_agent_3=cluster=WINDOWS<br/>
          **/
-        public AgentConfig withMapping(String mapping) {
+        public AgentConfig withMappings(String mapping) {
             Map<String, JS7Agent> map = new HashMap<>();
             if (mapping != null) {
                 // map and remove duplicates
@@ -490,11 +493,11 @@ public class JS7ConverterConfig {
                             }
                         }, (oldValue, newValue) -> oldValue));
             }
-            return withMapping(map);
+            return withMappings(map);
         }
 
-        public AgentConfig withMapping(Map<String, JS7Agent> map) {
-            this.mapping = map;
+        public AgentConfig withMappings(Map<String, JS7Agent> map) {
+            this.mappings = map;
             return this;
         }
 
@@ -506,11 +509,11 @@ public class JS7ConverterConfig {
             return defaultAgent;
         }
 
-        public Map<String, JS7Agent> getMapping() {
-            if (mapping == null) {
-                mapping = new HashMap<>();
+        public Map<String, JS7Agent> getMappings() {
+            if (mappings == null) {
+                mappings = new HashMap<>();
             }
-            return mapping;
+            return mappings;
         }
 
         public Platform getForcedPlatform() {
@@ -518,7 +521,7 @@ public class JS7ConverterConfig {
         }
 
         public boolean isEmpty() {
-            return (mapping == null || mapping.size() == 0) && forcedPlatform == null && forcedAgent == null && defaultAgent == null;
+            return (mappings == null || mappings.size() == 0) && forcedPlatform == null && forcedAgent == null && defaultAgent == null;
         }
 
     }
@@ -564,6 +567,7 @@ public class JS7ConverterConfig {
 
         private String windowsScript;
         private String unixScript;
+        private String jitlJobsMockLevel; // see com.sos.jitl.jobs.common.JobArguments
 
         public MockConfig withWindowsScript(String script) {
             this.windowsScript = script;
@@ -575,6 +579,11 @@ public class JS7ConverterConfig {
             return this;
         }
 
+        public MockConfig withJitlJobsMockLevel(String val) {
+            this.jitlJobsMockLevel = val;
+            return this;
+        }
+
         public String getWindowsScript() {
             return windowsScript;
         }
@@ -583,8 +592,16 @@ public class JS7ConverterConfig {
             return unixScript;
         }
 
+        public String getJitlJobsMockLevel() {
+            return jitlJobsMockLevel;
+        }
+
+        public boolean hasScript() {
+            return windowsScript != null || unixScript != null;
+        }
+
         public boolean isEmpty() {
-            return windowsScript == null && unixScript == null;
+            return !hasScript() && jitlJobsMockLevel == null;
         }
     }
 
@@ -669,7 +686,7 @@ public class JS7ConverterConfig {
 
     public class SubFolderConfig {
 
-        private Map<String, Integer> mapping;
+        private Map<String, Integer> mappings;
         private String separator = "_";
 
         /** Sub Folder mapping - extract job names parts(parts are separated by subFolderSeparator) to create a sub folders<br/>
@@ -680,18 +697,18 @@ public class JS7ConverterConfig {
          * 
          * @param map
          * @return */
-        public SubFolderConfig withMapping(String mapping) {
+        public SubFolderConfig withMappings(String mapping) {
             Map<String, Integer> map = new HashMap<>();
             if (mapping != null) {
                 // map and remove duplicates
                 map = Stream.of(mapping.trim().split(LIST_VALUE_DELIMITER)).map(e -> e.split("=")).filter(e -> e.length == 2).collect(Collectors
                         .toMap(arr -> arr[0].trim(), arr -> Integer.parseInt(arr[1].trim()), (oldValue, newValue) -> oldValue));
             }
-            return withMapping(map);
+            return withMappings(map);
         }
 
-        public SubFolderConfig withMapping(Map<String, Integer> map) {
-            this.mapping = map;
+        public SubFolderConfig withMappings(Map<String, Integer> map) {
+            this.mappings = map;
             return this;
         }
 
@@ -700,11 +717,11 @@ public class JS7ConverterConfig {
             return this;
         }
 
-        public Map<String, Integer> getMapping() {
-            if (mapping == null) {
-                mapping = new HashMap<>();
+        public Map<String, Integer> getMappings() {
+            if (mappings == null) {
+                mappings = new HashMap<>();
             }
-            return mapping;
+            return mappings;
         }
 
         public String getSeparator() {
@@ -712,7 +729,7 @@ public class JS7ConverterConfig {
         }
 
         public boolean isEmpty() {
-            return mapping == null || mapping.size() == 0;
+            return mappings == null || mappings.size() == 0;
         }
     }
 

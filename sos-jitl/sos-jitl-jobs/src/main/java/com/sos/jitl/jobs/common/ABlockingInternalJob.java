@@ -30,6 +30,7 @@ import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
+import com.sos.jitl.jobs.common.JobArguments.MockLevel;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
@@ -109,17 +110,39 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     @Override
     public OrderProcess toOrderProcess(BlockingInternalJob.Step step) {
         return () -> {
+            MockLevel mockLevel = MockLevel.OFF;
             JobStep<A> jobStep = new JobStep<A>(getClass().getName(), jobContext, step);
             try {
                 List<SOSJobArgumentException> exceptions = new ArrayList<SOSJobArgumentException>();
                 A args = createJobArguments(exceptions, jobStep);
                 jobStep.init(args);
-                jobStep.logParameterization();
-                checkExceptions(jobStep, exceptions);
 
-                return onOrderProcess(jobStep);
+                mockLevel = jobStep.getArguments().getMockLevel().getValue();
+                switch (mockLevel) {
+                case OFF:
+                    jobStep.logParameterization(null);
+                    checkExceptions(jobStep, exceptions);
+                    return onOrderProcess(jobStep);
+                case ERROR:
+                    jobStep.logParameterization(String.format("Mock Execution: %s=%s.", jobStep.getArguments().getMockLevel().getName(), mockLevel));
+                    checkExceptions(jobStep, exceptions);
+                    return jobStep.success();
+                case INFO:
+                default:
+                    jobStep.logParameterization(String.format("Mock Execution: %s=%s.", jobStep.getArguments().getMockLevel().getName(), mockLevel));
+                    return jobStep.success();
+                }
             } catch (Throwable e) {
-                return jobStep.failed(e.toString(), e);
+                switch (mockLevel) {
+                case OFF:
+                case ERROR:
+                    return jobStep.failed(e.toString(), e);
+                case INFO:
+                default:
+                    jobStep.getLogger().info(String.format("Mock Execution: %s=%s, Exception: %s", jobStep.getArguments().getMockLevel().getName(),
+                            mockLevel, e.toString()));
+                    return jobStep.success();
+                }
             }
         };
     }

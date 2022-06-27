@@ -649,9 +649,13 @@ public class JobStep<A extends JobArguments> {
         return resultMap;
     }
 
-    protected void logParameterization() {
+    protected void logParameterization(String mockMessage) {
         try {
-            logger.info("Job Parameterization:");
+            if (mockMessage == null) {
+                logger.info("Job Parameterization:");
+            } else {
+                logger.info(mockMessage + " Job Parameterization:");
+            }
             setKnownArguments();
             Map<ValueSource, List<String>> map = argumentsInfoBySetter();
             if (map == null || map.size() == 0) {
@@ -671,7 +675,7 @@ public class JobStep<A extends JobArguments> {
                 logAllResultingArguments(LogLevel.DEBUG);
             }
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error2allLogger(e.toString(), e);
         }
     }

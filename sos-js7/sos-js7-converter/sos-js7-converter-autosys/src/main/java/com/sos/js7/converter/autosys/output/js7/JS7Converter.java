@@ -714,8 +714,8 @@ public class JS7Converter {
         } else {
             // TODO agent cluster etc
             String name = normalizeName(result, jilJob, jilJob.getMachine().getValue());
-            if (CONFIG.getAgentConfig().getMapping().containsKey(name)) {
-                name = CONFIG.getAgentConfig().getMapping().get(name).getName();
+            if (CONFIG.getAgentConfig().getMappings().containsKey(name)) {
+                name = CONFIG.getAgentConfig().getMappings().get(name).getName();
             }
             j.setAgentName(name);
         }
@@ -730,7 +730,7 @@ public class JS7Converter {
         if (jilJob.getProfile().getValue() != null) {
             script.append(jilJob.getProfile().getValue()).append(CONFIG.getJobConfig().getScriptNewLine());
         }
-        if (!CONFIG.getMockConfig().isEmpty()) {
+        if (CONFIG.getMockConfig().hasScript()) {
             // TODO unix/windows
             script.append(CONFIG.getMockConfig().getUnixScript()).append(" ");
         }
@@ -923,8 +923,8 @@ public class JS7Converter {
 
     private static Path getSubFolders(String application, String normalizedName) {
         SubFolderConfig c = CONFIG.getSubFolderConfig();
-        if (c.getMapping().size() > 0 && c.getSeparator() != null && application != null) {
-            Integer position = c.getMapping().get(application);
+        if (c.getMappings().size() > 0 && c.getSeparator() != null && application != null) {
+            Integer position = c.getMappings().get(application);
             if (position != null) {
                 String[] arr = normalizedName.split(c.getSeparator());
                 if (arr.length >= position) {
