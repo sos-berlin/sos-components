@@ -184,11 +184,8 @@ public class BoardHelper {
             return Stream.empty();
         }
         Function<JOrder, Stream<ExpectingOrder>> mapper = order -> {
-            Set<BoardPath> refBoardPaths = JavaConverters.asJava(((ExpectNotices) controllerState.asScala().instruction(order.asScala()
-                    .workflowPosition())).boardPathExpr().boardPaths());
-            return refBoardPaths.stream().filter(bp -> boardPaths.contains(bp.string()))
-                    .flatMap(bp -> JavaConverters.asJava(((Order.ExpectingNotices) order.asScala().state()).expected()).stream().filter(e -> e
-                            .boardPath().equals(bp)).map(e -> new ExpectingOrder(order, bp, e.noticeId().string())));
+            return JavaConverters.asJava(((Order.ExpectingNotices) order.asScala().state()).expected()).stream().filter(e -> boardPaths.contains(e
+                    .boardPath().string())).map(e -> new ExpectingOrder(order, e.boardPath(), e.noticeId()));
         };
         if (permittedFolders == null || permittedFolders.isEmpty()) {
             return controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotices.class)).parallel().flatMap(mapper).filter(

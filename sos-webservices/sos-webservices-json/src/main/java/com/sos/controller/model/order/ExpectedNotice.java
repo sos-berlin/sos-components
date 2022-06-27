@@ -8,17 +8,12 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
-
-/**
- * set if state == ExpectingNotices
- * 
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "boardPath",
     "noticeId"
 })
-public class ExpectedNotices {
+public class ExpectedNotice {
 
     @JsonProperty("boardPath")
     private String boardPath;
@@ -29,7 +24,7 @@ public class ExpectedNotices {
      * No args constructor for use in serialization
      * 
      */
-    public ExpectedNotices() {
+    public ExpectedNotice() {
     }
 
     /**
@@ -37,7 +32,7 @@ public class ExpectedNotices {
      * @param boardPath
      * @param noticeId
      */
-    public ExpectedNotices(String boardPath, String noticeId) {
+    public ExpectedNotice(String boardPath, String noticeId) {
         super();
         this.boardPath = boardPath;
         this.noticeId = noticeId;
@@ -78,10 +73,10 @@ public class ExpectedNotices {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ExpectedNotices) == false) {
+        if ((other instanceof ExpectedNotice) == false) {
             return false;
         }
-        ExpectedNotices rhs = ((ExpectedNotices) other);
+        ExpectedNotice rhs = ((ExpectedNotice) other);
         return new EqualsBuilder().append(noticeId, rhs.noticeId).append(boardPath, rhs.boardPath).isEquals();
     }
 

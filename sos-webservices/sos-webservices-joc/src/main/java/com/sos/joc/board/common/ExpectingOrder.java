@@ -1,6 +1,7 @@
 package com.sos.joc.board.common;
 
 import js7.data.board.BoardPath;
+import js7.data.board.NoticeId;
 import js7.data_for_java.order.JOrder;
 
 
@@ -8,7 +9,7 @@ public class ExpectingOrder {
     
     private JOrder jOrder;
     private BoardPath boardPath;
-    private String noticeId;
+    private NoticeId noticeId;
     
 //    public ExpectingOrder(JOrder jOrder, BoardPath boardPath) {
 //        this.jOrder = jOrder;
@@ -20,7 +21,7 @@ public class ExpectingOrder {
 //        this.noticeIds = JavaConverters.asJava(((Order.ExpectingNotices) jOrder.asScala().state()).expected()).stream().filter(e -> e.boardPath().equals(boardPath)).map(e -> e.noticeId().string()).collect(Collectors.toList());
 //    }
     
-    public ExpectingOrder(JOrder jOrder, BoardPath boardPath, String noticeId) {
+    public ExpectingOrder(JOrder jOrder, BoardPath boardPath, NoticeId noticeId) {
         this.jOrder = jOrder;
         this.boardPath = boardPath;
         this.noticeId = noticeId;
@@ -35,7 +36,7 @@ public class ExpectingOrder {
     }
     
     public String getNoticeId() {
-        return noticeId;
+        return noticeId.string();
     }
     
 }

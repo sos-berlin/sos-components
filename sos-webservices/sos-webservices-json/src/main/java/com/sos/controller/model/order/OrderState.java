@@ -1,6 +1,7 @@
 
 package com.sos.controller.model.order;
 
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -33,7 +34,7 @@ public class OrderState {
      */
     @JsonProperty("expected")
     @JsonPropertyDescription("set if state == ExpectingNotices")
-    private ExpectedNotices expected;
+    private List<ExpectedNotice> expected = null;
     /**
      * OrderCycleState
      * <p>
@@ -60,7 +61,7 @@ public class OrderState {
      * @param tYPE
      * @param cycleState
      */
-    public OrderState(String tYPE, ExpectedNotices expected, OrderCycleState cycleState, String subagentId) {
+    public OrderState(String tYPE, List<ExpectedNotice> expected, OrderCycleState cycleState, String subagentId) {
         super();
         this.tYPE = tYPE;
         this.expected = expected;
@@ -83,7 +84,7 @@ public class OrderState {
      * 
      */
     @JsonProperty("expected")
-    public ExpectedNotices getExpected() {
+    public List<ExpectedNotice> getExpected() {
         return expected;
     }
 
@@ -92,7 +93,7 @@ public class OrderState {
      * 
      */
     @JsonProperty("expected")
-    public void setExpected(ExpectedNotices expected) {
+    public void setExpected(List<ExpectedNotice> expected) {
         this.expected = expected;
     }
 
