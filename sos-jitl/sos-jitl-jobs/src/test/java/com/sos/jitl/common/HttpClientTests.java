@@ -14,6 +14,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
@@ -135,12 +136,13 @@ public class HttpClientTests {
         }
     }
 
+    @Ignore
     @Test
-    public void readPrivateConf() {
+    public void readPrivateConf() throws SOSMissingDataException {
         Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
         System.setProperty("js7.config-directory", privateConfPath.toString());
         ApiExecutor ex = new ApiExecutor(null, null, null);
-        Config config = ex.readConfig(privateConfPath);
+        Config config = ex.readConfig();
         assertNotNull(config);
     }
 
