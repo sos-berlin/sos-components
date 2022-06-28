@@ -39,6 +39,7 @@ public class DailyPlanModifyOrder {
      * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -77,15 +78,13 @@ public class DailyPlanModifyOrder {
     @JsonProperty("variables")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables variables;
+    @JsonProperty("removeVariables")
+    private List<String> removeVariables = null;
     /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
+     * 
+     * (Required)
      * 
      */
-    @JsonProperty("removeVariables")
-    @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Variables removeVariables;
     @JsonProperty("orderIds")
     private List<String> orderIds = null;
     /**
@@ -121,6 +120,7 @@ public class DailyPlanModifyOrder {
      * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -132,6 +132,7 @@ public class DailyPlanModifyOrder {
      * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -227,33 +228,31 @@ public class DailyPlanModifyOrder {
         this.variables = variables;
     }
 
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
     @JsonProperty("removeVariables")
-    public Variables getRemoveVariables() {
+    public List<String> getRemoveVariables() {
         return removeVariables;
     }
 
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
     @JsonProperty("removeVariables")
-    public void setRemoveVariables(Variables removeVariables) {
+    public void setRemoveVariables(List<String> removeVariables) {
         this.removeVariables = removeVariables;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderIds")
     public List<String> getOrderIds() {
         return orderIds;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderIds")
     public void setOrderIds(List<String> orderIds) {
         this.orderIds = orderIds;

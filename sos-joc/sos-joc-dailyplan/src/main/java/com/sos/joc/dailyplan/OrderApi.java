@@ -133,9 +133,6 @@ public class OrderApi {
                     // Set<OrderId> set = map.keySet();
                     SOSHibernateSession session = null;
                     try {
-                        controllerApi.deleteOrdersWhenTerminated(set).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, jocError,
-                                controllerId));
-
                         session = Globals.createSosHibernateStatelessConnection(method);
                         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
 
@@ -149,6 +146,9 @@ public class OrderApi {
                         Globals.commit(session);
                         session.close();
                         session = null;
+                        
+                        controllerApi.deleteOrdersWhenTerminated(set).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, jocError,
+                                controllerId));
 
                         Instant end = Instant.now();
                         LOGGER.info(String.format("[%s][%s][%s]%s[submitted=%s][updated orders=%s(%s), history=%s(%s)]", startupMode, method,

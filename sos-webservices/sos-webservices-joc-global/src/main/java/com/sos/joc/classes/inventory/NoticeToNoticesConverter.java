@@ -100,10 +100,12 @@ public class NoticeToNoticesConverter {
                     break;
                 case FORK:
                     ForkJoin fj = invInstruction.cast();
-                    for (int j = 0; j < fj.getBranches().size(); j++) {
-                        Branch invBranch = fj.getBranches().get(j);
-                        if (invBranch.getWorkflow() != null) {
-                            convertInstructions(invBranch.getWorkflow().getInstructions());
+                    if (fj.getBranches() != null) {
+                        for (int j = 0; j < fj.getBranches().size(); j++) {
+                            Branch invBranch = fj.getBranches().get(j);
+                            if (invBranch.getWorkflow() != null) {
+                                convertInstructions(invBranch.getWorkflow().getInstructions());
+                            }
                         }
                     }
                     break;

@@ -1,6 +1,7 @@
 package com.sos.joc.dailyplan.db;
 
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -776,7 +777,26 @@ public class DBLayerDailyPlannedOrders {
         if (submitted != null) {
             query.setParameter("submitted", submitted);
         }
-        return session.getResultList(query);
+        List<DBItemDailyPlanOrder> result = session.getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return result;
+    }
+    
+    public int updateDailyPlanOrdersByCyclicMainPart(String controllerId, String mainPart, String orderParameterisation) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("set orderParameterisation=:orderParameterisation ");
+        hql.append(", modified=:modified ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and orderId like :mainPart ");
+
+        Query<DBItemDailyPlanOrder> query = session.createQuery(hql);
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("mainPart", mainPart + "%");
+        query.setParameter("orderParameterisation", orderParameterisation);
+        query.setParameter("modified", Date.from(Instant.now()));
+        return executeUpdate("updateOrderParameterisation", query);
     }
 
     private List<DBItemDailyPlanOrder> getDailyPlanListExecute(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {

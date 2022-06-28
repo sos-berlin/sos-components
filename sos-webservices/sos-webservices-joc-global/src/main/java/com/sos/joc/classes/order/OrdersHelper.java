@@ -689,19 +689,55 @@ public class OrdersHelper {
         }
         return listVariables;
     }
-
-    public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Set<String> temporaryOrderIds, DailyPlanModifyOrder dailyplanModifyOrder,
+    
+    public static Optional<Set<String>> getNotFreshOrders(Collection<String> orderIds, JControllerState currentState) {
+        Function1<Order<Order.State>, Object> notFreshAndExistsFilter = JOrderPredicates.and(o -> orderIds.contains(o.id().string()), JOrderPredicates
+                .not(JOrderPredicates.byOrderState(Order.Fresh$.class)));
+        Set<String> notFreshOrderIds = currentState.ordersBy(notFreshAndExistsFilter).map(JOrder::id).map(OrderId::string).collect(Collectors
+                .toSet());
+        if (!notFreshOrderIds.isEmpty()) {
+            return Optional.of(notFreshOrderIds);
+        }
+        return Optional.empty();
+    }
+    
+    public static Either<Set<String>, String> checkIfWorkflowIsUnique(Collection<String> orderIds, JControllerState currentState) {
+        Function1<Order<Order.State>, Object> freshAndExistsFilter = JOrderPredicates.and(o -> orderIds.contains(o.id().string()),
+                JOrderPredicates.byOrderState(Order.Fresh$.class));
+        Set<String> workflowNames = currentState.ordersBy(freshAndExistsFilter).map(JOrder::workflowId).map(JWorkflowId::path).map(
+                WorkflowPath::string).collect(Collectors.toSet());
+        if (workflowNames.size() == 1) {
+            return Either.right(workflowNames.iterator().next());
+        }
+        return Either.left(workflowNames);
+    }
+    
+    public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds, DailyPlanModifyOrder dailyplanModifyOrder,
             String accessToken, JocError jocError, Long auditlogId, SOSAuthFolderPermissions folderPermissions)
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
+        
+        Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
+        if (temporaryOrderIds.isEmpty()) {
+            return result;
+        }
+        JControllerProxy proxy = Proxy.of(dailyplanModifyOrder.getControllerId());
+        JControllerState currentState = proxy.currentState();
+        return cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, jocError, auditlogId, proxy, currentState, folderPermissions);
+        
+    }
+
+    public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
+            DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, JControllerProxy proxy,
+            JControllerState currentState, SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, ExecutionException {
 
         Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
         if (temporaryOrderIds.isEmpty()) {
             return result;
         }
         String controllerId = dailyplanModifyOrder.getControllerId();
-        JControllerProxy proxy = Proxy.of(controllerId);
-        JControllerState currentState = proxy.currentState();
         Instant now = Instant.now();
         List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
@@ -721,11 +757,8 @@ public class OrdersHelper {
                 if (dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty()) {
                     vars.setAdditionalProperties(dailyplanModifyOrder.getVariables().getAdditionalProperties());
                 }
-                if (dailyplanModifyOrder.getRemoveVariables() != null && !dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties()
-                        .isEmpty()) {
-                    dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties().forEach((k, v) -> {
-                        vars.removeAdditionalProperty(k);
-                    });
+                if (dailyplanModifyOrder.getRemoveVariables() != null) {
+                    dailyplanModifyOrder.getRemoveVariables().forEach(k -> vars.removeAdditionalProperty(k));
                 }
                 args = variablesToScalaValuedArguments(checkArguments(vars, JsonConverter.signOrderPreparationToInvOrderPreparation(workflow
                         .getOrderPreparation())));
