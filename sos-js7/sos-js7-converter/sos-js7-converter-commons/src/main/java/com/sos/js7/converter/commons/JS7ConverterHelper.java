@@ -217,8 +217,8 @@ public class JS7ConverterHelper {
         if (val.startsWith("$")) {
             return val;
         }
-        // return "\"" + val.replaceAll("\\\\", "\\\\\\\\") + "\"";
-        return "\"" + val + "\"";
+        return "\"" + val.replaceAll("\\\\", "\\\\\\\\") + "\"";
+        // return "\"" + val + "\"";
     }
 
     public static String quoteJS7StringValueWithSingleQuotes(String val) {

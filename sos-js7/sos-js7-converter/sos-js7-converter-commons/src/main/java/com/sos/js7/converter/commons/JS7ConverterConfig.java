@@ -139,6 +139,9 @@ public class JS7ConverterConfig {
                             LOGGER.warn(getWarnMessage("jobConfig.forcedV1Compatible", "boolean", val));
                         }
                         break;
+                    case "jobConfig.jitl.logLevel":
+                        jobConfig.jitlLogLevel = val;
+                        break;
                     // AGENT
                     case "agentConfig.mappings":
                         agentConfig.withMappings(val);
@@ -391,8 +394,8 @@ public class JS7ConverterConfig {
 
         private String defaultTimeZone = "Etc/UTC";
 
-        public WorkflowConfig withDefaultTimeZone(String timeZone) {
-            this.defaultTimeZone = timeZone;
+        public WorkflowConfig withDefaultTimeZone(String val) {
+            this.defaultTimeZone = val;
             return this;
         }
 
@@ -404,33 +407,43 @@ public class JS7ConverterConfig {
     public class JobConfig {
 
         private String scriptNewLine = "\n";
+        private String jitlLogLevel;
         private Integer forcedGraceTimeout;
         private Integer forcedParallelism;
         private Boolean forcedFailOnErrWritten;
         private Boolean forcedV1Compatible;
 
-        public JobConfig withScriptNewLine(String newLine) {
-            this.scriptNewLine = newLine;
+        public JobConfig withScriptNewLine(String val) {
+            this.scriptNewLine = val;
             return this;
         }
 
-        public JobConfig withForcedGraceTimeout(Integer graceTimeout) {
-            this.forcedGraceTimeout = graceTimeout;
+        public JobConfig withJitlLogLevel(String val) {
+            this.jitlLogLevel = val;
             return this;
         }
 
-        public JobConfig withForcedParallelism(Integer parallelism) {
-            this.forcedParallelism = parallelism;
+        public JobConfig withForcedGraceTimeout(Integer val) {
+            this.forcedGraceTimeout = val;
             return this;
         }
 
-        public JobConfig withForcedFailOnErrWritten(Boolean failOnErrWritten) {
-            this.forcedFailOnErrWritten = failOnErrWritten;
+        public JobConfig withForcedParallelism(Integer val) {
+            this.forcedParallelism = val;
+            return this;
+        }
+
+        public JobConfig withForcedFailOnErrWritten(Boolean val) {
+            this.forcedFailOnErrWritten = val;
             return this;
         }
 
         public String getScriptNewLine() {
             return scriptNewLine;
+        }
+
+        public String getJitlLogLevel() {
+            return jitlLogLevel;
         }
 
         public Integer getForcedGraceTimeout() {
@@ -461,18 +474,18 @@ public class JS7ConverterConfig {
         private JS7Agent forcedAgent; // use this instead of evaluated agent name
         private JS7Agent defaultAgent;// when agent can't be evaluated
 
-        public AgentConfig withForcedPlatform(Platform platform) {
-            this.forcedPlatform = platform;
+        public AgentConfig withForcedPlatform(Platform val) {
+            this.forcedPlatform = val;
             return this;
         }
 
-        public AgentConfig withForcedAgent(String agent) {
-            this.forcedAgent = new JS7Agent(agent);
+        public AgentConfig withForcedAgent(String val) {
+            this.forcedAgent = new JS7Agent(val);
             return this;
         }
 
-        public AgentConfig withDefaultAgent(String agent) {
-            this.defaultAgent = new JS7Agent(agent);
+        public AgentConfig withDefaultAgent(String val) {
+            this.defaultAgent = new JS7Agent(val);
             return this;
         }
 
@@ -569,13 +582,13 @@ public class JS7ConverterConfig {
         private String unixScript;
         private String jitlJobsMockLevel; // see com.sos.jitl.jobs.common.JobArguments
 
-        public MockConfig withWindowsScript(String script) {
-            this.windowsScript = script;
+        public MockConfig withWindowsScript(String val) {
+            this.windowsScript = val;
             return this;
         }
 
-        public MockConfig withUnixScript(String script) {
-            this.unixScript = script;
+        public MockConfig withUnixScript(String val) {
+            this.unixScript = val;
             return this;
         }
 
@@ -616,38 +629,38 @@ public class JS7ConverterConfig {
         private Boolean planOrders;
         private Boolean submitOrders;
 
-        public ScheduleConfig withForcedWorkingCalendarName(String calendarName) {
-            this.forcedWorkingCalendarName = calendarName;
+        public ScheduleConfig withForcedWorkingCalendarName(String val) {
+            this.forcedWorkingCalendarName = val;
             return this;
         }
 
-        public ScheduleConfig withForcedNonWorkingCalendarName(String calendarName) {
-            this.forcedNonWorkingCalendarName = calendarName;
+        public ScheduleConfig withForcedNonWorkingCalendarName(String val) {
+            this.forcedNonWorkingCalendarName = val;
             return this;
         }
 
-        public ScheduleConfig withDefaultWorkingCalendarName(String calendarName) {
-            this.defaultWorkingCalendarName = calendarName;
+        public ScheduleConfig withDefaultWorkingCalendarName(String val) {
+            this.defaultWorkingCalendarName = val;
             return this;
         }
 
-        public ScheduleConfig withDefaultNonWorkingCalendarName(String calendarName) {
-            this.defaultNonWorkingCalendarName = calendarName;
+        public ScheduleConfig withDefaultNonWorkingCalendarName(String val) {
+            this.defaultNonWorkingCalendarName = val;
             return this;
         }
 
-        public ScheduleConfig withDefaultTimeZone(String timeZone) {
-            this.defaultTimeZone = timeZone;
+        public ScheduleConfig withDefaultTimeZone(String val) {
+            this.defaultTimeZone = val;
             return this;
         }
 
-        public ScheduleConfig withPlanOrders(boolean planOrders) {
-            this.planOrders = planOrders;
+        public ScheduleConfig withPlanOrders(boolean val) {
+            this.planOrders = val;
             return this;
         }
 
-        public ScheduleConfig withSubmitOrders(boolean submitOrders) {
-            this.submitOrders = submitOrders;
+        public ScheduleConfig withSubmitOrders(boolean val) {
+            this.submitOrders = val;
             return this;
         }
 
@@ -707,13 +720,13 @@ public class JS7ConverterConfig {
             return withMappings(map);
         }
 
-        public SubFolderConfig withMappings(Map<String, Integer> map) {
-            this.mappings = map;
+        public SubFolderConfig withMappings(Map<String, Integer> val) {
+            this.mappings = val;
             return this;
         }
 
-        public SubFolderConfig withSeparator(String separator) {
-            this.separator = separator;
+        public SubFolderConfig withSeparator(String val) {
+            this.separator = val;
             return this;
         }
 

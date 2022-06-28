@@ -724,8 +724,21 @@ public class JS7Converter {
             });
             ej.setArguments(env);
         }
+        setLogLevel(ej);
         setMockLevel(ej);
         return ej;
+    }
+
+    private void setLogLevel(ExecutableJava ej) {
+        if (CONFIG.getJobConfig().getJitlLogLevel() != null) {
+            Environment env = ej.getArguments();
+            if (env == null) {
+                env = new Environment();
+            }
+            env.setAdditionalProperty("log_level", JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(CONFIG.getJobConfig().getJitlLogLevel()
+                    .toUpperCase()));
+            ej.setArguments(env);
+        }
     }
 
     private void setMockLevel(ExecutableJava ej) {
@@ -736,7 +749,7 @@ public class JS7Converter {
                 if (env == null) {
                     env = new Environment();
                 }
-                env.setAdditionalProperty("mock_level", mockLevel);
+                env.setAdditionalProperty("mock_level", JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(mockLevel));
                 ej.setArguments(env);
             }
         }
@@ -972,18 +985,30 @@ public class JS7Converter {
         }
     }
 
-    private Workflow setWorkflowOrderPreparationOrResources(Workflow w, JobChain jobChain, List<JobChainNodeFileOrderSource> fileOrderSources) {
-        Map<String, String> params = new HashMap<>();
-        List<String> jobResources = new ArrayList<>();
+    private Parameter getStringParameter(String defaultValue) {
+        Parameter p = new Parameter();
+        p.setType(ParameterType.String);
+        if (defaultValue != null) {
+            p.setDefault(JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(replaceJS1Values(defaultValue)));
+        }
+        return p;
+    }
 
+    private Workflow setWorkflowOrderPreparationOrResources(Workflow w, JobChain jobChain, List<JobChainNodeFileOrderSource> fileOrderSources) {
+        Parameters parameters = null;
+        if (fileOrderSources.size() > 0) {
+            parameters = new Parameters();
+            parameters.setAdditionalProperty("file", getStringParameter(null));
+            parameters.setAdditionalProperty("source_file", getStringParameter("${file}"));
+            parameters.setAdditionalProperty("SCHEDULER_FILE_PATH", getStringParameter("${file}"));
+        }
+
+        Map<String, String> params = new HashMap<>();
         if (jobChain.getConfig() != null && jobChain.getConfig().hasOrderParams()) {
             params.putAll(jobChain.getConfig().getOrderParams().getParams());
         }
 
-        if (fileOrderSources.size() > 0) {
-            params.put("SCHEDULER_FILE_PATH", "$FILE");
-        }
-
+        List<String> jobResources = new ArrayList<>();
         boolean hasOrders = false;
         for (JobChainOrder o : jobChain.getOrders()) {
             Params ps = o.getParams();
@@ -1009,17 +1034,16 @@ public class JS7Converter {
         }
 
         if (params.size() > 0) {
-            Parameters ps = new Parameters();
-
-            for (Map.Entry<String, String> e : params.entrySet()) {
-                Parameter p = new Parameter();
-                p.setType(ParameterType.String);
-                if (!hasOrders) {
-                    p.setDefault(JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(replaceJS1Values(e.getValue())));
-                }
-                ps.setAdditionalProperty(e.getKey(), p);
+            if (parameters == null) {
+                parameters = new Parameters();
             }
-            w.setOrderPreparation(new Requirements(ps, false));
+            for (Map.Entry<String, String> e : params.entrySet()) {
+                parameters.setAdditionalProperty(e.getKey(), getStringParameter(hasOrders ? null : e.getValue()));
+            }
+        }
+
+        if (parameters != null) {
+            w.setOrderPreparation(new Requirements(parameters, false));
         }
         if (jobResources.size() > 0) {
             w.setJobResourceNames(jobResources.stream().distinct().collect(Collectors.toList()));
@@ -1323,10 +1347,9 @@ public class JS7Converter {
         job.setLabel(label);
 
         Environment env = new Environment();
-        env.setAdditionalProperty("source_file", "$FILE");
         env.setAdditionalProperty("gracious", "true");
         if (!isRemove) {
-            env.setAdditionalProperty("target_file", fos.getMoveTo());
+            env.setAdditionalProperty("target_file", JS7ConverterHelper.quoteJS7StringValueWithSingleQuotes(fos.getMoveTo()));
         }
         job.setDefaultArguments(env);
         return job;
@@ -1346,6 +1369,7 @@ public class JS7Converter {
             ex.setClassName("com.sos.jitl.jobs.file.RemoveFileJob");
             break;
         }
+        setLogLevel(ex);
         setMockLevel(ex);
         job.setExecutable(ex);
         return job;
