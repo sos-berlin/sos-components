@@ -35,7 +35,7 @@ public class HistoryInfo {
         try {
             ApiResponse apiResponse = apiExecutor.login();
             if(apiResponse.getStatusCode() == 200) {
-                accessToken = apiResponse.getResponseBody();
+                accessToken = apiResponse.getAccessToken();
             } else {
                 // error handling here - apiResponse.getException();
             }
