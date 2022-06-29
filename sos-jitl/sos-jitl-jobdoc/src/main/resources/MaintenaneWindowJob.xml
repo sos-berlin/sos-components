@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
+<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xhtml="http://www.w3.org/1999/xhtml"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+
+    <job name  = "MaintenanceWindowJob"
+         title = "Enable/Disable a Maintenance Window"
+         category="Maintenance;JITL">
+        <script language   = "java"
+                java_class = "com.sos.jitl.jobs.maintenance.MaintenanceWindowJob"
+                resource   = "1"/>
+    </job>
+ 
+    <configuration>
+
+        <params id="job_parameter">
+
+                <param name="state" required="true">
+                <note>
+                    <title>Resulting state for the given Controller, JOC Cockpit or Agent</title>
+                    <p>
+                    Possible values are (not case sensitive)
+                    <ul>
+                    <li>active</li>>
+                    <li>incactive</li>>
+                    </ul>
+                    </p>
+                    
+                    <h2> Actions</h2>
+                    
+                    <b>Controller</b>
+                    <p>If the given controller in a cluster does not have the given state a switch over will be executed.</p>
+
+                    <b>JOC Cockpit</b>
+                    <p>If the given JOC Cockpit in a cluster does not have the given state a switch over will be executed.</p>
+                    
+                    <b>Agent</b>
+                    <p>If the given agent or subagent is enabled and the given state is INACTIVE the agent will be disabled.</p>
+                    <p>If the given agent or subagent is disabled and the given state is ACTIVE the agent will be enabled.</p>
+                    
+                    
+                </note>
+            </param>
+
+             
+            <param name="controller_id" required="one of workflow or job">
+                <note>
+                	<title>The Controller ID</title>
+                	<p>
+                	The controller-id for the given JOC Cockpit, Controller or agents
+                    </p>
+                  
+                </note>
+            </param>                     
+
+            <param name="controller_host" required="one of workflow or job">
+                <note>
+                    <title>The Controller host name</title>
+                   <p>
+                	The controller host name for which the given state should be reached. 
+                    </p>
+                </note>
+            </param>
+      
+            <param name="joc_host" required="false">
+                <note>
+                	<title>The JOC Cockpit host name</title>
+                	<p>
+                	The JOC host name for which the given state should be reached. 
+                     </p>
+                </note>
+            </param>
+            <param name="subagent_ids" required="false">
+                <note>
+                	<title>List of subagent ids</title>
+                	<p>
+                	A semicolon seperated list of subagent ids for which the given state should be reached. 
+                      </p>
+                </note>
+            </param>
+            <param name="agent_ids" required="false">
+                <note>
+                	<title>List of agent ids</title>
+                	<p>
+                	A semicolon seperated list of agent ids for which the given state should be reached. 
+                      </p>
+                </note>
+            </param>
+               
+        </params>
+        
+        <params id="return_parameter">
+            
+          
+        </params>
+
+    </configuration>
+
+    <documentation>
+    
+        <note>
+            <title>What is the purpose of this job?</title>
+            <p>
+                The job sets the given controller, JOC Cockpit instances, agents or subagents to a given state.
+            </p>
+        </note>
+    
+        <note>
+        <p>
+        The job will consider all controllers, JOC Cockpits, agents or subagents that are specified.
+        </p>
+        </note>
+         
+    </documentation>
+
+</description>
