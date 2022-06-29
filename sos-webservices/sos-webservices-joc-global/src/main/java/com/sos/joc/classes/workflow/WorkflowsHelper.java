@@ -165,6 +165,21 @@ public class WorkflowsHelper {
         return w;
     }
     
+    public static com.sos.inventory.model.workflow.Workflow addWorkflowPositions(com.sos.inventory.model.workflow.Workflow w) {
+        if (w == null) {
+            return null;
+        }
+        List<Instruction> instructions = w.getInstructions();
+        if (instructions != null) {
+            instructions.add(createImplicitEndInstruction());
+        } else {
+            w.setInstructions(Collections.singletonList(createImplicitEndInstruction()));
+        }
+        Object[] o = {};
+        setWorkflowPositions(o, w.getInstructions());
+        return w;
+    }
+    
     public static Set<Position> getWorkflowAddOrderPositions(Workflow w) {
         if (w == null) {
             return null;
@@ -489,6 +504,82 @@ public class WorkflowsHelper {
                     Cycle c = inst.cast();
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), forkListVariables,
                             expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders);
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+    
+    private static void setWorkflowPositions(Object[] parentPosition, List<Instruction> insts) {
+        if (insts != null) {
+            for (int i = 0; i < insts.size(); i++) {
+                Object[] pos = extendArray(parentPosition, i);
+                pos[parentPosition.length] = i;
+                Instruction inst = insts.get(i);
+                inst.setPosition(Arrays.asList(pos));
+                inst.setPositionString(getJPositionString(inst.getPosition()));
+                switch (inst.getTYPE()) {
+                case FORK:
+                    ForkJoin f = inst.cast();
+                    if (f.getBranches() != null) {
+                        for (Branch b : f.getBranches()) {
+                            if (b.getWorkflow().getInstructions() != null) {
+                                b.getWorkflow().getInstructions().add(createImplicitEndInstruction());
+                            } else {
+                                b.getWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
+                            }
+                            setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions());
+                        }
+                    }
+                    break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    if (fl.getWorkflow() != null) {
+                        if (fl.getWorkflow().getInstructions() != null) {
+                            fl.getWorkflow().getInstructions().add(createImplicitEndInstruction());
+                        } else {
+                            fl.getWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
+                        }
+                        setWorkflowPositions(extendArray(pos, "fork"), fl.getWorkflow().getInstructions());
+                    }
+                    break;
+                case EXPECT_NOTICE:
+                    insts.set(i, NoticeToNoticesConverter.expectNoticeToExpectNotices(inst.cast()));
+                    break;
+                case POST_NOTICE:
+                    insts.set(i, NoticeToNoticesConverter.postNoticeToPostNotices(inst.cast()));
+                    break;
+                case IF:
+                    IfElse ie = inst.cast();
+                    if (ie.getThen() != null) {
+                        setWorkflowPositions(extendArray(pos, "then"), ie.getThen().getInstructions());
+                    }
+                    if (ie.getElse() != null) {
+                        setWorkflowPositions(extendArray(pos, "else"), ie.getElse().getInstructions());
+                    }
+                    break;
+                case TRY:
+                    TryCatch tc = inst.cast();
+                    if (tc.getTry() != null) {
+                        setWorkflowPositions(extendArray(pos, "try"), tc.getTry().getInstructions());
+                    }
+                    if (tc.getCatch() != null) {
+                        setWorkflowPositions(extendArray(pos, "catch"), tc.getCatch().getInstructions());
+                    }
+                    break;
+                case LOCK:
+                    Lock l = inst.cast();
+                    if (l.getLockedWorkflow() != null) {
+                        setWorkflowPositions(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions());
+                    }
+                    break;
+                case CYCLE:
+                    Cycle c = inst.cast();
+                    if (c.getCycleWorkflow() != null) {
+                        setWorkflowPositions(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions());
+                    }
                     break;
                 default:
                     break;

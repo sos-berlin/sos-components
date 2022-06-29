@@ -270,8 +270,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         if (in.getEndPositions() != null && !in.getEndPositions().isEmpty()) {
             return false;
         }
-        if ((in.getScheduledFor() != null && !in.getScheduledFor().isEmpty()) || in.getCycle() != null) {
-            throw new JocMissingRequiredParameterException("scheduledFor, cycle, variables, removeVariables, startPosition or endPositions missing");
+        if ((in.getScheduledFor() == null || in.getScheduledFor().isEmpty()) && in.getCycle() == null) {
+            throw new JocMissingRequiredParameterException(
+                    "At least one of the parameters 'scheduledFor', 'cycle', 'variables', 'removeVariables', 'startPosition' or 'endPositions' should be set.");
         }
         return true;
     }
