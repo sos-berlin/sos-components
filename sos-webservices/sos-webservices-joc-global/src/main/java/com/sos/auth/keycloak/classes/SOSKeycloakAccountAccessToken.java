@@ -10,9 +10,27 @@ public class SOSKeycloakAccountAccessToken {
     private Boolean not_before_policy;
     private String session_state;
     private String scope;
+    private String error;
+    private String error_description;
+
+    public String getError() {
+        return error;
+    }
+
+    public String getError_description() {
+        return error_description;
+    }
 
     public String getAccess_token() {
         return access_token;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public void setError_description(String error_description) {
+        this.error_description = error_description;
     }
 
     public void setAccess_token(String access_token) {

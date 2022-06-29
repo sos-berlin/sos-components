@@ -570,7 +570,9 @@ public class SOSServicePermissionIam {
                         SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
                                 dbItemIamIdentityService));
                         currentAccount.setRoles(securityConfiguration);
-                        setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
+                        if (currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
+                            setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
+                        }
                         addFolder(currentAccount);
                     } else {
                         LOGGER.info("Login with required Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed." + msg);
@@ -611,7 +613,7 @@ public class SOSServicePermissionIam {
 
                 IamHistoryDbLayer iamHistoryDbLayer = new IamHistoryDbLayer(sosHibernateSession);
 
-                if (currentAccount.getCurrentSubject() != null) {
+                if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
                     iamHistoryDbLayer.addLoginAttempt(currentAccount.getAccountname(), true);
                     currentAccount.getCurrentSubject().getListOfAccountPermissions().addAll(setOfAccountPermissions);
                     SecurityConfiguration securityConfigurationEntry = sosPermissionMerger.mergePermissions();

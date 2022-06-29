@@ -195,11 +195,16 @@ public class SOSKeycloakHandler {
         body.put("grant_type", "password");
         body.put("client_secret", webserviceCredentials.getClientSecret());
 
-        String response = getFormResponse(POST, "/auth/realms/" + webserviceCredentials.getRealm() + "/protocol/openid-connect/token", body, null);
+        try {
+            String response = getFormResponse(POST, "/auth/realms/" + webserviceCredentials.getRealm() + "/protocol/openid-connect/token", body,
+                    null);
+            SOSKeycloakAccountAccessToken sosKeycloakUserAccessToken = Globals.objectMapper.readValue(response, SOSKeycloakAccountAccessToken.class);
 
-        SOSKeycloakAccountAccessToken sosKeycloakUserAccessToken = Globals.objectMapper.readValue(response, SOSKeycloakAccountAccessToken.class);
-
-        return sosKeycloakUserAccessToken;
+            return sosKeycloakUserAccessToken;
+        } catch (JocException e) {
+            LOGGER.info("Error accessing the admin account");
+            throw e;
+        }
     }
 
     private SOSKeycloakUserRepresentation getUserId(SOSKeycloakAccountAccessToken adminAccessToken) throws SocketException, SOSException,
@@ -283,38 +288,43 @@ public class SOSKeycloakHandler {
 
     public Set<String> getTokenRoles() throws SocketException, SOSException, JsonMappingException, JsonProcessingException {
         Set<String> tokenRoles = new HashSet<String>();
-        SOSKeycloakRoleRepresentation[] sosKeycloakRoleRepresentations;
-        // 1. get a admin access-token
-        SOSKeycloakAccountAccessToken adminAccessToken = this.getAdminAccessToken();
-        // 2. get user-id
-        SOSKeycloakUserRepresentation userRepresentation = this.getUserId(adminAccessToken);
-        // 2. get client-id
-        SOSKeycloakClientRepresentation clientRepresentation = this.getClientId(adminAccessToken);
+        try {
+            SOSKeycloakRoleRepresentation[] sosKeycloakRoleRepresentations;
+            // 1. get a admin access-token
+            SOSKeycloakAccountAccessToken adminAccessToken = this.getAdminAccessToken();
 
-        // 3. get account realm roles
-        sosKeycloakRoleRepresentations = this.getAccountRealmRoles(adminAccessToken, userRepresentation);
-        for (int i = 0; i < sosKeycloakRoleRepresentations.length; i++) {
-            tokenRoles.add(sosKeycloakRoleRepresentations[i].getName());
-        }
-        // 4. get account client roles
-        sosKeycloakRoleRepresentations = this.getAccountClientRoles(adminAccessToken, userRepresentation, clientRepresentation);
-        for (int i = 0; i < sosKeycloakRoleRepresentations.length; i++) {
-            tokenRoles.add(sosKeycloakRoleRepresentations[i].getName());
-        }
-        // 5. get account groups
-        SOSKeycloakGroupRepresentation[] sosKeycloakGroupRepresentations = this.getAccountGroups(adminAccessToken, userRepresentation);
-        // 5.1. foreach get group id
-        for (int i = 0; i < sosKeycloakGroupRepresentations.length; i++) {
-            // 5.11 get account group realm roles
-            sosKeycloakRoleRepresentations = this.getGroupRealmRoles(adminAccessToken, sosKeycloakGroupRepresentations[i]);
-            for (int ii = 0; ii < sosKeycloakRoleRepresentations.length; ii++) {
-                tokenRoles.add(sosKeycloakRoleRepresentations[ii].getName());
+            // 2. get user-id
+            SOSKeycloakUserRepresentation userRepresentation = this.getUserId(adminAccessToken);
+            // 2. get client-id
+            SOSKeycloakClientRepresentation clientRepresentation = this.getClientId(adminAccessToken);
+
+            // 3. get account realm roles
+            sosKeycloakRoleRepresentations = this.getAccountRealmRoles(adminAccessToken, userRepresentation);
+            for (int i = 0; i < sosKeycloakRoleRepresentations.length; i++) {
+                tokenRoles.add(sosKeycloakRoleRepresentations[i].getName());
             }
-            // 5.11 get account group client roles
-            sosKeycloakRoleRepresentations = this.getGroupClientRoles(adminAccessToken, sosKeycloakGroupRepresentations[i], clientRepresentation);
-            for (int ii = 0; ii < sosKeycloakRoleRepresentations.length; ii++) {
-                tokenRoles.add(sosKeycloakRoleRepresentations[ii].getName());
+            // 4. get account client roles
+            sosKeycloakRoleRepresentations = this.getAccountClientRoles(adminAccessToken, userRepresentation, clientRepresentation);
+            for (int i = 0; i < sosKeycloakRoleRepresentations.length; i++) {
+                tokenRoles.add(sosKeycloakRoleRepresentations[i].getName());
             }
+            // 5. get account groups
+            SOSKeycloakGroupRepresentation[] sosKeycloakGroupRepresentations = this.getAccountGroups(adminAccessToken, userRepresentation);
+            // 5.1. foreach get group id
+            for (int i = 0; i < sosKeycloakGroupRepresentations.length; i++) {
+                // 5.11 get account group realm roles
+                sosKeycloakRoleRepresentations = this.getGroupRealmRoles(adminAccessToken, sosKeycloakGroupRepresentations[i]);
+                for (int ii = 0; ii < sosKeycloakRoleRepresentations.length; ii++) {
+                    tokenRoles.add(sosKeycloakRoleRepresentations[ii].getName());
+                }
+                // 5.11 get account group client roles
+                sosKeycloakRoleRepresentations = this.getGroupClientRoles(adminAccessToken, sosKeycloakGroupRepresentations[i], clientRepresentation);
+                for (int ii = 0; ii < sosKeycloakRoleRepresentations.length; ii++) {
+                    tokenRoles.add(sosKeycloakRoleRepresentations[ii].getName());
+                }
+            }
+        } catch (JocException e) {
+            LOGGER.info("KEYCLOAK:" + e.getMessage());
         }
         return tokenRoles;
     }
