@@ -224,7 +224,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
             connection.setAutoCommit(false);
             Globals.beginTransaction(connection);
-            jocConfigurationDBLayer.deleteConfigurations(configurationsFilter.getAccounts());
+            jocConfigurationDBLayer.deleteConfigurations(configurationsFilter.getConfigurationType(),configurationsFilter.getAccounts());
             Globals.commit(connection);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

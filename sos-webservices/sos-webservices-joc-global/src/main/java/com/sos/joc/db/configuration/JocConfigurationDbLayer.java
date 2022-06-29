@@ -189,10 +189,17 @@ public class JocConfigurationDbLayer {
         return size;
     }
 
-    public int deleteConfigurations(List<String> accounts) throws DBConnectionRefusedException, DBInvalidDataException {
+    public int deleteConfigurations(ConfigurationType configurationType, List<String> accounts) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             String hql = "delete from " + DBLayer.DBITEM_JOC_CONFIGURATIONS + " where account in (:accounts)";
+            if (configurationType != null) {
+                hql += " and configurationType=:configurationType";
+            }
             Query<Integer> query = session.createQuery(hql);
+            if (configurationType != null) {
+                query.setParameter("configurationType", configurationType.name());
+            }
             query.setParameterList("accounts", accounts);
             return session.executeUpdate(query);
         } catch (SOSHibernateInvalidSessionException ex) {

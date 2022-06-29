@@ -19,10 +19,19 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "configurationType",
     "accounts"
 })
 public class ConfigurationsDeleteFilter {
 
+    /**
+     * configuration type
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("configurationType")
+    private ConfigurationType configurationType;
     /**
      * 
      * (Required)
@@ -30,6 +39,28 @@ public class ConfigurationsDeleteFilter {
      */
     @JsonProperty("accounts")
     private List<String> accounts = new ArrayList<String>();
+
+    /**
+     * configuration type
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("configurationType")
+    public ConfigurationType getConfigurationType() {
+        return configurationType;
+    }
+
+    /**
+     * configuration type
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("configurationType")
+    public void setConfigurationType(ConfigurationType configurationType) {
+        this.configurationType = configurationType;
+    }
 
     /**
      * 
@@ -53,12 +84,12 @@ public class ConfigurationsDeleteFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("accounts", accounts).toString();
+        return new ToStringBuilder(this).append("configurationType", configurationType).append("accounts", accounts).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(accounts).toHashCode();
+        return new HashCodeBuilder().append(configurationType).append(accounts).toHashCode();
     }
 
     @Override
@@ -70,7 +101,7 @@ public class ConfigurationsDeleteFilter {
             return false;
         }
         ConfigurationsDeleteFilter rhs = ((ConfigurationsDeleteFilter) other);
-        return new EqualsBuilder().append(accounts, rhs.accounts).isEquals();
+        return new EqualsBuilder().append(configurationType, rhs.configurationType).append(accounts, rhs.accounts).isEquals();
     }
 
 }
