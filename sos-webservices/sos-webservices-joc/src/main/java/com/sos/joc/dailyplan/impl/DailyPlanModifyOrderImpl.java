@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -111,49 +113,80 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 return response;
             }
 
-            List<String> orderIds = in.getOrderIds();
-            
-            // DailyPlan Orders
-            Set<String> dailyPlanOrderIds = orderIds.stream().filter(id -> !id.matches(".*#T[0-9]+-.*")).collect(Collectors.toSet());
-            
-            CategoryType category = dailyPlanOrderIds.isEmpty() ? CategoryType.CONTROLLER : CategoryType.DAILYPLAN;
+            // DailyPlan Orders: orderIds.get(Boolean.FALSE), Adhoc Orders: orderIds.get(Boolean.TRUE)
+            Map<Boolean, Set<String>> orderIds = in.getOrderIds().stream().collect(Collectors.groupingBy(id -> id.matches(".*#T[0-9]+-.*"), Collectors
+                    .toSet()));
+            orderIds.putIfAbsent(Boolean.FALSE, Collections.emptySet());
+            orderIds.putIfAbsent(Boolean.TRUE, Collections.emptySet());
+
+            CategoryType category = orderIds.get(Boolean.FALSE).isEmpty() ? CategoryType.CONTROLLER : CategoryType.DAILYPLAN;
             DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId(), category);
             
-            JControllerProxy proxy = Proxy.of(controllerId);
-            JControllerState currentState = proxy.currentState();
-            
-            OrdersHelper.getNotFreshOrders(orderIds, currentState).ifPresent(s -> {
-                throw new JocBadRequestException("All orders must have the state SCHEDULED. Not scheduled orders are " + s.toString());
-            });
-            
+            List<DBItemDailyPlanOrder> dailyPlanOrderItems = null;
+            if (!orderIds.get(Boolean.FALSE).isEmpty()) {
+                dailyPlanOrderItems = getDailyPlanOrders(controllerId, getDistinctOrderIds(orderIds.get(Boolean.FALSE)));
+            }
+            if (dailyPlanOrderItems == null) {
+                dailyPlanOrderItems = Collections.emptyList();
+            }
+            boolean someDailyPlanOrdersAreSubmitted = dailyPlanOrderItems.stream().anyMatch(DBItemDailyPlanOrder::getSubmitted);
             boolean onlyStarttimeModifications = hasOnlyStarttimeModifications(in);
-            if (!onlyStarttimeModifications) { // check that all orders belong to one workflow
-                Either<Set<String>, String> workflowNames = OrdersHelper.checkIfWorkflowIsUnique(orderIds, currentState);
-                if (workflowNames.isLeft()) {
-                    throw new JocBadRequestException(
-                            "All orders must belong to the same workflow when variables or positions are modified. Involved workflows are "
-                                    + workflowNames.getLeft().toString());
+            
+            Stream<String> workflowNames = Stream.empty();
+            if (!onlyStarttimeModifications) {
+                workflowNames = dailyPlanOrderItems.stream().map(DBItemDailyPlanOrder::getWorkflowName).distinct();
+            }
+            
+            JControllerProxy proxy = null;
+            JControllerState currentState = null;
+            
+            // some dailyplan orders are already submitted then these must be in state SCHEDULED
+            if (someDailyPlanOrdersAreSubmitted || !orderIds.get(Boolean.TRUE).isEmpty()) {
+                proxy = Proxy.of(controllerId);
+                currentState = proxy.currentState();
+                
+                OrdersHelper.getNotFreshOrders(in.getOrderIds(), currentState).ifPresent(s -> {
+                    throw new JocBadRequestException("Some orders are not in the state SCHEDULED or PLANNED: " + s
+                            .toString());
+                });
+
+                if (!onlyStarttimeModifications) {
+                    workflowNames = Stream.concat(workflowNames, OrdersHelper.getWorkflowNamesOfFreshOrders(in.getOrderIds(), currentState));
                 }
             }
             
-            orderIds.removeAll(dailyPlanOrderIds);
-            Either<List<Err419>, OrderIdMap> adhocCall = OrdersHelper.cancelAndAddFreshOrder(orderIds, in, accessToken, getJocError(), auditlog
-                    .getId(), proxy, currentState, folderPermissions);
+            if (!onlyStarttimeModifications) { // check that all orders belong to one workflow
+                Set<String> wNames = workflowNames.collect(Collectors.toSet());
+                if (wNames.size() > 1) {
+                    throw new JocBadRequestException(
+                            "All orders must belong to the same workflow when variables or positions are modified. Involved workflows are " + wNames
+                                    .toString());
+                }
+            }
+            
+            if (!orderIds.get(Boolean.TRUE).isEmpty()) {
+                if (proxy == null) {
+                    proxy = Proxy.of(controllerId);
+                }
+                if (currentState == null) {
+                    currentState = proxy.currentState();
+                }
+            }
+            
+            Either<List<Err419>, OrderIdMap> adhocCall = OrdersHelper.cancelAndAddFreshOrder(orderIds.get(Boolean.TRUE), in, accessToken,
+                    getJocError(), auditlog.getId(), proxy, currentState, folderPermissions);
             OrderIdMap dailyPlanResult = null;
 
-            if (!dailyPlanOrderIds.isEmpty()) {
-                List<DBItemDailyPlanOrder> items = getDailyPlanOrders(controllerId, getDistinctOrderIds(dailyPlanOrderIds));
-                if (items != null && !items.isEmpty()) {
-                    setSettings();
-                    
-                    if (!onlyStarttimeModifications) {
-                        dailyPlanResult = modifyOrderParameterisation(in, items, auditlog); 
-                    } else {
-                        dailyPlanResult = modifyStartTime(in, items, auditlog);
-                    }
+            if (!dailyPlanOrderItems.isEmpty()) {
+                setSettings();
+                
+                if (!onlyStarttimeModifications) {
+                    dailyPlanResult = modifyOrderParameterisation(in, dailyPlanOrderItems, auditlog); 
                 } else {
-                    LOGGER.debug("0 orders found");
+                    dailyPlanResult = modifyStartTime(in, dailyPlanOrderItems, auditlog);
                 }
+            } else {
+                LOGGER.debug("0 dailyplan orders found");
             }
 
             // TODO is not only adhocCall.isLeft() dependent ...

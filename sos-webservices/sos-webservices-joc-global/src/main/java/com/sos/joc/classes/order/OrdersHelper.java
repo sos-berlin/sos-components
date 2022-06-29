@@ -23,6 +23,7 @@ import java.util.function.ToLongFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -701,15 +702,11 @@ public class OrdersHelper {
         return Optional.empty();
     }
     
-    public static Either<Set<String>, String> checkIfWorkflowIsUnique(Collection<String> orderIds, JControllerState currentState) {
+    public static Stream<String> getWorkflowNamesOfFreshOrders(Collection<String> orderIds, JControllerState currentState) {
         Function1<Order<Order.State>, Object> freshAndExistsFilter = JOrderPredicates.and(o -> orderIds.contains(o.id().string()),
                 JOrderPredicates.byOrderState(Order.Fresh$.class));
-        Set<String> workflowNames = currentState.ordersBy(freshAndExistsFilter).map(JOrder::workflowId).map(JWorkflowId::path).map(
-                WorkflowPath::string).collect(Collectors.toSet());
-        if (workflowNames.size() == 1) {
-            return Either.right(workflowNames.iterator().next());
-        }
-        return Either.left(workflowNames);
+        return currentState.ordersBy(freshAndExistsFilter).map(JOrder::workflowId).map(JWorkflowId::path).map(
+                WorkflowPath::string).distinct();
     }
     
     public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds, DailyPlanModifyOrder dailyplanModifyOrder,
