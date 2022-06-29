@@ -16,8 +16,8 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonSerializer;
-import com.sos.joc.classes.inventory.NoticeToNoticesConverter;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
@@ -124,7 +124,12 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 }
                 item.setConfiguration(fos);
             } else {
-                item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
+                if (in.getWithPositions() == Boolean.TRUE && config.getType().equals(ConfigurationType.WORKFLOW.intValue())) {
+                    item.setConfiguration(WorkflowsHelper.addWorkflowPositions((Workflow) JocInventory.content2IJSObject(config.getContent(), config
+                            .getType())));
+                } else {
+                    item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
+                }
             }
             
             if (JocInventory.isDeployable(type)) {
