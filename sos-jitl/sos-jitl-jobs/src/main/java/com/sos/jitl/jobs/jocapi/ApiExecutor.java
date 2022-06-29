@@ -65,9 +65,6 @@ public class ApiExecutor {
             "js7.api-server.cs-password", "js7.web.https.keystore.store-password", "js7.web.https.keystore.key-password",
             "js7.web.https.truststores"});
     private static final String DO_NOT_LOG_VAL = "store-password";
-    private static final String ACTION_LOGIN = "login";
-    private static final String ACTION_POST = "post";
-    private static final String ACTION_LOGOUT = "logout";
     
     private final String truststoreFileName;
     private SOSRestApiClient client;
@@ -110,9 +107,9 @@ public class ApiExecutor {
     	        String response = client.postRestService(jocUri.resolve(WS_API_LOGIN), null);
     	        logDebug("HTTP status code: " + client.statusCode());
     	        try {
-                    response = handleExitCode(ACTION_LOGIN, client, response);
+                    handleExitCode(client);
                     logDebug(String.format("Connection to URI %1$s established.", jocUri.resolve(WS_API_LOGIN).toString()));
-                    return new ApiResponse(client.statusCode(), response, null);
+                    return new ApiResponse(client.statusCode(), response, client.getResponseHeader(ACCESS_TOKEN_HEADER), null);
                 } catch (SOSConnectionRefusedException e) {
                     logDebug(String.format("connection to URI %1$s failed, trying next Uri.", jocUri.resolve(WS_API_LOGIN).toString()));
                     continue;
@@ -121,7 +118,7 @@ public class ApiExecutor {
     	        logDebug(String.format("connection to URI %1$s failed, trying next Uri.", jocUri.resolve(WS_API_LOGIN).toString()));
             }
     	}
-        return new ApiResponse(null, null, null);
+        return new ApiResponse(null, null, null, null);
     }
     
     public ApiResponse post(String token, String apiUrl, String body) throws Exception {
@@ -140,10 +137,10 @@ public class ApiExecutor {
                     logDebug("resolvedUri: " + jocUri.resolve(apiUrl).toString());
                     String response = client.postRestService(jocUri.resolve(apiUrl), body);
                     logDebug("HTTP status code: " + client.statusCode());
-                    response = handleExitCode(ACTION_POST, client, response);
-                    return new ApiResponse(client.statusCode(), response, null);
+                    handleExitCode(client);
+                    return new ApiResponse(client.statusCode(), response, token, null);
                 } catch (SOSException e) {
-                    return new ApiResponse(client.statusCode(), null, e);
+                    return new ApiResponse(client.statusCode(), null, token, e);
                 }
             } else {
                 throw new SOSConnectionRefusedException("No connection established through previous login api call.");
@@ -158,10 +155,10 @@ public class ApiExecutor {
                 logDebug("send logout");
                 String response = client.postRestService(jocUri.resolve(WS_API_LOGOUT), null);
                 logDebug("HTTP status code: " + client.statusCode());
-                response = handleExitCode(ACTION_LOGOUT, client, response);
-                return new ApiResponse(client.statusCode(), response, null);
+                handleExitCode(client);
+                return new ApiResponse(client.statusCode(), response, token, null);
             } catch (SOSException e) {
-                return new ApiResponse(client.statusCode(), null, e);
+                return new ApiResponse(client.statusCode(), null, token, e);
             }
         } else {
             throw new SOSBadRequestException("no access token provided. permission denied.");
@@ -356,50 +353,11 @@ public class ApiExecutor {
         }
     }
     
-    private String handleExitCode (String action, SOSRestApiClient client, String response)
+    private void handleExitCode (SOSRestApiClient client)
             throws SOSAuthenticationFailedException, SOSConnectionRefusedException, SOSException {
         if(client.statusCode() >= 500) {
-            logDebug(response);
             throw new SOSConnectionRefusedException();
-        } else {
-            if (ACTION_LOGIN.equals(action)) {
-                return client.getResponseHeader(ACCESS_TOKEN_HEADER);
-            } else  {//if (ACTION_POST.equals(action))
-                return response;
-            }
         }
-//        switch (client.statusCode()) {
-//        case 200:
-//            break;
-//        case 401:
-//        case 403:
-//
-//        case 419:
-//
-//        case 420:
-//        case 434:
-//
-//        case 440:
-//            logDebug("Response: " + response);
-//            if(ACTION_LOGIN.equals(action)) {
-//                throw new SOSAuthenticationFailedException();
-//            } else {
-//                throw new SOSException();
-//            }
-//        case 500:
-//        case 501:
-//        case 503:
-//        default:
-//            logDebug(response);
-//            throw new SOSConnectionRefusedException();
-//        }
-//        if (ACTION_LOGIN.equals(action)) {
-//            return client.getResponseHeader(ACCESS_TOKEN_HEADER);
-//        } else if (ACTION_POST.equals(action)) {
-//            return response;
-//        } else {
-//            return null;
-//        }
     }
     
 }
