@@ -142,12 +142,16 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
             throw new ControllerObjectNotExistException("Workflow '" + wj.getPath() + "' not found.");
         }
 
-        Set<String> knownLabels = JavaConverters.asJava(workflowV.get().asScala().labeledInstructions()).stream().map(Labeled::labelString).collect(
-                Collectors.toSet());
+        Set<String> knownLabels = JavaConverters.asJava(workflowV.get().asScala().labeledInstructions()).stream().map(Labeled::labelString).filter(
+                s -> !s.isEmpty()).map(String::trim).map(s -> s.replaceFirst(":$", "")).collect(Collectors.toSet());
         wj.getLabels().retainAll(knownLabels);
         requestedLabels.removeAll(wj.getLabels());
 
         if (!requestedLabels.isEmpty()) {
+            if (requestedLabels.size() == 1) {
+                throw new ControllerObjectNotExistException("The label '" + requestedLabels.get(0) + "' doesn't exist in workflow '" + wj.getPath()
+                        + "'.");
+            }
             throw new ControllerObjectNotExistException("The labels " + requestedLabels.toString() + " don't exist in workflow '" + wj.getPath()
                     + "'.");
         }

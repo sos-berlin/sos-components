@@ -33,7 +33,11 @@ import com.sos.joc.workflow.resource.IWorkflowBoardsResource;
 import com.sos.joc.workflows.impl.WorkflowsResourceImpl;
 import com.sos.schema.JsonValidator;
 
+import js7.data.workflow.WorkflowPath;
+import js7.data.workflow.WorkflowPathControlState;
+import js7.data.workflow.position.Label;
 import js7.data_for_java.controller.JControllerState;
+import scala.collection.JavaConverters;
 
 @Path("workflow")
 public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWorkflowBoardsResource {
@@ -92,8 +96,10 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                     workflow.setFileOrderSources(WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, content.getName(), dbLayer));
                 }
                 
-                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow);
-                
+                Set<String> skippedLabels = WorkflowsHelper.getSkippedLabels(currentstate, content.getName(), workflowFilter
+                        .getCompact() == Boolean.TRUE);
+                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow, skippedLabels);
+
                 if (workflowFilter.getCompact() == Boolean.TRUE) {
                     workflow.setFileOrderSources(null);
                     //workflow.setForkListVariables(null);

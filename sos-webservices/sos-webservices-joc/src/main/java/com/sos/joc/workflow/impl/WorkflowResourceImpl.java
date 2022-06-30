@@ -1,8 +1,10 @@
 package com.sos.joc.workflow.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Path;
 
@@ -99,8 +101,10 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                     workflow.setHasAddOrderDependencies(true); 
                 }
                 
-                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow);
-                        
+                Set<String> skippedLabels = WorkflowsHelper.getSkippedLabels(currentstate, content.getName(), workflowFilter
+                        .getCompact() == Boolean.TRUE);
+                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow, skippedLabels);
+       
                 if (workflowFilter.getCompact() == Boolean.TRUE) {
                     workflow.setFileOrderSources(null);
                     //workflow.setForkListVariables(null);

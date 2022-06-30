@@ -38,6 +38,8 @@ import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.workflows.resource.IWorkflowsResource;
 import com.sos.schema.JsonValidator;
 
+import js7.data.workflow.WorkflowPath;
+import js7.data.workflow.WorkflowPathControlState;
 import js7.data_for_java.controller.JControllerState;
 
 @Path("workflows")
@@ -87,6 +89,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
     public static List<Workflow> getWorkflows(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer, JControllerState currentstate,
             Set<Folder> permittedFolders, JocError jocError) {
         
+        boolean compact = workflowsFilter.getCompact() == Boolean.TRUE;
         List<DeployedContent> contents = WorkflowsHelper.getDeployedContents(workflowsFilter, dbLayer, currentstate, permittedFolders);
         Stream<DeployedContent> contentsStream = WorkflowsHelper.getDeployedContentsStream(workflowsFilter, contents, permittedFolders);
         
@@ -94,9 +97,12 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         Set<String> workflowNamesWithAddOrders = dbLayer.getAddOrderWorkflows(controllerId);
         boolean withStatesFilter = withStatesFilter(workflowsFilter.getStates());
 
-        Map<String, List<FileOrderSource>> fileOrderSources = (workflowsFilter.getCompact() == Boolean.TRUE) ? null : WorkflowsHelper
+        Map<String, List<FileOrderSource>> fileOrderSources = (compact) ? null : WorkflowsHelper
                 .workflowToFileOrderSources(currentstate, controllerId, contents.parallelStream().filter(DeployedContent::isCurrentVersion).map(
                         w -> JocInventory.pathToName(w.getPath())).collect(Collectors.toSet()), dbLayer);
+        
+        Map<WorkflowPath, WorkflowPathControlState> workflowPathControlStates = WorkflowsHelper.getWorkflowPathControlStates(currentstate, compact);
+
         return contentsStream.parallel().map(w -> {
             try {
                 if (w.getContent() == null || w.getContent().isEmpty()) {
@@ -118,8 +124,10 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 if (workflowNamesWithAddOrders.contains(w.getName())) {
                     workflow.setHasAddOrderDependencies(true);
                 }
-                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow);
-                if (workflowsFilter.getCompact() == Boolean.TRUE) {
+                Set<String> skippedLabels = WorkflowsHelper.getSkippedLabels(workflowPathControlStates.get(WorkflowPath.of(w.getName())), compact);
+                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow, skippedLabels);
+                
+                if (compact) {
                     workflow.setFileOrderSources(null);
                     //workflow.setForkListVariables(null);
                     workflow.setInstructions(null);

@@ -26,7 +26,8 @@ import com.sos.inventory.model.common.ClassHelper;
 @JsonPropertyOrder({
     "TYPE",
     "position",
-    "positionString"
+    "positionString",
+    "state"
 })
 @JsonTypeInfo(
 		use = JsonTypeInfo.Id.NAME, 
@@ -73,6 +74,9 @@ public abstract class Instruction
     
     @JsonProperty("positionString")
     private String positionString;
+    
+    @JsonProperty("state")
+    private InstructionState state;
 
     /**
      * No args constructor for use in serialization
@@ -133,6 +137,16 @@ public abstract class Instruction
     @JsonProperty("positionString")
     public void setPositionString(String positionString) {
         this.positionString = positionString;
+    }
+    
+    @JsonProperty("state")
+    public InstructionState getState() {
+        return state;
+    }
+    
+    @JsonProperty("state")
+    public void setState(InstructionState state) {
+        this.state = state;
     }
     
     @JsonIgnore
