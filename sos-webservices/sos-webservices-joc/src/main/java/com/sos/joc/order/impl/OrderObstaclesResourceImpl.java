@@ -3,8 +3,9 @@ package com.sos.joc.order.impl;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -25,11 +26,8 @@ import com.sos.schema.JsonValidator;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
-import js7.data.workflow.WorkflowControlState;
 import js7.data_for_java.controller.JControllerState;
-import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderObstacle;
-import scala.collection.JavaConverters;
 
 @Path("order")
 public class OrderObstaclesResourceImpl extends JOCResourceImpl implements IOrderObstaclesResource {
@@ -52,7 +50,6 @@ public class OrderObstaclesResourceImpl extends JOCResourceImpl implements IOrde
             Instant surveyDateInstant = currentState.instant();
             OrderId oId = OrderId.of(orderFilter.getOrderId());
             Either<Problem, Set<JOrderObstacle>> obstaclesE = currentState.orderToObstacles(oId, surveyDateInstant);
-            JOrder order = currentState.idToOrder().get(oId);
             
             Obstacle200 entry = new Obstacle200();
             entry.setSurveyDate(Date.from(surveyDateInstant));
@@ -60,31 +57,20 @@ public class OrderObstaclesResourceImpl extends JOCResourceImpl implements IOrde
             try {
                 ProblemHelper.throwProblemIfExist(obstaclesE);
 
-                Set<Obstacle> obstacles = new HashSet<>();
-
-                if (order != null) {
-                    WorkflowControlState c = JavaConverters.asJava(currentState.asScala().pathToWorkflowControlState_()).get(order.workflowId()
-                            .path());
-                    if (c != null && c.workflowControl().suspended()) {
-                        Obstacle ob = new Obstacle();
-                        ob.setType(ObstacleType.WorkflowIsSuspended);
-                        obstacles.add(ob);
-                    }
-                }
-
-                for (JOrderObstacle obstacle : obstaclesE.get()) {
+                entry.setObstacles(obstaclesE.get().stream().map(obstacle -> {
                     Obstacle ob = new Obstacle();
                     if (obstacle instanceof JOrderObstacle.WaitingForAdmission) {
                         ob.setType(ObstacleType.WaitingForAdmission);
                         ob.setUntil(Date.from(((JOrderObstacle.WaitingForAdmission) obstacle).until()));
-                        obstacles.add(ob);
                     } else if (obstacle instanceof JOrderObstacle.JobParallelismLimitReached) {
                         ob.setType(ObstacleType.JobParallelismLimitReached);
-                        obstacles.add(ob);
+                    } else if (obstacle instanceof JOrderObstacle.WorkflowSuspended) {
+                        ob.setType(ObstacleType.WorkflowIsSuspended);
+                    } else {
+                        return null;
                     }
-                }
-                
-                entry.setObstacles(obstacles);
+                    return ob;
+                }).filter(Objects::nonNull).collect(Collectors.toSet()));
                 
             } catch (ControllerObjectNotExistException e) {
                 Obstacle ob = new Obstacle();

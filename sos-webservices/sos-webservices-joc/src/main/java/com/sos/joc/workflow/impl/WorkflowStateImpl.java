@@ -30,8 +30,8 @@ import com.sos.schema.JsonValidator;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
-import js7.data.workflow.WorkflowControlState;
 import js7.data.workflow.WorkflowPath;
+import js7.data.workflow.WorkflowPathControlState;
 import js7.data.workflow.instructions.executable.WorkflowJob;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
@@ -85,30 +85,51 @@ public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState
                 
                 stateText = SyncStateText.NOT_IN_SYNC;
                 if (workflowE != null && workflowE.isRight()) {
-                    WorkflowControlState controlState = JavaConverters.asJava(currentstate.asScala().pathToWorkflowControlState_()).get(wPath);
+                    
+                    WorkflowPathControlState controlState = JavaConverters.asJava(currentstate.asScala().pathToWorkflowPathControlState_()).get(wPath);
                     stateText = SyncStateText.IN_SYNC;
                     if (controlState != null) {
-                        Set<AgentPath> agentsThatConfirmedSuspendOrResume = JavaConverters.asJava(controlState.attachedToAgents());
+                        //Set<AgentPath> agentsThatConfirmedSuspendOrResume = JavaConverters.asJava(controlState.attachedToAgents());
+                        Set<AgentPath> agentsThatIgnoreSuspendOrResume = currentstate.singleWorkflowPathControlToIgnorantAgents(wPath);
                         Set<AgentPath> allAgents = JavaConverters.asJava(workflowE.get().asScala().nameToJob()).values().stream().map(
                                 WorkflowJob::agentPath).collect(Collectors.toSet());
-                        agentsThatConfirmedSuspendOrResume.retainAll(allAgents);
+                        //agentsThatConfirmedSuspendOrResume.retainAll(allAgents);
+                        agentsThatIgnoreSuspendOrResume.retainAll(allAgents);
                         
-                        if (controlState.workflowControl().suspended()) {
-                            if (agentsThatConfirmedSuspendOrResume.size() >= allAgents.size()) {
+//                        if (controlState.workflowPathControl().suspended()) {
+//                            if (agentsThatConfirmedSuspendOrResume.size() >= allAgents.size()) {
+//                                stateText = SyncStateText.SUSPENDED;
+//                            } else {
+//                                stateText = SyncStateText.SUSPENDING;
+//                            }
+//                        } else if (agentsThatConfirmedSuspendOrResume.size() < allAgents.size()) {
+//                            stateText = SyncStateText.RESUMING;
+//                        }
+//                        
+//                        allAgents.removeAll(agentsThatConfirmedSuspendOrResume);
+//                        Map<String, String> idNameMap = getAgentIdNameMap(controllerId);
+//
+//                        entity.setNotConfirmedAgentNames(allAgents.stream().map(AgentPath::string).map(a -> idNameMap.getOrDefault(a, a)).collect(
+//                                Collectors.toSet()));
+//                        entity.setConfirmedAgentNames(agentsThatConfirmedSuspendOrResume.stream().map(AgentPath::string).map(a -> idNameMap
+//                                .getOrDefault(a, a)).collect(Collectors.toSet()));
+                        
+                        if (controlState.workflowPathControl().suspended()) {
+                            if (agentsThatIgnoreSuspendOrResume.isEmpty()) {
                                 stateText = SyncStateText.SUSPENDED;
                             } else {
                                 stateText = SyncStateText.SUSPENDING;
                             }
-                        } else if (agentsThatConfirmedSuspendOrResume.size() < allAgents.size()) {
+                        } else if (!agentsThatIgnoreSuspendOrResume.isEmpty()) {
                             stateText = SyncStateText.RESUMING;
                         }
                         
-                        allAgents.removeAll(agentsThatConfirmedSuspendOrResume);
+                        allAgents.removeAll(agentsThatIgnoreSuspendOrResume);
                         Map<String, String> idNameMap = getAgentIdNameMap(controllerId);
 
-                        entity.setNotConfirmedAgentNames(allAgents.stream().map(AgentPath::string).map(a -> idNameMap.getOrDefault(a, a)).collect(
+                        entity.setConfirmedAgentNames(allAgents.stream().map(AgentPath::string).map(a -> idNameMap.getOrDefault(a, a)).collect(
                                 Collectors.toSet()));
-                        entity.setConfirmedAgentNames(agentsThatConfirmedSuspendOrResume.stream().map(AgentPath::string).map(a -> idNameMap
+                        entity.setNotConfirmedAgentNames(agentsThatIgnoreSuspendOrResume.stream().map(AgentPath::string).map(a -> idNameMap
                                 .getOrDefault(a, a)).collect(Collectors.toSet()));
                     }
                 }
@@ -152,7 +173,7 @@ public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState
         return currentstate;
     }
     
-    public static SyncStateText getWorkflowState(Either<Problem, JWorkflow> either, WorkflowControlState controlState) {
+    public static SyncStateText getWorkflowState(Either<Problem, JWorkflow> either, WorkflowPathControlState controlState) {
         SyncStateText stateText = SyncStateText.NOT_IN_SYNC;
         if (either != null && either.isRight()) {
             stateText = SyncStateText.IN_SYNC;
@@ -160,7 +181,7 @@ public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState
                 int numOfAgentsThatConfirmedSuspendOrResume = JavaConverters.asJava(controlState.attachedToAgents()).size();
                 int totalNumOfAgents = JavaConverters.asJava(either.get().asScala().nameToJob()).values().stream().map(j -> j.agentPath()).distinct()
                         .mapToInt(e -> 1).sum();
-                if (controlState.workflowControl().suspended()) {
+                if (controlState.workflowPathControl().suspended()) {
                     if (numOfAgentsThatConfirmedSuspendOrResume == totalNumOfAgents) {
                         stateText = SyncStateText.SUSPENDED;
                     } else {

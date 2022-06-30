@@ -107,6 +107,7 @@ import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
+import js7.data_for_java.workflow.position.JPositionOrLabel;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
@@ -770,10 +771,10 @@ public class OrdersHelper {
                 }
                 // modify start/end positions
                 Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
-                Optional<JPosition> startPos = getStartPosition(dailyplanModifyOrder.getStartPosition(), reachablePositions, order.workflowPosition()
-                        .position());
-                Set<JPosition> endPoss = getEndPositions(dailyplanModifyOrder.getEndPositions(), reachablePositions, JavaConverters.asJava(order.asScala()
-                        .stopPositions()));
+                Optional<JPositionOrLabel> startPos = getStartPosition(dailyplanModifyOrder.getStartPosition(), reachablePositions, order
+                        .workflowPosition().position());
+                Set<JPositionOrLabel> endPoss = getEndPositions(dailyplanModifyOrder.getEndPositions(), reachablePositions, JavaConverters.asJava(
+                        order.asScala().stopPositions()));
 
                 FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, startPos, endPoss);
                 auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string(), controllerId));
@@ -870,7 +871,7 @@ public class OrdersHelper {
         return oldOrderId.replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10,11}(-.+)$", "$1" + newUniqueOrderIdPart + "$2");
     }
 
-    public static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd, Optional<JPosition> startPos, Set<JPosition> endPoss) {
+    public static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd, Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss) {
         String orderId = String.format("#%s#T%s-%s", yyyymmdd, getUniqueOrderId(), order.getOrderName());
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
         // if (!scheduledFor.isPresent()) {
@@ -881,7 +882,7 @@ public class OrdersHelper {
     }
 
     private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor,
-            Optional<JPosition> startPos, Set<JPosition> endPoss) {
+            Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss) {
         return JFreshOrder.of(orderId, workflowPath, scheduledFor, args, true, startPos, endPoss);
     }
 
@@ -1095,13 +1096,12 @@ public class OrdersHelper {
         return posList;
     }
     
-    public static Optional<JPosition> getStartPosition(List<Object> pos, Set<String> reachablePositions) {
+    public static Optional<JPositionOrLabel> getStartPosition(List<Object> pos, Set<String> reachablePositions) {
         return getStartPosition(pos, reachablePositions, null);
     }
 
-    public static Optional<JPosition> getStartPosition(List<Object> pos, Set<String> reachablePositions,
-            JPosition defaultPosition) {
-        Optional<JPosition> posOpt = Optional.empty();
+    public static Optional<JPositionOrLabel> getStartPosition(List<Object> pos, Set<String> reachablePositions, JPosition defaultPosition) {
+        Optional<JPositionOrLabel> posOpt = Optional.empty();
         if (defaultPosition != null && !JPosition.apply(Position.First()).equals(defaultPosition)) {
             posOpt = Optional.of(defaultPosition);
         }
@@ -1119,12 +1119,12 @@ public class OrdersHelper {
         return posOpt;
     }
     
-    public static Set<JPosition> getEndPosition(List<List<Object>> poss, Set<String> reachablePositions) {
+    public static Set<JPositionOrLabel> getEndPosition(List<List<Object>> poss, Set<String> reachablePositions) {
         return getEndPositions(poss, reachablePositions, Collections.emptySet());
     }
 
-    public static Set<JPosition> getEndPositions(List<List<Object>> poss, Set<String> reachablePositions, Set<PositionOrLabel> defaultPositions) {
-        Set<JPosition> posOpt = Collections.emptySet();
+    public static Set<JPositionOrLabel> getEndPositions(List<List<Object>> poss, Set<String> reachablePositions, Set<PositionOrLabel> defaultPositions) {
+        Set<JPositionOrLabel> posOpt = Collections.emptySet();
         if (poss != null && !poss.isEmpty()) {
             posOpt = new HashSet<>();
             for (List<Object> pos : poss) {
@@ -1138,14 +1138,7 @@ public class OrdersHelper {
             }
         } else {
             if (!defaultPositions.isEmpty()) {
-                Set<JPosition> defaultPos = defaultPositions.stream().map(Position.class::cast).map(JPosition::apply).collect(Collectors.toSet());
-//                for (PositionOrLabel defaultPosition : defaultPositions) {
-//                    if (defaultPosition instanceof Position) {
-//                        JPosition.apply((Position) defaultPosition);
-//                    } else  { //instanceof Label
-//                        // TODO
-//                    }
-//                }
+                Set<JPositionOrLabel> defaultPos = defaultPositions.stream().map(JPositionOrLabel::apply).collect(Collectors.toSet());
                 posOpt = defaultPos;
             }
         }

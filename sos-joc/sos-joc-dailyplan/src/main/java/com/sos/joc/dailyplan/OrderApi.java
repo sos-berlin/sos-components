@@ -50,6 +50,7 @@ import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.workflow.position.JPosition;
+import js7.data_for_java.workflow.position.JPositionOrLabel;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
@@ -65,8 +66,8 @@ public class OrderApi {
         } else {
             scheduledFor = Optional.of(Instant.now());
         }
-        Optional<JPosition> startPosition = Optional.empty();
-        Set<JPosition> endPositions = Collections.emptySet();
+        Optional<JPositionOrLabel> startPosition = Optional.empty();
+        Set<JPositionOrLabel> endPositions = Collections.emptySet();
         OrderPositions positions = order.getPositions();
         if (positions != null) {
             if (positions.getStartPosition() != null && !positions.getStartPosition().isEmpty()) {

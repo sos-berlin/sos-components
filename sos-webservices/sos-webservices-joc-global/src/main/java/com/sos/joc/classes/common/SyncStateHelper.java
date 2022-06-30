@@ -3,6 +3,7 @@ package com.sos.joc.classes.common;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
@@ -13,13 +14,13 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.data.agent.AgentPath;
 import js7.data.board.BoardPath;
 import js7.data.job.JobResourcePath;
 import js7.data.lock.LockPath;
 import js7.data.orderwatch.OrderWatchPath;
-import js7.data.workflow.WorkflowControlState;
 import js7.data.workflow.WorkflowPath;
-import js7.data.workflow.instructions.executable.WorkflowJob;
+import js7.data.workflow.WorkflowPathControlState;
 import js7.data_for_java.common.JJsonable;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
@@ -62,8 +63,7 @@ public class SyncStateHelper {
             } else {
                 if (currentstate != null) {
                     WorkflowPath wPath = WorkflowPath.of(deployedNames.get(invCId));
-                    stateText = getWorkflowState(currentstate.repo().pathToCheckedWorkflow(wPath), JavaConverters.asJava(currentstate.asScala()
-                            .pathToWorkflowControlState_()).get(wPath));
+                    stateText = getWorkflowState(currentstate.repo().pathToCheckedWorkflow(wPath), currentstate);
                 }
             }
             break;
@@ -134,21 +134,33 @@ public class SyncStateHelper {
         }
     }
     
-    public static SyncStateText getWorkflowState(Either<Problem, JWorkflow> either, WorkflowControlState controlState) {
+    public static SyncStateText getWorkflowState(Either<Problem, JWorkflow> either, JControllerState currentstate) {
         SyncStateText stateText = SyncStateText.NOT_IN_SYNC;
         if (either != null && either.isRight()) {
             stateText = SyncStateText.IN_SYNC;
+            WorkflowPathControlState controlState = JavaConverters.asJava(currentstate.asScala().pathToWorkflowPathControlState_()).get(either.get().id().path());
             if (controlState != null) {
-                int numOfAgentsThatConfirmedSuspendOrResume = JavaConverters.asJava(controlState.attachedToAgents()).size();
-                int totalNumOfAgents = JavaConverters.asJava(either.get().asScala().nameToJob()).values().stream().map(WorkflowJob::agentPath)
-                        .distinct().mapToInt(e -> 1).sum();
-                if (controlState.workflowControl().suspended()) {
-                    if (numOfAgentsThatConfirmedSuspendOrResume >= totalNumOfAgents) {
+                Set<AgentPath> agentsThatIgnoreCommand = currentstate.singleWorkflowPathControlToIgnorantAgents(either.get().id().path());
+                int numOfgentsThatIgnoreCommand = agentsThatIgnoreCommand.size();
+                // int numOfAgentsThatConfirmedSuspendOrResume = JavaConverters.asJava(controlState.attachedToAgents()).size();
+                // int totalNumOfAgents = JavaConverters.asJava(either.get().asScala().nameToJob()).values().stream().map(WorkflowJob::agentPath)
+                //        .distinct().mapToInt(e -> 1).sum();
+//                if (controlState.workflowPathControl().suspended()) {
+//                    if (numOfAgentsThatConfirmedSuspendOrResume >= totalNumOfAgents) {
+//                        stateText = SyncStateText.SUSPENDED;
+//                    } else {
+//                        stateText = SyncStateText.SUSPENDING;
+//                    }
+//                } else if (numOfAgentsThatConfirmedSuspendOrResume < totalNumOfAgents) {
+//                    stateText = SyncStateText.RESUMING;
+//                }
+                if (controlState.workflowPathControl().suspended()) {
+                    if (numOfgentsThatIgnoreCommand == 0) {
                         stateText = SyncStateText.SUSPENDED;
                     } else {
                         stateText = SyncStateText.SUSPENDING;
                     }
-                } else if (numOfAgentsThatConfirmedSuspendOrResume < totalNumOfAgents) {
+                } else if (numOfgentsThatIgnoreCommand > 0) {
                     stateText = SyncStateText.RESUMING;
                 }
             }

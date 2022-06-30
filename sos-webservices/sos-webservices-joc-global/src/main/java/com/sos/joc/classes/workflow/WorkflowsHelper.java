@@ -81,7 +81,6 @@ import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import scala.Function1;
-import scala.collection.JavaConverters;
 
 public class WorkflowsHelper {
 
@@ -840,8 +839,7 @@ public class WorkflowsHelper {
         SyncStateText stateText = SyncStateText.UNKNOWN;
         if (currentstate != null) {
             JWorkflowId wId = JWorkflowId.of(JocInventory.pathToName(workflow.getPath()), workflow.getVersionId());
-            stateText = SyncStateHelper.getWorkflowState(currentstate.repo().idToCheckedWorkflow(wId), JavaConverters.asJava(currentstate.asScala()
-                    .pathToWorkflowControlState_()).get(wId.path()));
+            stateText = SyncStateHelper.getWorkflowState(currentstate.repo().idToCheckedWorkflow(wId), currentstate);
         }
         return SyncStateHelper.getState(stateText);
     }

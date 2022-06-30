@@ -96,7 +96,7 @@ import js7.data.order.OrderId;
 import js7.data.subagent.SubagentId;
 import js7.data.subagent.SubagentItemStateEvent;
 import js7.data.subagent.SubagentSelectionId;
-import js7.data.workflow.WorkflowControlEvent;
+import js7.data.workflow.WorkflowPathControlEvent;
 import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.instructions.BoardInstruction;
 import js7.data_for_java.controller.JControllerState;
@@ -120,7 +120,7 @@ public class EventService {
             OrderPrompted.class, OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, 
             VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, ItemDeleted.class, BoardEvent.class,
             OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class, OrderNoticeEvent.class, SubagentItemStateEvent.class,
-            WorkflowControlEvent.class);
+            WorkflowPathControlEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
@@ -456,7 +456,7 @@ public class EventService {
             } else if (evt instanceof SubagentItemStateEvent && !(evt instanceof SubagentItemStateEvent.SubagentEventsObserved$)) {
                 addEvent(createAgentEvent(eventId, ((SubagentId) key).string()));
                 
-            } else if (evt instanceof WorkflowControlEvent) {
+            } else if (evt instanceof WorkflowPathControlEvent) {
                 addEvent(createWorkflowControlEvent(eventId, ((WorkflowPath) key).string()));
                 
             } else if (evt instanceof BoardEvent) {

@@ -46,7 +46,7 @@ import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.workflow.JWorkflow;
-import js7.data_for_java.workflow.position.JPosition;
+import js7.data_for_java.workflow.position.JPositionOrLabel;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
@@ -97,8 +97,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     order.setArguments(OrdersHelper.checkArguments(order.getArguments(), JsonConverter.signOrderPreparationToInvOrderPreparation(
                             workflow.getOrderPreparation())));
                     Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
-                    Optional<JPosition> startPos = OrdersHelper.getStartPosition(order.getStartPosition(), reachablePositions);
-                    Set<JPosition> endPoss = OrdersHelper.getEndPosition(order.getEndPositions(), reachablePositions);
+                    Optional<JPositionOrLabel> startPos = OrdersHelper.getStartPosition(order.getStartPosition(), reachablePositions);
+                    Set<JPositionOrLabel> endPoss = OrdersHelper.getEndPosition(order.getEndPositions(), reachablePositions);
                     // TODO check if endPos not before startPos
                     
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd, startPos, endPoss);
