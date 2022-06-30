@@ -20,9 +20,4 @@ public interface IWorkflowsModify {
     @Produces({ "application/json" })
     public JOCDefaultResponse resumeWorkflows(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
-    @POST
-    @Path("skip")
-    @Produces({ "application/json" })
-    public JOCDefaultResponse skipWorkflows(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
-    
 }
