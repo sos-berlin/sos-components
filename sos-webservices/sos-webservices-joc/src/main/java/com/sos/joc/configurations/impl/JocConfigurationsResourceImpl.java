@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -23,17 +24,24 @@ import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.configurations.resource.IJocConfigurationsResource;
+import com.sos.joc.db.authentication.DBItemIamAccount;
+import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.db.security.IamAccountDBLayer;
+import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.configuration.Configuration;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.Configurations;
 import com.sos.joc.model.configuration.ConfigurationsDeleteFilter;
 import com.sos.joc.model.configuration.ConfigurationsFilter;
+import com.sos.joc.model.configuration.Profile;
 import com.sos.joc.model.configuration.Profiles;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
+import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
+import com.sos.joc.security.classes.SecurityHelper;
 import com.sos.schema.JsonValidator;
 
 @Path("configurations")
@@ -256,20 +264,33 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                 return jocDefaultResponse;
             }
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
+            JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
+            IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_PROFILES);
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_PROFILES);
+            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, identityServiceFilter
+                    .getIdentityServiceName());
+
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+            IamAccountFilter filter = new IamAccountFilter();
+            filter.setIdentityServiceId(dbItemIamIdentityService.getId());
+            List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(filter, 0);
+
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-            JocConfigurationFilter filter = new JocConfigurationFilter();
-            filter.setConfigurationType("PROFILE");
-            Profiles profiles = new Profiles();
+            JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
+            jocConfigurationFilter.setConfigurationType("PROFILE");
+            Profiles resultProfiles = new Profiles();
 
-            profiles.setProfiles(jocConfigurationDBLayer.getJocConfigurationProfiles(filter));
-            profiles.setDeliveryDate(Date.from(Instant.now()));
+            List<Profile> profiles = jocConfigurationDBLayer.getJocConfigurationProfiles(jocConfigurationFilter);
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(profiles));
+            resultProfiles.setProfiles(profiles.stream().filter(account -> listOfAccounts.stream().anyMatch(profile -> account.getAccount().equals(
+                    profile.getAccountName()))).collect(Collectors.toList()));
+            resultProfiles.setDeliveryDate(Date.from(Instant.now()));
+
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(resultProfiles));
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
