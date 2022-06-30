@@ -265,23 +265,25 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, identityServiceFilter
-                    .getIdentityServiceName());
-
-            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-            IamAccountFilter filter = new IamAccountFilter();
-            filter.setIdentityServiceId(dbItemIamIdentityService.getId());
-            List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(filter, 0);
-
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
             JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
             jocConfigurationFilter.setConfigurationType("PROFILE");
             Profiles resultProfiles = new Profiles();
-
             List<Profile> profiles = jocConfigurationDBLayer.getJocConfigurationProfiles(jocConfigurationFilter);
 
-            resultProfiles.setProfiles(profiles.stream().filter(account -> listOfAccounts.stream().anyMatch(profile -> account.getAccount().equals(
-                    profile.getAccountName()))).collect(Collectors.toList()));
+            if (identityServiceFilter.getIdentityServiceName() != null && !identityServiceFilter.getIdentityServiceName().isEmpty()) {
+                DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, identityServiceFilter
+                        .getIdentityServiceName());
+                IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+                IamAccountFilter filter = new IamAccountFilter();
+                filter.setIdentityServiceId(dbItemIamIdentityService.getId());
+                List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(filter, 0);
+                resultProfiles.setProfiles(profiles.stream().filter(account -> listOfAccounts.stream().anyMatch(profile -> account.getAccount()
+                        .equals(profile.getAccountName()))).collect(Collectors.toList()));
+            } else {
+                resultProfiles.getProfiles().addAll(profiles);
+            }
+
             resultProfiles.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(resultProfiles));
