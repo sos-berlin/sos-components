@@ -168,6 +168,7 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.SetKeyFilter", "publish/setKey-schema.json");
             put("com.sos.joc.model.publish.GenerateKeyFilter", "publish/generateKey-schema.json");
             put("com.sos.joc.model.publish.ExportFilter", "publish/exportFilter-schema.json");
+            put("com.sos.joc.model.publish.folder.ExportFolderFilter", "publish/folder/exportFolderFilter-schema.json");
             put("com.sos.joc.model.publish.ImportFilter", "publish/importFilter-schema.json");
             put("com.sos.joc.model.publish.DeployFilter", "publish/deploy-schema.json");
             put("com.sos.joc.model.publish.ImportDeployFilter", "publish/importDeployFilter-schema.json");

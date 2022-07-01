@@ -36,6 +36,7 @@ import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpdateableFileOrderSourceAgentName;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IExportResource;
+import com.sos.joc.publish.util.ExportUtils;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
@@ -91,7 +92,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 folderPermissions.setSchedulerId(controllerId);
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                 
-                deployablesForSigning = PublishUtils.getDeployableControllerObjectsFromDB(forSigning.getDeployables(), dbLayer, commitId);
+                deployablesForSigning = ExportUtils.getDeployableControllerObjectsFromDB(forSigning.getDeployables(), dbLayer, commitId, account);
                 deployablesForSigning = deployablesForSigning.stream()
                 		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
                 final String controllerIdUsed = controllerId;
@@ -149,17 +150,19 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             StreamingOutput stream = null;
             if (filter.getExportFile().getFormat().equals(ArchiveFormat.TAR_GZ)) {
                 if (forSigning != null) {
-                    stream = PublishUtils.writeTarGzipFileForSigning(deployablesForSigning, releasables, updateableWorkflowJobsAgentNames, 
+                    stream = ExportUtils.writeTarGzipFileForSigning(deployablesForSigning, updateableWorkflowJobsAgentNames, 
                     		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
-                    stream = PublishUtils.writeTarGzipFileShallow(deployablesForShallowCopy, releasables, dbLayer, jocVersion, apiVersion, inventoryVersion);
+                    Set<ConfigurationObject> all = Stream.concat(deployablesForShallowCopy.stream(), releasables.stream()).collect(Collectors.toSet());
+                    stream = ExportUtils.writeTarGzipFileShallow(all, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 }
             } else {
                 if (forSigning != null) {
-                    stream = PublishUtils.writeZipFileForSigning(deployablesForSigning, releasables, updateableWorkflowJobsAgentNames, 
+                    stream = ExportUtils.writeZipFileForSigning(deployablesForSigning, updateableWorkflowJobsAgentNames, 
                     		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
-                    stream = PublishUtils.writeZipFileShallow(deployablesForShallowCopy, releasables, dbLayer, jocVersion, apiVersion, inventoryVersion);
+                    Set<ConfigurationObject> all = Stream.concat(deployablesForShallowCopy.stream(), releasables.stream()).collect(Collectors.toSet());
+                    stream = ExportUtils.writeZipFileShallow(all, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 }
             }
             return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());

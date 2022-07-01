@@ -1469,6 +1469,10 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemDeploymentHistory> getDepHistoryItemsFromFolder(String folder, boolean recursive) {
+        return getDepHistoryItemsFromFolder(folder, null, recursive);
+    }
+    
+    public List<DBItemDeploymentHistory> getDepHistoryItemsFromFolder(String folder, String controllerId, boolean recursive) {
         Date getDepHistoryItemsFromFolderStarted = Date.from(Instant.now());
         LOGGER.trace("*** call getDepHistoryItemsFromFolder started ***" + getDepHistoryItemsFromFolderStarted);
         try {
@@ -1482,6 +1486,9 @@ public class DBLayerDeploy {
             } else {
                 hql.append(" and folder = :folder");
             }
+            if(controllerId != null) {
+                hql.append(" and controllerId = :controllerId");
+            }
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             if (recursive) {
                 if (!"/".equals(folder)) {
@@ -1490,6 +1497,9 @@ public class DBLayerDeploy {
                 }
             } else {
                 query.setParameter("folder", folder);
+            }
+            if(controllerId != null) {
+                query.setParameter("controllerId", controllerId);
             }
             List<DBItemDeploymentHistory> result = session.getResultList(query);
             Date getDepHistoryItemsFromFolderFinished = Date.from(Instant.now());

@@ -20,16 +20,12 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.Cycle;
-import com.sos.inventory.model.instruction.ExpectNotice;
-import com.sos.inventory.model.instruction.ExpectNotices;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
-import com.sos.inventory.model.instruction.PostNotice;
-import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.script.Script;
@@ -146,7 +142,7 @@ public class JsonConverter {
                 Matcher m = scriptIncludePattern.matcher(line);
                 if (m.find()) {
                     String scriptName = m.group(2);
-                    if (!releasedScripts.containsKey(scriptName)) {
+                    if (releasedScripts == null || !releasedScripts.containsKey(scriptName)) {
                         throw new IllegalArgumentException(String.format("Script include '%s' of job '%s[%s]' referenced an unreleased script '%s'", line,
                                 workflowName, jobName, scriptName));
                     }

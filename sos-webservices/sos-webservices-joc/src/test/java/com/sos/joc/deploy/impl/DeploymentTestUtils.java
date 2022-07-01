@@ -52,6 +52,9 @@ import com.sos.joc.model.publish.SetRootCaFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
+import com.sos.joc.model.publish.folder.ExportFolderFilter;
+import com.sos.joc.model.publish.folder.ExportFolderForSigning;
+import com.sos.joc.model.publish.folder.ExportFolderShallowCopy;
 import com.sos.joc.model.publish.git.AddCredentialsFilter;
 import com.sos.joc.model.publish.git.GitCredentials;
 import com.sos.joc.model.publish.git.RemoveCredentialsFilter;
@@ -1105,5 +1108,52 @@ public class DeploymentTestUtils {
         cal.set(2023, 0, 12, 9, 32, 41);
         info.setValidUntil(Date.from(cal.toInstant()));
         return info;
+    }
+    
+    public static ExportFolderFilter createExportFolderShallowCopyFilter() {
+        ExportFolderFilter filter = new ExportFolderFilter();
+        ExportFolderShallowCopy shallowCopy = new ExportFolderShallowCopy();
+        ExportFile exportFile = new ExportFile();
+        exportFile.setFilename("test_export_folder.zip");
+        exportFile.setFormat(ArchiveFormat.ZIP);
+        filter.setExportFile(exportFile);
+        List<String> folders = new ArrayList<String>();
+        folders.add("/JS7Demo");
+        folders.add("/Examples.Unix");
+        shallowCopy.setFolders(folders);
+        shallowCopy.setRecursive(true);
+        List<ConfigurationType> types = new ArrayList<ConfigurationType>();
+        types.add(ConfigurationType.WORKFLOW);
+        types.add(ConfigurationType.FILEORDERSOURCE);
+        types.add(ConfigurationType.JOBRESOURCE);
+        types.add(ConfigurationType.LOCK);
+        types.add(ConfigurationType.WORKINGDAYSCALENDAR);
+        types.add(ConfigurationType.SCHEDULE);
+        shallowCopy.setObjectTypes(types);
+        filter.setShallowCopy(shallowCopy);
+        return filter;
+    }
+
+    public static ExportFolderFilter createExportFolderForSigningFilter() {
+        ExportFolderFilter filter = new ExportFolderFilter();
+        ExportFolderForSigning forSigning = new ExportFolderForSigning();
+        ExportFile exportFile = new ExportFile();
+        exportFile.setFilename("test_export_folder.zip");
+        exportFile.setFormat(ArchiveFormat.ZIP);
+        filter.setExportFile(exportFile);
+        List<String> folders = new ArrayList<String>();
+        folders.add("/JS7Demo");
+        folders.add("/Examples.Unix");
+        forSigning.setFolders(folders);
+        forSigning.setRecursive(true);
+        List<ConfigurationType> types = new ArrayList<ConfigurationType>();
+        types.add(ConfigurationType.WORKFLOW);
+        types.add(ConfigurationType.FILEORDERSOURCE);
+        types.add(ConfigurationType.JOBRESOURCE);
+        types.add(ConfigurationType.LOCK);
+        forSigning.setObjectTypes(types);
+        forSigning.setControllerId("testsuite");
+        filter.setForSigning(forSigning);
+        return filter;
     }
 }

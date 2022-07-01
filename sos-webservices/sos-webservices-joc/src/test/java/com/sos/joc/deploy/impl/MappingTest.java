@@ -32,6 +32,7 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
+import com.sos.joc.model.publish.folder.ExportFolderFilter;
 import com.sos.joc.model.publish.git.AddCredentialsFilter;
 import com.sos.joc.model.publish.git.commands.CloneFilter;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
@@ -456,5 +457,15 @@ public class MappingTest {
             e.printStackTrace();
         }
         assertTrue(validatedSuccessfully);
+    }
+    
+    @Test
+    public void test28ExportFolder() throws JsonProcessingException {
+        ExportFolderFilter filter = DeploymentTestUtils.createExportFolderShallowCopyFilter();
+        LOGGER.trace("shallow copy");
+        LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(filter));
+        filter = DeploymentTestUtils.createExportFolderForSigningFilter();
+        LOGGER.trace("for signing");
+        LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(filter));
     }
 }

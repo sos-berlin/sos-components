@@ -1,4 +1,4 @@
-package com.sos.joc.publish.impl;
+package com.sos.joc.publish.folder.impl;
 
 import java.io.InputStream;
 import java.util.HashSet;
@@ -20,6 +20,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
@@ -29,39 +30,36 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ControllerObject;
-import com.sos.joc.model.publish.ExportFilter;
-import com.sos.joc.model.publish.ExportForSigning;
-import com.sos.joc.model.publish.ExportShallowCopy;
+import com.sos.joc.model.publish.folder.ExportFolderFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpdateableFileOrderSourceAgentName;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
-import com.sos.joc.publish.resource.IExportResource;
+import com.sos.joc.publish.resource.IExportFolderResource;
 import com.sos.joc.publish.util.ExportUtils;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
 @Path("inventory")
-public class ExportImpl extends JOCResourceImpl implements IExportResource {
+public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderResource {
 
-    private static final String API_CALL = "./inventory/export";
+    private static final String API_CALL = "./inventory/export/folder";
     
     @Override
-    public JOCDefaultResponse getExportConfiguration(String xAccessToken, String accessToken, String exportFilter)
+    public JOCDefaultResponse getExportFolder(String xAccessToken, String accessToken, String exportFilter)
             throws Exception {
-        return postExportConfiguration(getAccessToken(xAccessToken, accessToken), exportFilter.getBytes());
+        return postExportFolder(getAccessToken(xAccessToken, accessToken), exportFilter.getBytes());
     }
         
 	@Override
-	public JOCDefaultResponse postExportConfiguration(String xAccessToken, byte[] exportFilter) throws Exception {
+	public JOCDefaultResponse postExportFolder(String xAccessToken, byte[] exportFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, exportFilter, xAccessToken);
-            JsonValidator.validate(exportFilter, ExportFilter.class);
-            ExportFilter filter = Globals.objectMapper.readValue(exportFilter, ExportFilter.class);
-            ExportForSigning forSigning = filter.getForSigning();
+            JsonValidator.validate(exportFilter, ExportFolderFilter.class);
+            ExportFolderFilter filter = Globals.objectMapper.readValue(exportFilter, ExportFolderFilter.class);
             
             boolean permitted = false;
-            if (forSigning != null) {
+            if (filter.getForSigning() != null) {
                 permitted = getJocPermissions(xAccessToken).getInventory().getManage();
             } else {
                 permitted = getJocPermissions(xAccessToken).getInventory().getView();
@@ -72,27 +70,23 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             }
             
             DBItemJocAuditLog dbAudit = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
-            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+            String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-
-            ExportShallowCopy shallowCopy = filter.getShallowCopy();
             
             Set<ControllerObject> deployablesForSigning = null;
-            Set<ConfigurationObject> deployablesForShallowCopy = null;
-            Set<ConfigurationObject> releasables = null;
+            Set<ConfigurationObject> configurationsForShallowCopy = null;
             final Set<UpdateableWorkflowJobAgentName> updateableWorkflowJobsAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
             final Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames = new HashSet<UpdateableFileOrderSourceAgentName>();
             
             String commitId = null;
             String controllerId = null;
-            if (forSigning != null) {
+            if (filter.getForSigning() != null) {
                 commitId = UUID.randomUUID().toString();
-                controllerId = forSigning.getControllerId();
+                controllerId = filter.getForSigning().getControllerId();
                 folderPermissions.setSchedulerId(controllerId);
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-                
-                deployablesForSigning = ExportUtils.getDeployableControllerObjectsFromDB(forSigning.getDeployables(), dbLayer, commitId, account);
+                deployablesForSigning = ExportUtils.getFolderControllerObjectsForSigning(filter, account, dbLayer, commitId);
                 deployablesForSigning = deployablesForSigning.stream()
                 		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
                 final String controllerIdUsed = controllerId;
@@ -113,16 +107,14 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                     }
                 });
                 final Stream<ControllerObject> stream = deployablesForSigning.stream();
-                CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(stream.map(i -> new AuditLogDetail(i.getPath(), i.getObjectType().intValue())),
-                        dbAudit.getId(), dbAudit.getCreated()));
+                CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(stream.map(
+                        i -> new AuditLogDetail(i.getPath(), i.getObjectType().intValue())), dbAudit.getId(), dbAudit.getCreated()));
             } else { // shallow copy
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-                deployablesForShallowCopy = PublishUtils.getDeployableConfigurationObjectsFromDB(shallowCopy.getDeployables(), dbLayer);
-                deployablesForShallowCopy = deployablesForShallowCopy.stream()
+                configurationsForShallowCopy = ExportUtils.getFolderConfigurationObjectsForShallowCopy(filter, account, dbLayer);
+                configurationsForShallowCopy = configurationsForShallowCopy.stream()
                 		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
-                releasables = PublishUtils.getReleasableObjectsFromDB(shallowCopy.getReleasables(), dbLayer);
-                releasables = releasables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
-                final Stream<ConfigurationObject> stream = Stream.concat(deployablesForShallowCopy.stream(), releasables.stream());
+                final Stream<ConfigurationObject> stream = configurationsForShallowCopy.stream();
                 CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(stream.map(i -> new AuditLogDetail(i.getPath(), i.getObjectType().intValue())),
                         dbAudit.getId(), dbAudit.getCreated()));
             }
@@ -149,20 +141,18 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
 
             StreamingOutput stream = null;
             if (filter.getExportFile().getFormat().equals(ArchiveFormat.TAR_GZ)) {
-                if (forSigning != null) {
+                if (filter.getForSigning() != null) {
                     stream = ExportUtils.writeTarGzipFileForSigning(deployablesForSigning, updateableWorkflowJobsAgentNames, 
                     		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
-                    Set<ConfigurationObject> all = Stream.concat(deployablesForShallowCopy.stream(), releasables.stream()).collect(Collectors.toSet());
-                    stream = ExportUtils.writeTarGzipFileShallow(all, dbLayer, jocVersion, apiVersion, inventoryVersion);
+                    stream = ExportUtils.writeTarGzipFileShallow(configurationsForShallowCopy, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 }
             } else {
-                if (forSigning != null) {
+                if (filter.getForSigning() != null) {
                     stream = ExportUtils.writeZipFileForSigning(deployablesForSigning, updateableWorkflowJobsAgentNames, 
                     		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
-                    Set<ConfigurationObject> all = Stream.concat(deployablesForShallowCopy.stream(), releasables.stream()).collect(Collectors.toSet());
-                    stream = ExportUtils.writeZipFileShallow(all, dbLayer, jocVersion, apiVersion, inventoryVersion);
+                    stream = ExportUtils.writeZipFileShallow(configurationsForShallowCopy, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 }
             }
             return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());
