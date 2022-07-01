@@ -262,6 +262,11 @@ public class JsonValidator {
             put("com.sos.joc.model.security.roles.Role", "security/roles/role-schema.json");
             put("com.sos.joc.model.security.roles.RoleStore", "security/roles/roleStore-schema.json");
 
+         // Profiles
+            put("com.sos.joc.model.profile.Profile", "profile/profile-schema.json");
+            put("com.sos.joc.model.profile.ProfileFilter", "profile/profileFilter-schema.json");
+            put("com.sos.joc.model.profile.ProfilesFilter", "profile/profilesFilter-schema.json");
+
             // TODO complete the map
         }
     });

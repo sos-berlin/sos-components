@@ -70,7 +70,7 @@ public class SOSLdapLogin implements ISOSLogin {
             setMsg(e.getMessage());
             LOGGER.error("", e);
         } catch (NamingException e) {
-            setMsg(e.getMessage());
+            setMsg(e.getMessage() + " ==> " + e.getCause());
             LOGGER.error("", e);
         } finally {
             sosLdapHandler.close();

@@ -22,7 +22,7 @@ public class JocConfigurationDbLayer {
     private SOSHibernateSession session;
     private static final String JOC_CONFIGURATION_DB_ITEM = DBItemJocConfiguration.class.getSimpleName();
     private static final String CONFIGURATION_PROFILE = ConfigurationProfile.class.getName();
-
+ 
     public JocConfigurationDbLayer(SOSHibernateSession sosHibernateSession) {
         this.session = sosHibernateSession;
     }
@@ -125,6 +125,22 @@ public class JocConfigurationDbLayer {
         return this.session.getResultList(query);
     }
 
+    public DBItemJocConfiguration getJocConfiguration(JocConfigurationFilter filter, final int limit) throws SOSHibernateException {
+
+        String sql = "from " + DBLayer.DBITEM_JOC_CONFIGURATIONS + " " + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
+        Query<DBItemJocConfiguration> query = this.session.createQuery(sql);
+        bindParameters(filter, query);
+        if (limit > 0) {
+            query.setMaxResults(limit);
+        }
+        List<DBItemJocConfiguration> l = this.session.getResultList(query);
+        if (l.size() == 0) {
+            return null;
+        } else {
+            return l.get(0);
+        }
+    }
+
     public boolean jocConfigurationExists(JocConfigurationFilter filter) throws SOSHibernateException {
 
         String sql = "select count(id) from " + DBLayer.DBITEM_JOC_CONFIGURATIONS + " " + getWhere(filter);
@@ -146,6 +162,7 @@ public class JocConfigurationDbLayer {
         return profiles.stream().distinct().collect(Collectors.toList());
     }
 
+    
     public DBItemJocConfiguration getJocConfiguration(Long id) throws SOSHibernateException {
         return session.get(DBItemJocConfiguration.class, id);
     }
