@@ -219,6 +219,7 @@ public class JS7CalendarConverter {
         return result;
     }
 
+    // TODO JS7RunTimeConverter: use common function
     private static Period convertPeriod(com.sos.js7.converter.js1.common.json.calendar.Period js1) {
         Period p = new Period();
         p.setBegin(js1.getBegin());

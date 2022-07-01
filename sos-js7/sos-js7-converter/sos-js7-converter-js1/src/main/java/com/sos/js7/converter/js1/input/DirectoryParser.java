@@ -174,7 +174,7 @@ public class DirectoryParser {
                     folder.addLock(file.toPath());
                 } catch (Exception e) {
                     LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
-                    ParserReport.INSTANCE.addErrorRecord(file.toPath(), null, e);
+                    ParserReport.INSTANCE.addErrorRecord(file.toPath(), "error on addLock", e);
                 }
             } else if (fileName.endsWith(EConfigFileExtensions.PROCESS_CLASS.extension())) {
                 r.addCountProcessClasses();
@@ -182,7 +182,7 @@ public class DirectoryParser {
                     folder.addProcessClass(file.toPath());
                 } catch (Exception e) {
                     LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
-                    ParserReport.INSTANCE.addErrorRecord(file.toPath(), null, e);
+                    ParserReport.INSTANCE.addErrorRecord(file.toPath(), "error on addProcessClass", e);
                 }
             } else if (fileName.endsWith(EConfigFileExtensions.SCHEDULE.extension())) {
                 r.addCountSchedules();
@@ -190,7 +190,7 @@ public class DirectoryParser {
                     folder.addSchedule(r, file.toPath());
                 } catch (Exception e) {
                     LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
-                    ParserReport.INSTANCE.addErrorRecord(file.toPath(), null, e);
+                    ParserReport.INSTANCE.addErrorRecord(file.toPath(), "error on addSchedule", e);
                 }
             } else if (fileName.endsWith(EConfigFileExtensions.MONITOR.extension())) {
                 r.addCountMonitors();
@@ -205,8 +205,8 @@ public class DirectoryParser {
             try {
                 folder.addJobChain(r, entry.getKey(), entry.getValue());
             } catch (Throwable e) {
-                LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
-                ParserReport.INSTANCE.addErrorRecord(folder.getPath(), "job chain=" + entry.getKey(), e);
+                LOGGER.error(String.format("[%s]%s", method, e.toString()));
+                ParserReport.INSTANCE.addErrorRecord(folder.getPath(), "job chain=" + entry.getKey(), e.toString());
             }
         }
 

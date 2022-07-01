@@ -142,13 +142,22 @@ public class JS7ConverterConfig {
                     case "jobConfig.jitl.logLevel":
                         jobConfig.jitlLogLevel = val;
                         break;
+                    case "jobConfig.notification.mail.defaultTo":
+                        jobConfig.notificationMailDefaultTo = val;
+                        break;
+                    case "jobConfig.notification.mail.defaultCc":
+                        jobConfig.notificationMailDefaultCc = val;
+                        break;
+                    case "jobConfig.notification.mail.defaultBcc":
+                        jobConfig.notificationMailDefaultBcc = val;
+                        break;
                     // AGENT
                     case "agentConfig.mappings":
                         agentConfig.withMappings(val);
                         break;
                     case "agentConfig.forcedPlatform":
                         try {
-                            agentConfig.forcedPlatform = Platform.valueOf(val);
+                            agentConfig.forcedPlatform = Platform.valueOf(val.toUpperCase());
                         } catch (Throwable t) {
                             LOGGER.warn(getWarnMessage("agentConfig.forcedPlatform", "Platform", val));
                         }
@@ -413,6 +422,10 @@ public class JS7ConverterConfig {
         private Boolean forcedFailOnErrWritten;
         private Boolean forcedV1Compatible;
 
+        private String notificationMailDefaultTo;
+        private String notificationMailDefaultCc;
+        private String notificationMailDefaultBcc;
+
         public JobConfig withScriptNewLine(String val) {
             this.scriptNewLine = val;
             return this;
@@ -435,6 +448,21 @@ public class JS7ConverterConfig {
 
         public JobConfig withForcedFailOnErrWritten(Boolean val) {
             this.forcedFailOnErrWritten = val;
+            return this;
+        }
+
+        public JobConfig withNotificationMailDefaultTo(String val) {
+            this.notificationMailDefaultTo = val;
+            return this;
+        }
+
+        public JobConfig withNotificationMailDefaultCc(String val) {
+            this.notificationMailDefaultCc = val;
+            return this;
+        }
+
+        public JobConfig withNotificationMailDefaultBcc(String val) {
+            this.notificationMailDefaultBcc = val;
             return this;
         }
 
@@ -462,8 +490,21 @@ public class JS7ConverterConfig {
             return forcedV1Compatible;
         }
 
+        public String getNotificationMailDefaultTo() {
+            return notificationMailDefaultTo;
+        }
+
+        public String getNotificationMailDefaultCc() {
+            return notificationMailDefaultCc;
+        }
+
+        public String getNotificationMailDefaultBcc() {
+            return notificationMailDefaultBcc;
+        }
+
         public boolean isEmpty() {
-            return forcedGraceTimeout == null && forcedParallelism == null && forcedFailOnErrWritten == null && forcedV1Compatible == null;
+            return forcedGraceTimeout == null && forcedParallelism == null && forcedFailOnErrWritten == null && forcedV1Compatible == null
+                    && notificationMailDefaultTo == null && notificationMailDefaultCc == null && notificationMailDefaultBcc == null;
         }
     }
 
@@ -493,18 +534,18 @@ public class JS7ConverterConfig {
          * Example 1<br>
          * - input map: my_agent_1=agent=UNIX; my_agent_2=agent; my_agent_3=cluster=WINDOWS<br/>
          **/
-        public AgentConfig withMappings(String mapping) {
+        public AgentConfig withMappings(String mappings) {
             Map<String, JS7Agent> map = new HashMap<>();
-            if (mapping != null) {
+            if (mappings != null) {
                 // map and remove duplicates
-                map = Stream.of(mapping.trim().split(LIST_VALUE_DELIMITER)).map(e -> e.split("=")).filter(e -> e.length == 2 || e.length == 3)
+                map = Stream.of(mappings.trim().split(LIST_VALUE_DELIMITER)).map(e -> e.split("=")).filter(e -> e.length == 2 || e.length == 3)
                         .collect(Collectors.toMap(arr -> arr[0].trim(), arr -> {
                             if (arr.length == 3) {
                                 return new JS7Agent(arr[1].trim() + "=" + arr[2].trim());
                             } else {
                                 return new JS7Agent(arr[1].trim());
                             }
-                        }, (oldValue, newValue) -> oldValue));
+                        }, (oldValue, newValue) -> newValue));
             }
             return withMappings(map);
         }
@@ -573,6 +614,16 @@ public class JS7ConverterConfig {
 
         public Platform getPlatform() {
             return platform;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            sb.append("name=").append(name);
+            sb.append(",platform=").append(platform);
+            sb.append("]");
+            return sb.toString();
         }
     }
 

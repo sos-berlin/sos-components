@@ -14,6 +14,7 @@ import com.sos.js7.converter.js1.common.job.StandaloneJob;
 import com.sos.js7.converter.js1.common.jobchain.JobChain;
 import com.sos.js7.converter.js1.common.lock.Lock;
 import com.sos.js7.converter.js1.common.processclass.ProcessClass;
+import com.sos.js7.converter.js1.common.runtime.Schedule;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 
 public class Folder {

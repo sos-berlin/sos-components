@@ -32,6 +32,10 @@ public enum EConfigFileExtensions {
         return getName(EConfigFileExtensions.JOB_CHAIN, path.getFileName().toString());
     }
 
+    public static String getScheduleName(Path path) {
+        return getName(EConfigFileExtensions.SCHEDULE, path.getFileName().toString());
+    }
+
     public static String getOrderName(Path path) {
         String n = path.getFileName().toString().replace(ORDER.extension(), "");
         int idx = n.indexOf(",");
