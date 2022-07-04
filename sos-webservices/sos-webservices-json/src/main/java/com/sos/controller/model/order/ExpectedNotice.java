@@ -1,6 +1,7 @@
 
 package com.sos.controller.model.order;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -8,15 +9,25 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+
+/**
+ * ExpectedNotice
+ * <p>
+ * 
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "boardPath",
+    "boardName",
     "noticeId"
 })
 public class ExpectedNotice {
 
-    @JsonProperty("boardPath")
-    private String boardPath;
+    @JsonProperty("boardName")
+    @JsonAlias({
+        "boardPath"
+    })
+    private String boardName;
     @JsonProperty("noticeId")
     private String noticeId;
 
@@ -29,23 +40,23 @@ public class ExpectedNotice {
 
     /**
      * 
-     * @param boardPath
+     * @param boardName
      * @param noticeId
      */
-    public ExpectedNotice(String boardPath, String noticeId) {
+    public ExpectedNotice(String boardName, String noticeId) {
         super();
-        this.boardPath = boardPath;
+        this.boardName = boardName;
         this.noticeId = noticeId;
     }
 
-    @JsonProperty("boardPath")
-    public String getBoardPath() {
-        return boardPath;
+    @JsonProperty("boardName")
+    public String getBoardName() {
+        return boardName;
     }
 
-    @JsonProperty("boardPath")
-    public void setBoardPath(String boardPath) {
-        this.boardPath = boardPath;
+    @JsonProperty("boardName")
+    public void setBoardName(String boardName) {
+        this.boardName = boardName;
     }
 
     @JsonProperty("noticeId")
@@ -60,12 +71,12 @@ public class ExpectedNotice {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("boardPath", boardPath).append("noticeId", noticeId).toString();
+        return new ToStringBuilder(this).append("boardName", boardName).append("noticeId", noticeId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(noticeId).append(boardPath).toHashCode();
+        return new HashCodeBuilder().append(boardName).append(noticeId).toHashCode();
     }
 
     @Override
@@ -77,7 +88,7 @@ public class ExpectedNotice {
             return false;
         }
         ExpectedNotice rhs = ((ExpectedNotice) other);
-        return new EqualsBuilder().append(noticeId, rhs.noticeId).append(boardPath, rhs.boardPath).isEquals();
+        return new EqualsBuilder().append(boardName, rhs.boardName).append(noticeId, rhs.noticeId).isEquals();
     }
 
 }

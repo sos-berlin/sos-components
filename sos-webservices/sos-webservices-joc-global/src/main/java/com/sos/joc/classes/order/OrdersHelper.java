@@ -187,8 +187,8 @@ public class OrdersHelper {
         {
             put("DelayedAfterError", OrderWaitingReason.DELAYED_AFTER_ERROR);
             put("Forked", OrderWaitingReason.FORKED);
-            put("ExpectingNotice", OrderWaitingReason.EXPECTING_NOTICE);
-            put("ExpectingNotices", OrderWaitingReason.EXPECTING_NOTICE); // TODO introduce plural in OrderWaitingReason??
+            put("ExpectingNotice", OrderWaitingReason.EXPECTING_NOTICES);
+            put("ExpectingNotices", OrderWaitingReason.EXPECTING_NOTICES); // TODO introduce plural in OrderWaitingReason??
             put("WaitingForLock", OrderWaitingReason.WAITING_FOR_LOCK);
             put("BetweenCycles", OrderWaitingReason.BETWEEN_CYCLES);
         }
@@ -407,6 +407,7 @@ public class OrdersHelper {
         
         o.setEndPositions(oItem.getStopPositions());
         o.setCycleState(oItem.getState().getCycleState());
+        o.setExpectedNotices(oItem.getState().getExpected());
         int positionsSize = o.getPosition().size();
         if ("Processing".equals(oItem.getState().getTYPE())) {
             Option<SubagentId> subAgentId = ((Order.Processing) jOrder.asScala().state()).subagentId();
