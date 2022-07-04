@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,7 +38,7 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.controller.ControllerCommand.Response;
-import js7.data.workflow.Instruction.Labeled;
+import js7.data.workflow.Workflow;
 import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.WorkflowPathControlState;
 import js7.data.workflow.position.Label;
@@ -137,13 +138,32 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
     
     private void checkWorkflow(Action action, WorkflowJobs wj, JControllerState currentState, List<String> requestedLabels) {
         
+        Set<String> knownLabels = new HashSet<>();
         Either<Problem, JWorkflow> workflowV = currentState.repo().pathToCheckedWorkflow(wj.getWorkflowPath());
-        if (workflowV == null | workflowV.isLeft()) {
+        if (workflowV == null || workflowV.isLeft()) {
             throw new ControllerObjectNotExistException("Workflow '" + wj.getPath() + "' not found.");
         }
 
-        Set<String> knownLabels = JavaConverters.asJava(workflowV.get().asScala().labeledInstructions()).stream().map(Labeled::labelString).filter(
-                s -> !s.isEmpty()).map(String::trim).map(s -> s.replaceFirst(":$", "")).collect(Collectors.toSet());
+        // knownLabels = JavaConverters.asJava(workflowV.get().asScala().labeledInstructions()).stream().map(Labeled::labelString).filter(
+        // s -> !s.isEmpty()).map(String::trim).map(s -> s.replaceFirst(":$", "")).collect(Collectors.toSet());
+
+        Workflow wV = workflowV.get().asScala();
+        requestedLabels.forEach(l -> {
+            if (wV.labelToPosition(Label.fromString(l)).isRight()) {
+                knownLabels.add(l);
+            }
+        });
+        
+        // check labels of older workflow versions
+        WorkflowsHelper.oldJWorkflowIds(currentState).filter(wId -> wj.getPath().equals(wId.path().string())).map(wId -> currentState.repo()
+                .idToCheckedWorkflow(wId)).filter(Either::isRight).map(Either::get).map(JWorkflow::asScala).forEach(w -> {
+                    requestedLabels.forEach(l -> {
+                        if (w.labelToPosition(Label.fromString(l)).isRight()) {
+                            knownLabels.add(l);
+                        }
+                    });
+                });
+
         wj.getLabels().retainAll(knownLabels);
         requestedLabels.removeAll(wj.getLabels());
 

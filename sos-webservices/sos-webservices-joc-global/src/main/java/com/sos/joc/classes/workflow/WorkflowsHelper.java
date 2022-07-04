@@ -146,9 +146,9 @@ public class WorkflowsHelper {
                 .workflowId().path().string(), o.workflowId().versionId().string()));
     }
 
-//    private static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
-//        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(JOrder::workflowId);
-//    }
+    public static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
+        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(JOrder::workflowId);
+    }
 
     public static ImplicitEnd createImplicitEndInstruction() {
         ImplicitEnd i = new ImplicitEnd();
