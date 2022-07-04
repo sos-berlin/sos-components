@@ -43,6 +43,7 @@ public class MailJobTest {
         LOGGER.info(String.format("[RESULT]%s", result));
     }
 
+    @Ignore
     @Test
     public void testMailJobProcess() throws Exception {
         MailJobArgumentsTest args = new MailJobArgumentsTest();

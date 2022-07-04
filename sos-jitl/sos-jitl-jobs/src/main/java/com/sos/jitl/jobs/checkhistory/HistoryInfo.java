@@ -12,7 +12,6 @@ import com.sos.jitl.jobs.checkhistory.classes.ParameterResolver;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.TaskHistory;
