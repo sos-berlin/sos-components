@@ -54,6 +54,8 @@ public class NoticeToNoticesConverter {
     public static PostNotices postNoticeToPostNotices(PostNotice pn) {
         PostNotices pns = new PostNotices();
         pns.setTYPE(InstructionType.POST_NOTICES);
+        pns.setPosition(pn.getPosition());
+        pns.setPositionString(pn.getPositionString());
         if (pn.getNoticeBoardName() != null) {
             pns.setNoticeBoardNames(Collections.singletonList(pn.getNoticeBoardName()));
         }
@@ -63,6 +65,8 @@ public class NoticeToNoticesConverter {
     public static ExpectNotices expectNoticeToExpectNotices(ExpectNotice en) {
         ExpectNotices ens = new ExpectNotices();
         ens.setTYPE(InstructionType.EXPECT_NOTICES);
+        ens.setPosition(en.getPosition());
+        ens.setPositionString(en.getPositionString());
         if (en.getNoticeBoardName() != null) {
             ens.setNoticeBoardNames(JExpression.quoteString(en.getNoticeBoardName()));
         }
