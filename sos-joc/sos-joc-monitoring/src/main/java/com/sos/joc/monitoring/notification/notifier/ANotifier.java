@@ -3,6 +3,7 @@ package com.sos.joc.monitoring.notification.notifier;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
@@ -24,17 +25,23 @@ import com.sos.monitoring.notification.NotificationType;
 public abstract class ANotifier {
 
     protected static final String PREFIX_ENV_VAR = "JS7";
+    protected static final String PREFIX_COMMON_VAR = "MON";
 
     private static final String PREFIX_TABLE_ORDERS = "MON_O";
     private static final String PREFIX_TABLE_ORDER_STEPS = "MON_OS";
     private static final String PREFIX_TABLE_NOTIFICATIONS = "MON_N";
 
+    private static final String COMMON_VAR_TIME_ZONE = PREFIX_COMMON_VAR + "_TIME_ZONE";
+
     private JocHref jocHref;
     private Map<String, String> tableFields;
+    private Map<String, String> commonVars;
     private NotificationStatus status;
+    private TimeZone timeZone;
     private int nr;
 
-    public abstract NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn);
+    public abstract NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
+            DBItemNotification mn);
 
     public abstract void close();
 
@@ -46,14 +53,21 @@ public abstract class ANotifier {
         return tableFields;
     }
 
+    protected Map<String, String> getCommonVars() {
+        return commonVars;
+    }
+
     protected String getValue(NotificationType type) {
         return type == null ? "" : type.name();
     }
 
-    protected void set(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
+    protected void set(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
+        this.timeZone = timeZone;
+
         setStatus(type);
+        setCommonVars();
         setTableFields(mo, mos, mn);
-        jocHref = new JocHref(mo, mos);
+        this.jocHref = new JocHref(mo, mos);
     }
 
     protected String resolve(String msg, boolean resolveEnv) {
@@ -64,7 +78,11 @@ public abstract class ANotifier {
         SOSParameterSubstitutor ps = new SOSParameterSubstitutor(false, "${", "}");
         jocHref.addKeys(ps);
 
-        getTableFields().entrySet().forEach(e -> {
+        commonVars.entrySet().forEach(e -> {
+            ps.addKey(e.getKey(), e.getValue());
+        });
+
+        tableFields.entrySet().forEach(e -> {
             ps.addKey(e.getKey(), e.getValue());
         });
 
@@ -97,7 +115,7 @@ public abstract class ANotifier {
             String addInfo) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(nr).append("]");
-        sb.append("[").append(getClass().getSimpleName()).append(" monitor=").append(getMonitor().getMonitorName()).append("]");
+        sb.append("[").append(getClass().getSimpleName()).append(" ").append(getMonitorInfo(getMonitor())).append("]");
         sb.append("[").append(isExecute ? "execute" : "successful").append("]");
         sb.append(getInfo(mo, mos, type));
         if (addInfo != null) {
@@ -109,7 +127,7 @@ public abstract class ANotifier {
     protected String getInfo4executeFailed(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type, String addInfo) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(nr).append("]");
-        sb.append("[").append(getClass().getSimpleName()).append(" monitor=").append(getMonitor().getMonitorName()).append("]");
+        sb.append("[").append(getClass().getSimpleName()).append(" ").append(getMonitorInfo(getMonitor())).append("]");
         sb.append("[failed]");
         sb.append(getInfo(mo, mos, type));
         if (addInfo != null) {
@@ -131,11 +149,18 @@ public abstract class ANotifier {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(monitor.getType().value()).append(" monitor=").append(monitor.getMonitorName()).append("]");
+        sb.append("[").append(monitor.getType().value()).append(" ").append(getMonitorInfo(monitor)).append("]");
         if (type != null) {
             sb.append("[").append(getTypeAsString(type)).append("]");
         }
         return sb;
+    }
+
+    private static String getMonitorInfo(AMonitor monitor) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("monitor=").append(monitor.getMonitorName());
+        sb.append(",timeZone=").append(monitor.getTimeZoneValue());
+        return sb.toString();
     }
 
     public static StringBuilder getInfo(NotifyAnalyzer analyzer, AMonitor monitor, NotificationType type) {
@@ -173,6 +198,11 @@ public abstract class ANotifier {
         return sb;
     }
 
+    private void setCommonVars() {
+        commonVars = new HashMap<String, String>();
+        commonVars.put(COMMON_VAR_TIME_ZONE, getMonitor().getTimeZoneValue());
+    }
+
     private void setTableFields(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
         tableFields = new HashMap<String, String>();
         // additional fields
@@ -183,19 +213,19 @@ public abstract class ANotifier {
         if (mo == null) {
             tableFields.putAll(DBItem.toEmptyValuesMap(DBItemMonitoringOrder.class, true, PREFIX_TABLE_ORDERS));
         } else {
-            tableFields.putAll(mo.toMap(true, PREFIX_TABLE_ORDERS));
+            tableFields.putAll(mo.toMap(true, PREFIX_TABLE_ORDERS, timeZone, true));
             adjustFields(PREFIX_TABLE_ORDERS);
         }
         if (mos == null) {
             tableFields.putAll(DBItem.toEmptyValuesMap(DBItemMonitoringOrderStep.class, true, PREFIX_TABLE_ORDER_STEPS));
         } else {
-            tableFields.putAll(mos.toMap(true, PREFIX_TABLE_ORDER_STEPS));
+            tableFields.putAll(mos.toMap(true, PREFIX_TABLE_ORDER_STEPS, timeZone, true));
             adjustFields(PREFIX_TABLE_ORDER_STEPS);
         }
         if (mn == null) {
             tableFields.putAll(DBItem.toEmptyValuesMap(DBItemNotification.class, true, PREFIX_TABLE_NOTIFICATIONS));
         } else {
-            tableFields.putAll(mn.toMap(true, PREFIX_TABLE_NOTIFICATIONS));
+            tableFields.putAll(mn.toMap(true, PREFIX_TABLE_NOTIFICATIONS, timeZone, true));
             adjustFields(PREFIX_TABLE_NOTIFICATIONS);
         }
     }

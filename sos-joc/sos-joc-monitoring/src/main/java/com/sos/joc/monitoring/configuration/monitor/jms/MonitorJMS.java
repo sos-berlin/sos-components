@@ -50,8 +50,8 @@ public class MonitorJMS extends AMonitor {
     private final int deliveryMode;
     private final long timeToLive;
 
-    public MonitorJMS(Document document, Node node) throws Exception {
-        super(document, node);
+    public MonitorJMS(Document document, Node node, String notificationId) throws Exception {
+        super(document, node, notificationId);
 
         Node cf = SOSXML.getChildNode(getRefElement(), ELEMENT_NAME_CONNECTION_FACTORY);
         if (cf != null) {

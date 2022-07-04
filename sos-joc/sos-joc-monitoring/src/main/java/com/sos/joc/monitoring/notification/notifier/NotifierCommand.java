@@ -2,6 +2,7 @@ package com.sos.joc.monitoring.notification.notifier;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -24,7 +25,7 @@ public class NotifierCommand extends ANotifier {
     private static final Logger LOGGER = LoggerFactory.getLogger(NotifierCommand.class);
 
     private static final SOSTimeout TIMEOUT = new SOSTimeout(5, TimeUnit.MINUTES);
-    private static final String VAR_COMMAND = "MON_COMMAND";
+    private static final String VAR_COMMAND = PREFIX_COMMON_VAR + "_COMMAND";
 
     private final MonitorCommand monitor;
 
@@ -39,9 +40,10 @@ public class NotifierCommand extends ANotifier {
     }
 
     @Override
-    public NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
+            DBItemNotification mn) {
 
-        set(type, mo, mos, mn);
+        set(type, timeZone, mo, mos, mn);
         String cmd = resolve(monitor.getCommand(), false);
         LOGGER.info(getInfo4execute(true, mo, mos, type, cmd));
 
@@ -71,10 +73,17 @@ public class NotifierCommand extends ANotifier {
 
     private SOSEnv getEnvVariables(String cmd) {
         Map<String, String> map = new HashMap<>();
-        map.put(PREFIX_ENV_VAR + "_" + VAR_COMMAND, cmd);
+        map.put(PREFIX_ENV_VAR + "_" + VAR_COMMAND, cmd); // extra var
 
+        // JOC VARS
         getJocHref().addEnvs(map);
 
+        // COMMON VARS
+        getCommonVars().entrySet().forEach(e -> {
+            map.put(PREFIX_ENV_VAR + "_" + e.getKey(), e.getValue());
+        });
+
+        // TABLE VARS
         getTableFields().entrySet().forEach(e -> {
             // if (!e.getKey().endsWith("_PARAMETERS")) {
             String val = e.getValue();

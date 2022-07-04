@@ -3,6 +3,7 @@ package com.sos.joc.monitoring.notification.notifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
@@ -46,7 +47,8 @@ public class NotifierMail extends ANotifier {
     }
 
     @Override
-    public NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
+            DBItemNotification mn) {
         NotifyResult result = new NotifyResult(monitor.getMessage(), getSendInfo());
         if (mail == null) {
             result.setError("mail is null");
@@ -58,7 +60,7 @@ public class NotifierMail extends ANotifier {
             return skip;
         }
 
-        set(type, mo, mos, mn);
+        set(type, timeZone, mo, mos, mn);
 
         mail.setSubject(resolve(monitor.getSubject(), true));
         mail.setBody(resolve(monitor.getMessage(), true));

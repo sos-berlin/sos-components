@@ -24,6 +24,7 @@ public class SOSDate {
     public static final String DATE_FORMAT = new String("yyyy-MM-dd");
     public static final String TIME_FORMAT = new String("HH:mm:ss");
     public static final String DATETIME_FORMAT = new String(DATE_FORMAT + " " + TIME_FORMAT);
+    public static final String DATETIME_FORMAT_WITH_ZONE_OFFSET = new String(DATE_FORMAT + "'T'" + TIME_FORMAT + "Z");// 2022-04-07T16:37:35+0200
 
     private static final boolean LENIENT = false;
 
@@ -98,6 +99,10 @@ public class SOSDate {
 
     public static String getDateTimeAsString(Date date, TimeZone timeZone) throws SOSInvalidDataException {
         return format(date, SOSDate.DATETIME_FORMAT, timeZone);
+    }
+
+    public static String getDateTimeWithZoneOffsetAsString(Date date, TimeZone timeZone) throws SOSInvalidDataException {
+        return format(date, SOSDate.DATETIME_FORMAT_WITH_ZONE_OFFSET, timeZone);
     }
 
     public static String getTimeAsString(Date date) throws SOSInvalidDataException {

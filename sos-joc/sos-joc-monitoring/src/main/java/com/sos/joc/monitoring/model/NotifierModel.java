@@ -256,7 +256,7 @@ public class NotifierModel {
             }
             if (n != null) {
                 try {
-                    NotifyResult nr = n.notify(type, analyzer.getOrder(), os, mn);
+                    NotifyResult nr = n.notify(type, m.getTimeZone(), analyzer.getOrder(), os, mn);
                     if (nr != null && nr.getError() != null) {
                         LOGGER.error(nr.getError().getMessage(), nr.getError().getException());
                     }

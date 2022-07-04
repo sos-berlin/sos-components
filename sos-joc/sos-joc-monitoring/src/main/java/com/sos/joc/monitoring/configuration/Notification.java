@@ -76,10 +76,10 @@ public class Notification extends AElement {
                     try {
                         switch (monitor.getNodeName()) {
                         case ELEMENT_NAME_COMMAND_FRAGMENT_REF:
-                            monitors.add(new MonitorCommand(doc, monitor));
+                            monitors.add(new MonitorCommand(doc, monitor, notificationId));
                             break;
                         case ELEMENT_NAME_MAIL_FRAGMENT_REF:
-                            MonitorMail mm = new MonitorMail(doc, monitor);
+                            MonitorMail mm = new MonitorMail(doc, monitor, notificationId);
                             monitors.add(mm);
                             if (mm.getJobResources() != null) {
                                 for (String r : mm.getJobResources()) {
@@ -90,10 +90,10 @@ public class Notification extends AElement {
                             }
                             break;
                         case ELEMENT_NAME_NSCA_FRAGMENT_REF:
-                            monitors.add(new MonitorNSCA(doc, monitor));
+                            monitors.add(new MonitorNSCA(doc, monitor, notificationId));
                             break;
                         case ELEMENT_NAME_JMS_FRAGMENT_REF:
-                            monitors.add(new MonitorJMS(doc, monitor));
+                            monitors.add(new MonitorJMS(doc, monitor, notificationId));
                             break;
                         }
                     } catch (Throwable e) {

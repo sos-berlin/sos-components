@@ -40,8 +40,8 @@ public class MonitorMail extends AMonitor {
     private String bcc;
     private String subject;
 
-    public MonitorMail(Document document, Node node) throws Exception {
-        super(document, node);
+    public MonitorMail(Document document, Node node, String notificationId) throws Exception {
+        super(document, node, notificationId);
 
         jobResources = SOSString.toList(getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_JOB_RESOURCES)), JOB_RESOURCES_DELIMITER);
         contentType = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_CONTENT_TYPE));
@@ -64,7 +64,7 @@ public class MonitorMail extends AMonitor {
 
     public StringBuilder getInfo() {
         StringBuilder sb = new StringBuilder(super.getInfo());
-        sb.append(" job_resources=").append(jobResources == null ? "" : String.join(",", jobResources));
+        sb.append(",job_resources=").append(jobResources == null ? "" : String.join(",", jobResources));
         return sb;
     }
 

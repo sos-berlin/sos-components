@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import javax.persistence.Column;
@@ -79,12 +80,17 @@ public abstract class DBItem implements Serializable {
     }
 
     @Transient
-    public Map<String, String> toMap(boolean useSQLColumnNames) {
-        return toMap(useSQLColumnNames, null);
+    public Map<String, String> toMap(boolean useSQLColumnNames, TimeZone timeZone) {
+        return toMap(useSQLColumnNames, (String) null, (TimeZone) null, false);
     }
 
+    /** @param useSQLColumnNames - use Table Column names or DBItem hibernate class field name
+     * @param prefix - use name prefix
+     * @param timeZone
+     * @param withZoneOffset: true- 2022-04-07T16:14:23+0200, false- 2022-04-07 16:14:23
+     * @return */
     @Transient
-    public Map<String, String> toMap(boolean useSQLColumnNames, String prefix) {
+    public Map<String, String> toMap(boolean useSQLColumnNames, String prefix, TimeZone timeZone, boolean withZoneOffset) {
         List<Field> fields = Arrays.stream(this.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Column.class)).collect(Collectors
                 .toList());
         Map<String, String> map = new HashMap<>();
@@ -104,7 +110,11 @@ public abstract class DBItem implements Serializable {
                 Object oVal = field.get(this);
                 if (oVal != null) {
                     if (oVal instanceof Date) {
-                        val = SOSDate.getDateTimeAsString((Date) oVal);
+                        if (withZoneOffset) {
+                            val = SOSDate.getDateTimeWithZoneOffsetAsString((Date) oVal, timeZone);
+                        } else {
+                            val = SOSDate.getDateTimeAsString((Date) oVal, timeZone);
+                        }
                     } else if (oVal instanceof Boolean) {
                         val = (Boolean) oVal ? "true" : "false";
                     } else {

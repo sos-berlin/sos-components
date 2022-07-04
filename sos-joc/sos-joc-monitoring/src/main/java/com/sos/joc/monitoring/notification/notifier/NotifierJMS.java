@@ -3,6 +3,7 @@ package com.sos.joc.monitoring.notification.notifier;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -58,13 +59,14 @@ public class NotifierJMS extends ANotifier {
     }
 
     @Override
-    public NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
+            DBItemNotification mn) {
 
         MessageProducer producer = null;
         String message = null;
         try {
             producer = createProducer();
-            set(type, mo, mos, mn);
+            set(type, timeZone, mo, mos, mn);
 
             message = resolve(monitor.getMessage(), true);
 

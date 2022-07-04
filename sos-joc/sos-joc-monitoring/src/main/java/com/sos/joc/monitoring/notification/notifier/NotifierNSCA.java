@@ -2,6 +2,7 @@ package com.sos.joc.monitoring.notification.notifier;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,10 +73,11 @@ public class NotifierNSCA extends ANotifier {
     }
 
     @Override
-    public NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
+            DBItemNotification mn) {
 
         try {
-            set(type, mo, mos, mn);
+            set(type, timeZone, mo, mos, mn);
             set(type);
 
             Map<String, String> map = new HashMap<>();

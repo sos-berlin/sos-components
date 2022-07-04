@@ -23,11 +23,13 @@ import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.exception.SOSXMLDoctypeException;
 import com.sos.commons.xml.exception.SOSXMLXPathException;
 
@@ -120,6 +122,17 @@ public class SOSXML {
     public static String getTrimmedValue(Node n) {
         String val = getValue(n);
         return val == null ? null : val.trim();
+    }
+
+    public static String getAttributeValue(Node n, String attrName) {
+        if (n == null || SOSString.isEmpty(attrName)) {
+            return null;
+        }
+        NamedNodeMap m = n.getAttributes();
+        if (m == null || m.getLength() == 0) {
+            return null;
+        }
+        return getTrimmedValue(m.getNamedItem(attrName));
     }
 
     public static SOSXMLXPath newXPath() {

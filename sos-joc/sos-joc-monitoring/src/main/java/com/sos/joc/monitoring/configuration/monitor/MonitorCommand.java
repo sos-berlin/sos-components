@@ -16,8 +16,8 @@ public class MonitorCommand extends AMonitor {
 
     private final String command;
 
-    public MonitorCommand(Document doc, Node node) throws Exception {
-        super(doc, node);
+    public MonitorCommand(Document doc, Node node, String notificationId) throws Exception {
+        super(doc, node, notificationId);
 
         this.command = resolveCommand();
     }

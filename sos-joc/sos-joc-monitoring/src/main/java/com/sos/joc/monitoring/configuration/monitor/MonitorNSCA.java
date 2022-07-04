@@ -35,8 +35,8 @@ public class MonitorNSCA extends AMonitor {
     private final String serviceNameOnSuccess;
     private final String serviceStatusOnSuccess;
 
-    public MonitorNSCA(Document document, Node node) throws Exception {
-        super(document, node);
+    public MonitorNSCA(Document document, Node node, String notificationId) throws Exception {
+        super(document, node, notificationId);
 
         // from RefElement
         serviceHost = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_SERVICE_HOST));
