@@ -1,5 +1,6 @@
 package com.sos.jitl.jobs.maintenance.classes;
 
+import com.sos.commons.exception.SOSException;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
@@ -27,7 +28,12 @@ public class MaintenanceWindowImpl {
         try {
             if (args.getState() != null) {
                 apiResponse = apiExecutor.login();
-                accessToken = apiResponse.getResponseBody();
+                if (apiResponse.getStatusCode() == 200) {
+                    accessToken = apiResponse.getAccessToken();
+                } else {
+                    String message = apiResponse.getStatusCode() + " " + apiExecutor.getClient().getHttpResponse().getStatusLine().getReasonPhrase();
+                    throw new SOSException(message);
+                }
                 MaintenanceWindowExecuter maintenanceWindowExecuter = new MaintenanceWindowExecuter(logger, apiExecutor);
                 // ManageMaintenanceWindowProfile manageMaintenanceWindowProfile =
                 // maintenanceWindowExecuter.getSettings(accessToken,args.getMaintenanceProfile());

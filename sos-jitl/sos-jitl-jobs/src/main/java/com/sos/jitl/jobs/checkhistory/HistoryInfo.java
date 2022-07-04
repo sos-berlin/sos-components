@@ -12,6 +12,7 @@ import com.sos.jitl.jobs.checkhistory.classes.ParameterResolver;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
+import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.TaskHistory;
@@ -34,10 +35,11 @@ public class HistoryInfo {
         String accessToken = null;
         try {
             ApiResponse apiResponse = apiExecutor.login();
-            if(apiResponse.getStatusCode() == 200) {
+            if (apiResponse.getStatusCode() == 200) {
                 accessToken = apiResponse.getAccessToken();
             } else {
-                // error handling here - apiResponse.getException();
+                String message = apiResponse.getStatusCode() + " " + apiExecutor.getClient().getHttpResponse().getStatusLine().getReasonPhrase();
+                throw new SOSException(message);
             }
 
             HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(logger, apiExecutor);
