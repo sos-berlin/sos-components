@@ -10,7 +10,7 @@ import com.sos.commons.xml.SOSXML.SOSXMLXPath;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 import com.sos.js7.converter.js1.common.Params;
-import com.sos.js7.converter.js1.common.RunTime;
+import com.sos.js7.converter.js1.common.runtime.RunTime;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 
 public class JobChainOrder {

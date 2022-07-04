@@ -42,20 +42,24 @@ public abstract class JS7ConverterMain {
         String argConfig = null;
         String argHelp = null;
 
-        for (int i = 0; i < args.length; i++) {
-            String arg = args[i].trim();
-            if (arg.startsWith("--input=")) {
-                argInput = getOptionValue(arg);
-            } else if (arg.startsWith("--output-dir=")) {
-                argOutputDir = getOptionValue(arg);
-            } else if (arg.startsWith("--report-dir=")) {
-                argReportDir = getOptionValue(arg);
-            } else if (arg.startsWith("--archive=")) {
-                argArhive = getOptionValue(arg);
-            } else if (arg.startsWith("--config=")) {
-                argConfig = getOptionValue(arg);
-            } else if (arg.startsWith("--help")) {
-                argHelp = "help";
+        if (args == null) {
+            argHelp = "help";
+        } else {
+            for (int i = 0; i < args.length; i++) {
+                String arg = args[i].trim();
+                if (arg.startsWith("--input=")) {
+                    argInput = getOptionValue(arg);
+                } else if (arg.startsWith("--output-dir=")) {
+                    argOutputDir = getOptionValue(arg);
+                } else if (arg.startsWith("--report-dir=")) {
+                    argReportDir = getOptionValue(arg);
+                } else if (arg.startsWith("--archive=")) {
+                    argArhive = getOptionValue(arg);
+                } else if (arg.startsWith("--config=")) {
+                    argConfig = getOptionValue(arg);
+                } else if (arg.startsWith("--help")) {
+                    argHelp = "help";
+                }
             }
         }
         int status = 0;

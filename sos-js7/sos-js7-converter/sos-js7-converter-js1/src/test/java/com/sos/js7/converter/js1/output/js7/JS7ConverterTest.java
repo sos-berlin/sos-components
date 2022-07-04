@@ -15,21 +15,23 @@ public class JS7ConverterTest {
     @Ignore
     @Test
     public void test() throws IOException {
-        Path input = Paths.get("src/test/resources/input");
-        Path outputDir = Paths.get("src/test/resources/output");
-        Path reportDir = Paths.get("src/test/resources/report");
-        Path archive = Paths.get("src/test/resources/js7_converted.tar.gz");
-
         JS7Converter.CONFIG.getGenerateConfig().withWorkflows(true).withSchedules(true).withLocks(true).withCyclicOrders(false);
         JS7Converter.CONFIG.getParserConfig().withExcludedDirectoryNames(".sos-templates;.svn;.configuration;").withExcludedDirectoryPaths(
                 "sos/;xxx/");
-        JS7Converter.CONFIG.getAgentConfig().withForcedPlatform(Platform.UNIX).withDefaultAgent("agent_name").withMappings(
+        JS7Converter.CONFIG.getAgentConfig().withForcedPlatform(Platform.WINDOWS).withDefaultAgent("agent_name").withMappings(
                 "abcd=agent;xyz=agent_cluster");
         JS7Converter.CONFIG.getMockConfig().withUnixScript("$HOME/MockScript.sh").withWindowsScript("echo 123").withJitlJobsMockLevel("ERROR");
-        JS7Converter.CONFIG.getScheduleConfig().withDefaultWorkingCalendarName("AnyDays").withDefaultNonWorkingCalendarName(null).withPlanOrders(true)
-                .withSubmitOrders(true);
-        JS7Converter.CONFIG.getJobConfig().withJitlLogLevel("DEBUG").withForcedFailOnErrWritten(true).withScriptNewLine("\n");
+        JS7Converter.CONFIG.getScheduleConfig().withDefaultWorkingCalendarName("AnyDays").withDefaultNonWorkingCalendarName("NonWorking")
+                .withPlanOrders(true).withSubmitOrders(true);
+        JS7Converter.CONFIG.getJobConfig().withJitlLogLevel("DEBUG").withForcedFailOnErrWritten(true).withNotificationMailDefaultTo(
+                "to@localhost.com").withNotificationMailDefaultCc("cc@localhost.com").withNotificationMailDefaultBcc("bcc@localhost.com")
+                .withScriptNewLine("\n");
         JS7Converter.CONFIG.getSubFolderConfig().withMappings("aapg=2; ebzc=0; wmad=0; abcd=0").withSeparator("_");
+
+        Path input = Paths.get("src/test/resources/input");
+        Path outputDir = Paths.get("src/test/resources/output/live");
+        Path reportDir = outputDir.getParent().resolve("report");
+        Path archive = outputDir.getParent().resolve("js7_converted.tar.gz");
 
         JS7Converter.convert(input, outputDir, reportDir);
         JS7ConverterMain.createArchiveFile(outputDir, archive);

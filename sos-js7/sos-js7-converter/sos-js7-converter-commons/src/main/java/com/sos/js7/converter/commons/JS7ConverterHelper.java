@@ -95,29 +95,44 @@ public class JS7ConverterHelper {
             return null;
         }
         return days.stream().map(d -> {
-            switch (d.toLowerCase()) {
-            case "mo":
-                return 0;
-            case "tu":
-                return 1;
-            case "we":
-                return 2;
-            case "th":
-                return 3;
-            case "fr":
-                return 4;
-            case "sa":
-                return 5;
-            case "su":
-                return 6;
-            }
-            String msg = String.format("[getDays][unknown day]%s", d);
-            LOGGER.error(msg);
-            ConverterReport.INSTANCE.addErrorRecord(msg);
-            return null;
+            return getDay(d);
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
+    public static Integer getDay(String day) {
+        if (day == null) {
+            return null;
+        }
+        switch (day.toLowerCase()) {
+        case "mo":
+        case "monday":
+            return 1;
+        case "tu":
+        case "tuesday":
+            return 2;
+        case "we":
+        case "wednesday":
+            return 3;
+        case "th":
+        case "thursday":
+            return 4;
+        case "fr":
+        case "friday":
+            return 5;
+        case "sa":
+        case "saturday":
+            return 6;
+        case "su":
+        case "sunday":
+            return 0;
+        }
+        String msg = String.format("[getDay][unknown day]%s", day);
+        LOGGER.error(msg);
+        ConverterReport.INSTANCE.addErrorRecord(msg);
+        return null;
+    }
+
+    // TODO Autosys
     public static List<String> getTimes(List<String> times) {
         if (times == null) {
             return times;
@@ -125,6 +140,7 @@ public class JS7ConverterHelper {
         return times.stream().map(t -> normalizeTime(t)).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
+    // TODO Autosys
     public static String normalizeTime(String time) {
         if (SOSString.isEmpty(time)) {
             return null;

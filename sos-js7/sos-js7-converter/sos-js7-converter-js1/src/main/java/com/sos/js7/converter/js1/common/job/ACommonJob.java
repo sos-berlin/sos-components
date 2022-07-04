@@ -20,10 +20,10 @@ import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 import com.sos.js7.converter.js1.common.Include;
 import com.sos.js7.converter.js1.common.Monitor;
 import com.sos.js7.converter.js1.common.Params;
-import com.sos.js7.converter.js1.common.RunTime;
 import com.sos.js7.converter.js1.common.Script;
 import com.sos.js7.converter.js1.common.lock.LockUse;
 import com.sos.js7.converter.js1.common.processclass.ProcessClass;
+import com.sos.js7.converter.js1.common.runtime.RunTime;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 import com.sos.js7.converter.js1.output.js7.JS7Converter;
 
@@ -380,8 +380,8 @@ public abstract class ACommonJob {
         private boolean mailOnProcess;
         private boolean mailOnDelayAfterError;
         private String mailTo;
-        private String mailCC;
-        private String mailBCC;
+        private String mailCc;
+        private String mailBcc;
 
         public Settings(SOSXMLXPath xpath, Node node) throws Exception {
             mailOnError = getBooleanValue(xpath, node, ELEMENT_MAIL_ON_ERROR);
@@ -391,8 +391,8 @@ public abstract class ACommonJob {
             mailOnDelayAfterError = getBooleanValue(xpath, node, ELEMENT_MAIL_ON_DELAY_AFTER_ERROR);
 
             mailTo = getStringValue(xpath, node, ELEMENT_MAIL_TO);
-            mailCC = getStringValue(xpath, node, ELEMENT_MAIL_CC);
-            mailBCC = getStringValue(xpath, node, ELEMENT_MAIL_BCC);
+            mailCc = getStringValue(xpath, node, ELEMENT_MAIL_CC);
+            mailBcc = getStringValue(xpath, node, ELEMENT_MAIL_BCC);
         }
 
         private boolean getBooleanValue(SOSXMLXPath xpath, Node node, String elementName) throws SOSXMLXPathException {
@@ -428,12 +428,12 @@ public abstract class ACommonJob {
             return mailTo;
         }
 
-        public String getMailCC() {
-            return mailCC;
+        public String getMailCc() {
+            return mailCc;
         }
 
-        public String getMailBCC() {
-            return mailBCC;
+        public String getMailBcc() {
+            return mailBcc;
         }
 
     }

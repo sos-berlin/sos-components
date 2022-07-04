@@ -44,7 +44,7 @@ public class JobChain {
 
         Path jobChainFile = handleFiles(pr, jobChainFiles);
         if (jobChainFile == null) {
-            throw new Exception("missing job chain file");
+            throw new Exception("job chain file not found");
         }
         parse(jobChainFile);
     }
