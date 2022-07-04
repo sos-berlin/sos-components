@@ -876,7 +876,7 @@ public class WorkflowsHelper {
     
     public static boolean getSuspended(SyncState syncState) {
         SyncStateText stateText = syncState.get_text();
-        return SyncStateText.SUSPENDED.equals(stateText) || SyncStateText.SUSPENDING.equals(stateText);
+        return SyncStateText.SUSPENDED.equals(stateText);
     }
 
     public static Boolean workflowCurrentlyExists(JControllerState currentstate, WorkflowPath workflowPath) {

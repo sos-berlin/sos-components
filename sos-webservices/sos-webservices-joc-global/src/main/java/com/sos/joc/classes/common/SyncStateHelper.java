@@ -37,8 +37,7 @@ public class SyncStateHelper {
             put(SyncStateText.NOT_IN_SYNC, 5); //orange
             put(SyncStateText.NOT_DEPLOYED, 4);
             put(SyncStateText.SUSPENDED, 11); //lightorange
-            put(SyncStateText.SUSPENDING, 11);//lightorange
-            put(SyncStateText.RESUMING, 3); //lightblue
+            put(SyncStateText.OUTSTANDING, 11);//lightorange
             put(SyncStateText.UNKNOWN, 2);
         }
     });
@@ -138,9 +137,10 @@ public class SyncStateHelper {
         SyncStateText stateText = SyncStateText.NOT_IN_SYNC;
         if (either != null && either.isRight()) {
             stateText = SyncStateText.IN_SYNC;
-            WorkflowPathControlState controlState = JavaConverters.asJava(currentstate.asScala().pathToWorkflowPathControlState_()).get(either.get().id().path());
+            WorkflowPath wPath = either.get().id().path();
+            WorkflowPathControlState controlState = JavaConverters.asJava(currentstate.asScala().pathToWorkflowPathControlState_()).get(wPath);
             if (controlState != null) {
-                Set<AgentPath> agentsThatIgnoreCommand = currentstate.singleWorkflowPathControlToIgnorantAgents(either.get().id().path());
+                Set<AgentPath> agentsThatIgnoreCommand = currentstate.singleWorkflowPathControlToIgnorantAgents(wPath);
                 int numOfgentsThatIgnoreCommand = agentsThatIgnoreCommand.size();
                 // int numOfAgentsThatConfirmedSuspendOrResume = JavaConverters.asJava(controlState.attachedToAgents()).size();
                 // int totalNumOfAgents = JavaConverters.asJava(either.get().asScala().nameToJob()).values().stream().map(WorkflowJob::agentPath)
@@ -154,14 +154,11 @@ public class SyncStateHelper {
 //                } else if (numOfAgentsThatConfirmedSuspendOrResume < totalNumOfAgents) {
 //                    stateText = SyncStateText.RESUMING;
 //                }
-                if (controlState.workflowPathControl().suspended()) {
-                    if (numOfgentsThatIgnoreCommand == 0) {
-                        stateText = SyncStateText.SUSPENDED;
-                    } else {
-                        stateText = SyncStateText.SUSPENDING;
-                    }
-                } else if (numOfgentsThatIgnoreCommand > 0) {
-                    stateText = SyncStateText.RESUMING;
+                
+                if (numOfgentsThatIgnoreCommand > 0) {
+                    stateText = SyncStateText.OUTSTANDING;
+                } else if (controlState.workflowPathControl().suspended()) {
+                    stateText = SyncStateText.SUSPENDED;
                 }
             }
         }
