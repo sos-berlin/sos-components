@@ -29,6 +29,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.model.inventory.release.ReleasableRecallFilter;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
@@ -468,4 +469,12 @@ public class MappingTest {
         LOGGER.trace("for signing");
         LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(filter));
     }
+    
+    @Test
+    public void test29ReleasableRecallFilter() throws JsonProcessingException {
+        ReleasableRecallFilter filter = DeploymentTestUtils.createReleasableRecallFilter();
+        LOGGER.trace("ReleasableRecallFilter");
+        LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(filter));
+    }
+    
 }

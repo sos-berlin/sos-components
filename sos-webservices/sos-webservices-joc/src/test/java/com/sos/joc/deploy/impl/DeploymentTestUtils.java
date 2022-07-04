@@ -25,6 +25,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.path.PathFilter;
 import com.sos.joc.model.inventory.path.PathResponse;
+import com.sos.joc.model.inventory.release.Releasable;
+import com.sos.joc.model.inventory.release.ReleasableRecallFilter;
 import com.sos.joc.model.joc.Js7LicenseInfo;
 import com.sos.joc.model.joc.LicenseType;
 import com.sos.joc.model.publish.ArchiveFormat;
@@ -1154,6 +1156,15 @@ public class DeploymentTestUtils {
         forSigning.setObjectTypes(types);
         forSigning.setControllerId("testsuite");
         filter.setForSigning(forSigning);
+        return filter;
+    }
+    
+    public static ReleasableRecallFilter createReleasableRecallFilter() {
+        ReleasableRecallFilter filter = new ReleasableRecallFilter();
+        Releasable releasable = new Releasable();
+        releasable.setName("mySchedule");
+        releasable.setObjectType(ConfigurationType.SCHEDULE);
+        filter.getReleasables().add(releasable);
         return filter;
     }
 }
