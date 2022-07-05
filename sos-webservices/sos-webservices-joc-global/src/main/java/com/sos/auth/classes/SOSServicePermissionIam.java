@@ -747,6 +747,8 @@ public class SOSServicePermissionIam {
         }
 
         LOGGER.debug(String.format("Method: %s, Account: %s", "login", currentAccount.getAccountname()));
+        JocAuditLog jocAuditLog = new JocAuditLog(currentAccount.getAccountname(), "./login");
+        AuditParams audit = new AuditParams();
 
         if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
             Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeTimedOutAccount(currentAccount.getAccountname());
@@ -759,12 +761,12 @@ public class SOSServicePermissionIam {
             Globals.jocWebserviceDataContainer.setSosAuthAccessTokenHandler(new SOSAuthAccessTokenHandler());
             Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().start();
 
-            JocAuditLog jocAuditLog = new JocAuditLog(currentAccount.getAccountname(), "./login");
-            AuditParams audit = new AuditParams();
             audit.setComment(currentAccount.getRolesAsString());
             jocAuditLog.logAuditMessage(audit);
         }
         if (!sosAuthCurrentUserAnswer.isAuthenticated()) {
+            audit.setComment("===> Failed login");
+            jocAuditLog.logAuditMessage(audit);
             return JOCDefaultResponse.responseStatus401(sosAuthCurrentUserAnswer);
         } else {
             SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
@@ -783,17 +785,6 @@ public class SOSServicePermissionIam {
         } else {
             LOGGER.error("No valid account");
         }
-    }
-
-    private SOSAuthCurrentAccountAnswer createSOSAuthCurrentAccountAnswer(String accessToken, String user, String message) {
-        SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer();
-        sosAuthCurrentAccountAnswer.setAccessToken(accessToken);
-        sosAuthCurrentAccountAnswer.setAccount(user);
-        sosAuthCurrentAccountAnswer.setHasRole(false);
-        sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
-        sosAuthCurrentAccountAnswer.setIsPermitted(false);
-        sosAuthCurrentAccountAnswer.setMessage(message);
-        return sosAuthCurrentAccountAnswer;
     }
 
 }
