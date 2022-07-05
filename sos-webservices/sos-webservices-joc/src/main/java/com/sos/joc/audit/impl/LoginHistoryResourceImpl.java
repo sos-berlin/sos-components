@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.ws.rs.Path;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.audit.resource.ILoginHistoryResource;
@@ -13,9 +14,14 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.authentication.DBItemIamHistory;
 import com.sos.joc.db.security.IamAccountDBLayer;
+import com.sos.joc.db.security.IamHistoryDbLayer;
+import com.sos.joc.db.security.IamHistoryFilter;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.AuditLogFilter;
 import com.sos.joc.model.security.history.LoginHistory;
+import com.sos.joc.model.security.history.LoginHistoryFilter;
 import com.sos.joc.model.security.history.LoginHistoryItem;
+import com.sos.schema.JsonValidator;
 
 @Path("audit_log")
 public class LoginHistoryResourceImpl extends JOCResourceImpl implements ILoginHistoryResource {
@@ -23,11 +29,13 @@ public class LoginHistoryResourceImpl extends JOCResourceImpl implements ILoginH
     private static final String API_CALL = "./audit_log/login_history";
 
     @Override
-    public JOCDefaultResponse postLoginHistory(String accessToken) {
+    public JOCDefaultResponse postLoginHistory(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
             initLogging(API_CALL, null, accessToken);
+            JsonValidator.validateFailFast(body, LoginHistoryFilter.class);
+            LoginHistoryFilter loginHistoryFilter = Globals.objectMapper.readValue(body, LoginHistoryFilter.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAuditLog().getView());
             if (jocDefaultResponse != null) {
@@ -36,13 +44,22 @@ public class LoginHistoryResourceImpl extends JOCResourceImpl implements ILoginH
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
 
-            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+            IamHistoryDbLayer iamHistoryDbLayer = new IamHistoryDbLayer(sosHibernateSession);
+            IamHistoryFilter iamHistoryFilter = new IamHistoryFilter();
+            iamHistoryFilter.setAccountName(loginHistoryFilter.getAccountName());
+            iamHistoryFilter.setDateFrom(loginHistoryFilter.getDateFrom());
+            iamHistoryFilter.setDateTo(loginHistoryFilter.getDateTo());
+            iamHistoryFilter.setTimeZone(loginHistoryFilter.getTimeZone());
             LoginHistory loginHistory = new LoginHistory();
             loginHistory.setLoginHistoryItems(new ArrayList<LoginHistoryItem>());
-            List<DBItemIamHistory> listOfFailedLogins = iamAccountDBLayer.getListOfFailedLogins(0);
+            List<DBItemIamHistory> listOfFailedLogins = iamHistoryDbLayer.getListOfFailedLogins(iamHistoryFilter, 0);
             for (DBItemIamHistory dbItemIamHistory : listOfFailedLogins) {
                 LoginHistoryItem loginHistoryItem = new LoginHistoryItem();
-                loginHistoryItem.setAccountName(dbItemIamHistory.getAccountName());
+                if (dbItemIamHistory.getAccountName() == null || dbItemIamHistory.getAccountName().isEmpty()) {
+                    loginHistoryItem.setAccountName(SOSAuthHelper.NONE);
+                } else {
+                    loginHistoryItem.setAccountName(dbItemIamHistory.getAccountName());
+                }
                 loginHistoryItem.setLoginDate(dbItemIamHistory.getLoginDate());
                 loginHistoryItem.setLoginSuccess(dbItemIamHistory.getLoginSuccess());
                 loginHistory.getLoginHistoryItems().add(loginHistoryItem);

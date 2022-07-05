@@ -2,12 +2,40 @@ package com.sos.joc.db.security;
 
 import java.util.Date;
 
+import com.sos.joc.classes.JobSchedulerDate;
+
 public class IamHistoryFilter extends SOSHibernateFilter {
 
     private Long id;
     private String accountName;
     private Boolean loginSuccess;
-    private Date loginDateTo;
+    private String dateFrom;
+    private String dateTo;
+    private String timeZone;
+
+    public Date getDateFrom() {
+        return JobSchedulerDate.getDateFrom(this.dateFrom, this.getTimeZone());
+    }
+
+    public void setDateFrom(String dateFrom) {
+        this.dateFrom = dateFrom;
+    }
+
+    public Date getDateTo() {
+        return JobSchedulerDate.getDateTo(this.dateTo, this.getTimeZone());
+    }
+
+    public void setDateTo(String dateTo) {
+        this.dateTo = dateTo;
+    }
+
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
+    }
 
     public IamHistoryFilter() {
 
@@ -19,14 +47,6 @@ public class IamHistoryFilter extends SOSHibernateFilter {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Date getLoginDateTo() {
-        return loginDateTo;
-    }
-
-    public void setLoginDateTo(Date loginDateTo) {
-        this.loginDateTo = loginDateTo;
     }
 
     public String getAccountName() {

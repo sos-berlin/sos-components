@@ -16,6 +16,6 @@ public interface ILoginHistoryResource {
     @Path("login_history")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postLoginHistory(@HeaderParam("X-Access-Token") String accessToken);
+    public JOCDefaultResponse postLoginHistory(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 
 }

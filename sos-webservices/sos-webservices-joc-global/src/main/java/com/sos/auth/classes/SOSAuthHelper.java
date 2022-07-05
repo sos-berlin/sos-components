@@ -38,6 +38,7 @@ import com.sos.joc.exceptions.JocException;
 public class SOSAuthHelper {
 
     public static final String INITIAL = "initial";
+    public static final String NONE = "*none";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthHelper.class);
 

@@ -6,14 +6,15 @@ import java.util.List;
 
 import org.hibernate.query.Query;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.authentication.DBItemIamHistory;
 
 public class IamHistoryDbLayer {
 
     private static final String DBItemIamHistory = com.sos.joc.db.authentication.DBItemIamHistory.class.getSimpleName();
-
     private final SOSHibernateSession sosHibernateSession;
 
     public IamHistoryDbLayer(SOSHibernateSession session) {
@@ -33,15 +34,20 @@ public class IamHistoryDbLayer {
         if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
             query.setParameter("accountName", filter.getAccountName());
         }
-        if (filter.getLoginDateTo() != null) {
-            query.setParameter("loginDate", filter.getLoginDateTo());
+
+        if (filter.getDateFrom() != null) {
+            query.setParameter("from", filter.getDateFrom());
         }
 
+        if (filter.getDateTo() != null) {
+            query.setParameter("to", filter.getDateTo());
+        }
         return query;
 
     }
 
     private String getWhere(IamHistoryFilter filter) {
+
         String where = " ";
         String and = "";
         if (filter.getId() != null) {
@@ -56,10 +62,16 @@ public class IamHistoryDbLayer {
             where += and + " loginSuccess = :loginSuccess";
             and = " and ";
         }
-        if (filter.getLoginDateTo() != null) {
-            where += and + " loginDate < :loginDate";
+
+        if (filter.getDateFrom() != null) {
+            where += and + "loginDate >= :from";
             and = " and ";
         }
+        if (filter.getDateTo() != null) {
+            where += and + "loginDate < :to";
+            and = " and ";
+        }
+
         if (!where.trim().equals("")) {
             where = " where " + where;
         }
@@ -67,6 +79,8 @@ public class IamHistoryDbLayer {
     }
 
     public List<DBItemIamHistory> getIamAccountList(IamHistoryFilter filter, final int limit) throws SOSHibernateException {
+        filter.setOrderCriteria("loginDate");
+        filter.setSortMode("desc");
         Query<DBItemIamHistory> query = sosHibernateSession.createQuery("from " + DBItemIamHistory + getWhere(filter) + filter.getOrderCriteria()
                 + filter.getSortMode());
         bindParameters(filter, query);
@@ -78,8 +92,16 @@ public class IamHistoryDbLayer {
         return iamHistoryList == null ? Collections.emptyList() : iamHistoryList;
     }
 
+    public List<DBItemIamHistory> getListOfFailedLogins(IamHistoryFilter filter, final int limit) throws SOSHibernateException {
+        filter.setLoginSuccess(false);
+        return getIamAccountList(filter, limit);
+    }
+
     public void addLoginAttempt(String accountName, boolean loginSuccess) throws SOSHibernateException {
 
+        if (accountName == null || accountName.isEmpty()) {
+            accountName = SOSAuthHelper.NONE;
+        }
         DBItemIamHistory dbItemIamHistory = new DBItemIamHistory();
         dbItemIamHistory.setAccountName(accountName);
         dbItemIamHistory.setLoginDate(new Date());

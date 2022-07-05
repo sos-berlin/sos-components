@@ -403,15 +403,6 @@ public class IamAccountDBLayer {
         }
     }
 
-    public List<DBItemIamHistory> getListOfFailedLogins(int i) throws SOSHibernateException {
-        List<DBItemIamHistory> iamFailedLoginsList = null;
-        Query<DBItemIamHistory> query = sosHibernateSession.createQuery("from " + DBItemIamHistory + " where loginSuccess=0 order by loginDate desc");
-
-        iamFailedLoginsList = query.getResultList();
-        if (iamFailedLoginsList.size() > 0) {
-            return iamFailedLoginsList;
-        }
-        return null;
-    }
+  
 
 }
