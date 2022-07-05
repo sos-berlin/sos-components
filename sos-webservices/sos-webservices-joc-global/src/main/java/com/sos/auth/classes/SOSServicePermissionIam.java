@@ -762,13 +762,13 @@ public class SOSServicePermissionIam {
             Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().start();
 
             audit.setComment(currentAccount.getRolesAsString());
-            jocAuditLog.logAuditMessage(audit);
         }
         if (!sosAuthCurrentUserAnswer.isAuthenticated()) {
             audit.setComment("===> Failed login");
             jocAuditLog.logAuditMessage(audit);
             return JOCDefaultResponse.responseStatus401(sosAuthCurrentUserAnswer);
         } else {
+            jocAuditLog.logAuditMessage(audit);
             SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
             return JOCDefaultResponse.responseStatus200WithHeaders(sosAuthCurrentUserAnswer, sosAuthCurrentUserAnswer.getAccessToken(),
                     sosSessionHandler.getTimeout());
