@@ -14,13 +14,13 @@ import com.sos.joc.model.inventory.release.ReleasableRecallFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.schema.JsonValidator;
 
-@Path("inventory/releasables")
+@Path("inventory")
 public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasablesRecall {
 
     private static final String API_CALL = "./inventory/releasables/recall";
 
     @Override
-    public JOCDefaultResponse postRecall(String xAccessToken, byte[] filter) throws Exception {
+    public JOCDefaultResponse postRecall(String xAccessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, filter, xAccessToken);

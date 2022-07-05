@@ -8,10 +8,10 @@ import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-@Path("recall")
 public interface IReleasablesRecall {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public JOCDefaultResponse postRecall(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter) throws Exception;
+    @Path("releasables/recall")
+    public JOCDefaultResponse postRecall(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter);
 }
