@@ -432,7 +432,7 @@ public class MappingTest {
 
     @Test
     public void test27LicenseInfoFilter () throws JsonProcessingException {
-        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createLicenseInfo()));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createLicenseInfo()));
     }
     
     @Test

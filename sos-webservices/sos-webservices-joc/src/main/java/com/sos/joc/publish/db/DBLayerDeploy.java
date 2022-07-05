@@ -2599,5 +2599,31 @@ public class DBLayerDeploy {
             throw new JocSosHibernateException(e);
         }
     }
-
+    
+    public void recallReleasedConfiguration (String name, ConfigurationType type) {
+        try {
+            StringBuilder hqlReleased = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+            hqlReleased.append(" where type = :type");
+            hqlReleased.append(" and name = :name");
+            Query<DBItemInventoryReleasedConfiguration> queryReleased = getSession().createQuery(hqlReleased.toString());
+            queryReleased.setParameter("type", type.intValue());
+            queryReleased.setParameter("name", name);
+            DBItemInventoryReleasedConfiguration released = getSession().getSingleResult(queryReleased);
+            getSession().delete(released);
+            StringBuilder hqlUnreleased = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hqlUnreleased.append(" where type = :type");
+            hqlUnreleased.append(" and name = :name");
+            Query<DBItemInventoryConfiguration> queryUnreleased = getSession().createQuery(hqlUnreleased.toString());
+            queryUnreleased.setParameter("type", type.intValue());
+            queryUnreleased.setParameter("name", name);
+            DBItemInventoryConfiguration unreleased = getSession().getSingleResult(queryUnreleased);
+            unreleased.setReleased(false);
+            getSession().update(unreleased);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+        
+        
+    }
+    
 }
