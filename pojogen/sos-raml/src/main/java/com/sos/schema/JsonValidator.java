@@ -154,6 +154,7 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.deploy.DeployablesFilter", "inventory/deploy/request-deployables-schema.json");
             put("com.sos.joc.model.inventory.release.ReleasableFilter", "inventory/release/request-releasable-schema.json");
             put("com.sos.joc.model.inventory.release.ReleasablesFilter", "inventory/release/request-releasables-schema.json");
+            put("com.sos.joc.model.inventory.release.ReleasablesRecallFilter", "inventory/release/releasableRecallFilter-schema.json");
             put("com.sos.joc.model.inventory.rename.RequestFilter", "inventory/rename/request-filter-schema.json");
             put("com.sos.joc.model.inventory.replace.RequestFilters", "inventory/replace/request-filters-schema.json");
             put("com.sos.joc.model.inventory.replace.RequestFolder", "inventory/replace/request-folder-schema.json");
