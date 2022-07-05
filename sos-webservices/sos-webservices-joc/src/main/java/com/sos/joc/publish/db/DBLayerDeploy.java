@@ -2609,7 +2609,11 @@ public class DBLayerDeploy {
             queryReleased.setParameter("type", type.intValue());
             queryReleased.setParameter("name", name);
             DBItemInventoryReleasedConfiguration released = getSession().getSingleResult(queryReleased);
-            getSession().delete(released);
+            if (released != null) {
+                getSession().delete(released);
+            } else {
+                throw new JocSosHibernateException(String.format("no item found to delete with name: %1$s and objectType: %2$s", name, type.value()));
+            }
             StringBuilder hqlUnreleased = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             hqlUnreleased.append(" where type = :type");
             hqlUnreleased.append(" and name = :name");
@@ -2617,8 +2621,10 @@ public class DBLayerDeploy {
             queryUnreleased.setParameter("type", type.intValue());
             queryUnreleased.setParameter("name", name);
             DBItemInventoryConfiguration unreleased = getSession().getSingleResult(queryUnreleased);
-            unreleased.setReleased(false);
-            getSession().update(unreleased);
+            if (unreleased != null) {
+                unreleased.setReleased(false);
+                getSession().update(unreleased);
+            }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
