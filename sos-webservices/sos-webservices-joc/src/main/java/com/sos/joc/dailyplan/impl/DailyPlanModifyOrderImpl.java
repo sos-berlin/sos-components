@@ -108,9 +108,15 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             DailyPlanModifyOrder in = Globals.objectMapper.readValue(filterBytes, DailyPlanModifyOrder.class);
             String controllerId = in.getControllerId();
             
-            JOCDefaultResponse response = initPermissions(controllerId, getJocPermissions(accessToken).getDailyPlan().getView());
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getModify());
             if (response != null) {
                 return response;
+            }
+            
+            boolean hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
+            if (!hasManagePositionsPermission && (in.getStartPosition() != null && !in.getStartPosition().isEmpty() || in.getEndPositions() != null
+                    && !in.getEndPositions().isEmpty())) {
+                return accessDeniedResponse("Access denied for setting start-/endpositions");
             }
 
             // DailyPlan Orders: orderIds.get(Boolean.FALSE), Adhoc Orders: orderIds.get(Boolean.TRUE)

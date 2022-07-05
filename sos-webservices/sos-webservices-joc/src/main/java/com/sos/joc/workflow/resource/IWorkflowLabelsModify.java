@@ -20,4 +20,14 @@ public interface IWorkflowLabelsModify {
     @Produces({ "application/json" })
     public JOCDefaultResponse unskipWorkflows(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
+    @POST
+    @Path("stop")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse stopWorkflows(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("unstop")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse unstopWorkflows(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
 }

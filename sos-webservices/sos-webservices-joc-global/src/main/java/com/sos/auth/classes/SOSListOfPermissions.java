@@ -80,6 +80,7 @@ public class SOSListOfPermissions {
         addPermission(sosPermissions.getSOSPermission(), "sos:products:controller:orders:cancel");
         addPermission(sosPermissions.getSOSPermission(), "sos:products:controller:orders:modify");
         addPermission(sosPermissions.getSOSPermission(), "sos:products:controller:orders:suspend_resume");
+        addPermission(sosPermissions.getSOSPermission(), "sos:products:controller:orders:manage_positions");
 
         sosPermissionShiro.setSOSPermissions(sosPermissions);
     }

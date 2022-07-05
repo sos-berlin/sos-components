@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.SecurityConfigurationRole;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
@@ -37,7 +34,6 @@ import com.sos.joc.model.security.configuration.permissions.joc.admin.Settings;
 
 public class SOSPermissionsCreator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSPermissionsCreator.class);
     private SOSAuthCurrentAccount currentAccount;
 
     public SOSPermissionsCreator(SOSAuthCurrentAccount currentAccount) {
@@ -138,6 +134,7 @@ public class SOSPermissionsCreator {
             controllerPermissions.getOrders().setCancel(haveRight(controllerId, "sos:products:controller:orders:cancel"));
             controllerPermissions.getOrders().setModify(haveRight(controllerId, "sos:products:controller:orders:modify"));
             controllerPermissions.getOrders().setSuspendResume(haveRight(controllerId, "sos:products:controller:orders:suspend_resume"));
+            controllerPermissions.getOrders().setManagePositions(haveRight(controllerId, "sos:products:controller:orders:manage_positions"));
 
         }
         return controllerPermissions;
@@ -151,11 +148,11 @@ public class SOSPermissionsCreator {
         return isPermitted(controllerId, permission);
     }
 
-    private void addRole(List<String> sosRoles, String role, boolean forAccount) {
-        if (currentAccount != null && (!forAccount || currentAccount.hasRole(role)) && currentAccount.isAuthenticated()) {
-            if (!sosRoles.contains(role)) {
-                sosRoles.add(role);
-            }
-        }
-    }
+//    private void addRole(List<String> sosRoles, String role, boolean forAccount) {
+//        if (currentAccount != null && (!forAccount || currentAccount.hasRole(role)) && currentAccount.isAuthenticated()) {
+//            if (!sosRoles.contains(role)) {
+//                sosRoles.add(role);
+//            }
+//        }
+//    }
 }

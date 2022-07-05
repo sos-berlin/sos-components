@@ -15,7 +15,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "create",
     "cancel",
     "suspendResume",
-    "modify"
+    "modify",
+    "managePositions"
 })
 public class Orders {
 
@@ -44,6 +45,13 @@ public class Orders {
     private Boolean suspendResume = false;
     @JsonProperty("modify")
     private Boolean modify = true;
+    /**
+     * skip, unskip, stop, unstop workflow jobs and add/modify order with special start-/endposition
+     * 
+     */
+    @JsonProperty("managePositions")
+    @JsonPropertyDescription("skip, unskip, stop, unstop workflow jobs and add/modify order with special start-/endposition")
+    private Boolean managePositions = true;
 
     /**
      * No args constructor for use in serialization
@@ -58,15 +66,17 @@ public class Orders {
      * @param modify
      * @param view
      * @param suspendResume
+     * @param managePositions
      * @param create
      */
-    public Orders(Boolean view, Boolean create, Boolean cancel, Boolean suspendResume, Boolean modify) {
+    public Orders(Boolean view, Boolean create, Boolean cancel, Boolean suspendResume, Boolean modify, Boolean managePositions) {
         super();
         this.view = view;
         this.create = create;
         this.cancel = cancel;
         this.suspendResume = suspendResume;
         this.modify = modify;
+        this.managePositions = managePositions;
     }
 
     /**
@@ -143,14 +153,32 @@ public class Orders {
         this.modify = modify;
     }
 
+    /**
+     * skip, unskip, stop, unstop workflow jobs and add/modify order with special start-/endposition
+     * 
+     */
+    @JsonProperty("managePositions")
+    public Boolean getManagePositions() {
+        return managePositions;
+    }
+
+    /**
+     * skip, unskip, stop, unstop workflow jobs and add/modify order with special start-/endposition
+     * 
+     */
+    @JsonProperty("managePositions")
+    public void setManagePositions(Boolean managePositions) {
+        this.managePositions = managePositions;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("view", view).append("create", create).append("cancel", cancel).append("suspendResume", suspendResume).append("modify", modify).toString();
+        return new ToStringBuilder(this).append("view", view).append("create", create).append("cancel", cancel).append("suspendResume", suspendResume).append("modify", modify).append("managePositions", managePositions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(cancel).append(create).append(modify).append(view).append(suspendResume).toHashCode();
+        return new HashCodeBuilder().append(cancel).append(modify).append(view).append(suspendResume).append(managePositions).append(create).toHashCode();
     }
 
     @Override
@@ -162,7 +190,7 @@ public class Orders {
             return false;
         }
         Orders rhs = ((Orders) other);
-        return new EqualsBuilder().append(cancel, rhs.cancel).append(create, rhs.create).append(modify, rhs.modify).append(view, rhs.view).append(suspendResume, rhs.suspendResume).isEquals();
+        return new EqualsBuilder().append(cancel, rhs.cancel).append(modify, rhs.modify).append(view, rhs.view).append(suspendResume, rhs.suspendResume).append(managePositions, rhs.managePositions).append(create, rhs.create).isEquals();
     }
 
 }

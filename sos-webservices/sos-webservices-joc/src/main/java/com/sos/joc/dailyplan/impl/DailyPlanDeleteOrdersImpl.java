@@ -52,7 +52,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             DailyPlanOrderFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
 
             Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getFilter().getControllerIds(), accessToken)
-                    .stream().filter(availableController -> getControllerPermissions(availableController, accessToken).getOrders().getCancel())
+                    .stream().filter(availableController -> getControllerPermissions(availableController, accessToken).getOrders().getModify())
                     .collect(Collectors.toSet());
             boolean permitted = !allowedControllers.isEmpty();
 

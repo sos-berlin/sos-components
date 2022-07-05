@@ -68,6 +68,13 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            boolean hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
+            Predicate<AddOrder> requestHasPositionSettings = o -> (o.getStartPosition() != null && !o.getStartPosition().isEmpty() || o
+                    .getEndPositions() != null && !o.getEndPositions().isEmpty());
+            if (!hasManagePositionsPermission && addOrders.getOrders().parallelStream().anyMatch(requestHasPositionSettings)) {
+                return accessDeniedResponse("Access denied for setting start-/endpositions");
+            }
 
             DBItemJocAuditLog dbAuditLog = storeAuditLog(addOrders.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 

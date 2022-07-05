@@ -29,6 +29,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.ModifyWorkflowLabels;
 import com.sos.joc.workflow.resource.IWorkflowLabelsModify;
@@ -54,7 +55,7 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowLabelsModifyImpl.class);
 
     private enum Action {
-        SKIP, UNSKIP
+        SKIP, UNSKIP, STOP, UNSTOP
     }
     
     private class WorkflowJobs {
@@ -89,7 +90,7 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
     public JOCDefaultResponse skipWorkflows(String accessToken, byte[] filterBytes) {
         try {
             ModifyWorkflowLabels modifyWorkflow = initRequest(Action.SKIP, accessToken, filterBytes);
-            boolean perm = getControllerPermissions(modifyWorkflow.getControllerId(), accessToken).getOrders().getSuspendResume();
+            boolean perm = hasPermission(modifyWorkflow.getControllerId(), accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -108,12 +109,50 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
     public JOCDefaultResponse unskipWorkflows(String accessToken, byte[] filterBytes) {
         try {
             ModifyWorkflowLabels modifyWorkflow = initRequest(Action.UNSKIP, accessToken, filterBytes);
-            boolean perm = getControllerPermissions(modifyWorkflow.getControllerId(), accessToken).getOrders().getSuspendResume();
+            boolean perm = hasPermission(modifyWorkflow.getControllerId(), accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             postWorkflowJobsModify(Action.UNSKIP, modifyWorkflow);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse stopWorkflows(String accessToken, byte[] filterBytes) {
+        try {
+            ModifyWorkflowLabels modifyWorkflow = initRequest(Action.STOP, accessToken, filterBytes);
+            boolean perm = hasPermission(modifyWorkflow.getControllerId(), accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), perm);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            postWorkflowJobsModify(Action.STOP, modifyWorkflow);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse unstopWorkflows(String accessToken, byte[] filterBytes) {
+        try {
+            ModifyWorkflowLabels modifyWorkflow = initRequest(Action.UNSTOP, accessToken, filterBytes);
+            boolean perm = hasPermission(modifyWorkflow.getControllerId(), accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), perm);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            postWorkflowJobsModify(Action.UNSTOP, modifyWorkflow);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -189,12 +228,15 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
                     throw new JocBadRequestException("All requested labels are already skipped.");
                 }
                 break;
-            default: //UNSKIP
+            case UNSKIP:
                 wj.getLabels().retainAll(skippedLabels);
                 if (wj.getLabels().isEmpty()) { // TODO or maybe better always raise an exception?
                     throw new JocBadRequestException("None of the requested labels are skipped.");
                 }
                 break;
+            case STOP:
+            case UNSTOP:
+                throw new JocNotImplementedException(API_CALL + action.name().toLowerCase() + " is not yet implemented.");
             }
         }
     }
@@ -206,10 +248,18 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
     }
 
     private void command(String controllerId, Action action, WorkflowJobs wj, DBItemJocAuditLog dbAuditLog) {
-        JControllerCommand commmand = JControllerCommand.controlWorkflowPath(wj.getWorkflowPath(), Optional.empty(), wj.getLabelsForSkipOrUnSkip(
-                Action.SKIP.equals(action)));
-        LOGGER.info(action.name().toLowerCase() + "-command: " + commmand.toJson());
-        ControllerApi.of(controllerId).executeCommand(commmand).thenAccept(either -> thenAcceptHandler(either, controllerId, wj, dbAuditLog));
+        switch (action) {
+        case SKIP:
+        case UNSKIP:
+            JControllerCommand commmand = JControllerCommand.controlWorkflowPath(wj.getWorkflowPath(), Optional.empty(), wj.getLabelsForSkipOrUnSkip(
+                    Action.SKIP.equals(action)));
+            // LOGGER.info(action.name().toLowerCase() + "-command: " + commmand.toJson());
+            ControllerApi.of(controllerId).executeCommand(commmand).thenAccept(either -> thenAcceptHandler(either, controllerId, wj, dbAuditLog));
+            break;
+        case STOP:
+        case UNSTOP:
+            throw new JocNotImplementedException(API_CALL + action.name().toLowerCase() + " is not yet implemented.");
+        }
     }
 
     private void thenAcceptHandler(Either<Problem, Response> either, String controllerId, WorkflowJobs wj, DBItemJocAuditLog dbAuditLog) {
@@ -218,5 +268,9 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
             WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(wj.getWorkflowPath(), dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
                     .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
         }
+    }
+    
+    private boolean hasPermission(String controllerId, String accessToken) {
+        return getControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
     }
 }
