@@ -23,7 +23,7 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.ca.CAUtils;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
-import com.sos.joc.keys.db.DBLayerKeys;
+import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.model.publish.CreateCSRFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;

@@ -74,7 +74,7 @@ import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
-import com.sos.joc.keys.db.DBLayerKeys;
+import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.CreateCSRFilter;

@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "account",
+    "accountName",
     "profileItem",
     "modified"
 })
@@ -41,8 +41,8 @@ public class Profile {
      * (Required)
      * 
      */
-    @JsonProperty("account")
-    private String account;
+    @JsonProperty("accountName")
+    private String accountName;
     /**
      * JSON object as string
      * (Required)
@@ -90,9 +90,9 @@ public class Profile {
      * (Required)
      * 
      */
-    @JsonProperty("account")
-    public String getAccount() {
-        return account;
+    @JsonProperty("accountName")
+    public String getAccountName() {
+        return accountName;
     }
 
     /**
@@ -102,9 +102,9 @@ public class Profile {
      * (Required)
      * 
      */
-    @JsonProperty("account")
-    public void setAccount(String account) {
-        this.account = account;
+    @JsonProperty("accountName")
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 
     /**
@@ -151,12 +151,12 @@ public class Profile {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("account", account).append("profileItem", profileItem).append("modified", modified).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("accountName", accountName).append("profileItem", profileItem).append("modified", modified).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(modified).append(controllerId).append(account).append(profileItem).toHashCode();
+        return new HashCodeBuilder().append(modified).append(controllerId).append(accountName).append(profileItem).toHashCode();
     }
 
     @Override
@@ -168,7 +168,7 @@ public class Profile {
             return false;
         }
         Profile rhs = ((Profile) other);
-        return new EqualsBuilder().append(modified, rhs.modified).append(controllerId, rhs.controllerId).append(account, rhs.account).append(profileItem, rhs.profileItem).isEquals();
+        return new EqualsBuilder().append(modified, rhs.modified).append(controllerId, rhs.controllerId).append(accountName, rhs.accountName).append(profileItem, rhs.profileItem).isEquals();
     }
 
 }

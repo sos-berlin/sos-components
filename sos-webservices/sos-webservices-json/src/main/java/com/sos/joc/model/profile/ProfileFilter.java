@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "account"
+    "accountName"
 })
 public class ProfileFilter {
 
@@ -38,8 +38,8 @@ public class ProfileFilter {
      * (Required)
      * 
      */
-    @JsonProperty("account")
-    private String account;
+    @JsonProperty("accountName")
+    private String accountName;
 
     /**
      * controllerId
@@ -72,9 +72,9 @@ public class ProfileFilter {
      * (Required)
      * 
      */
-    @JsonProperty("account")
-    public String getAccount() {
-        return account;
+    @JsonProperty("accountName")
+    public String getAccountName() {
+        return accountName;
     }
 
     /**
@@ -84,19 +84,19 @@ public class ProfileFilter {
      * (Required)
      * 
      */
-    @JsonProperty("account")
-    public void setAccount(String account) {
-        this.account = account;
+    @JsonProperty("accountName")
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("account", account).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("accountName", accountName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(account).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(accountName).toHashCode();
     }
 
     @Override
@@ -108,7 +108,7 @@ public class ProfileFilter {
             return false;
         }
         ProfileFilter rhs = ((ProfileFilter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(account, rhs.account).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(accountName, rhs.accountName).isEquals();
     }
 
 }

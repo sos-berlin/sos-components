@@ -17,15 +17,20 @@ import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamAccount2RoleWithName;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
+import com.sos.joc.Globals;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamHistory;
 import com.sos.joc.db.authentication.DBItemIamPermission;
 import com.sos.joc.db.authentication.DBItemIamRole;
+import com.sos.joc.db.configuration.JocConfigurationDbLayer;
+import com.sos.joc.db.favorite.FavoriteDBLayer;
+import com.sos.joc.db.keys.DBLayerKeys;
+import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.configuration.ConfigurationType;
 
 public class IamAccountDBLayer {
 
     private static final String DBItemIamAccount = com.sos.joc.db.authentication.DBItemIamAccount.class.getSimpleName();
-    private static final String DBItemIamHistory = com.sos.joc.db.authentication.DBItemIamHistory.class.getSimpleName();
     private static final String DBItemIamRole = com.sos.joc.db.authentication.DBItemIamRole.class.getSimpleName();
     private static final String DBItemIamAccount2Roles = com.sos.joc.db.authentication.DBItemIamAccount2Roles.class.getSimpleName();
     private static final String DBItemIamPermission = com.sos.joc.db.authentication.DBItemIamPermission.class.getSimpleName();
@@ -70,6 +75,29 @@ public class IamAccountDBLayer {
         return row;
     }
 
+    private void deleteProfile(IamAccountFilter filter) throws SOSHibernateException {
+        List<String> accounts = new ArrayList<String>();
+        accounts.add(filter.getAccountName());
+        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+        jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.PROFILE, accounts);
+        jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.GIT, accounts);
+        jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.SETTING, accounts);
+
+        FavoriteDBLayer favoriteDBLayer = new FavoriteDBLayer(sosHibernateSession, "");
+        for (String account : accounts) {
+            favoriteDBLayer.deleteByAccount(account);
+        }
+
+        if (!JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
+
+            DBLayerKeys dbLayerKeys = new DBLayerKeys(sosHibernateSession);
+            for (String account : accounts) {
+                dbLayerKeys.deleteKeyByAccount(account);
+                dbLayerKeys.deleteCertByAccount(account);
+            }
+        }
+    }
+
     public int deleteCascading(IamAccountFilter filter) throws SOSHibernateException {
         IamAccountFilter filterCascade = new IamAccountFilter();
         List<DBItemIamAccount> iamAccountList = getIamAccountList(filter, 0);
@@ -79,6 +107,7 @@ public class IamAccountDBLayer {
                 filterCascade.setId(iamAccountDBItem.getId());
                 deleteAccount2Role(filterCascade);
                 deletePermission(filterCascade);
+                deleteProfile(filter);
             }
         }
         return iamAccountList.size();
@@ -402,7 +431,5 @@ public class IamAccountDBLayer {
             return false;
         }
     }
-
-  
 
 }

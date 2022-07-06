@@ -1,9 +1,11 @@
-package com.sos.joc.keys.db;
+package com.sos.joc.db.keys;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Collections;
+import java.util.List;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -25,7 +27,7 @@ import com.sos.joc.model.sign.JocKeyType;
 public class DBLayerKeys {
 
     private final SOSHibernateSession session;
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerKeys.class); 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerKeys.class);
 
     public DBLayerKeys(SOSHibernateSession hibernateSession) {
         session = hibernateSession;
@@ -40,17 +42,16 @@ public class DBLayerKeys {
             session.close();
         }
     }
-    
-    public void saveOrUpdateKey (DBItemDepKeys key) throws SOSHibernateException {
+
+    public void saveOrUpdateKey(DBItemDepKeys key) throws SOSHibernateException {
         if (key.getId() != null && key.getId() != 0L) {
             session.update(key);
         } else {
             session.save(key);
         }
     }
-    
-    public void saveOrUpdateGeneratedKey (JocKeyPair keyPair, String account, JocSecurityLevel secLvl)
-            throws SOSHibernateException {
+
+    public void saveOrUpdateGeneratedKey(JocKeyPair keyPair, String account, JocSecurityLevel secLvl) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_DEP_KEYS);
         hql.append(" where account = :account");
@@ -58,7 +59,7 @@ public class DBLayerKeys {
         Query<DBItemDepKeys> query = session.createQuery(hql.toString());
         query.setParameter("account", account);
         query.setParameter("secLvl", secLvl.intValue());
-        DBItemDepKeys existingKey =  session.getSingleResult(query);
+        DBItemDepKeys existingKey = session.getSingleResult(query);
         if (existingKey != null) {
             existingKey.setKeyType(JocKeyType.PRIVATE.value());
             existingKey.setKey(keyPair.getPrivateKey());
@@ -66,14 +67,13 @@ public class DBLayerKeys {
                 existingKey.setCertificate(keyPair.getCertificate());
             } else {
                 try {
-                    String certificate = CertificateUtils.asPEMString(
-                            KeyUtil.generateCertificateFromKeyPair(
-                                    KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey())));
+                    String certificate = CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil
+                            .getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey())));
                     existingKey.setCertificate(certificate);
                 } catch (CertificateEncodingException | NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
                     LOGGER.warn("could not extract certificate from key pair. cause: ", e);
                     existingKey.setCertificate(null);
-                } 
+                }
             }
             if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 existingKey.setKeyAlgorithm(JocKeyAlgorithm.PGP.value());
@@ -101,8 +101,7 @@ public class DBLayerKeys {
         }
     }
 
-    public void saveOrUpdateKey (Integer type, String key, String account, JocSecurityLevel secLvl, String keyAlgorythm)
-            throws SOSHibernateException {
+    public void saveOrUpdateKey(Integer type, String key, String account, JocSecurityLevel secLvl, String keyAlgorythm) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_DEP_KEYS);
         hql.append(" where account = :account");
@@ -112,21 +111,19 @@ public class DBLayerKeys {
         query.setParameter("account", account);
         query.setParameter("secLvl", secLvl.intValue());
         query.setParameter("keyType", type);
-        DBItemDepKeys existingKey =  session.getSingleResult(query);
+        DBItemDepKeys existingKey = session.getSingleResult(query);
         if (existingKey != null) {
             existingKey.setKeyType(type);
             if (key.startsWith(SOSKeyConstants.CERTIFICATE_HEADER)) {
                 existingKey.setCertificate(key);
                 if (secLvl.equals(JocSecurityLevel.HIGH) && existingKey.getKey() != null) {
-                    if ((SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyAlgorythm) 
-                            && (existingKey.getKey().startsWith(SOSKeyConstants.PUBLIC_PGP_KEY_HEADER) 
-                                    || existingKey.getKey().startsWith(SOSKeyConstants.PUBLIC_ECDSA_KEY_HEADER))) 
-                        || (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorythm) 
-                                && (existingKey.getKey().startsWith(SOSKeyConstants.PUBLIC_PGP_KEY_HEADER) 
-                                        || existingKey.getKey().startsWith(SOSKeyConstants.PUBLIC_RSA_KEY_HEADER)))
-                        || (JocKeyType.fromValue(existingKey.getKeyType()).equals(JocKeyType.PRIVATE))) {
+                    if ((SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyAlgorythm) && (existingKey.getKey().startsWith(
+                            SOSKeyConstants.PUBLIC_PGP_KEY_HEADER) || existingKey.getKey().startsWith(SOSKeyConstants.PUBLIC_ECDSA_KEY_HEADER)))
+                            || (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorythm) && (existingKey.getKey().startsWith(
+                                    SOSKeyConstants.PUBLIC_PGP_KEY_HEADER) || existingKey.getKey().startsWith(SOSKeyConstants.PUBLIC_RSA_KEY_HEADER)))
+                            || (JocKeyType.fromValue(existingKey.getKeyType()).equals(JocKeyType.PRIVATE))) {
                         existingKey.setKey(null);
-                   } 
+                    }
                 }
             } else {
                 existingKey.setKey(key);
@@ -160,8 +157,8 @@ public class DBLayerKeys {
         }
     }
 
-    public void saveOrUpdateKey (Integer type, String key, String certificate, String account, JocSecurityLevel secLvl,
-            String keyAlgorithm) throws SOSHibernateException {
+    public void saveOrUpdateKey(Integer type, String key, String certificate, String account, JocSecurityLevel secLvl, String keyAlgorithm)
+            throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_DEP_KEYS);
         hql.append(" where account = :account");
@@ -171,7 +168,7 @@ public class DBLayerKeys {
         query.setParameter("account", account);
         query.setParameter("secLvl", secLvl.intValue());
         query.setParameter("keyType", type);
-        DBItemDepKeys existingKey =  session.getSingleResult(query);
+        DBItemDepKeys existingKey = session.getSingleResult(query);
         if (existingKey != null) {
             existingKey.setKeyType(type);
             existingKey.setCertificate(certificate);
@@ -213,7 +210,7 @@ public class DBLayerKeys {
         DBItemDepKeys key = session.getSingleResult(query);
         if (key != null) {
             JocKeyPair keyPair = new JocKeyPair();
-            if(key.getKeyType() == JocKeyType.PRIVATE.value()) {
+            if (key.getKeyType() == JocKeyType.PRIVATE.value()) {
                 keyPair.setPrivateKey(key.getKey());
                 keyPair.setCertificate(key.getCertificate());
             } else if (key.getKeyType() == JocKeyType.PUBLIC.value()) {
@@ -224,6 +221,16 @@ public class DBLayerKeys {
             return keyPair;
         }
         return null;
+    }
+
+    public List<DBItemDepKeys> getDBItemDepKeys(JocSecurityLevel secLvl) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(DBLayer.DBITEM_DEP_KEYS);
+        hql.append(" where secLvl = :secLvl");
+        Query<DBItemDepKeys> query = session.createQuery(hql.toString());
+        query.setParameter("secLvl", secLvl.intValue());
+        List<DBItemDepKeys> listOfDBItemDepKeys = session.getResultList(query);
+        return listOfDBItemDepKeys == null ? Collections.emptyList() : listOfDBItemDepKeys;
     }
 
     public JocKeyPair getAuthRootCaKeyPair() throws SOSHibernateException {
@@ -244,16 +251,15 @@ public class DBLayerKeys {
         return null;
     }
 
-    public DBItemInventoryCertificate getSigningRootCaCertificate() throws SOSHibernateException {
+    public List<DBItemInventoryCertificate> getSigningRootCaCertificates() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_INV_CERTS);
         hql.append(" where ca = 1");
         Query<DBItemInventoryCertificate> query = session.createQuery(hql.toString());
-        query.setMaxResults(1);
-        DBItemInventoryCertificate key = session.getSingleResult(query);
-        return key;
+        List<DBItemInventoryCertificate> listOfDBItemDepKeys = session.getResultList(query);
+        return listOfDBItemDepKeys == null ? Collections.emptyList() : listOfDBItemDepKeys;
     }
-    
+
     public DBItemInventoryCertificate getSigningRootCaCertificate(String account) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_INV_CERTS);
@@ -265,7 +271,7 @@ public class DBLayerKeys {
         DBItemInventoryCertificate key = session.getSingleResult(query);
         return key;
     }
-    
+
     public void saveOrUpdateSigningRootCaCertificate(JocKeyPair keyPair, String account, Integer secLvl) throws SOSHibernateException {
         DBItemInventoryCertificate certificate = getSigningRootCaCertificate(account);
         if (certificate != null) {
@@ -303,6 +309,22 @@ public class DBLayerKeys {
             return keyPair;
         }
         return null;
+    }
+
+    public int deleteKeyByAccount(String accountName) throws SOSHibernateException {
+        String hql = "delete " + DBLayer.DBITEM_DEP_KEYS + " where account=:accountName";
+        Query<DBItemDepKeys> query = session.createQuery(hql);
+        query.setParameter("accountName", accountName);
+        int row = session.executeUpdate(query);
+        return row;
+    }
+
+    public int deleteCertByAccount(String accountName) throws SOSHibernateException {
+        String hql = "delete " + DBLayer.DBITEM_INV_CERTS + " where account=:accountName";
+        Query<DBItemInventoryCertificate> query = session.createQuery(hql);
+        query.setParameter("accountName", accountName);
+        int row = session.executeUpdate(query);
+        return row;
     }
 
 }

@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "accounts"
+    "accountNames"
 })
 public class ProfilesFilter {
 
@@ -32,13 +32,8 @@ public class ProfilesFilter {
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("accounts")
-    private List<String> accounts = new ArrayList<String>();
+    @JsonProperty("accountNames")
+    private List<String> accountNames = new ArrayList<String>();
 
     /**
      * controllerId
@@ -62,34 +57,24 @@ public class ProfilesFilter {
         this.controllerId = controllerId;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("accounts")
-    public List<String> getAccounts() {
-        return accounts;
+    @JsonProperty("accountNames")
+    public List<String> getAccountNames() {
+        return accountNames;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("accounts")
-    public void setAccounts(List<String> accounts) {
-        this.accounts = accounts;
+    @JsonProperty("accountNames")
+    public void setAccountNames(List<String> accountNames) {
+        this.accountNames = accountNames;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("accounts", accounts).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("accountNames", accountNames).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(accounts).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(accountNames).toHashCode();
     }
 
     @Override
@@ -101,7 +86,7 @@ public class ProfilesFilter {
             return false;
         }
         ProfilesFilter rhs = ((ProfilesFilter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(accounts, rhs.accounts).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(accountNames, rhs.accountNames).isEquals();
     }
 
 }

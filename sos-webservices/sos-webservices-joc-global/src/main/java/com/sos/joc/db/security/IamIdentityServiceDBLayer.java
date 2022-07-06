@@ -28,7 +28,6 @@ public class IamIdentityServiceDBLayer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IamIdentityServiceDBLayer.class);
     private static final String DBItemIamIdentityService = com.sos.joc.db.authentication.DBItemIamIdentityService.class.getSimpleName();
-    private static final String DBItemIamAccount = com.sos.joc.db.authentication.DBItemIamAccount.class.getSimpleName();
     private static final String DBItemIamRole = com.sos.joc.db.authentication.DBItemIamRole.class.getSimpleName();
     private static final String DBItemIamPermission = com.sos.joc.db.authentication.DBItemIamPermission.class.getSimpleName();
 
@@ -126,7 +125,6 @@ public class IamIdentityServiceDBLayer {
         bindParameters(filter, query);
         int row = sosHibernateSession.executeUpdate(query);
         return row;
-
     }
 
     public List<DBItemIamIdentityService> getIdentityServiceList(IamIdentityServiceFilter filter, final int limit) throws SOSHibernateException {

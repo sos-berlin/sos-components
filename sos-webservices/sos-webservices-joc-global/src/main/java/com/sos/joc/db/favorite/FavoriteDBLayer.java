@@ -13,7 +13,9 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.inventory.DBItemInventoryFavorite;
+import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -25,21 +27,22 @@ import com.sos.joc.model.favorite.StoreFavorite;
 public class FavoriteDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
+    private static final String DBItemInventoryFavoriteClass = com.sos.joc.db.inventory.DBItemInventoryFavorite.class.getSimpleName();
     private String account;
 
     public FavoriteDBLayer(SOSHibernateSession session, String account) {
         super(session);
         this.account = account;
     }
-    
+
     public DBItemInventoryFavorite getFavorite(FavoriteIdentifier favorite) {
         return getFavorite(favorite.getName(), favorite.getType());
     }
-    
+
     public DBItemInventoryFavorite getFavorite(String name, FavoriteType type) {
         return getFavorite(name, type.intValue());
     }
-    
+
     public DBItemInventoryFavorite getFavorite(String name, Integer type) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_FAVORITES);
@@ -57,7 +60,7 @@ public class FavoriteDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public DBItemInventoryFavorite getSharedFavorite(FavoriteSharedIdentifier sharedFavorite) {
         try {
             if (sharedFavorite.getAccount() == account) {
@@ -79,7 +82,7 @@ public class FavoriteDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public int deleteFavorite(FavoriteIdentifier favorite) {
         try {
             DBItemInventoryFavorite item = getFavorite(favorite);
@@ -95,6 +98,15 @@ public class FavoriteDBLayer extends DBLayer {
         }
     }
     
+    public int deleteByAccount(String accountName) throws SOSHibernateException {
+        String hql = "delete " + DBItemInventoryFavoriteClass + " where account=:accountName";
+        Query<DBItemIamIdentityService> query = getSession().createQuery(hql);
+        query.setParameter("accountName", accountName);
+        int row = getSession().executeUpdate(query);
+        return row;
+    }
+
+
     public Integer takeOverFavorite(FavoriteSharedIdentifier sharedFavorite, Date now, Integer ordering) {
         try {
             DBItemInventoryFavorite sharedItem = getSharedFavorite(sharedFavorite);
@@ -125,7 +137,7 @@ public class FavoriteDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public Integer storeFavorite(StoreFavorite storeFavorite, Date now, Integer ordering) {
         try {
             DBItemInventoryFavorite item = getFavorite(storeFavorite.getName(), storeFavorite.getType());
@@ -146,7 +158,7 @@ public class FavoriteDBLayer extends DBLayer {
             }
             item.setModified(now);
             if (storeFavorite.getContent() != null && storeFavorite.getContent().isEmpty()) {
-                storeFavorite.setContent(null); 
+                storeFavorite.setContent(null);
             }
             item.setFavorite(storeFavorite.getContent());
             if (isNew) {
@@ -162,7 +174,7 @@ public class FavoriteDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public int shareFavorite(FavoriteIdentifier favorite, Date now) {
         try {
             DBItemInventoryFavorite item = getFavorite(favorite);
@@ -179,7 +191,7 @@ public class FavoriteDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public int unShareFavorite(FavoriteIdentifier favorite, Date now) {
         try {
             DBItemInventoryFavorite item = getFavorite(favorite);
@@ -204,9 +216,9 @@ public class FavoriteDBLayer extends DBLayer {
             hql.append(" where account = :account");
             if (types != null && !types.isEmpty() && types.size() < numOfAllTypes) {
                 if (types.size() == 1) {
-                    hql.append(" and type = :type"); 
+                    hql.append(" and type = :type");
                 } else {
-                    hql.append(" and type in (:types)"); 
+                    hql.append(" and type in (:types)");
                 }
             }
             hql.append(" order by ordering");
@@ -233,7 +245,26 @@ public class FavoriteDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
+    public List<DBItemInventoryFavorite> getAllFavorites(int limit) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_FAVORITES);
+            Query<DBItemInventoryFavorite> query = getSession().createQuery(hql.toString());
+            if (limit > -1) {
+                query.setMaxResults(limit);
+            }
+            List<DBItemInventoryFavorite> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     public List<DBItemInventoryFavorite> getSharedFavorites(Set<FavoriteType> types, int limit) {
         try {
             int numOfAllTypes = EnumSet.allOf(FavoriteType.class).size();
@@ -242,9 +273,9 @@ public class FavoriteDBLayer extends DBLayer {
             hql.append(" and shared = 1");
             if (types != null && !types.isEmpty() && types.size() < numOfAllTypes) {
                 if (types.size() == 1) {
-                    hql.append(" and type = :type"); 
+                    hql.append(" and type = :type");
                 } else {
-                    hql.append(" and type in (:types)"); 
+                    hql.append(" and type in (:types)");
                 }
             }
             hql.append(" order by ordering");
@@ -276,7 +307,7 @@ public class FavoriteDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("select max(ordering) from ").append(DBLayer.DBITEM_INV_FAVORITES);
         hql.append(" where account = :account");
         hql.append(" and type = :type");
-        
+
         Query<Integer> query = getSession().createQuery(hql.toString());
         query.setParameter("account", account);
         query.setParameter("type", type.intValue());
@@ -286,7 +317,7 @@ public class FavoriteDBLayer extends DBLayer {
         }
         return result;
     }
-    
+
     public void cleanupFavoritesOrdering(FavoriteType type, boolean force) throws SOSHibernateException {
         List<DBItemInventoryFavorite> dbFavoritesByType = getFavorites(Collections.singleton(type), -1);
         if (!force) {
@@ -316,8 +347,8 @@ public class FavoriteDBLayer extends DBLayer {
         DBItemInventoryFavorite predecessorFavorite = null;
         if (predecessorName != null && !predecessorName.isEmpty()) {
             if (name.equals(predecessorName)) {
-                throw new DBInvalidDataException("Favorite name '" + name + "' and predecessor favorite name '"
-                        + predecessorName + "' are the same.");
+                throw new DBInvalidDataException("Favorite name '" + name + "' and predecessor favorite name '" + predecessorName
+                        + "' are the same.");
             }
             predecessorFavorite = getFavorite(predecessorName, type);
             if (predecessorFavorite == null) {

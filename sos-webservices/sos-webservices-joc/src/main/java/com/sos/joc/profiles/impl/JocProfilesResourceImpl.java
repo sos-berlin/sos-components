@@ -3,7 +3,9 @@ package com.sos.joc.profiles.impl;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -13,16 +15,23 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.authentication.DBItemIamAccount;
+import com.sos.joc.db.authentication.DBItemIamHistory;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
-import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.db.deployment.DBItemDepKeys;
+import com.sos.joc.db.favorite.FavoriteDBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryCertificate;
+import com.sos.joc.db.inventory.DBItemInventoryFavorite;
+import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
+import com.sos.joc.db.security.IamHistoryDbLayer;
+import com.sos.joc.db.security.IamHistoryFilter;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.Profiles;
-import com.sos.joc.model.profile.Profile;
 import com.sos.joc.model.profile.ProfilesFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.profiles.resource.IJocProfilesResource;
@@ -51,7 +60,24 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
-            jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.PROFILE, profilesFilter.getAccounts());
+            jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.PROFILE, profilesFilter.getAccountNames());
+            jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.GIT, profilesFilter.getAccountNames());
+            jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.SETTING, profilesFilter.getAccountNames());
+
+            FavoriteDBLayer favoriteDBLayer = new FavoriteDBLayer(sosHibernateSession, "");
+            for (String account : profilesFilter.getAccountNames()) {
+                favoriteDBLayer.deleteByAccount(account);
+            }
+
+            if (!JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
+
+                DBLayerKeys dbLayerKeys = new DBLayerKeys(sosHibernateSession);
+                for (String account : profilesFilter.getAccountNames()) {
+                    dbLayerKeys.deleteKeyByAccount(account);
+                    dbLayerKeys.deleteCertByAccount(account);
+                }
+            }
+
             Globals.commit(sosHibernateSession);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -90,6 +116,63 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
             Profiles resultProfiles = new Profiles();
 
             List<com.sos.joc.model.configuration.Profile> profiles = jocConfigurationDBLayer.getJocConfigurationProfiles(jocConfigurationFilter);
+            jocConfigurationFilter.setConfigurationType("GIT");
+            List<com.sos.joc.model.configuration.Profile> profilesGit = jocConfigurationDBLayer.getJocConfigurationProfiles(jocConfigurationFilter);
+            profiles.addAll(profilesGit);
+
+            List<DBItemDepKeys> listOfDBItemDepKeys = new ArrayList<DBItemDepKeys>();
+            if (!JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
+                DBLayerKeys dbLayerKeys = new DBLayerKeys(sosHibernateSession);
+                listOfDBItemDepKeys = dbLayerKeys.getDBItemDepKeys(Globals.getJocSecurityLevel());
+                for (DBItemDepKeys dbItemDepKeys : listOfDBItemDepKeys) {
+                    com.sos.joc.model.configuration.Profile profileKey = new com.sos.joc.model.configuration.Profile();
+                    profileKey.setAccount(dbItemDepKeys.getAccount());
+                    profiles.add(profileKey);
+                }
+
+                List<DBItemInventoryCertificate> listOfDBItemInventoryCertificate = new ArrayList<DBItemInventoryCertificate>();
+                listOfDBItemInventoryCertificate = dbLayerKeys.getSigningRootCaCertificates();
+                for (DBItemInventoryCertificate dbItemInventoryCertificate : listOfDBItemInventoryCertificate) {
+                    com.sos.joc.model.configuration.Profile profileKey = new com.sos.joc.model.configuration.Profile();
+                    profileKey.setAccount(dbItemInventoryCertificate.getAccount());
+                    profiles.add(profileKey);
+                }
+
+            }
+
+            FavoriteDBLayer dbLayer = new FavoriteDBLayer(sosHibernateSession, "");
+            List<DBItemInventoryFavorite> listOfFavorites = dbLayer.getAllFavorites(0);
+            for (DBItemInventoryFavorite dbItemInventoryFavorite : listOfFavorites) {
+                com.sos.joc.model.configuration.Profile profileKey = new com.sos.joc.model.configuration.Profile();
+                profileKey.setAccount(dbItemInventoryFavorite.getAccount());
+                profiles.add(profileKey);
+            }
+
+            List<com.sos.joc.model.configuration.Profile> uniqueProfiles = new ArrayList<com.sos.joc.model.configuration.Profile>();
+
+            for (com.sos.joc.model.configuration.Profile p : profiles) {
+                p.setLastLogin(null);
+                if (!uniqueProfiles.contains(p)) {
+                    uniqueProfiles.add(p);
+                }
+            }
+
+            // Get last login date.
+            IamHistoryDbLayer iamHistoryDbLayer = new IamHistoryDbLayer(sosHibernateSession);
+            IamHistoryFilter iamHistoryFilter = new IamHistoryFilter();
+            iamHistoryFilter.setLoginSuccess(true);
+            List<DBItemIamHistory> listOfLastLogins = iamHistoryDbLayer.getIamAccountList(iamHistoryFilter, 0);
+            Map<String, Date> lastLogin = new HashMap<String, Date>();
+            for (DBItemIamHistory dbItemIamHistory : listOfLastLogins) {
+                lastLogin.put(dbItemIamHistory.getAccountName(), dbItemIamHistory.getLoginDate());
+            }
+
+            for (com.sos.joc.model.configuration.Profile p : uniqueProfiles) {
+                Date l = lastLogin.get(p.getAccount());
+                if (l != null) {
+                    p.setLastLogin(l);
+                }
+            }
 
             if (identityServiceFilter.getIdentityServiceName() != null && !identityServiceFilter.getIdentityServiceName().isEmpty()) {
                 DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, identityServiceFilter
@@ -98,10 +181,10 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
                 IamAccountFilter filter = new IamAccountFilter();
                 filter.setIdentityServiceId(dbItemIamIdentityService.getId());
                 List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(filter, 0);
-                resultProfiles.setProfiles(profiles.stream().filter(account -> listOfAccounts.stream().anyMatch(profile -> account.getAccount()
+                resultProfiles.setProfiles(uniqueProfiles.stream().filter(account -> listOfAccounts.stream().anyMatch(profile -> account.getAccount()
                         .equals(profile.getAccountName()))).collect(Collectors.toList()));
             } else {
-                resultProfiles.getProfiles().addAll(profiles);
+                resultProfiles.getProfiles().addAll(uniqueProfiles);
             }
 
             resultProfiles.setDeliveryDate(Date.from(Instant.now()));

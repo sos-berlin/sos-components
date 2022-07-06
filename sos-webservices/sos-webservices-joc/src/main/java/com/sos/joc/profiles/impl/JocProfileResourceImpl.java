@@ -19,10 +19,10 @@ import com.sos.joc.model.profile.ProfileFilter;
 import com.sos.joc.profiles.resource.IJocProfileResource;
 import com.sos.schema.JsonValidator;
 
-@Path("profile")
+@Path("profile/prefs")
 public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfileResource {
 
-    private static final String API_CALL_PROFILE = "./profile";
+    private static final String API_CALL_PROFILE = "./profile/prefs";
     private static final String API_CALL_PROFILE_STORE = "./profile/store";
 
     @Override
@@ -42,7 +42,7 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_PROFILE_STORE);
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
             JocConfigurationFilter filter = new JocConfigurationFilter();
-            filter.setAccount(profile.getAccount());
+            filter.setAccount(profile.getAccountName());
             filter.setControllerId(profile.getControllerId());
             filter.setConfigurationType(ConfigurationType.PROFILE.name());
             DBItemJocConfiguration dbItem = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
@@ -58,7 +58,7 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
 
             dbItem.setControllerId(profile.getControllerId());
             dbItem.setInstanceId(0L);
-            dbItem.setAccount(profile.getAccount());
+            dbItem.setAccount(profile.getAccountName());
             dbItem.setObjectType(ConfigurationType.PROFILE.name());
 
             dbItem.setConfigurationItem(profile.getProfileItem());
@@ -101,7 +101,7 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_PROFILE);
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
             JocConfigurationFilter filter = new JocConfigurationFilter();
-            filter.setAccount(profileFilter.getAccount());
+            filter.setAccount(profileFilter.getAccountName());
             filter.setControllerId(profileFilter.getControllerId());
             filter.setConfigurationType(ConfigurationType.PROFILE.name());
             DBItemJocConfiguration dbItem = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
@@ -111,7 +111,7 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
             }
 
             Profile profile = new Profile();
-            profile.setAccount(dbItem.getAccount());
+            profile.setAccountName(dbItem.getAccount());
             profile.setControllerId(dbItem.getControllerId());
             profile.setModified(dbItem.getModified());
             profile.setProfileItem(dbItem.getConfigurationItem());

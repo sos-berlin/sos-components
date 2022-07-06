@@ -9,7 +9,6 @@ import org.hibernate.query.Query;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.authentication.DBItemIamHistory;
 
 public class IamHistoryDbLayer {
