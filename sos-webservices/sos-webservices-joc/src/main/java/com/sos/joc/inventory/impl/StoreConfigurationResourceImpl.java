@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -22,8 +21,8 @@ import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JocInventory.InventoryPath;
-import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.inventory.Validator;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -36,7 +35,6 @@ import com.sos.joc.model.common.ICalendarObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
-import com.sos.joc.model.order.AddOrder;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -193,7 +191,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     Predicate<OrderParameterisation> requestHasPositionSettings = o -> o.getPositions() != null && (o.getPositions()
                             .getStartPosition() != null && !o.getPositions().getStartPosition().isEmpty() || o.getPositions()
                                     .getEndPositions() != null && !o.getPositions().getEndPositions().isEmpty());
-                    if (schedule.getOrderParameterisations().parallelStream().anyMatch(requestHasPositionSettings)) {
+                    if (schedule.getOrderParameterisations() != null && schedule.getOrderParameterisations().parallelStream().anyMatch(
+                            requestHasPositionSettings)) {
                         boolean hasManagePositionsPermission = Proxies.getControllerDbInstances().keySet().parallelStream().anyMatch(
                                 availableController -> getControllerPermissions(availableController, getAccessToken()).getOrders()
                                         .getManagePositions());
