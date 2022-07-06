@@ -1,6 +1,7 @@
 package com.sos.jitl.jobs.jocapi;
 
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
@@ -25,7 +26,6 @@ import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
-import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.exception.SOSAuthenticationFailedException;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.typesafe.config.Config;
@@ -98,6 +98,7 @@ public class ApiExecutor {
     public ApiResponse login() throws SOSAuthenticationFailedException, Exception {
         logDebug("***ApiExecutor***");
         jocUris = getUris();
+        
         for (String uri : jocUris) {
             try {
                 tryCreateClient(uri);
@@ -116,6 +117,9 @@ public class ApiExecutor {
             } catch (Exception e) {
                 logDebug(String.format("connection to URI %1$s failed, trying next Uri.", jocUri.resolve(WS_API_LOGIN).toString()));
             }
+        }
+        if (this.jocUri == null) {
+            throw new Exception("no uri provided for api server.");
         }
         return new ApiResponse(null, null, null, null);
     }
@@ -201,7 +205,7 @@ public class ApiExecutor {
             client.closeHttpClient();
         }
         Config config = readConfig();
-
+        
         for (Entry<String, ConfigValue> entry : config.entrySet()) {
             if (entry.getKey().startsWith("js7")) {
                 if (!DO_NOT_LOG_KEY.contains(entry.getKey())) {
@@ -209,23 +213,7 @@ public class ApiExecutor {
                 }
             }
         }
-        List<String> jocUris = getUris();
-        while (jocUris.iterator().hasNext()) {
-            String uri = jocUris.iterator().next();
-            if (!SOSString.isEmpty(uri)) {
-                this.jocUri = URI.create(uri);
-            } else {
-                throw new Exception("no uri provided for api server.");
-            }
-
-        }
-        if (!SOSString.isEmpty(jocUri)) {
-            this.jocUri = URI.create(jocUri);
-        }
-        if (this.jocUri == null) {
-            throw new Exception("missing JOC Uri");
-        }
-
+        
         client = new SOSRestApiClient();
         logDebug("initiate REST api client");
         if (jocUri.toLowerCase().startsWith("https:")) {
@@ -286,7 +274,7 @@ public class ApiExecutor {
     public Config readConfig() throws SOSMissingDataException {
         String agentConfDirPath = System.getenv(AGENT_CONF_DIR_ENV_PARAM);
         if (agentConfDirPath == null) {
-            throw new SOSMissingDataException(String.format("Environment variable %1$s not set. Can´t read credetials from agents private.conf file.",
+            throw new SOSMissingDataException(String.format("Environment variable %1$s not set. Can´t read credentials from agents private.conf file.",
                     AGENT_CONF_DIR_ENV_PARAM));
         }
         logDebug("agentConfDirPath: " + agentConfDirPath);
@@ -302,8 +290,13 @@ public class ApiExecutor {
         logDebug("agents private folder: " + privatFolderPath.toString());
         Config defaultConfigWithAgentConfDir = ConfigFactory.parseProperties(props).withFallback(defaultConfig).resolve();
         logDebug(PRIVATE_CONF_JS7_PARAM_CONFDIR + " (Config): " + defaultConfigWithAgentConfDir.getString(PRIVATE_CONF_JS7_PARAM_CONFDIR));
-        return ConfigFactory.parseFile(privatFolderPath.resolve(PRIVATE_CONF_FILENAME).toFile()).withFallback(defaultConfigWithAgentConfDir)
-                .resolve();
+        if (Files.exists(privatFolderPath.resolve(PRIVATE_CONF_FILENAME))) {
+            return ConfigFactory.parseFile(privatFolderPath.resolve(PRIVATE_CONF_FILENAME).toFile()).withFallback(defaultConfigWithAgentConfDir)
+                    .resolve();
+        } else {
+            throw new SOSMissingDataException(String.format("File %1$s does not exists. Can´t read credentials from agents private.conf file.",
+                    privatFolderPath.resolve(PRIVATE_CONF_FILENAME).toString()));
+        }
     }
 
     private static KeyStoreCredentials readKeystoreCredentials(Config config) {
