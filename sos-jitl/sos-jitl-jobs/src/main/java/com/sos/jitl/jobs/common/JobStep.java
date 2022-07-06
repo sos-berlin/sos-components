@@ -3,6 +3,7 @@ package com.sos.jitl.jobs.common;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSReflection;
@@ -19,6 +21,7 @@ import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.commons.vfs.common.AProvider;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.common.JobLogger.LogLevel;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
@@ -40,15 +43,22 @@ import scala.collection.JavaConverters;
 
 public class JobStep<A extends JobArguments> {
 
+    protected static final String PAYLOAD_NAME_HIBERNATE_SESSION = "hibernate_session";
+    protected static final String PAYLOAD_NAME_SQL_CONNECTION = "sql_connection";
+    protected static final String PAYLOAD_NAME_VFS_PROVIDER = "vfs_provider";
+
     private final String jobClassName;
     private final JobContext jobContext;
     private final BlockingInternalJob.Step internalStep;
     private final JobLogger logger;
+    private final String threadName;
+
     private A arguments;
     private Map<String, Map<String, JobDetailValue>> lastOutcomes;
     private Map<String, JobDetailValue> jobResourcesValues;
     private List<JobArgument<A>> knownArguments;
     private Map<String, JobArgument<A>> allCurrentArguments;
+    private Map<String, Object> payload;
 
     private String controllerId;
     private String orderId;
@@ -64,11 +74,37 @@ public class JobStep<A extends JobArguments> {
         this.jobContext = jobContext;
         this.internalStep = step;
         this.logger = new JobLogger(internalStep, getStepInfo());
+        this.threadName = Thread.currentThread().getName();
+
     }
 
     protected void init(A arguments) {
         this.arguments = arguments;
         this.logger.init(arguments);
+    }
+
+    protected String getThreadName() {
+        return threadName;
+    }
+
+    public void setPayload(SOSHibernateSession session) {
+        payload = Collections.singletonMap(PAYLOAD_NAME_HIBERNATE_SESSION, session);
+    }
+
+    public void setPayload(Connection conn) {
+        payload = Collections.singletonMap(PAYLOAD_NAME_SQL_CONNECTION, conn);
+    }
+
+    public void setPayload(AProvider<?> provider) {
+        payload = Collections.singletonMap(PAYLOAD_NAME_VFS_PROVIDER, provider);
+    }
+
+    public void setPayload(Map<String, Object> val) {
+        payload = val;
+    }
+
+    public Map<String, Object> getPayload() {
+        return payload;
     }
 
     public BlockingInternalJob.Step getInternalStep() {

@@ -34,6 +34,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             factory.setIdentifier(SQLExecutorJob.class.getSimpleName());
             factory.build();
             session = factory.openStatelessSession();
+            step.setPayload(session);
 
             Map<String, Object> map = process(step, session);
             step.getLogger().info("result: " + map);

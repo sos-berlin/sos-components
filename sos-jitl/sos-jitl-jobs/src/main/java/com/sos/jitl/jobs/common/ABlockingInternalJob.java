@@ -11,6 +11,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,10 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSBase64;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper;
+import com.sos.commons.vfs.common.AProvider;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.common.JobArguments.MockLevel;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
@@ -45,6 +49,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ABlockingInternalJob.class);
     private static final String BASE64_VALUE_PREFIX = "base64:";
+    private static final String OPERATION_CANCEL_KILL = "cancel/kill";
 
     private final JobContext jobContext;
 
@@ -109,42 +114,141 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
 
     @Override
     public OrderProcess toOrderProcess(BlockingInternalJob.Step step) {
-        return () -> {
-            MockLevel mockLevel = MockLevel.OFF;
-            JobStep<A> jobStep = new JobStep<A>(getClass().getName(), jobContext, step);
-            try {
-                List<SOSJobArgumentException> exceptions = new ArrayList<SOSJobArgumentException>();
-                A args = createJobArguments(exceptions, jobStep);
-                jobStep.init(args);
+        return new OrderProcess() {
 
-                mockLevel = jobStep.getArguments().getMockLevel().getValue();
-                switch (mockLevel) {
-                case OFF:
-                    jobStep.logParameterization(null);
-                    checkExceptions(jobStep, exceptions);
-                    return onOrderProcess(jobStep);
-                case ERROR:
-                    jobStep.logParameterization(String.format("Mock Execution: %s=%s.", jobStep.getArguments().getMockLevel().getName(), mockLevel));
-                    checkExceptions(jobStep, exceptions);
-                    return jobStep.success();
-                case INFO:
-                default:
-                    jobStep.logParameterization(String.format("Mock Execution: %s=%s.", jobStep.getArguments().getMockLevel().getName(), mockLevel));
-                    return jobStep.success();
+            volatile boolean canceled = false;
+            AtomicReference<JobStep<A>> jobStepRef = null;
+
+            public JOutcome.Completed run() throws Exception {
+                while (!canceled) {
+                    MockLevel mockLevel = MockLevel.OFF;
+                    JobStep<A> jobStep = new JobStep<A>(getClass().getName(), jobContext, step);
+                    jobStepRef = new AtomicReference<>(jobStep);
+                    try {
+                        List<SOSJobArgumentException> exceptions = new ArrayList<SOSJobArgumentException>();
+                        A args = createJobArguments(exceptions, jobStep);
+                        jobStep.init(args);
+
+                        mockLevel = jobStep.getArguments().getMockLevel().getValue();
+                        switch (mockLevel) {
+                        case OFF:
+                            jobStep.logParameterization(null);
+                            checkExceptions(jobStep, exceptions);
+                            return onOrderProcess(jobStep);
+                        case ERROR:
+                            jobStep.logParameterization(String.format("Mock Execution: %s=%s.", jobStep.getArguments().getMockLevel().getName(),
+                                    mockLevel));
+                            checkExceptions(jobStep, exceptions);
+                            return jobStep.success();
+                        case INFO:
+                        default:
+                            jobStep.logParameterization(String.format("Mock Execution: %s=%s.", jobStep.getArguments().getMockLevel().getName(),
+                                    mockLevel));
+                            return jobStep.success();
+                        }
+                    } catch (Throwable e) {
+                        switch (mockLevel) {
+                        case OFF:
+                        case ERROR:
+                            return jobStep.failed(e.toString(), e);
+                        case INFO:
+                        default:
+                            jobStep.getLogger().info(String.format("Mock Execution: %s=%s, Exception: %s", jobStep.getArguments().getMockLevel()
+                                    .getName(), mockLevel, e.toString()));
+                            return jobStep.success();
+                        }
+                    }
                 }
-            } catch (Throwable e) {
-                switch (mockLevel) {
-                case OFF:
-                case ERROR:
-                    return jobStep.failed(e.toString(), e);
-                case INFO:
-                default:
-                    jobStep.getLogger().info(String.format("Mock Execution: %s=%s, Exception: %s", jobStep.getArguments().getMockLevel().getName(),
-                            mockLevel, e.toString()));
-                    return jobStep.success();
+                return JOutcome.failed("Canceled");
+            }
+
+            @Override
+            public void cancel(boolean immediately) {
+                if (jobStepRef != null && !canceled) {
+                    JobStep<A> jobStep = jobStepRef.get();
+                    if (jobStep != null) {
+                        cancelStep(jobStep);
+                        Thread thread = Thread.getAllStackTraces().keySet().stream().filter(t -> t.getName().equals(jobStep.getThreadName())).map(
+                                t -> {
+                                    return t;
+                                }).findAny().orElse(null);
+                        if (thread == null) {
+                            try {
+                                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][thread][" + jobStep.getThreadName()
+                                        + "][skip interrupt]thread not found");
+                            } catch (Throwable e) {
+                            }
+                        } else {
+                            jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][thread][" + thread.getName() + "]interrupt ...");
+                            thread.interrupt();
+                        }
+                    }
                 }
+                canceled = true;
             }
         };
+    }
+
+    /** can be overwritten */
+    public void cancelStep(JobStep<A> jobStep) {
+        if (jobStep.getPayload() != null) {
+            String jobName = getJobName(jobStep);
+            cancelHibernateConnection(jobStep, jobName);
+            cancelSQLConnection(jobStep, jobName);
+            cancelVFSConnection(jobStep, jobName);
+        }
+    }
+
+    private void cancelHibernateConnection(JobStep<A> jobStep, String jobName) {
+        try {
+            Object o = jobStep.getPayload().get(JobStep.PAYLOAD_NAME_HIBERNATE_SESSION);
+            if (o != null) {
+                SOSHibernateSession s = (SOSHibernateSession) o;
+                // step.getLogger().info("cancel ... close session");
+                // s.rollback(); s.close() <- does not work because blocked
+                if (s.getFactory() != null) {
+                    jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]close factory ...");
+                    s.getFactory().close();
+                }
+            }
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][job name=%s][cancelHibernateConnection]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
+        }
+    }
+
+    // TODO currently not used(candidate PLSQLJob) because abort is asynchronous and conn.close() is synchronous (waiting for execution is completed)
+    // PLSQLJob is cancelled when the Thread is interrupted.
+    private void cancelSQLConnection(JobStep<A> jobStep, String jobName) {
+        try {
+            Object o = jobStep.getPayload().get(JobStep.PAYLOAD_NAME_SQL_CONNECTION);
+            if (o != null) {
+                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]abort connection ...");
+                // ((Connection) o).close();
+                ((Connection) o).abort(Runnable::run);
+            }
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][job name=%s][cancelSQLConnection]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
+        }
+    }
+
+    private void cancelVFSConnection(JobStep<A> jobStep, String jobName) {
+        try {
+            Object o = jobStep.getPayload().get(JobStep.PAYLOAD_NAME_VFS_PROVIDER);
+            if (o != null) {
+                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]disconnect ..");
+                ((AProvider<?>) o).disconnect();
+            }
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][job name=%s][cancelVFSConnection]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
+        }
+    }
+
+    private String getJobName(JobStep<A> jobStep) {
+        try {
+            return jobStep == null ? "unknown" : jobStep.getJobName();
+        } catch (Throwable e) {
+            return "unknown";
+        }
     }
 
     private void checkExceptions(JobStep<A> jobStep, List<SOSJobArgumentException> exceptions) throws Exception {

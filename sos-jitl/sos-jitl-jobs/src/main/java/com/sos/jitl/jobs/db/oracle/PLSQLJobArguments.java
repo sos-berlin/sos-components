@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArguments;
@@ -20,7 +21,7 @@ public class PLSQLJobArguments extends JobArguments {
     private JobArgument<String> commandScriptFile = new JobArgument<String>("command_script_file", false);
     private JobArgument<String> variableParserRegExpr = new JobArgument<String>("variable_parser_reg_expr", false,
             "^SET\\s+([^\\s]+)\\s*IS\\s+(.*)$");
-    private JobArgument<String> dbPassword = new JobArgument<String>("db_password", false);
+    private JobArgument<String> dbPassword = new JobArgument<String>("db_password", false, DisplayMode.MASKED);
     private JobArgument<String> dbUrl = new JobArgument<String>("db_url", false);
     private JobArgument<String> dbUser = new JobArgument<String>("db_user", false);
 
@@ -52,24 +53,24 @@ public class PLSQLJobArguments extends JobArguments {
         this.variableParserRegExpr.setValue(variableParserRegExpr);
     }
 
-    public String getDbPassword() {
-        return dbPassword.getValue();
+    public JobArgument<String> getDbPassword() {
+        return dbPassword;
     }
 
     public void setDbPassword(String dbPassword) {
         this.dbPassword.setValue(dbPassword);
     }
 
-    public String getDbUrl() {
-        return dbUrl.getValue();
+    public JobArgument<String> getDbUrl() {
+        return dbUrl;
     }
 
     public void setDbUrl(String dbUrl) {
         this.dbUrl.setValue(dbUrl);
     }
 
-    public String getDbUser() {
-        return dbUser.getValue();
+    public JobArgument<String> getDbUser() {
+        return dbUser;
     }
 
     public void setDbUser(String dbUser) {
@@ -113,10 +114,10 @@ public class PLSQLJobArguments extends JobArguments {
             if (dbUrl.getValue() == null || dbUrl.getValue().isEmpty()) {
                 throw new SOSJobRequiredArgumentMissingException(dbUrl.getName());
             }
-            if ((dbUser.getValue() == null || dbUser.getValue().isEmpty())  && (dbPassword.getValue() != null)) {
+            if ((dbUser.getValue() == null || dbUser.getValue().isEmpty()) && (dbPassword.getValue() != null)) {
                 throw new SOSJobRequiredArgumentMissingException(dbUrl.getName());
             }
-         
+
         } else {
             if (hibernateFile.getValue().toString().isEmpty()) {
                 throw new SOSJobRequiredArgumentMissingException(hibernateFile.getName() + " or " + dbUrl.getName() + " + username and password");

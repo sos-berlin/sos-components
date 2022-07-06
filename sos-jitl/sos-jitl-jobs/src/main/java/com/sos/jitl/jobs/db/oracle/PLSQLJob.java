@@ -1,12 +1,9 @@
 package com.sos.jitl.jobs.db.oracle;
 
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,17 +11,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.cfg.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
 import com.sos.commons.hibernate.SOSHibernate;
-import com.sos.commons.hibernate.SOSHibernateFactory;
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 
 import js7.data_for_java.order.JOutcome;
@@ -33,8 +25,6 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
 
     private static final String STD_OUT_OUTPUT = "std_out_output";
     private static final String DBMS_OUTPUT = "dbms_output";
-    private static final Logger LOGGER = LoggerFactory.getLogger(PLSQLJob.class);
-    private Configuration configuration;
 
     public PLSQLJob(JobContext jobContext) {
         super(jobContext);
@@ -42,108 +32,135 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
 
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<PLSQLJobArguments> step) throws Exception {
+        step.getArguments().checkRequired();
 
+        Connection conn = null;
         try {
-            Connection connection = getConnection(step, step.getLogger(), step.getArguments(), step.getAppArguments(
-                    SOSCredentialStoreArguments.class));
-            return step.success(process(step.getLogger(), connection, step.getArguments()));
-        } catch (Throwable e) {
-            throw e;
-        }
-    }
+            conn = getConnection(step);
 
-    private void log(JobLogger logger, String log) {
-        if (logger != null) {
-            logger.info(log);
-        } else {
-            LOGGER.info(log);
-        }
-    }
-
-    private void debug(JobLogger logger, String log) {
-        if (logger != null) {
-            logger.debug(log);
-        } else {
-            LOGGER.debug(log);
-        }
-    }
-
-    private void configure(Path filePath) throws SOSHibernateConfigurationException {
-        if (!Files.exists(filePath)) {
-            throw new SOSHibernateConfigurationException(String.format("hibernate config file not found: %s", filePath.toString()));
-        }
-
-        configuration.configure(filePath.toFile());
-
-    }
-
-    private Connection getConnection(JobStep<PLSQLJobArguments> step, JobLogger logger, PLSQLJobArguments args, SOSCredentialStoreArguments csArgs)
-            throws Exception {
-        SOSHibernateFactory factory = null;
-        SOSHibernateSession session = null;
-        Connection connection = null;
-
-        args.checkRequired();
-
-        try {
-
-            if (args.useHibernateFile()) {
-                configuration = new Configuration();
-                configure(args.getHibernateFile());
-                String s = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
-                if (s != null) {
-                    args.setDbUrl(s);
-                }
-                s = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME);
-                if (s != null) {
-                    args.setDbUser(s);
-                }
-                s = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD);
-                if (s != null) {
-                    args.setDbPassword(s);
-                }
-            }
-            if (csArgs.getFile().getValue() != null) {
-                SOSCredentialStoreResolver r = csArgs.newResolver();
-
-                args.setDbUrl(r.resolve(args.getDbUrl()));
-                args.setDbUser(r.resolve(args.getDbUser()));
-                args.setDbPassword(r.resolve(args.getDbPassword()));
-            }
-
-            debug(logger, "dbUrl: " + args.getDbUrl());
-            debug(logger, "dbUser: " + args.getDbUser());
-            debug(logger, "dbPassword: " + "********");
-
-            DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
-
-            String s = "";
-            if (args.getDbUser() != null && args.getDbPassword() != null) {
-                s = args.getDbUser().trim() + args.getDbPassword().trim();
-            }
-
-            if (s.isEmpty()) {
-                debug(logger, "Empty user and password. Trying wallet");
-                connection = DriverManager.getConnection(args.getDbUrl());
-            } else {
-                debug(logger, "Connecting with user and password.");
-                connection = DriverManager.getConnection(args.getDbUrl(), args.getDbUser(), args.getDbPassword());
-            }
-
-            connection = DriverManager.getConnection(args.getDbUrl(), args.getDbUser(), args.getDbPassword());
-
+            return step.success(process(step, conn));
         } catch (Throwable e) {
             throw e;
         } finally {
-            if (session != null) {
-                session.close();
-            }
-            if (factory != null) {
-                factory.close();
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (Throwable e) {
+                }
             }
         }
-        return connection;
+    }
 
+    private Connection getConnection(JobStep<PLSQLJobArguments> step) throws Exception {
+        PLSQLJobArguments args = step.getArguments();
+        SOSCredentialStoreArguments csArgs = step.getAppArguments(SOSCredentialStoreArguments.class);
+        if (args.useHibernateFile()) {
+            if (!Files.exists(args.getHibernateFile())) {
+                throw new SOSHibernateConfigurationException(String.format("hibernate config file not found: %s", args.getHibernateFile()));
+            }
+            Configuration configuration = new Configuration();
+            configuration.configure(args.getHibernateFile().toFile());
+
+            String s = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
+            if (s != null) {
+                args.setDbUrl(s);
+            }
+            s = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME);
+            if (s != null) {
+                args.setDbUser(s);
+            }
+            s = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD);
+            if (s != null) {
+                args.setDbPassword(s);
+            }
+        }
+        if (csArgs.getFile().getValue() != null) {
+            SOSCredentialStoreResolver r = csArgs.newResolver();
+
+            args.setDbUrl(r.resolve(args.getDbUrl().getValue()));
+            args.setDbUser(r.resolve(args.getDbUser().getValue()));
+            args.setDbPassword(r.resolve(args.getDbPassword().getValue()));
+        }
+        step.getLogger().debug("dbUrl=%s, dbUser=%s, dbPassword=%s", args.getDbUrl().getDisplayValue(), args.getDbUser().getDisplayValue(), args
+                .getDbPassword().getDisplayValue());
+
+        DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
+        Connection connection = null;
+        if (args.getDbUser() != null && args.getDbPassword() != null) {
+            step.getLogger().debug("Connecting with user and password.");
+            connection = DriverManager.getConnection(args.getDbUrl().getValue(), args.getDbUser().getValue(), args.getDbPassword().getValue());
+        } else {
+            step.getLogger().debug("Empty user and password. Trying wallet");
+            connection = DriverManager.getConnection(args.getDbUrl().getValue());
+        }
+        return connection;
+    }
+
+    private Map<String, Object> process(JobStep<PLSQLJobArguments> step, final Connection connection) throws Exception {
+
+        PLSQLJobArguments args = step.getArguments();
+        String plsql = "";
+        if ((args.getCommand() != null) && !args.getCommand().isEmpty()) {
+            plsql = args.getCommand();
+        }
+        if (args.getCommandScriptFile() != null) {
+            plsql += args.getCommandScriptFileContent();
+        }
+        plsql = unescapeXML(plsql).replace("\r\n", "\n");
+        step.getLogger().info(String.format("substituted Statement: %s", plsql));
+
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+        resultMap.put(DBMS_OUTPUT, "");
+        resultMap.put(STD_OUT_OUTPUT, "");
+
+        DbmsOutput dbmsOutput = null;
+        CallableStatement callableStatement = null;
+        try {
+            dbmsOutput = new DbmsOutput(connection);
+            dbmsOutput.enable(1000000);
+            callableStatement = connection.prepareCall(plsql);
+            callableStatement.execute();
+
+            String output = dbmsOutput.getOutput();
+            step.getLogger().info(output);
+
+            if (output != null) {
+                resultMap.put(DBMS_OUTPUT, output);
+                resultMap.put(STD_OUT_OUTPUT, output);
+
+                int regExpFlags = Pattern.CASE_INSENSITIVE + Pattern.MULTILINE + Pattern.DOTALL;
+                String[] strA = output.split("\n");
+                boolean aVariableFound = false;
+                String regExp = args.getVariableParserRegExpr();
+                Pattern regExprPattern = Pattern.compile(regExp, regExpFlags);
+                for (String string : strA) {
+                    Matcher matcher = regExprPattern.matcher(string);
+                    if (matcher.matches() && matcher.group().length() >= 2) {
+                        resultMap.put(matcher.group(1), matcher.group(2).trim());
+                        aVariableFound = true;
+                    }
+                }
+                dbmsOutput.close();
+                dbmsOutput = null;
+                if (!aVariableFound) {
+                    step.getLogger().debug(String.format("no JS-variable definitions found using reg-exp '%1$s'.", regExp));
+                }
+            }
+
+        } catch (SQLException e) {
+            String msg = String.format("SQL Exception raised. Msg='%1$s', Status='%2$s'", e.getMessage(), e.getSQLState());
+            step.getLogger().debug(msg);
+            throw new Exception(msg, e);
+        } finally {
+            if (dbmsOutput != null) {
+                dbmsOutput.close();
+            }
+            if (callableStatement != null) {
+                callableStatement.close();
+                callableStatement = null;
+            }
+        }
+        return resultMap;
     }
 
     private String unescapeXML(final String stringValue) {
@@ -164,114 +181,5 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
             newValue = newValue.replaceAll("&#xa;", "\n");
         }
         return newValue;
-    }
-
-    private Map<String, Object> process(JobLogger logger, final Connection connection, PLSQLJobArguments args) throws Exception {
-
-        Map<String, Object> resultMap = new HashMap<String, Object>();
-        resultMap.put(DBMS_OUTPUT, "");
-        resultMap.put(STD_OUT_OUTPUT, "");
-
-        CallableStatement callableStatement = null;
-        DbmsOutput dbmsOutput = null;
-
-        String plsql = "";
-        if ((args.getCommand() != null) && !args.getCommand().isEmpty()) {
-            plsql = args.getCommand();
-        }
-        if (args.getCommandScriptFile() != null) {
-            plsql += args.getCommandScriptFileContent();
-        }
-
-        plsql = unescapeXML(plsql).replace("\r\n", "\n");
-
-        log(logger, String.format("substituted Statement: %s will be executed.", plsql));
-
-        dbmsOutput = new DbmsOutput(connection);
-        dbmsOutput.enable(1000000);
-        callableStatement = connection.prepareCall(plsql);
-        try {
-            callableStatement.execute();
-
-            if (dbmsOutput != null) {
-                String output = dbmsOutput.getOutput();
-
-                log(logger, output);
-
-                if (output != null) {
-                    resultMap.put(DBMS_OUTPUT, output);
-                    resultMap.put(STD_OUT_OUTPUT, output);
-
-                    int regExpFlags = Pattern.CASE_INSENSITIVE + Pattern.MULTILINE + Pattern.DOTALL;
-                    String[] strA = output.split("\n");
-                    boolean aVariableFound = false;
-                    String regExp = args.getVariableParserRegExpr();
-                    Pattern regExprPattern = Pattern.compile(regExp, regExpFlags);
-                    for (String string : strA) {
-                        Matcher matcher = regExprPattern.matcher(string);
-                        if (matcher.matches() && matcher.group().length() >= 2) {
-                            resultMap.put(matcher.group(1), matcher.group(2).trim());
-                            aVariableFound = true;
-                        }
-                    }
-                    dbmsOutput.close();
-                    if (!aVariableFound) {
-                        debug(logger, String.format("no JS-variable definitions found using reg-exp '%1$s'.", regExp));
-                    }
-                    ResultSetMetaData resultSetMetaData = callableStatement.getMetaData();
-                    if (resultSetMetaData != null) {
-                        int nCols;
-                        nCols = resultSetMetaData.getColumnCount();
-                        for (int i = 1; i <= nCols; i++) {
-                            debug(logger, resultSetMetaData.getColumnName(i));
-                            int colSize = resultSetMetaData.getColumnDisplaySize(i);
-                            for (int k = 0; k < colSize - resultSetMetaData.getColumnName(i).length(); k++) {
-                                debug(logger, " ");
-                            }
-                        }
-                        debug(logger, "");
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            String errorMessage = String.format("SQL Exception raised. Msg='%1$s', Status='%2$s'", e.getMessage(), e.getSQLState());
-            debug(logger, errorMessage);
-            LOGGER.error(errorMessage, e);
-            throw new Exception(errorMessage, e);
-        } finally {
-
-            if (callableStatement != null) {
-                callableStatement.close();
-                callableStatement = null;
-            }
-            if (connection != null) {
-                connection.close();
-            }
-
-        }
-        return resultMap;
-    }
-
-    public static void main(String[] args) {
-        PLSQLJob sosPLSQLJob = new PLSQLJob(null);
-        PLSQLJobArguments arguments = new PLSQLJobArguments();
-        arguments.setCommandScripFile("c:/temp/1.sql");
-        // arguments.setDbPassword("scheduler");
-        // arguments.setDbUser("scheduler");
-        arguments.setVariableParserRegExpr("");
-        // arguments.setDbUrl("jdbc:oracle:thin:@//LAPTOP-7RSACSCV:1521/xe");
-        arguments.setHibernateFile(Paths.get("D:/documents/sos-berlin.com/scheduler_joc_cockpit/oracle/hibernate.cfg.xml"));
-
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
-
-        Connection connection;
-        try {
-            connection = sosPLSQLJob.getConnection(null, null, arguments, csArgs);
-            sosPLSQLJob.process(null, connection, arguments);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            System.exit(0);
-        }
     }
 }

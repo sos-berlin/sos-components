@@ -17,7 +17,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
     public Completed onOrderProcess(JobStep<SSHJobArguments> step) throws Exception {
         SSHProviderArguments providerArgs = step.getAppArguments(SSHProviderArguments.class);
         SSHProvider provider = new SSHProvider(providerArgs, step.getAppArguments(SOSCredentialStoreArguments.class));
-
+        step.setPayload(provider);
         try {
             step.getLogger().info("[connect]%s:%s ...", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());
             provider.connect();
