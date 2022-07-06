@@ -2,7 +2,6 @@ package com.sos.jitl.jobs.checkhistory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.jitl.jobs.checkhistory.classes.CheckHistoryJobReturn;
@@ -15,7 +14,6 @@ import com.sos.jitl.jobs.common.JobStep;
 import js7.data_for_java.order.JOutcome;
 
 public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArguments> {
-
 
     public CheckHistoryJob(JobContext jobContext) {
         super(jobContext);
@@ -67,39 +65,40 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
             }
         }
 
-        boolean result = historyItem.getResult();
-        if (result) {
-            String s = args.getQuery() + "(" + name + ") ==> true";
-            Globals.debug(logger, s);
-            resultMap.put("js7CheckHistoryResultString", s);
-            checkHistoryJobReturn.setExitCode(0);
-            resultMap.put("js7CheckHistoryResult", true);
-            resultMap.put("js7CheckHistoryResultControllerId", historyItem.getControllerId());
-            resultMap.put("js7CheckHistoryResultStarted", historyItem.getStartTime());
-            resultMap.put("js7CheckHistoryResultCompleted", historyItem.getEndTime());
-            resultMap.put("js7CheckHistoryResultWorkflow", historyItem.getWorkflow());
-            resultMap.put("js7CheckHistoryResultJob", historyItem.getJob());
+        if (historyItem != null) {
+            boolean result = historyItem.getResult();
+            if (result) {
+                String s = args.getQuery() + "(" + name + ") ==> true";
+                Globals.debug(logger, s);
+                resultMap.put("js7CheckHistoryResultString", s);
+                checkHistoryJobReturn.setExitCode(0);
+                resultMap.put("js7CheckHistoryResult", true);
+                resultMap.put("js7CheckHistoryResultControllerId", historyItem.getControllerId());
+                resultMap.put("js7CheckHistoryResultStarted", historyItem.getStartTime());
+                resultMap.put("js7CheckHistoryResultCompleted", historyItem.getEndTime());
+                resultMap.put("js7CheckHistoryResultWorkflow", historyItem.getWorkflow());
+                resultMap.put("js7CheckHistoryResultJob", historyItem.getJob());
 
-        } else {
-            String s = args.getQuery() + "(" + name + ") ==> false";
-            Globals.debug(logger, s);
-            resultMap.put("js7CheckHistoryResultString", s);
-            checkHistoryJobReturn.setExitCode(1);
-            resultMap.put("js7CheckHistoryResult", false);
+            } else {
+                String s = args.getQuery() + "(" + name + ") ==> false";
+                Globals.debug(logger, s);
+                resultMap.put("js7CheckHistoryResultString", s);
+                checkHistoryJobReturn.setExitCode(1);
+                resultMap.put("js7CheckHistoryResult", false);
+            }
         }
 
- 
         checkHistoryJobReturn.setResultMap(resultMap);
 
         return checkHistoryJobReturn;
     }
 
     public static void main(String[] args) {
-        
+
         CheckHistoryJobArguments arguments = new CheckHistoryJobArguments();
         arguments.setQuery("isStarted(startedFrom=-1d,startedTo=-1d)");
 
-        //arguments.setQuery("isCompletedSuccessful(startedFrom=-1d,startedTo=-1d)");
+        // arguments.setQuery("isCompletedSuccessful(startedFrom=-1d,startedTo=-1d)");
         // arguments.setQuery("isCompleted(startedFrom=-100d, count>5)");
 
         // arguments.setQuery("lastCompletedSuccessful");

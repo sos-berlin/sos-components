@@ -41,6 +41,14 @@ public class Globals {
         }
     }
 
+    public static void error(JobLogger logger, String log,Exception e) {
+        if (logger != null) {
+            logger.error(log,e);
+        } else {
+            System.out.println(log);
+        }
+    }
+
     public static void warn(JobLogger logger, String log) {
         if (logger != null) {
             logger.warn(log);

@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.jitl.jobs.checkhistory.classes.CheckHistoryHelper;
+import com.sos.jitl.jobs.checkhistory.classes.Globals;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryFilter;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryWebserviceExecuter;
@@ -166,13 +167,15 @@ public class HistoryInfo {
             }
 
             return historyItem;
+        } catch (Exception e) {
+            Globals.error(logger, "", e);
         } finally {
             if (accessToken != null) {
                 apiExecutor.logout(accessToken);
             }
             apiExecutor.close();
-
         }
+        return null;
     }
 
     public HistoryItem queryHistory() throws Exception {
