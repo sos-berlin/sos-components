@@ -93,7 +93,6 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             }
             String[] commands = new String[] {};
             if (!jobArgs.getCommand().isEmpty()) {
-                logger.info("[execute command] %s", jobArgs.getCommand().getDisplayValue());
                 commands = splitCommands(jobArgs, logger);
                 // new feature 2022-04-05, SP
                 if(!jobArgs.getCommandScriptFile().isEmpty()) {
@@ -112,7 +111,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                     commands[0] += " " + jobArgs.getCommandScriptParam().getValue();
                 }
             }
-            logger.info("command: %s", commands[0]);
+            logger.info("command]%s", commands[0]);
             if (logger.isDebugEnabled()) {
                 logger.debug(String.format("createEnvironmentVariables=%s, simulateShell=%s", jobArgs.getCreateEnvVars().getValue(), providerArgs
                         .getSimulateShell().getValue()));
@@ -194,7 +193,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
     }
 
     private String[] splitCommands(SSHJobArguments jobArgs, JobLogger logger) {
-        logger.info("[execute command]%s", jobArgs.getCommand().getDisplayValue());
+        logger.info("[execute commands]%s", jobArgs.getCommand().getDisplayValue());
         return jobArgs.getCommand().getValue().split(jobArgs.getCommandDelimiter().getValue());
     }
 

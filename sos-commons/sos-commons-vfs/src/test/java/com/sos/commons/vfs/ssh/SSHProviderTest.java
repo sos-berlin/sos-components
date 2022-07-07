@@ -3,6 +3,8 @@ package com.sos.commons.vfs.ssh;
 import java.net.Proxy.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -48,6 +50,10 @@ public class SSHProviderTest {
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
+            cancelAfterSeconds(p, 2);
+
+            LOGGER.info(p.executeCommand("sleep 11").toString());
+
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -356,4 +362,18 @@ public class SSHProviderTest {
             }
         }
     }
+
+    private void cancelAfterSeconds(SSHProvider p, int seconds) {
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                LOGGER.info("cancel after " + seconds + "s");
+                TimeUnit.SECONDS.sleep(seconds);
+                p.cancelWithKill();
+            } catch (Throwable e) {
+                LOGGER.error(e.toString(), e);
+            }
+            return true;
+        });
+    }
+
 }

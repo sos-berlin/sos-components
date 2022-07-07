@@ -32,7 +32,7 @@ import com.sos.commons.util.SOSBase64;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper;
-import com.sos.commons.vfs.common.AProvider;
+import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.common.JobArguments.MockLevel;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
@@ -236,7 +236,9 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             Object o = jobStep.getPayload().get(JobStep.PAYLOAD_NAME_VFS_PROVIDER);
             if (o != null) {
                 jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]disconnect ..");
-                ((AProvider<?>) o).disconnect();
+                // ((AProvider<?>) o).disconnect();
+                SSHProvider p = (SSHProvider) o;
+                p.cancelWithKill();
             }
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][job name=%s][cancelVFSConnection]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);

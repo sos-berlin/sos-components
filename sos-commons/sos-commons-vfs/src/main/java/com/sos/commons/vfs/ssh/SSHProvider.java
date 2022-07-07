@@ -7,6 +7,9 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.exception.SOSMissingDataException;
@@ -37,6 +40,7 @@ import net.schmizz.sshj.Service;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.connection.channel.direct.Session.Command;
+import net.schmizz.sshj.connection.channel.direct.Signal;
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.FileMode;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
@@ -58,6 +62,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     private Config config;
     private SSHClient sshClient;
     private SFTPClient sftpClient;
+    private AtomicBoolean killCommands = new AtomicBoolean(false);
 
     private SSHServerInfo serverInfo;
     /** e.g. "OpenSSH_$version" -> OpenSSH_for_Windows_8.1. Can be null. */
@@ -152,6 +157,15 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         default:
             break;
         }
+    }
+
+    public void cancelWithKill() {
+        killCommands.set(true);
+        try {
+            TimeUnit.SECONDS.sleep(2);
+        } catch (InterruptedException e) {
+        }
+        disconnect();
     }
 
     private void throwException(SFTPException e, String msg) throws Exception {
@@ -315,7 +329,25 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
                 session.allocateDefaultPTY();
             }
             command = handleEnvs(command, session, env);
-            Command cmd = session.exec(command);
+            final Command cmd = session.exec(command);
+
+            CompletableFuture.supplyAsync(() -> {
+                try {
+                    boolean signal = false;
+                    while (cmd.isOpen()) {
+                        TimeUnit.SECONDS.sleep(1);
+                        if (!signal && killCommands.get()) {
+                            cmd.signal(Signal.KILL);
+                            signal = true;
+
+                            // cmd.join(1, TimeUnit.SECONDS);
+                            // cmd.close();
+                        }
+                    }
+                } catch (Throwable e) {
+                }
+                return true;
+            });
 
             // TODO use Charset?
             // String cs = getArguments().getRemoteCharset().getValue().name();
@@ -333,6 +365,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
                     throw new SOSSSHCommandExitViolentlyException(cmd.getExitSignal(), cmd.getExitErrorMessage());
                 }
             }
+            cmd.close();
         } catch (Throwable e) {
             result.setException(e);
         }
