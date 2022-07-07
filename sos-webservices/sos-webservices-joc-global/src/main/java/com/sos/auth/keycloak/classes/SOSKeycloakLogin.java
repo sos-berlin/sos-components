@@ -75,12 +75,16 @@ public class SOSKeycloakLogin implements ISOSLogin {
             }
 
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
+            msg = e.toString();
             LOGGER.error("", e);
         } catch (SOSException e) {
+            msg = e.toString();
             LOGGER.error("", e);
         } catch (JocException e) {
+            msg = e.toString();
             LOGGER.info("KEYCLOAK:" + e.getMessage());
         } catch (Exception e) {
+            msg = e.toString();
             LOGGER.error("", e);
         }
     }

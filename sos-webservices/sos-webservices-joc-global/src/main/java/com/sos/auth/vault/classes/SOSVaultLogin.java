@@ -70,12 +70,16 @@ public class SOSVaultLogin implements ISOSLogin {
             }
 
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
+            msg = e.toString();
             LOGGER.error("", e);
         } catch (SOSException e) {
+            msg = e.toString();
             LOGGER.error("", e);
         } catch (JocException e) {
+            msg = e.toString();
             LOGGER.info("VAULT:" + e.getMessage());
         } catch (Exception e) {
+            msg = e.toString();
             LOGGER.error("", e);
         }
     }

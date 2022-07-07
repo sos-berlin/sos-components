@@ -3,6 +3,8 @@ package com.sos.joc.db.security;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.hibernate.query.Query;
 
@@ -10,10 +12,12 @@ import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.authentication.DBItemIamHistory;
+import com.sos.joc.db.authentication.DBItemIamHistoryDetails;
 
 public class IamHistoryDbLayer {
 
     private static final String DBItemIamHistory = com.sos.joc.db.authentication.DBItemIamHistory.class.getSimpleName();
+    private static final String DBItemIamHistoryDetails = com.sos.joc.db.authentication.DBItemIamHistoryDetails.class.getSimpleName();;
     private final SOSHibernateSession sosHibernateSession;
 
     public IamHistoryDbLayer(SOSHibernateSession session) {
@@ -96,7 +100,7 @@ public class IamHistoryDbLayer {
         return getIamAccountList(filter, limit);
     }
 
-    public void addLoginAttempt(String accountName, boolean loginSuccess) throws SOSHibernateException {
+    public void addLoginAttempt(String accountName, Map<String, String> authenticationResult, boolean loginSuccess) throws SOSHibernateException {
 
         if (accountName == null || accountName.isEmpty()) {
             accountName = SOSAuthHelper.NONE;
@@ -119,9 +123,28 @@ public class IamHistoryDbLayer {
             }
         } else {
             sosHibernateSession.save(dbItemIamHistory);
+            for (Entry<String, String> entry : authenticationResult.entrySet()) {
+                DBItemIamHistoryDetails dbItemIamHistoryDetails = new DBItemIamHistoryDetails();
+                dbItemIamHistoryDetails.setIamHistoryId(dbItemIamHistory.getId());
+                dbItemIamHistoryDetails.setIdentityServiceName(entry.getKey());
+                dbItemIamHistoryDetails.setMessage(entry.getValue());
+                sosHibernateSession.save(dbItemIamHistoryDetails);
+            }
 
         }
 
+    }
+
+    public List<DBItemIamHistoryDetails> getListOfFailedLoginDetails(Long id, int limit) throws SOSHibernateException {
+        Query<DBItemIamHistoryDetails> query = sosHibernateSession.createQuery("from " + DBItemIamHistoryDetails
+                + " where iamHistoryId=:iamHistoryId");
+        query.setParameter("iamHistoryId", id);
+        if (limit > 0) {
+            query.setMaxResults(limit);
+        }
+
+        List<DBItemIamHistoryDetails> iamHistoryDetailsList = query.getResultList();
+        return iamHistoryDetailsList == null ? Collections.emptyList() : iamHistoryDetailsList;
     }
 
 }

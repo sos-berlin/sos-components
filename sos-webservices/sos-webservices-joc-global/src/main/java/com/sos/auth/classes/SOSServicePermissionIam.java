@@ -3,6 +3,7 @@ package com.sos.auth.classes;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -563,6 +564,7 @@ public class SOSServicePermissionIam {
 
                 currentAccount.initFolders();
                 Set<String> setOfAccountPermissions = new HashSet<String>();
+                Map<String, String> authenticationResult = new HashMap<String, String>();
 
                 for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
                     msg = createAccount(currentAccount, password, dbItemIamIdentityService);
@@ -575,6 +577,7 @@ public class SOSServicePermissionIam {
                         }
                         addFolder(currentAccount);
                     } else {
+                        authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
                         LOGGER.info("Login with required Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed." + msg);
                     }
                 }
@@ -605,6 +608,7 @@ public class SOSServicePermissionIam {
                         } catch (JocAuthenticationException e) {
                             LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed.");
                             msg = e.getMessage();
+                            authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
                             continue;
                         }
                     }
@@ -614,7 +618,7 @@ public class SOSServicePermissionIam {
                 IamHistoryDbLayer iamHistoryDbLayer = new IamHistoryDbLayer(sosHibernateSession);
 
                 if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
-                    iamHistoryDbLayer.addLoginAttempt(currentAccount.getAccountname(), true);
+                    iamHistoryDbLayer.addLoginAttempt(currentAccount.getAccountname(), authenticationResult, true);
                     currentAccount.getCurrentSubject().getListOfAccountPermissions().addAll(setOfAccountPermissions);
                     SecurityConfiguration securityConfigurationEntry = sosPermissionMerger.mergePermissions();
                     SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
@@ -622,7 +626,7 @@ public class SOSServicePermissionIam {
                             securityConfigurationEntry);
                     currentAccount.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
                 } else {
-                    iamHistoryDbLayer.addLoginAttempt(currentAccount.getAccountname(), false);
+                    iamHistoryDbLayer.addLoginAttempt(currentAccount.getAccountname(), authenticationResult, false);
                 }
                 Globals.disconnect(sosHibernateSession);
 

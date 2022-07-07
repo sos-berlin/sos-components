@@ -2,6 +2,11 @@
 package com.sos.joc.model.security.history;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -21,7 +26,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "accountName",
     "loginDate",
-    "loginSuccess"
+    "loginSuccess",
+    "details"
 })
 public class LoginHistoryItem {
 
@@ -44,6 +50,16 @@ public class LoginHistoryItem {
     private Date loginDate;
     @JsonProperty("loginSuccess")
     private Boolean loginSuccess;
+    /**
+     * LoginHistoryDetails
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("details")
+    private LoginHistoryDetails details;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -57,12 +73,14 @@ public class LoginHistoryItem {
      * @param loginSuccess
      * @param accountName
      * @param loginDate
+     * @param details
      */
-    public LoginHistoryItem(String accountName, Date loginDate, Boolean loginSuccess) {
+    public LoginHistoryItem(String accountName, Date loginDate, Boolean loginSuccess, LoginHistoryDetails details) {
         super();
         this.accountName = accountName;
         this.loginDate = loginDate;
         this.loginSuccess = loginSuccess;
+        this.details = details;
     }
 
     /**
@@ -119,14 +137,46 @@ public class LoginHistoryItem {
         this.loginSuccess = loginSuccess;
     }
 
+    /**
+     * LoginHistoryDetails
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("details")
+    public LoginHistoryDetails getDetails() {
+        return details;
+    }
+
+    /**
+     * LoginHistoryDetails
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("details")
+    public void setDetails(LoginHistoryDetails details) {
+        this.details = details;
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("accountName", accountName).append("loginDate", loginDate).append("loginSuccess", loginSuccess).toString();
+        return new ToStringBuilder(this).append("accountName", accountName).append("loginDate", loginDate).append("loginSuccess", loginSuccess).append("details", details).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(loginDate).append(loginSuccess).append(accountName).toHashCode();
+        return new HashCodeBuilder().append(loginDate).append(loginSuccess).append(details).append(additionalProperties).append(accountName).toHashCode();
     }
 
     @Override
@@ -138,7 +188,7 @@ public class LoginHistoryItem {
             return false;
         }
         LoginHistoryItem rhs = ((LoginHistoryItem) other);
-        return new EqualsBuilder().append(loginDate, rhs.loginDate).append(loginSuccess, rhs.loginSuccess).append(accountName, rhs.accountName).isEquals();
+        return new EqualsBuilder().append(loginDate, rhs.loginDate).append(loginSuccess, rhs.loginSuccess).append(details, rhs.details).append(additionalProperties, rhs.additionalProperties).append(accountName, rhs.accountName).isEquals();
     }
 
 }

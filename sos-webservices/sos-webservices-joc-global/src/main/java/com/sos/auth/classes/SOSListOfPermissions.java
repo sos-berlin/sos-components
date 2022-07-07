@@ -3,23 +3,19 @@ package com.sos.auth.classes;
 import java.util.List;
 
 import com.sos.auth.classes.permission.model.ObjectFactory;
-import com.sos.auth.classes.permission.model.SOSPermissionRoles;
 import com.sos.auth.classes.permission.model.SOSPermissionShiro;
 import com.sos.auth.classes.permission.model.SOSPermissions;
 
 public class SOSListOfPermissions {
 
-    private SOSAuthCurrentAccount currentAccount;
     private SOSPermissionShiro sosPermissionShiro;
 
     public SOSListOfPermissions(SOSAuthCurrentAccount currentAccount) {
         super();
-        this.currentAccount = currentAccount;
         this.initList(currentAccount);
     }
 
     private void initList(SOSAuthCurrentAccount currentAccount) {
-        SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
 
         ObjectFactory o = new ObjectFactory();
         sosPermissionShiro = o.createSOSPermissionShiro();

@@ -13,10 +13,13 @@ import com.sos.joc.audit.resource.ILoginHistoryResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.authentication.DBItemIamHistory;
+import com.sos.joc.db.authentication.DBItemIamHistoryDetails;
 import com.sos.joc.db.security.IamHistoryDbLayer;
 import com.sos.joc.db.security.IamHistoryFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.history.LoginHistory;
+import com.sos.joc.model.security.history.LoginHistoryDetailItem;
+import com.sos.joc.model.security.history.LoginHistoryDetails;
 import com.sos.joc.model.security.history.LoginHistoryFilter;
 import com.sos.joc.model.security.history.LoginHistoryItem;
 import com.sos.schema.JsonValidator;
@@ -60,6 +63,17 @@ public class LoginHistoryResourceImpl extends JOCResourceImpl implements ILoginH
                 }
                 loginHistoryItem.setLoginDate(dbItemIamHistory.getLoginDate());
                 loginHistoryItem.setLoginSuccess(dbItemIamHistory.getLoginSuccess());
+
+                List<DBItemIamHistoryDetails> listOfFailedLoginsDetails = iamHistoryDbLayer.getListOfFailedLoginDetails(dbItemIamHistory.getId(), 0);
+                loginHistoryItem.setDetails(new LoginHistoryDetails());
+                for (DBItemIamHistoryDetails dbItemIamHistoryDetails:listOfFailedLoginsDetails) {
+                    LoginHistoryDetailItem loginHistoryDetailItem = new LoginHistoryDetailItem();
+                    loginHistoryDetailItem.setIdentityServiceName(dbItemIamHistoryDetails.getIdentityServiceName());
+                    loginHistoryDetailItem.setMessage(dbItemIamHistoryDetails.getMessage());
+                    loginHistoryItem.getDetails().getLoginHistoryItems().add(loginHistoryDetailItem);
+                }
+
+                
                 loginHistory.getLoginHistoryItems().add(loginHistoryItem);
             }
 
