@@ -22,7 +22,6 @@
     <module>sos-commons</module>
     <module>sos-yade</module>
     <module>sos-webservices</module>
-    <!-- module>sos-joc-utils</module -->
     <module>sos-joc</module>
     <module>sos-jitl</module>
     <module>sos-js7</module>
