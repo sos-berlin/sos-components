@@ -57,7 +57,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
 
-    public List<String> getUrisOfVisibleClusterWatcherByControllerId(String controllerId) throws DBInvalidDataException, DBMissingDataException,
+    public List<String> getUrisOfClusterWatcherByControllerId(String controllerId) throws DBInvalidDataException, DBMissingDataException,
             DBConnectionRefusedException {
         if (controllerId == null || controllerId.isEmpty()) {
             return null;
@@ -67,11 +67,15 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             hql.append("select uri from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
             hql.append(" where controllerId = :controllerId");
             hql.append(" and isWatcher = 1");
-            hql.append(" and hidden = 0");
+            //hql.append(" and hidden = 0");
 
             Query<String> query = getSession().createQuery(hql.toString());
             query.setParameter("controllerId", controllerId);
-            return getSession().getResultList(query);
+            List<String> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
         } catch (DBMissingDataException ex) {
             throw ex;
         } catch (SOSHibernateInvalidSessionException ex) {

@@ -5,6 +5,8 @@ import java.io.StringReader;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.json.Json;
@@ -46,19 +48,20 @@ public class JOCJsonCommand extends SOSRestApiClient {
     private JOCResourceImpl jocResourceImpl;
     private String url = null;
     private String csrfToken = null;
+    public static Map<String, String> urlMapper = Collections.emptyMap();
     
     public JOCJsonCommand() {
         setProperties();
     }
 
     public JOCJsonCommand(DBItemInventoryJSInstance dbItemInventoryInstance, String csrfToken) {
-        this.url = dbItemInventoryInstance.getUri();
+        this.url = urlMapper.getOrDefault(dbItemInventoryInstance.getUri(), dbItemInventoryInstance.getUri());
         this.csrfToken = csrfToken;
         setProperties();
     }
     
     public JOCJsonCommand(URI uri, String csrfToken) {
-        this.url = uri.toString();
+        this.url = urlMapper.getOrDefault(uri.toString(), uri.toString());
         this.csrfToken = csrfToken;
         setProperties();
     }
@@ -68,43 +71,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
     }
     
     public void setUriBuilderForCommands() {
-    	setUriBuilderForCommands(url);
-    }
-    
-    public void setUriBuilderForCommands(String url) {
-        setUriBuilder(url, CONTROLLER_API_PATH + "/command");
-    }
-    
-    public void setUriBuilderForOrders() {
-        setUriBuilderForOrders(url);
-    }
-    
-    public void setUriBuilderForOrders(String url) {
-        setUriBuilder(url, CONTROLLER_API_PATH + "/order");
-    }
-    
-    public void setUriBuilderForEvents() {
-        setUriBuilderForEvents(url);
-    }
-    
-    public void setUriBuilderForEvents(String url) {
-        setUriBuilder(url, CONTROLLER_API_PATH + "/event");
-    }
-
-    public void setUriBuilderForProcessClasses() {
-        setUriBuilderForProcessClasses(url);
-    }
-    
-    public void setUriBuilderForProcessClasses(String url) {
-        setUriBuilder(url, CONTROLLER_API_PATH + "/processClass");
-    }
-
-    public void setUriBuilderForJobs() {
-        setUriBuilderForJobs(url);
-    }
-    
-    public void setUriBuilderForJobs(String url) {
-        setUriBuilder(url, CONTROLLER_API_PATH + "/job");
+    	setUriBuilder(url, CONTROLLER_API_PATH + "/command");
     }
     
     public void setUriBuilderForOverview() {
@@ -150,13 +117,6 @@ public class JOCJsonCommand extends SOSRestApiClient {
     }
 
     public UriBuilder getUriBuilder() {
-        return uriBuilder;
-    }
-    
-    public UriBuilder replaceUriBuilder(String url, URI uri) {
-        uriBuilder = UriBuilder.fromPath(url);
-        uriBuilder.path(uri.getPath());
-        uriBuilder.replaceQuery(uri.getQuery());
         return uriBuilder;
     }
 

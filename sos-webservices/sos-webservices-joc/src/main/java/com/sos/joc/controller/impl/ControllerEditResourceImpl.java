@@ -207,10 +207,16 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                         for (RegisterParameter controller : body.getControllers()) {
                             if (Role.PRIMARY.equals(controller.getRole())) {
                                 uriChanged = !dbControllers.get(0).getUri().equalsIgnoreCase(controller.getUrl().toString());
+                                if (controller.getClusterUrl() == null) {
+                                    controller.setClusterUrl(controller.getUrl());
+                                }
                                 clusterUriChanged = !dbControllers.get(0).getClusterUri().equalsIgnoreCase(controller.getClusterUrl().toString());
                                 instance = setInventoryInstance(dbControllers.get(0), controller, controllerId);
                             } else {
                                 uriChanged = !dbControllers.get(1).getUri().equalsIgnoreCase(controller.getUrl().toString());
+                                if (controller.getClusterUrl() == null) {
+                                    controller.setClusterUrl(controller.getUrl());
+                                }
                                 clusterUriChanged = !dbControllers.get(1).getClusterUri().equalsIgnoreCase(controller.getClusterUrl().toString());
                                 instance = setInventoryInstance(dbControllers.get(1), controller, controllerId);
                             }
@@ -246,7 +252,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                         DBItemInventoryAgentInstance dbAgent = dbAgentOpt.get();
                         dbAgents.remove(dbAgent);
                         boolean watcherIsChanged = false;
-                        if (!dbAgent.getIsWatcher()) { // cluster watcher is already cluster watcher
+                        if (!dbAgent.getIsWatcher()) { // cluster watcher is not already cluster watcher
                             controllerUpdateRequired = true;
                             watcherIsChanged = true;
                             dbAgent.setIsWatcher(true);
@@ -304,9 +310,11 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 
                 
             instances = instances.stream().filter(Objects::nonNull).collect(Collectors.toList());
+            boolean proxyIsUpdated = false;
             if (!instances.isEmpty()) {
                 // appointClusterNodes is called in Proxy when coupled with controller if cluster TYPE:Empty
                 ProxiesEdit.update(instances);
+                proxyIsUpdated = true;
             }
             if (clusterUriChanged || controllerUpdateRequired) {
                 try {
@@ -356,6 +364,10 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     }
                 });
             }
+            
+//            if (!proxyIsUpdated && controllerUpdateRequired) {
+//                ProxiesEdit.update(controllerId);
+//            }
             
             if (firstController) { // GUI needs permissions directly for the first controller(s)
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getJobschedulerUser().getSOSAuthCurrentAccount()

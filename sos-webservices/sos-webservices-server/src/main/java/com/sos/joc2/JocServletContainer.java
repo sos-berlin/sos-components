@@ -8,7 +8,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.classes.workflow.WorkflowPaths;
@@ -36,7 +38,8 @@ public class JocServletContainer extends ServletContainer {
         SOSShell.printJVMInfos();
         Globals.readUnmodifiables();
         Globals.setProperties();
-
+        JOCJsonCommand.urlMapper = MapUrls.getUrlMapperByUser();
+        AgentHelper.testMode = true;
         //JocClusterService.getInstance().start();
     }
 

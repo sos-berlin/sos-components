@@ -201,9 +201,24 @@ public class Proxies {
                     }
                     EventBus.getInstance().post(new ProxyStarted(account.name(), controllerId));
                 } else {
-                    if ((account == ProxyUser.JOC && restart(newCredentials)) || (account == ProxyUser.HISTORY && reloadApi(newCredentials))) {
+                    if ((account == ProxyUser.JOC && restart(newCredentials, false)) || (account == ProxyUser.HISTORY && reloadApi(newCredentials))) {
                         EventBus.getInstance().post(new ProxyRestarted(account.name(), controllerId));
                     }
+                }
+            }
+        }
+    }
+    
+    protected void updateProxies(final String controllerId) throws DBMissingDataException, ControllerConnectionRefusedException {
+        if (controllerDbInstances != null && !controllerDbInstances.isEmpty()) {
+            List<DBItemInventoryJSInstance> dbInstances = controllerDbInstances.get(controllerId);
+            for (ProxyUser account : ProxyUser.values()) {
+                ProxyCredentials credentials = ProxyCredentialsBuilder.withDbInstancesOfCluster(dbInstances).withAccount(account)
+                        .build();
+                // History needs only ControllerAPI (not Proxy)
+                // in case of changes - see eg JocClusterService.java->handleControllerAdded
+                if ((account == ProxyUser.JOC && restart(credentials, true)) || (account == ProxyUser.HISTORY && reloadApi(credentials))) {
+                    EventBus.getInstance().post(new ProxyRestarted(account.name(), controllerId));
                 }
             }
         }
@@ -463,13 +478,12 @@ public class Proxies {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetClusterWatchers");
                 dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
             }
-            List<String> w = dbLayer.getUrisOfVisibleClusterWatcherByControllerId(controllerId);
-            List<Watch> watchers = w.stream().map(item -> new Watch(Uri.of(item))).collect(Collectors.toList());
-            if (watchers == null || watchers.isEmpty()) {
+            List<String> w = dbLayer.getUrisOfClusterWatcherByControllerId(controllerId);
+            if (w.isEmpty()) {
                 throw new DBMissingDataException("No Cluster Watcher is configured for Controller '" + controllerId + "'");
             } else {
                 LOGGER.info(String.format("Cluster Watchers of '%s': %s", controllerId, w.toString()));
-                return watchers;
+                return w.stream().map(item -> new Watch(Uri.of(item))).collect(Collectors.toList());
             }
         } finally {
             Globals.disconnect(sosHibernateSession);
@@ -583,13 +597,15 @@ public class Proxies {
         return controllerFutures.get(credentials);
     }
     
-    private boolean restart(ProxyCredentials credentials) throws ControllerConnectionRefusedException {
+    private boolean restart(ProxyCredentials credentials, boolean force) throws ControllerConnectionRefusedException {
         // contains if controller id and account is equal (see ProxyCredentials.equals)
         if (controllerFutures.containsKey(credentials)) {
-            // "identical" checks equality inclusive the urls
-            // restart not necessary if a proxy with identically credentials already started
-            if (controllerFutures.keySet().stream().anyMatch(key -> key.identical(credentials))) {
-                return false;
+            if (!force) {
+                // "identical" checks equality inclusive the urls
+                // restart not necessary if a proxy with identically credentials already started
+                if (controllerFutures.keySet().stream().anyMatch(key -> key.identical(credentials))) {
+                    return false;
+                }
             }
             reloadApi(credentials);
             controllerFutures.get(credentials).restart(loadApi(credentials), credentials);

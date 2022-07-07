@@ -153,6 +153,9 @@ public class SubAgent {
      */
     @JsonProperty("url")
     public String getUrl() {
+        if (url != null && !"/".equals(url) && url.endsWith("/")) {
+            url = url.replaceFirst("/$", ""); 
+        }
         return url;
     }
 

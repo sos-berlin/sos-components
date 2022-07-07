@@ -98,6 +98,9 @@ public class RegisterParameter {
      */
     @JsonProperty("url")
     public URI getUrl() {
+        if (url != null && !"/".equals(url.toString()) && url.toString().endsWith("/")) {
+            url = URI.create(url.toString().replaceFirst("/$", "")); 
+        }
         return url;
     }
 

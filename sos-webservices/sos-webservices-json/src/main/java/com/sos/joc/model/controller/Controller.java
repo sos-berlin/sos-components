@@ -262,6 +262,9 @@ public class Controller {
      */
     @JsonProperty("url")
     public String getUrl() {
+        if (url != null && !"/".equals(url) && url.endsWith("/")) {
+            url = url.replaceFirst("/$", ""); 
+        }
         return url;
     }
 

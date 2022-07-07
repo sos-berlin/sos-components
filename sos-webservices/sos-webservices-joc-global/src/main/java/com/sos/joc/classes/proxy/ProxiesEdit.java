@@ -28,9 +28,13 @@ public class ProxiesEdit {
      * @throws DBMissingDataException
      * @throws ControllerConnectionRefusedException
      */
-    public static synchronized void update(List<DBItemInventoryJSInstance> controllerDbInstances)
-            throws DBMissingDataException, ControllerConnectionRefusedException {
+    public static synchronized void update(List<DBItemInventoryJSInstance> controllerDbInstances) throws DBMissingDataException,
+            ControllerConnectionRefusedException {
         Proxies.getInstance().updateProxies(controllerDbInstances);
+    }
+
+    public static synchronized void update(String controllerId) throws DBMissingDataException, ControllerConnectionRefusedException {
+        Proxies.getInstance().updateProxies(controllerId);
     }
 
 }

@@ -1,10 +1,12 @@
 package com.sos.joc.agents.impl;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -12,6 +14,8 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.controller.model.cluster.ClusterState;
+import com.sos.controller.model.cluster.ClusterWatcher;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsClusterDeploy;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -19,6 +23,9 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
+import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.controller.impl.ControllerResourceModifyClusterImpl;
+import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
@@ -37,6 +44,7 @@ import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.subagent.JSubagentItem;
+import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
 @Path("agents")
@@ -70,6 +78,7 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
             List<JUpdateItemOperation> updateItems = new ArrayList<>();
             List<String> updateAgentIds = new ArrayList<>();
             List<String> updateSubagentIds = new ArrayList<>();
+            Set<String> clusterWatcherUrls = new HashSet<>();
             
             Set<String> agentIds = agentParameter.getClusterAgentIds();
             if (agentIds != null) {
@@ -92,11 +101,33 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
                     updateItems.addAll(subAgents.stream().map(s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), agentPath, Uri.of(s.getUri()), s
                             .getDisabled())).map(JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
                     updateSubagentIds.addAll(subAgents.stream().map(DBItemInventorySubAgentInstance::getSubAgentId).collect(Collectors.toList()));
+                    
+                    DBItemInventoryAgentInstance dbAgent = dbLayer.getAgentInstance(agentId);
+                    if (dbAgent.getIsWatcher()) {
+                        clusterWatcherUrls.add(dbAgent.getUri());
+                    }
                 }
             }
             
+            JControllerProxy proxy = Proxy.of(controllerId);
+            if (!clusterWatcherUrls.isEmpty()) {
+                try {
+                    ClusterState cState = Globals.objectMapper.readValue(proxy.currentState().clusterState().toJson(), ClusterState.class);
+                    if (cState.getSetting().getClusterWatches() != null) {
+                        clusterWatcherUrls.removeAll(cState.getSetting().getClusterWatches().stream().map(ClusterWatcher::getUri).map(URI::toString)
+                                .collect(Collectors.toSet()));
+                    }
+                } catch (Exception e) {
+                    //
+                }
+            }
+
+            if (!clusterWatcherUrls.isEmpty()) {
+                ControllerResourceModifyClusterImpl.appointNodes(controllerId, dbLayer, accessToken, getJocError());
+            }
+            
             if (!updateItems.isEmpty()) {
-                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(updateItems)).thenAccept(e -> {
+                proxy.api().updateItems(Flux.fromIterable(updateItems)).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;

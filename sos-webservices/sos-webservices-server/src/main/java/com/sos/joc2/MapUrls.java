@@ -46,12 +46,12 @@ public class MapUrls {
         private static final long serialVersionUID = 1L;
 
         {
-            put("http://controller-2-0-primary:4444", "http://centosdev_third.sos:5444");
-            put("http://controller-2-0-secondary:4444", "http://centosdev_third.sos:5544");
-            put("http://controller-2-0-standalone:4444", "http://centosdev_third.sos:5344");
-            put("https://controller-2-0-primary:4443", "http://centosdev_third.sos:5444");
-            put("https://controller-2-0-secondary:4443", "http://centosdev_third.sos:5544");
-            put("https://controller-2-0-standalone:4443", "http://centosdev_third.sos:5344");
+            put("http://controller-2-0-primary.sos:4444", "http://centosdev_third.sos:5444");
+            put("http://controller-2-0-secondary.sos:4444", "http://centosdev_third.sos:5544");
+            put("http://controller-2-0-standalone.sos:4444", "http://centosdev_third.sos:5344");
+            put("https://controller-2-0-primary.sos:4443", "http://centosdev_third.sos:5444");
+            put("https://controller-2-0-secondary.sos:4443", "http://centosdev_third.sos:5544");
+            put("https://controller-2-0-standalone.sos:4443", "http://centosdev_third.sos:5344");
         }
     });
     // http://sp:5555
@@ -72,6 +72,7 @@ public class MapUrls {
 
         {
             put("oh", centosdev_secondary_urlMapper);
+            //put("oh", centostest_primary_urlMapper);
             put("sp", sp_local_urlMapper);
         }
     });
@@ -82,6 +83,7 @@ public class MapUrls {
 
         {
             put("oh", JocSecurityLevel.LOW);
+            //put("oh", JocSecurityLevel.MEDIUM);
             put("sp", JocSecurityLevel.MEDIUM);
         }
     });

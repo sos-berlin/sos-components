@@ -1,22 +1,28 @@
 package com.sos.joc.agents.impl;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.controller.model.cluster.ClusterState;
+import com.sos.controller.model.cluster.ClusterWatcher;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsStandaloneDeploy;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.controller.impl.ControllerResourceModifyClusterImpl;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
@@ -80,7 +86,9 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
             
             JControllerProxy proxy = Proxy.of(controllerId);
             JControllerState currentState = proxy.currentState();
-
+            
+            Set<String> clusterWatcherUrls = new HashSet<>();
+            
             if (dbAgents != null) {
                 Map<AgentPath, JAgentRef> knownAgents = currentState.pathToAgentRef();
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
@@ -94,9 +102,29 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
                         agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createSubagentDirector(dbAgent, subagentId)));
                     }
                     updateAgentIds.add(dbAgent.getAgentId());
+                    
+                    if (dbAgent.getIsWatcher()) {
+                        clusterWatcherUrls.add(dbAgent.getUri());
+                    }
                 }
             }
-
+            
+            if (!clusterWatcherUrls.isEmpty()) {
+                try {
+                    ClusterState cState = Globals.objectMapper.readValue(currentState.clusterState().toJson(), ClusterState.class);
+                    if (cState.getSetting().getClusterWatches() != null) {
+                        clusterWatcherUrls.removeAll(cState.getSetting().getClusterWatches().stream().map(ClusterWatcher::getUri).map(URI::toString)
+                                .collect(Collectors.toSet()));
+                    }
+                } catch (Exception e) {
+                    //
+                }
+            }
+            
+            if (!clusterWatcherUrls.isEmpty()) {
+                ControllerResourceModifyClusterImpl.appointNodes(controllerId, agentDBLayer, accessToken, getJocError());
+            }
+            
             if (!agentRefs.isEmpty()) {
                 proxy.api().updateItems(Flux.fromIterable(agentRefs)).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId);

@@ -115,6 +115,9 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     }
 
     public void setUri(String val) {
+        if (val != null && !"/".equals(val)) {
+            val = val.replaceFirst("/$", "");
+        }
         uri = val;
     }
 
