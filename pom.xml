@@ -85,7 +85,7 @@
     <google.findbugs.version>3.0.2</google.findbugs.version>
     <typesafe.config.version>1.4.1</typesafe.config.version>
     <keepass.java2.version>2.1.4</keepass.java2.version>
-    <sshj.version>0.32.0</sshj.version>
+    <sshj.version>0.33.0</sshj.version>
     <apache.commons.net.version>3.8.0</apache.commons.net.version>
     <!-- SP: for sos-webservice-server proof-of-concept with jetty -->
     <jetty.version>9.4.41.v20210516</jetty.version>
