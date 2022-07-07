@@ -87,7 +87,7 @@
     <sshj.version>0.33.0</sshj.version>
     <apache.commons.net.version>3.8.0</apache.commons.net.version>
     <!-- SP: for sos-webservice-server proof-of-concept with jetty -->
-    <jetty.version>9.4.41.v20210516</jetty.version>
+    <jetty.version>10.0.10</jetty.version>
     <javax.jms-api.version>2.0.1</javax.jms-api.version>
     <jsendnsca.version>2.1.1</jsendnsca.version>
     <jna.version>5.11.0</jna.version>
