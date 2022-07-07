@@ -45,6 +45,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         
         SSHProviderArguments providerArgs = step.getAppArguments(SSHProviderArguments.class);
         SSHProvider provider = new SSHProvider(providerArgs, step.getAppArguments(SOSCredentialStoreArguments.class));
+        step.setPayload(provider);
         SSHJobArguments jobArgs = step.getArguments();
 
         SOSEnv envVars = new SOSEnv();
@@ -144,7 +145,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                 outcomes.put("exit_code", result.getExitCode());
                 if (result.getException() != null) {
                     outcomes.put("exception", result.getException());
-                    logger.info("[exception]%s", result.getException().getCause());
+                    logger.info("[exception]%s", SOSString.toString(result.getException()));
                 }
             }
             if (resolvedReturnValuesFileName != null) {
