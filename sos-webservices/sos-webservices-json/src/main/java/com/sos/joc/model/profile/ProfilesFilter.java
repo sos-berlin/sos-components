@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
+    "complete",
     "accountNames"
 })
 public class ProfilesFilter {
@@ -32,6 +33,8 @@ public class ProfilesFilter {
      */
     @JsonProperty("controllerId")
     private String controllerId;
+    @JsonProperty("complete")
+    private Boolean complete = false;
     @JsonProperty("accountNames")
     private List<String> accountNames = new ArrayList<String>();
 
@@ -57,6 +60,16 @@ public class ProfilesFilter {
         this.controllerId = controllerId;
     }
 
+    @JsonProperty("complete")
+    public Boolean getComplete() {
+        return complete;
+    }
+
+    @JsonProperty("complete")
+    public void setComplete(Boolean complete) {
+        this.complete = complete;
+    }
+
     @JsonProperty("accountNames")
     public List<String> getAccountNames() {
         return accountNames;
@@ -69,12 +82,12 @@ public class ProfilesFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("accountNames", accountNames).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("complete", complete).append("accountNames", accountNames).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(accountNames).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(complete).append(accountNames).toHashCode();
     }
 
     @Override
@@ -86,7 +99,7 @@ public class ProfilesFilter {
             return false;
         }
         ProfilesFilter rhs = ((ProfilesFilter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(accountNames, rhs.accountNames).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(complete, rhs.complete).append(accountNames, rhs.accountNames).isEquals();
     }
 
 }
