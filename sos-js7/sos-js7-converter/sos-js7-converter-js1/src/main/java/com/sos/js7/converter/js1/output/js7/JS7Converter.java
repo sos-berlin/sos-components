@@ -119,6 +119,7 @@ public class JS7Converter {
     private static final String REMOVE_JOB_NAME = "fileOrderSinkRemove";
     private static final String VAR_CURRENT_FILE_JS7 = "${file}";
     private static final String VAR_CURRENT_FILE_JS1 = "${scheduler_file_path}";
+    private static final String ENV_VAR_JS1_PREFIX = "SCHEDULER_PARAM_";
 
     private ConverterObjects converterObjects;
     private DirectoryParserResult pr;
@@ -274,15 +275,19 @@ public class JS7Converter {
     }
 
     private void addJobResources(JS7ConverterResult result) {
+        String envVarPrefix = CONFIG.getJobConfig().isForcedV1Compatible() ? ENV_VAR_JS1_PREFIX : "";
+
         jobResources.entrySet().forEach(e -> {
             try {
                 Params p = new Params(SOSXML.newXPath(), JS7ConverterHelper.getDocumentRoot(e.getKey()));
                 Environment args = new Environment();
+                Environment envs = new Environment();
 
                 p.getParams().entrySet().forEach(pe -> {
-                    args.setAdditionalProperty(pe.getKey(), pe.getValue());
+                    args.setAdditionalProperty(pe.getKey(), JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(pe.getValue()));
+                    envs.setAdditionalProperty(envVarPrefix + pe.getKey().toUpperCase(), "$" + pe.getKey());
                 });
-                JobResource jr = new JobResource(args, null, null, null);
+                JobResource jr = new JobResource(args, envs, null, null);
                 result.add(Paths.get(e.getValue() + ".jobresource.json"), jr);
             } catch (Throwable e1) {
                 ConverterReport.INSTANCE.addErrorRecord(e.getKey(), "jobResource=" + e.getValue(), e1);
