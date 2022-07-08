@@ -18,7 +18,7 @@ public class SQLExecutorJobArguments extends JobArguments {
     private JobArgument<Boolean> execReturnsResultset = new JobArgument<Boolean>("exec_returns_resultset", false, false);
     private JobArgument<Boolean> resultSetAsWarning = new JobArgument<Boolean>("resultset_as_warning", false, false);
 
-    // CSV/XML export
+    // CSV/XML/JSON export
     private JobArgument<Path> resultFile = new JobArgument<Path>("result_file", false);
 
     public JobArgument<Path> getHibernateFile() {

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <hibernate-configuration>
 	<session-factory>
+		<!-- <property name="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect 
+			</property> <property name="hibernate.connection.driver_class">org.mariadb.jdbc.Driver</property> 
+			<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/js7_x</property> 
+			<property name="hibernate.connection.password">root</property> <property 
+			name="hibernate.connection.username">root</property> -->
 
-		<property name="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect
+		<property name="hibernate.connection.driver_class">oracle.jdbc.driver.OracleDriver</property>
+		<property name="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect
 		</property>
-		<property name="hibernate.connection.driver_class">org.mariadb.jdbc.Driver</property>
-		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/js7_x</property>
-		<property name="hibernate.connection.password">root</property>
-		<property name="hibernate.connection.username">root</property>
-
-		<!-- <property name="hibernate.connection.driver_class">oracle.jdbc.driver.OracleDriver</property> 
-			<property name="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect 
-			</property> <property name="hibernate.connection.url">jdbc:oracle:thin:@localhost:1522:orcl12c 
-			</property> <property name="hibernate.connection.username">scheduler</property> 
-			<property name="hibernate.connection.password">scheduler</property> -->
+		<property name="hibernate.connection.url">jdbc:oracle:thin:@localhost:1522:orcl12c
+		</property>
+		<property name="hibernate.connection.username">scheduler</property>
+		<property name="hibernate.connection.password">scheduler</property>
 
 		<property name="hibernate.show_sql">true</property>
 		<property name="hibernate.connection.autocommit">false</property>

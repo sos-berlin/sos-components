@@ -211,17 +211,22 @@
 					</div>
 				</note>
 			</param>
-			<param name="output_file" required="false"
-				default_value="false" DataType="java.nio.file.Path">
+			<param name="result_file" required="false" default_value=""
+				DataType="java.nio.file.Path">
 				<note>
 					<p>
-						The path to the output file that holds the result set in csv
+						The path to the output file that holds the result set in
+						csv/xml/json
 						format.
 						<br />
 						Required by the
 						<paramref>resultset_as_variables</paramref>
 						argument when used with the value
 						<strong>csv</strong>
+						,
+						<strong>xml</strong>
+						or
+						<strong>json</strong>
 						.
 					</p>
 				</note>

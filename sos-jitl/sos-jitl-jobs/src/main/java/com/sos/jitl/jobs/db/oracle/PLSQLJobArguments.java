@@ -16,6 +16,10 @@ import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 public class PLSQLJobArguments extends JobArguments {
 
+    public enum ResultSetAs {
+        CSV, XML, JSON
+    }
+
     private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", false, Job.getAgentHibernateFile());
     private JobArgument<String> command = new JobArgument<String>("command", false);
     private JobArgument<String> commandScriptFile = new JobArgument<String>("command_script_file", false);
@@ -24,6 +28,10 @@ public class PLSQLJobArguments extends JobArguments {
     private JobArgument<String> dbPassword = new JobArgument<String>("db_password", false, DisplayMode.MASKED);
     private JobArgument<String> dbUrl = new JobArgument<String>("db_url", false);
     private JobArgument<String> dbUser = new JobArgument<String>("db_user", false);
+
+    // CSV/XML/JSON export
+    private JobArgument<ResultSetAs> resultSetAs = new JobArgument<ResultSetAs>("resultset_as", false);
+    private JobArgument<Path> resultFile = new JobArgument<Path>("result_file", false);
 
     public PLSQLJobArguments() {
         super(new SOSCredentialStoreArguments());
@@ -105,6 +113,22 @@ public class PLSQLJobArguments extends JobArguments {
         this.commandScriptFile.setValue(commandScriptFile);
     }
 
+    public ResultSetAs getResultSetAs() {
+        return resultSetAs.getValue();
+    }
+
+    protected void setResultSetAs(ResultSetAs val) {
+        resultSetAs.setValue(val);
+    }
+
+    public Path getResultFile() {
+        return resultFile.getValue();
+    }
+
+    protected void setResultFile(Path val) {
+        resultFile.setValue(val);
+    }
+
     public void checkRequired() throws SOSJobRequiredArgumentMissingException {
         if ((command.getValue() == null || command.getValue().isEmpty()) && (commandScriptFile.getValue() == null || commandScriptFile.getValue()
                 .isEmpty())) {
@@ -122,7 +146,10 @@ public class PLSQLJobArguments extends JobArguments {
             if (hibernateFile.getValue().toString().isEmpty()) {
                 throw new SOSJobRequiredArgumentMissingException(hibernateFile.getName() + " or " + dbUrl.getName() + " + username and password");
             }
+        }
 
+        if (getResultSetAs() != null && getResultFile() == null) {
+            throw new SOSJobRequiredArgumentMissingException(resultFile.getName());
         }
 
     }

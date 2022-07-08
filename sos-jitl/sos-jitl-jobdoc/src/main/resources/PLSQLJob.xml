@@ -1,206 +1,409 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
-<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
-    xmlns:xi="http://www.w3.org/2001/XInclude"
-    xmlns:xhtml="http://www.w3.org/1999/xhtml"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<description
+	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+	xmlns:xi="http://www.w3.org/2001/XInclude"
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
 
-    <job name  = "PLSQLJob"
-         title = "Execute PL/SQL Statements"
-         category="PLSQL;SQL;Database;JITL;Oracle">
-        <script language   = "java"
-                java_class = "com.sos.jitl.jobs.db.oracle.PLSQLJob"
-                resource   = "1"/>
-    </job>
+	<job name="PLSQLJob" title="Execute PL/SQL Statements"
+		category="PLSQL;SQL;Database;JITL;Oracle">
+		<script language="java"
+			java_class="com.sos.jitl.jobs.db.oracle.PLSQLJob" resource="1" />
+	</job>
 
-    <configuration>
-     
-        <params id="job_parameter">
-        
-            <xi:include href="./includes/common/params/param_hibernate_configuration_file.xml" parse="xml" />
+	<configuration>
 
-    
-            <param name="command" required="one of command or command_script_file">
-                <note>
-                	<title>SQL Statement(s) of the Job</title>
-                	<p>
-                        The argument holds SQL statement(s) of the Job.
-                    	It is possible to specify more than one SQL statement with the "command" argument.
-                    	Such SQL statements are then carried out in the specified order
-                    	and have to be separated by a semicolon and a subsequent new line.
-                     </p>
-                     <p>
-                    	Placeholders are replaced in SQL statements by the job. This is achieved by embedding a variable in the form ${argument}
-                    	in the SQL statement. On execution of the job the variable "argument" is assigned the value of the
-                    	argument with the same name.
-                  	</p>
-                </note>
-            </param>
-      
-            <param name="command_script_file" required="one of command or command_script_file">
-                <note>
-                	<title>Path to a file that contains the SQL statement(s)</title>
-                	<p>
-                    	It is possible to specify SQL statements from one or more files.
-                    	Such SQL statements are then carried out in the specified order of files.
-                    	SQL statements included in files have to be separated by a semicolon and a subsequent new line.
-                    </p>
-                    <p>
-                    	Placeholders are replaced in SQL statements by the job. This is achieved by embedding a variable in the form ${argument}
-                    	in the SQL statement. On execution of the job the variable "argument" is assigned the value of the
-                    	argument with the same name.
-                  	</p>
-                </note>
-            </param>                     
+		<params id="job_parameter">
+
+			<xi:include
+				href="./includes/common/params/param_hibernate_configuration_file.xml"
+				parse="xml" />
 
 
-            <param name="db_url" required="true">
-                <note>
-                    <title>The JDBC URL (e.g. jdbc:oracle:thin:@localhost:1521:XE)</title>
-                    <p>
-                        The JDBC URL specifies the host and port of the Orcle listener. Depending on the syntax in use the
-                        Service Name or Service ID of the database is specified.
-                    </p>
-                    <p>
-                        The JDBC URL can be retrieved from a credential store by use of the cs://path/entry@url property.
-                    </p>
-                </note>
-            </param>
-      
-            <param name="db_user" required="true">
-                <note>
-                    <title>The user accocunt for access to the database</title>
-                    <p>
-                        Database user accounts can be retrieved from a credential store by use of the cs://path/entry@user property.
-                    </p>
-                </note>
-            </param>
-      
-            <param name="db_password" required="false">
-                <note>
-                    <title>The password for access to the database</title>
-                    <p>
-                        Passwords for user accounts can be retrieved from a credential store by use of the cs://path/entry@password property.
-                    </p>
-                </note>
-            </param>
-      
-            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_variable_parser_reg_expr.xml" parse="xml"/>            
-            <xi:include href="./includes/common/params/params_credential_store.xml" parse="xml" />
-        
-        </params>
-        
-        <params id="return_parameter">
-            
-            <param name="sql_error" required="false">
-                <note>
-                    <title>Error Messages of the JDBC client or the database server</title>
-                    <p>
-                        If errors occur during execution of SQL statements then the error messages will be stored with the "sql_error" result variable 
-                        in the order or occurrence.
-                        If no errors occur then the value of the variable is empty.
-                    </p>
-                </note>
-            </param>
-        
-            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_std_out_output.xml" parse="xml"/>
-        
-        </params>
-    </configuration>
+			<param name="command"
+				required="one of command or command_script_file">
+				<note>
+					<title>SQL Statement(s) of the Job</title>
+					<p>
+						The argument holds SQL statement(s) of the Job.
+						It is possible to
+						specify more than one SQL statement with the
+						"command" argument.
+						Such SQL statements are then carried out in the specified order
+						and have to be separated by a semicolon and a subsequent new line.
+					</p>
+					<p>
+						Placeholders are replaced in SQL statements by the job. This is
+						achieved by
+						embedding a variable in the form ${argument}
+						in the SQL
+						statement. On execution of the job the variable
+						"argument" is
+						assigned the value of the
+						argument with the same name.
+					</p>
+				</note>
+			</param>
 
-    <documentation>
-    
-        <note>
-            <title>What is the purpose of this job?</title>
-            <p>The job executes PL/SQL statements by JDBC.</p>
-        </note>
-    
-    
-        <note>
-            <title>How is the job script defined?</title>
-            <p>
-                SQL statements can be stored to a separate file that is specified by the <paramref> command_script_file </paramref> argument.
-                In addition, they can be specified with the value of the <paramref>command</paramref> argument.
-            </p>
-            <p>
-                Before SQL statements are executed, they are checked for placeholders that should be substituted.
-                Placeholders that reference order variables are replaced by the oder variable's value.
-                The following syntax for use with SQL statements is supported: ${argument}
-            </p>
-        </note>
-    
-    
-        <note>
-            <title>How can results be reused in subsequent jobs?</title>
-            <p>
-                To report return values the job adds result order variables.
-                The first set of return variables is static in the sense that variables are always provided, such as the
-                variables explained with section "return variables".
-                In addition, result order variables can be added dynamically.
-                The job parses output of the process and extracts variable names and values using a regular expression.
-                The regular expression is defined with the <paramref>variable_parser_reg_exp</paramref> argument.
-            </p>
-            <p>
-                Result order variables are available to jobs and instructions in subsequent nodes of a workflow.
-                The values of result orders variables can be modified by subsequent jobs and instructions.
-            </p>
-        </note>
+			<param name="command_script_file"
+				required="one of command or command_script_file">
+				<note>
+					<title>Path to a file that contains the SQL statement(s)</title>
+					<p>
+						It is possible to specify SQL statements from one or more files.
+						Such SQL statements are then carried out in the specified order of
+						files.
+						SQL statements included in files have to be separated by a
+						semicolon
+						and a subsequent new line.
+					</p>
+					<p>
+						Placeholders are replaced in SQL statements by the job. This is
+						achieved by
+						embedding a variable in the form ${argument}
+						in the SQL
+						statement. On execution of the job the variable
+						"argument" is
+						assigned the value of the
+						argument with the same name.
+					</p>
+				</note>
+			</param>
 
-        <p>
-            <codeexample>
-                <embeddedExample>declare
-  howmany NUMBER;
-  p_id varchar2(20) := null;
-begin
-  dbms_output.put_line('set variable1=value1');
-  p_id := '12345';
-  --
-  -- If the job or order contains the argument
-  --
-  -- table_name=scheduler_variables
-  --
-  -- then all following select statement is substituted to 'select count(*) into howmany from scheduler_variables;'
-  --
-  select count(*) into howmany from ${table_name};
-  --
-  -- now add the results to the buffer
-  -- JS7 will read the results from the buffer
-  --
-  dbms_output.put_line('The table ${table_name} has ' || howmany || ' rows.');
-  dbms_output.put_line('set howmany is ' || howmany);
-  dbms_output.put_line('set variable1 is ' || p_id);
-  dbms_output.put_line('set variable2 is value2');
-end;
-            </embeddedExample>
 
-                <explanation>
-                    <title >Example: PL/SQL code</title>
-                    <p>
-                        If the job or order carries the argument "table_name" with the value "scheduler_variables"
-                        then all following select statements are substituted to "select count(*) into howmany from scheduler_variables;"
-                    </p>
-                    <p>
-                        The <paramref>variable_parser_reg_expr</paramref> argument specifies a regular expression to parse output of the process,
-                        for example with the regular expression "^SET\s+([^\s]+)\s*IS\s+(.*)$".
-                    </p>
-                    <p>
-                        In the above example the following resulting order variables are created:
-                    </p>
-                    <p>
-                        <ul>
-                            <li>howmany=8</li>
-                            <li>variable1=12345</li>
-                            <li>variable2=value2</li>
-                        </ul>
-                    </p>
-                    <p>
-                        If a resulting order variable is set a number of times then the last assignment will be used.
-                    </p>
-                </explanation>
-            </codeexample>
-        </p>
+			<param name="db_url" required="true">
+				<note>
+					<title>The JDBC URL (e.g. jdbc:oracle:thin:@localhost:1521:XE)
+					</title>
+					<p>
+						The JDBC URL specifies the host and port of the Orcle listener.
+						Depending on the syntax in use the
+						Service Name or Service ID of
+						the database is specified.
+					</p>
+					<p>
+						The JDBC URL can be retrieved from a credential store by use of
+						the
+						cs://path/entry@url property.
+					</p>
+				</note>
+			</param>
 
-    </documentation>
+			<param name="db_user" required="true">
+				<note>
+					<title>The user accocunt for access to the database</title>
+					<p>
+						Database user accounts can be retrieved from a credential store
+						by use of
+						the cs://path/entry@user property.
+					</p>
+				</note>
+			</param>
+
+			<param name="db_password" required="false">
+				<note>
+					<title>The password for access to the database</title>
+					<p>
+						Passwords for user accounts can be retrieved from a credential
+						store by use
+						of the cs://path/entry@password property.
+					</p>
+				</note>
+			</param>
+
+			<xi:include
+				href="./includes/com.sos.jitl.jobs.sql/param_variable_parser_reg_expr.xml"
+				parse="xml" />
+
+			<param name="resultset_as" required="false" default_value=""
+				DataType="java.lang.String" valuelist="'csv','xml','json'">
+				<note>
+					<div xmlns="http://www.w3.org/1999/xhtml">
+						<strong>Argument value: empty</strong>
+						<br />
+						<br />
+						The query "SELECT first_name, last_name, age FROM persons" creates
+						the following result set:
+						<br />
+						<table class="explanation">
+							<tr>
+								<th>first_name</th>
+								<th>last_name</th>
+								<th>age</th>
+							</tr>
+							<tr>
+								<td>John</td>
+								<td>Doe</td>
+								<td>30</td>
+							</tr>
+							<tr>
+								<td>Hans</td>
+								<td>Mustermann</td>
+								<td>33</td>
+							</tr>
+							<tr>
+								<td>Jean</td>
+								<td>Dupont</td>
+								<td>56</td>
+							</tr>
+						</table>
+						<strong>Argument value: csv</strong>
+						<br />
+						If set to 'csv', the column names and all columns of the result
+						set will be written to the file
+						specified with the
+						<paramref>output_file</paramref>
+						argument enclosed with double quotes and separated by a comma.
+						<br />
+						<code>
+							"FIRST_NAME","LAST_NAME","AGE"
+							<br />
+							"John","Doe","30"
+							<br />
+							"Hans","Mustermann","33"
+							<br />
+						</code>
+						<br />
+						<br />
+						<strong>Argument value: xml</strong>
+						<br />
+						If set to 'xml', the column names and all columns of the result
+						set will be written to the file
+						specified with the
+						<paramref>output_file</paramref>
+						argument.
+						<br />
+						<code>
+							&lt;RESULTSET&gt;
+							<br />
+							&lt;ROW&gt;&lt;FIRST_NAME&gt;&lt;![CDATA[John]]&gt;&lt;/FIRST_NAME&gt;&lt;LAST_NAME&gt;&lt;![CDATA[Doe]]&gt;&lt;/LAST_NAME&gt;&lt;AGE&gt;&lt;![CDATA[30]]&gt;&lt;/AGE&gt;&lt;/ROW&gt;
+							<br />
+							&lt;ROW&gt;&lt;FIRST_NAME&gt;&lt;![CDATA[Hans]]&gt;&lt;/FIRST_NAME&gt;&lt;LAST_NAME&gt;&lt;![CDATA[Mustermann]]&gt;&lt;/LAST_NAME&gt;&lt;AGE&gt;&lt;![CDATA[33]]&gt;&lt;/AGE&gt;&lt;/ROW&gt;
+							<br />
+							&lt;/RESULTSET&gt;
+							<br />
+						</code>
+						<br />
+						<br />
+						<strong>Argument value: json</strong>
+						<br />
+						If set to 'json', the column names and all columns of the result
+						set will be written to the file
+						specified with the
+						<paramref>output_file</paramref>
+						argument.
+						<br />
+						<code>
+							[ {
+							<br />
+							"FIRST_NAME" : "John",
+							<br />
+							"LAST_NAME" : "Doe",
+							<br />
+							"AGE" : 30,
+							<br />
+							},
+							<br />
+							"FIRST_NAME" : "Hans",
+							<br />
+							"LAST_NAME" : "Mustermann",
+							<br />
+							"AGE" : 33,
+							<br />
+							} ]
+							<br />
+
+						</code>
+					</div>
+				</note>
+			</param>
+			<param name="result_file" required="false" default_value=""
+				DataType="java.nio.file.Path">
+				<note>
+					<p>
+						The path to the output file that holds the result set in
+						csv/xml/json
+						format.
+						<br />
+						Required by the
+						<paramref>resultset_as</paramref>
+						argument when used with the value
+						<strong>csv</strong>
+						,
+						<strong>xml</strong>
+						or
+						<strong>json</strong>
+						.
+					</p>
+				</note>
+			</param>
+
+			<xi:include
+				href="./includes/common/params/params_credential_store.xml"
+				parse="xml" />
+
+		</params>
+
+		<params id="return_parameter">
+
+			<param name="sql_error" required="false">
+				<note>
+					<title>Error Messages of the JDBC client or the database server
+					</title>
+					<p>
+						If errors occur during execution of SQL statements then the
+						error
+						messages will be stored with the "sql_error" result variable
+						in the order or occurrence.
+						If no errors occur then the value of
+						the variable is empty.
+					</p>
+				</note>
+			</param>
+
+			<xi:include
+				href="./includes/com.sos.jitl.jobs.sql/param_std_out_output.xml"
+				parse="xml" />
+
+		</params>
+	</configuration>
+
+	<documentation>
+
+		<note>
+			<title>What is the purpose of this job?</title>
+			<p>The job executes PL/SQL statements by JDBC.</p>
+		</note>
+
+
+		<note>
+			<title>How is the job script defined?</title>
+			<p>
+				SQL statements can be stored to a separate file that is specified by
+				the
+				<paramref> command_script_file </paramref>
+				argument.
+				In addition, they can be specified with the value of the
+				<paramref>command</paramref>
+				argument.
+			</p>
+			<p>
+				Before SQL statements are executed, they are checked for
+				placeholders that
+				should be substituted.
+				Placeholders that reference
+				order variables are replaced by the oder variable's
+				value.
+				The
+				following syntax for use with SQL statements is supported:
+				${argument}
+			</p>
+		</note>
+
+
+		<note>
+			<title>How can results be reused in subsequent jobs?</title>
+			<p>
+				To report return values the job adds result order variables.
+				The
+				first set of return variables is static in the sense that variables
+				are always provided, such as the
+				variables explained with section
+				"return variables".
+				In addition, result order variables can be added
+				dynamically.
+				The job parses output of the process and extracts
+				variable names and
+				values using a regular expression.
+				The regular
+				expression is defined with the
+				<paramref>variable_parser_reg_exp</paramref>
+				argument.
+			</p>
+			<p>
+				Result order variables are available to jobs and instructions in
+				subsequent nodes of a workflow.
+				The values of result orders variables
+				can be modified by subsequent
+				jobs and instructions.
+			</p>
+		</note>
+
+		<p>
+			<codeexample>
+				<embeddedExample>declare
+					howmany NUMBER;
+					p_id varchar2(20) := null;
+					begin
+					dbms_output.put_line('set variable1=value1');
+					p_id := '12345';
+					--
+					-- If the job or order contains the argument
+					--
+					--
+					table_name=scheduler_variables
+					--
+					-- then all following select
+					statement is substituted to 'select
+					count(*) into howmany from
+					scheduler_variables;'
+					--
+					select count(*) into howmany from
+					${table_name};
+					--
+					-- now add the results to the buffer
+					-- JS7 will
+					read the results from the buffer
+					--
+					dbms_output.put_line('The table
+					${table_name} has ' || howmany || ' rows.');
+					dbms_output.put_line('set howmany is ' || howmany);
+					dbms_output.put_line('set variable1 is ' || p_id);
+					dbms_output.put_line('set variable2 is value2');
+					end;
+				</embeddedExample>
+
+				<explanation>
+					<title>Example: PL/SQL code</title>
+					<p>
+						If the job or order carries the argument "table_name" with the
+						value
+						"scheduler_variables"
+						then all following select statements are
+						substituted to "select
+						count(*) into howmany from
+						scheduler_variables;"
+					</p>
+					<p>
+						The
+						<paramref>variable_parser_reg_expr</paramref>
+						argument specifies a regular expression to parse output of the
+						process,
+						for example with the regular expression
+						"^SET\s+([^\s]+)\s*IS\s+(.*)$".
+					</p>
+					<p>
+						In the above example the following resulting order variables are
+						created:
+					</p>
+					<p>
+						<ul>
+							<li>howmany=8</li>
+							<li>variable1=12345</li>
+							<li>variable2=value2</li>
+						</ul>
+					</p>
+					<p>
+						If a resulting order variable is set a number of times then the
+						last
+						assignment will be used.
+					</p>
+				</explanation>
+			</codeexample>
+		</p>
+
+	</documentation>
 
 </description>

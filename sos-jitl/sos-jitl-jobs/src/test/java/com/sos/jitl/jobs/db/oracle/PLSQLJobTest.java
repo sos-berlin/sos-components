@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.jitl.jobs.common.UnitTestJobHelper;
+import com.sos.jitl.jobs.db.oracle.PLSQLJobArguments.ResultSetAs;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -23,6 +24,10 @@ public class PLSQLJobTest {
         args.setCommand("select 1 from dual");
         // args.setCommand("select * from SOS_TEST_SLEEP_VIEW");
         args.setHibernateFile(Paths.get("src/test/resources/hibernate.cfg.xml"));
+
+        // Export
+        args.setResultSetAs(ResultSetAs.XML);
+        args.setResultFile(Paths.get("src/test/resources/plsqljob_export.xml"));
 
         // TODO cs support
         SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();

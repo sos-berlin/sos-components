@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.sql.ResultSet;
 import java.time.Instant;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -21,6 +22,7 @@ import com.sos.jitl.jobs.common.JobLogger;
 public class Export2XML {
 
     private static final String NEW_LINE = "\r\n";
+    private static final Pattern NUMERIC_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)?");
 
     public static void export(ResultSet resultSet, Path outputFile, JobLogger logger) throws Exception {
         if (resultSet == null) {
@@ -108,9 +110,23 @@ public class Export2XML {
     private static String[] normalizeLabels(String[] labels) {
         String[] r = new String[labels.length];
         for (int i = 0; i < labels.length; i++) {
-            r[i] = labels[i].replaceAll("//s|'|:|\\.|,|<|>|-|\"", "");
+            r[i] = normalizeLabel(labels[i]);
         }
         return r;
     }
 
+    private static String normalizeLabel(String label) {
+        String r = label.replaceAll("//s|'|:|\\.|,|<|>|-|\"", "");
+        if (isNumeric(r)) {
+            r = "Column" + r;
+        }
+        return r;
+    }
+
+    private static boolean isNumeric(String val) {
+        if (val == null) {
+            return false;
+        }
+        return NUMERIC_PATTERN.matcher(val).matches();
+    }
 }

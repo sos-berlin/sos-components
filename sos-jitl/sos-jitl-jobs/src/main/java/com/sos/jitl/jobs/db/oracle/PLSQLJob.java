@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +19,9 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.db.common.Export2CSV;
+import com.sos.jitl.jobs.db.common.Export2JSON;
+import com.sos.jitl.jobs.db.common.Export2XML;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -86,7 +90,7 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
 
         DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
         Connection connection = null;
-        if (args.getDbUser() != null && args.getDbPassword() != null) {
+        if (args.getDbUser().getValue() != null && args.getDbPassword().getValue() != null) {
             step.getLogger().debug("Connecting with user and password.");
             connection = DriverManager.getConnection(args.getDbUrl().getValue(), args.getDbUser().getValue(), args.getDbPassword().getValue());
         } else {
@@ -109,41 +113,60 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
         plsql = unescapeXML(plsql).replace("\r\n", "\n");
         step.getLogger().info(String.format("substituted Statement: %s", plsql));
 
-        Map<String, Object> resultMap = new HashMap<String, Object>();
-        resultMap.put(DBMS_OUTPUT, "");
-        resultMap.put(STD_OUT_OUTPUT, "");
+        Map<String, Object> result = new HashMap<String, Object>();
+        result.put(DBMS_OUTPUT, "");
+        result.put(STD_OUT_OUTPUT, "");
 
-        DbmsOutput dbmsOutput = null;
-        CallableStatement callableStatement = null;
+        DbmsOutput out = null;
+        CallableStatement cs = null;
         try {
-            dbmsOutput = new DbmsOutput(connection);
-            dbmsOutput.enable(1000000);
-            callableStatement = connection.prepareCall(plsql);
-            callableStatement.execute();
+            out = new DbmsOutput(connection);
+            out.enable(1000000);
 
-            String output = dbmsOutput.getOutput();
+            cs = connection.prepareCall(plsql);
+            cs.execute();
+
+            String output = out.getOutput();
             step.getLogger().info(output);
 
             if (output != null) {
-                resultMap.put(DBMS_OUTPUT, output);
-                resultMap.put(STD_OUT_OUTPUT, output);
+                result.put(DBMS_OUTPUT, output);
+                result.put(STD_OUT_OUTPUT, output);
 
                 int regExpFlags = Pattern.CASE_INSENSITIVE + Pattern.MULTILINE + Pattern.DOTALL;
-                String[] strA = output.split("\n");
-                boolean aVariableFound = false;
-                String regExp = args.getVariableParserRegExpr();
-                Pattern regExprPattern = Pattern.compile(regExp, regExpFlags);
-                for (String string : strA) {
+                Pattern regExprPattern = Pattern.compile(args.getVariableParserRegExpr(), regExpFlags);
+
+                boolean found = false;
+                String[] arr = output.split("\n");
+                for (String string : arr) {
                     Matcher matcher = regExprPattern.matcher(string);
                     if (matcher.matches() && matcher.group().length() >= 2) {
-                        resultMap.put(matcher.group(1), matcher.group(2).trim());
-                        aVariableFound = true;
+                        result.put(matcher.group(1), matcher.group(2).trim());
+                        found = true;
                     }
                 }
-                dbmsOutput.close();
-                dbmsOutput = null;
-                if (!aVariableFound) {
-                    step.getLogger().debug(String.format("no JS-variable definitions found using reg-exp '%1$s'.", regExp));
+                out.close();
+                out = null;
+                if (!found) {
+                    step.getLogger().debug(String.format("no JS-variable definitions found using reg-exp '%1$s'.", args.getVariableParserRegExpr()));
+                }
+            }
+
+            if (args.getResultSetAs() != null) {
+                // resultFile already checked by checkRequired
+                ResultSet rs = cs.getResultSet();
+                if (rs != null) {
+                    switch (args.getResultSetAs()) {
+                    case CSV:
+                        Export2CSV.export(rs, args.getResultFile(), step.getLogger());
+                        break;
+                    case XML:
+                        Export2XML.export(rs, args.getResultFile(), step.getLogger());
+                        break;
+                    case JSON:
+                        Export2JSON.export(rs, args.getResultFile(), step.getLogger());
+                        break;
+                    }
                 }
             }
 
@@ -152,15 +175,15 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
             step.getLogger().debug(msg);
             throw new Exception(msg, e);
         } finally {
-            if (dbmsOutput != null) {
-                dbmsOutput.close();
+            if (out != null) {
+                out.close();
             }
-            if (callableStatement != null) {
-                callableStatement.close();
-                callableStatement = null;
+            if (cs != null) {
+                cs.close();
+                cs = null;
             }
         }
-        return resultMap;
+        return result;
     }
 
     private String unescapeXML(final String stringValue) {
