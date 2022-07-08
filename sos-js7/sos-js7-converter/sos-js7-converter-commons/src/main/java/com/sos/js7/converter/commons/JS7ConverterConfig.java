@@ -490,6 +490,10 @@ public class JS7ConverterConfig {
             return forcedV1Compatible;
         }
 
+        public boolean isForcedV1Compatible() {
+            return forcedV1Compatible != null && forcedV1Compatible;
+        }
+
         public String getNotificationMailDefaultTo() {
             return notificationMailDefaultTo;
         }

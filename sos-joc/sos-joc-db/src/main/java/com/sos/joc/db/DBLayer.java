@@ -7,6 +7,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSClassList;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
+import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.authentication.DBItemIamHistory;
 import com.sos.joc.db.authentication.DBItemIamHistoryDetails;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
@@ -283,6 +284,9 @@ public class DBLayer implements Serializable {
     public static final String TABLE_IAM_HISTORY = "IAM_HISTORY";
     public static final String TABLE_IAM_HISTORY_SEQUENCE = "SEQ_IAM_HISTORY";
 
+    public static final String TABLE_IAM_BLOCKLIST = "IAM_BLOCKLIST";
+    public static final String TABLE_IAM_BLOCKLIST_SEQUENCE = "SEQ_IAM_BLOCKLIST";
+
     public static final String TABLE_IAM_HISTORY_DETAILS = "IAM_HISTORY_DETAILS";
     public static final String TABLE_IAM_HISTORY_DETAILS_SEQUENCE = "SEQ_IAM_HISTORY_DETAILS";
 
@@ -448,6 +452,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDepCommitIds.class);
         cl.add(DBItemDepNamePaths.class);
 
+        cl.add(DBItemIamBlockedAccount.class);
         cl.add(DBItemIamHistory.class);
         cl.add(DBItemIamHistoryDetails.class);
         cl.add(DBItemIamAccount.class);

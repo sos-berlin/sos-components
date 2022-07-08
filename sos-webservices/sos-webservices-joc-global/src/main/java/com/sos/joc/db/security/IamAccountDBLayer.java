@@ -13,14 +13,14 @@ import org.hibernate.transform.Transformers;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
-import com.sos.joc.db.authentication.DBItemIamIdentityService;
-import com.sos.joc.db.authentication.DBItemIamAccount2RoleWithName;
-import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.Globals;
 import com.sos.joc.db.authentication.DBItemIamAccount;
-import com.sos.joc.db.authentication.DBItemIamHistory;
+import com.sos.joc.db.authentication.DBItemIamAccount2RoleWithName;
+import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
+import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
+import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamPermission;
+import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.favorite.FavoriteDBLayer;
@@ -31,6 +31,7 @@ import com.sos.joc.model.configuration.ConfigurationType;
 public class IamAccountDBLayer {
 
     private static final String DBItemIamAccount = com.sos.joc.db.authentication.DBItemIamAccount.class.getSimpleName();
+    private static final String DBItemIamBlockedAccount = com.sos.joc.db.authentication.DBItemIamBlockedAccount.class.getSimpleName();
     private static final String DBItemIamRole = com.sos.joc.db.authentication.DBItemIamRole.class.getSimpleName();
     private static final String DBItemIamAccount2Roles = com.sos.joc.db.authentication.DBItemIamAccount2Roles.class.getSimpleName();
     private static final String DBItemIamPermission = com.sos.joc.db.authentication.DBItemIamPermission.class.getSimpleName();
@@ -59,6 +60,13 @@ public class IamAccountDBLayer {
         }
         if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
             query.setParameter("accountName", filter.getAccountName());
+        }
+        if (filter.getDateFrom() != null) {
+            query.setParameter("from", filter.getDateFrom());
+        }
+
+        if (filter.getDateTo() != null) {
+            query.setParameter("to", filter.getDateTo());
         }
 
         return query;
@@ -170,6 +178,16 @@ public class IamAccountDBLayer {
             where += and + " disabled = :disabled";
             and = " and ";
         }
+
+        if (filter.getDateFrom() != null) {
+            where += and + "loginDate >= :from";
+            and = " and ";
+        }
+        if (filter.getDateTo() != null) {
+            where += and + "loginDate < :to";
+            and = " and ";
+        }
+
         if (!where.trim().equals("")) {
             where = " where " + where;
         }
@@ -430,6 +448,44 @@ public class IamAccountDBLayer {
         } else {
             return false;
         }
+    }
+
+    public DBItemIamBlockedAccount getBlockedAccount(IamAccountFilter filter) throws SOSHibernateException {
+        if ((filter.getAccountName() == null) || (filter.getAccountName().isEmpty())) {
+            return null;
+        }
+        List<DBItemIamBlockedAccount> accountList = null;
+        Query<DBItemIamBlockedAccount> query = sosHibernateSession.createQuery("from " + DBItemIamBlockedAccount + getWhere(filter));
+        bindParameters(filter, query);
+
+        accountList = query.getResultList();
+        if (accountList.size() == 0) {
+            return null;
+        } else {
+            return accountList.get(0);
+        }
+    }
+
+    public int deleteBlockedAccount(IamAccountFilter filter) throws SOSHibernateException {
+        String hql = "delete from " + DBItemIamBlockedAccount + getWhere(filter);
+        Query<DBItemIamAccount> query = null;
+        int row = 0;
+        query = sosHibernateSession.createQuery(hql);
+        query = bindParameters(filter, query);
+        row = query.executeUpdate();
+        return row;
+    }
+
+    public List<DBItemIamBlockedAccount> getIamBlockedAccountList(IamAccountFilter filter, int limit) throws SOSHibernateException {
+        Query<DBItemIamBlockedAccount> query = sosHibernateSession.createQuery("from " + DBItemIamBlockedAccount + getWhere(filter) + filter
+                .getOrderCriteria() + filter.getSortMode());
+        bindParameters(filter, query);
+        if (limit > 0) {
+            query.setMaxResults(limit);
+        }
+
+        List<DBItemIamBlockedAccount> iamBlockedAccountsList = query.getResultList();
+        return iamBlockedAccountsList == null ? Collections.emptyList() : iamBlockedAccountsList;
     }
 
 }

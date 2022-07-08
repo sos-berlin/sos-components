@@ -39,10 +39,13 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.db.security.IamAccountDBLayer;
+import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamHistoryDbLayer;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
@@ -555,66 +558,79 @@ public class SOSServicePermissionIam {
             try {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("Login Identity Services");
 
-                IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-                IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-                filter.setDisabled(false);
-                filter.setRequired(true);
+                IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+                IamAccountFilter iamAccountFilter = new IamAccountFilter();
+                iamAccountFilter.setAccountName(currentAccount.getAccountname());
+                DBItemIamBlockedAccount dbItemIamBlockedAccount = iamAccountDBLayer.getBlockedAccount(iamAccountFilter);
 
-                List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
-
-                currentAccount.initFolders();
-                Set<String> setOfAccountPermissions = new HashSet<String>();
                 Map<String, String> authenticationResult = new HashMap<String, String>();
+                Set<String> setOfAccountPermissions = new HashSet<String>();
 
-                for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
-                    msg = createAccount(currentAccount, password, dbItemIamIdentityService);
-                    if (msg.isEmpty()) {
-                        SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
-                                dbItemIamIdentityService));
-                        currentAccount.setRoles(securityConfiguration);
-                        if (currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
-                            setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
-                        }
-                        addFolder(currentAccount);
-                    } else {
-                        authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
-                        LOGGER.info("Login with required Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed." + msg);
-                    }
-                }
+                if (dbItemIamBlockedAccount != null) {
+                    msg = "Account is blocked";
+                    authenticationResult.put("*none", msg);
+                } else {
 
-                if (currentAccount.getCurrentSubject() == null) {
-                    filter.setRequired(false);
-                    if (listOfIdentityServices.size() == 0) {
-                        listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
-                        if (listOfIdentityServices.size() == 0) {
-                            LOGGER.info("No enabled Identity Service is configured.");
-                        }
-                    }
+                    IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+                    IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+                    filter.setDisabled(false);
+                    filter.setRequired(true);
 
-                    msg = "";
+                    List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+
+                    currentAccount.initFolders();
+
                     for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
-                        try {
-                            msg = createAccount(currentAccount, password, dbItemIamIdentityService);
+                        msg = createAccount(currentAccount, password, dbItemIamIdentityService);
+                        if (msg.isEmpty()) {
                             SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
                                     dbItemIamIdentityService));
                             currentAccount.setRoles(securityConfiguration);
-
-                            if (msg.isEmpty()) {
-                                LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " successful.");
-                                addFolder(currentAccount);
-                                break;
+                            if (currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
+                                setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
                             }
-
-                        } catch (JocAuthenticationException e) {
-                            LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed.");
-                            msg = e.getMessage();
+                            addFolder(currentAccount);
+                        } else {
                             authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
-                            continue;
+                            LOGGER.info("Login with required Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed."
+                                    + msg);
                         }
                     }
 
-                }
+                    if (currentAccount.getCurrentSubject() == null) {
+                        filter.setRequired(false);
+                        if (listOfIdentityServices.size() == 0) {
+                            listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+                            if (listOfIdentityServices.size() == 0) {
+                                LOGGER.info("No enabled Identity Service is configured.");
+                            }
+                        }
 
+                        msg = "";
+                        for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
+                            try {
+                                msg = createAccount(currentAccount, password, dbItemIamIdentityService);
+                                SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
+                                        dbItemIamIdentityService));
+                                currentAccount.setRoles(securityConfiguration);
+
+                                if (msg.isEmpty()) {
+                                    LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " successful.");
+                                    addFolder(currentAccount);
+                                    break;
+                                }
+
+                            } catch (JocAuthenticationException e) {
+                                LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed.");
+                                msg = e.getMessage();
+                                authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
+                                continue;
+                            }
+                        }
+
+                    }
+
+                }
                 IamHistoryDbLayer iamHistoryDbLayer = new IamHistoryDbLayer(sosHibernateSession);
 
                 if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
