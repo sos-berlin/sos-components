@@ -1177,7 +1177,7 @@ public class DeploymentTestUtils {
         ReadNotificationFilter filter = new ReadNotificationFilter();
         filter.setControllerId("testsuite");
         filter.setName("notification.xml");
-        filter.setObjectType(ObjectType.NOTIFICATION);
+        //filter.setObjectType(ObjectType.NOTIFICATION);
         filter.setForceRelease(false);
         return filter;
     }
@@ -1186,7 +1186,7 @@ public class DeploymentTestUtils {
         DeleteNotificationFilter filter = new DeleteNotificationFilter();
         filter.setControllerId("testsuite");
         filter.setName("notification.xml");
-        filter.setObjectType(ObjectType.NOTIFICATION);
+        //filter.setObjectType(ObjectType.NOTIFICATION);
         filter.setRelease(false);
         return filter;
     }
@@ -1195,7 +1195,7 @@ public class DeploymentTestUtils {
         StoreNotificationFilter filter = new StoreNotificationFilter();
         filter.setControllerId("testsuite");
         filter.setName("notification.xml");
-        filter.setObjectType(ObjectType.NOTIFICATION);
+       // filter.setObjectType(ObjectType.NOTIFICATION);
         filter.setConfiguration("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\r\n"
                 + "<Configurations>\r\n"
                 + "    <Fragments>\r\n"
