@@ -169,7 +169,7 @@ public class SOSXML {
         t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, omitXmlDeclaration ? "yes" : "no");
         t.setOutputProperty(OutputKeys.INDENT, indent ? "yes" : "no");
         t.transform(new DOMSource(node), new StreamResult(sw));
-        return sw.toString();
+        return sw.toString().trim();
     }
 
     public class SOSXMLXPath {

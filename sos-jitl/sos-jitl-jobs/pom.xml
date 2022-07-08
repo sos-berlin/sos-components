@@ -48,7 +48,11 @@
 			<artifactId>sos-commons-vfs</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-xml</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<!-- 3rd Party Dependencies -->
 		<dependency>
 			<groupId>com.typesafe</groupId>
@@ -66,13 +70,13 @@
 			<groupId>com.google.code.findbugs</groupId>
 			<artifactId>jsr305</artifactId>
 		</dependency>
-		
+
 		<dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
-        </dependency>
-        
-        <dependency>
+			<groupId>org.glassfish.jersey.core</groupId>
+			<artifactId>jersey-client</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-csv</artifactId>
 		</dependency>

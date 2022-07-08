@@ -1,5 +1,6 @@
 package com.sos.commons.hibernate;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -952,5 +953,48 @@ public class SOSHibernateSQLExecutor implements Serializable {
     public static boolean isResultListQuery(final String sql, final boolean execReturnsResultSet) {
         String stmt = sql.toLowerCase();
         return stmt.startsWith("select") || (stmt.startsWith("exec") && execReturnsResultSet);
+    }
+
+    public static String[] getColumnLabels(ResultSet rs) throws SQLException {
+        if (rs == null) {
+            return null;
+        }
+        ResultSetMetaData m = rs.getMetaData();
+        if (m == null) {
+            return null;
+        }
+
+        final int count = m.getColumnCount();
+        String[] result = new String[count];
+        for (int i = 0; i < count; i++) {
+            result[i] = m.getColumnLabel(i + 1);
+        }
+        return result;
+    }
+
+    public static String sqlValueToString(Object o) {
+        if (o == null) {
+            return null;
+        }
+        if (o instanceof java.sql.Clob) {
+            return toString((java.sql.Clob) o);
+        }
+        return o.toString();
+    }
+
+    public static String toString(java.sql.Clob clob) {
+        final StringBuilder sb = new StringBuilder();
+        try {
+            final Reader reader = clob.getCharacterStream();
+            final BufferedReader br = new BufferedReader(reader);
+            int b;
+            while (-1 != (b = br.read())) {
+                sb.append((char) b);
+            }
+            br.close();
+        } catch (Throwable e) {
+            return e.toString();
+        }
+        return sb.toString();
     }
 }

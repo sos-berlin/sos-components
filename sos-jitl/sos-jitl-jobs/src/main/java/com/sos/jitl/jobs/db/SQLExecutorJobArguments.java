@@ -9,7 +9,7 @@ import com.sos.jitl.jobs.common.JobArguments;
 public class SQLExecutorJobArguments extends JobArguments {
 
     public enum ResultSetAsVariables {
-        COLUMN_VALUE, NAME_VALUE, CSV
+        COLUMN_VALUE, NAME_VALUE, CSV, XML, JSON
     }
 
     private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", true, Job.getAgentHibernateFile());

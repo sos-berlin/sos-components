@@ -11,6 +11,7 @@ import org.apache.commons.csv.CSVFormat.Builder;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.QuoteMode;
 
+import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.jitl.jobs.common.JobLogger;
@@ -49,7 +50,7 @@ public class Export2CSV {
             int columnCount = resultSet.getMetaData().getColumnCount();
             while (resultSet.next()) {
                 for (int i = 1; i <= columnCount; ++i) {
-                    printer.print(resultSet.getObject(i));
+                    printer.print(SOSHibernateSQLExecutor.sqlValueToString(resultSet.getObject(i)));
                 }
                 printer.println();
                 dataRows++;
@@ -62,8 +63,8 @@ public class Export2CSV {
                 }
             }
             if (logger != null) {
-                logger.info("[export][%s]total rows written = %s (header = %s, data = %s), duration = %s", file, headerRows + dataRows, headerRows,
-                        dataRows, SOSDate.getDuration(start, Instant.now()));
+                logger.info("[export][%s]total rows written=%s (header=%s, data=%s), duration=%s", file, headerRows + dataRows, headerRows, dataRows,
+                        SOSDate.getDuration(start, Instant.now()));
             }
         } catch (Throwable e) {
             removeOutputFile = true;

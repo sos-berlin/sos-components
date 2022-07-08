@@ -56,4 +56,9 @@ public class UnitTestJobHelper<A extends JobArguments> {
         return step;
     }
 
+    public static JobLogger newJobLogger() {
+        JobLogger l = new JobLogger(null, null);
+        l.init(null);
+        return l;
+    }
 }

@@ -15,6 +15,8 @@ import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ResultSetAsVariables;
 import com.sos.jitl.jobs.db.common.Export2CSV;
+import com.sos.jitl.jobs.db.common.Export2JSON;
+import com.sos.jitl.jobs.db.common.Export2XML;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 import js7.data_for_java.order.JOutcome;
@@ -99,6 +101,18 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
                         throw new SOSJobRequiredArgumentMissingException(args.getResultFile().getName());
                     }
                     Export2CSV.export(rs, args.getResultFile().getValue(), step.getLogger());
+                    return;
+                case XML:
+                    if (args.getResultFile().getValue() == null) {
+                        throw new SOSJobRequiredArgumentMissingException(args.getResultFile().getName());
+                    }
+                    Export2XML.export(rs, args.getResultFile().getValue(), step.getLogger());
+                    return;
+                case JSON:
+                    if (args.getResultFile().getValue() == null) {
+                        throw new SOSJobRequiredArgumentMissingException(args.getResultFile().getName());
+                    }
+                    Export2JSON.export(rs, args.getResultFile().getValue(), step.getLogger());
                     return;
                 default:
                     isParamValue = args.getResultSetAsVariables().equals(ResultSetAsVariables.NAME_VALUE);
