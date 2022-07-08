@@ -6,7 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.agent.Agent;
+import com.sos.joc.model.agent.RegisterClusterWatchAgent;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -44,13 +44,13 @@ public class RegisterParameters {
     @JsonProperty("controllers")
     private List<RegisterParameter> controllers = new ArrayList<RegisterParameter>();
     /**
-     * single agent
+     * Register Cluster Watch Agent
      * <p>
      * 
      * 
      */
     @JsonProperty("clusterWatcher")
-    private Agent clusterWatcher;
+    private RegisterClusterWatchAgent clusterWatcher;
     /**
      * auditParams
      * <p>
@@ -103,24 +103,24 @@ public class RegisterParameters {
     }
 
     /**
-     * single agent
+     * Register Cluster Watch Agent
      * <p>
      * 
      * 
      */
     @JsonProperty("clusterWatcher")
-    public Agent getClusterWatcher() {
+    public RegisterClusterWatchAgent getClusterWatcher() {
         return clusterWatcher;
     }
 
     /**
-     * single agent
+     * Register Cluster Watch Agent
      * <p>
      * 
      * 
      */
     @JsonProperty("clusterWatcher")
-    public void setClusterWatcher(Agent clusterWatcher) {
+    public void setClusterWatcher(RegisterClusterWatchAgent clusterWatcher) {
         this.clusterWatcher = clusterWatcher;
     }
 
