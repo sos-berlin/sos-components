@@ -120,13 +120,13 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
                 agent.setHidden(a.getHidden());
                 agent.setDisabled(a.getDisabled());
                 agent.setIsClusterWatcher(a.getIsWatcher());
-                if (clusterAgentIds.contains(a.getAgentId())) {
-                    agent.setUrl(null);
-                } else {
+//                if (clusterAgentIds.contains(a.getAgentId())) {
+//                    agent.setUrl(null);
+//                } else {
                     agent.setUrl(a.getUri());
-                }
+//                }
                 return agent;
-            }).collect(Collectors.groupingBy(a -> a.getUrl() == null));
+            }).collect(Collectors.groupingBy(a -> clusterAgentIds.contains(a.getAgentId()))); //.collect(Collectors.groupingBy(a -> a.getUrl() == null));
         }
         return Collections.emptyMap();
     }
