@@ -13,9 +13,6 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -41,18 +38,16 @@ import js7.base.problem.Problem;
 import js7.data.controller.ControllerCommand.Response;
 import js7.data.workflow.Workflow;
 import js7.data.workflow.WorkflowPath;
-import js7.data.workflow.WorkflowPathControlState;
+import js7.data.workflow.WorkflowPathControl;
 import js7.data.workflow.position.Label;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
-import scala.collection.JavaConverters;
 
 @Path("workflow")
 public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkflowLabelsModify {
 
     private static final String API_CALL = "./workflow/";
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowLabelsModifyImpl.class);
 
     private enum Action {
         SKIP, UNSKIP, STOP, UNSTOP
@@ -215,11 +210,9 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
                     + "'.");
         }
 
-        WorkflowPathControlState controlState = JavaConverters.asJava(currentState.asScala().pathToWorkflowPathControlState_()).get(wj
-                .getWorkflowPath());
-        if (controlState != null) {
-            Set<String> skippedLabels = JavaConverters.asJava(controlState.workflowPathControl().skip()).stream().map(Label::string).collect(
-                    Collectors.toSet());
+        Optional<WorkflowPathControl> controlState = WorkflowsHelper.getWorkflowPathControl(currentState, wj.getWorkflowPath(), false);
+        if (controlState.isPresent()) {
+            Set<String> skippedLabels = WorkflowsHelper.getSkippedLabels(controlState, false);
             
             switch (action) {
             case SKIP:

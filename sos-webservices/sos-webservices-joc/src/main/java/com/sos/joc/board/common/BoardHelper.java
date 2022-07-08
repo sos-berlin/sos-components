@@ -41,7 +41,6 @@ import com.sos.joc.model.common.Folder;
 import js7.data.board.BoardPath;
 import js7.data.board.BoardState;
 import js7.data.order.Order;
-import js7.data.workflow.instructions.ExpectNotices;
 import js7.data_for_java.board.JBoardState;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
@@ -184,8 +183,10 @@ public class BoardHelper {
             return Stream.empty();
         }
         Function<JOrder, Stream<ExpectingOrder>> mapper = order -> {
-            return JavaConverters.asJava(((Order.ExpectingNotices) order.asScala().state()).expected()).stream().filter(e -> boardPaths.contains(e
-                    .boardPath().string())).map(e -> new ExpectingOrder(order, e.boardPath(), e.noticeId()));
+            return controllerState.orderToStillExpectedNotices(order.id()).stream().filter(e -> boardPaths.contains(e.boardPath().string())).map(
+                    e -> new ExpectingOrder(order, e));
+            // return JavaConverters.asJava(((Order.ExpectingNotices) order.asScala().state()).expected()).stream().filter(e -> boardPaths.contains(e
+            // .boardPath().string())).map(e -> new ExpectingOrder(order, e.boardPath(), e.noticeId()));
         };
         if (permittedFolders == null || permittedFolders.isEmpty()) {
             return controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotices.class)).parallel().flatMap(mapper).filter(

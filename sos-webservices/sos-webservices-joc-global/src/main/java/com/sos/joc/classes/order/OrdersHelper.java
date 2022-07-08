@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.controller.model.order.ExpectedNotice;
 import com.sos.controller.model.order.OrderCycleState;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.order.OrderModeType;
@@ -407,7 +408,7 @@ public class OrdersHelper {
         
         o.setEndPositions(oItem.getStopPositions());
         o.setCycleState(oItem.getState().getCycleState());
-        o.setExpectedNotices(oItem.getState().getExpected());
+        o.setExpectedNotices(getStillExpectedNotices(jOrder.id(), oItem, controllerState));
         int positionsSize = o.getPosition().size();
         if ("Processing".equals(oItem.getState().getTYPE())) {
             Option<SubagentId> subAgentId = ((Order.Processing) jOrder.asScala().state()).subagentId();
@@ -462,6 +463,18 @@ public class OrdersHelper {
         }
         o.setWorkflowId(wId);
         return o;
+    }
+    
+    private static List<ExpectedNotice> getStillExpectedNotices(OrderId orderId, OrderItem oItem, JControllerState controllerState) {
+        if ("ExpectingNotices".equals(oItem.getState().getTYPE())) {
+            if (controllerState != null) {
+                return controllerState.orderToStillExpectedNotices(orderId).stream().map(n -> new ExpectedNotice(n.boardPath().string(), n.noticeId()
+                        .string())).collect(Collectors.toList());
+            } else {
+                return oItem.getState().getExpected();
+            }
+        }
+        return null;
     }
 
     public static OrderV mapJOrderToOrderV(JOrder jOrder, JControllerState controllerState, Boolean compact, Set<Folder> listOfFolders,

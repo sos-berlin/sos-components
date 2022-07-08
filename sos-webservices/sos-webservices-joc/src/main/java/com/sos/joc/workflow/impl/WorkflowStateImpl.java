@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.workflow.WorkflowFilter;
@@ -31,7 +33,7 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
 import js7.data.workflow.WorkflowPath;
-import js7.data.workflow.WorkflowPathControlState;
+import js7.data.workflow.WorkflowPathControl;
 import js7.data.workflow.instructions.executable.WorkflowJob;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
@@ -86,9 +88,9 @@ public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState
                 stateText = SyncStateText.NOT_IN_SYNC;
                 if (workflowE != null && workflowE.isRight()) {
                     
-                    WorkflowPathControlState controlState = JavaConverters.asJava(currentstate.asScala().pathToWorkflowPathControlState_()).get(wPath);
+                    Optional<WorkflowPathControl> controlState = WorkflowsHelper.getWorkflowPathControl(currentstate, wPath, false);
                     stateText = SyncStateText.IN_SYNC;
-                    if (controlState != null) {
+                    if (controlState.isPresent()) {
                         Set<AgentPath> agentsThatIgnoreCommand = currentstate.singleWorkflowPathControlToIgnorantAgents(wPath);
                         Set<AgentPath> allAgents = JavaConverters.asJava(workflowE.get().asScala().nameToJob()).values().stream().map(
                                 WorkflowJob::agentPath).collect(Collectors.toSet());
@@ -96,7 +98,7 @@ public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState
                         
                         if (!agentsThatIgnoreCommand.isEmpty()) {
                             stateText = SyncStateText.OUTSTANDING;
-                        } else if (controlState.workflowPathControl().suspended()) {
+                        } else if (controlState.get().suspended()) {
                             stateText = SyncStateText.SUSPENDED;
                         }
                         

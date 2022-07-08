@@ -40,7 +40,7 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.controller.ControllerCommand.Response;
-import js7.data.workflow.WorkflowPathControlState;
+import js7.data.workflow.WorkflowPathControl;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
@@ -161,8 +161,8 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
     private List<WorkflowPath> getCheckedWorkflows(Action action, Stream<WorkflowPath> workflowsStream, JControllerState currentState,
             String controllerId, boolean withPostProblem) {
 
-        Set<WorkflowPath> suspendedWorkflowsAtController = JavaConverters.asJava(currentState.asScala().pathToWorkflowPathControlState_()).values()
-                .stream().filter(c -> c.workflowPathControl().suspended()).map(WorkflowPathControlState::workflowPath).collect(Collectors.toSet());
+        Set<WorkflowPath> suspendedWorkflowsAtController = JavaConverters.asJavaCollection(currentState.asScala().pathToWorkflowPathControl()
+                .values()).stream().filter(WorkflowPathControl::suspended).map(WorkflowPathControl::workflowPath).collect(Collectors.toSet());
 
         Map<Boolean, List<WorkflowPath>> suspendedWorkflows = workflowsStream.distinct().collect(Collectors.groupingBy(
                 w -> suspendedWorkflowsAtController.contains(w), Collectors.toList()));

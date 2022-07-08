@@ -3,12 +3,14 @@ package com.sos.joc.classes.common;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
@@ -20,11 +22,10 @@ import js7.data.job.JobResourcePath;
 import js7.data.lock.LockPath;
 import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
-import js7.data.workflow.WorkflowPathControlState;
+import js7.data.workflow.WorkflowPathControl;
 import js7.data_for_java.common.JJsonable;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
-import scala.collection.JavaConverters;
 
 public class SyncStateHelper {
     
@@ -138,8 +139,8 @@ public class SyncStateHelper {
         if (either != null && either.isRight()) {
             stateText = SyncStateText.IN_SYNC;
             WorkflowPath wPath = either.get().id().path();
-            WorkflowPathControlState controlState = JavaConverters.asJava(currentstate.asScala().pathToWorkflowPathControlState_()).get(wPath);
-            if (controlState != null) {
+            Optional<WorkflowPathControl> controlState = WorkflowsHelper.getWorkflowPathControl(currentstate, wPath, false);
+            if (controlState.isPresent()) {
                 Set<AgentPath> agentsThatIgnoreCommand = currentstate.singleWorkflowPathControlToIgnorantAgents(wPath);
                 int numOfgentsThatIgnoreCommand = agentsThatIgnoreCommand.size();
                 // int numOfAgentsThatConfirmedSuspendOrResume = JavaConverters.asJava(controlState.attachedToAgents()).size();
@@ -157,7 +158,7 @@ public class SyncStateHelper {
                 
                 if (numOfgentsThatIgnoreCommand > 0) {
                     stateText = SyncStateText.OUTSTANDING;
-                } else if (controlState.workflowPathControl().suspended()) {
+                } else if (controlState.get().suspended()) {
                     stateText = SyncStateText.SUSPENDED;
                 }
             }

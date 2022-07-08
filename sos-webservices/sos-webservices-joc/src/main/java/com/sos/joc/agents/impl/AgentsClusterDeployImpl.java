@@ -22,7 +22,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.agent.AgentHelper;
-import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.controller.impl.ControllerResourceModifyClusterImpl;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;

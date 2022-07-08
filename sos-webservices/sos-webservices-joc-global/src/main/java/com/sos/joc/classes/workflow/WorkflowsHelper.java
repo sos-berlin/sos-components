@@ -12,6 +12,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
@@ -77,7 +78,8 @@ import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
-import js7.data.workflow.WorkflowPathControlState;
+import js7.data.workflow.WorkflowPathControl;
+import js7.data.workflow.WorkflowPathControlPath;
 import js7.data.workflow.position.Label;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
@@ -87,6 +89,7 @@ import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import scala.Function1;
 import scala.collection.JavaConverters;
+import scala.jdk.javaapi.OptionConverters;
 
 public class WorkflowsHelper {
     
@@ -824,25 +827,33 @@ public class WorkflowsHelper {
                     break;
                 case IF:
                     IfElse ie = inst.cast();
-                    extractImplicitEnds(ie.getThen().getInstructions(), posSet, true);
+                    if (ie.getThen() != null) {
+                        extractImplicitEnds(ie.getThen().getInstructions(), posSet, true);
+                    }
                     if (ie.getElse() != null) {
                         extractImplicitEnds(ie.getElse().getInstructions(), posSet, true);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
-                    extractImplicitEnds(tc.getTry().getInstructions(), posSet, true);
+                    if (tc.getTry() != null) {
+                        extractImplicitEnds(tc.getTry().getInstructions(), posSet, true);
+                    }
                     if (tc.getCatch() != null) {
                         extractImplicitEnds(tc.getCatch().getInstructions(), posSet, true);
                     }
                     break;
                 case LOCK:
                     Lock l = inst.cast();
-                    extractImplicitEnds(l.getLockedWorkflow().getInstructions(), posSet, true);
+                    if (l.getLockedWorkflow() != null) {
+                        extractImplicitEnds(l.getLockedWorkflow().getInstructions(), posSet, true);
+                    }
                     break;
                 case CYCLE:
                     Cycle c = inst.cast();
-                    extractImplicitEnds(c.getCycleWorkflow().getInstructions(), posSet, true);
+                    if (c.getCycleWorkflow() != null) {
+                        extractImplicitEnds(c.getCycleWorkflow().getInstructions(), posSet, true);
+                    }
                     break;
                 default:
                     break;
@@ -851,13 +862,78 @@ public class WorkflowsHelper {
         }
     }
     
+//    private static void extractImplicitEndOfScope(List<Instruction> insts, Set<String> posSet, boolean extract) {
+//        if (insts != null) {
+//            for (int i = 0; i < insts.size(); i++) {
+//                Instruction inst = insts.get(i);
+//                switch (inst.getTYPE()) {
+//                case IMPLICIT_END:
+//                    if (extract) {
+//                        posSet.add(getJPositionString(inst.getPosition()));
+//                    }
+//                    break;
+//                case FORK:
+//                    ForkJoin f = inst.cast();
+//                    for (Branch b : f.getBranches()) {
+//                        extractImplicitEnds(b.getWorkflow().getInstructions(), posSet, true);
+//                    }
+//                    break;
+//                case FORKLIST:
+//                    ForkList fl = inst.cast();
+//                    extractImplicitEnds(fl.getWorkflow().getInstructions(), posSet, true);
+//                    break;
+//                case IF:
+//                    IfElse ie = inst.cast();
+//                    if (ie.getThen() != null) {
+//                        extractImplicitEnds(ie.getThen().getInstructions(), posSet, false);
+//                    }
+//                    if (ie.getElse() != null) {
+//                        extractImplicitEnds(ie.getElse().getInstructions(), posSet, false);
+//                    }
+//                    break;
+//                case TRY:
+//                    TryCatch tc = inst.cast();
+//                    if (tc.getTry() != null) {
+//                        extractImplicitEnds(tc.getTry().getInstructions(), posSet, false);
+//                    }
+//                    if (tc.getCatch() != null) {
+//                        extractImplicitEnds(tc.getCatch().getInstructions(), posSet, false);
+//                    }
+//                    break;
+//                case LOCK:
+//                    Lock l = inst.cast();
+//                    if (l.getLockedWorkflow() != null) {
+//                        extractImplicitEnds(l.getLockedWorkflow().getInstructions(), posSet, false);
+//                    }
+//                    break;
+//                case CYCLE:
+//                    Cycle c = inst.cast();
+//                    if (c.getCycleWorkflow() != null) {
+//                        extractImplicitEnds(c.getCycleWorkflow().getInstructions(), posSet, false);
+//                    }
+//                    break;
+//                default:
+//                    break;
+//                }
+//            }
+//        }
+//    }
+    
     private static String getJPositionString(List<Object> positionList) {
         Either<Problem, JPosition> jPosEither = JPosition.fromList(positionList);
         if (jPosEither.isRight()) {
             return jPosEither.get().toString();
         }
-        return null;
+        return "";
     }
+    
+//    private static JPosition getJPosition(List<Object> positionList) {
+//        Either<Problem, JPosition> jPosEither = JPosition.fromList(positionList);
+//        if (jPosEither.isRight()) {
+//            return jPosEither.get();
+//        }
+//        return null;
+//    }
 
     private static Object[] extendArray(Object[] position, Object extValue) {
         Object[] pos = Arrays.copyOf(position, position.length + 1);
@@ -1064,29 +1140,35 @@ public class WorkflowsHelper {
     }
     
     public static Set<String> getSkippedLabels(JControllerState currentstate, String workflowName, boolean compact) {
+        return getSkippedLabels(currentstate, WorkflowPath.of(workflowName), compact);
+    }
+    
+    public static Set<String> getSkippedLabels(JControllerState currentstate, WorkflowPath workflowName, boolean compact) {
         if (!compact && currentstate != null) {
-            WorkflowPathControlState controlState = JavaConverters.asJava(currentstate.asScala().pathToWorkflowPathControlState_()).get(
-                    WorkflowPath.of(workflowName));
-            return getSkippedLabels(controlState, compact);
+            return getSkippedLabels(getWorkflowPathControl(currentstate, workflowName, compact), compact);
         }
         return Collections.emptySet();
     }
     
-    public static Set<String> getSkippedLabels(WorkflowPathControlState controlState, boolean compact) {
+    public static Set<String> getSkippedLabels(Optional<WorkflowPathControl> controlState, boolean compact) {
         if (!compact) {
-            if (controlState != null) {
-                return JavaConverters.asJava(controlState.workflowPathControl().skip()).stream().map(Label::string).collect(
+            if (controlState.isPresent()) {
+                return JavaConverters.asJava(controlState.get().skip()).stream().map(Label::string).collect(
                         Collectors.toSet());
             }
         }
         return Collections.emptySet();
     }
     
-    public static Map<WorkflowPath, WorkflowPathControlState> getWorkflowPathControlStates(JControllerState currentstate, boolean compact) {
+    public static Optional<WorkflowPathControl> getWorkflowPathControl(JControllerState currentstate, String workflowName, boolean compact) {
+        return getWorkflowPathControl(currentstate, WorkflowPath.of(workflowName), compact);
+    }
+    
+    public static Optional<WorkflowPathControl> getWorkflowPathControl(JControllerState currentstate, WorkflowPath workflowName, boolean compact) {
         if (!compact && currentstate != null) {
-            return JavaConverters.asJava(currentstate.asScala().pathToWorkflowPathControlState_());
+            return OptionConverters.toJava(currentstate.asScala().pathToWorkflowPathControl().get(WorkflowPathControlPath.apply(workflowName)));
         }
-        return Collections.emptyMap();
+        return Optional.empty();
     }
     
 }

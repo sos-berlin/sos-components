@@ -33,11 +33,7 @@ import com.sos.joc.workflow.resource.IWorkflowBoardsResource;
 import com.sos.joc.workflows.impl.WorkflowsResourceImpl;
 import com.sos.schema.JsonValidator;
 
-import js7.data.workflow.WorkflowPath;
-import js7.data.workflow.WorkflowPathControlState;
-import js7.data.workflow.position.Label;
 import js7.data_for_java.controller.JControllerState;
-import scala.collection.JavaConverters;
 
 @Path("workflow")
 public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWorkflowBoardsResource {
