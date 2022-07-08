@@ -30,6 +30,9 @@ import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.model.inventory.release.ReleasableRecallFilter;
+import com.sos.joc.model.notification.DeleteNotificationFilter;
+import com.sos.joc.model.notification.ReadNotificationFilter;
+import com.sos.joc.model.notification.StoreNotificationFilter;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
@@ -475,6 +478,19 @@ public class MappingTest {
         ReleasableRecallFilter filter = DeploymentTestUtils.createReleasableRecallFilter();
         LOGGER.trace("ReleasableRecallFilter");
         LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(filter));
+    }
+    
+    @Test
+    public void test30NotificationFilters() throws JsonProcessingException {
+        ReadNotificationFilter readFilter = DeploymentTestUtils.createReadNotificationFilter();
+        StoreNotificationFilter storeFilter = DeploymentTestUtils.createStoreNotificationFilter();
+        DeleteNotificationFilter deleteFilter = DeploymentTestUtils.createDeleteNotificationFilter();
+        LOGGER.info("ReadNotificationFilter");
+        LOGGER.info(Globals.prettyPrintObjectMapper.writeValueAsString(readFilter));
+        LOGGER.info("StoreNotificationFilter");
+        LOGGER.info(Globals.prettyPrintObjectMapper.writeValueAsString(storeFilter));
+        LOGGER.info("DeleteNotificationFilter");
+        LOGGER.info(Globals.prettyPrintObjectMapper.writeValueAsString(deleteFilter));
     }
     
 }
