@@ -278,15 +278,18 @@ public class DBLayer implements Serializable {
     public static final String TABLE_YADE_FILES = "YADE_FILES";
     public static final String TABLE_YADE_FILES_SEQUENCE = "SEQ_YADE_FIL";
 
+    public static final String DBITEM_IAM_ACCOUNTS = DBItemIamAccount.class.getSimpleName();
     public static final String TABLE_IAM_ACCOUNTS = "IAM_ACCOUNTS";
     public static final String TABLE_IAM_ACCOUNTS_SEQUENCE = "SEQ_IAM_ACCOUNTS";
 
+    public static final String DBITEM_IAM_HISTORY = DBItemIamHistory.class.getSimpleName();
     public static final String TABLE_IAM_HISTORY = "IAM_HISTORY";
     public static final String TABLE_IAM_HISTORY_SEQUENCE = "SEQ_IAM_HISTORY";
 
     public static final String TABLE_IAM_BLOCKLIST = "IAM_BLOCKLIST";
     public static final String TABLE_IAM_BLOCKLIST_SEQUENCE = "SEQ_IAM_BLOCKLIST";
 
+    public static final String DBITEM_IAM_HISTORY_DETAILS = DBItemIamHistoryDetails.class.getSimpleName();
     public static final String TABLE_IAM_HISTORY_DETAILS = "IAM_HISTORY_DETAILS";
     public static final String TABLE_IAM_HISTORY_DETAILS_SEQUENCE = "SEQ_IAM_HISTORY_DETAILS";
 
