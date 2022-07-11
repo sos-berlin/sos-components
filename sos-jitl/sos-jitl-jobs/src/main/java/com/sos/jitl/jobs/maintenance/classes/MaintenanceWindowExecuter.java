@@ -36,7 +36,7 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            throw new SOSException(String.format("Status Code: %s", apiResponse.getStatusCode()));
+            throw new SOSException(String.format("Status Code: %s : Response: %s", apiResponse.getStatusCode(),apiResponse.getResponseBody()));
         }
 
         Globals.debug(logger, body);
@@ -57,7 +57,7 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            throw new SOSException(String.format("Status Code: %s", apiResponse.getStatusCode()));
+            throw new SOSException(String.format("Status Code: %s : Response: %s", apiResponse.getStatusCode(),apiResponse.getResponseBody()));
         }
         Globals.debug(logger, body);
         Globals.debug(logger, "answer=" + answer);
@@ -74,7 +74,7 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            throw new SOSException(String.format("Status Code: %s", apiResponse.getStatusCode()));
+            throw new SOSException(String.format("Status Code: %s : Response: %s", apiResponse.getStatusCode(),apiResponse.getResponseBody()));
         }
         Globals.debug(logger, body);
         Globals.debug(logger, "answer=" + answer);
@@ -99,7 +99,7 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            throw new SOSException(String.format("Status Code: %s", apiResponse.getStatusCode()));
+            throw new SOSException(String.format("Status Code: %s : Response: %s", apiResponse.getStatusCode(),apiResponse.getResponseBody()));
         }
 
         Globals.debug(logger, body);
@@ -124,7 +124,7 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            throw new SOSException(String.format("Status Code: %s", apiResponse.getStatusCode()));
+            throw new SOSException(String.format("Status Code: %s : Response: %s", apiResponse.getStatusCode(),apiResponse.getResponseBody()));
         }
         Globals.debug(logger, body);
         Globals.debug(logger, "answer=" + answer);
@@ -142,7 +142,7 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            throw new SOSException(String.format("Status Code: %s", apiResponse.getStatusCode()));
+            throw new SOSException(String.format("Status Code: %s : Response: %s", apiResponse.getStatusCode(),apiResponse.getResponseBody()));
         }
         Globals.debug(logger, body);
         Globals.debug(logger, "answer=" + answer);
