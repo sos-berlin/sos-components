@@ -34,7 +34,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
                     .map(dbItemReleased -> {
                         dbLayer.recallReleasedConfiguration(dbItemReleased);
                         return dbItemReleased.getFolder();
-                    }).collect(Collectors.toSet()).stream().forEach(folder -> JocInventory.postEvent(folder));
+                    }).distinct().forEach(folder -> JocInventory.postEvent(folder));
             return JOCDefaultResponse.responseStatusJSOk(new Date());
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
