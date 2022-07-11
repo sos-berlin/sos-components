@@ -425,7 +425,7 @@ public class EventService {
                 } else if (itemId instanceof BoardPath) {
                     addEvent(createBoardEvent(eventId, itemId.string(), eventType));
                 } else if (itemId instanceof WorkflowPathControlPath) {
-                    addEvent(createWorkflowEvent(eventId, itemId.string(), eventType));
+                    addEvent(createWorkflowEvent(eventId, itemId.string(), "WorkflowUpdated"));
                 } else {
                     // TODO other simple objects
                 }
