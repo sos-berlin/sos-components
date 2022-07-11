@@ -2379,6 +2379,23 @@ public class DBLayerDeploy {
         }
     }
 
+    public DBItemInventoryReleasedConfiguration getReleasedConfiguration(String name, ConfigurationType type) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+            hql.append(" where name = :name");
+            hql.append(" and type = :type");
+            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("name", name);
+            query.setParameter("type", type);
+            query.setMaxResults(1);
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
     public List<DBItemInventoryConfiguration> getReleasableConfigurations(String folder) {
         Set<Integer> types = JocInventory.getReleasableTypes();
         try {
@@ -2628,8 +2645,27 @@ public class DBLayerDeploy {
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
-        
-        
+    }
+    
+    public void recallReleasedConfiguration (DBItemInventoryReleasedConfiguration released) {
+        try {
+            if (released != null) {
+                getSession().delete(released);
+            }
+            StringBuilder hqlUnreleased = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hqlUnreleased.append(" where type = :type");
+            hqlUnreleased.append(" and name = :name");
+            Query<DBItemInventoryConfiguration> queryUnreleased = getSession().createQuery(hqlUnreleased.toString());
+            queryUnreleased.setParameter("type", released.getType());
+            queryUnreleased.setParameter("name", released.getName());
+            DBItemInventoryConfiguration unreleased = getSession().getSingleResult(queryUnreleased);
+            if (unreleased != null) {
+                unreleased.setReleased(false);
+                getSession().update(unreleased);
+            }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
     }
     
 }
