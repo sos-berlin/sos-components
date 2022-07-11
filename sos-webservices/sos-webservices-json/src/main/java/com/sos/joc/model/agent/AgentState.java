@@ -19,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "severity",
-    "_text"
+    "_text",
+    "_reason"
 })
 public class AgentState {
 
@@ -32,7 +33,7 @@ public class AgentState {
     @JsonPropertyDescription("0=COUPLED, 1=RESETTING, 1=RESET, 2=COUPLINGFAILED, 3=UNKNOWN")
     private Integer severity;
     /**
-     * component state
+     * agent state
      * <p>
      * 
      * (Required)
@@ -40,6 +41,14 @@ public class AgentState {
      */
     @JsonProperty("_text")
     private AgentStateText _text;
+    /**
+     * reason of intitialised state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("_reason")
+    private AgentStateReason _reason;
 
     /**
      *  0=COUPLED, 1=RESETTING, 1=RESET, 2=COUPLINGFAILED, 3=UNKNOWN
@@ -62,7 +71,7 @@ public class AgentState {
     }
 
     /**
-     * component state
+     * agent state
      * <p>
      * 
      * (Required)
@@ -74,7 +83,7 @@ public class AgentState {
     }
 
     /**
-     * component state
+     * agent state
      * <p>
      * 
      * (Required)
@@ -85,14 +94,36 @@ public class AgentState {
         this._text = _text;
     }
 
+    /**
+     * reason of intitialised state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("_reason")
+    public AgentStateReason get_reason() {
+        return _reason;
+    }
+
+    /**
+     * reason of intitialised state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("_reason")
+    public void set_reason(AgentStateReason _reason) {
+        this._reason = _reason;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).toString();
+        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).append("_reason", _reason).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(severity).append(_text).toHashCode();
+        return new HashCodeBuilder().append(severity).append(_text).append(_reason).toHashCode();
     }
 
     @Override
@@ -104,7 +135,7 @@ public class AgentState {
             return false;
         }
         AgentState rhs = ((AgentState) other);
-        return new EqualsBuilder().append(severity, rhs.severity).append(_text, rhs._text).isEquals();
+        return new EqualsBuilder().append(severity, rhs.severity).append(_text, rhs._text).append(_reason, rhs._reason).isEquals();
     }
 
 }

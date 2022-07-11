@@ -38,6 +38,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentClusterState;
 import com.sos.joc.model.agent.AgentClusterStateText;
 import com.sos.joc.model.agent.AgentState;
+import com.sos.joc.model.agent.AgentStateReason;
 import com.sos.joc.model.agent.AgentStateText;
 import com.sos.joc.model.agent.AgentStateV;
 import com.sos.joc.model.agent.AgentV;
@@ -81,11 +82,10 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         {
             put(AgentStateText.COUPLED, 0);
             put(AgentStateText.RESETTING, 1);
-            put(AgentStateText.RESET, 1);
+            put(AgentStateText.INITIALISED, 1);
             put(AgentStateText.COUPLINGFAILED, 2);
             put(AgentStateText.SHUTDOWN, 2);
             put(AgentStateText.UNKNOWN, 2);
-            put(AgentStateText.NEVER_STARTED, 4);
         }
     });
     private static final Map<AgentClusterStateText, Integer> agentHealthStates = Collections.unmodifiableMap(
@@ -100,6 +100,16 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                     put(AgentClusterStateText.UNKNOWN, 2);
                 }
             });
+    private static final Map<String, AgentStateReason> agentStateReasons = Collections.unmodifiableMap(new HashMap<String, AgentStateReason>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put("Fresh", AgentStateReason.FRESH);
+            put("Reset", AgentStateReason.RESET);
+            put("Restarted", AgentStateReason.RESTARTED);
+        }
+    });
 
     @Override
     public JOCDefaultResponse getState(String accessToken, byte[] filterBytes) {
@@ -196,6 +206,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                     DBItemInventorySubAgentInstance::getOrdering)).map(dbSubAgent -> {
                                         SubagentV subagent = mapDbSubagentToAgentV(dbSubAgent);
                                         AgentStateText stateText = AgentStateText.UNKNOWN;
+                                        AgentStateReason stateReason = null;
                                         if (Proxies.isCoupled(controllerId)) {
                                             if (SubagentDirectorType.NO_DIRECTOR.equals(dbSubAgent.getDirectorAsEnum())) {
                                                 JSubagentItemState jSubagentItemState = subagentItemStates.get(SubagentId.of(dbSubAgent.getSubAgentId()));
@@ -204,11 +215,14 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                                             .toJson());
                                                     SubagentItemState subagentItemState = jSubagentItemState.asScala();
                                                     DelegateCouplingState couplingState = subagentItemState.couplingState();
+                                                    OptionConverters.toJava(subagentItemState.platformInfo()).ifPresent(i -> subagent.setVersion(i
+                                                            .js7Version().string()));
                                                     Optional<Problem> optProblem = OptionConverters.toJava(subagentItemState.problem());
                                                     if (optProblem.isPresent()) {
                                                         subagent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
                                                     }
                                                     stateText = getAgentStateText(couplingState, optProblem);
+                                                    stateReason = getAgentReasonText(couplingState, optProblem);
                                                 }
                                             } else {
                                                 JAgentRefState jAgentRefState = agentRefStates.get(AgentPath.of(dbSubAgent.getAgentId()));
@@ -216,11 +230,14 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                                     LOGGER.debug("Agent '" + dbSubAgent.getAgentId() + "',  state = " + jAgentRefState.toJson());
                                                     AgentRefState agentRefState = jAgentRefState.asScala();
                                                     DelegateCouplingState couplingState = agentRefState.couplingState();
+                                                    OptionConverters.toJava(agentRefState.platformInfo()).ifPresent(i -> subagent.setVersion(i
+                                                            .js7Version().string()));
                                                     Optional<Problem> optProblem = OptionConverters.toJava(agentRefState.problem());
                                                     if (optProblem.isPresent()) {
                                                         subagent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
                                                     }
                                                     stateText = getAgentStateText(couplingState, optProblem);
+                                                    stateReason = getAgentReasonText(couplingState, optProblem);
                                                 }
                                             }
                                         }
@@ -237,7 +254,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                                 subagent.setRunningTasks(subagent.getOrders().size());
                                             }
                                         }
-                                        subagent.setState(getState(stateText));
+                                        subagent.setState(getState(stateText, stateReason));
                                         // Comparator.comparingInt(SubagentV::getRunningTasks).reversed()
                                         return subagent;
                                     }).filter(Objects::nonNull).collect(Collectors.toList()));
@@ -250,16 +267,19 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         AgentV agent = mapDbAgentToAgentV(dbAgent, subagentsPerAgentId.get(dbAgent.getAgentId()), withStateFilter, agentsParam.getStates());
                         if (agent.getSubagents() == null) { // only for standalone agent, cluster agents has no state (but its subagents)
                             AgentStateText stateText = AgentStateText.UNKNOWN;
+                            AgentStateReason stateReason = null;
                             if (Proxies.isCoupled(controllerId)) {
                                 if (jAgentRefState != null) {
                                     LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  state = " + jAgentRefState.toJson());
                                     AgentRefState agentRefState = jAgentRefState.asScala();
                                     DelegateCouplingState couplingState = agentRefState.couplingState();
+                                    OptionConverters.toJava(agentRefState.platformInfo()).ifPresent(i -> agent.setVersion(i.js7Version().string()));
                                     Optional<Problem> optProblem = OptionConverters.toJava(agentRefState.problem());
                                     if (optProblem.isPresent()) {
                                         agent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
                                     }
                                     stateText = getAgentStateText(couplingState, optProblem);
+                                    stateReason = getAgentReasonText(couplingState, optProblem);
                                 }
                             }
                             if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
@@ -274,7 +294,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                     agent.setRunningTasks(agent.getOrders().size());
                                 }
                             }
-                            agent.setState(getState(stateText));
+                            agent.setState(getState(stateText, stateReason));
                             if (withClusterLicense) {
                                 agent.setHealthState(getHealthState(stateText, dbAgent.getDisabled() == Boolean.TRUE));
                             }
@@ -343,10 +363,11 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         }
     }
 
-    private static AgentState getState(AgentStateText state) {
+    private static AgentState getState(AgentStateText state, AgentStateReason stateReason) {
         AgentState s = new AgentState();
         s.set_text(state);
         s.setSeverity(agentStates.get(state));
+        s.set_reason(stateReason);
         return s;
     }
     
@@ -406,7 +427,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             agent.setSubagents(null);
             agent.setIsClusterWatcher(dbAgent.getIsWatcher());
             agent.setUrl(dbAgent.getUri());
-            agent.setState(getState(AgentStateText.UNKNOWN));
+            agent.setState(getState(AgentStateText.UNKNOWN, null));
             agent.setHealthState(null); //will be set later for standalone agents
             agent.setDisabled(dbAgent.getDisabled());
         } else {
@@ -431,7 +452,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         agent.setAgentId(dbSubagent.getAgentId());
         agent.setSubagentId(dbSubagent.getSubAgentId());
         agent.setUrl(dbSubagent.getUri());
-        agent.setState(getState(AgentStateText.UNKNOWN));
+        agent.setState(getState(AgentStateText.UNKNOWN, null));
         agent.setDisabled(dbSubagent.getDisabled());
         agent.setIsDirector(dbSubagent.getDirectorAsEnum());
         return agent;
@@ -447,15 +468,22 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         } else if (couplingState instanceof DelegateCouplingState.Resetting) {
             return AgentStateText.RESETTING;
         } else if (couplingState instanceof DelegateCouplingState.Reset) {
-            // DelegateCouplingState.Reset.reason.string sollte dir in Java den Grund als String liefern, also Fresh, Shutdown, Restart und ResetCommand.
             String reason = ((DelegateCouplingState.Reset) couplingState).reason().string();
-            if (reason.equals("Fresh")) {
-                return AgentStateText.NEVER_STARTED;
-            } else if (reason.equals("Shutdown")) {
+            if (reason.equals("Shutdown")) {
                 return AgentStateText.SHUTDOWN;
             }
-            return AgentStateText.RESET;
+            return AgentStateText.INITIALISED;
         }
         return AgentStateText.UNKNOWN;
+    }
+    
+    private static AgentStateReason getAgentReasonText(DelegateCouplingState couplingState, Optional<Problem> optProblem) {
+        if (optProblem.isPresent()) {
+            return null;
+        }
+        if (couplingState instanceof DelegateCouplingState.Reset) {
+            return agentStateReasons.get(((DelegateCouplingState.Reset) couplingState).reason().string());
+        }
+        return null;
     }
 }

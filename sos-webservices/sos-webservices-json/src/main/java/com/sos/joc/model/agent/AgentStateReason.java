@@ -6,24 +6,21 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum AgentStateText {
+public enum AgentStateReason {
 
-    COUPLED("COUPLED"),
-    RESETTING("RESETTING"),
-    INITIALISED("INITIALISED"),
-    COUPLINGFAILED("COUPLINGFAILED"),
-    SHUTDOWN("SHUTDOWN"),
-    UNKNOWN("UNKNOWN");
+    FRESH("FRESH"),
+    RESTARTED("RESTARTED"),
+    RESET("RESET");
     private final String value;
-    private final static Map<String, AgentStateText> CONSTANTS = new HashMap<String, AgentStateText>();
+    private final static Map<String, AgentStateReason> CONSTANTS = new HashMap<String, AgentStateReason>();
 
     static {
-        for (AgentStateText c: values()) {
+        for (AgentStateReason c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private AgentStateText(String value) {
+    private AgentStateReason(String value) {
         this.value = value;
     }
 
@@ -38,8 +35,8 @@ public enum AgentStateText {
     }
 
     @JsonCreator
-    public static AgentStateText fromValue(String value) {
-        AgentStateText constant = CONSTANTS.get(value);
+    public static AgentStateReason fromValue(String value) {
+        AgentStateReason constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
