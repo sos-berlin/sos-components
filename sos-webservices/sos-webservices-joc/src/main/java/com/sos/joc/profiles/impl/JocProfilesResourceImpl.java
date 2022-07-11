@@ -30,7 +30,6 @@ import com.sos.joc.db.security.IamHistoryDbLayer;
 import com.sos.joc.db.security.IamHistoryFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.Profiles;
 import com.sos.joc.model.profile.ProfilesFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
@@ -71,31 +70,10 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
             }
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
-            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
-            jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.PROFILE, profilesFilter.getAccounts());
 
-            if (profilesFilter.getComplete()) {
-                jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.GIT, profilesFilter.getAccounts());
-                jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.SETTING, profilesFilter.getAccounts());
-                jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.CUSTOMIZATION, profilesFilter.getAccounts());
-                jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.IGNORELIST, profilesFilter.getAccounts());
-
-                FavoriteDBLayer favoriteDBLayer = new FavoriteDBLayer(sosHibernateSession, "");
-                for (String account : profilesFilter.getAccounts()) {
-                    favoriteDBLayer.deleteByAccount(account);
-                }
-
-                if (!JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
-
-                    DBLayerKeys dbLayerKeys = new DBLayerKeys(sosHibernateSession);
-                    for (String account : profilesFilter.getAccounts()) {
-                        dbLayerKeys.deleteKeyByAccount(account);
-                        dbLayerKeys.deleteCertByAccount(account);
-                    }
-                }
-            }
+            com.sos.joc.classes.profiles.Profiles.delete(sosHibernateSession, profilesFilter);
 
             Globals.commit(sosHibernateSession);
 
