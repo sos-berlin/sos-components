@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
 import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
 import com.sos.auth.vault.classes.SOSVaultStoreUser;
@@ -55,6 +56,8 @@ public class SOSVaultHandler {
 
     private String getResponse(boolean post, String api, String body, String xVaultAccessToken) throws SOSException, SocketException {
         SOSRestApiClient restApiClient = new SOSRestApiClient();
+        restApiClient.setConnectionTimeout(SOSAuthHelper.RESTAPI_CONNECTION_TIMEOUT);
+
 
         if (!(xVaultAccessToken == null || xVaultAccessToken.isEmpty())) {
             restApiClient.addHeader(X_VAULT_TOKEN, xVaultAccessToken);

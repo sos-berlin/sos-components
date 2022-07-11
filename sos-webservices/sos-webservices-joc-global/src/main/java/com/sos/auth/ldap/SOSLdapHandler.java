@@ -70,6 +70,7 @@ public class SOSLdapHandler {
             env.put(Context.SECURITY_AUTHENTICATION, SOSLdapWebserviceCredentials.SECURITY_AUTHENTICATION);
             env.put(Context.SECURITY_PRINCIPAL, sosLdapWebserviceCredentials.getSecurityPrincipal());
             env.put(Context.SECURITY_CREDENTIALS, password);
+            env.put("com.sun.jndi.ldap.read.timeout", SOSAuthHelper.LDAP_TIMEOUT);
             if (sosLdapWebserviceCredentials.isSSL()) {
                 env.put("java.naming.ldap.factory.socket", "com.sos.auth.ldap.classes.SOSLdapSSLSocketFactory");
             }

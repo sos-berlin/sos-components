@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthAccessTokenHandler;
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.keycloak.classes.SOSKeycloakAccountAccessToken;
 import com.sos.auth.keycloak.classes.SOSKeycloakClientRepresentation;
 import com.sos.auth.keycloak.classes.SOSKeycloakGroupRepresentation;
@@ -56,6 +57,7 @@ public class SOSKeycloakHandler {
     private String getFormResponse(Boolean post, String api, Map<String, String> body, String xKeycloakAccessToken) throws SOSException,
             SocketException {
         SOSRestApiClient restApiClient = new SOSRestApiClient();
+        restApiClient.setConnectionTimeout(SOSAuthHelper.RESTAPI_CONNECTION_TIMEOUT);
         restApiClient.addHeader(CONTENT_TYPE, APPLICATION_X_WWW_FORM_URLENCODED);
         if (!(xKeycloakAccessToken == null || xKeycloakAccessToken.isEmpty())) {
             restApiClient.addHeader(AUTHORIZATION, BEARER + " " + xKeycloakAccessToken);
