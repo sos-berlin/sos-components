@@ -97,6 +97,7 @@ import js7.data.subagent.SubagentId;
 import js7.data.subagent.SubagentItemStateEvent;
 import js7.data.subagent.SubagentSelectionId;
 import js7.data.workflow.WorkflowPath;
+import js7.data.workflow.WorkflowPathControlPath;
 import js7.data.workflow.instructions.BoardInstruction;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
@@ -423,6 +424,8 @@ public class EventService {
 //                    addEvent(createFileOrderSourceEvent(eventId, itemId.string(), eventType));
                 } else if (itemId instanceof BoardPath) {
                     addEvent(createBoardEvent(eventId, itemId.string(), eventType));
+                } else if (itemId instanceof WorkflowPathControlPath) {
+                    addEvent(createWorkflowEvent(eventId, itemId.string(), eventType));
                 } else {
                     // TODO other simple objects
                 }
