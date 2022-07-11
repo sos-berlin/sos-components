@@ -23,6 +23,7 @@ public class MaintenanceWindowImpl {
     public void executeApiCall() throws Exception {
 
         ApiExecutor apiExecutor = new ApiExecutor(logger);
+        apiExecutor.getClient().setConnectionTimeout(10000);
         String accessToken = null;
         ApiResponse apiResponse = null;
         try {
