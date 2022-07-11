@@ -21,7 +21,7 @@ public class JS7ConverterTest {
         JS7Converter.CONFIG.getAgentConfig().withForcedPlatform(Platform.WINDOWS).withDefaultAgent("agent_name").withMappings(
                 "abcd=agent;xyz=agent_cluster");
         JS7Converter.CONFIG.getMockConfig().withUnixScript("$HOME/MockScript.sh").withWindowsScript("echo 123").withJitlJobsMockLevel("ERROR");
-        JS7Converter.CONFIG.getScheduleConfig().withDefaultWorkingCalendarName("AnyDays").withDefaultNonWorkingCalendarName("NonWorking")
+        JS7Converter.CONFIG.getScheduleConfig().withDefaultWorkingDayCalendarName("AnyDays").withDefaultNonWorkingDayCalendarName("NonWorking")
                 .withPlanOrders(true).withSubmitOrders(true);
         JS7Converter.CONFIG.getJobConfig().withJitlLogLevel("DEBUG").withForcedFailOnErrWritten(true).withNotificationMailDefaultTo(
                 "to@localhost.com").withNotificationMailDefaultCc("cc@localhost.com").withNotificationMailDefaultBcc("bcc@localhost.com")

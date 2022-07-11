@@ -67,7 +67,7 @@ public class JS7RunTimeConverter {
 
         if (hasHolidays) {
             AssignedNonWorkingDayCalendars nwc = new AssignedNonWorkingDayCalendars();
-            nwc.setCalendarName(JS7Converter.CONFIG.getScheduleConfig().getDefaultNonWorkingCalendarName());
+            nwc.setCalendarName(JS7Converter.CONFIG.getScheduleConfig().getDefaultNonWorkingDayCalendarName());
             nonWorking.add(nwc);
         }
 
@@ -128,7 +128,7 @@ public class JS7RunTimeConverter {
 
     private static AssignedCalendars createWorkingCalendar(String timeZone) {
         AssignedCalendars c = new AssignedCalendars();
-        c.setCalendarName(JS7Converter.CONFIG.getScheduleConfig().getDefaultWorkingCalendarName());
+        c.setCalendarName(JS7Converter.CONFIG.getScheduleConfig().getDefaultWorkingDayCalendarName());
         c.setTimeZone(timeZone);
         if (c.getTimeZone() == null) {
             c.setTimeZone(JS7Converter.CONFIG.getScheduleConfig().getDefaultTimeZone());

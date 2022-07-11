@@ -689,8 +689,8 @@ public class JS7Converter {
 
     private static String getWorkingCalendarName(JS7ConverterConfig config) {
         String name = null;
-        if (config.getScheduleConfig().getDefaultWorkingCalendarName() != null) {
-            name = config.getScheduleConfig().getDefaultWorkingCalendarName();
+        if (config.getScheduleConfig().getDefaultWorkingDayCalendarName() != null) {
+            name = config.getScheduleConfig().getDefaultWorkingDayCalendarName();
         }
         return name;
     }

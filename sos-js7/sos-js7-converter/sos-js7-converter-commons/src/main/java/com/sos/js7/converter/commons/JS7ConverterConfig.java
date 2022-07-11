@@ -179,17 +179,17 @@ public class JS7ConverterConfig {
                         mockConfig.jitlJobsMockLevel = val;
                         break;
                     // SCHEDULE
-                    case "scheduleConfig.forcedWorkingCalendarName":
-                        scheduleConfig.forcedWorkingCalendarName = val;
+                    case "scheduleConfig.forcedWorkingDayCalendarName":
+                        scheduleConfig.forcedWorkingDayCalendarName = val;
                         break;
-                    case "scheduleConfig.forcedNonWorkingCalendarName":
-                        scheduleConfig.forcedNonWorkingCalendarName = val;
+                    case "scheduleConfig.forcedNonWorkingDayCalendarName":
+                        scheduleConfig.forcedNonWorkingDayCalendarName = val;
                         break;
-                    case "scheduleConfig.defaultWorkingCalendarName":
-                        scheduleConfig.defaultWorkingCalendarName = val;
+                    case "scheduleConfig.defaultWorkingDayCalendarName":
+                        scheduleConfig.defaultWorkingDayCalendarName = val;
                         break;
-                    case "scheduleConfig.defaultNonWorkingCalendarName":
-                        scheduleConfig.defaultNonWorkingCalendarName = val;
+                    case "scheduleConfig.defaultNonWorkingDayCalendarName":
+                        scheduleConfig.defaultNonWorkingDayCalendarName = val;
                         break;
                     case "scheduleConfig.defaultTimeZone":
                         scheduleConfig.defaultTimeZone = val;
@@ -675,32 +675,32 @@ public class JS7ConverterConfig {
 
     public class ScheduleConfig {
 
-        private String forcedWorkingCalendarName;
-        private String forcedNonWorkingCalendarName;
-        private String defaultWorkingCalendarName;
-        private String defaultNonWorkingCalendarName;
+        private String forcedWorkingDayCalendarName;
+        private String forcedNonWorkingDayCalendarName;
+        private String defaultWorkingDayCalendarName;
+        private String defaultNonWorkingDayCalendarName;
 
         private String defaultTimeZone = "Etc/UTC";
         private Boolean planOrders;
         private Boolean submitOrders;
 
-        public ScheduleConfig withForcedWorkingCalendarName(String val) {
-            this.forcedWorkingCalendarName = val;
+        public ScheduleConfig withForcedWorkingDayCalendarName(String val) {
+            this.forcedWorkingDayCalendarName = val;
             return this;
         }
 
-        public ScheduleConfig withForcedNonWorkingCalendarName(String val) {
-            this.forcedNonWorkingCalendarName = val;
+        public ScheduleConfig withForcedNonWorkingDayCalendarName(String val) {
+            this.forcedNonWorkingDayCalendarName = val;
             return this;
         }
 
-        public ScheduleConfig withDefaultWorkingCalendarName(String val) {
-            this.defaultWorkingCalendarName = val;
+        public ScheduleConfig withDefaultWorkingDayCalendarName(String val) {
+            this.defaultWorkingDayCalendarName = val;
             return this;
         }
 
-        public ScheduleConfig withDefaultNonWorkingCalendarName(String val) {
-            this.defaultNonWorkingCalendarName = val;
+        public ScheduleConfig withDefaultNonWorkingDayCalendarName(String val) {
+            this.defaultNonWorkingDayCalendarName = val;
             return this;
         }
 
@@ -719,20 +719,20 @@ public class JS7ConverterConfig {
             return this;
         }
 
-        public String getForcedWorkingCalendarName() {
-            return forcedWorkingCalendarName;
+        public String getForcedWorkingDayCalendarName() {
+            return forcedWorkingDayCalendarName;
         }
 
-        public String getForcedNonWorkingCalendarName() {
-            return forcedNonWorkingCalendarName;
+        public String getForcedNonWorkingDayCalendarName() {
+            return forcedNonWorkingDayCalendarName;
         }
 
-        public String getDefaultWorkingCalendarName() {
-            return defaultWorkingCalendarName;
+        public String getDefaultWorkingDayCalendarName() {
+            return defaultWorkingDayCalendarName;
         }
 
-        public String getDefaultNonWorkingCalendarName() {
-            return defaultNonWorkingCalendarName;
+        public String getDefaultNonWorkingDayCalendarName() {
+            return defaultNonWorkingDayCalendarName;
         }
 
         public String getDefaultTimeZone() {
@@ -748,7 +748,8 @@ public class JS7ConverterConfig {
         }
 
         public boolean isEmpty() {
-            return defaultWorkingCalendarName == null && defaultNonWorkingCalendarName == null && planOrders == null && submitOrders == null;
+            return forcedWorkingDayCalendarName == null && forcedNonWorkingDayCalendarName == null && defaultWorkingDayCalendarName == null
+                    && defaultNonWorkingDayCalendarName == null && planOrders == null && submitOrders == null;
         }
     }
 

@@ -51,16 +51,16 @@ public class JS7CalendarConverter {
         String defaultName = null;
         switch (cal.getType()) {
         case NONWORKINGDAYSCALENDAR:
-            if (!SOSString.isEmpty(config.getScheduleConfig().getForcedNonWorkingCalendarName())) {
-                return config.getScheduleConfig().getForcedNonWorkingCalendarName();
+            if (!SOSString.isEmpty(config.getScheduleConfig().getForcedNonWorkingDayCalendarName())) {
+                return config.getScheduleConfig().getForcedNonWorkingDayCalendarName();
             }
-            defaultName = config.getScheduleConfig().getDefaultNonWorkingCalendarName();
+            defaultName = config.getScheduleConfig().getDefaultNonWorkingDayCalendarName();
             break;
         case WORKINGDAYSCALENDAR:
-            if (!SOSString.isEmpty(config.getScheduleConfig().getForcedWorkingCalendarName())) {
-                return config.getScheduleConfig().getForcedWorkingCalendarName();
+            if (!SOSString.isEmpty(config.getScheduleConfig().getForcedWorkingDayCalendarName())) {
+                return config.getScheduleConfig().getForcedWorkingDayCalendarName();
             }
-            defaultName = config.getScheduleConfig().getDefaultWorkingCalendarName();
+            defaultName = config.getScheduleConfig().getDefaultWorkingDayCalendarName();
             break;
         }
 
