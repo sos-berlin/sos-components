@@ -35,7 +35,8 @@ public class CleanupServiceConfiguration {
     private Age auditLogAge;
     private Age monitoringHistoryAge;
     private Age notificationHistoryAge;
-    private Age userLastLoginAge;
+    private Age profileAge;
+    private Age failedLoginHistoryAge;
     private int deploymentHistoryVersions;
     private int batchSize;
 
@@ -61,7 +62,8 @@ public class CleanupServiceConfiguration {
         this.auditLogAge = new Age(configuration.getAuditLogAge());
         this.monitoringHistoryAge = new Age(configuration.getMonitoringHistoryAge());
         this.notificationHistoryAge = new Age(configuration.getNotificationHistoryAge());
-        this.userLastLoginAge = new Age(configuration.getUserLastLoginAge());
+        this.profileAge = new Age(configuration.getProfileAge());
+        this.failedLoginHistoryAge = new Age(configuration.getFailedLoginHistoryAge());
         try {
             this.deploymentHistoryVersions = Integer.parseInt(configuration.getDeploymentHistoryVersions().getValue());
         } catch (Throwable e) {
@@ -114,8 +116,12 @@ public class CleanupServiceConfiguration {
         return notificationHistoryAge;
     }
 
-    public Age getUserLastLoginAge() {
-        return userLastLoginAge;
+    public Age getProfileAge() {
+        return profileAge;
+    }
+
+    public Age getFailedLoginHistoryAge() {
+        return failedLoginHistoryAge;
     }
 
     public int getDeploymentHistoryVersions() {
@@ -168,8 +174,9 @@ public class CleanupServiceConfiguration {
                 .getMinutes()).append("]");
         sb.append(",notificationHistoryAge=[configured=").append(notificationHistoryAge.getConfigured()).append(",minutes=").append(
                 notificationHistoryAge.getMinutes()).append("]");
-        sb.append(",userLastLoginAge=[configured=").append(userLastLoginAge.getConfigured()).append(",minutes=").append(userLastLoginAge.getMinutes())
-                .append("]");
+        sb.append(",profileAge=[configured=").append(profileAge.getConfigured()).append(",minutes=").append(profileAge.getMinutes()).append("]");
+        sb.append(",failedLoginHistoryAge=[configured=").append(failedLoginHistoryAge.getConfigured()).append(",minutes=").append(
+                failedLoginHistoryAge.getMinutes()).append("]");
         sb.append(",deploymentHistoryVersions=").append(deploymentHistoryVersions);
         sb.append("]");
         sb.append("]");

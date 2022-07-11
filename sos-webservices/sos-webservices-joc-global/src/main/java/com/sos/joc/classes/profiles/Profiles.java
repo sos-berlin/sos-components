@@ -12,28 +12,31 @@ import com.sos.joc.model.profile.ProfilesFilter;
 
 public class Profiles {
 
-    public static void delete(SOSHibernateSession session, ProfilesFilter filter) throws SOSHibernateException {
+    public static ProfilesDeleteResult delete(SOSHibernateSession session, ProfilesFilter filter) throws SOSHibernateException {
+        ProfilesDeleteResult r = new ProfilesDeleteResult();
+
         JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(session);
-        dbLayer.deleteConfigurations(ConfigurationType.PROFILE, filter.getAccounts());
+        r.getConfiguration().setProfile(dbLayer.deleteConfigurations(ConfigurationType.PROFILE, filter.getAccounts()));
 
         if (filter.getComplete()) {
-            dbLayer.deleteConfigurations(ConfigurationType.GIT, filter.getAccounts());
-            dbLayer.deleteConfigurations(ConfigurationType.SETTING, filter.getAccounts());
-            dbLayer.deleteConfigurations(ConfigurationType.CUSTOMIZATION, filter.getAccounts());
-            dbLayer.deleteConfigurations(ConfigurationType.IGNORELIST, filter.getAccounts());
+            r.getConfiguration().setGit(dbLayer.deleteConfigurations(ConfigurationType.GIT, filter.getAccounts()));
+            r.getConfiguration().setSetting(dbLayer.deleteConfigurations(ConfigurationType.SETTING, filter.getAccounts()));
+            r.getConfiguration().setCustomization(dbLayer.deleteConfigurations(ConfigurationType.CUSTOMIZATION, filter.getAccounts()));
+            r.getConfiguration().setIgnoreList(dbLayer.deleteConfigurations(ConfigurationType.IGNORELIST, filter.getAccounts()));
 
             FavoriteDBLayer favoriteDBLayer = new FavoriteDBLayer(session, "");
             for (String account : filter.getAccounts()) {
-                favoriteDBLayer.deleteByAccount(account);
+                r.getAccount(account).setFavorite(favoriteDBLayer.deleteByAccount(account));
             }
 
             if (!JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 DBLayerKeys dbLayerKeys = new DBLayerKeys(session);
                 for (String account : filter.getAccounts()) {
-                    dbLayerKeys.deleteKeyByAccount(account);
-                    dbLayerKeys.deleteCertByAccount(account);
+                    r.getAccount(account).setKey(dbLayerKeys.deleteKeyByAccount(account));
+                    r.getAccount(account).setCert(dbLayerKeys.deleteCertByAccount(account));
                 }
             }
         }
+        return r;
     }
 }

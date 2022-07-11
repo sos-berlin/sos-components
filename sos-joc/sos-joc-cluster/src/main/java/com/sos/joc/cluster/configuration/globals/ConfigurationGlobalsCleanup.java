@@ -23,7 +23,9 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
     private ConfigurationEntry monitoringHistoryAge = new ConfigurationEntry("monitoring_history_age", "1d", GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry notificationHistoryAge = new ConfigurationEntry("notification_history_age", "1d",
             GlobalSettingsSectionValueType.DURATION);
-    private ConfigurationEntry userLastLoginAge = new ConfigurationEntry("user_last_login_age", "90d", GlobalSettingsSectionValueType.DURATION);
+    private ConfigurationEntry profileAge = new ConfigurationEntry("profile_age", "365d", GlobalSettingsSectionValueType.DURATION);
+    private ConfigurationEntry failedLoginHistoryAge = new ConfigurationEntry("failed_login_history_age", "90d",
+            GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry deploymentHistoryVersions = new ConfigurationEntry("deployment_history_versions", "10",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
@@ -35,15 +37,22 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
         periodEnd.setOrdering(++index);
         batchSize.setOrdering(++index);
 
+        // HISTORY
         orderHistoryAge.setOrdering(++index);
         orderHistoryLogsAge.setOrdering(++index);
+        // YADE
         fileTransferHistoryAge.setOrdering(++index);
+        // AUDITLOG
         auditLogAge.setOrdering(++index);
+        // DAILYPLAN
         dailyPlanHistoryAge.setOrdering(++index);
+        // MONITORING
         monitoringHistoryAge.setOrdering(++index);
         notificationHistoryAge.setOrdering(++index);
-        userLastLoginAge.setOrdering(++index);
-
+        // PROFILE
+        profileAge.setOrdering(++index);
+        failedLoginHistoryAge.setOrdering(++index);
+        // DEPLOYMENT
         deploymentHistoryVersions.setOrdering(++index);
     }
 
@@ -95,8 +104,12 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
         return notificationHistoryAge;
     }
 
-    public ConfigurationEntry getUserLastLoginAge() {
-        return userLastLoginAge;
+    public ConfigurationEntry getProfileAge() {
+        return profileAge;
+    }
+
+    public ConfigurationEntry getFailedLoginHistoryAge() {
+        return failedLoginHistoryAge;
     }
 
     public ConfigurationEntry getDeploymentHistoryVersions() {

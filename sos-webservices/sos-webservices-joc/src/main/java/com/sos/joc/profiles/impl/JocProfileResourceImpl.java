@@ -52,6 +52,8 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
                 dbItem = new DBItemJocConfiguration();
                 isNew = true;
                 dbItem.setId(null);
+                dbItem.setConfigurationType(ConfigurationType.PROFILE.name());
+                dbItem.setShared(false);
             } else {
                 isNew = false;
             }
@@ -59,7 +61,6 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
             dbItem.setControllerId(profile.getControllerId());
             dbItem.setInstanceId(0L);
             dbItem.setAccount(profile.getAccountName());
-            dbItem.setObjectType(ConfigurationType.PROFILE.name());
 
             dbItem.setConfigurationItem(profile.getProfileItem());
             Date now = Date.from(Instant.now());

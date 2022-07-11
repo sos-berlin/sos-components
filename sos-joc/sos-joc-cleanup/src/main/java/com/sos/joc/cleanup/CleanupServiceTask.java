@@ -21,7 +21,6 @@ import com.sos.joc.cleanup.CleanupServiceConfiguration.Age;
 import com.sos.joc.cleanup.model.CleanupTaskAuditLog;
 import com.sos.joc.cleanup.model.CleanupTaskDailyPlan;
 import com.sos.joc.cleanup.model.CleanupTaskDeployment;
-import com.sos.joc.cleanup.model.CleanupTaskGit;
 import com.sos.joc.cleanup.model.CleanupTaskHistory;
 import com.sos.joc.cleanup.model.CleanupTaskMonitoring;
 import com.sos.joc.cleanup.model.CleanupTaskUserProfiles;
@@ -209,13 +208,16 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
                         } else if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_USER_PROFILES)) {
                             List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
-                            TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getUserLastLoginAge(), cleanupSchedule
+                            TaskDateTime profileDateTime = new TaskDateTime(cleanupSchedule.getService().getConfig().getProfileAge(), cleanupSchedule
                                     .getFirstStart());
-                            if (datetime.getDatetime() == null) {
+                            TaskDateTime failedLoginHistoryDateTime = new TaskDateTime(cleanupSchedule.getService().getConfig()
+                                    .getFailedLoginHistoryAge(), cleanupSchedule.getFirstStart());
+                            if (profileDateTime.getDatetime() == null && failedLoginHistoryDateTime.getDatetime() == null) {
                                 LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, manualTask.getIdentifier()));
                                 LOGGER.info(String.format("[%s][%s]completed", logIdentifier, manualTask.getIdentifier()));
                             } else {
-                                datetimes.add(datetime);
+                                datetimes.add(profileDateTime);
+                                datetimes.add(failedLoginHistoryDateTime);
                                 executeTask(manualTask, datetimes, cleanupSchedule.getUncompleted());
                             }
 
@@ -297,7 +299,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         tasks.add(new CleanupTaskDeployment(factory, batchSize, MANUAL_TASK_IDENTIFIER_DEPLOYMENT));
         tasks.add(new CleanupTaskAuditLog(factory, batchSize, MANUAL_TASK_IDENTIFIER_AUDITLOG));
         tasks.add(new CleanupTaskYade(factory, batchSize, MANUAL_TASK_IDENTIFIER_YADE));
-        tasks.add(new CleanupTaskGit(factory, batchSize, MANUAL_TASK_IDENTIFIER_GIT));
+        // tasks.add(new CleanupTaskGit(factory, batchSize, MANUAL_TASK_IDENTIFIER_GIT));
         tasks.add(new CleanupTaskUserProfiles(factory, batchSize, MANUAL_TASK_IDENTIFIER_USER_PROFILES));
         return tasks;
     }
