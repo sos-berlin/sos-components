@@ -36,7 +36,10 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            throw new SOSException(String.format("Status Code: %s : Response: %s", apiResponse.getStatusCode(),apiResponse.getResponseBody()));
+            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+                    MaintenanceErrorResponse.class);
+            throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
+                    .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
 
         Globals.debug(logger, body);
@@ -57,7 +60,10 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            throw new SOSException(String.format("Status Code: %s : Response: %s", apiResponse.getStatusCode(),apiResponse.getResponseBody()));
+            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+                    MaintenanceErrorResponse.class);
+            throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
+                    .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
         Globals.debug(logger, body);
         Globals.debug(logger, "answer=" + answer);
@@ -74,7 +80,10 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            throw new SOSException(String.format("Status Code: %s : Response: %s", apiResponse.getStatusCode(),apiResponse.getResponseBody()));
+            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+                    MaintenanceErrorResponse.class);
+            throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
+                    .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
         Globals.debug(logger, body);
         Globals.debug(logger, "answer=" + answer);
@@ -93,13 +102,15 @@ public class MaintenanceWindowExecuter {
             apiResponse = apiExecutor.post(accessToken, "/joc/api/agents/inventory/cluster/subagents/enable", body);
         } else {
             apiResponse = apiExecutor.post(accessToken, "/joc/api/agents/inventory/cluster/subagents/enable", body);
-
         }
 
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            throw new SOSException(String.format("Status Code: %s : Response: %s", apiResponse.getStatusCode(),apiResponse.getResponseBody()));
+            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+                    MaintenanceErrorResponse.class);
+            throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
+                    .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
 
         Globals.debug(logger, body);
@@ -124,7 +135,10 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            throw new SOSException(String.format("Status Code: %s : Response: %s", apiResponse.getStatusCode(),apiResponse.getResponseBody()));
+            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+                    MaintenanceErrorResponse.class);
+            throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
+                    .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
         Globals.debug(logger, body);
         Globals.debug(logger, "answer=" + answer);
@@ -142,7 +156,10 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            throw new SOSException(String.format("Status Code: %s : Response: %s", apiResponse.getStatusCode(),apiResponse.getResponseBody()));
+            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+                    MaintenanceErrorResponse.class);
+            throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
+                    .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
         Globals.debug(logger, body);
         Globals.debug(logger, "answer=" + answer);

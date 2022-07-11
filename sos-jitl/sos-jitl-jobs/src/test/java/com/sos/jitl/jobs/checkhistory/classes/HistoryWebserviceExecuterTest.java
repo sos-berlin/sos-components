@@ -1,17 +1,7 @@
 package com.sos.jitl.jobs.checkhistory.classes;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.junit.Ignore;
 import org.junit.Test;
-
-import com.sos.joc.model.common.HistoryStateText;
-import com.sos.joc.model.order.OrderHistory;
-import com.sos.joc.model.order.OrderPath;
-import com.sos.joc.model.order.OrdersFilter;
 
 public class HistoryWebserviceExecuterTest {
 
