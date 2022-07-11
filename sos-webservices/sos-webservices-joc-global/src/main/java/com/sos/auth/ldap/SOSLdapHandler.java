@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthAccessToken;
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.ldap.classes.SOSLdapGroupRolesMapping;
 import com.sos.auth.ldap.classes.SOSLdapWebserviceCredentials;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -71,7 +72,7 @@ public class SOSLdapHandler {
             env.put(Context.SECURITY_PRINCIPAL, sosLdapWebserviceCredentials.getSecurityPrincipal());
             env.put(Context.SECURITY_CREDENTIALS, password);
             env.put("com.sun.jndi.ldap.read.timeout", SOSAuthHelper.LDAP_TIMEOUT);
-            if (sosLdapWebserviceCredentials.isSSL()) {
+             if (sosLdapWebserviceCredentials.isSSL()) {
                 env.put("java.naming.ldap.factory.socket", "com.sos.auth.ldap.classes.SOSLdapSSLSocketFactory");
             }
 
