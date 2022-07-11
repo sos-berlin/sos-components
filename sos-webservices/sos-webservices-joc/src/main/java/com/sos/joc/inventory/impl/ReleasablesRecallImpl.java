@@ -1,7 +1,6 @@
 package com.sos.joc.inventory.impl;
 
 import java.util.Date;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
