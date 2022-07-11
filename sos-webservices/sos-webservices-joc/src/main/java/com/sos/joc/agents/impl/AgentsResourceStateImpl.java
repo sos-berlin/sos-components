@@ -138,6 +138,9 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             Map<String, List<SubagentV>> subagentsPerAgentId = new HashMap<>();
 
             boolean withStateFilter = agentsParam.getStates() != null && !agentsParam.getStates().isEmpty();
+            if (withStateFilter && agentsParam.getStates().contains(AgentStateText.RESET) && !agentsParam.getStates().contains(AgentStateText.INITIALISED)) {
+                agentsParam.getStates().add(AgentStateText.INITIALISED);
+            }
             Instant currentStateMoment = null;
 
             if (dbAgents != null) {
