@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.auth.classes.SOSAuthHelper;

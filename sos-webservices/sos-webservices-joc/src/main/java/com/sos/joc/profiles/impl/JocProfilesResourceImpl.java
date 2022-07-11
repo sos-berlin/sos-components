@@ -51,7 +51,21 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
             initLogging(API_CALL_DELETE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ProfilesFilter.class);
             ProfilesFilter profilesFilter = Globals.objectMapper.readValue(filterBytes, ProfilesFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+
+            boolean onlyActAccount = true;
+            for (String accountName : profilesFilter.getAccounts()) {
+                if (!accountName.equals(this.getAccount())) {
+                    onlyActAccount = false;
+                    break;
+                }
+            }
+
+            JOCDefaultResponse jocDefaultResponse = null;
+            if (!onlyActAccount) {
+                jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            } else {
+                jocDefaultResponse = initPermissions("", true);
+            }
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -60,23 +74,23 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
-            jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.PROFILE, profilesFilter.getAccountNames());
+            jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.PROFILE, profilesFilter.getAccounts());
 
             if (profilesFilter.getComplete()) {
-                jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.GIT, profilesFilter.getAccountNames());
-                jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.SETTING, profilesFilter.getAccountNames());
-                jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.CUSTOMIZATION, profilesFilter.getAccountNames());
-                jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.IGNORELIST, profilesFilter.getAccountNames());
+                jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.GIT, profilesFilter.getAccounts());
+                jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.SETTING, profilesFilter.getAccounts());
+                jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.CUSTOMIZATION, profilesFilter.getAccounts());
+                jocConfigurationDBLayer.deleteConfigurations(ConfigurationType.IGNORELIST, profilesFilter.getAccounts());
 
                 FavoriteDBLayer favoriteDBLayer = new FavoriteDBLayer(sosHibernateSession, "");
-                for (String account : profilesFilter.getAccountNames()) {
+                for (String account : profilesFilter.getAccounts()) {
                     favoriteDBLayer.deleteByAccount(account);
                 }
 
                 if (!JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
 
                     DBLayerKeys dbLayerKeys = new DBLayerKeys(sosHibernateSession);
-                    for (String account : profilesFilter.getAccountNames()) {
+                    for (String account : profilesFilter.getAccounts()) {
                         dbLayerKeys.deleteKeyByAccount(account);
                         dbLayerKeys.deleteCertByAccount(account);
                     }

@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "complete",
-    "accountNames"
+    "accounts"
 })
 public class ProfilesFilter {
 
@@ -35,8 +35,13 @@ public class ProfilesFilter {
     private String controllerId;
     @JsonProperty("complete")
     private Boolean complete = false;
-    @JsonProperty("accountNames")
-    private List<String> accountNames = new ArrayList<String>();
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("accounts")
+    private List<String> accounts = new ArrayList<String>();
 
     /**
      * controllerId
@@ -70,24 +75,34 @@ public class ProfilesFilter {
         this.complete = complete;
     }
 
-    @JsonProperty("accountNames")
-    public List<String> getAccountNames() {
-        return accountNames;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("accounts")
+    public List<String> getAccounts() {
+        return accounts;
     }
 
-    @JsonProperty("accountNames")
-    public void setAccountNames(List<String> accountNames) {
-        this.accountNames = accountNames;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("accounts")
+    public void setAccounts(List<String> accounts) {
+        this.accounts = accounts;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("complete", complete).append("accountNames", accountNames).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("complete", complete).append("accounts", accounts).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(complete).append(accountNames).toHashCode();
+        return new HashCodeBuilder().append(accounts).append(controllerId).append(complete).toHashCode();
     }
 
     @Override
@@ -99,7 +114,7 @@ public class ProfilesFilter {
             return false;
         }
         ProfilesFilter rhs = ((ProfilesFilter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(complete, rhs.complete).append(accountNames, rhs.accountNames).isEquals();
+        return new EqualsBuilder().append(accounts, rhs.accounts).append(controllerId, rhs.controllerId).append(complete, rhs.complete).isEquals();
     }
 
 }
