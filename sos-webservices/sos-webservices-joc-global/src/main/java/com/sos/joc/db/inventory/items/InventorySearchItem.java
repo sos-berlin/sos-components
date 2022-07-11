@@ -1,9 +1,12 @@
 package com.sos.joc.db.inventory.items;
 
+import com.sos.joc.model.inventory.common.ConfigurationType;
+
 public class InventorySearchItem {
 
     private Long id;
     private String path;
+    private Integer type;
     private String folder;
     private String name;
     private String title;
@@ -29,6 +32,18 @@ public class InventorySearchItem {
 
     public void setPath(String val) {
         path = val;
+    }
+    
+    public Integer getType() {
+        return type;
+    }
+    
+    public ConfigurationType getTypeAsEnum() {
+        return ConfigurationType.fromValue(type);
+    }
+
+    public void setType(Integer val) {
+        type = val;
     }
 
     public String getFolder() {

@@ -21,9 +21,9 @@ import com.sos.joc.db.inventory.InventorySearchDBLayer;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.ISearchResource;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.RequestSearchAdvancedItem;
 import com.sos.joc.model.inventory.search.RequestSearchFilter;
+import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 import com.sos.joc.model.inventory.search.ResponseSearch;
 import com.sos.joc.model.inventory.search.ResponseSearchItem;
 import com.sos.schema.JsonValidator;
@@ -65,24 +65,22 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
 
-            ConfigurationType objectType = ConfigurationType.valueOf(in.getReturnType().value());
             List<InventorySearchItem> items = null;
             if (in.getDeployedOrReleased() != null && in.getDeployedOrReleased().booleanValue()) {
-                items = dbLayer.getBasicSearchDeployedOrReleasedConfigurations(objectType, in.getSearch(), in.getFolders(), in.getControllerId());
+                items = dbLayer.getBasicSearchDeployedOrReleasedConfigurations(in.getReturnType(), in.getSearch(), in.getFolders(), in
+                        .getControllerId());
             } else {
-                items = dbLayer.getBasicSearchInventoryConfigurations(objectType, in.getSearch(), in.getFolders());
+                items = dbLayer.getBasicSearchInventoryConfigurations(in.getReturnType(), in.getSearch(), in.getFolders());
             }
 
-            List<ResponseSearchItem> r = new ArrayList<>();
+            List<ResponseSearchItem> r = Collections.emptyList();
             if (items != null) {
-                List<InventorySearchItem> sorted = items.stream().sorted(Comparator.comparing(InventorySearchItem::getPath)).collect(Collectors
-                        .toList());
-                for (InventorySearchItem item : sorted) {
+                r = items.stream().map(item -> {
                     ResponseSearchItem ri = new ResponseSearchItem();
                     ri.setId(item.getId());
                     ri.setPath(item.getPath());
                     ri.setName(item.getName());
-                    ri.setObjectType(objectType);
+                    ri.setObjectType(item.getTypeAsEnum());
                     ri.setTitle(item.getTitle());
                     ri.setControllerId(item.getControllerId());
                     ri.setValid(item.isValid());
@@ -92,8 +90,9 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                     ri.setHasDeployments(item.getCountDeployed().intValue() > 0);
                     ri.setHasReleases(item.getCountReleased().intValue() > 0);
                     ri.setPermitted(folderPermissions.isPermittedForFolder(item.getFolder()));
-                    r.add(ri);
-                }
+                    return ri;
+                }).sorted(Comparator.comparing(ResponseSearchItem::getPath)).collect(Collectors
+                        .toList());
             }
             return r;
         } catch (Throwable e) {
@@ -111,14 +110,13 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
 
-            ConfigurationType objectType = ConfigurationType.valueOf(in.getReturnType().value());
             List<InventorySearchItem> items = null;
             boolean deployedOrReleased = in.getDeployedOrReleased() != null && in.getDeployedOrReleased().booleanValue();
             if (deployedOrReleased) {
-                items = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(objectType, in.getSearch(), in.getFolders(), in.getAdvanced(), in
-                        .getControllerId());
+                items = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(in.getReturnType(), in.getSearch(), in.getFolders(), in
+                        .getAdvanced(), in.getControllerId());
             } else {
-                items = dbLayer.getAdvancedSearchInventoryConfigurations(objectType, in.getSearch(), in.getFolders(), in.getAdvanced());
+                items = dbLayer.getAdvancedSearchInventoryConfigurations(in.getReturnType(), in.getSearch(), in.getFolders(), in.getAdvanced());
             }
 
             List<ResponseSearchItem> r = new ArrayList<>();
@@ -129,7 +127,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                 for (InventorySearchItem item : sorted) {
                     boolean checkWorkflow = false;
                     // TODO consider SCRIPT objects
-                    switch (objectType) {
+                    switch (in.getReturnType()) {
                     case JOBRESOURCE:
                         workflowAdvanced.setJobResources(item.getName());
                         checkWorkflow = true;
@@ -148,11 +146,11 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                     if (checkWorkflow) {
                         List<InventorySearchItem> wi = null;
                         if (deployedOrReleased) {
-                            wi = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(ConfigurationType.WORKFLOW, in.getAdvanced().getWorkflow(),
-                                    null, workflowAdvanced, in.getControllerId());
+                            wi = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(RequestSearchReturnType.WORKFLOW, in.getAdvanced()
+                                    .getWorkflow(), null, workflowAdvanced, in.getControllerId());
                         } else {
-                            wi = dbLayer.getAdvancedSearchInventoryConfigurations(ConfigurationType.WORKFLOW, in.getAdvanced().getWorkflow(), null,
-                                    workflowAdvanced);
+                            wi = dbLayer.getAdvancedSearchInventoryConfigurations(RequestSearchReturnType.WORKFLOW, in.getAdvanced().getWorkflow(),
+                                    null, workflowAdvanced);
                         }
                         if (wi == null || wi.size() == 0) {
                             continue;
@@ -163,7 +161,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                     ri.setId(item.getId());
                     ri.setPath(item.getPath());
                     ri.setName(item.getName());
-                    ri.setObjectType(objectType);
+                    ri.setObjectType(item.getTypeAsEnum());
                     ri.setTitle(item.getTitle());
                     ri.setControllerId(item.getControllerId());
                     ri.setValid(item.isValid());
@@ -209,6 +207,9 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             break;
         case INCLUDESCRIPT:
             in.getAdvanced().setIncludeScript(null);
+            break;
+        case CALENDAR:
+            // TODO
             break;
         }
     }

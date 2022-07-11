@@ -15,6 +15,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowJob;
 import com.sos.joc.db.DBLayer;
@@ -22,6 +23,7 @@ import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.RequestSearchAdvancedItem;
+import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 
 public class InventorySearchDBLayer extends DBLayer {
 
@@ -35,7 +37,7 @@ public class InventorySearchDBLayer extends DBLayer {
         super(session);
     }
 
-    public List<InventorySearchItem> getBasicSearchInventoryConfigurations(ConfigurationType type, String search, List<String> folders)
+    public List<InventorySearchItem> getBasicSearchInventoryConfigurations(RequestSearchReturnType type, String search, List<String> folders)
             throws SOSHibernateException {
 
         boolean isReleasable = isReleasable(type);
@@ -43,6 +45,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
         StringBuilder hql = new StringBuilder("select mt.id as id ");
         hql.append(",mt.path as path ");
+        hql.append(",mt.type as type ");
         hql.append(",mt.folder as folder ");
         hql.append(",mt.name as name ");
         hql.append(",mt.title as title ");
@@ -63,7 +66,11 @@ public class InventorySearchDBLayer extends DBLayer {
             hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
             hql.append("on mt.id=dh.inventoryConfigurationId ");
         }
-        hql.append("where mt.type=:type ");
+        if (RequestSearchReturnType.CALENDAR.equals(type)) {
+            hql.append("where mt.type in (:types) ");
+        } else {
+            hql.append("where mt.type=:type ");
+        }
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
@@ -72,10 +79,14 @@ public class InventorySearchDBLayer extends DBLayer {
         if (searchInFolders) {
             hql.append("and (").append(foldersHql(folders)).append(") ");
         }
-        hql.append("group by mt.id,mt.path,mt.folder,mt.name,mt.title,mt.valid,mt.deleted,mt.deployed,mt.released ");
+        hql.append("group by mt.id,mt.path,mt.type,mt.folder,mt.name,mt.title,mt.valid,mt.deleted,mt.deployed,mt.released ");
 
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
-        query.setParameter("type", type.intValue());
+        if (RequestSearchReturnType.CALENDAR.equals(type)) {
+            query.setParameter("types", JocInventory.getCalendarTypes());
+        } else {
+            query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
+        }
         if (search != null) {
             query.setParameter("search", SearchStringHelper.globToSqlPattern('%' + search.toLowerCase() + '%').replaceAll("%%+", "%"));
         }
@@ -88,7 +99,7 @@ public class InventorySearchDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<InventorySearchItem> getBasicSearchDeployedOrReleasedConfigurations(ConfigurationType type, String search, List<String> folders,
+    public List<InventorySearchItem> getBasicSearchDeployedOrReleasedConfigurations(RequestSearchReturnType type, String search, List<String> folders,
             String controllerId) throws SOSHibernateException {
 
         boolean isReleasable = isReleasable(type);
@@ -98,6 +109,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (isReleasable) {
             hql.append("mt.cid as id");
             hql.append(",mt.path as path");
+            hql.append(",mt.type as type");
             hql.append(",mt.folder as folder ");
             hql.append(",mt.name as name");
             hql.append(",mt.title as title ");
@@ -111,6 +123,7 @@ public class InventorySearchDBLayer extends DBLayer {
         } else {
             hql.append("mt.inventoryConfigurationId as id");
             hql.append(",mt.path as path");
+            hql.append(",mt.type as type");
             hql.append(",mt.folder as folder ");
             hql.append(",mt.name as name");
             hql.append(",mt.title as title ");
@@ -123,7 +136,11 @@ public class InventorySearchDBLayer extends DBLayer {
             hql.append(",1 as countDeployed ");
             hql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" mt ");
         }
-        hql.append("where mt.type=:type ");
+        if (RequestSearchReturnType.CALENDAR.equals(type)) {
+            hql.append("where mt.type in (:types) ");
+        } else {
+            hql.append("where mt.type=:type ");
+        }
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
@@ -139,7 +156,11 @@ public class InventorySearchDBLayer extends DBLayer {
         }
 
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
-        query.setParameter("type", type.intValue());
+        if (RequestSearchReturnType.CALENDAR.equals(type)) {
+            query.setParameter("types", JocInventory.getCalendarTypes());
+        } else {
+            query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
+        }
         if (search != null) {
             query.setParameter("search", SearchStringHelper.globToSqlPattern('%' + search.toLowerCase() + '%').replaceAll("%%+", "%"));
         }
@@ -174,7 +195,7 @@ public class InventorySearchDBLayer extends DBLayer {
     }
 
     // TODO merge all functions ...
-    public List<InventorySearchItem> getAdvancedSearchInventoryConfigurations(ConfigurationType type, String search, List<String> folders,
+    public List<InventorySearchItem> getAdvancedSearchInventoryConfigurations(RequestSearchReturnType type, String search, List<String> folders,
             RequestSearchAdvancedItem advanced) throws SOSHibernateException {
 
         boolean isReleasable = isReleasable(type);
@@ -182,6 +203,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
         StringBuilder hql = new StringBuilder("select mt.id as id ");
         hql.append(",mt.path as path ");
+        hql.append(",mt.type as type ");
         hql.append(",mt.folder as folder ");
         hql.append(",mt.name as name ");
         hql.append(",mt.title as title ");
@@ -203,12 +225,16 @@ public class InventorySearchDBLayer extends DBLayer {
             hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" mt ");
             hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
             hql.append("on mt.id=dh.inventoryConfigurationId ");
-            if (type.equals(ConfigurationType.WORKFLOW)) {
+            if (type.equals(RequestSearchReturnType.WORKFLOW)) {
                 hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
                 hql.append("on mt.id=sw.inventoryConfigurationId and mt.deployed=sw.deployed ");
             }
         }
-        hql.append("where mt.type=:type ");
+        if (RequestSearchReturnType.CALENDAR.equals(type)) {
+            hql.append("where mt.type in (:types) ");
+        } else {
+            hql.append("where mt.type=:type ");
+        }
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
@@ -231,6 +257,7 @@ public class InventorySearchDBLayer extends DBLayer {
         String jobNameForExactMatch = SOSString.isEmpty(advanced.getJobName()) ? "" : advanced.getJobName();
         String jobResources = null;
         String jobScript = null;
+//        String includeScript = null;
         String noticeBoards = null;
         String lock = null;
         String argumentName = null;
@@ -280,6 +307,8 @@ public class InventorySearchDBLayer extends DBLayer {
             }
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
+//            includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", "!include " + advanced.getIncludeScript(), "sw.jobsScripts",
+//                    "$.scripts");
             noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions",
                     "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
@@ -386,6 +415,8 @@ public class InventorySearchDBLayer extends DBLayer {
             }
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
+//            includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", "!include " + advanced.getIncludeScript(), "sw.jobsScripts",
+//                    "$.scripts");
             noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions",
                     "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
@@ -399,10 +430,14 @@ public class InventorySearchDBLayer extends DBLayer {
         default:
             break;
         }
-        hql.append("group by mt.id,mt.path,mt.folder,mt.name,mt.title,mt.valid,mt.deleted,mt.deployed,mt.released ");
+        hql.append("group by mt.id,mt.path,mt.type,mt.folder,mt.name,mt.title,mt.valid,mt.deleted,mt.deployed,mt.released ");
 
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
-        query.setParameter("type", type.intValue());
+        if (RequestSearchReturnType.CALENDAR.equals(type)) {
+            query.setParameter("types", JocInventory.getCalendarTypes());
+        } else {
+            query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
+        }
         if (search != null) {
             query.setParameter("search", SearchStringHelper.globToSqlPattern('%' + search.toLowerCase() + '%').replaceAll("%%+", "%"));
         }
@@ -444,6 +479,9 @@ public class InventorySearchDBLayer extends DBLayer {
         if (jobScript != null) {
             query.setParameter("jobScript", '%' + jobScript.toLowerCase() + '%');
         }
+//        if (includeScript != null) {
+//            query.setParameter("includeScript", '%' + includeScript.toLowerCase() + '%');
+//        }
         if (noticeBoards != null) {
             query.setParameter("noticeBoards", '%' + noticeBoards.toLowerCase() + '%');
         }
@@ -503,7 +541,7 @@ public class InventorySearchDBLayer extends DBLayer {
         return result;
     }
 
-    public List<InventorySearchItem> getAdvancedSearchDeployedOrReleasedConfigurations(ConfigurationType type, String search, List<String> folders,
+    public List<InventorySearchItem> getAdvancedSearchDeployedOrReleasedConfigurations(RequestSearchReturnType type, String search, List<String> folders,
             RequestSearchAdvancedItem advanced, String controllerId) throws SOSHibernateException {
 
         boolean isReleasable = isReleasable(type);
@@ -513,6 +551,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (isReleasable) {
             hql.append("mt.cid as id");
             hql.append(",mt.path as path");
+            hql.append(",mt.type as type");
             hql.append(",mt.folder as folder ");
             hql.append(",mt.name as name");
             hql.append(",mt.title as title ");
@@ -526,6 +565,7 @@ public class InventorySearchDBLayer extends DBLayer {
         } else {
             hql.append("mt.inventoryConfigurationId as id");
             hql.append(",mt.path as path");
+            hql.append(",mt.type as type");
             hql.append(",mt.folder as folder ");
             hql.append(",mt.name as name");
             hql.append(",mt.title as title ");
@@ -537,7 +577,7 @@ public class InventorySearchDBLayer extends DBLayer {
             hql.append(",0 as countReleased ");
             hql.append(",1 as countDeployed ");
             hql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" mt ");
-            if (type.equals(ConfigurationType.WORKFLOW)) {
+            if (type.equals(RequestSearchReturnType.WORKFLOW)) {
                 // hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
                 // hql.append("on mt.inventoryConfigurationId=sw.inventoryConfigurationId and sw.deployed=1 ");
                 hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
@@ -546,7 +586,11 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append("on swdh.deploymentHistoryId=mt.id and swdh.searchWorkflowId=sw.id ");
             }
         }
-        hql.append("where mt.type=:type ");
+        if (RequestSearchReturnType.CALENDAR.equals(type)) {
+            hql.append("where mt.type in (:types) ");
+        } else {
+            hql.append("where mt.type=:type ");
+        }
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
@@ -574,6 +618,7 @@ public class InventorySearchDBLayer extends DBLayer {
         String jobNameForExactMatch = SOSString.isEmpty(advanced.getJobName()) ? "" : advanced.getJobName();
         String jobResources = null;
         String jobScript = null;
+//        String includeScript = null;
         String noticeBoards = null;
         String lock = null;
         String envName = null;
@@ -626,6 +671,8 @@ public class InventorySearchDBLayer extends DBLayer {
             }
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
+//            includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", "!include " + advanced.getIncludeScript(), "sw.jobsScripts",
+//                    "$.scripts");
             noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions",
                     "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
@@ -739,6 +786,8 @@ public class InventorySearchDBLayer extends DBLayer {
             }
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
+//            includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", "!include " + advanced.getIncludeScript(), "sw.jobsScripts",
+//                    "$.scripts");
             noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions",
                     "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
@@ -753,7 +802,11 @@ public class InventorySearchDBLayer extends DBLayer {
             break;
         }
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
-        query.setParameter("type", type.intValue());
+        if (RequestSearchReturnType.CALENDAR.equals(type)) {
+            query.setParameter("types", JocInventory.getCalendarTypes());
+        } else {
+            query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
+        }
         if (search != null) {
             query.setParameter("search", SearchStringHelper.globToSqlPattern('%' + search.toLowerCase() + '%').replaceAll("%%+", "%"));
         }
@@ -798,6 +851,9 @@ public class InventorySearchDBLayer extends DBLayer {
         if (jobScript != null) {
             query.setParameter("jobScript", '%' + jobScript.toLowerCase() + '%');
         }
+//        if (includeScript != null) {
+//            query.setParameter("includeScript", '%' + includeScript.toLowerCase() + '%');
+//        }
         if (noticeBoards != null) {
             query.setParameter("noticeBoards", '%' + noticeBoards.toLowerCase() + '%');
         }
@@ -910,9 +966,11 @@ public class InventorySearchDBLayer extends DBLayer {
         return result;
     }
 
-    private boolean isReleasable(ConfigurationType type) {
+    private boolean isReleasable(RequestSearchReturnType type) {
         switch (type) {
         case SCHEDULE:
+        case INCLUDESCRIPT:
+        case CALENDAR:
             return true;
         default:
             return false;
