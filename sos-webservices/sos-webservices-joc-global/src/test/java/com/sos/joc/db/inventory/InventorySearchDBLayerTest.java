@@ -14,8 +14,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.RequestSearchAdvancedItem;
+import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 
 public class InventorySearchDBLayerTest {
 
@@ -37,7 +37,7 @@ public class InventorySearchDBLayerTest {
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
             session.beginTransaction();
 
-            List<InventorySearchItem> items = dbLayer.getBasicSearchInventoryConfigurations(ConfigurationType.WORKFLOW, search, folders);
+            List<InventorySearchItem> items = dbLayer.getBasicSearchInventoryConfigurations(RequestSearchReturnType.WORKFLOW, search, folders);
             LOGGER.info("RESULT=" + items.size());
             for (InventorySearchItem item : items) {
                 LOGGER.info(SOSString.toString(item));
@@ -90,7 +90,8 @@ public class InventorySearchDBLayerTest {
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
             session.beginTransaction();
 
-            List<InventorySearchItem> items = dbLayer.getAdvancedSearchInventoryConfigurations(ConfigurationType.WORKFLOW, search, folders, advanced);
+            List<InventorySearchItem> items = dbLayer.getAdvancedSearchInventoryConfigurations(RequestSearchReturnType.WORKFLOW, search, folders,
+                    advanced);
             // List<InventorySearchItem> items = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(ConfigurationType.WORKFLOW, search, folders,
             // advanced,"js7.x");
             LOGGER.info("RESULT=" + items.size());
