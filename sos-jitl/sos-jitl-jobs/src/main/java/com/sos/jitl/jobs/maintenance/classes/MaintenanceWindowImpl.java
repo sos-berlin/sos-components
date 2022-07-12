@@ -43,13 +43,14 @@ public class MaintenanceWindowImpl {
                 // ManageMaintenanceWindowProfile manageMaintenanceWindowProfile =
                 // maintenanceWindowExecuter.getSettings(accessToken,args.getMaintenanceProfile());
 
-                Components components = maintenanceWindowExecuter.getControllerClusterStatus(accessToken, maintenanceWindowExecuter.getControllerid(
-                        accessToken, args.getControllerId()));
+                String controllerId = maintenanceWindowExecuter.getControllerid(accessToken, args.getControllerId());
+
+                Components components = maintenanceWindowExecuter.getControllerClusterStatus(accessToken, controllerId);
                 if (args.getControllerHost() != null) {
                     for (Controller controller : components.getControllers()) {
                         if (args.getState() != null && controller.getHost().equals(args.getControllerHost()) && !controller.getClusterNodeState()
                                 .get_text().value().equalsIgnoreCase(args.getState().name())) {
-                            maintenanceWindowExecuter.switchOverController(accessToken, args.getControllerId());
+                            maintenanceWindowExecuter.switchOverController(accessToken, controllerId);
                             break;
                         }
                     }
@@ -76,12 +77,12 @@ public class MaintenanceWindowImpl {
                 }
 
                 if (args.getAgentIds() != null && args.getAgentIds().size() > 0) {
-                    maintenanceWindowExecuter.enOrDisableAgent(accessToken, args.getState().equals(StateValues.ACTIVE), args.getControllerId(), args
+                    maintenanceWindowExecuter.enOrDisableAgent(accessToken, args.getState().equals(StateValues.ACTIVE), controllerId, args
                             .getAgentIds());
                 }
                 if (args.getSubAgentIds() != null && args.getSubAgentIds().size() > 0) {
-                    maintenanceWindowExecuter.enOrDisableSubAgent(accessToken, args.getState().equals(StateValues.ACTIVE), args.getControllerId(),
-                            args.getSubAgentIds());
+                    maintenanceWindowExecuter.enOrDisableSubAgent(accessToken, args.getState().equals(StateValues.ACTIVE), controllerId, args
+                            .getSubAgentIds());
                 }
             }
 
