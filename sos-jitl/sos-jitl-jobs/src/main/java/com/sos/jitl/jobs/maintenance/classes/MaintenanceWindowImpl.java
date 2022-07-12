@@ -23,12 +23,16 @@ public class MaintenanceWindowImpl {
     public void executeApiCall() throws Exception {
 
         ApiExecutor apiExecutor = new ApiExecutor(logger);
-        apiExecutor.getClient().setConnectionTimeout(10000);
         String accessToken = null;
         ApiResponse apiResponse = null;
         try {
             if (args.getState() != null) {
                 apiResponse = apiExecutor.login();
+
+                if (apiExecutor.getClient() != null) {
+                    apiExecutor.getClient().setConnectionTimeout(10000);
+                }
+
                 if (apiResponse.getStatusCode() == 200) {
                     accessToken = apiResponse.getAccessToken();
                 } else {
@@ -39,7 +43,8 @@ public class MaintenanceWindowImpl {
                 // ManageMaintenanceWindowProfile manageMaintenanceWindowProfile =
                 // maintenanceWindowExecuter.getSettings(accessToken,args.getMaintenanceProfile());
 
-                Components components = maintenanceWindowExecuter.getControllerClusterStatus(accessToken, args.getControllerId());
+                Components components = maintenanceWindowExecuter.getControllerClusterStatus(accessToken, maintenanceWindowExecuter.getControllerid(
+                        accessToken, args.getControllerId()));
                 if (args.getControllerHost() != null) {
                     for (Controller controller : components.getControllers()) {
                         if (args.getState() != null && controller.getHost().equals(args.getControllerHost()) && !controller.getClusterNodeState()

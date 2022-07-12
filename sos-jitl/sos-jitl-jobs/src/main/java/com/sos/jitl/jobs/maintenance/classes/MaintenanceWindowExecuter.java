@@ -12,7 +12,9 @@ import com.sos.joc.model.agent.ReadAgentsV;
 import com.sos.joc.model.agent.SubAgentsCommand;
 import com.sos.joc.model.cluster.ClusterSwitchMember;
 import com.sos.joc.model.controller.Components;
+import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.controller.ControllerIdReq;
+import com.sos.joc.model.controller.Controllers;
 
 public class MaintenanceWindowExecuter {
 
@@ -23,6 +25,41 @@ public class MaintenanceWindowExecuter {
         super();
         this.apiExecutor = apiExecutor;
         this.logger = logger;
+    }
+
+    public String getControllerid(String accessToken, String controllerId) throws Exception {
+
+        String defControllerId = "";
+        ApiResponse apiResponse = apiExecutor.post(accessToken, "/joc/api/controllers/p", "{}");
+        String answer = null;
+        if (apiResponse.getStatusCode() == 200) {
+            answer = apiResponse.getResponseBody();
+        } else {
+            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+                    MaintenanceErrorResponse.class);
+            throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
+                    .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
+        }
+
+        Globals.debug(logger, "answer=" + answer);
+        Controllers controllers = Globals.objectMapper.readValue(answer, Controllers.class);
+        for (Controller controller : controllers.getControllers()) {
+            if (!defControllerId.isEmpty() & !defControllerId.equals(controller.getControllerId())) {
+                defControllerId = "";
+                break;
+            }
+            if (controller.getClusterUrl() != null && !controller.getClusterUrl().isEmpty() && defControllerId.isEmpty()) {
+                defControllerId = controller.getControllerId();
+            }
+        }
+        
+        if (!defControllerId.isEmpty()) {
+            Globals.debug(logger, "ControllerId from Webservice");
+            return defControllerId;
+        } else {
+            Globals.debug(logger, "ControllerId from Arguments");
+            return controllerId;
+        }
     }
 
     public Components getControllerClusterStatus(String accessToken, String controllerId) throws Exception {
