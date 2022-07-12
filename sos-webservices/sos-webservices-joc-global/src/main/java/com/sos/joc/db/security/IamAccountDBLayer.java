@@ -155,6 +155,31 @@ public class IamAccountDBLayer {
         return row;
     }
 
+    
+    private String getBlockedWhere(IamAccountFilter filter) {
+        String where = " ";
+        String and = "";
+        if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
+            where += and + " accountName = :accountName";
+            and = " and ";
+        }
+
+        if (filter.getDateFrom() != null) {
+            where += and + "since >= :from";
+            and = " and ";
+        }
+        if (filter.getDateTo() != null) {
+            where += and + "since < :to";
+            and = " and ";
+        }
+
+        if (!where.trim().equals("")) {
+            where = " where " + where;
+        }
+        return where;
+    }
+    
+    
     private String getWhere(IamAccountFilter filter) {
         String where = " ";
         String and = "";
@@ -477,7 +502,7 @@ public class IamAccountDBLayer {
     }
 
     public List<DBItemIamBlockedAccount> getIamBlockedAccountList(IamAccountFilter filter, int limit) throws SOSHibernateException {
-        Query<DBItemIamBlockedAccount> query = sosHibernateSession.createQuery("from " + DBItemIamBlockedAccount + getWhere(filter) + filter
+        Query<DBItemIamBlockedAccount> query = sosHibernateSession.createQuery("from " + DBItemIamBlockedAccount + getBlockedWhere(filter) + filter
                 .getOrderCriteria() + filter.getSortMode());
         bindParameters(filter, query);
         if (limit > 0) {

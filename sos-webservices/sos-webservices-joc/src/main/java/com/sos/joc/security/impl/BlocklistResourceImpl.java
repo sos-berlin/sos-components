@@ -140,7 +140,7 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
         try {
 
             initLogging(API_CALL_BLOCKLISTS, body, accessToken);
-            JsonValidator.validateFailFast(body, AccountListFilter.class);
+            JsonValidator.validateFailFast(body, BlockedAccountsFilter.class);
             BlockedAccountsFilter blocklistFilter = Globals.objectMapper.readValue(body, BlockedAccountsFilter.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
