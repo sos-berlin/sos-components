@@ -155,7 +155,9 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
             if (args.getResultSetAs() != null) {
                 // resultFile already checked by checkRequired
                 ResultSet rs = cs.getResultSet();
-                if (rs != null) {
+                if (rs == null) {
+                    step.getLogger().info("[export][%s][skip]command did not generate a result set.", args.getResultFile().toString());
+                } else {
                     switch (args.getResultSetAs()) {
                     case CSV:
                         Export2CSV.export(rs, args.getResultFile(), step.getLogger());
