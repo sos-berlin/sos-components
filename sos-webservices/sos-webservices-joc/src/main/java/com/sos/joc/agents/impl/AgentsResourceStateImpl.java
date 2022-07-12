@@ -105,9 +105,10 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         private static final long serialVersionUID = 1L;
 
         {
-            put("Fresh", AgentStateReason.FRESH);
-            put("Reset", AgentStateReason.RESET);
-            put("Restarted", AgentStateReason.RESTARTED);
+            put("fresh", AgentStateReason.FRESH);
+            put("reset", AgentStateReason.RESET);
+            put("resetcommand", AgentStateReason.RESET);
+            put("restarted", AgentStateReason.RESTARTED);
         }
     });
 
@@ -472,7 +473,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             return AgentStateText.RESETTING;
         } else if (couplingState instanceof DelegateCouplingState.Reset) {
             String reason = ((DelegateCouplingState.Reset) couplingState).reason().string();
-            if (reason.equals("Shutdown")) {
+            if (reason.equalsIgnoreCase("Shutdown")) {
                 return AgentStateText.SHUTDOWN;
             }
             return AgentStateText.INITIALISED;
@@ -485,7 +486,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             return null;
         }
         if (couplingState instanceof DelegateCouplingState.Reset) {
-            return agentStateReasons.get(((DelegateCouplingState.Reset) couplingState).reason().string());
+            return agentStateReasons.get(((DelegateCouplingState.Reset) couplingState).reason().string().toLowerCase());
         }
         return null;
     }

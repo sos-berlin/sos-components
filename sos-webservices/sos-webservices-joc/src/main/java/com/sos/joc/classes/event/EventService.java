@@ -426,8 +426,6 @@ public class EventService {
                     addEvent(createBoardEvent(eventId, itemId.string(), eventType));
                 } else if (itemId instanceof WorkflowPathControlPath) {
                     addEvent(createWorkflowEvent(eventId, itemId.string(), "WorkflowUpdated"));
-                } else {
-                    // TODO other simple objects
                 }
                 
 //            } else if (evt instanceof SignedItemEvent) {
@@ -447,6 +445,8 @@ public class EventService {
                     addEvent(createLockEvent(eventId, itemId.path().string(), eventType));
                 } else if (itemId instanceof BoardPath) {
                     addEvent(createBoardEvent(eventId, itemId.path().string(), eventType));
+                } else if (itemId instanceof WorkflowPathControlPath) {
+                    addEvent(createWorkflowEvent(eventId, itemId.path().string(), "WorkflowUpdated"));
                 } else if (itemId instanceof VersionedItemId<?>) {
                     addEvent(createWorkflowEvent(eventId, mapWorkflowId((VersionedItemId<?>) itemId), eventType));
                 } // JobResourcePath, OrderWatchPath
@@ -456,9 +456,6 @@ public class EventService {
                 
             } else if (evt instanceof SubagentItemStateEvent && !(evt instanceof SubagentItemStateEvent.SubagentEventsObserved$)) {
                 addEvent(createAgentEvent(eventId, ((SubagentId) key).string()));
-                
-//            } else if (evt instanceof WorkflowPathControlEvent) {
-//                addEvent(createWorkflowControlEvent(eventId, ((WorkflowPath) key).string()));
                 
             } else if (evt instanceof BoardEvent) {
                 addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
