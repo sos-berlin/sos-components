@@ -23,7 +23,7 @@
     	"type": "string"
     },
     "workflow": {
-    	"$ref": "instructions-schema.json"
+    	"$ref": "branchWorkflow-schema.json"
     },
     "joinIfFailed": {
     	"type": "boolean",

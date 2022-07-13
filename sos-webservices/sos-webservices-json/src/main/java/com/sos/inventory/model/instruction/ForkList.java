@@ -4,9 +4,8 @@ package com.sos.inventory.model.instruction;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.job.Environment;
+import com.sos.inventory.model.workflow.BranchWorkflow;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -23,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "children",
     "childToId",
     "workflow",
-    "result",
     "joinIfFailed"
 })
 public class ForkList
@@ -45,23 +43,14 @@ public class ForkList
     @JsonProperty("childToId")
     private String childToId;
     /**
-     * instructions
+     * workflow in forks
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("workflow")
-    private Instructions workflow;
-    /**
-     * key-value pairs particularly to assign parameters to environment
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
-    @JsonProperty("result")
-    @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Environment result;
+    private BranchWorkflow workflow;
     @JsonProperty("joinIfFailed")
     private Boolean joinIfFailed = false;
 
@@ -74,18 +63,16 @@ public class ForkList
 
     /**
      * 
-     * @param result
      * @param childToId
      * @param workflow
      * @param children
      * @param joinIfFailed
      */
-    public ForkList(String children, String childToId, Instructions workflow, Environment result, Boolean joinIfFailed) {
+    public ForkList(String children, String childToId, BranchWorkflow workflow, Boolean joinIfFailed) {
         super();
         this.children = children;
         this.childToId = childToId;
         this.workflow = workflow;
-        this.result = result;
         this.joinIfFailed = joinIfFailed;
     }
 
@@ -130,49 +117,27 @@ public class ForkList
     }
 
     /**
-     * instructions
+     * workflow in forks
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("workflow")
-    public Instructions getWorkflow() {
+    public BranchWorkflow getWorkflow() {
         return workflow;
     }
 
     /**
-     * instructions
+     * workflow in forks
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("workflow")
-    public void setWorkflow(Instructions workflow) {
+    public void setWorkflow(BranchWorkflow workflow) {
         this.workflow = workflow;
-    }
-
-    /**
-     * key-value pairs particularly to assign parameters to environment
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
-    @JsonProperty("result")
-    public Environment getResult() {
-        return result;
-    }
-
-    /**
-     * key-value pairs particularly to assign parameters to environment
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
-    @JsonProperty("result")
-    public void setResult(Environment result) {
-        this.result = result;
     }
 
     @JsonProperty("joinIfFailed")
@@ -187,12 +152,12 @@ public class ForkList
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("children", children).append("childToId", childToId).append("workflow", workflow).append("result", result).append("joinIfFailed", joinIfFailed).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("children", children).append("childToId", childToId).append("workflow", workflow).append("joinIfFailed", joinIfFailed).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(result).append(childToId).append(workflow).append(children).append(joinIfFailed).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(childToId).append(workflow).append(children).append(joinIfFailed).toHashCode();
     }
 
     @Override
@@ -204,7 +169,7 @@ public class ForkList
             return false;
         }
         ForkList rhs = ((ForkList) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(result, rhs.result).append(childToId, rhs.childToId).append(workflow, rhs.workflow).append(children, rhs.children).append(joinIfFailed, rhs.joinIfFailed).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(childToId, rhs.childToId).append(workflow, rhs.workflow).append(children, rhs.children).append(joinIfFailed, rhs.joinIfFailed).isEquals();
     }
 
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.instruction.InstructionType;
+import com.sos.sign.model.workflow.BranchWorkflow;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -40,14 +41,14 @@ public class ForkList
     @JsonProperty("childToId")
     private String childToId;
     /**
-     * instructions
+     * workflow in forks
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("workflow")
-    private Instructions workflow;
+    private BranchWorkflow workflow;
     @JsonProperty("joinIfFailed")
     private Boolean joinIfFailed = false;
 
@@ -67,7 +68,7 @@ public class ForkList
      * @param childToArguments
      * @param joinIfFailed
      */
-    public ForkList(String children, String childToArguments, String childToId, Instructions workflow, Boolean joinIfFailed, InstructionType tYPE) {
+    public ForkList(String children, String childToArguments, String childToId, BranchWorkflow workflow, Boolean joinIfFailed, InstructionType tYPE) {
         super(tYPE);
         this.children = children;
         this.childToArguments = childToArguments;
@@ -117,26 +118,26 @@ public class ForkList
     }
 
     /**
-     * instructions
+     * workflow in forks
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("workflow")
-    public Instructions getWorkflow() {
+    public BranchWorkflow getWorkflow() {
         return workflow;
     }
 
     /**
-     * instructions
+     * workflow in forks
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("workflow")
-    public void setWorkflow(Instructions workflow) {
+    public void setWorkflow(BranchWorkflow workflow) {
         this.workflow = workflow;
     }
 
