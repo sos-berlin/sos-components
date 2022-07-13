@@ -10,8 +10,7 @@
     "TYPE",
     "path",
     "versionId",
-    "instructions",
-    "jobs"
+    "instructions"
   ],
   "propertyOrder": [
     "TYPE",
