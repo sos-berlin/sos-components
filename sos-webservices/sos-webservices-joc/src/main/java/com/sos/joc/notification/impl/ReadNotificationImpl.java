@@ -2,6 +2,8 @@ package com.sos.joc.notification.impl;
 
 import java.util.Arrays;
 
+import javax.ws.rs.Path;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +27,7 @@ import com.sos.joc.xmleditor.common.standard.ReadConfigurationHandler;
 import com.sos.joc.xmleditor.impl.ValidateResourceImpl;
 import com.sos.schema.JsonValidator;
 
+@Path("notification")
 public class ReadNotificationImpl extends JOCResourceImpl implements IReadNotification {
 
     private static final String API_CALL = "./notification";
