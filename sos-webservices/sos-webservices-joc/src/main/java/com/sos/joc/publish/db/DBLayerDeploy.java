@@ -2386,7 +2386,7 @@ public class DBLayerDeploy {
             hql.append(" and type = :type");
             Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
             query.setParameter("name", name);
-            query.setParameter("type", type);
+            query.setParameter("type", type.intValue());
             query.setMaxResults(1);
             return query.getSingleResult();
         } catch (NoResultException e) {
