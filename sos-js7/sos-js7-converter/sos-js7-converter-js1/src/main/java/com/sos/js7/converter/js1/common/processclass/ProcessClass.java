@@ -14,7 +14,7 @@ import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 public class ProcessClass {
 
     private static final String ATTR_MAX_PROCESSES = "max_processes";
-    //private static final String ATTR_NAME = "name";
+    // private static final String ATTR_NAME = "name";
     private static final String ATTR_REMOTE_SCHEDULER = "remote_scheduler";
     private static final String ATTR_REPLACE = "replace";
     private static final String ATTR_SPOOLER_ID = "spooler_id";
@@ -22,6 +22,8 @@ public class ProcessClass {
     private static final String ELEMENT_REMOTE_SCHEDULERS = "remote_schedulers";
 
     private RemoteSchedulers remoteSchedulers;
+
+    private Path path;
 
     private Integer maxProcesses;
     private String name;
@@ -31,6 +33,8 @@ public class ProcessClass {
     private String spoolerId;
 
     public ProcessClass(Path path) throws Exception {
+        this.path = path;
+
         SOSXMLXPath xpath = SOSXML.newXPath();
         Node node = JS7ConverterHelper.getDocumentRoot(path);
 
@@ -46,6 +50,10 @@ public class ProcessClass {
         if (n != null) {
             this.remoteSchedulers = new RemoteSchedulers(xpath, n);
         }
+    }
+
+    public Path getPath() {
+        return path;
     }
 
     public boolean isAgent() {

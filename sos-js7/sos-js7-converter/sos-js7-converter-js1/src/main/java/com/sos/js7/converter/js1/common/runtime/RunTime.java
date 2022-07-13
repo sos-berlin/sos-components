@@ -69,6 +69,12 @@ public class RunTime {
     private JS1Calendars calendars;
     private Path currentPath;
 
+    protected RunTime(SOSXMLXPath xpath, Node node, Path currentPath) throws Exception {
+        this.currentPath = currentPath;
+
+        convertChildElements(xpath, node);
+    }
+
     public RunTime(DirectoryParserResult pr, SOSXMLXPath xpath, Node node, Path currentPath) throws Exception {
         this.nodeText = JS7ConverterHelper.nodeToString(node);
         this.currentPath = currentPath;
@@ -84,23 +90,33 @@ public class RunTime {
         this.letRun = JS7ConverterHelper.stringValue(m.get(ATTR_LET_RUN));
         this.once = JS7ConverterHelper.stringValue(m.get(ATTR_ONCE));
 
+        convertChildElements(xpath, node);
+    }
+
+    private void convertChildElements(SOSXMLXPath xpath, Node node) throws Exception {
         this.periods = convertPeriod(xpath, node);
         this.ats = convertAt(xpath, node);
         this.dates = convertDate(xpath, node);
         this.weekDays = convertWeekDays(xpath, node);
         this.monthDays = convertMonthDays(xpath, node);
         this.months = convertMonth(xpath, node);
+        this.ultimos = convertUltimos(xpath, node);
         this.holidays = convertHolidays(xpath, node);
         this.calendars = convertCalendars(xpath, node, nodeText);
     }
 
     public boolean isEmpty() {
         return singleStart == null && begin == null && end == null && repeat == null && schedule == null && periods == null && ats == null
-                && dates == null && weekDays == null && monthDays == null && months == null && holidays == null && calendars == null;
+                && dates == null && weekDays == null && monthDays == null && months == null && ultimos == null && holidays == null
+                && calendars == null;
     }
 
     public boolean hasCalendars() {
         return calendars != null && calendars.getCalendars() != null && calendars.getCalendars().size() > 0;
+    }
+
+    public boolean isConvertableWithoutCalendars() {
+        return !isEmpty() && !hasCalendars();
     }
 
     private Schedule convertSchedule(DirectoryParserResult pr, SOSXMLXPath xpath, Node node, Map<String, String> m, Path currentPath)
@@ -110,6 +126,10 @@ public class RunTime {
             return null;
         }
         return newSchedule(pr, currentPath, includePath, ATTR_SCHEDULE);
+    }
+
+    public static Schedule newSchedule(RunTime runTime, String name, Path file) {
+        return new Schedule(runTime, name, file);
     }
 
     public static Schedule newSchedule(DirectoryParserResult pr, Path currentPath, String includePath, String attrName) {

@@ -451,18 +451,15 @@ public class JS7ConverterConfig {
             return this;
         }
 
-        public JobConfig withNotificationMailDefaultTo(String val) {
-            this.notificationMailDefaultTo = val;
+        public JobConfig withForcedV1Compatible(Boolean val) {
+            this.forcedV1Compatible = val;
             return this;
         }
 
-        public JobConfig withNotificationMailDefaultCc(String val) {
-            this.notificationMailDefaultCc = val;
-            return this;
-        }
-
-        public JobConfig withNotificationMailDefaultBcc(String val) {
-            this.notificationMailDefaultBcc = val;
+        public JobConfig withNotificationMailDefault(String to, String cc, String bcc) {
+            this.notificationMailDefaultTo = to;
+            this.notificationMailDefaultCc = cc;
+            this.notificationMailDefaultBcc = bcc;
             return this;
         }
 

@@ -1,6 +1,7 @@
 package com.sos.js7.converter.js1.common.jobchain;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -8,10 +9,14 @@ import java.util.Map;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.sos.commons.util.SOSString;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 import com.sos.js7.converter.js1.common.jobchain.node.AJobChainNode;
+import com.sos.js7.converter.js1.common.processclass.ProcessClass;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
+import com.sos.js7.converter.js1.output.js7.JS7Converter;
 
 public class JobChain {
 
@@ -31,8 +36,8 @@ public class JobChain {
     private final String name;
     private String title;
 
-    private String processClass;
-    private String fileWatchingProcessClass;
+    private ProcessClass processClass;
+    private ProcessClass fileWatchingProcessClass;
     private Integer maxOrders;
 
     private Boolean ordersRecoverable; // yes|no
@@ -46,16 +51,16 @@ public class JobChain {
         if (jobChainFile == null) {
             throw new Exception("job chain file not found");
         }
-        parse(jobChainFile);
+        parse(pr, jobChainFile);
     }
 
-    private void parse(Path file) throws Exception {
+    private void parse(DirectoryParserResult pr, Path file) throws Exception {
         path = file;
         Node node = JS7ConverterHelper.getDocumentRoot(file);
         Map<String, String> map = JS7ConverterHelper.attribute2map(node);
         title = JS7ConverterHelper.stringValue(map.get(ATTR_TITLE));
-        processClass = JS7ConverterHelper.stringValue(map.get(ATTR_PROCESS_CLASS));
-        fileWatchingProcessClass = JS7ConverterHelper.stringValue(map.get(ATTR_FW_PROCESS_CLASS));
+        processClass = convertProcessClass(pr, file, map, ATTR_PROCESS_CLASS);
+        fileWatchingProcessClass = convertProcessClass(pr, file, map, ATTR_FW_PROCESS_CLASS);
         maxOrders = JS7ConverterHelper.integerValue(map.get(ATTR_MAX_ORDERS));
         ordersRecoverable = JS7ConverterHelper.booleanValue(map.get(ATTR_ORDERS_RECOVERABLE));
         distributed = JS7ConverterHelper.booleanValue(map.get(ATTR_DISTRIBUTED));
@@ -73,6 +78,20 @@ public class JobChain {
                     nodes.add(jcn);
                 }
             }
+        }
+    }
+
+    private ProcessClass convertProcessClass(DirectoryParserResult pr, Path currentPath, Map<String, String> m, String attrName) {
+        String includePath = JS7ConverterHelper.stringValue(m.get(attrName));
+        if (SOSString.isEmpty(includePath)) {
+            return null;
+        }
+        try {
+            return new ProcessClass(JS7Converter.findIncludeFile(pr, currentPath, Paths.get(includePath + EConfigFileExtensions.PROCESS_CLASS
+                    .extension())));
+        } catch (Throwable e) {
+            ParserReport.INSTANCE.addErrorRecord(currentPath, "[attribute=" + attrName + "]ProcessClass not found=" + includePath, e);
+            return null;
         }
     }
 
@@ -111,11 +130,11 @@ public class JobChain {
         return title;
     }
 
-    public String getProcessClass() {
+    public ProcessClass getProcessClass() {
         return processClass;
     }
 
-    public String getFileWatchingProcessClass() {
+    public ProcessClass getFileWatchingProcessClass() {
         return fileWatchingProcessClass;
     }
 

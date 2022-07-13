@@ -132,6 +132,14 @@ public class JS7ConverterHelper {
         return null;
     }
 
+    public static List<Integer> allWeekDays() {
+        List<Integer> r = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            r.add(Integer.valueOf(i));
+        }
+        return r;
+    }
+
     // TODO Autosys
     public static List<String> getTimes(List<String> times) {
         if (times == null) {
@@ -259,6 +267,14 @@ public class JS7ConverterHelper {
             return null;
         }
         return "/" + StringUtils.strip(path.trim().replace('\\', '/'), "/").concat("/");
+    }
+
+    public static String getFileName(String p) {
+        if (p.endsWith("/")) {
+            return "";
+        }
+        int i = p.lastIndexOf("/");
+        return i > -1 ? p.substring(i + 1) : p;
     }
 
 }

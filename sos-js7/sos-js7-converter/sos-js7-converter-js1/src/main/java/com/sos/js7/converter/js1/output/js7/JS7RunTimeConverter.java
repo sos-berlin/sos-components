@@ -2,7 +2,9 @@ package com.sos.js7.converter.js1.output.js7;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -29,42 +31,56 @@ public class JS7RunTimeConverter {
     }
 
     public static Schedule convert(com.sos.js7.converter.js1.common.runtime.Schedule js1Schedule, String timeZone, List<String> workflowNames) {
-        if (js1Schedule == null || !js1Schedule.isConvertable()) {
+        if (js1Schedule == null) {
+            return null;
+        }
+        return convert(js1Schedule.getRunTime(), timeZone, workflowNames);
+    }
+
+    public static Schedule convert(com.sos.js7.converter.js1.common.runtime.RunTime js1RunTime, String timeZone, List<String> workflowNames) {
+        if (js1RunTime == null || !js1RunTime.isConvertableWithoutCalendars()) {
             return null;
         }
 
-        boolean hasDates = js1Schedule.getDates() != null;
-        boolean hasWeekDays = js1Schedule.getWeekDays() != null;
-        boolean hasMonthDays = js1Schedule.getMonthDays() != null;
-        boolean hasUltimos = js1Schedule.getUltimos() != null;
-        boolean hasHolidays = js1Schedule.getHolidays() != null;
+        boolean hasPeriods = js1RunTime.getPeriods() != null;
+        boolean hasAts = js1RunTime.getAts() != null;
+        boolean hasDates = js1RunTime.getDates() != null;
+        boolean hasWeekDays = js1RunTime.getWeekDays() != null;
+        boolean hasMonthDays = js1RunTime.getMonthDays() != null;
+        boolean hasUltimos = js1RunTime.getUltimos() != null;
+        boolean hasHolidays = js1RunTime.getHolidays() != null;
 
-        LOGGER.info(String.format("[schedule=%s]hasDates=%s, hasWeekDays=%s,hasMonthDays=%s,hasUltimos=%s,hasHolidays=%s", js1Schedule.getName(),
-                hasDates, hasWeekDays, hasMonthDays, hasUltimos, hasHolidays));
+        LOGGER.info(String.format("hasPeriods=%s,hasAts=%s,hasDates=%s, hasWeekDays=%s,hasMonthDays=%s,hasUltimos=%s,hasHolidays=%s", hasPeriods,
+                hasAts, hasDates, hasWeekDays, hasMonthDays, hasUltimos, hasHolidays));
 
         List<AssignedCalendars> working = new ArrayList<>();
         List<AssignedNonWorkingDayCalendars> nonWorking = new ArrayList<>();
+
+        if (hasPeriods) {
+            convertPeriods(working, js1RunTime.getPeriods(), timeZone);
+        }
+        if (hasAts) {
+            convertAts(working, js1RunTime.getAts(), timeZone);
+        }
         if (hasDates) {
-            convertDates(working, js1Schedule.getDates(), timeZone);
+            convertDates(working, js1RunTime.getDates(), timeZone);
         }
         if (hasWeekDays) {
-            for (com.sos.js7.converter.js1.common.runtime.WeekDays wd : js1Schedule.getWeekDays()) {
+            for (com.sos.js7.converter.js1.common.runtime.WeekDays wd : js1RunTime.getWeekDays()) {
                 convertDays(working, wd.getDays(), timeZone, DaysType.WEEKDAYS);
             }
         }
         if (hasMonthDays) {
-            for (com.sos.js7.converter.js1.common.runtime.MonthDays wd : js1Schedule.getMonthDays()) {
+            for (com.sos.js7.converter.js1.common.runtime.MonthDays wd : js1RunTime.getMonthDays()) {
                 convertDays(working, wd.getDays(), timeZone, DaysType.MONTHDAYS);
                 convertWeekDays(working, wd.getWeekDays(), timeZone);
             }
         }
-
         if (hasUltimos) {
-            for (com.sos.js7.converter.js1.common.runtime.Ultimos wd : js1Schedule.getUltimos()) {
+            for (com.sos.js7.converter.js1.common.runtime.Ultimos wd : js1RunTime.getUltimos()) {
                 convertDays(working, wd.getDays(), timeZone, DaysType.ULTIMOS);
             }
         }
-
         if (hasHolidays) {
             AssignedNonWorkingDayCalendars nwc = new AssignedNonWorkingDayCalendars();
             nwc.setCalendarName(JS7Converter.CONFIG.getScheduleConfig().getDefaultNonWorkingDayCalendarName());
@@ -81,6 +97,63 @@ public class JS7RunTimeConverter {
             schedule.setSubmitOrderToControllerWhenPlanned(JS7Converter.CONFIG.getScheduleConfig().submitOrders());
         }
         return schedule;
+
+    }
+
+    private static void convertPeriods(List<AssignedCalendars> working, List<com.sos.js7.converter.js1.common.runtime.Period> runTimeDays,
+            String timeZone) {
+        if (runTimeDays == null) {
+            return;
+        }
+
+        AssignedCalendars c = createWorkingCalendar(timeZone);
+        WeekDays wds = new WeekDays();
+        wds.setDays(JS7ConverterHelper.allWeekDays());
+        c.getIncludes().setWeekdays(Collections.singletonList(wds));
+        c.setPeriods(convertPeriods(runTimeDays));
+        working.add(c);
+    }
+
+    private static void convertAts(List<AssignedCalendars> working, List<com.sos.js7.converter.js1.common.runtime.At> runTimeDays, String timeZone) {
+        if (runTimeDays == null) {
+            return;
+        }
+
+        // <at at="2006-03-24 12:00"/>
+        Map<String, List<String>> starts = new HashMap<>();
+        for (com.sos.js7.converter.js1.common.runtime.At d : runTimeDays) {
+            String at = d.getAt();
+            if (SOSString.isEmpty(at)) {
+                continue;
+            }
+            String[] arr = at.split(" ");
+            if (arr.length < 2) {
+                continue;
+            }
+            String day = arr[0];
+            String singleStart = normalizeTime(arr[1]);
+
+            List<String> days = starts.get(singleStart);
+            if (days == null) {
+                days = new ArrayList<>();
+            }
+            if (!days.contains(day)) {
+                days.add(day);
+            }
+            starts.put(singleStart, days);
+        }
+
+        for (Map.Entry<String, List<String>> e : starts.entrySet()) {
+            AssignedCalendars c = createWorkingCalendar(timeZone);
+            c.getIncludes().setDates(e.getValue());
+
+            Period p = new Period();
+            p.setSingleStart(e.getKey());
+            p.setWhenHoliday(WhenHolidayType.SUPPRESS);
+            c.setPeriods(Collections.singletonList(p));
+
+            working.add(c);
+        }
     }
 
     private static void convertDates(List<AssignedCalendars> working, List<com.sos.js7.converter.js1.common.runtime.Date> runTimeDates,
@@ -239,6 +312,13 @@ public class JS7RunTimeConverter {
                     Period period = new Period();
                     period.setWhenHoliday(getWhenHolidayType(p.getWhenHoliday()));
                     period.setRepeat(normalizeTime(p.getAbsoluteRepeat()));
+                    period.setBegin(normalizeTime(p.getBegin()));
+                    period.setEnd(normalizeTime(p.getEnd()));
+                    periods.add(period);
+                } else if (!SOSString.isEmpty(p.getRepeat()) && !p.getRepeat().equals("0")) {
+                    Period period = new Period();
+                    period.setWhenHoliday(getWhenHolidayType(p.getWhenHoliday()));
+                    period.setRepeat(normalizeTime(p.getRepeat()));
                     period.setBegin(normalizeTime(p.getBegin()));
                     period.setEnd(normalizeTime(p.getEnd()));
                     periods.add(period);
