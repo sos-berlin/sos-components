@@ -39,6 +39,7 @@ import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.model.publish.folder.ExportFolderFilter;
 import com.sos.joc.model.publish.git.AddCredentialsFilter;
 import com.sos.joc.model.publish.git.commands.CloneFilter;
+import com.sos.joc.model.settings.StoreSettingsFilter;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
@@ -485,12 +486,19 @@ public class MappingTest {
         ReadNotificationFilter readFilter = DeploymentTestUtils.createReadNotificationFilter();
         StoreNotificationFilter storeFilter = DeploymentTestUtils.createStoreNotificationFilter();
         DeleteNotificationFilter deleteFilter = DeploymentTestUtils.createDeleteNotificationFilter();
-        LOGGER.info("ReadNotificationFilter");
-        LOGGER.info(Globals.prettyPrintObjectMapper.writeValueAsString(readFilter));
-        LOGGER.info("StoreNotificationFilter");
-        LOGGER.info(Globals.prettyPrintObjectMapper.writeValueAsString(storeFilter));
-        LOGGER.info("DeleteNotificationFilter");
-        LOGGER.info(Globals.prettyPrintObjectMapper.writeValueAsString(deleteFilter));
+        LOGGER.trace("ReadNotificationFilter");
+        LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(readFilter));
+        LOGGER.trace("StoreNotificationFilter");
+        LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(storeFilter));
+        LOGGER.trace("DeleteNotificationFilter");
+        LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(deleteFilter));
+    }
+    
+    @Test
+    public void test31SettingsFilter() throws JsonProcessingException {
+        StoreSettingsFilter storeFilter = DeploymentTestUtils.createStoreSettingsFilter();
+        LOGGER.trace("StoreSettingsFilter");
+        LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(storeFilter));
     }
     
 }

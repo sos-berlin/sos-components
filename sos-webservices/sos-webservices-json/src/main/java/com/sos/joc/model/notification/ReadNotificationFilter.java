@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * read notification
  * <p>
- * forceRelease for notification
+ * Request Filter to read a notification
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -36,7 +36,6 @@ public class ReadNotificationFilter {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
@@ -72,7 +71,6 @@ public class ReadNotificationFilter {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
@@ -84,7 +82,6 @@ public class ReadNotificationFilter {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")

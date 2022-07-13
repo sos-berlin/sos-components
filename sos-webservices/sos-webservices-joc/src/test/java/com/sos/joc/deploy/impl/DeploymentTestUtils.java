@@ -22,7 +22,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.path.PathFilter;
 import com.sos.joc.model.inventory.path.PathResponse;
@@ -78,8 +77,8 @@ import com.sos.joc.model.publish.repository.ReadFromFilter;
 import com.sos.joc.model.publish.repository.ResponseFolder;
 import com.sos.joc.model.publish.repository.ResponseFolderItem;
 import com.sos.joc.model.publish.repository.UpdateFromFilter;
+import com.sos.joc.model.settings.StoreSettingsFilter;
 import com.sos.joc.model.sign.Signature;
-import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.sign.model.instruction.ForkJoin;
 import com.sos.sign.model.instruction.IfElse;
@@ -1176,8 +1175,6 @@ public class DeploymentTestUtils {
     public static ReadNotificationFilter createReadNotificationFilter() {
         ReadNotificationFilter filter = new ReadNotificationFilter();
         filter.setControllerId("testsuite");
-        filter.setName("notification.xml");
-        //filter.setObjectType(ObjectType.NOTIFICATION);
         filter.setForceRelease(false);
         return filter;
     }
@@ -1185,8 +1182,6 @@ public class DeploymentTestUtils {
     public static DeleteNotificationFilter createDeleteNotificationFilter() {
         DeleteNotificationFilter filter = new DeleteNotificationFilter();
         filter.setControllerId("testsuite");
-        filter.setName("notification.xml");
-        //filter.setObjectType(ObjectType.NOTIFICATION);
         filter.setRelease(false);
         return filter;
     }
@@ -1194,8 +1189,6 @@ public class DeploymentTestUtils {
     public static StoreNotificationFilter createStoreNotificationFilter() {
         StoreNotificationFilter filter = new StoreNotificationFilter();
         filter.setControllerId("testsuite");
-        filter.setName("notification.xml");
-       // filter.setObjectType(ObjectType.NOTIFICATION);
         filter.setConfiguration("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\r\n"
                 + "<Configurations>\r\n"
                 + "    <Fragments>\r\n"
@@ -1454,6 +1447,12 @@ public class DeploymentTestUtils {
                 + "        </Notification>\r\n"
                 + "    </Notifications>\r\n"
                 + "</Configurations>");
+        return filter;
+    }
+    
+    public static StoreSettingsFilter createStoreSettingsFilter () {
+        StoreSettingsFilter filter = new StoreSettingsFilter();
+        filter.setConfigurationItem("{\"status\":[\"info\",\"debug\",\"error\",\"warn\"],\"isEnable\":false}");
         return filter;
     }
     

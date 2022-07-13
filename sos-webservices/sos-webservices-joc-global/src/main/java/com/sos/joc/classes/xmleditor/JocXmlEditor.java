@@ -21,6 +21,7 @@ import org.w3c.dom.Document;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.xmleditor.exceptions.SOSAssignSchemaException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -377,8 +378,8 @@ public class JocXmlEditor {
         if (realPath != null) {
             return;
         }
-        realPath = Paths.get(System.getProperty("user.dir"), "resources/joc").normalize();
-       
+//        realPath = Paths.get(System.getProperty("user.dir"), "resources/joc").normalize();
+        realPath = Globals.sosCockpitProperties.getResourceDir();
     }
 
 }

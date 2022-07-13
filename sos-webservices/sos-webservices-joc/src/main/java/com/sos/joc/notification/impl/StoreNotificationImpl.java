@@ -76,7 +76,9 @@ public class StoreNotificationImpl extends JOCResourceImpl implements IStoreNoti
         item.setType(ObjectType.NOTIFICATION.name());
         item.setName(name.trim());
         item.setConfigurationDraft(filter.getConfiguration());
-        item.setConfigurationDraftJson(Utils.serialize(filter.getConfigurationJson()));
+        if (filter.getConfigurationJson() != null) {
+            item.setConfigurationDraftJson(Utils.serialize(filter.getConfigurationJson()));
+        }
         item.setSchemaLocation(JocXmlEditor.SCHEMA_FILENAME_NOTIFICATION);
         item.setAuditLogId(auditLogId);
         item.setAccount(getAccount());
@@ -90,7 +92,9 @@ public class StoreNotificationImpl extends JOCResourceImpl implements IStoreNoti
             String name, Long auditLogId) throws Exception {
         item.setName(name.trim());
         item.setConfigurationDraft(SOSString.isEmpty(filter.getConfiguration()) ? null : filter.getConfiguration());
-        item.setConfigurationDraftJson(Utils.serialize(filter.getConfigurationJson()));
+        if (filter.getConfigurationJson() != null) {
+            item.setConfigurationDraftJson(Utils.serialize(filter.getConfigurationJson()));
+        }
         item.setSchemaLocation(JocXmlEditor.SCHEMA_FILENAME_NOTIFICATION);
         item.setAuditLogId(auditLogId);
         item.setAccount(getAccount());

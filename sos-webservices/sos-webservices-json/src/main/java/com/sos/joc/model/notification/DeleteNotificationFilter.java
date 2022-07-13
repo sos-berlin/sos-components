@@ -13,13 +13,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * delete notification filter
  * <p>
- * release only for NOTIFICATION
+ * Request Filter to delete a notification
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "name",
     "release",
     "auditLog"
 })
@@ -34,15 +33,6 @@ public class DeleteNotificationFilter {
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("name")
-    private String name;
     @JsonProperty("release")
     private Boolean release;
     /**
@@ -76,30 +66,6 @@ public class DeleteNotificationFilter {
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("name")
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("name")
-    public void setName(String name) {
-        this.name = name;
     }
 
     @JsonProperty("release")
@@ -136,12 +102,12 @@ public class DeleteNotificationFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("name", name).append("release", release).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("release", release).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(controllerId).append(auditLog).append(release).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(auditLog).append(release).toHashCode();
     }
 
     @Override
@@ -153,7 +119,7 @@ public class DeleteNotificationFilter {
             return false;
         }
         DeleteNotificationFilter rhs = ((DeleteNotificationFilter) other);
-        return new EqualsBuilder().append(name, rhs.name).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(release, rhs.release).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(release, rhs.release).isEquals();
     }
 
 }

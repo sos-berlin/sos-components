@@ -1,5 +1,6 @@
 package com.sos.joc.db.configuration;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -239,4 +240,32 @@ public class JocConfigurationDbLayer {
         session.executeUpdate(query);
     }
 
+    public DBItemJocConfiguration getGlobalSettingsConfiguration() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_JOC_CONFIGURATIONS);
+        hql.append(" where configurationType = 'GLOBALS'");
+        Query<DBItemJocConfiguration> query = session.createQuery(hql.toString());
+        query.setMaxResults(1);
+        return session.getSingleResult(query);
+    }
+    
+    public void saveOrUpdateGlobalSettingsConfiguration(DBItemJocConfiguration cfg) throws SOSHibernateException {
+        saveOrUpdateGlobalSettingsConfiguration(cfg, null);
+    }
+    
+    public void saveOrUpdateGlobalSettingsConfiguration(DBItemJocConfiguration newCfg, DBItemJocConfiguration oldCfg) throws SOSHibernateException {
+        if (oldCfg == null) {
+            oldCfg = getGlobalSettingsConfiguration();
+        }
+        if(oldCfg != null) {
+            // update
+            oldCfg.setConfigurationItem(newCfg.getConfigurationItem());
+            oldCfg.setModified(Date.from(Instant.now()));
+            session.update(oldCfg);
+        } else {
+            // save
+            newCfg.setModified(Date.from(Instant.now()));
+            session.save(newCfg);
+        }
+    }
+    
 }

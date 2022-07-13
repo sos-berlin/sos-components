@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * store notification filter
  * <p>
- * schemaIdentifier only for objectType=YADE,OTHER
+ * Request Filter to store a notification.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -56,7 +56,6 @@ public class StoreNotificationFilter {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
@@ -144,7 +143,6 @@ public class StoreNotificationFilter {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
@@ -156,7 +154,6 @@ public class StoreNotificationFilter {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
