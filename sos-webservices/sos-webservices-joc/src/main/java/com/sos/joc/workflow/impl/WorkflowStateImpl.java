@@ -96,11 +96,12 @@ public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState
                         
                         if (!agentsThatIgnoreCommand.isEmpty()) {
                             stateText = SyncStateText.OUTSTANDING;
+                            allAgents = allAgents.stream().filter(a -> !agentsThatIgnoreCommand.contains(a)).collect(Collectors.toSet());
+                            //Unsupported Operation agentsThatIgnoreCommand.forEach(a -> allAgents.remove(a));
                         } else if (controlState.get().suspended()) {
                             stateText = SyncStateText.SUSPENDED;
                         }
                         
-                        agentsThatIgnoreCommand.forEach(a -> allAgents.remove(a));
                         Map<String, String> idNameMap = getAgentIdNameMap(controllerId);
 
                         entity.setConfirmedAgentNames(allAgents.stream().map(AgentPath::string).map(a -> idNameMap.getOrDefault(a, a)).collect(
