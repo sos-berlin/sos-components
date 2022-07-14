@@ -144,8 +144,7 @@ public class SyncStateHelper {
                 Set<AgentPath> agentsThatIgnoreCommand = currentstate.singleWorkflowPathControlToIgnorantAgents(wPath);
                 int numOfgentsThatIgnoreCommand = agentsThatIgnoreCommand.size();
                 // int numOfAgentsThatConfirmedSuspendOrResume = JavaConverters.asJava(controlState.attachedToAgents()).size();
-                // int totalNumOfAgents = JavaConverters.asJava(either.get().asScala().nameToJob()).values().stream().map(WorkflowJob::agentPath)
-                //        .distinct().mapToInt(e -> 1).sum();
+                // int totalNumOfAgents = JavaConverters.asJava(workflowE.get().asScala().referencedAgentPaths()).size();
 //                if (controlState.workflowPathControl().suspended()) {
 //                    if (numOfAgentsThatConfirmedSuspendOrResume >= totalNumOfAgents) {
 //                        stateText = SyncStateText.SUSPENDED;

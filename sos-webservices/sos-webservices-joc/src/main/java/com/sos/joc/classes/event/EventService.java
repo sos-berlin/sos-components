@@ -452,8 +452,11 @@ public class EventService {
                 } // JobResourcePath, OrderWatchPath
                 
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
-                addEvent(createAgentEvent(eventId, ((AgentPath) key).string()));
-                
+                AgentPath ap = (AgentPath) key;
+                addEvent(createAgentEvent(eventId, ap.string()));
+                currentState.workflowPathControlToIgnorantAgent().entrySet().stream().filter(e -> e.getValue().contains(ap)).map(e -> e
+                        .getKey()).forEach(wp -> createWorkflowEvent(eventId, wp.string(), "WorkflowUpdated"));
+
             } else if (evt instanceof SubagentItemStateEvent && !(evt instanceof SubagentItemStateEvent.SubagentEventsObserved$)) {
                 addEvent(createAgentEvent(eventId, ((SubagentId) key).string()));
                 
