@@ -75,24 +75,8 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
 
             List<ResponseSearchItem> r = Collections.emptyList();
             if (items != null) {
-                r = items.stream().map(item -> {
-                    ResponseSearchItem ri = new ResponseSearchItem();
-                    ri.setId(item.getId());
-                    ri.setPath(item.getPath());
-                    ri.setName(item.getName());
-                    ri.setObjectType(item.getTypeAsEnum());
-                    ri.setTitle(item.getTitle());
-                    ri.setControllerId(item.getControllerId());
-                    ri.setValid(item.isValid());
-                    ri.setDeleted(item.isDeleted());
-                    ri.setDeployed(item.isDeployed());
-                    ri.setReleased(item.isReleased());
-                    ri.setHasDeployments(item.getCountDeployed().intValue() > 0);
-                    ri.setHasReleases(item.getCountReleased().intValue() > 0);
-                    ri.setPermitted(folderPermissions.isPermittedForFolder(item.getFolder()));
-                    return ri;
-                }).sorted(Comparator.comparing(ResponseSearchItem::getPath)).collect(Collectors
-                        .toList());
+                r = items.stream().map(item -> toResponseSearchItem(item)).sorted(Comparator.comparing(ResponseSearchItem::getPath)).collect(
+                        Collectors.toList());
             }
             return r;
         } catch (Throwable e) {
@@ -157,20 +141,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                         }
                     }
 
-                    ResponseSearchItem ri = new ResponseSearchItem();
-                    ri.setId(item.getId());
-                    ri.setPath(item.getPath());
-                    ri.setName(item.getName());
-                    ri.setObjectType(item.getTypeAsEnum());
-                    ri.setTitle(item.getTitle());
-                    ri.setControllerId(item.getControllerId());
-                    ri.setValid(item.isValid());
-                    ri.setDeleted(item.isDeleted());
-                    ri.setDeployed(item.isDeployed());
-                    ri.setReleased(item.isReleased());
-                    ri.setHasDeployments(item.getCountDeployed().intValue() > 0);
-                    ri.setHasReleases(item.getCountReleased().intValue() > 0);
-                    ri.setPermitted(folderPermissions.isPermittedForFolder(item.getFolder()));
+                    ResponseSearchItem ri = toResponseSearchItem(item);
                     r.add(ri);
                 }
             }
@@ -209,7 +180,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             in.getAdvanced().setIncludeScript(null);
             break;
         case CALENDAR:
-            // TODO
+            in.getAdvanced().setCalendar(null);
             break;
         }
     }
@@ -268,5 +239,23 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
         }
         return permitted;
+    }
+    
+    private ResponseSearchItem toResponseSearchItem(InventorySearchItem item) {
+        ResponseSearchItem ri = new ResponseSearchItem();
+        ri.setId(item.getId());
+        ri.setPath(item.getPath());
+        ri.setName(item.getName());
+        ri.setObjectType(item.getTypeAsEnum());
+        ri.setTitle(item.getTitle());
+        ri.setControllerId(item.getControllerId());
+        ri.setValid(item.isValid());
+        ri.setDeleted(item.isDeleted());
+        ri.setDeployed(item.isDeployed());
+        ri.setReleased(item.isReleased());
+        ri.setHasDeployments(item.getCountDeployed().intValue() > 0);
+        ri.setHasReleases(item.getCountReleased().intValue() > 0);
+        ri.setPermitted(folderPermissions.isPermittedForFolder(item.getFolder()));
+        return ri;
     }
 }

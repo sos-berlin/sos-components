@@ -24,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "lock",
     "schedule",
     "includeScript",
+    "calendar",
     "noticeBoards",
     "jobResources",
     "jobName",
@@ -87,6 +88,14 @@ public class RequestSearchAdvancedItem {
      */
     @JsonProperty("includeScript")
     private String includeScript;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("calendar")
+    private String calendar;
     /**
      * string without < and >
      * <p>
@@ -308,6 +317,28 @@ public class RequestSearchAdvancedItem {
     @JsonProperty("includeScript")
     public void setIncludeScript(String includeScript) {
         this.includeScript = includeScript;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("calendar")
+    public String getCalendar() {
+        return calendar;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("calendar")
+    public void setCalendar(String calendar) {
+        this.calendar = calendar;
     }
 
     /**
@@ -564,12 +595,12 @@ public class RequestSearchAdvancedItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentName", agentName).append("workflow", workflow).append("fileOrderSource", fileOrderSource).append("lock", lock).append("schedule", schedule).append("includeScript", includeScript).append("noticeBoards", noticeBoards).append("jobResources", jobResources).append("jobName", jobName).append("jobNameExactMatch", jobNameExactMatch).append("jobCriticality", jobCriticality).append("jobCountFrom", jobCountFrom).append("jobCountTo", jobCountTo).append("jobScript", jobScript).append("argumentName", argumentName).append("argumentValue", argumentValue).append("envName", envName).append("envValue", envValue).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("workflow", workflow).append("fileOrderSource", fileOrderSource).append("lock", lock).append("schedule", schedule).append("includeScript", includeScript).append("calendar", calendar).append("noticeBoards", noticeBoards).append("jobResources", jobResources).append("jobName", jobName).append("jobNameExactMatch", jobNameExactMatch).append("jobCriticality", jobCriticality).append("jobCountFrom", jobCountFrom).append("jobCountTo", jobCountTo).append("jobScript", jobScript).append("argumentName", argumentName).append("argumentValue", argumentValue).append("envName", envName).append("envValue", envValue).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobName).append(workflow).append(argumentName).append(jobCriticality).append(agentName).append(jobNameExactMatch).append(argumentValue).append(jobScript).append(envValue).append(includeScript).append(noticeBoards).append(jobCountFrom).append(schedule).append(jobCountTo).append(envName).append(lock).append(fileOrderSource).append(jobResources).toHashCode();
+        return new HashCodeBuilder().append(calendar).append(jobName).append(workflow).append(argumentName).append(jobCriticality).append(includeScript).append(agentName).append(jobNameExactMatch).append(argumentValue).append(jobScript).append(envValue).append(noticeBoards).append(jobCountFrom).append(schedule).append(jobCountTo).append(envName).append(lock).append(fileOrderSource).append(jobResources).toHashCode();
     }
 
     @Override
@@ -581,7 +612,7 @@ public class RequestSearchAdvancedItem {
             return false;
         }
         RequestSearchAdvancedItem rhs = ((RequestSearchAdvancedItem) other);
-        return new EqualsBuilder().append(jobName, rhs.jobName).append(workflow, rhs.workflow).append(argumentName, rhs.argumentName).append(jobCriticality, rhs.jobCriticality).append(agentName, rhs.agentName).append(jobNameExactMatch, rhs.jobNameExactMatch).append(argumentValue, rhs.argumentValue).append(jobScript, rhs.jobScript).append(envValue, rhs.envValue).append(includeScript, rhs.includeScript).append(noticeBoards, rhs.noticeBoards).append(jobCountFrom, rhs.jobCountFrom).append(schedule, rhs.schedule).append(jobCountTo, rhs.jobCountTo).append(envName, rhs.envName).append(lock, rhs.lock).append(fileOrderSource, rhs.fileOrderSource).append(jobResources, rhs.jobResources).isEquals();
+        return new EqualsBuilder().append(calendar, rhs.calendar).append(jobName, rhs.jobName).append(workflow, rhs.workflow).append(argumentName, rhs.argumentName).append(jobCriticality, rhs.jobCriticality).append(includeScript, rhs.includeScript).append(agentName, rhs.agentName).append(jobNameExactMatch, rhs.jobNameExactMatch).append(argumentValue, rhs.argumentValue).append(jobScript, rhs.jobScript).append(envValue, rhs.envValue).append(noticeBoards, rhs.noticeBoards).append(jobCountFrom, rhs.jobCountFrom).append(schedule, rhs.schedule).append(jobCountTo, rhs.jobCountTo).append(envName, rhs.envName).append(lock, rhs.lock).append(fileOrderSource, rhs.fileOrderSource).append(jobResources, rhs.jobResources).isEquals();
     }
 
 }
