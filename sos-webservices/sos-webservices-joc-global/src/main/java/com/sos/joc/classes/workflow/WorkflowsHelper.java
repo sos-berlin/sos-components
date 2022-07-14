@@ -85,6 +85,8 @@ import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflow;
+import js7.data_for_java.workflow.JWorkflowControl;
+import js7.data_for_java.workflow.JWorkflowControlId;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import scala.Function1;
@@ -101,6 +103,7 @@ public class WorkflowsHelper {
                 {
                     put(InstructionStateText.SKIPPED, 5);
                     put(InstructionStateText.STOPPED, 2);
+                    put(InstructionStateText.STOPPED_AND_SKIPPED, 2);
                 }
             });
     
@@ -159,7 +162,8 @@ public class WorkflowsHelper {
         return i;
     }
     
-    public static <T extends Workflow> T addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(T w, Set<String> skippedLabels) {
+    public static <T extends Workflow> T addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(T w, Set<String> skippedLabels,
+            Set<JPosition> stoppedPositions) {
         if (w == null) {
             return null;
         }
@@ -175,7 +179,7 @@ public class WorkflowsHelper {
         }
         Object[] o = {};
         setWorkflowPositionsAndForkListVariables(o, w.getInstructions(), w.getForkListVariables(), expectedNoticeBoards, postNoticeBoards,
-                workflowNamesFromAddOrders, skippedLabels);
+                workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
         if (w.getForkListVariables() == null || w.getForkListVariables().isEmpty()) {
             w.setForkListVariables(null);
         }
@@ -447,14 +451,19 @@ public class WorkflowsHelper {
     }
     
     private static void setWorkflowPositionsAndForkListVariables(Object[] parentPosition, List<Instruction> insts, Set<String> forkListVariables,
-            Set<String> expectedNoticeBoards, Set<String> postNoticeBoards, Set<String> workflowNamesFromAddOrders, Set<String> skippedLabels) {
+            Set<String> expectedNoticeBoards, Set<String> postNoticeBoards, Set<String> workflowNamesFromAddOrders, Set<String> skippedLabels,
+            Set<JPosition> stoppedPositions) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
                 Object[] pos = extendArray(parentPosition, i);
                 pos[parentPosition.length] = i;
                 Instruction inst = insts.get(i);
                 inst.setPosition(Arrays.asList(pos));
-                inst.setPositionString(getJPositionString(inst.getPosition()));
+                JPosition jPos = getJPosition(inst.getPosition());
+                if (stoppedPositions.contains(jPos)) {
+                    inst.setState(getState(InstructionStateText.STOPPED));
+                }
+                inst.setPositionString(getJPositionString(jPos));
                 switch (inst.getTYPE()) {
                 case FORK:
                     ForkJoin f = inst.cast();
@@ -465,7 +474,7 @@ public class WorkflowsHelper {
                             b.getWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
                         }
                         setWorkflowPositionsAndForkListVariables(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(),
-                                forkListVariables, expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels);
+                                forkListVariables, expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     }
                     break;
                 case FORKLIST:
@@ -477,7 +486,7 @@ public class WorkflowsHelper {
                         fl.getWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
                     }
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "fork"), fl.getWorkflow().getInstructions(), forkListVariables,
-                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels);
+                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     break;
                 case EXPECT_NOTICE:
                     ExpectNotice en = inst.cast();
@@ -502,25 +511,25 @@ public class WorkflowsHelper {
                 case IF:
                     IfElse ie = inst.cast();
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "then"), ie.getThen().getInstructions(), forkListVariables,
-                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels);
+                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     if (ie.getElse() != null) {
                         setWorkflowPositionsAndForkListVariables(extendArray(pos, "else"), ie.getElse().getInstructions(), forkListVariables,
-                                expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels);
+                                expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "try"), tc.getTry().getInstructions(), forkListVariables,
-                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels);
+                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     if (tc.getCatch() != null) {
                         setWorkflowPositionsAndForkListVariables(extendArray(pos, "catch"), tc.getCatch().getInstructions(), forkListVariables,
-                                expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels);
+                                expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     }
                     break;
                 case LOCK:
                     Lock l = inst.cast();
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions(), forkListVariables,
-                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels);
+                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     break;
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();
@@ -529,12 +538,16 @@ public class WorkflowsHelper {
                 case CYCLE:
                     Cycle c = inst.cast();
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), forkListVariables,
-                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels);
+                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     break;
                 case EXECUTE_NAMED:
                     NamedJob nj = inst.cast();
                     if (skippedLabels.contains(nj.getLabel())) {
-                        inst.setState(getState(InstructionStateText.SKIPPED));
+                        if (inst.getState() != null && InstructionStateText.STOPPED.equals(inst.getState().get_text())) {
+                            inst.setState(getState(InstructionStateText.STOPPED_AND_SKIPPED));
+                        } else {
+                            inst.setState(getState(InstructionStateText.SKIPPED));
+                        }
                     }
                     break;
                 default:
@@ -927,6 +940,21 @@ public class WorkflowsHelper {
         return "";
     }
     
+    private static String getJPositionString(JPosition jPosition) {
+        if (jPosition != null) {
+            return jPosition.toString();
+        }
+        return "";
+    }
+    
+    private static JPosition getJPosition(List<Object> positionList) {
+        Either<Problem, JPosition> jPosEither = JPosition.fromList(positionList);
+        if (jPosEither.isRight()) {
+            return jPosEither.get();
+        }
+        return null;
+    }
+    
 //    private static JPosition getJPosition(List<Object> positionList) {
 //        Either<Problem, JPosition> jPosEither = JPosition.fromList(positionList);
 //        if (jPosEither.isRight()) {
@@ -1169,6 +1197,29 @@ public class WorkflowsHelper {
         return Collections.emptySet();
     }
     
+    public static Set<JPosition> getStoppedPositions(JControllerState currentstate, String workflowName, String versionId, boolean compact) {
+        if (!compact && currentstate != null) {
+            return getStoppedPositions(getWorkflowControl(currentstate, workflowName, versionId, compact), compact);
+        }
+        return Collections.emptySet();
+    }
+    
+    public static Set<JPosition> getStoppedPositions(JControllerState currentstate, JWorkflowId workflowId, boolean compact) {
+        if (!compact && currentstate != null) {
+            return getStoppedPositions(getWorkflowControl(currentstate, workflowId, compact), compact);
+        }
+        return Collections.emptySet();
+    }
+    
+    public static Set<JPosition> getStoppedPositions(Optional<JWorkflowControl> controlState, boolean compact) {
+        if (!compact) {
+            if (controlState.isPresent()) {
+                return controlState.get().breakpoints();
+            }
+        }
+        return Collections.emptySet();
+    }
+    
     public static Optional<WorkflowPathControl> getWorkflowPathControl(JControllerState currentstate, String workflowName, boolean compact) {
         return getWorkflowPathControl(currentstate, WorkflowPath.of(workflowName), compact);
     }
@@ -1176,6 +1227,21 @@ public class WorkflowsHelper {
     public static Optional<WorkflowPathControl> getWorkflowPathControl(JControllerState currentstate, WorkflowPath workflowName, boolean compact) {
         if (!compact && currentstate != null) {
             return OptionConverters.toJava(currentstate.asScala().pathToWorkflowPathControl().get(WorkflowPathControlPath.apply(workflowName)));
+        }
+        return Optional.empty();
+    }
+    
+    public static Optional<JWorkflowControl> getWorkflowControl(JControllerState currentstate, String workflowPath, String versionId,
+            boolean compact) {
+        return getWorkflowControl(currentstate, JWorkflowId.of(workflowPath, versionId), compact);
+    }
+
+    public static Optional<JWorkflowControl> getWorkflowControl(JControllerState currentstate, JWorkflowId workflowId, boolean compact) {
+        if (!compact && currentstate != null) {
+            JWorkflowControl c = currentstate.idToWorkflowControl().get(JWorkflowControlId.of(workflowId));
+            if (c == null) {
+                return Optional.of(c);
+            }
         }
         return Optional.empty();
     }

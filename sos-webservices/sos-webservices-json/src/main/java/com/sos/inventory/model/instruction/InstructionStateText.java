@@ -9,7 +9,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum InstructionStateText {
 
     SKIPPED("SKIPPED"),
-    STOPPED("STOPPED");
+    STOPPED("STOPPED"),
+    STOPPED_AND_SKIPPED("STOPPED_AND_SKIPPED");
     private final String value;
     private final static Map<String, InstructionStateText> CONSTANTS = new HashMap<String, InstructionStateText>();
 

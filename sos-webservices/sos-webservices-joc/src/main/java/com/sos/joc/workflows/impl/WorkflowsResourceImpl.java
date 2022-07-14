@@ -39,6 +39,7 @@ import com.sos.joc.workflows.resource.IWorkflowsResource;
 import com.sos.schema.JsonValidator;
 
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.workflow.position.JPosition;
 
 @Path("workflows")
 public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflowsResource {
@@ -120,8 +121,9 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     workflow.setHasAddOrderDependencies(true);
                 }
                 Set<String> skippedLabels = WorkflowsHelper.getSkippedLabels(currentstate, w.getName(), compact);
-                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow, skippedLabels);
-                
+                Set<JPosition> stoppedPositions = WorkflowsHelper.getStoppedPositions(currentstate, w.getName(), workflow.getVersionId(), compact);
+                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow, skippedLabels, stoppedPositions);
+
                 if (compact) {
                     workflow.setFileOrderSources(null);
                     //workflow.setForkListVariables(null);

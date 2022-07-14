@@ -30,6 +30,7 @@ import com.sos.joc.workflow.resource.IWorkflowResource;
 import com.sos.schema.JsonValidator;
 
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.workflow.position.JPosition;
 
 @Path("workflow")
 public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowResource {
@@ -53,6 +54,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
 
             String workflowPath = workflowFilter.getWorkflowId().getPath();
             String versionId = workflowFilter.getWorkflowId().getVersionId();
+            boolean compact = workflowFilter.getCompact() == Boolean.TRUE;
 
             Workflow entity = new Workflow();
             entity.setSurveyDate(Date.from(Instant.now()));
@@ -62,7 +64,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
 //                WorkflowPath wPath = WorkflowPath.of(JocInventory.pathToName(workflowPath));
 //                Optional<WorkflowPathControl> controlState = WorkflowsHelper.getWorkflowPathControl(currentstate, wPath, false);
 //                if (controlState.isPresent()) {
-//                    LOGGER.info(currentstate.singleWorkflowPathControlToIgnorantAgents(wPath).toString());
+//                    LOGGER.info(currentstate.workflowPathControlToIgnorantAgent().getOrDefault(wPath, Collections.emptySet()).toString());
 //                    LOGGER.info(controlState.get().suspended() + "");
 //                    if (versionId != null && !versionId.isEmpty()) {
 //                        JWorkflow jw = currentstate.repo().idToCheckedWorkflow(JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId))
@@ -95,7 +97,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                         workflow.setIsCurrentVersion(lastContent.getCommitId().equals(content.getCommitId()));
                     }
                 }
-                if (workflow.getIsCurrentVersion() && workflowFilter.getCompact() != Boolean.TRUE) {
+                if (workflow.getIsCurrentVersion() && !compact) {
                     workflow.setFileOrderSources(WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, content.getName(), dbLayer));
                 }
                 List<WorkflowId> wIds = dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId);
@@ -103,11 +105,12 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                     workflow.setHasAddOrderDependencies(true);
                 }
 
-                Set<String> skippedLabels = WorkflowsHelper.getSkippedLabels(currentstate, content.getName(), workflowFilter
-                        .getCompact() == Boolean.TRUE);
-                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow, skippedLabels);
+                Set<String> skippedLabels = WorkflowsHelper.getSkippedLabels(currentstate, content.getName(), compact);
+                Set<JPosition> stoppedPositions = WorkflowsHelper.getStoppedPositions(currentstate, content.getName(), workflow.getVersionId(),
+                        compact);
+                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow, skippedLabels, stoppedPositions);
 
-                if (workflowFilter.getCompact() == Boolean.TRUE) {
+                if (compact) {
                     workflow.setFileOrderSources(null);
                     // workflow.setForkListVariables(null);
                     workflow.setInstructions(null);

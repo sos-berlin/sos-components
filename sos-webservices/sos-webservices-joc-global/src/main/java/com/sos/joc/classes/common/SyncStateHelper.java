@@ -142,7 +142,8 @@ public class SyncStateHelper {
             WorkflowPath wPath = either.get().id().path();
             Optional<WorkflowPathControl> controlState = WorkflowsHelper.getWorkflowPathControl(currentstate, wPath, false);
             if (controlState.isPresent()) {
-                Set<AgentPath> agentsThatIgnoreCommand = currentstate.singleWorkflowPathControlToIgnorantAgents(wPath);
+                Set<AgentPath> agentsThatIgnoreCommand = currentstate.workflowPathControlToIgnorantAgent().getOrDefault(wPath, Collections
+                        .emptySet());
                 int numOfgentsThatIgnoreCommand = agentsThatIgnoreCommand.size();
                 // int numOfAgentsThatConfirmedSuspendOrResume = JavaConverters.asJava(controlState.attachedToAgents()).size();
                 // int totalNumOfAgents = JavaConverters.asJava(workflowE.get().asScala().referencedAgentPaths()).size();
@@ -174,7 +175,7 @@ public class SyncStateHelper {
             WorkflowPath wPath = either.get().id().path();
             Optional<WorkflowPathControl> controlState = WorkflowsHelper.getWorkflowPathControl(currentstate, wPath, false);
             if (controlState.isPresent()) {
-                if (currentstate.singleWorkflowPathControlToIgnorantAgents(wPath).size() > 0) {
+                if (currentstate.workflowPathControlToIgnorantAgent().getOrDefault(wPath, Collections.emptySet()).size() > 0) {
                     stateText = SyncStateText.OUTSTANDING;
                 } else if (controlState.get().suspended()) {
                     workflow.setSuspended(true);

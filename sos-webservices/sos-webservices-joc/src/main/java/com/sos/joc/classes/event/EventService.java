@@ -63,8 +63,11 @@ import js7.data.event.Stamped;
 import js7.data.item.BasicItemEvent.ItemAttached;
 import js7.data.item.BasicItemEvent.ItemDeleted;
 import js7.data.item.InventoryItemKey;
-import js7.data.item.SimpleItemPath;
+import js7.data.item.UnsignedItemEvent;
 import js7.data.item.UnsignedSimpleItemEvent;
+import js7.data.item.UnsignedSimpleItemPath;
+import js7.data.item.UnsignedVersionedItemId;
+import js7.data.item.VersionedControlPath;
 import js7.data.item.VersionedEvent.VersionedItemAddedOrChanged;
 import js7.data.item.VersionedItemId;
 import js7.data.item.VersionedItemPath;
@@ -119,8 +122,8 @@ public class EventService {
             OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class, OrderSuspended$.class, 
             OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, 
             OrderPrompted.class, OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, 
-            VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, ItemDeleted.class, ItemAttached.class, BoardEvent.class,
-            OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class, OrderNoticeEvent.class, SubagentItemStateEvent.class);
+            VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, UnsignedItemEvent.class, ItemDeleted.class, ItemAttached.class, 
+            BoardEvent.class, OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class, OrderNoticeEvent.class, SubagentItemStateEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
@@ -414,7 +417,7 @@ public class EventService {
             } else if (evt instanceof UnsignedSimpleItemEvent) {
                 // UnsignedSimpleItemAdded SimpleItemAddedAndChanged and SimpleItemChanged etc.
                 String eventType = evt.getClass().getSimpleName().replaceFirst(".*Simple", "");
-                SimpleItemPath itemId = ((UnsignedSimpleItemEvent) evt).key();
+                UnsignedSimpleItemPath itemId = ((UnsignedSimpleItemEvent) evt).key();
                 if (itemId instanceof AgentPath || itemId instanceof SubagentId || itemId instanceof SubagentSelectionId) {
                     //eventType = evt.getClass().getSimpleName().replaceFirst(".*SimpleItem", "Agent");
                     addEvent(createAgentEvent(eventId, itemId.string(), eventType));
@@ -437,6 +440,10 @@ public class EventService {
 //                    addEvent(createJobResourceEvent(eventId, ((JobResourcePath) itemId).string(), eventType));
 //                }
                 
+            } else if (evt instanceof UnsignedItemEvent) {
+                UnsignedVersionedItemId<? extends VersionedControlPath> itemId = ((UnsignedItemEvent) evt).key();
+                addEvent(createWorkflowUpdatedEvent(eventId, itemId.path().string()));
+                
             } else if (evt instanceof ItemDeleted) {
                 InventoryItemKey itemId = ((ItemDeleted) evt).key();
                 String eventType = "ItemDeleted";
@@ -447,6 +454,8 @@ public class EventService {
                 } else if (itemId instanceof BoardPath) {
                     addEvent(createBoardEvent(eventId, itemId.path().string(), eventType));
                 } else if (itemId instanceof WorkflowPathControlPath) {
+                    addEvent(createWorkflowUpdatedEvent(eventId, itemId.path().string()));
+                } else if (itemId instanceof VersionedControlPath) {
                     addEvent(createWorkflowUpdatedEvent(eventId, itemId.path().string()));
                 } else if (itemId instanceof VersionedItemId<?>) {
                     addEvent(createWorkflowEvent(eventId, mapWorkflowId((VersionedItemId<?>) itemId), eventType));

@@ -34,6 +34,7 @@ import com.sos.joc.workflows.impl.WorkflowsResourceImpl;
 import com.sos.schema.JsonValidator;
 
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.workflow.position.JPosition;
 
 @Path("workflow")
 public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWorkflowBoardsResource {
@@ -57,6 +58,7 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
 
             String workflowPath = workflowFilter.getWorkflowId().getPath();
             String versionId = workflowFilter.getWorkflowId().getVersionId();
+            boolean compact = workflowFilter.getCompact() == Boolean.TRUE;
             
             Workflow entity = new Workflow();
             entity.setSurveyDate(Date.from(Instant.now()));
@@ -87,15 +89,16 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                         workflow.setIsCurrentVersion(lastContent.getCommitId().equals(content.getCommitId()));
                     }
                 }
-                if (workflow.getIsCurrentVersion() && workflowFilter.getCompact() != Boolean.TRUE) {
+                if (workflow.getIsCurrentVersion() && !compact) {
                     workflow.setFileOrderSources(WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, content.getName(), dbLayer));
                 }
                 
-                Set<String> skippedLabels = WorkflowsHelper.getSkippedLabels(currentstate, content.getName(), workflowFilter
-                        .getCompact() == Boolean.TRUE);
-                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow, skippedLabels);
+                Set<String> skippedLabels = WorkflowsHelper.getSkippedLabels(currentstate, content.getName(), compact);
+                Set<JPosition> stoppedPositions = WorkflowsHelper.getStoppedPositions(currentstate, content.getName(), workflow.getVersionId(),
+                        compact);
+                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow, skippedLabels, stoppedPositions);
 
-                if (workflowFilter.getCompact() == Boolean.TRUE) {
+                if (compact) {
                     workflow.setFileOrderSources(null);
                     //workflow.setForkListVariables(null);
                     workflow.setInstructions(null);

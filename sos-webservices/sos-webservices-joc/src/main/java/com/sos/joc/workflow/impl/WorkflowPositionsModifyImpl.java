@@ -13,6 +13,9 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -46,6 +49,7 @@ import js7.data_for_java.workflow.position.JPosition;
 public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWorkflowPositionsModify {
 
     private static final String API_CALL = "./workflow/";
+    private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowPositionsModifyImpl.class);
 
     private enum Action {
         STOP, UNSTOP
@@ -153,8 +157,9 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
         boolean stop = Action.STOP.equals(action);
         Map<JPosition, Boolean> m = new HashMap<>(positions.size());
         positions.forEach(l -> m.put(l, stop));
-        JControllerCommand commmand = JControllerCommand.controlWorkflow(workflow.id(), m);
-        ControllerApi.of(controllerId).executeCommand(commmand).thenAccept(either -> thenAcceptHandler(either, controllerId, workflow, dbAuditLog));
+        JControllerCommand command = JControllerCommand.controlWorkflow(workflow.id(), m);
+        LOGGER.debug("send command: " + command.toJson());
+        ControllerApi.of(controllerId).executeCommand(command).thenAccept(either -> thenAcceptHandler(either, controllerId, workflow, dbAuditLog));
     }
 
     private void thenAcceptHandler(Either<Problem, Response> either, String controllerId, JWorkflow workflow, DBItemJocAuditLog dbAuditLog) {

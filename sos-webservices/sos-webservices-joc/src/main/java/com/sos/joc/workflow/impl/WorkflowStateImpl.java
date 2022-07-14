@@ -90,7 +90,8 @@ public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState
                     Optional<WorkflowPathControl> controlState = WorkflowsHelper.getWorkflowPathControl(currentstate, wPath, false);
                     stateText = SyncStateText.IN_SYNC;
                     if (controlState.isPresent()) {
-                        Set<AgentPath> agentsThatIgnoreCommand = currentstate.singleWorkflowPathControlToIgnorantAgents(wPath);
+                        Set<AgentPath> agentsThatIgnoreCommand = currentstate.workflowPathControlToIgnorantAgent().getOrDefault(wPath, Collections
+                                .emptySet());
                         Set<AgentPath> allAgents = JavaConverters.asJava(workflowE.get().asScala().referencedAgentPaths());
                         
                         if (!agentsThatIgnoreCommand.isEmpty()) {
