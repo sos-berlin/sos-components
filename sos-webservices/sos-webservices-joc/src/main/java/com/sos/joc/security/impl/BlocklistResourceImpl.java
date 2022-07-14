@@ -13,13 +13,13 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.security.SOSBlocklist;
 import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.security.accounts.AccountListFilter;
 import com.sos.joc.model.security.blocklist.BlockedAccount;
 import com.sos.joc.model.security.blocklist.BlockedAccounts;
 import com.sos.joc.model.security.blocklist.BlockedAccountsDeleteFilter;
@@ -55,25 +55,7 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
 
-            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-
-            IamAccountFilter iamAccountFilter = new IamAccountFilter();
-            iamAccountFilter.setAccountName(blockedAccount.getAccountName());
-            DBItemIamBlockedAccount dbItemIamBlockedAccount = iamAccountDBLayer.getBlockedAccount(iamAccountFilter);
-            boolean newBlockedAccount = false;
-            if (dbItemIamBlockedAccount == null) {
-                dbItemIamBlockedAccount = new DBItemIamBlockedAccount();
-                newBlockedAccount = true;
-            }
-
-            dbItemIamBlockedAccount.setAccountName(blockedAccount.getAccountName());
-            dbItemIamBlockedAccount.setNotice(blockedAccount.getNotice());
-            dbItemIamBlockedAccount.setSince(new Date());
-            if (newBlockedAccount) {
-                sosHibernateSession.save(dbItemIamBlockedAccount);
-            } else {
-                sosHibernateSession.update(dbItemIamBlockedAccount);
-            }
+            SOSBlocklist.store(sosHibernateSession, blockedAccount);
 
             storeAuditLog(blockedAccount.getAuditLog(), CategoryType.IDENTITY);
             Globals.commit(sosHibernateSession);
@@ -98,7 +80,7 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
         try {
             initLogging(API_CALL_BLOCKLISTS_DELETE, body, accessToken);
             JsonValidator.validate(body, BlockedAccountsDeleteFilter.class);
-            BlockedAccountsDeleteFilter blockedAccountsFilter = Globals.objectMapper.readValue(body, BlockedAccountsDeleteFilter.class);
+            BlockedAccountsDeleteFilter blockedAccountsDeleteFilter = Globals.objectMapper.readValue(body, BlockedAccountsDeleteFilter.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
@@ -109,19 +91,11 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-            IamAccountFilter iamAccountFilter = new IamAccountFilter();
+            SOSBlocklist.delete(sosHibernateSession, blockedAccountsDeleteFilter);
 
-            for (String accountName : blockedAccountsFilter.getAccountNames()) {
-                iamAccountFilter.setAccountName(accountName);
-                int count = iamAccountDBLayer.deleteBlockedAccount(iamAccountFilter);
-                if (count == 0) {
-                    throw new JocObjectNotExistException("Object <" + accountName + "> not found");
-                }
-            }
             Globals.commit(sosHibernateSession);
 
-            storeAuditLog(blockedAccountsFilter.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(blockedAccountsDeleteFilter.getAuditLog(), CategoryType.IDENTITY);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -153,18 +127,18 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
             BlockedAccounts blockedAccounts = new BlockedAccounts();
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-            
+
             IamAccountFilter filter = new IamAccountFilter();
             filter.setDateFrom(blocklistFilter.getDateFrom());
             filter.setDateTo(blocklistFilter.getDateTo());
             filter.setAccountName(blocklistFilter.getAccountName());
             filter.setTimeZone(blocklistFilter.getTimeZone());
-            
+
             List<DBItemIamBlockedAccount> listOfBlockedAccounts = iamAccountDBLayer.getIamBlockedAccountList(filter, 0);
             for (DBItemIamBlockedAccount dbItemIamBlockedAccount : listOfBlockedAccounts) {
                 BlockedAccount blockedAccount = new BlockedAccount();
                 blockedAccount.setAccountName(dbItemIamBlockedAccount.getAccountName());
-                blockedAccount.setNotice(dbItemIamBlockedAccount.getNotice());
+                blockedAccount.setComment(dbItemIamBlockedAccount.getComment());
                 blockedAccount.setSince(dbItemIamBlockedAccount.getSince());
                 blockedAccounts.getBlockedAccounts().add(blockedAccount);
             }

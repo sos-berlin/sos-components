@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,9 +35,11 @@ import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.security.SOSBlocklist;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamAccount2RoleWithName;
 import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
+import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamRole;
@@ -57,6 +60,8 @@ import com.sos.joc.model.security.accounts.AccountNamesFilter;
 import com.sos.joc.model.security.accounts.AccountRename;
 import com.sos.joc.model.security.accounts.Accounts;
 import com.sos.joc.model.security.accounts.AccountsFilter;
+import com.sos.joc.model.security.blocklist.BlockedAccount;
+import com.sos.joc.model.security.blocklist.BlockedAccountsDeleteFilter;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
@@ -89,7 +94,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             initLogging(API_CALL_ACCOUNT_READ, body, accessToken);
             JsonValidator.validateFailFast(body, AccountFilter.class);
             AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
-            
+
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -105,7 +110,12 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter filter = new IamAccountFilter();
             filter.setAccountName(accountFilter.getAccountName());
+
+            DBItemIamBlockedAccount dbItemIamBlockedAccount = iamAccountDBLayer.getBlockedAccount(filter);
+            account.setBlocked(dbItemIamBlockedAccount != null);
+
             filter.setIdentityServiceId(dbItemIamIdentityService.getId());
+
             DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(filter);
             if (dbItemIamAccount != null) {
                 account.setDisabled(dbItemIamAccount.getDisabled());
@@ -137,7 +147,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         try {
 
             Account accountMasked = Globals.objectMapper.readValue(body, Account.class);
-            
+
             accountMasked.setPassword("********");
             initLogging(API_CALL_ACCOUNT_STORE, Globals.objectMapper.writeValueAsBytes(accountMasked), accessToken);
             JsonValidator.validateFailFast(body, Account.class);
@@ -156,6 +166,18 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                     .getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+
+            if (accountMasked.getBlocked() != null) {
+                if (accountMasked.getBlocked()) {
+                    BlockedAccount blockedAccount = new BlockedAccount();
+                    blockedAccount.setAccountName(accountMasked.getAccountName());
+                    SOSBlocklist.store(sosHibernateSession, blockedAccount);
+                } else {
+                    BlockedAccountsDeleteFilter blockedAccountsDeleteFilter = new BlockedAccountsDeleteFilter();
+                    blockedAccountsDeleteFilter.getAccountNames().add(accountMasked.getAccountName());
+                    SOSBlocklist.delete(sosHibernateSession, blockedAccountsDeleteFilter);
+                }
+            }
 
             SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
             String initialPassword = sosInitialPasswordSetting.getInitialPassword();
@@ -380,7 +402,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             initLogging(API_CALL_ACCOUNTS, body, accessToken);
             JsonValidator.validateFailFast(body, AccountListFilter.class);
             AccountListFilter accountFilter = Globals.objectMapper.readValue(body, AccountListFilter.class);
-            
+
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -395,6 +417,11 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter filter = new IamAccountFilter();
+
+            List<DBItemIamBlockedAccount> listOfBlockedAccounts = iamAccountDBLayer.getIamBlockedAccountList(filter, 0);
+            Map<String, Date> blockedAccounts = listOfBlockedAccounts.stream().collect(Collectors.toMap(DBItemIamBlockedAccount::getAccountName,
+                    DBItemIamBlockedAccount::getSince));
+
             boolean onlyDisabled = Boolean.TRUE == accountFilter.getDisabled();
             boolean onlyEnabled = Boolean.TRUE == accountFilter.getEnabled();
             if (onlyDisabled && !onlyEnabled) {
@@ -413,6 +440,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 account.setDisabled(dbItemIamAccount.getDisabled());
                 account.setForcePasswordChange(dbItemIamAccount.getForcePasswordChange());
                 account.setIdentityServiceName(accountFilter.getIdentityServiceName());
+                account.setBlocked(blockedAccounts.get(dbItemIamAccount.getAccountName()) != null);
                 List<DBItemIamAccount2RoleWithName> listOfRoles = iamAccountDBLayer.getListOfRolesWithName(dbItemIamAccount);
                 account.setRoles(new ArrayList<String>());
                 for (DBItemIamAccount2RoleWithName dbItemIamAccount2RoleWithName : listOfRoles) {
@@ -440,7 +468,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             initLogging(API_CALL_ACCOUNT_PERMISSIONS, body, accessToken);
             JsonValidator.validateFailFast(body, AccountFilter.class);
             AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
-            
+
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -681,10 +709,10 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         AccountNamesFilter accountsFilter = null;
         try {
 
-        	initLogging(apiCall, body, accessToken);
+            initLogging(apiCall, body, accessToken);
             JsonValidator.validate(body, AccountsFilter.class);
             accountsFilter = Globals.objectMapper.readValue(body, AccountNamesFilter.class);
-            
+
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -764,7 +792,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             initLogging(API_CALL_RESET_PASSWORD, body, accessToken);
             JsonValidator.validate(body, AccountsFilter.class);
             accountsFilter = Globals.objectMapper.readValue(body, AccountNamesFilter.class);
-            
+
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

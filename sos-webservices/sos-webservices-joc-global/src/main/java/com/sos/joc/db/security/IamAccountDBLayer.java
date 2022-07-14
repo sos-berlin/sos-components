@@ -113,6 +113,7 @@ public class IamAccountDBLayer {
             delete(filter);
             for (DBItemIamAccount iamAccountDBItem : iamAccountList) {
                 filterCascade.setId(iamAccountDBItem.getId());
+                deleteBlockedAccount(filter);
                 deleteAccount2Role(filterCascade);
                 deletePermission(filterCascade);
                 deleteProfile(filter);
@@ -492,11 +493,13 @@ public class IamAccountDBLayer {
     }
 
     public int deleteBlockedAccount(IamAccountFilter filter) throws SOSHibernateException {
-        String hql = "delete from " + DBItemIamBlockedAccount + getWhere(filter);
+        IamAccountFilter _filter = new IamAccountFilter();
+        _filter.setAccountName(filter.getAccountName());
+        String hql = "delete from " + DBItemIamBlockedAccount + getWhere(_filter);
         Query<DBItemIamAccount> query = null;
         int row = 0;
         query = sosHibernateSession.createQuery(hql);
-        query = bindParameters(filter, query);
+        query = bindParameters(_filter, query);
         row = query.executeUpdate();
         return row;
     }

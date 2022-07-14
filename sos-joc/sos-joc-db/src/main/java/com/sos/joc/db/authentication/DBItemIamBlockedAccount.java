@@ -29,8 +29,8 @@ public class DBItemIamBlockedAccount {
     @Column(name = "[ACCOUNT_NAME]", nullable = false)
     private String accountName;
 
-    @Column(name = "[NOTICE]", nullable = false)
-    private String notice;
+    @Column(name = "[COMMENT]", nullable = false)
+    private String comment;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[SINCE]", nullable = false)
@@ -56,12 +56,12 @@ public class DBItemIamBlockedAccount {
         this.accountName = accountName;
     }
 
-    public String getNotice() {
-        return notice;
+    public String getComment() {
+        return comment;
     }
 
-    public void setNotice(String notice) {
-        this.notice = notice;
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
     public Date getSince() {
