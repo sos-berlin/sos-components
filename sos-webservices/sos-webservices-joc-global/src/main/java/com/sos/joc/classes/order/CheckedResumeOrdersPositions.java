@@ -187,10 +187,11 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         JWorkflow w = e.get();
         
         JsonNode node = Globals.objectMapper.readTree(w.withPositions().toJson());
-        List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
-        //List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
+        List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {
+        }).readValue(node.get("instructions"));
+        // List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
         Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(instructions);
-        
+
         setWorkflowId(new WorkflowId(WorkflowPaths.getPath(workflowId), workflowId.versionId().string()));
 
         final Set<Position> pos = new LinkedHashSet<>();
@@ -214,8 +215,15 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         if (position == null || position.isEmpty()) {
             position = currentPosition.toString();
         }
-        String firstPos = pos.iterator().next().getPositionString();
-        setVariablesNotSettable(firstPos.equals(position));
+        if (pos.isEmpty()) {
+            Position p = createPosition(currentPosition, w.asScala());
+            pos.add(p);
+            // TODO + ImplicitEnd of the Order's scope
+            setVariablesNotSettable(true);
+        } else {
+            String firstPos = pos.iterator().next().getPositionString();
+            setVariablesNotSettable(firstPos.equals(position));
+        }
         
         setVariables(getVariables(jOrder, position, implicitEnds));
         

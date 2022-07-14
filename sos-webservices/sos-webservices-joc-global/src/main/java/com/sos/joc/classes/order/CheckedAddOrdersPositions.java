@@ -90,6 +90,10 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
 //        }
 
         setWorkflowId(workflowId);
+        if (pos.isEmpty()) {
+            Position p = createPosition(pos0, w.asScala());
+            pos.add(p);
+        }
         setPositions(pos);
 
         setDeliveryDate(Date.from(Instant.now()));
