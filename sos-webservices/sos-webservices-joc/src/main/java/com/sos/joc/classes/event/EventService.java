@@ -60,6 +60,7 @@ import js7.data.controller.ControllerEvent;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
+import js7.data.item.BasicItemEvent.ItemAttached;
 import js7.data.item.BasicItemEvent.ItemDeleted;
 import js7.data.item.InventoryItemKey;
 import js7.data.item.SimpleItemPath;
@@ -118,7 +119,7 @@ public class EventService {
             OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class, OrderSuspended$.class, 
             OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, 
             OrderPrompted.class, OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, 
-            VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, ItemDeleted.class, BoardEvent.class,
+            VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, ItemDeleted.class, ItemAttached.class, BoardEvent.class,
             OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class, OrderNoticeEvent.class, SubagentItemStateEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
@@ -425,7 +426,7 @@ public class EventService {
                 } else if (itemId instanceof BoardPath) {
                     addEvent(createBoardEvent(eventId, itemId.string(), eventType));
                 } else if (itemId instanceof WorkflowPathControlPath) {
-                    addEvent(createWorkflowEvent(eventId, itemId.string(), "WorkflowUpdated"));
+                    addEvent(createWorkflowUpdatedEvent(eventId, itemId.string()));
                 }
                 
 //            } else if (evt instanceof SignedItemEvent) {
@@ -446,16 +447,19 @@ public class EventService {
                 } else if (itemId instanceof BoardPath) {
                     addEvent(createBoardEvent(eventId, itemId.path().string(), eventType));
                 } else if (itemId instanceof WorkflowPathControlPath) {
-                    addEvent(createWorkflowEvent(eventId, itemId.path().string(), "WorkflowUpdated"));
+                    addEvent(createWorkflowUpdatedEvent(eventId, itemId.path().string()));
                 } else if (itemId instanceof VersionedItemId<?>) {
                     addEvent(createWorkflowEvent(eventId, mapWorkflowId((VersionedItemId<?>) itemId), eventType));
                 } // JobResourcePath, OrderWatchPath
                 
+            } else if (evt instanceof ItemAttached) {
+                InventoryItemKey itemId = ((ItemAttached) evt).key();
+                if (itemId instanceof WorkflowPathControlPath) {
+                    addEvent(createWorkflowUpdatedEvent(eventId, itemId.path().string()));
+                }
+                
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
-                AgentPath ap = (AgentPath) key;
-                addEvent(createAgentEvent(eventId, ap.string()));
-                currentState.workflowPathControlToIgnorantAgent().entrySet().stream().filter(e -> e.getValue().contains(ap)).map(e -> e
-                        .getKey()).forEach(wp -> createWorkflowEvent(eventId, wp.string(), "WorkflowUpdated"));
+                addEvent(createAgentEvent(eventId, ((AgentPath) key).string()));
 
             } else if (evt instanceof SubagentItemStateEvent && !(evt instanceof SubagentItemStateEvent.SubagentEventsObserved$)) {
                 addEvent(createAgentEvent(eventId, ((SubagentId) key).string()));
@@ -602,10 +606,6 @@ public class EventService {
 //        return evt;
 //    }
     
-//    private EventSnapshot createWorkflowControlEvent(long eventId, String path) {
-//        return createWorkflowEvent(eventId, path, "WorkflowUpdated");
-//    }
-    
     private EventSnapshot createWorkflowEvent(long eventId, String path, String eventType) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
@@ -613,6 +613,10 @@ public class EventService {
         evt.setPath(path);
         evt.setObjectType(EventType.WORKFLOW);
         return evt;
+    }
+    
+    private EventSnapshot createWorkflowUpdatedEvent(long eventId, String path) {
+        return createWorkflowEvent(eventId, path, "WorkflowUpdated");
     }
 
     private void addEvent(EventSnapshot eventSnapshot) {
