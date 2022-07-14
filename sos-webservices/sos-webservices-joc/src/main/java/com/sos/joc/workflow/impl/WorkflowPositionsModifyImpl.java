@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,7 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.ModifyWorkflowPositions;
@@ -42,6 +44,7 @@ import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
+import js7.data_for_java.workflow.JWorkflowControl;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 
@@ -117,12 +120,13 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
                 .throwProblemIfExist(e));
         Set<JPosition> positions = modifyWorkflow.getPositions().stream().map(pos -> JPosition.fromList(pos)).filter(Either::isRight).map(Either::get)
                 .collect(Collectors.toSet());
-        checkWorkflow(action, workflow, positions, new ArrayList<>(positions));
+        checkWorkflow(action, workflow, positions, currentState, new ArrayList<>(positions));
 
         command(controllerId, action, workflow, positions, dbAuditLog);
     }
 
-    private void checkWorkflow(Action action, JWorkflow workflow, Set<JPosition> positions, List<JPosition> requestedPositions) {
+    private void checkWorkflow(Action action, JWorkflow workflow, Set<JPosition> positions, JControllerState currentState,
+            List<JPosition> requestedPositions) {
 
         Set<JPosition> knownPositions = new HashSet<>();
 
@@ -144,7 +148,26 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
             throw new ControllerObjectNotExistException("The positions " + requestedPositions.toString() + " don't exist in workflow '" + workflow
                     .id().path().string() + "'.");
         }
-
+        
+        Optional<JWorkflowControl> controlState = WorkflowsHelper.getWorkflowControl(currentState, workflow.id(), false);
+        if (controlState.isPresent()) {
+            Set<JPosition> stoppedPositions = WorkflowsHelper.getStoppedPositions(controlState, false);
+            
+            switch (action) {
+            case STOP:
+                positions.removeAll(stoppedPositions);
+                if (positions.isEmpty()) { // TODO or maybe better always raise an exception?
+                    throw new JocBadRequestException("All requested positions are already stopped.");
+                }
+                break;
+            case UNSTOP:
+                positions.retainAll(stoppedPositions);
+                if (positions.isEmpty()) { // TODO or maybe better always raise an exception?
+                    throw new JocBadRequestException("None of the requested positions are stopped.");
+                }
+                break;
+            }
+        }
     }
 
     private ModifyWorkflowPositions initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
