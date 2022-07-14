@@ -307,10 +307,7 @@ public class InventorySearchDBLayer extends DBLayer {
             }
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            if (!SOSString.isEmpty(advanced.getIncludeScript())) {
-                includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", "!include " + advanced.getIncludeScript(), "sw.jobsScripts",
-                        "$.scripts");
-            }
+            includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
             noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions",
                     "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
@@ -417,10 +414,7 @@ public class InventorySearchDBLayer extends DBLayer {
             }
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            if (!SOSString.isEmpty(advanced.getIncludeScript())) {
-                includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", "!include " + advanced.getIncludeScript(), "sw.jobsScripts",
-                        "$.scripts");
-            }
+            includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
             noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions",
                     "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
@@ -484,7 +478,7 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("jobScript", '%' + jobScript.toLowerCase() + '%');
         }
         if (includeScript != null) {
-            query.setParameter("includeScript", '%' + includeScript.toLowerCase() + '%');
+            query.setParameter("includeScript", "%!include " + includeScript.toLowerCase() + '%');
         }
         if (noticeBoards != null) {
             query.setParameter("noticeBoards", '%' + noticeBoards.toLowerCase() + '%');
@@ -675,10 +669,7 @@ public class InventorySearchDBLayer extends DBLayer {
             }
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            if (!SOSString.isEmpty(advanced.getIncludeScript())) {
-                includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", "!include " + advanced.getIncludeScript(), "sw.jobsScripts",
-                        "$.scripts");
-            }
+            includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
             noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions",
                     "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
@@ -792,10 +783,7 @@ public class InventorySearchDBLayer extends DBLayer {
             }
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            if (!SOSString.isEmpty(advanced.getIncludeScript())) {
-                includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", "!include " + advanced.getIncludeScript(), "sw.jobsScripts",
-                        "$.scripts");
-            }
+            includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
             noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions",
                     "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
@@ -860,7 +848,7 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("jobScript", '%' + jobScript.toLowerCase() + '%');
         }
         if (includeScript != null) {
-            query.setParameter("includeScript", '%' + includeScript.toLowerCase() + '%');
+            query.setParameter("includeScript", "%!include " + includeScript.toLowerCase() + '%');
         }
         if (noticeBoards != null) {
             query.setParameter("noticeBoards", '%' + noticeBoards.toLowerCase() + '%');

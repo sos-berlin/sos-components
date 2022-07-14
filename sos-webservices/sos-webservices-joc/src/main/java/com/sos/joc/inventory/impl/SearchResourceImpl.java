@@ -204,6 +204,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         item.setLock(in.getAdvanced().getLock());
         item.setSchedule(in.getAdvanced().getSchedule());
         item.setIncludeScript(in.getAdvanced().getIncludeScript());
+        item.setCalendar(in.getAdvanced().getCalendar());
         item.setWorkflow(null);
         return item;
     }
