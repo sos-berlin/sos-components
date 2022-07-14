@@ -175,7 +175,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 }).map(o -> o.id()).collect(Collectors.toSet());
 
                 Set<OrderId> waitingForAdmissionOrderIds = OrdersHelper.getWaitingForAdmissionOrderIds(blockedOrderIds, controllerState);
-                blockedOrderIds.removeAll(waitingForAdmissionOrderIds);
+                waitingForAdmissionOrderIds.forEach(i -> blockedOrderIds.remove(i));
                 numOfWaitingForAdmissionOrders = waitingForAdmissionOrderIds.size();
 
                 numOfBlockedOrders = blockedOrderIds.stream().map(oId -> OrdersHelper.getCyclicOrderIdMainPart(oId.string())).distinct()

@@ -113,8 +113,8 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
                 try {
                     ClusterState cState = Globals.objectMapper.readValue(currentState.clusterState().toJson(), ClusterState.class);
                     if (cState.getSetting().getClusterWatches() != null) {
-                        clusterWatcherUrls.removeAll(cState.getSetting().getClusterWatches().stream().map(ClusterWatcher::getUri).map(URI::toString)
-                                .collect(Collectors.toSet()));
+                        cState.getSetting().getClusterWatches().stream().map(ClusterWatcher::getUri).map(URI::toString).forEach(
+                                c -> clusterWatcherUrls.remove(c));
                     }
                 } catch (Exception e) {
                     //

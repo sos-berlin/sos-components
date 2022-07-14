@@ -75,7 +75,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
 
             // check that controllerId corresponds to subagentClusterIds
             if (dbSubAgentClusters.size() != subagentClusterIds.size()) {
-                subagentClusterIds.removeAll(dbSubagentClusterIds);
+                dbSubagentClusterIds.forEach(i -> subagentClusterIds.remove(i));
                 throw new JocBadRequestException(String.format("The Subagent Clusters %s are not assigned to Controller '%s'", subagentClusterIds
                         .toString(), controllerId));
             }
@@ -157,7 +157,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
 
             // check that controllerId corresponds to subagentClusterIds
             if (subAgentClusters.size() != subagentClusterIds.size()) {
-                subagentClusterIds.removeAll(dbSubagentClusterIds);
+                dbSubagentClusterIds.forEach(i -> subagentClusterIds.remove(i));
                 throw new JocBadRequestException(String.format("The Subagent Clusters %s are not assigned to Controller '%s'", subagentClusterIds
                         .toString(), controllerId));
             }

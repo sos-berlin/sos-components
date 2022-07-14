@@ -641,7 +641,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         case CANCEL_DAILYPLAN:
             if (modifyOrders.getOrderIds() != null) {
                 Set<String> orders = modifyOrders.getOrderIds().stream().filter(s -> !s.matches(".*#(T|F|D)[0-9]+-.*")).collect(Collectors.toSet());
-                orders.removeAll(oIds.stream().map(OrderId::string).collect(Collectors.toSet()));
+                oIds.stream().map(OrderId::string).forEach(o -> orders.remove(o));
 
                 updateDailyPlan("command", orders);
             }

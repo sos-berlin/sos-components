@@ -81,9 +81,8 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
             
             // check that controllerId corresponds to subagentClusterIds
             if (subAgentClusters.size() != subagentClusterIds.size()) {
-                Set<String> a = subAgentClusters.keySet().stream().map(DBItemInventorySubAgentCluster::getSubAgentClusterId).collect(Collectors
-                        .toSet());
-                subagentClusterIds.removeAll(a);
+                subAgentClusters.keySet().stream().map(DBItemInventorySubAgentCluster::getSubAgentClusterId).forEach(a -> subagentClusterIds.remove(
+                        a));
                 throw new JocBadRequestException(String.format("The Subagent Clusters %s are not assigned to Controller '%s'", subagentClusterIds
                         .toString(), controllerId));
             }

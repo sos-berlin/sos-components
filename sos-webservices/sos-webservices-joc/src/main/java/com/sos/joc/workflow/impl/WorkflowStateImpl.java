@@ -34,7 +34,6 @@ import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
 import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.WorkflowPathControl;
-import js7.data.workflow.instructions.executable.WorkflowJob;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
@@ -92,9 +91,7 @@ public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState
                     stateText = SyncStateText.IN_SYNC;
                     if (controlState.isPresent()) {
                         Set<AgentPath> agentsThatIgnoreCommand = currentstate.singleWorkflowPathControlToIgnorantAgents(wPath);
-                        Set<AgentPath> allAgents = JavaConverters.asJava(workflowE.get().asScala().nameToJob()).values().stream().map(
-                                WorkflowJob::agentPath).collect(Collectors.toSet());
-                        agentsThatIgnoreCommand.retainAll(allAgents);
+                        Set<AgentPath> allAgents = JavaConverters.asJava(workflowE.get().asScala().referencedAgentPaths());
                         
                         if (!agentsThatIgnoreCommand.isEmpty()) {
                             stateText = SyncStateText.OUTSTANDING;
@@ -102,7 +99,7 @@ public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState
                             stateText = SyncStateText.SUSPENDED;
                         }
                         
-                        allAgents.removeAll(agentsThatIgnoreCommand);
+                        agentsThatIgnoreCommand.forEach(a -> allAgents.remove(a));
                         Map<String, String> idNameMap = getAgentIdNameMap(controllerId);
 
                         entity.setConfirmedAgentNames(allAgents.stream().map(AgentPath::string).map(a -> idNameMap.getOrDefault(a, a)).collect(

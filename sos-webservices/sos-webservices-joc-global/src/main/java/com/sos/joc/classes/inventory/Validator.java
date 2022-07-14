@@ -273,9 +273,9 @@ public class Validator {
         }
         if (!agents.isEmpty()) {
             if (visibleAgentNames != null) {
-                agents.removeAll(visibleAgentNames);
+                visibleAgentNames.forEach(a -> agents.remove(a));
             } else {
-                agents.removeAll(dbLayer.getVisibleAgentNames());
+                dbLayer.getVisibleAgentNames().forEach(a -> agents.remove(a));
             }
             if (!agents.isEmpty()) {
                 throw new JocConfigurationException("Missing assigned Agents: " + agents.toString());
@@ -297,7 +297,7 @@ public class Validator {
             if (dbLocks == null || dbLocks.isEmpty()) {
                 throw new JocConfigurationException("Missing assigned Locks: " + locks.toString());
             } else {
-                locks.removeAll(dbLocks.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
+                dbLocks.stream().map(DBItemInventoryConfiguration::getName).forEach(l -> locks.remove(l));
                 if (!locks.isEmpty()) {
                     throw new JocConfigurationException("Missing assigned Locks: " + locks.toString());
                 }
