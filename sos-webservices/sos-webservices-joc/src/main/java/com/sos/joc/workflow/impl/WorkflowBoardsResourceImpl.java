@@ -77,8 +77,7 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                 workflow.setPath(path);
                 workflow.setVersionDate(content.getCreated());
                 workflow.setVersionId(content.getCommitId());
-                workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
-                workflow.setSuspended(WorkflowsHelper.getSuspended(workflow.getState()));
+                WorkflowsHelper.setStateAndSuspended(currentstate, workflow);
                 
                 if (versionId == null || versionId.isEmpty()) {
                     workflow.setIsCurrentVersion(true);

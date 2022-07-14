@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
+import com.sos.controller.model.workflow.Workflow;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
@@ -163,6 +164,25 @@ public class SyncStateHelper {
             }
         }
         return stateText;
+    }
+    
+    public static void setWorkflowWithStateAndSuspended(Workflow workflow, Either<Problem, JWorkflow> either, JControllerState currentstate) {
+        workflow.setSuspended(false);
+        SyncStateText stateText = SyncStateText.NOT_IN_SYNC;
+        if (either != null && either.isRight()) {
+            stateText = SyncStateText.IN_SYNC;
+            WorkflowPath wPath = either.get().id().path();
+            Optional<WorkflowPathControl> controlState = WorkflowsHelper.getWorkflowPathControl(currentstate, wPath, false);
+            if (controlState.isPresent()) {
+                if (currentstate.singleWorkflowPathControlToIgnorantAgents(wPath).size() > 0) {
+                    stateText = SyncStateText.OUTSTANDING;
+                } else if (controlState.get().suspended()) {
+                    workflow.setSuspended(true);
+                    stateText = SyncStateText.SUSPENDED;
+                }
+            }
+        }
+        workflow.setState(getState(stateText));
     }
     
     private static SyncStateText getState(JJsonable<?> o) {

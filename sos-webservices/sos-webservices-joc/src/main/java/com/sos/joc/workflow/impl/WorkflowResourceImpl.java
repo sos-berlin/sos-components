@@ -1,7 +1,6 @@
 package com.sos.joc.workflow.impl;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -54,22 +53,26 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
 
             String workflowPath = workflowFilter.getWorkflowId().getPath();
             String versionId = workflowFilter.getWorkflowId().getVersionId();
-            
+
             Workflow entity = new Workflow();
             entity.setSurveyDate(Date.from(Instant.now()));
             final JControllerState currentstate = getCurrentState(controllerId);
             if (currentstate != null) {
                 entity.setSurveyDate(Date.from(currentstate.instant()));
-//                WorkflowControlState controlState = JavaConverters.asJava(currentstate.asScala().pathToWorkflowControlState_()).get(WorkflowPath.of(workflowPath));
-//                if (controlState != null) {
-//                    LOGGER.info(JavaConverters.asJava(controlState.attachedToAgents()).toString());
-//                    LOGGER.info(controlState.workflowControl().suspended() + "");
-//                    LOGGER.info(JavaConverters.asJava(currentstate.repo().idToCheckedWorkflow(JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId))
-//                            .get().asScala().nameToJob()).values().stream().map(j -> j.agentPath()).distinct().collect(Collectors.toList()).toString());
+//                WorkflowPath wPath = WorkflowPath.of(JocInventory.pathToName(workflowPath));
+//                Optional<WorkflowPathControl> controlState = WorkflowsHelper.getWorkflowPathControl(currentstate, wPath, false);
+//                if (controlState.isPresent()) {
+//                    LOGGER.info(currentstate.singleWorkflowPathControlToIgnorantAgents(wPath).toString());
+//                    LOGGER.info(controlState.get().suspended() + "");
+//                    if (versionId != null && !versionId.isEmpty()) {
+//                        JWorkflow jw = currentstate.repo().idToCheckedWorkflow(JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId))
+//                                .get();
+//                        LOGGER.info(JavaConverters.asJava(jw.asScala().referencedAgentPaths()).toString());
+//                        LOGGER.info(jw.withPositions().toJson());
+//                    }
 //                }
-//                LOGGER.info(currentstate.repo().idToCheckedWorkflow(JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId)).get().withPositions().toJson());
             }
-            
+
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
 
@@ -82,9 +85,8 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 workflow.setPath(path);
                 workflow.setVersionDate(content.getCreated());
                 workflow.setVersionId(content.getCommitId());
-                workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
-                workflow.setSuspended(WorkflowsHelper.getSuspended(workflow.getState()));
-                
+                WorkflowsHelper.setStateAndSuspended(currentstate, workflow);
+
                 if (versionId == null || versionId.isEmpty()) {
                     workflow.setIsCurrentVersion(true);
                 } else {
@@ -98,20 +100,20 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 }
                 List<WorkflowId> wIds = dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId);
                 if (wIds != null && !wIds.isEmpty()) {
-                    workflow.setHasAddOrderDependencies(true); 
+                    workflow.setHasAddOrderDependencies(true);
                 }
-                
+
                 Set<String> skippedLabels = WorkflowsHelper.getSkippedLabels(currentstate, content.getName(), workflowFilter
                         .getCompact() == Boolean.TRUE);
                 workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow, skippedLabels);
-       
+
                 if (workflowFilter.getCompact() == Boolean.TRUE) {
                     workflow.setFileOrderSources(null);
-                    //workflow.setForkListVariables(null);
+                    // workflow.setForkListVariables(null);
                     workflow.setInstructions(null);
                     workflow.setJobResourceNames(null);
                     workflow.setJobs(null);
-                    //workflow.setOrderPreparation(null);
+                    // workflow.setOrderPreparation(null);
                 } else if (workflow.getOrderPreparation() != null) {
                     workflow.setOrderPreparation(WorkflowsHelper.removeFinals(workflow));
                 }

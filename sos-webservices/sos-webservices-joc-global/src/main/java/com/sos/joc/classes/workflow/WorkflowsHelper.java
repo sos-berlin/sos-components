@@ -950,6 +950,15 @@ public class WorkflowsHelper {
         return SyncStateHelper.getState(stateText);
     }
     
+    public static void setStateAndSuspended(JControllerState currentstate, Workflow workflow) {
+        workflow.setState(SyncStateHelper.getState(SyncStateText.UNKNOWN));
+        workflow.setSuspended(false);
+        if (currentstate != null) {
+            JWorkflowId wId = JWorkflowId.of(JocInventory.pathToName(workflow.getPath()), workflow.getVersionId());
+            SyncStateHelper.setWorkflowWithStateAndSuspended(workflow, currentstate.repo().idToCheckedWorkflow(wId), currentstate);
+        }
+    }
+    
     public static boolean getSuspended(SyncState syncState) {
         SyncStateText stateText = syncState.get_text();
         return SyncStateText.SUSPENDED.equals(stateText);
