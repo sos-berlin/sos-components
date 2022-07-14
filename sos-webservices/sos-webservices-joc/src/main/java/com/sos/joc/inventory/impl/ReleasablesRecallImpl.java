@@ -1,6 +1,7 @@
 package com.sos.joc.inventory.impl;
 
 import java.util.Date;
+import java.util.Objects;
 
 import javax.ws.rs.Path;
 
@@ -30,7 +31,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             recallFilter.getReleasables().stream().map(released -> dbLayer.getReleasedConfiguration(released.getName(), released.getObjectType()))
-                    .map(dbItemReleased -> {
+                    .filter(Objects::nonNull).map(dbItemReleased -> {
                         dbLayer.recallReleasedConfiguration(dbItemReleased);
                         return dbItemReleased.getFolder();
                     }).distinct().forEach(folder -> JocInventory.postEvent(folder));
