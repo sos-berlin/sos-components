@@ -159,8 +159,10 @@ public class Validator {
                     // JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/inventory/schemas/workflow/workflowJobs-schema.json"));
                     validateOrderPreparation(workflow.getOrderPreparation());
                     List<String> boardNames = hasNoticesInstruction.test(json) ? dbLayer.getBoardNames() : Collections.emptyList();
-                    validateInstructions(workflow.getInstructions(), "instructions", workflow.getJobs().getAdditionalProperties().keySet(), workflow
-                            .getOrderPreparation(), new HashMap<String, String>(), boardNames, dbLayer);
+                    Set<String> jobNames = workflow.getJobs() == null ? Collections.emptySet() : workflow.getJobs().getAdditionalProperties()
+                            .keySet();
+                    validateInstructions(workflow.getInstructions(), "instructions", jobNames, workflow.getOrderPreparation(),
+                            new HashMap<String, String>(), boardNames, dbLayer);
                     // validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
                     validateLockRefs(json, dbLayer);
                     //validateBoardRefs(json, dbLayer);
@@ -330,6 +332,9 @@ public class Validator {
     private static List<String> validateWorkflowJobs(Workflow workflow, Set<String> releasedScripts) throws JsonProcessingException, IOException,
             SOSJsonSchemaException {
         List<String> jobResources = new ArrayList<>();
+        if (workflow.getJobs() == null) {
+            return jobResources;
+        }
         for (Map.Entry<String, Job> entry : workflow.getJobs().getAdditionalProperties().entrySet()) {
             // TODO check JobResources references in Job
             try {
