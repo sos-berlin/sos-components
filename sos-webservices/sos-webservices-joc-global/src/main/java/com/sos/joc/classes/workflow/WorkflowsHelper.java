@@ -1239,7 +1239,7 @@ public class WorkflowsHelper {
     public static Optional<JWorkflowControl> getWorkflowControl(JControllerState currentstate, JWorkflowId workflowId, boolean compact) {
         if (!compact && currentstate != null) {
             JWorkflowControl c = currentstate.idToWorkflowControl().get(JWorkflowControlId.of(workflowId));
-            if (c == null) {
+            if (c != null) {
                 return Optional.of(c);
             }
         }
