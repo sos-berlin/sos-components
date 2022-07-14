@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "accountName",
-    "notice",
+    "comment",
     "since",
     "auditLog"
 })
@@ -42,8 +42,8 @@ public class BlockedAccount {
      * 
      * 
      */
-    @JsonProperty("notice")
-    private String notice;
+    @JsonProperty("comment")
+    private String comment;
     /**
      * timestamp
      * <p>
@@ -73,13 +73,13 @@ public class BlockedAccount {
      * 
      * @param auditLog
      * @param accountName
-     * @param notice
+     * @param comment
      * @param since
      */
-    public BlockedAccount(String accountName, String notice, Date since, AuditParams auditLog) {
+    public BlockedAccount(String accountName, String comment, Date since, AuditParams auditLog) {
         super();
         this.accountName = accountName;
-        this.notice = notice;
+        this.comment = comment;
         this.since = since;
         this.auditLog = auditLog;
     }
@@ -114,9 +114,9 @@ public class BlockedAccount {
      * 
      * 
      */
-    @JsonProperty("notice")
-    public String getNotice() {
-        return notice;
+    @JsonProperty("comment")
+    public String getComment() {
+        return comment;
     }
 
     /**
@@ -125,9 +125,9 @@ public class BlockedAccount {
      * 
      * 
      */
-    @JsonProperty("notice")
-    public void setNotice(String notice) {
-        this.notice = notice;
+    @JsonProperty("comment")
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
     /**
@@ -176,12 +176,12 @@ public class BlockedAccount {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("accountName", accountName).append("notice", notice).append("since", since).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("accountName", accountName).append("comment", comment).append("since", since).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(accountName).append(notice).append(since).toHashCode();
+        return new HashCodeBuilder().append(comment).append(auditLog).append(accountName).append(since).toHashCode();
     }
 
     @Override
@@ -193,7 +193,7 @@ public class BlockedAccount {
             return false;
         }
         BlockedAccount rhs = ((BlockedAccount) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(notice, rhs.notice).append(since, rhs.since).isEquals();
+        return new EqualsBuilder().append(comment, rhs.comment).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(since, rhs.since).isEquals();
     }
 
 }

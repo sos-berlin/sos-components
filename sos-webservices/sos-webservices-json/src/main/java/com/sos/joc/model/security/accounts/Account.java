@@ -26,6 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "password",
     "forcePasswordChange",
     "disabled",
+    "blocked",
     "roles",
     "auditLog"
 })
@@ -63,12 +64,21 @@ public class Account {
     /**
      * disabled parameter
      * <p>
-     * controls if the object is disabled
+     * true if the account is disabled
      * 
      */
     @JsonProperty("disabled")
-    @JsonPropertyDescription("controls if the object is disabled")
+    @JsonPropertyDescription("true if the account is disabled")
     private Boolean disabled = false;
+    /**
+     * blocked parameter
+     * <p>
+     * true if the account is blocked
+     * 
+     */
+    @JsonProperty("blocked")
+    @JsonPropertyDescription("true if the account is blocked")
+    private Boolean blocked;
     @JsonProperty("roles")
     private List<String> roles = new ArrayList<String>();
     /**
@@ -91,19 +101,21 @@ public class Account {
      * 
      * @param identityServiceName
      * @param password
+     * @param blocked
      * @param auditLog
      * @param accountName
      * @param forcePasswordChange
      * @param roles
      * @param disabled
      */
-    public Account(String identityServiceName, String accountName, String password, Boolean forcePasswordChange, Boolean disabled, List<String> roles, AuditParams auditLog) {
+    public Account(String identityServiceName, String accountName, String password, Boolean forcePasswordChange, Boolean disabled, Boolean blocked, List<String> roles, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.accountName = accountName;
         this.password = password;
         this.forcePasswordChange = forcePasswordChange;
         this.disabled = disabled;
+        this.blocked = blocked;
         this.roles = roles;
         this.auditLog = auditLog;
     }
@@ -191,7 +203,7 @@ public class Account {
     /**
      * disabled parameter
      * <p>
-     * controls if the object is disabled
+     * true if the account is disabled
      * 
      */
     @JsonProperty("disabled")
@@ -202,12 +214,34 @@ public class Account {
     /**
      * disabled parameter
      * <p>
-     * controls if the object is disabled
+     * true if the account is disabled
      * 
      */
     @JsonProperty("disabled")
     public void setDisabled(Boolean disabled) {
         this.disabled = disabled;
+    }
+
+    /**
+     * blocked parameter
+     * <p>
+     * true if the account is blocked
+     * 
+     */
+    @JsonProperty("blocked")
+    public Boolean getBlocked() {
+        return blocked;
+    }
+
+    /**
+     * blocked parameter
+     * <p>
+     * true if the account is blocked
+     * 
+     */
+    @JsonProperty("blocked")
+    public void setBlocked(Boolean blocked) {
+        this.blocked = blocked;
     }
 
     @JsonProperty("roles")
@@ -244,12 +278,12 @@ public class Account {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("password", password).append("forcePasswordChange", forcePasswordChange).append("disabled", disabled).append("roles", roles).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("password", password).append("forcePasswordChange", forcePasswordChange).append("disabled", disabled).append("blocked", blocked).append("roles", roles).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(password).append(auditLog).append(accountName).append(forcePasswordChange).append(roles).append(disabled).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(password).append(blocked).append(auditLog).append(accountName).append(forcePasswordChange).append(roles).append(disabled).toHashCode();
     }
 
     @Override
@@ -261,7 +295,7 @@ public class Account {
             return false;
         }
         Account rhs = ((Account) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(password, rhs.password).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(forcePasswordChange, rhs.forcePasswordChange).append(roles, rhs.roles).append(disabled, rhs.disabled).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(password, rhs.password).append(blocked, rhs.blocked).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(forcePasswordChange, rhs.forcePasswordChange).append(roles, rhs.roles).append(disabled, rhs.disabled).isEquals();
     }
 
 }
