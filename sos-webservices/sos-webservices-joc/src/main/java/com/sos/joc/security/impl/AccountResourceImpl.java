@@ -98,7 +98,6 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             Account account = new Account();
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNT_READ);
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNT_READ);
 
             DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountFilter
                     .getIdentityServiceName());
