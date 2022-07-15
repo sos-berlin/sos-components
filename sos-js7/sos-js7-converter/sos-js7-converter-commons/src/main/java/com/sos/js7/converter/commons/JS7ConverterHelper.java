@@ -241,6 +241,10 @@ public class JS7ConverterHelper {
         if (val.startsWith("$")) {
             return val;
         }
+        if (val.equalsIgnoreCase("true") || val.equalsIgnoreCase("false")) {
+            return val;
+        }
+
         return "\"" + val.replaceAll("\\\\", "\\\\\\\\") + "\"";
         // return "\"" + val + "\"";
     }
@@ -251,6 +255,9 @@ public class JS7ConverterHelper {
         }
         // if (val.equals("$FILE")) {
         if (val.startsWith("$")) {
+            return val;
+        }
+        if (val.equalsIgnoreCase("true") || val.equalsIgnoreCase("false")) {
             return val;
         }
         if (val.indexOf("'") > -1) {

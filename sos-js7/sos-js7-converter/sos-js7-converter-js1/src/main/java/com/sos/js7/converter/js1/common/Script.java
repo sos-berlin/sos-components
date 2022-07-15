@@ -9,6 +9,9 @@ import com.sos.js7.converter.commons.JS7ConverterHelper;
 
 public class Script {
 
+    public static final String JAVA_JITL_SPLITTER_JOB = "com.sos.jitl.splitter.JobChainSplitterJSAdapterClass";
+    public static final String JAVA_JITL_JOIN_JOB = "com.sos.jitl.join.JobSchedulerJoinOrdersJSAdapterClass";
+
     private static final String ATTR_COM_CLASS = "com_class";
     private static final String ATTR_FILENAME = "filename";
     private static final String ATTR_JAVA_CLASS = "java_class";
@@ -40,6 +43,14 @@ public class Script {
         javaClassPath = JS7ConverterHelper.stringValue(attributes.get(ATTR_JAVA_CLASS_PATH));
         language = JS7ConverterHelper.stringValue(attributes.get(ATTR_LANGUAGE));
         script = JS7ConverterHelper.getTextValue(node);
+    }
+
+    public boolean isJavaJITLSplitterJob() {
+        return javaClass != null && javaClass.equals(JAVA_JITL_SPLITTER_JOB);
+    }
+
+    public boolean isJavaJITLJoinJob() {
+        return javaClass != null && javaClass.equals(JAVA_JITL_JOIN_JOB);
     }
 
     public Include getInclude() {
