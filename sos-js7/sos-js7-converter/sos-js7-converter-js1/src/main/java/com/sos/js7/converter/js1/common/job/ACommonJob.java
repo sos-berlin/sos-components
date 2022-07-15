@@ -235,6 +235,14 @@ public abstract class ACommonJob {
         }
     }
 
+    public boolean isJavaJITLSplitterJob() {
+        return script != null && script.isJavaJITLSplitterJob();
+    }
+
+    public boolean isJavaJITLJoinJob() {
+        return script != null && script.isJavaJITLJoinJob();
+    }
+
     public ACommonJob(Type type) {
         this.type = type;
     }
@@ -365,6 +373,8 @@ public abstract class ACommonJob {
 
     public class Settings {
 
+        private static final String ELEMENT_LOG_LEVEL = "log_level";
+
         private static final String ELEMENT_MAIL_ON_ERROR = "mail_on_error";
         private static final String ELEMENT_MAIL_ON_WARNING = "mail_on_warning";
         private static final String ELEMENT_MAIL_ON_SUCCESS = "mail_on_success";
@@ -374,16 +384,20 @@ public abstract class ACommonJob {
         private static final String ELEMENT_MAIL_CC = "log_mail_cc";
         private static final String ELEMENT_MAIL_BCC = "log_mail_bcc";
 
-        private boolean mailOnError;
-        private boolean mailOnWarning;
-        private boolean mailOnSuccess;
-        private boolean mailOnProcess;
-        private boolean mailOnDelayAfterError;
+        private String logLevel;
+
+        private Boolean mailOnError;
+        private Boolean mailOnWarning;
+        private Boolean mailOnSuccess;
+        private Boolean mailOnProcess;
+        private Boolean mailOnDelayAfterError;
         private String mailTo;
         private String mailCc;
         private String mailBcc;
 
         public Settings(SOSXMLXPath xpath, Node node) throws Exception {
+            logLevel = getStringValue(xpath, node, ELEMENT_LOG_LEVEL);
+
             mailOnError = getBooleanValue(xpath, node, ELEMENT_MAIL_ON_ERROR);
             mailOnWarning = getBooleanValue(xpath, node, ELEMENT_MAIL_ON_WARNING);
             mailOnSuccess = getBooleanValue(xpath, node, ELEMENT_MAIL_ON_SUCCESS);
@@ -395,33 +409,46 @@ public abstract class ACommonJob {
             mailBcc = getStringValue(xpath, node, ELEMENT_MAIL_BCC);
         }
 
-        private boolean getBooleanValue(SOSXMLXPath xpath, Node node, String elementName) throws SOSXMLXPathException {
+        private Boolean getBooleanValue(SOSXMLXPath xpath, Node node, String elementName) throws SOSXMLXPathException {
             Node n = xpath.selectNode(node, "./" + elementName);
-            return JS7ConverterHelper.booleanValue(JS7ConverterHelper.getTextValue(n), false);
+            return JS7ConverterHelper.booleanValue(JS7ConverterHelper.getTextValue(n));
+        }
+
+        private boolean getBooleanValue(Boolean val) {
+            return val == null ? false : val;
         }
 
         private String getStringValue(SOSXMLXPath xpath, Node node, String elementName) throws SOSXMLXPathException {
             return JS7ConverterHelper.getTextValue(xpath.selectNode(node, "./" + elementName));
         }
 
+        public String getLogLevel() {
+            return logLevel;
+        }
+
+        public boolean hasMailSettings() {
+            return mailOnError != null || mailOnWarning != null || mailOnSuccess != null || mailOnProcess != null || mailOnDelayAfterError != null
+                    || mailTo != null || mailCc != null || mailBcc != null;
+        }
+
         public boolean isMailOnError() {
-            return mailOnError;
+            return getBooleanValue(mailOnError);
         }
 
         public boolean isMailOnWarning() {
-            return mailOnWarning;
+            return getBooleanValue(mailOnWarning);
         }
 
         public boolean isMailOnSuccess() {
-            return mailOnSuccess;
+            return getBooleanValue(mailOnSuccess);
         }
 
         public boolean isMailOnProcess() {
-            return mailOnProcess;
+            return getBooleanValue(mailOnProcess);
         }
 
         public boolean isMailOnDelayAfterError() {
-            return mailOnDelayAfterError;
+            return getBooleanValue(mailOnDelayAfterError);
         }
 
         public String getMailTo() {

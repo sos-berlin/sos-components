@@ -1,11 +1,9 @@
 package com.sos.joc.publish.util;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
@@ -36,14 +34,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPOutputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
-import javax.ws.rs.core.StreamingOutput;
-
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.bouncycastle.openpgp.PGPException;
 import org.slf4j.Logger;
@@ -66,7 +57,6 @@ import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
-import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -88,6 +78,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotParseableException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.Version;
 import com.sos.joc.model.common.IDeployObject;
@@ -100,7 +91,6 @@ import com.sos.joc.model.inventory.jobclass.JobClassPublish;
 import com.sos.joc.model.inventory.jobresource.JobResourcePublish;
 import com.sos.joc.model.inventory.lock.LockPublish;
 import com.sos.joc.model.inventory.workflow.WorkflowPublish;
-import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.ControllerObject;
@@ -111,8 +101,6 @@ import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
-import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
-import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpdateableFileOrderSourceAgentName;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
@@ -912,21 +900,22 @@ public abstract class PublishUtils {
         Set<UpdateableWorkflowJobAgentName> update = new HashSet<UpdateableWorkflowJobAgentName>();
         if (ConfigurationType.WORKFLOW.intValue() == type) {
             Workflow workflow = (Workflow) deployObject;
-            workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
-                Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                String agentNameOrAlias = job.getAgentPath();
-
-                Optional<Map<String, Set<String>>> opt = agentsWithAliasesByControllerId.entrySet().stream()
-                    .filter(item -> controllerId.equals(item.getKey()))
-                    .map(item -> item.getValue()).findFirst();
-                if (opt.isPresent()) {
-                    Optional<String> agentId = opt.get().entrySet().stream().filter(item -> item.getValue().contains(agentNameOrAlias))
-                            .filter(Objects::nonNull).map(item -> item.getKey()).findFirst();
-                    if (agentId.isPresent()) {
-                        update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentPath(), agentId.get(), controllerId));
+            if (workflow.getJobs() != null) {
+                workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
+                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                    String agentNameOrAlias = job.getAgentPath();
+                    Optional<Map<String, Set<String>>> opt = agentsWithAliasesByControllerId.entrySet().stream()
+                        .filter(item -> controllerId.equals(item.getKey()))
+                        .map(item -> item.getValue()).findFirst();
+                    if (opt.isPresent()) {
+                        Optional<String> agentId = opt.get().entrySet().stream().filter(item -> item.getValue().contains(agentNameOrAlias))
+                                .filter(Objects::nonNull).map(item -> item.getKey()).findFirst();
+                        if (agentId.isPresent()) {
+                            update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentPath(), agentId.get(), controllerId));
+                        }
                     }
-                }
-            });
+                });
+            }
         }
         return update;
     }
@@ -941,12 +930,14 @@ public abstract class PublishUtils {
         Set<UpdateableWorkflowJobAgentName> update = new HashSet<UpdateableWorkflowJobAgentName>();
         if (ConfigurationType.WORKFLOW.intValue() == type) {
             Workflow workflow = (Workflow) deployObject;
-            workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
-                Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                String agentNameOrAlias = job.getAgentPath();
-                String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId, path, jobname);
-                update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentPath(), agentId, controllerId));
-            });
+            if (workflow.getJobs() != null) {
+                workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
+                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                    String agentNameOrAlias = job.getAgentPath();
+                    String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId, path, jobname);
+                    update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentPath(), agentId, controllerId));
+                });
+            }
         }
         return update;
     }
@@ -1460,26 +1451,22 @@ public abstract class PublishUtils {
 
     private static void replaceAgentNameWithAgentId(DBItemDeploymentHistory deployed, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
             String controllerId) throws JsonParseException, JsonMappingException, IOException {
-        Workflow workflow = (Workflow) deployed.readUpdateableContent();
-        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> item.getWorkflowPath().equals(deployed
-                .getPath())).collect(Collectors.toSet());
-        workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
-            Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-            job.setAgentPath(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
-                    .getControllerId())).findAny().get().getAgentId());
-        });
+        replaceAgentNameWithAgentId((Workflow) deployed.readUpdateableContent(), updateableAgentNames, controllerId);
     }
 
     public static void replaceAgentNameWithAgentId(Workflow workflow, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId)
             throws JsonParseException, JsonMappingException, IOException {
-        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> item.getWorkflowPath().equals(workflow
-                .getPath())).collect(Collectors.toSet());
+        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream()
+                .filter(item -> item.getWorkflowPath().equals(workflow.getPath())).collect(Collectors.toSet());
         if (!filteredUpdateables.isEmpty()) {
-            workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
-                Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                job.setAgentPath(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
-                        .getControllerId())).findAny().get().getAgentId());
-            });
+            if (workflow.getJobs() != null) {
+                workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
+                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                    job.setAgentPath(checkAgentIdPresent(filteredUpdateables.stream()
+                            .filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item.getControllerId()))
+                            .map(UpdateableWorkflowJobAgentName::getAgentId).findAny(), controllerId));
+                });
+            }
         }
     }
 
@@ -1488,11 +1475,19 @@ public abstract class PublishUtils {
         Set<UpdateableFileOrderSourceAgentName> filteredUpdateables = updateableFOSAgentNames.stream().filter(item -> item.getFileOrderSourceId()
                 .equals(fileOrderSource.getPath())).collect(Collectors.toSet());
         if (!filteredUpdateables.isEmpty()) {
-            fileOrderSource.setAgentPath(filteredUpdateables.stream().filter(item -> controllerId.equals(item.getControllerId())).findAny().get()
-                    .getAgentId());
+            fileOrderSource.setAgentPath(checkAgentIdPresent(filteredUpdateables.stream().filter(item -> controllerId.equals(item.getControllerId()))
+                    .map(UpdateableFileOrderSourceAgentName::getAgentId).findAny(), controllerId));
         }
     }
-
+    
+    private static String checkAgentIdPresent(Optional<String> opt, String controllerId) {
+        if(opt.isPresent()) {
+            return opt.get();
+        } else {
+            throw new JocObjectNotExistException("the agent name is not known for the controller " + controllerId);
+        }
+    }
+    
     public static String getValueAsStringWithleadingZeros(Integer i, int length) {
         if (i.toString().length() >= length) {
             return i.toString();

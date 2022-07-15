@@ -68,6 +68,13 @@ public class JS7ConverterConfig {
                             LOGGER.warn(getWarnMessage("generateConfig.workflows", "boolean", val));
                         }
                         break;
+                    case "generateConfig.agents":
+                        try {
+                            generateConfig.agents = Boolean.parseBoolean(val);
+                        } catch (Throwable t) {
+                            LOGGER.warn(getWarnMessage("generateConfig.agents", "boolean", val));
+                        }
+                        break;
                     case "generateConfig.locks":
                         try {
                             generateConfig.locks = Boolean.parseBoolean(val);
@@ -139,8 +146,8 @@ public class JS7ConverterConfig {
                             LOGGER.warn(getWarnMessage("jobConfig.forcedV1Compatible", "boolean", val));
                         }
                         break;
-                    case "jobConfig.jitl.logLevel":
-                        jobConfig.jitlLogLevel = val;
+                    case "jobConfig.jitl.forcedLogLevel":
+                        jobConfig.forcedJitlLogLevel = val;
                         break;
                     case "jobConfig.notification.mail.defaultTo":
                         jobConfig.notificationMailDefaultTo = val;
@@ -347,6 +354,7 @@ public class JS7ConverterConfig {
     public class GenerateConfig {
 
         private boolean workflows = true;
+        private boolean agents;
         private boolean locks;
         private boolean schedules;
         private boolean calendars;
@@ -354,6 +362,11 @@ public class JS7ConverterConfig {
 
         public GenerateConfig withWorkflows(boolean val) {
             this.workflows = val;
+            return this;
+        }
+
+        public GenerateConfig withAgents(boolean val) {
+            this.agents = val;
             return this;
         }
 
@@ -379,6 +392,10 @@ public class JS7ConverterConfig {
 
         public boolean getWorkflows() {
             return workflows;
+        }
+
+        public boolean getAgents() {
+            return agents;
         }
 
         public boolean getLocks() {
@@ -416,7 +433,7 @@ public class JS7ConverterConfig {
     public class JobConfig {
 
         private String scriptNewLine = "\n";
-        private String jitlLogLevel;
+        private String forcedJitlLogLevel;
         private Integer forcedGraceTimeout;
         private Integer forcedParallelism;
         private Boolean forcedFailOnErrWritten;
@@ -431,8 +448,8 @@ public class JS7ConverterConfig {
             return this;
         }
 
-        public JobConfig withJitlLogLevel(String val) {
-            this.jitlLogLevel = val;
+        public JobConfig withForcedJitlLogLevel(String val) {
+            this.forcedJitlLogLevel = val;
             return this;
         }
 
@@ -467,8 +484,8 @@ public class JS7ConverterConfig {
             return scriptNewLine;
         }
 
-        public String getJitlLogLevel() {
-            return jitlLogLevel;
+        public String getForcedJitlLogLevel() {
+            return forcedJitlLogLevel;
         }
 
         public Integer getForcedGraceTimeout() {

@@ -24,7 +24,7 @@ public class JS7ConverterTest {
         // JS7Converter.CONFIG.getSubFolderConfig().withMappings("aapg=2; ebzc=0; wmad=0; abcd=0").withSeparator("_");
 
         GenerateConfig generate = JS7Converter.CONFIG.getGenerateConfig();
-        generate.withWorkflows(true).withSchedules(true).withLocks(true).withCyclicOrders(false);
+        generate.withWorkflows(true).withAgents(true).withSchedules(true).withLocks(true).withCyclicOrders(false);
 
         ParserConfig parser = JS7Converter.CONFIG.getParserConfig();
         parser.withExcludedDirectoryNames(".sos-templates;.svn;.configuration;").withExcludedDirectoryPaths("sos/;xxx/");
@@ -40,7 +40,7 @@ public class JS7ConverterTest {
         schedule.withPlanOrders(true).withSubmitOrders(true);
 
         JobConfig job = JS7Converter.CONFIG.getJobConfig();
-        job.withJitlLogLevel("DEBUG").withForcedFailOnErrWritten(true);
+        // job.withForcedJitlLogLevel("DEBUG").withForcedFailOnErrWritten(true);
         job.withNotificationMailDefault("to@localhost.com", "cc@localhost.com", "bcc@localhost.com");
         job.withScriptNewLine("\n").withForcedV1Compatible(true);
 

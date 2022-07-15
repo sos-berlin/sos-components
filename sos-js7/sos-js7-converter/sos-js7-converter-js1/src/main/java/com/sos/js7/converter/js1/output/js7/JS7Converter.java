@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.Fail;
 import com.sos.inventory.model.instruction.Finish;
+import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.NamedJob;
@@ -46,6 +48,8 @@ import com.sos.inventory.model.job.notification.JobNotificationType;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.workflow.Branch;
+import com.sos.inventory.model.workflow.BranchWorkflow;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.ParameterType;
@@ -81,7 +85,8 @@ import com.sos.js7.converter.js1.common.processclass.ProcessClass;
 import com.sos.js7.converter.js1.common.runtime.RunTime;
 import com.sos.js7.converter.js1.input.DirectoryParser;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
-import com.sos.js7.converter.js1.output.js7.JS7ScriptLanguageConverter.YADE;
+import com.sos.js7.converter.js1.output.js7.JS7JobHelper.JavaJITLJobHelper;
+import com.sos.js7.converter.js1.output.js7.JS7JobHelper.ShellJobHelper;
 
 /** <br/>
  * TODO Locks<br/>
@@ -106,7 +111,8 @@ import com.sos.js7.converter.js1.output.js7.JS7ScriptLanguageConverter.YADE;
  * TODO Cyclic Workflows Instructions<br/>
  * TODO Job (order) AdmissionTimes<br/>
  * ---- RunTime - without calendars or job chain jobs with a run time ...<br/>
- * TODO Java: Split/Join<br/>
+ * TODO Java: Split/Join - done<br/>
+ * TODO Java: Synchronizer<br/>
  */
 public class JS7Converter {
 
@@ -385,7 +391,10 @@ public class JS7Converter {
         w.setTimeZone(CONFIG.getWorkflowConfig().getDefaultTimeZone());
 
         Jobs js = new Jobs();
-        js.setAdditionalProperty(js1Job.getName(), getJob(result, js1Job, null));
+        Job job = getJob(result, js1Job, null);
+        if (job != null) {
+            js.setAdditionalProperty(js1Job.getName(), job);
+        }
         w.setJobs(js);
 
         List<Instruction> in = new ArrayList<>();
@@ -656,6 +665,7 @@ public class JS7Converter {
         return in;
     }
 
+    // TODO no extra instructions? is default by JS7
     private List<Instruction> getSuspendInstructions(ACommonJob job, List<Instruction> in, JobChainStateHelper h) {
         try {
             TryCatch tryCatch = new TryCatch();
@@ -699,15 +709,28 @@ public class JS7Converter {
             }
         }
 
+        JS7JobHelper jh = new JS7JobHelper(job);
+        List<ACommonJob> jbt = js1JobsByLanguage.get(jh.getLanguage());
+        if (jbt == null) {
+            jbt = new ArrayList<>();
+        }
+        jbt.add(job);
+        js1JobsByLanguage.put(jh.getLanguage(), jbt);
+
+        if (!jh.createJS7Job()) {
+            return null;
+        }
+
         Job j = new Job();
         j.setTitle(job.getTitle());
         setFromConfig(j);
 
         JS7Agent js7Agent = setAgent(j, job, jobChainAgentName);
         setJobJobResources(j, job);
-        setExecutable(j, job, js7Agent);
+        setExecutable(j, job, jh, js7Agent);
         setJobOptions(j, job);
         setJobNotification(j, job);
+
         return j;
     }
 
@@ -814,57 +837,80 @@ public class JS7Converter {
         return CONFIG.newJS7Agent(name, platform);
     }
 
-    private void setExecutable(Job j, ACommonJob job, JS7Agent js7Agent) {
-        JS7ScriptLanguageConverter c = new JS7ScriptLanguageConverter(job);
-
-        List<ACommonJob> jbt = js1JobsByLanguage.get(c.getLanguage());
-        if (jbt == null) {
-            jbt = new ArrayList<>();
-        }
-        jbt.add(job);
-        js1JobsByLanguage.put(c.getLanguage(), jbt);
-
-        c.process();
-
-        j.setExecutable(c.getJavaClassName() == null ? getExecutableScript(j, job, js7Agent, c.getLanguage(), c.getClassName(), c.getYADE())
-                : getInternalExecutable(j, job, c.getJavaClassName()));
+    private void setExecutable(Job j, ACommonJob job, JS7JobHelper jh, JS7Agent js7Agent) {
+        j.setExecutable(jh.getJavaJITLJob() == null ? getExecutableScript(j, job, js7Agent, jh.getShellJob()) : getInternalExecutable(j, job, jh
+                .getJavaJITLJob()));
     }
 
-    private ExecutableJava getInternalExecutable(Job j, ACommonJob job, String javaClassName) {
+    private ExecutableJava getInternalExecutable(Job j, ACommonJob job, JavaJITLJobHelper jitlJob) {
         ExecutableJava ej = new ExecutableJava();
-        ej.setClassName(javaClassName);
-        ej.setArguments(getJobArguments(job));
+        ej.setClassName(jitlJob.getNewJavaClass());
+        ej.setArguments(getJobArguments(job, jitlJob));
 
-        setLogLevel(ej);
+        setLogLevel(ej, job);
         setMockLevel(ej);
         return ej;
     }
 
-    private Environment getJobArguments(ACommonJob job) {
+    private Environment getJobArguments(ACommonJob job, JavaJITLJobHelper jitlJob) {
         Environment env = null;
         if (job.getParams() != null && job.getParams().hasParams()) {
             // ARGUMENTS
             env = new Environment();
+            if (jitlJob != null) {
+                for (Map.Entry<String, String> e : jitlJob.getParams().getToAdd().entrySet()) {
+                    env.setAdditionalProperty(e.getKey(), JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(replaceJS1Values(e.getValue())));
+                }
+            }
             for (Map.Entry<String, String> e : job.getParams().getParams().entrySet()) {
                 try {
-                    env.setAdditionalProperty(e.getKey(), JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(replaceJS1Values(e.getValue())));
+                    String name = e.getKey();
+                    if (jitlJob != null) {
+                        if (jitlJob.getParams().getToRemove().contains(name)) {
+                            ConverterReport.INSTANCE.addWarningRecord(job.getPath(), "Job " + job.getName(), "Param[" + name + "=" + e.getValue()
+                                    + "]" + " not converted because not used in JS7");
+                            continue;
+                        }
+                        String n = jitlJob.getParams().getMapping().get(name);
+                        if (n != null) {
+                            ConverterReport.INSTANCE.addAnalyzerRecord(job.getPath(), "Job " + job.getName(), "Param[" + name + "=" + e.getValue()
+                                    + "]" + " mapped to JS7 Argument[" + n + "]");
+                            name = n;
+                        }
+                    }
+                    env.setAdditionalProperty(name, JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(replaceJS1Values(e.getValue())));
                 } catch (Throwable ee) {
                     env.setAdditionalProperty(e.getKey(), e.getValue());
                     ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "getJobArguments: could not convert value=" + e.getValue(), ee);
                 }
             }
+            if (env.getAdditionalProperties().size() == 0) {
+                env = null;
+            }
         }
         return env;
     }
 
-    private void setLogLevel(ExecutableJava ej) {
-        if (CONFIG.getJobConfig().getJitlLogLevel() != null) {
+    private void setLogLevel(ExecutableJava ej, ACommonJob job) {
+        String logLevel = null;
+
+        if (CONFIG.getJobConfig().getForcedJitlLogLevel() != null) {
+            logLevel = CONFIG.getJobConfig().getForcedJitlLogLevel();
+        } else if (job != null && job.getSettings() != null && !SOSString.isEmpty(job.getSettings().getLogLevel())) {
+            String lv = job.getSettings().getLogLevel().toLowerCase().trim();
+            if (lv.startsWith("debug")) {
+                logLevel = "debug";
+            } else {
+                logLevel = lv;
+            }
+        }
+
+        if (!SOSString.isEmpty(logLevel)) {
             Environment env = ej.getArguments();
             if (env == null) {
                 env = new Environment();
             }
-            env.setAdditionalProperty("log_level", JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(CONFIG.getJobConfig().getJitlLogLevel()
-                    .toUpperCase()));
+            env.setAdditionalProperty("log_level", JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(logLevel.toUpperCase()));
             ej.setArguments(env);
         }
     }
@@ -883,7 +929,7 @@ public class JS7Converter {
         }
     }
 
-    private ExecutableScript getExecutableScript(Job j, ACommonJob job, JS7Agent js7Agent, String language, String className, YADE yade) {
+    private ExecutableScript getExecutableScript(Job j, ACommonJob job, JS7Agent js7Agent, ShellJobHelper shellJob) {
         StringBuilder scriptHeader = new StringBuilder();
         StringBuilder scriptCommand = new StringBuilder();
         StringBuilder yadeCommand = new StringBuilder();
@@ -893,7 +939,7 @@ public class JS7Converter {
         boolean isUnix = js7Agent.getPlatform().equals(Platform.UNIX);
         if (isUnix) {
             commentBegin = "#";
-            if (language.equals("powershell")) {
+            if (shellJob.getLanguage().equals("powershell")) {
                 scriptHeader.append("#!/usr/bin/env pwsh");
                 scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
                 scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
@@ -901,35 +947,35 @@ public class JS7Converter {
                 scriptHeader.append("#!/bin/bash");
                 scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
             }
-            if (yade != null) {
-                yadeCommand.append("$").append(yade.getBin()).append(" -settings $SETTINGS -profile $PROFILE");
+            if (shellJob.getYADE() != null) {
+                yadeCommand.append("$").append(shellJob.getYADE().getBin()).append(" -settings $SETTINGS -profile $PROFILE");
             }
         } else {
             commentBegin = "REM";
-            if (language.equals("powershell")) {
+            if (shellJob.getLanguage().equals("powershell")) {
                 scriptHeader.append("@@findstr/v \"^@@f.*&\" \"%~f0\"|pwsh.exe -&goto:eof");
                 scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
                 scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
             }
-            if (yade != null) {
-                yadeCommand.append("%").append(yade.getBin()).append("% -settings %SETTINGS% -profile %PROFILE%");
+            if (shellJob.getYADE() != null) {
+                yadeCommand.append("%").append(shellJob.getYADE().getBin()).append("% -settings %SETTINGS% -profile %PROFILE%");
             }
         }
-        if (!language.equals("shell")) {// language always lower case
-            scriptHeader.append(commentBegin).append(" language=").append(language);
-            if (className != null) {
-                scriptHeader.append(",className=" + className);
+        if (!shellJob.getLanguage().equals("shell")) {// language always lower case
+            scriptHeader.append(commentBegin).append(" language=").append(shellJob.getLanguage());
+            if (shellJob.getClassName() != null) {
+                scriptHeader.append(",className=" + shellJob.getClassName());
             }
             scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
             if (isMock) {
-                if (yade != null) {
+                if (shellJob.getYADE() != null) {
                     scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
                     scriptHeader.append(commentBegin).append(" ").append(yadeCommand);
                     scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
                 }
             }
         }
-        if (yade == null) {
+        if (shellJob.getYADE() == null) {
             if (job.getScript().getInclude() != null) {
                 // TODO resolve include
                 scriptCommand.append(job.getScript().getInclude().getIncludeFile());
@@ -954,7 +1000,7 @@ public class JS7Converter {
         es.setScript(script.toString());
         es.setV1Compatible(CONFIG.getJobConfig().getForcedV1Compatible());
 
-        Environment args = getJobArguments(job);
+        Environment args = getJobArguments(job, null);
         if (args != null) {
             if (es.getV1Compatible() != null && es.getV1Compatible()) {
                 j.setDefaultArguments(args);// will be automatically set by JS7 as env var with the prefix SCHEDULER_PARAM_<arr name upper case>
@@ -1065,7 +1111,7 @@ public class JS7Converter {
     }
 
     private void setJobNotification(Job j, ACommonJob job) {
-        if (job.getSettings() != null) {
+        if (job.getSettings() != null && job.getSettings().hasMailSettings()) {
             List<JobNotificationType> types = new ArrayList<>();
             if (job.getSettings().isMailOnError()) {
                 types.add(JobNotificationType.ERROR);
@@ -1229,6 +1275,7 @@ public class JS7Converter {
                             } else {
                                 uniqueJobs.put(jobName, oj);
                             }
+
                             states.put(jcn.getState(), new JobChainStateHelper(jcn, jobName));
                         } catch (Throwable e) {
                             LOGGER.warn("[jobChain " + jobChain.getPath() + "/node=" + SOSString.toString(n) + "]" + e.getMessage());
@@ -1266,7 +1313,10 @@ public class JS7Converter {
         String agentName = getJobChainAgentName(jobChain, false);
         Jobs js = new Jobs();
         uniqueJobs.entrySet().forEach(e -> {
-            js.setAdditionalProperty(e.getKey(), getJob(result, e.getValue(), agentName));
+            Job job = getJob(result, e.getValue(), agentName);
+            if (job != null) {
+                js.setAdditionalProperty(e.getKey(), job);
+            }
         });
         w.setJobs(js);
 
@@ -1274,8 +1324,16 @@ public class JS7Converter {
         Map<String, List<Instruction>> workflowInstructions = new LinkedHashMap<>();
         String startState = getNodesStartState(states);
         Map<String, String> fileOrderSinkJobs = new HashMap<>();
+
+        if (LOGGER.isDebugEnabled()) {
+            states.entrySet().forEach(e -> {
+                LOGGER.debug(String.format("[convertJobChainWorkflow]state=%s,helper=%s", e.getKey(), SOSString.toString(e.getValue())));
+            });
+        }
+
         if (startState != null) {
-            in.addAll(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, startState, states, fileOrderSinkStates, fileOrderSinkJobs));
+            in.addAll(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, startState, states, fileOrderSinkStates, fileOrderSinkJobs,
+                    false));
         } else {
             ConverterReport.INSTANCE.addErrorRecord(jobChain.getPath(), "[jobChain " + jobChain.getName() + "]", "startState not found");
         }
@@ -1414,7 +1472,7 @@ public class JS7Converter {
 
     private List<Instruction> getNodesInstructions(Map<String, List<Instruction>> workflowInstructions, JobChain jobChain,
             Map<String, OrderJob> uniqueJobs, String startState, Map<String, JobChainStateHelper> states,
-            Map<String, JobChainNodeFileOrderSink> fileOrderSinkStates, Map<String, String> fileOrderSinkJobs) {
+            Map<String, JobChainNodeFileOrderSink> fileOrderSinkStates, Map<String, String> fileOrderSinkJobs, boolean isFork) {
         List<Instruction> result = new ArrayList<>();
 
         JobChainStateHelper h = states.get(startState);
@@ -1426,15 +1484,50 @@ public class JS7Converter {
                 return new ArrayList<>();
             }
 
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[getNodesInstructions]state=%s,isFork=%s,isJoinJob=%s", h.state, isFork, job.isJavaJITLJoinJob()));
+            }
+
+            if (isFork && job.isJavaJITLJoinJob()) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format("[getNodesInstructions][skip][state=%s]because isFork and isJoinJob", h.state));
+                }
+                h = null;
+                continue;
+            }
+
             List<Instruction> in = new ArrayList<>();
 
-            SOSParameterSubstitutor ps = new SOSParameterSubstitutor(true, "${", "}");
-            if (hasConfigOrderParams) {
-                jobChain.getConfig().getOrderParams().getParams().entrySet().forEach(e -> {
-                    ps.addKey(e.getKey(), e.getValue());
-                });
+            if (job.isJavaJITLSplitterJob()) {
+                ForkJoin forkJoin = new ForkJoin();
+                List<Branch> branches = new ArrayList<>();
+                int b = 1;
+
+                List<String> splitterStates = getSplitterStates(job, jobChain, h.state);
+                for (String splitterState : splitterStates) {
+                    JobChainStateHelper sh = states.get(splitterState);
+                    if (sh == null) {
+                        ConverterReport.INSTANCE.addWarningRecord(jobChain.getPath(), "Splitter Job(state=" + h.state + ")", "State " + splitterState
+                                + " not found");
+                    }
+                    BranchWorkflow bw = new BranchWorkflow(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, splitterState, states,
+                            fileOrderSinkStates, fileOrderSinkJobs, true), null);
+                    branches.add(new Branch("branch_" + b, bw));
+                    b++;
+                }
+                forkJoin.setBranches(branches);
+                in.add(forkJoin);
+            } else if (job.isJavaJITLJoinJob()) {
+
+            } else {
+                SOSParameterSubstitutor ps = new SOSParameterSubstitutor(true, "${", "}");
+                if (hasConfigOrderParams) {
+                    jobChain.getConfig().getOrderParams().getParams().entrySet().forEach(e -> {
+                        ps.addKey(e.getKey(), e.getValue());
+                    });
+                }
+                in.add(getNamedJobInstruction(job.getName(), h.state, hasConfigProcess ? jobChain.getConfig().getProcess().get(h.state) : null, ps));
             }
-            in.add(getNamedJobInstruction(job.getName(), h.state, hasConfigProcess ? jobChain.getConfig().getProcess().get(h.state) : null, ps));
 
             String onError = h.onError.toLowerCase();
             switch (onError) {
@@ -1442,9 +1535,11 @@ public class JS7Converter {
                 in = getRetryInstructions(job, in);
                 break;
             case "suspend":
-                in = getSuspendInstructions(job, in, h);
+                // nothing to do - is default JS7 behaviour
+                // in = getSuspendInstructions(job, in, h);
                 break;
             }
+
             workflowInstructions.put(h.state, in);
 
             boolean hasErrorStateJob = states.get(h.errorState) != null && states.get(h.errorState).jobName != null;
@@ -1455,7 +1550,7 @@ public class JS7Converter {
                 boolean add = false;
                 if (hasErrorStateJob) {
                     tryCatch.setCatch(new Instructions(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, h.errorState, states,
-                            fileOrderSinkStates, fileOrderSinkJobs)));
+                            fileOrderSinkStates, fileOrderSinkJobs, false)));
                     add = true;
                 } else {
                     NamedJob nj = getFileOrderSinkNamedJob(fileOrderSinkStates.get(h.errorState), h.errorState, fileOrderSinkJobs);
@@ -1500,6 +1595,103 @@ public class JS7Converter {
         return result;
     }
 
+    private List<String> getSplitterStates(OrderJob js1Job, JobChain js1JobChain, String state) {
+        String paramName = "state_names";
+
+        String splitterStates = null;
+        // CONFIG
+        if (js1JobChain.getConfig() != null) {
+            if (js1JobChain.getConfig().hasProcess()) {
+                Params p = js1JobChain.getConfig().getProcess().get(state);
+                if (p != null && p.getParams() != null) {
+                    String s = p.getParams().get(paramName);
+                    if (!SOSString.isEmpty(s)) {
+                        splitterStates = s;
+                    }
+                }
+            }
+            if (SOSString.isEmpty(splitterStates) && js1JobChain.getConfig().getOrderParams() != null && js1JobChain.getConfig().getOrderParams()
+                    .getParams() != null) {
+                String s = js1JobChain.getConfig().getOrderParams().getParams().get(paramName);
+                if (!SOSString.isEmpty(s)) {
+                    splitterStates = s;
+                }
+            }
+        }
+
+        // ORDER
+        // TODO multiple files ....
+        if (SOSString.isEmpty(splitterStates) && js1JobChain.getOrders() != null && js1JobChain.getOrders().size() > 0) {
+            for (JobChainOrder o : js1JobChain.getOrders()) {
+                if (o.getParams() != null) {
+                    if (o.getParams().getParams() != null) {
+                        String s = o.getParams().getParams().get(paramName);
+                        if (!SOSString.isEmpty(s)) {
+                            splitterStates = s;
+                        }
+                    }
+
+                    if (SOSString.isEmpty(splitterStates) && o.getParams().getIncludes() != null) {
+                        for (Include in : o.getParams().getIncludes()) {
+                            Params p = include2params(o.getPath(), in);
+                            if (p != null && p.hasParams()) {
+                                String s = p.getParams().get(paramName);
+                                if (!SOSString.isEmpty(s)) {
+                                    splitterStates = s;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // JOB
+        if (SOSString.isEmpty(splitterStates) && js1Job.getParams() != null) {
+            if (js1Job.getParams().getParams() != null) {
+                splitterStates = js1Job.getParams().getParams().get(paramName);
+            }
+            if (SOSString.isEmpty(splitterStates) && js1Job.getParams().getIncludes() != null) {
+                for (Include in : js1Job.getParams().getIncludes()) {
+                    Params p = include2params(js1Job.getPath(), in);
+                    if (p != null && p.hasParams()) {
+                        String s = p.getParams().get(paramName);
+                        if (!SOSString.isEmpty(s)) {
+                            splitterStates = s;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (SOSString.isEmpty(splitterStates)) {
+            ConverterReport.INSTANCE.addWarningRecord(js1JobChain.getPath(), "Splitter Job(state=" + state + ")", "Parameter " + paramName
+                    + " not found or is empty");
+
+            return new ArrayList<>();
+        }
+        String delimiter = splitterStates.indexOf(";") > -1 ? ";" : ",";
+        return Stream.of(splitterStates.split(delimiter)).map(e -> e.trim()).collect(Collectors.toList());
+    }
+
+    private Params include2params(Path currentPath, Include i) {
+        Path path = null;
+        try {
+            path = findIncludeFile(pr, currentPath, i.getIncludeFile());
+        } catch (Throwable e) {
+            ConverterReport.INSTANCE.addErrorRecord(currentPath, "[include2params][include=" + i.getNodeText() + "]" + e.toString(), e);
+        }
+        if (path != null) {
+            try {
+                return new Params(SOSXML.newXPath(), JS7ConverterHelper.getDocumentRoot(path));
+            } catch (Exception e) {
+                ConverterReport.INSTANCE.addErrorRecord(currentPath, "[include2params][include=" + i.getNodeText() + "]" + e.toString(), e);
+            }
+
+        }
+        return null;
+    }
+
     private NamedJob getFileOrderSinkNamedJob(JobChainNodeFileOrderSink fos, String label, Map<String, String> fileOrderSinkJobs) {
         if (SOSString.isEmpty(fos.getMoveTo()) && fos.getRemove() == null) {
             return null;
@@ -1533,7 +1725,7 @@ public class JS7Converter {
             ex.setClassName("com.sos.jitl.jobs.file.RemoveFileJob");
             break;
         }
-        setLogLevel(ex);
+        setLogLevel(ex, null);
         setMockLevel(ex);
         job.setExecutable(ex);
         return job;
