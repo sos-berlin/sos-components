@@ -1288,8 +1288,10 @@ public class JS7Converter {
         if (agentNameWithFileWatching == null && CONFIG.getAgentConfig().getDefaultAgent() != null) {
             agentNameWithFileWatching = CONFIG.getAgentConfig().getDefaultAgent().getName();
         }
-        for (Map.Entry<String, String> e : fileOrderSinkJobs.entrySet()) {
-            w.getJobs().getAdditionalProperties().put(e.getKey(), getFileOrderSinkJob(e.getKey(), agentNameWithFileWatching));
+        if (w.getJobs() != null) {
+            for (Map.Entry<String, String> e : fileOrderSinkJobs.entrySet()) {
+                w.getJobs().getAdditionalProperties().put(e.getKey(), getFileOrderSinkJob(e.getKey(), agentNameWithFileWatching));
+            }
         }
 
         w.setInstructions(in);
