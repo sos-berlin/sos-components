@@ -900,21 +900,22 @@ public abstract class PublishUtils {
         Set<UpdateableWorkflowJobAgentName> update = new HashSet<UpdateableWorkflowJobAgentName>();
         if (ConfigurationType.WORKFLOW.intValue() == type) {
             Workflow workflow = (Workflow) deployObject;
-            workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
-                Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                String agentNameOrAlias = job.getAgentPath();
-
-                Optional<Map<String, Set<String>>> opt = agentsWithAliasesByControllerId.entrySet().stream()
-                    .filter(item -> controllerId.equals(item.getKey()))
-                    .map(item -> item.getValue()).findFirst();
-                if (opt.isPresent()) {
-                    Optional<String> agentId = opt.get().entrySet().stream().filter(item -> item.getValue().contains(agentNameOrAlias))
-                            .filter(Objects::nonNull).map(item -> item.getKey()).findFirst();
-                    if (agentId.isPresent()) {
-                        update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentPath(), agentId.get(), controllerId));
+            if (workflow.getJobs() != null) {
+                workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
+                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                    String agentNameOrAlias = job.getAgentPath();
+                    Optional<Map<String, Set<String>>> opt = agentsWithAliasesByControllerId.entrySet().stream()
+                        .filter(item -> controllerId.equals(item.getKey()))
+                        .map(item -> item.getValue()).findFirst();
+                    if (opt.isPresent()) {
+                        Optional<String> agentId = opt.get().entrySet().stream().filter(item -> item.getValue().contains(agentNameOrAlias))
+                                .filter(Objects::nonNull).map(item -> item.getKey()).findFirst();
+                        if (agentId.isPresent()) {
+                            update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentPath(), agentId.get(), controllerId));
+                        }
                     }
-                }
-            });
+                });
+            }
         }
         return update;
     }
@@ -929,12 +930,14 @@ public abstract class PublishUtils {
         Set<UpdateableWorkflowJobAgentName> update = new HashSet<UpdateableWorkflowJobAgentName>();
         if (ConfigurationType.WORKFLOW.intValue() == type) {
             Workflow workflow = (Workflow) deployObject;
-            workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
-                Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                String agentNameOrAlias = job.getAgentPath();
-                String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId, path, jobname);
-                update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentPath(), agentId, controllerId));
-            });
+            if (workflow.getJobs() != null) {
+                workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
+                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                    String agentNameOrAlias = job.getAgentPath();
+                    String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId, path, jobname);
+                    update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentPath(), agentId, controllerId));
+                });
+            }
         }
         return update;
     }
@@ -1456,12 +1459,14 @@ public abstract class PublishUtils {
         Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream()
                 .filter(item -> item.getWorkflowPath().equals(workflow.getPath())).collect(Collectors.toSet());
         if (!filteredUpdateables.isEmpty()) {
-            workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
-                Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                job.setAgentPath(checkAgentIdPresent(filteredUpdateables.stream()
-                        .filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item.getControllerId()))
-                        .map(UpdateableWorkflowJobAgentName::getAgentId).findAny(), controllerId));
-            });
+            if (workflow.getJobs() != null) {
+                workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
+                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                    job.setAgentPath(checkAgentIdPresent(filteredUpdateables.stream()
+                            .filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item.getControllerId()))
+                            .map(UpdateableWorkflowJobAgentName::getAgentId).findAny(), controllerId));
+                });
+            }
         }
     }
 
