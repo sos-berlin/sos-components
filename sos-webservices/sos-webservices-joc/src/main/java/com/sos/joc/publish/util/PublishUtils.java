@@ -1457,7 +1457,7 @@ public abstract class PublishUtils {
     public static void replaceAgentNameWithAgentId(Workflow workflow, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId)
             throws JsonParseException, JsonMappingException, IOException {
         Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream()
-                .filter(item -> item.getWorkflowPath().equals(workflow.getPath())).collect(Collectors.toSet());
+                .filter(item -> JocInventory.pathToName(item.getWorkflowPath()).equals(JocInventory.pathToName(workflow.getPath()))).collect(Collectors.toSet());
         if (!filteredUpdateables.isEmpty()) {
             if (workflow.getJobs() != null) {
                 workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
@@ -1472,8 +1472,8 @@ public abstract class PublishUtils {
 
     public static void replaceAgentNameWithAgentId(FileOrderSource fileOrderSource, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
             String controllerId) throws JsonParseException, JsonMappingException, IOException {
-        Set<UpdateableFileOrderSourceAgentName> filteredUpdateables = updateableFOSAgentNames.stream().filter(item -> item.getFileOrderSourceId()
-                .equals(fileOrderSource.getPath())).collect(Collectors.toSet());
+        Set<UpdateableFileOrderSourceAgentName> filteredUpdateables = updateableFOSAgentNames.stream().filter(item -> JocInventory.pathToName(item.getFileOrderSourceId())
+                .equals(JocInventory.pathToName(fileOrderSource.getPath()))).collect(Collectors.toSet());
         if (!filteredUpdateables.isEmpty()) {
             fileOrderSource.setAgentPath(checkAgentIdPresent(filteredUpdateables.stream().filter(item -> controllerId.equals(item.getControllerId()))
                     .map(UpdateableFileOrderSourceAgentName::getAgentId).findAny(), controllerId));
