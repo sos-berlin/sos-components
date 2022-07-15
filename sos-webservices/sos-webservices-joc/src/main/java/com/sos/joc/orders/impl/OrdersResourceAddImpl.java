@@ -60,7 +60,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
     public JOCDefaultResponse postOrdersAdd(String accessToken, byte[] filterBytes) {
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, AddOrders.class);
+            JsonValidator.validate(filterBytes, AddOrders.class);
             AddOrders addOrders = Globals.objectMapper.readValue(filterBytes, AddOrders.class);
             String controllerId = addOrders.getControllerId();
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders()

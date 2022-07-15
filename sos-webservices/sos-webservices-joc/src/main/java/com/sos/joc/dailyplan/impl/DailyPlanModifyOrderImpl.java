@@ -104,7 +104,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     public JOCDefaultResponse postModifyOrder(String accessToken, byte[] filterBytes) {
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, DailyPlanModifyOrder.class);
+            JsonValidator.validate(filterBytes, DailyPlanModifyOrder.class);
             DailyPlanModifyOrder in = Globals.objectMapper.readValue(filterBytes, DailyPlanModifyOrder.class);
             String controllerId = in.getControllerId();
             
