@@ -172,7 +172,7 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
 
     private ModifyWorkflowPositions initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
         initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
-        JsonValidator.validateFailFast(filterBytes, ModifyWorkflowPositions.class);
+        JsonValidator.validate(filterBytes, ModifyWorkflowPositions.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyWorkflowPositions.class);
     }
 
