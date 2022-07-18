@@ -42,6 +42,8 @@ public class JS7RunTimeConverter {
             return null;
         }
 
+        boolean hasSingleStart = js1RunTime.getSingleStart() != null;
+        boolean hasRepeat = js1RunTime.getRepeat() != null && js1RunTime.getBegin() != null && js1RunTime.getEnd() != null;
         boolean hasPeriods = js1RunTime.getPeriods() != null;
         boolean hasAts = js1RunTime.getAts() != null;
         boolean hasDates = js1RunTime.getDates() != null;
@@ -50,12 +52,20 @@ public class JS7RunTimeConverter {
         boolean hasUltimos = js1RunTime.getUltimos() != null;
         boolean hasHolidays = js1RunTime.getHolidays() != null;
 
-        LOGGER.info(String.format("hasPeriods=%s,hasAts=%s,hasDates=%s, hasWeekDays=%s,hasMonthDays=%s,hasUltimos=%s,hasHolidays=%s", hasPeriods,
-                hasAts, hasDates, hasWeekDays, hasMonthDays, hasUltimos, hasHolidays));
+        LOGGER.info(String.format(
+                "hasRepeat=%s,hasSingleStart=%s,hasPeriods=%s,hasAts=%s,hasDates=%s, hasWeekDays=%s,hasMonthDays=%s,hasUltimos=%s,hasHolidays=%s",
+                hasRepeat, hasSingleStart, hasPeriods, hasAts, hasDates, hasWeekDays, hasMonthDays, hasUltimos, hasHolidays));
 
         List<AssignedCalendars> working = new ArrayList<>();
         List<AssignedNonWorkingDayCalendars> nonWorking = new ArrayList<>();
 
+        WhenHolidayType whenHolidayType = getWhenHolidayType(js1RunTime.getWhenHoliday());
+        if (hasSingleStart) {
+            convertSingleStart(working, js1RunTime.getSingleStart(), timeZone, whenHolidayType);
+        }
+        if (hasRepeat) {
+            convertRepeat(working, js1RunTime.getRepeat(), js1RunTime.getBegin(), js1RunTime.getEnd(), timeZone, whenHolidayType);
+        }
         if (hasPeriods) {
             convertPeriods(working, js1RunTime.getPeriods(), timeZone);
         }
@@ -98,6 +108,47 @@ public class JS7RunTimeConverter {
         }
         return schedule;
 
+    }
+
+    private static void convertSingleStart(List<AssignedCalendars> working, String singleStart, String timeZone, WhenHolidayType whenHolidayType) {
+        if (singleStart == null) {
+            return;
+        }
+
+        AssignedCalendars c = createWorkingCalendar(timeZone);
+        WeekDays wds = new WeekDays();
+        wds.setDays(JS7ConverterHelper.allWeekDays());
+        c.getIncludes().setWeekdays(Collections.singletonList(wds));
+
+        List<Period> periods = new ArrayList<>();
+        Period period = new Period();
+        period.setWhenHoliday(whenHolidayType);
+        period.setSingleStart(normalizeTime(singleStart));
+        periods.add(period);
+        c.setPeriods(periods);
+        working.add(c);
+    }
+
+    private static void convertRepeat(List<AssignedCalendars> working, String repeat, String begin, String end, String timeZone,
+            WhenHolidayType whenHolidayType) {
+        if (repeat == null || begin == null || end == null) {
+            return;
+        }
+
+        AssignedCalendars c = createWorkingCalendar(timeZone);
+        WeekDays wds = new WeekDays();
+        wds.setDays(JS7ConverterHelper.allWeekDays());
+        c.getIncludes().setWeekdays(Collections.singletonList(wds));
+
+        List<Period> periods = new ArrayList<>();
+        Period period = new Period();
+        period.setWhenHoliday(whenHolidayType);
+        period.setRepeat(normalizeTime(repeat));
+        period.setBegin(normalizeTime(begin));
+        period.setEnd(normalizeTime(end));
+        periods.add(period);
+        c.setPeriods(periods);
+        working.add(c);
     }
 
     private static void convertPeriods(List<AssignedCalendars> working, List<com.sos.js7.converter.js1.common.runtime.Period> runTimeDays,

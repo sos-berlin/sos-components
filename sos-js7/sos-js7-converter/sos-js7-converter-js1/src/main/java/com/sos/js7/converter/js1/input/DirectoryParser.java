@@ -64,19 +64,6 @@ public class DirectoryParser {
         } else {
             LOGGER.info(String.format("[%s][not found]%s", method, input));
         }
-
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL FOLDERS", r.getCountFolders());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB files", r.getCountJobs() + ", STANDALONE=" + r.getCountStandaloneJobs() + ", ORDER=" + r
-                .getCountOrderJobs());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN files", r.getCountJobChains());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN ORDER files", r.getCountOrders());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN CONFIG files", r.getCountJobChainConfigs());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL LOCK files", r.getCountLocks());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL PROCESS CLASS files", r.getCountProcessClasses());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL SCHEDULE files", r.getCountSchedules());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL MONITOR files", r.getCountMonitors());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL ANOTHER files", r.getCountFiles());
-
         return r;
     }
 

@@ -68,15 +68,16 @@ public abstract class ACommonJob {
     private final Type type;
     private Path path;
 
-    private Settings settings;
-    private Description description;
-    private List<LockUse> lockUses;
-    private Environment environment;
-    private Params params;
-    private Script script;
     private List<Monitor> monitors = new ArrayList<>();
     private List<StartWhenDirectoryChanged> startWhenDirectoryChanged = new ArrayList<>();
     private List<DelayAfterError> delayAfterError = new ArrayList<>(); // delayOrderAfterSetback is declared in the OrderJob
+    private List<LockUse> lockUses = new ArrayList<>();
+
+    private Settings settings;
+    private Description description;
+    private Environment environment;
+    private Params params;
+    private Script script;
     private RunTime runTime;
     private ProcessClass processClass;
 

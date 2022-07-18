@@ -116,7 +116,7 @@ public class RunTime {
     }
 
     public boolean isConvertableWithoutCalendars() {
-        return !isEmpty() && !hasCalendars();
+        return !isEmpty() && !hasCalendars() && (singleStart != null || (repeat != null && begin != null && end != null));
     }
 
     private Schedule convertSchedule(DirectoryParserResult pr, SOSXMLXPath xpath, Node node, Map<String, String> m, Path currentPath)

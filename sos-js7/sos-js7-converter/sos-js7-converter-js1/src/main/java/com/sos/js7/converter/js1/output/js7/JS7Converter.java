@@ -1,6 +1,8 @@
 package com.sos.js7.converter.js1.output.js7;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -19,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.controller.model.workflow.Workflow;
@@ -224,6 +227,7 @@ public class JS7Converter {
         c.addJobResources(result);
         c.addSchedulesBasedOnJS1Schedule(result);
 
+        c.parserSummaryReport();
         c.analyzerReport();
 
         return result;
@@ -263,11 +267,29 @@ public class JS7Converter {
         });
     }
 
+    private void parserSummaryReport() {
+        long agentsStandalone = agents.entrySet().stream().filter(a -> a.getValue().standalone).count();
+
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL FOLDERS", pr.getCountFolders());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL AGENTS", agents.size() + ", STANDALONE=" + agentsStandalone + ", CLUSTER=" + (agents.size()
+                - agentsStandalone));
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB files", pr.getCountJobs() + ", STANDALONE=" + pr.getCountStandaloneJobs() + ", ORDER=" + pr
+                .getCountOrderJobs());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN files", pr.getCountJobChains());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN ORDER files", pr.getCountOrders());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN CONFIG files", pr.getCountJobChainConfigs());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL LOCK files", pr.getCountLocks());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL PROCESS CLASS files", pr.getCountProcessClasses());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL SCHEDULE files", pr.getCountSchedules());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL MONITOR files", pr.getCountMonitors());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL ANOTHER files", pr.getCountFiles());
+    }
+
     private void analyzerReport() {
+
         try {
             if (agents.size() > 0) {
                 ParserReport.INSTANCE.addAnalyzerRecord("AGENTS", "START");
-
                 agents.entrySet().stream().sorted(Map.Entry.<Path, AgentHelper> comparingByKey()).forEach(e -> {
                     ParserReport.INSTANCE.addAnalyzerRecord(e.getKey(), e.getValue().name, "standalone=" + e.getValue().standalone);
                 });
@@ -398,7 +420,7 @@ public class JS7Converter {
         w.setJobs(js);
 
         List<Instruction> in = new ArrayList<>();
-        in.add(getNamedJobInstruction(js1Job.getName(), js1Job.getName(), null, null));
+        in.add(getNamedJobInstruction(js1Job, js1Job.getName(), null, null));
         in = getRetryInstructions(js1Job, in);
         in = getCyclicWorkflowInstructions(js1Job, in);
         w.setInstructions(in);
@@ -406,7 +428,7 @@ public class JS7Converter {
         Path workflowPath = getWorkflowPath(result, js1Job, counter);
         String workflowName = getWorkflowName(workflowPath);
 
-        RunTimeHelper rth = convertRunTime("STANDALONE", js1Job.getRunTime(), workflowPath, workflowName, "");
+        RunTimeHelper rth = convertRunTimeForSchedule("STANDALONE", js1Job.getRunTime(), workflowPath, workflowName, "");
         if (rth != null) {
             if (rth.schedule != null) {
                 result.add(rth.path, rth.schedule);
@@ -452,16 +474,19 @@ public class JS7Converter {
         }
     }
 
-    private RunTimeHelper convertRunTime(String range, RunTime runTime, Path workflowPath, String workflowName, String additionalName) {
+    private RunTimeHelper convertRunTimeForSchedule(String range, RunTime runTime, Path workflowPath, String workflowName, String additionalName) {
         if (runTime != null && !runTime.isEmpty()) {
-            if (runTime.hasCalendars() || runTime.getSchedule() != null) {
+            if (runTime.getCalendars() != null || runTime.getSchedule() != null) {
                 JS1Calendars calendars = runTime.getCalendars();
                 if (calendars == null) {
                     calendars = runTime.getSchedule().getRunTime().getCalendars();
                 }
                 if (calendars == null || calendars.getCalendars() == null) {
-                    ConverterReport.INSTANCE.addWarningRecord(workflowPath, "[" + range + "][not empty run time][with calendars or schedule]"
-                            + runTime.getNodeText(), "calendars are null");
+                    // ConverterReport.INSTANCE.addWarningRecord(runTime.getCurrentPath(), "[" + range
+                    // + "][skip convert run-time][with calendars or schedule]" + runTime.getNodeText(), "calendars are null");
+                } else if (calendars.getCalendars().size() == 0) {
+                    ConverterReport.INSTANCE.addAnalyzerRecord(runTime.getCurrentPath(), "[" + range
+                            + "][skip convert run-time][with calendars or schedule]" + runTime.getNodeText(), "calendars is empty");
                 } else {
                     List<AssignedCalendars> working = new ArrayList<>();
                     List<AssignedNonWorkingDayCalendars> nonWorking = new ArrayList<>();
@@ -477,8 +502,8 @@ public class JS7Converter {
 
                         Calendar cal = JS7CalendarConverter.convert(CONFIG, js1);
                         if (cal == null) {
-                            ConverterReport.INSTANCE.addWarningRecord(workflowPath, "[" + range + "][run time][calendars is null]" + runTime
-                                    .getNodeText(), "calendars is null");
+                            ConverterReport.INSTANCE.addWarningRecord(runTime.getCurrentPath(), "[" + range
+                                    + "][skip convert run-time][calendars is null]" + runTime.getNodeText(), "calendars is null");
                             continue;
                         }
 
@@ -514,11 +539,11 @@ public class JS7Converter {
                 }
 
             } else {
-                AdmissionTimeScheme ats = runTimeToAdmissionTime(runTime);
-                if (ats == null) {
-                    ConverterReport.INSTANCE.addWarningRecord(workflowPath, "[" + range + "][not empty run time][without calendars or schedule]"
-                            + runTime.getNodeText(), "not implemented yet");
-                }
+                // AdmissionTimeScheme ats = runTimeToAdmissionTime(runTime);
+                // if (ats == null) {
+                // ConverterReport.INSTANCE.addWarningRecord(runTime.getCurrentPath(), "[" + range
+                // + "][skip convert run-time][without calendars or schedule]" + runTime.getNodeText(), "not implemented yet");
+                // }
             }
         }
         return null;
@@ -734,24 +759,115 @@ public class JS7Converter {
         return j;
     }
 
-    private NamedJob getNamedJobInstruction(String jobName, String jobLabel, Params params, SOSParameterSubstitutor ps) {
-        NamedJob nj = new NamedJob(jobName);
+    private NamedJob getNamedJobInstruction(ACommonJob js1Job, String jobLabel, Params jobChainConfigProcessParams, SOSParameterSubstitutor ps) {
+        NamedJob nj = new NamedJob(js1Job.getName());
         nj.setLabel(jobLabel);
-        if (params != null && params.hasParams()) {
+        if (jobChainConfigProcessParams != null && jobChainConfigProcessParams.hasParams()) {
             if (ps != null) {
-                params.getParams().entrySet().forEach(e -> {
+                jobChainConfigProcessParams.getParams().entrySet().forEach(e -> {
                     ps.addKey(e.getKey(), e.getValue());
                 });
             }
 
             Environment env = new Environment();
-            params.getParams().entrySet().forEach(e -> {
-                String replaced = replaceJS1Values(e.getValue());
-                String val = ps == null ? replaced : ps.replace(replaced);
-                env.setAdditionalProperty(e.getKey(), JS7ConverterHelper.quoteJS7StringValueWithSingleQuotes(val));
-            });
 
-            nj.setDefaultArguments(env);
+            // TODO see getJobArguments handling arguments
+            JS7JobHelper jh = new JS7JobHelper(js1Job);
+            JavaJITLJobHelper jitlJob = jh.getJavaJITLJob();
+            ShellJobHelper shellJob = jh.getShellJob();
+
+            Map<String, String> dynamic = null;
+            if (jitlJob != null) {
+                // Add Arguments
+                for (Map.Entry<String, String> e : jitlJob.getParams().getToAdd().entrySet()) {
+                    env.setAdditionalProperty(e.getKey(), JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(replaceJS1Values(e.getValue())));
+                }
+
+                // Prepare Dynamic Argument names to use
+                if (jitlJob.getParams().getMappingDynamic() != null) {
+                    String d = js1Job.getParams().getParams().get(jitlJob.getParams().getMappingDynamic().getParamName());
+                    if (d != null) {
+                        dynamic = jitlJob.getParams().getMappingDynamic().replace(d);
+                    }
+                }
+            }
+
+            for (Map.Entry<String, String> e : jobChainConfigProcessParams.getParams().entrySet()) {
+                String name = e.getKey();
+                String value = e.getValue();
+
+                if (shellJob != null && shellJob.getYADE() != null) {
+                    // Remove unused Arguments
+                    if (shellJob.getYADE().getParams().getToRemove().contains(name)) {
+                        ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Job " + nj.getJobName() + ",Label=" + nj.getLabel(), "Param["
+                                + name + "=" + value + "]" + "not converted because not used in JS7");
+                        continue;
+                    }
+                }
+                if (jitlJob != null) {
+                    // Remove unused Arguments
+                    if (jitlJob.getParams().getToRemove().contains(name)) {
+                        ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Job " + nj.getJobName() + ",Label=" + nj.getLabel(), "Param["
+                                + name + "=" + value + "]" + "not converted because not used in JS7");
+                        continue;
+                    }
+
+                    // Map to new Argument name
+                    String n = jitlJob.getParams().getMapping().get(name);
+                    if (n != null) {
+                        ConverterReport.INSTANCE.addAnalyzerRecord(js1Job.getPath(), "Job " + nj.getJobName() + ",Label=" + nj.getLabel(), "Param["
+                                + name + "=" + value + "]" + "mapped to JS7 Argument[" + n + "=" + value + "]");
+                        name = n;
+                    }
+
+                    // Map to new Argument name and new value only when Parameter value is true
+                    if (n == null) {
+                        n = jitlJob.getParams().getMappingWhenTrue().get(name);
+                        if (n != null) {
+                            if (JS7ConverterHelper.booleanValue(value, false)) {
+                                String[] arr = n.split("=");
+
+                                ConverterReport.INSTANCE.addAnalyzerRecord(js1Job.getPath(), "Job " + nj.getJobName() + ",Label=" + nj.getLabel(),
+                                        "Param[" + name + "=" + value + "]" + "mapped to JS7 Argument[" + arr[0] + "=" + arr[1] + "]");
+
+                                name = arr[0];
+                                value = arr[1];
+                            } else {
+                                ConverterReport.INSTANCE.addAnalyzerRecord(js1Job.getPath(), "Job " + nj.getJobName() + ",Label=" + nj.getLabel(),
+                                        "Param[" + name + "=" + value + "]" + "not mapped to JS7 Argument because has FALSE value");
+                            }
+                        }
+                    }
+
+                    // Convert JS1 boolean values(0,1, yes ...) to JS7 boolean
+                    if (n == null) {
+                        n = jitlJob.getParams().getMappingBoolean().get(name);
+                        if (n != null) {
+                            name = n;
+                            value = String.valueOf(JS7ConverterHelper.booleanValue(value, false));
+                        }
+                    }
+
+                    // Dynamic Arguments
+                    if (n == null && dynamic != null) {
+                        n = dynamic.get(name);
+                        if (n != null) {
+                            ConverterReport.INSTANCE.addAnalyzerRecord(js1Job.getPath(), "Job " + nj.getJobName() + ",Label=" + nj.getLabel(),
+                                    "Param[" + name + "=" + value + "]" + "mapped to JS7 Argument[" + n + "=" + value + "]");
+                            name = n;
+                        }
+                    }
+
+                }
+
+                String replaced = replaceJS1Values(value);
+                String val = ps == null ? replaced : ps.replace(replaced);
+                env.setAdditionalProperty(name, JS7ConverterHelper.quoteJS7StringValueWithSingleQuotes(val));
+            }
+
+            if (env.getAdditionalProperties().size() > 0) {
+                nj.setDefaultArguments(env);
+            }
         }
         return nj;
     }
@@ -838,47 +954,111 @@ public class JS7Converter {
     }
 
     private void setExecutable(Job j, ACommonJob job, JS7JobHelper jh, JS7Agent js7Agent) {
-        j.setExecutable(jh.getJavaJITLJob() == null ? getExecutableScript(j, job, js7Agent, jh.getShellJob()) : getInternalExecutable(j, job, jh
-                .getJavaJITLJob()));
+        j.setExecutable(jh.getJavaJITLJob() == null ? getExecutableScript(j, job, js7Agent, jh) : getInternalExecutable(j, job, jh));
     }
 
-    private ExecutableJava getInternalExecutable(Job j, ACommonJob job, JavaJITLJobHelper jitlJob) {
+    private ExecutableJava getInternalExecutable(Job j, ACommonJob job, JS7JobHelper jh) {
         ExecutableJava ej = new ExecutableJava();
-        ej.setClassName(jitlJob.getNewJavaClass());
-        ej.setArguments(getJobArguments(job, jitlJob));
+        ej.setClassName(jh.getJavaJITLJob().getNewJavaClass());
+        ej.setArguments(getJobArguments(job, jh));
 
         setLogLevel(ej, job);
         setMockLevel(ej);
         return ej;
     }
 
-    private Environment getJobArguments(ACommonJob job, JavaJITLJobHelper jitlJob) {
+    private Environment getJobArguments(ACommonJob job, JS7JobHelper jh) {
         Environment env = null;
         if (job.getParams() != null && job.getParams().hasParams()) {
             // ARGUMENTS
             env = new Environment();
+
+            JavaJITLJobHelper jitlJob = jh.getJavaJITLJob();
+            ShellJobHelper shellJob = jh.getShellJob();
+            Map<String, String> dynamic = null;
             if (jitlJob != null) {
+                // Add Arguments
                 for (Map.Entry<String, String> e : jitlJob.getParams().getToAdd().entrySet()) {
                     env.setAdditionalProperty(e.getKey(), JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(replaceJS1Values(e.getValue())));
+                }
+
+                // Prepare Dynamic Argument names to use
+                if (jitlJob.getParams().getMappingDynamic() != null) {
+                    String d = job.getParams().getParams().get(jitlJob.getParams().getMappingDynamic().getParamName());
+                    if (d != null) {
+                        dynamic = jitlJob.getParams().getMappingDynamic().replace(d);
+                    }
                 }
             }
             for (Map.Entry<String, String> e : job.getParams().getParams().entrySet()) {
                 try {
                     String name = e.getKey();
-                    if (jitlJob != null) {
-                        if (jitlJob.getParams().getToRemove().contains(name)) {
-                            ConverterReport.INSTANCE.addWarningRecord(job.getPath(), "Job " + job.getName(), "Param[" + name + "=" + e.getValue()
-                                    + "]" + " not converted because not used in JS7");
+                    String value = e.getValue();
+
+                    if (shellJob != null && shellJob.getYADE() != null) {
+                        // Remove unused Arguments
+                        if (shellJob.getYADE().getParams().getToRemove().contains(name)) {
+                            ConverterReport.INSTANCE.addWarningRecord(job.getPath(), "Job " + job.getName(), "Param[" + name + "=" + value + "]"
+                                    + "not converted because not used in JS7");
                             continue;
                         }
+                    }
+
+                    if (jitlJob != null) {
+                        // Remove unused Arguments
+                        if (jitlJob.getParams().getToRemove().contains(name)) {
+                            ConverterReport.INSTANCE.addWarningRecord(job.getPath(), "Job " + job.getName(), "Param[" + name + "=" + value + "]"
+                                    + "not converted because not used in JS7");
+                            continue;
+                        }
+
+                        // Map to new Argument name
                         String n = jitlJob.getParams().getMapping().get(name);
                         if (n != null) {
-                            ConverterReport.INSTANCE.addAnalyzerRecord(job.getPath(), "Job " + job.getName(), "Param[" + name + "=" + e.getValue()
-                                    + "]" + " mapped to JS7 Argument[" + n + "]");
+                            ConverterReport.INSTANCE.addAnalyzerRecord(job.getPath(), "Job " + job.getName(), "Param[" + name + "=" + value + "]"
+                                    + "mapped to JS7 Argument[" + n + "=" + value + "]");
                             name = n;
                         }
+
+                        // Map to new Argument name and new value only when Parameter value is true
+                        if (n == null) {
+                            n = jitlJob.getParams().getMappingWhenTrue().get(name);
+                            if (n != null) {
+                                if (JS7ConverterHelper.booleanValue(value, false)) {
+                                    String[] arr = n.split("=");
+
+                                    ConverterReport.INSTANCE.addAnalyzerRecord(job.getPath(), "Job " + job.getName(), "Param[" + name + "=" + value
+                                            + "]" + "mapped to JS7 Argument[" + arr[0] + "=" + arr[1] + "]");
+
+                                    name = arr[0];
+                                    value = arr[1];
+                                } else {
+                                    ConverterReport.INSTANCE.addAnalyzerRecord(job.getPath(), "Job " + job.getName(), "Param[" + name + "=" + value
+                                            + "]" + "not mapped to JS7 Argument because has FALSE value");
+                                }
+                            }
+                        }
+
+                        // Convert JS1 boolean values(0,1, yes ...) to JS7 boolean
+                        if (n == null) {
+                            n = jitlJob.getParams().getMappingBoolean().get(name);
+                            if (n != null) {
+                                name = n;
+                                value = String.valueOf(JS7ConverterHelper.booleanValue(value, false));
+                            }
+                        }
+
+                        // Dynamic Arguments
+                        if (n == null && dynamic != null) {
+                            n = dynamic.get(name);
+                            if (n != null) {
+                                ConverterReport.INSTANCE.addAnalyzerRecord(job.getPath(), "Job " + job.getName(), "Param[" + name + "=" + value + "]"
+                                        + "mapped to JS7 Argument[" + n + "=" + value + "]");
+                                name = n;
+                            }
+                        }
                     }
-                    env.setAdditionalProperty(name, JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(replaceJS1Values(e.getValue())));
+                    env.setAdditionalProperty(name, JS7ConverterHelper.quoteJS7StringValueWithDoubleQuotes(replaceJS1Values(value)));
                 } catch (Throwable ee) {
                     env.setAdditionalProperty(e.getKey(), e.getValue());
                     ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "getJobArguments: could not convert value=" + e.getValue(), ee);
@@ -929,14 +1109,16 @@ public class JS7Converter {
         }
     }
 
-    private ExecutableScript getExecutableScript(Job j, ACommonJob job, JS7Agent js7Agent, ShellJobHelper shellJob) {
+    private ExecutableScript getExecutableScript(Job j, ACommonJob job, JS7Agent js7Agent, JS7JobHelper jh) {
         StringBuilder scriptHeader = new StringBuilder();
         StringBuilder scriptCommand = new StringBuilder();
         StringBuilder yadeCommand = new StringBuilder();
         String commentBegin = "#";
         boolean isMock = CONFIG.getMockConfig().hasScript();
-
         boolean isUnix = js7Agent.getPlatform().equals(Platform.UNIX);
+        Environment args = getJobArguments(job, jh);
+
+        ShellJobHelper shellJob = jh.getShellJob();
         if (isUnix) {
             commentBegin = "#";
             if (shellJob.getLanguage().equals("powershell")) {
@@ -948,7 +1130,16 @@ public class JS7Converter {
                 scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
             }
             if (shellJob.getYADE() != null) {
-                yadeCommand.append("$").append(shellJob.getYADE().getBin()).append(" -settings $SETTINGS -profile $PROFILE");
+                yadeCommand.append("$").append(shellJob.getYADE().getBin()).append(" ");
+                if (args != null && args.getAdditionalProperties().size() > 0) {
+                    args.getAdditionalProperties().entrySet().forEach(y -> {
+                        yadeCommand.append("-").append(y.getKey()).append("=");
+                        yadeCommand.append("\"$").append(y.getKey().toUpperCase()).append("\"");
+                        yadeCommand.append(" ");
+                    });
+                } else {
+                    yadeCommand.append("-settings $SETTINGS -profile $PROFILE");
+                }
             }
         } else {
             commentBegin = "REM";
@@ -958,34 +1149,51 @@ public class JS7Converter {
                 scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
             }
             if (shellJob.getYADE() != null) {
-                yadeCommand.append("%").append(shellJob.getYADE().getBin()).append("% -settings %SETTINGS% -profile %PROFILE%");
+                yadeCommand.append("%").append(shellJob.getYADE().getBin()).append("% ");
+                if (args != null && args.getAdditionalProperties().size() > 0) {
+                    args.getAdditionalProperties().entrySet().forEach(y -> {
+                        yadeCommand.append("-").append(y.getKey()).append("=");
+                        yadeCommand.append("\"%").append(y.getKey().toUpperCase()).append("%\"");
+                        yadeCommand.append(" ");
+                    });
+                } else {
+                    yadeCommand.append("-settings %SETTINGS% -profile %PROFILE%");
+                }
             }
         }
         if (!shellJob.getLanguage().equals("shell")) {// language always lower case
-            scriptHeader.append(commentBegin).append(" language=").append(shellJob.getLanguage());
-            if (shellJob.getClassName() != null) {
-                scriptHeader.append(",className=" + shellJob.getClassName());
+            if (shellJob.getYADE() == null) {
+                scriptHeader.append(commentBegin).append(" language=").append(shellJob.getLanguage());
+                if (shellJob.getClassName() != null) {
+                    scriptHeader.append(",className=" + shellJob.getClassName());
+                }
+                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
             }
-            scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
             if (isMock) {
                 if (shellJob.getYADE() != null) {
                     scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
-                    scriptHeader.append(commentBegin).append(" ").append(yadeCommand);
+                    scriptHeader.append(commentBegin).append(" ").append(yadeCommand.toString().trim());
                     scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
                 }
             }
         }
         if (shellJob.getYADE() == null) {
             if (job.getScript().getInclude() != null) {
-                // TODO resolve include
-                scriptCommand.append(job.getScript().getInclude().getIncludeFile());
+                try {
+                    Path p = findIncludeFile(pr, job.getPath(), job.getScript().getInclude().getIncludeFile());
+                    scriptCommand.append(SOSPath.readFile(p, StandardCharsets.UTF_8));
+                } catch (Throwable e) {
+                    scriptCommand.append(job.getScript().getInclude().getIncludeFile());
+                    ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "[script][find include=" + job.getScript().getInclude().getNodeText()
+                            + "]", e);
+                }
                 scriptCommand.append(CONFIG.getJobConfig().getScriptNewLine());
             }
             if (job.getScript().getScript() != null) {
                 scriptCommand.append(job.getScript().getScript());
             }
         } else {
-            scriptCommand.append(yadeCommand);
+            scriptCommand.append(yadeCommand.toString().trim());
         }
 
         StringBuilder script = new StringBuilder(scriptHeader);
@@ -1000,10 +1208,16 @@ public class JS7Converter {
         es.setScript(script.toString());
         es.setV1Compatible(CONFIG.getJobConfig().getForcedV1Compatible());
 
-        Environment args = getJobArguments(job, null);
         if (args != null) {
             if (es.getV1Compatible() != null && es.getV1Compatible()) {
                 j.setDefaultArguments(args);// will be automatically set by JS7 as env var with the prefix SCHEDULER_PARAM_<arr name upper case>
+
+                Environment env = new Environment();
+                args.getAdditionalProperties().entrySet().stream().forEach(e -> {
+                    env.getAdditionalProperties().put(e.getKey().toUpperCase(), "${" + e.getKey() + "}");
+                });
+                es.setEnv(env);
+
             } else {
                 Map<String, String> upper = args.getAdditionalProperties().entrySet().stream().collect(Collectors.toMap(e -> e.getKey().toUpperCase(),
                         e -> e.getValue()));
@@ -1346,10 +1560,8 @@ public class JS7Converter {
         if (agentNameWithFileWatching == null && CONFIG.getAgentConfig().getDefaultAgent() != null) {
             agentNameWithFileWatching = CONFIG.getAgentConfig().getDefaultAgent().getName();
         }
-        if (w.getJobs() != null) {
-            for (Map.Entry<String, String> e : fileOrderSinkJobs.entrySet()) {
-                w.getJobs().getAdditionalProperties().put(e.getKey(), getFileOrderSinkJob(e.getKey(), agentNameWithFileWatching));
-            }
+        for (Map.Entry<String, String> e : fileOrderSinkJobs.entrySet()) {
+            w.getJobs().getAdditionalProperties().put(e.getKey(), getFileOrderSinkJob(e.getKey(), agentNameWithFileWatching));
         }
 
         w.setInstructions(in);
@@ -1422,7 +1634,7 @@ public class JS7Converter {
                 boolean hasJobChainConfigOrderParams = jobChain.getConfig() != null && jobChain.getConfig().hasOrderParams();
 
                 for (JobChainOrder o : orders) {
-                    RunTimeHelper rth = convertRunTime("ORDER", o.getRunTime(), workflowPath, workflowName, "_" + o.getName());
+                    RunTimeHelper rth = convertRunTimeForSchedule("ORDER", o.getRunTime(), workflowPath, workflowName, "_" + o.getName());
                     if (rth != null && rth.schedule != null) {
                         Schedule s = rth.schedule;
                         s.setTitle(o.getTitle());
@@ -1526,7 +1738,7 @@ public class JS7Converter {
                         ps.addKey(e.getKey(), e.getValue());
                     });
                 }
-                in.add(getNamedJobInstruction(job.getName(), h.state, hasConfigProcess ? jobChain.getConfig().getProcess().get(h.state) : null, ps));
+                in.add(getNamedJobInstruction(job, h.state, hasConfigProcess ? jobChain.getConfig().getProcess().get(h.state) : null, ps));
             }
 
             String onError = h.onError.toLowerCase();
