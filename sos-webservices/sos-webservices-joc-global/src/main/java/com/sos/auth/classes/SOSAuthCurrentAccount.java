@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,6 +49,7 @@ public class SOSAuthCurrentAccount {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthCurrentAccount.class);
     private ISOSAuthSubject currentSubject;
     private String accountName;
+    private String id;
     private String accessToken;
     private SOSIdentityService identityServices;
     private Map<String, String> identyServiceAccessToken;
@@ -107,11 +109,18 @@ public class SOSAuthCurrentAccount {
         return accessToken;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public void setAccessToken(String identityServiceName, String accessToken) {
         if (identyServiceAccessToken == null) {
             identyServiceAccessToken = new HashMap<String, String>();
         }
         identyServiceAccessToken.put(identityServiceName, accessToken);
+        if (this.id == null) {
+            this.id = SOSAuthHelper.createSessionId();
+        }
         if (this.accessToken == null) {
             this.accessToken = SOSAuthHelper.createAccessToken();
         }

@@ -268,7 +268,10 @@ public class JsonValidator {
             put("com.sos.joc.model.security.blocklist.BlockedAccountsDeleteFilter", "security/blocklist/blockedAccountsDeleteFilter-schema.json");
             put("com.sos.joc.model.security.blocklist.BlockedAccountsFilter", "security/blocklist/blockedAccountsFilter-schema.json");
             put("com.sos.joc.model.security.blocklist.BlockedAccount", "security/blocklist/blockedAccount-schema.json");
-            
+
+            put("com.sos.joc.model.security.session.ActiveSessionsDeleteFilter", "security/session/sessionsDeleteFilter-schema.json");
+            put("com.sos.joc.model.security.session.ActiveSessionsFilter", "security/session/sessionsFilter-schema.json");
+
             put("com.sos.joc.model.security.history.LoginHistoryFilter", "security/history/loginHistoryFilter-schema.json");
 
 
