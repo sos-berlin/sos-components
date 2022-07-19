@@ -18,6 +18,11 @@ public class SOSAuthCurrentAccountsList {
     private static final String NOT_VALID = "not-valid";
     private Map<String, SOSAuthCurrentAccount> currentAccounts;
 
+    
+    public Map<String, SOSAuthCurrentAccount> getCurrentAccounts() {
+        return currentAccounts;
+    }
+
     public SOSAuthCurrentAccountsList() {
         this.currentAccounts = new ConcurrentHashMap <String, SOSAuthCurrentAccount>();
     }
@@ -99,6 +104,7 @@ public class SOSAuthCurrentAccountsList {
                             sosAuthCurrentAccountAnswer.setAccessToken(NOT_VALID);
                         } else {
                             sosAuthCurrentAccountAnswer.setSessionTimeout(sessionTimeout);
+                            sosAuthCurrentAccountAnswer.setIdentityService(entry.getValue().getIdentityServices().getIdentyServiceType() + ":" + entry.getValue().getIdentityServices().getIdentityServiceName());
                         }
                     }
                 }

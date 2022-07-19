@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.naming.InvalidNameException;
 import javax.servlet.http.HttpServletRequest;
@@ -52,6 +53,9 @@ public class SOSAuthHelper {
     public static final String LDAP_TIMEOUT = "10000";
     public static final Integer RESTAPI_CONNECTION_TIMEOUT = 10000;
 
+    public static String createSessionId() {
+        return UUID.randomUUID().toString();
+    }
 
     public static String createAccessToken() {
 
@@ -100,7 +104,7 @@ public class SOSAuthHelper {
     public static boolean accountIsDisabled(Long identityServiceId, String account) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            if (account == null || account.isEmpty() ) {
+            if (account == null || account.isEmpty()) {
                 return false;
             }
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSInternAuthLogin.class.getName());
