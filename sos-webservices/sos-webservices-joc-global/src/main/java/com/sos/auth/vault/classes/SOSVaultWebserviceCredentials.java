@@ -146,7 +146,7 @@ public class SOSVaultWebserviceCredentials {
                 }
 
                 if (authenticationMethodPath == null || authenticationMethodPath.isEmpty()) {
-                    authenticationMethodPath = getProperty(properties.getVault().getIamVaultAuthenticationMethodPath(), "ldap");
+                    authenticationMethodPath = getProperty(properties.getVault().getIamVaultAuthenticationMethodPath(), "");
                 }
 
                 String truststorePathGui = getProperty(properties.getVault().getIamVaultTruststorePath(), "");
