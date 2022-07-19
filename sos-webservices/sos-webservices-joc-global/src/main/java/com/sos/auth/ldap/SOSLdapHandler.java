@@ -77,7 +77,13 @@ public class SOSLdapHandler {
                 env.put("java.naming.ldap.factory.socket", "com.sos.auth.ldap.classes.SOSLdapSSLSocketFactory");
             }
 
-            ldapContext = new InitialLdapContext(env, null);
+            ldapContext = new InitialLdapContext(env, null);//Authentication
+            
+            if (sosLdapWebserviceCredentials.getSystemUser() != null && !sosLdapWebserviceCredentials.getSystemUser().isEmpty()) {
+                env.put(Context.SECURITY_PRINCIPAL, sosLdapWebserviceCredentials.getSystemUser());
+                env.put(Context.SECURITY_CREDENTIALS, sosLdapWebserviceCredentials.getSystemPassword());
+                ldapContext = new InitialLdapContext(env, null);               
+            }
             startTls(sosLdapWebserviceCredentials);
         }
     }

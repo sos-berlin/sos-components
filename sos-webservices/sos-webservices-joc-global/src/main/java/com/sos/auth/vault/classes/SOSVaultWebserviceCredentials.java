@@ -123,7 +123,7 @@ public class SOSVaultWebserviceCredentials {
                 }
 
                 if (authenticationMethodPath == null || authenticationMethodPath.isEmpty()) {
-                    authenticationMethodPath = getProperty(properties.getVault().getIamVaultAuthenticationMethodPath(), "userpass");
+                    authenticationMethodPath = getProperty(properties.getVault().getIamVaultAuthenticationMethodPath(), "");
                 }
 
                 String truststorePathGui = getProperty(properties.getVault().getIamVaultTruststorePath(), "");
