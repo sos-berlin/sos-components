@@ -30,6 +30,8 @@ public class SOSLdapWebserviceCredentials {
     private Long identityServiceId;
     private String ldapServerUrl;
     private String account;
+    private String systemUser;
+    private String systemPassword;
     private SOSLdapLoginUserName sosLdapLoginUserName;
 
     private String userDnTemplate;
@@ -171,6 +173,12 @@ public class SOSLdapWebserviceCredentials {
                 if (userDnTemplate == null || userDnTemplate.isEmpty()) {
                     userDnTemplate = getProperty(properties.getLdap().getExpert().getIamLdapUserDnTemplate(), DEFAULT_USER_DN_TEMPLATE);
                 }
+                if (systemUser == null || systemUser.isEmpty()) {
+                    systemUser = getProperty(properties.getLdap().getExpert().getIamLdapSystemUser(), "");
+                }
+                if (systemPassword == null || systemPassword.isEmpty()) {
+                    systemPassword = getProperty(properties.getLdap().getExpert().getIamLdapSystemPassword(), "");
+                }
 
                 if (searchBase == null || searchBase.isEmpty()) {
                     searchBase = getProperty(properties.getLdap().getExpert().getIamLdapSearchBase(), "");
@@ -273,6 +281,16 @@ public class SOSLdapWebserviceCredentials {
             return "";
         }
         return this.ldapServerUrl;
+    }
+
+    
+    public String getSystemUser() {
+        return systemUser;
+    }
+
+    
+    public String getSystemPassword() {
+        return systemPassword;
     }
 
 }
