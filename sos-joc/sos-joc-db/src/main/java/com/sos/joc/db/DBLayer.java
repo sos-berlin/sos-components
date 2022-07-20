@@ -42,7 +42,9 @@ import com.sos.joc.db.inventory.DBItemInventoryFavorite;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedSchedule2Calendar;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedSchedule2Workflow;
+import com.sos.joc.db.inventory.DBItemInventorySchedule2Calendar;
 import com.sos.joc.db.inventory.DBItemInventorySchedule2Workflow;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentClusterMember;
@@ -220,6 +222,12 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS = DBItemInventoryReleasedSchedule2Workflow.class.getSimpleName();
     public static final String VIEW_INV_RELEASED_SCHEDULE2WORKFLOWS = "INV_REL_SCHEDULE2WORKFLOWS";
+
+    public static final String DBITEM_INV_SCHEDULE2CALENDARS = DBItemInventorySchedule2Calendar.class.getSimpleName();
+    public static final String VIEW_INV_SCHEDULE2CALENDARS = "INV_SCHEDULE2CALENDARS";
+
+    public static final String DBITEM_INV_RELEASED_SCHEDULE2CALENDARS = DBItemInventoryReleasedSchedule2Calendar.class.getSimpleName();
+    public static final String VIEW_INV_RELEASED_SCHEDULE2CALENDARS = "INV_REL_SCHEDULE2CALENDARS";
 
     /** Search (helper) tables */
     public static final String DBITEM_SEARCH_WORKFLOWS = DBItemSearchWorkflow.class.getSimpleName();
@@ -433,6 +441,8 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryCertificate.class);
         cl.add(DBItemInventorySchedule2Workflow.class);
         cl.add(DBItemInventoryReleasedSchedule2Workflow.class);
+        cl.add(DBItemInventorySchedule2Calendar.class);
+        cl.add(DBItemInventoryReleasedSchedule2Calendar.class);
         cl.add(DBItemInventoryFavorite.class);
         cl.add(DBItemSearchWorkflow.class);
         cl.add(DBItemSearchWorkflow2DeploymentHistory.class);
