@@ -185,13 +185,20 @@ public class InventorySearchDBLayer extends DBLayer {
         return query.getSingleResult();
     }
 
-    public String getDeployedConfigurationsContent(Long id) throws SOSHibernateException {
+    public String getDeployedConfigurationsContent(Long id, String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select content from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" ");
-        hql.append("where inventoryConfigurationId=:id");
+        hql.append("where inventoryConfigurationId=:id ");
+        if (controllerId != null) {
+            hql.append("and controllerId=:controllerId ");
+        }
 
         Query<String> query = getSession().createQuery(hql.toString());
         query.setParameter("id", id);
-        return query.getSingleResult();
+        if (controllerId != null) {
+            query.setParameter("controllerId", controllerId);
+        }
+        List<String> l = getSession().getResultList(query);
+        return l == null || l.size() == 0 ? null : l.get(0);
     }
 
     // TODO merge all functions ...
@@ -686,7 +693,7 @@ public class InventorySearchDBLayer extends DBLayer {
         for (InventorySearchItem item : workflows) {
             String content = null;
             if (deployedOrReleased) {
-                content = getDeployedConfigurationsContent(item.getId());
+                content = getDeployedConfigurationsContent(item.getId(), item.getControllerId());
             } else {
                 content = getInventoryConfigurationsContent(item.getId());
             }
@@ -774,6 +781,7 @@ public class InventorySearchDBLayer extends DBLayer {
         /*------------------------*/
         String fileOrderSource = null;
         String schedule = null;
+        String calendar = null;
         String workflow = null;
         Integer jobCountFrom = null;
         Integer jobCountTo = null;
@@ -793,32 +801,61 @@ public class InventorySearchDBLayer extends DBLayer {
         String argumentValue = null;
         boolean isWorkflowType = false;
 
+        boolean selectSchedule = !SOSString.isEmpty(advanced.getSchedule());
+        boolean selectCalendar = !SOSString.isEmpty(advanced.getCalendar());
+        boolean selectFileOrderSource = !SOSString.isEmpty(advanced.getFileOrderSource());
+
         switch (type) {
         case WORKFLOW:
             isWorkflowType = true;
-            if (!SOSString.isEmpty(advanced.getFileOrderSource())) {
+            if (selectSchedule || selectCalendar || selectFileOrderSource) {
+                String add = "where";
                 hql.append("and mt.name in (");
-                hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.content", "$.workflowName")).append(" ");
-                hql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subt ");
-                hql.append("where subt.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
-                if (!advanced.getFileOrderSource().equals(FIND_ALL)) {
-                    fileOrderSource = advanced.getFileOrderSource();
-                    hql.append("and lower(subt.name) like :fileOrderSource ");
+                if (!selectSchedule && !selectCalendar) {// only fileOrderSource
+                    hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.content", "$.workflowName"));
+                    hql.append(" ");
+                    hql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subti ");
+                    hql.append("where subti.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
+                } else {
+                    hql.append("select subt.workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
+                    if (selectCalendar) {
+                        hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2CALENDARS).append(" subtc ");
+                    }
+                    if (selectFileOrderSource) {
+                        hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subti ");
+                        hql.append("where subti.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
+                        hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.content", "$.workflowName")).append(
+                                "=subt.workflowName").append(" ");
+                        add = "and";
+                    }
+                    if (selectCalendar) {
+                        hql.append(add).append(" subt.scheduleName=subtc.scheduleName ");
+                        add = "and";
+                    }
+                    if (selectSchedule && !advanced.getSchedule().equals(FIND_ALL)) {
+                        schedule = advanced.getSchedule();
+                        hql.append(add).append(" lower(subt.scheduleName) like :schedule ");
+                        add = "and";
+                    }
+                    if (selectCalendar && !advanced.getCalendar().equals(FIND_ALL)) {
+                        calendar = advanced.getCalendar();
+                        hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
+                        add = "and";
+                    }
                 }
-                if (controllerId != null) {
-                    hql.append("and subt.controllerId=:controllerId ");
+
+                if (selectFileOrderSource) {
+                    if (controllerId != null) {
+                        hql.append("and subti.controllerId=:controllerId ");
+                    }
+                    if (!advanced.getFileOrderSource().equals(FIND_ALL)) {
+                        fileOrderSource = advanced.getFileOrderSource();
+                        hql.append("and lower(subti.name) like :fileOrderSource ");
+                    }
                 }
                 hql.append(") ");
             }
-            if (!SOSString.isEmpty(advanced.getSchedule())) {
-                hql.append("and mt.name in (");
-                hql.append("select workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
-                if (!advanced.getSchedule().equals(FIND_ALL)) {
-                    schedule = advanced.getSchedule();
-                    hql.append("where lower(subt.scheduleName) like :schedule ");
-                }
-                hql.append(") ");
-            }
+
             if (advanced.getJobCountFrom() != null) {
                 jobCountFrom = advanced.getJobCountFrom();
                 hql.append("and sw.jobsCount >= :jobCountFrom ");
@@ -986,6 +1023,9 @@ public class InventorySearchDBLayer extends DBLayer {
         }
         if (schedule != null) {
             query.setParameter("schedule", '%' + schedule.toLowerCase() + '%');
+        }
+        if (calendar != null) {
+            query.setParameter("calendar", '%' + calendar.toLowerCase() + '%');
         }
         if (workflow != null) {
             query.setParameter("workflow", '%' + workflow.toLowerCase() + '%');
