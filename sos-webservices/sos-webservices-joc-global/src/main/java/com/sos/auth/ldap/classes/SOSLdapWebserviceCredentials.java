@@ -286,8 +286,8 @@ public class SOSLdapWebserviceCredentials {
 
     
     public String getSystemUser() {
-        return systemUser;
-    }
+        return userDnTemplate.replaceAll("\\{0\\}", systemUser);
+     }
 
     
     public String getSystemPassword() {
