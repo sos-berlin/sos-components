@@ -60,9 +60,9 @@ public class GitCredentialsGetImpl extends JOCResourceImpl implements IGitCreden
                 dbItem = existing.get(0);
                 credList =  Globals.objectMapper.readValue(dbItem.getConfigurationItem(), GitCredentialsList.class);
             }
-            if(credList != null && !credList.getRemoteUris().isEmpty()) {
+            if(credList != null && !credList.getRemoteUrls().isEmpty()) {
                 // remove from response as uris are not part of the credentials
-                credList.setRemoteUris(null);
+                credList.setRemoteUrls(null);
             }
             if(credList == null) {
                 credList = new GitCredentialsList();

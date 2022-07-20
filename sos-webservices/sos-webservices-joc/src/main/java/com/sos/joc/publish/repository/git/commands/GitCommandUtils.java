@@ -65,9 +65,9 @@ public class GitCommandUtils {
         String hostPort = "";
         String path = "";
         String protocol = "";
-        if (isSshUri(filter.getRemoteUri())) {
+        if (isSshUri(filter.getRemoteUrl())) {
             Pattern sshGitUriPattern = Pattern.compile(REGEX_GIT_URI_SSH);
-            Matcher sshGitUriMatcher = sshGitUriPattern.matcher(filter.getRemoteUri());
+            Matcher sshGitUriMatcher = sshGitUriPattern.matcher(filter.getRemoteUrl());
             if(sshGitUriMatcher.matches()) {
                 protocol = DEFAULT_PROTOCOL;
                 hostPort = sshGitUriMatcher.group(1);
@@ -76,23 +76,23 @@ public class GitCommandUtils {
         } else {
             URI remoteUri = null;
             try {
-                remoteUri = new URI(filter.getRemoteUri());
+                remoteUri = new URI(filter.getRemoteUrl());
                 hostPort = remoteUri.getHost();
             } catch (URISyntaxException e) {
-                throw new JocBadRequestException(String.format("%1$s is not a Git Uri.", filter.getRemoteUri()), e);
+                throw new JocBadRequestException(String.format("%1$s is not a Git URL.", filter.getRemoteUrl()), e);
             }
             
             Pattern protocolUriPattern = Pattern.compile(REGEX_GIT_URI_PROTOCOL);
-            Matcher protocolUriMatcher = protocolUriPattern.matcher(filter.getRemoteUri());
+            Matcher protocolUriMatcher = protocolUriPattern.matcher(filter.getRemoteUrl());
             if(protocolUriMatcher.matches()) {
                 protocol = protocolUriMatcher.group(1);
                 if (!HTTP_PROTOCOL.equals(protocol) && !HTTPS_PROTOCOL.equals(protocol)) {
-                    throw new JocBadRequestException(String.format("%1$s is not a Git Uri.", filter.getRemoteUri()));
+                    throw new JocBadRequestException(String.format("%1$s is not a Git URL.", filter.getRemoteUrl()));
                 }
                 String hostPortWithCreds = "";
                 if(hostPort == null || hostPort.isEmpty()) {
                     Pattern hostUriPattern = Pattern.compile(REGEX_GIT_URI_HOST);
-                    Matcher hostUriMatcher = hostUriPattern.matcher(filter.getRemoteUri());
+                    Matcher hostUriMatcher = hostUriPattern.matcher(filter.getRemoteUrl());
                     if(hostUriMatcher.matches()) {
                         hostPortWithCreds = hostUriMatcher.group(1);
                         if (hostPortWithCreds.contains("@")) {
@@ -108,12 +108,12 @@ public class GitCommandUtils {
                 if(remoteUri.getPath() != null && !remoteUri.getPath().isEmpty()) {
                     path = remoteUri.getPath();
                 } else if (!hostPortWithCreds.isEmpty()) {
-                    path = filter.getRemoteUri().replace(protocol + "://" + hostPortWithCreds, "");
+                    path = filter.getRemoteUrl().replace(protocol + "://" + hostPortWithCreds, "");
                 }
             }
         }
         if (hostPort.isEmpty() || path.isEmpty() || protocol.isEmpty()) {
-            throw new JocBadRequestException(String.format("%1$s is not a Git Uri.", filter.getRemoteUri()));
+            throw new JocBadRequestException(String.format("%1$s is not a Git URL.", filter.getRemoteUrl()));
         }
 
         try {
@@ -125,8 +125,8 @@ public class GitCommandUtils {
             if(credList == null) {
                 throw new JocGitException("No Git Credentials found for Joc account:  " + dbItem.getAccount());
             }
-            if(!credList.getRemoteUris().contains(filter.getRemoteUri())) {
-                credList.getRemoteUris().add(filter.getRemoteUri());
+            if(!credList.getRemoteUrls().contains(filter.getRemoteUrl())) {
+                credList.getRemoteUrls().add(filter.getRemoteUrl());
                 dbItem.setConfigurationItem(Globals.objectMapper.writeValueAsString(credList));
                 dbLayer.saveOrUpdateConfiguration(dbItem);
             }
@@ -148,8 +148,8 @@ public class GitCommandUtils {
                         email = credentials.getEmail();
                         if (credentials.getKeyfilePath() == null) {
                             throw new JocGitException(String.format(
-                                    "remote Uri '%1$s' needs ssh authentication. Missing keyfilePath in credentials for server '%2$s' and account '%3$s'.",
-                                    filter.getRemoteUri(), hostPort, credentials.getGitAccount()));
+                                    "remote URL '%1$s' needs ssh authentication. Missing keyfilePath in credentials for server '%2$s' and account '%3$s'.",
+                                    filter.getRemoteUrl(), hostPort, credentials.getGitAccount()));
                         } else if(credentials.getKeyfilePath().isEmpty()) {
                             // use ~/.ssh/id_rsa from home directory
                             // use Path homeDir = Paths.get(System.getProperty("user.home")); for windows and linux
@@ -166,7 +166,7 @@ public class GitCommandUtils {
                 }
                 // check remote connectivity
                 GitLsRemoteCommandResult lsRemoteResult = (GitLsRemoteCommandResult)GitCommand.executeGitCheckRemoteConnection(
-                        filter.getRemoteUri(), charset);
+                        filter.getRemoteUrl(), charset);
                 // TODO: rest of check when timeout available from SOSShell
                 
                 // prepare git config environment
@@ -187,7 +187,7 @@ public class GitCommandUtils {
                 // clone
                 String folder = filter.getFolder().startsWith("/") ? filter.getFolder().substring(1) : filter.getFolder();
                 GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(
-                        filter.getRemoteUri(), folder, repositoryBase, charset);
+                        filter.getRemoteUrl(), folder, repositoryBase, charset);
                 if(result.getExitCode() != 0) {
                     throw new JocGitException(String.format("clone command exit code <%1$d> with message: %2$s", 
                             result.getExitCode(), result.getStdErr()), result.getException());
@@ -513,10 +513,10 @@ public class GitCommandUtils {
             // check if account has remoteUri configured
             for (String shortName : remoteRepos.keySet()) {
                 String knownRemoteUri = remoteRepos.get(shortName);
-                LOGGER.debug("remote URI from git remote -v command: " + knownRemoteUri);
+                LOGGER.debug("remote URL from git remote -v command: " + knownRemoteUri);
                 if(knownRemoteUri.startsWith("git@")) {
                     // ssh
-                    if(credList.getRemoteUris().contains(knownRemoteUri)) {
+                    if(credList.getRemoteUrls().contains(knownRemoteUri)) {
                         remoteUri = knownRemoteUri;
                     }
                 } else {
@@ -535,11 +535,11 @@ public class GitCommandUtils {
                         String hp = hostPort.substring(hostPort.lastIndexOf("@") + 1);
                         String adjustedRemoteUri = String.format(
                                 "%1$s://%2$s%3$s", protocol, hp, (path.startsWith("/") ? path : "/" + path));
-                        if(credList != null && credList.getRemoteUris().contains(adjustedRemoteUri)) {
+                        if(credList != null && credList.getRemoteUrls().contains(adjustedRemoteUri)) {
                             remoteUri = adjustedRemoteUri;
                         }
                     } else {
-                        if(credList != null && credList.getRemoteUris().contains(knownRemoteUri)) {
+                        if(credList != null && credList.getRemoteUrls().contains(knownRemoteUri)) {
                             remoteUri = knownRemoteUri;
                         }
                     }

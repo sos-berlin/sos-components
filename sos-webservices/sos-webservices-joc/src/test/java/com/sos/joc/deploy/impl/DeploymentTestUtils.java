@@ -1029,7 +1029,7 @@ public class DeploymentTestUtils {
 
     public static CloneFilter createExampleCloneFilter () {
         CloneFilter cloneFilter = new CloneFilter();
-        cloneFilter.setRemoteUri("git@github.com:sos-berlin/JS7Demo.git");
+        cloneFilter.setRemoteUrl("git@github.com:sos-berlin/JS7Demo.git");
         cloneFilter.setFolder("/JSDemo");
         cloneFilter.setCategory(Category.ROLLOUT);
         return cloneFilter;

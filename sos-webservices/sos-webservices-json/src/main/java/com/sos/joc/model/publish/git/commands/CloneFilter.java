@@ -1,6 +1,7 @@
 
 package com.sos.joc.model.publish.git.commands;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -20,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "remoteUri",
+    "remoteUrl",
     "folder",
     "category",
     "auditLog"
@@ -28,13 +29,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class CloneFilter {
 
     /**
-     * Git Remote Uri.
+     * Git Remote URL
      * (Required)
      * 
      */
-    @JsonProperty("remoteUri")
-    @JsonPropertyDescription("Git Remote Uri.")
-    private String remoteUri;
+    @JsonProperty("remoteUrl")
+    @JsonPropertyDescription("Git Remote URL")
+    @JsonAlias({
+        "remoteUri"
+    })
+    private String remoteUrl;
     /**
      * string without < and >
      * <p>
@@ -63,23 +67,23 @@ public class CloneFilter {
     private AuditParams auditLog;
 
     /**
-     * Git Remote Uri.
+     * Git Remote URL
      * (Required)
      * 
      */
-    @JsonProperty("remoteUri")
-    public String getRemoteUri() {
-        return remoteUri;
+    @JsonProperty("remoteUrl")
+    public String getRemoteUrl() {
+        return remoteUrl;
     }
 
     /**
-     * Git Remote Uri.
+     * Git Remote URL
      * (Required)
      * 
      */
-    @JsonProperty("remoteUri")
-    public void setRemoteUri(String remoteUri) {
-        this.remoteUri = remoteUri;
+    @JsonProperty("remoteUrl")
+    public void setRemoteUrl(String remoteUrl) {
+        this.remoteUrl = remoteUrl;
     }
 
     /**
@@ -154,12 +158,12 @@ public class CloneFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("remoteUri", remoteUri).append("folder", folder).append("category", category).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("remoteUrl", remoteUrl).append("folder", folder).append("category", category).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(category).append(auditLog).append(remoteUri).toHashCode();
+        return new HashCodeBuilder().append(remoteUrl).append(folder).append(category).append(auditLog).toHashCode();
     }
 
     @Override
@@ -171,7 +175,7 @@ public class CloneFilter {
             return false;
         }
         CloneFilter rhs = ((CloneFilter) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(category, rhs.category).append(auditLog, rhs.auditLog).append(remoteUri, rhs.remoteUri).isEquals();
+        return new EqualsBuilder().append(remoteUrl, rhs.remoteUrl).append(folder, rhs.folder).append(category, rhs.category).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

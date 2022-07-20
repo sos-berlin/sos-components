@@ -3,6 +3,7 @@ package com.sos.joc.model.publish.git;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -20,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "credentials",
-    "remoteUris"
+    "remoteUrls"
 })
 public class GitCredentialsList {
 
@@ -31,8 +32,11 @@ public class GitCredentialsList {
      */
     @JsonProperty("credentials")
     private List<GitCredentials> credentials = new ArrayList<GitCredentials>();
-    @JsonProperty("remoteUris")
-    private List<String> remoteUris = new ArrayList<String>();
+    @JsonProperty("remoteUrls")
+    @JsonAlias({
+        "remoteUris"
+    })
+    private List<String> remoteUrls = new ArrayList<String>();
 
     /**
      * 
@@ -54,24 +58,24 @@ public class GitCredentialsList {
         this.credentials = credentials;
     }
 
-    @JsonProperty("remoteUris")
-    public List<String> getRemoteUris() {
-        return remoteUris;
+    @JsonProperty("remoteUrls")
+    public List<String> getRemoteUrls() {
+        return remoteUrls;
     }
 
-    @JsonProperty("remoteUris")
-    public void setRemoteUris(List<String> remoteUris) {
-        this.remoteUris = remoteUris;
+    @JsonProperty("remoteUrls")
+    public void setRemoteUrls(List<String> remoteUrls) {
+        this.remoteUrls = remoteUrls;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("credentials", credentials).append("remoteUris", remoteUris).toString();
+        return new ToStringBuilder(this).append("credentials", credentials).append("remoteUrls", remoteUrls).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(remoteUris).append(credentials).toHashCode();
+        return new HashCodeBuilder().append(credentials).append(remoteUrls).toHashCode();
     }
 
     @Override
@@ -83,7 +87,7 @@ public class GitCredentialsList {
             return false;
         }
         GitCredentialsList rhs = ((GitCredentialsList) other);
-        return new EqualsBuilder().append(remoteUris, rhs.remoteUris).append(credentials, rhs.credentials).isEquals();
+        return new EqualsBuilder().append(credentials, rhs.credentials).append(remoteUrls, rhs.remoteUrls).isEquals();
     }
 
 }
