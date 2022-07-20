@@ -185,6 +185,10 @@ public class JS7ConverterHelper {
         return String.format("%02d", i);
     }
 
+    public static String toTimePart(String i) {
+        return String.format("%02d", Integer.parseInt(i));
+    }
+
     public static Node getDocumentRoot(Path p) throws Exception {
         return SOSXML.parse(p).getDocumentElement();
     }

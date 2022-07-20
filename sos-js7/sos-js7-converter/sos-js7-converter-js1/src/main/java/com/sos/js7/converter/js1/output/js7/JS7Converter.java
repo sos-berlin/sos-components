@@ -1,7 +1,6 @@
 package com.sos.js7.converter.js1.output.js7;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,8 +38,6 @@ import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.RetryCatch;
 import com.sos.inventory.model.instruction.TryCatch;
-import com.sos.inventory.model.job.AdmissionTimePeriod;
-import com.sos.inventory.model.job.AdmissionTimeScheme;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
@@ -539,39 +536,10 @@ public class JS7Converter {
                 }
 
             } else {
-                // AdmissionTimeScheme ats = runTimeToAdmissionTime(runTime);
-                // if (ats == null) {
-                // ConverterReport.INSTANCE.addWarningRecord(runTime.getCurrentPath(), "[" + range
-                // + "][skip convert run-time][without calendars or schedule]" + runTime.getNodeText(), "not implemented yet");
-                // }
+
             }
         }
         return null;
-    }
-
-    private AdmissionTimeScheme runTimeToAdmissionTime(RunTime runTime) {
-        List<AdmissionTimePeriod> periods = new ArrayList<>();
-        if (runTime.getWeekDays() != null && runTime.getWeekDays().size() > 0) {
-            for (com.sos.js7.converter.js1.common.runtime.WeekDays wd : runTime.getWeekDays()) {
-                if (wd.getDays() != null) {
-                    for (com.sos.js7.converter.js1.common.runtime.Day d : wd.getDays()) {
-                        List<Integer> days = d.getDays();
-                        if (days != null && days.size() > 0) {
-                            // WeekdayPeriod wdp = new WeekdayPeriod(null);
-                            // wdp.setSecondOfWeek(null);
-                            // wdp.setDuration(null);
-
-                            if (d.getPeriods() != null) {
-                                for (com.sos.js7.converter.js1.common.runtime.Period p : d.getPeriods()) {
-                                    // p.
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return periods.size() > 0 ? new AdmissionTimeScheme(periods) : null;
     }
 
     private Path getSchedulePath(Path workflowPath, String workflowName, String additionalName) {
@@ -1529,6 +1497,7 @@ public class JS7Converter {
         uniqueJobs.entrySet().forEach(e -> {
             Job job = getJob(result, e.getValue(), agentName);
             if (job != null) {
+                job.setAdmissionTimeScheme(JS7RunTimeConverter.convert(e.getValue()));
                 js.setAdditionalProperty(e.getKey(), job);
             }
         });
@@ -2052,17 +2021,11 @@ public class JS7Converter {
 
         private Path path;
         private Schedule schedule;
-        private AdmissionTimeScheme admissionTimeScheme;
 
         private RunTimeHelper(Path path, Schedule schedule) {
             this.path = path;
             this.schedule = schedule;
         }
-
-        private RunTimeHelper(AdmissionTimeScheme admissionTimeScheme) {
-            this.admissionTimeScheme = admissionTimeScheme;
-        }
-
     }
 
     private class ScheduleHelper {

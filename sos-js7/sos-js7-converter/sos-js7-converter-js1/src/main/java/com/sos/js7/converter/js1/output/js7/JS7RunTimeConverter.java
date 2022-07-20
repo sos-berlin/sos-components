@@ -1,5 +1,6 @@
 package com.sos.js7.converter.js1.output.js7;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,15 +20,215 @@ import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.calendar.WeekDays;
 import com.sos.inventory.model.calendar.WeeklyDay;
 import com.sos.inventory.model.calendar.WhenHolidayType;
+import com.sos.inventory.model.job.AdmissionTimePeriod;
+import com.sos.inventory.model.job.AdmissionTimeScheme;
+import com.sos.inventory.model.job.DailyPeriod;
+import com.sos.inventory.model.job.WeekdayPeriod;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.report.ConverterReport;
+import com.sos.js7.converter.js1.common.job.OrderJob;
+import com.sos.js7.converter.js1.common.runtime.RunTime;
 
 public class JS7RunTimeConverter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JS7RunTimeConverter.class);
 
+    private static final int DAY_SECONDS = 24 * 3_600;
+
     private enum DaysType {
         WEEKDAYS, MONTHDAYS, ULTIMOS;
+    }
+
+    public static AdmissionTimeScheme convert(OrderJob js1Job) {
+        if (js1Job == null || js1Job.getRunTime() == null) {
+            return null;
+        }
+
+        RunTime js1RunTime = js1Job.getRunTime().getSchedule() == null ? js1Job.getRunTime() : js1Job.getRunTime().getSchedule().getRunTime();
+
+        boolean hasSingleStart = js1RunTime.getSingleStart() != null;
+        boolean hasRepeat = js1RunTime.getRepeat() != null;
+        boolean hasBeginEnd = !hasSingleStart && !hasRepeat && !js1RunTime.hasChildElements();
+        boolean hasPeriods = js1RunTime.getPeriods() != null;
+        boolean hasAts = js1RunTime.getAts() != null;
+        boolean hasDates = js1RunTime.getDates() != null;
+        boolean hasWeekDays = js1RunTime.getWeekDays() != null;
+        boolean hasMonthDays = js1RunTime.getMonthDays() != null;
+        boolean hasUltimos = js1RunTime.getUltimos() != null;
+        boolean hasHolidays = js1RunTime.getHolidays() != null;
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format(
+                    "hasRepeat=%s,hasSingleStart=%s,hasBeginEnd=%s,hasPeriods=%s,hasAts=%s,hasDates=%s, hasWeekDays=%s,hasMonthDays=%s,hasUltimos=%s,hasHolidays=%s",
+                    hasRepeat, hasSingleStart, hasBeginEnd, hasPeriods, hasAts, hasDates, hasWeekDays, hasMonthDays, hasUltimos, hasHolidays));
+        }
+
+        if (hasRepeat) {
+            ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Order Job=" + js1Job.getName(),
+                    "[convert2AdmissionTimeScheme][hasRepeat=true][not implemented yet]" + js1Job.getRunTime().getNodeText());
+            return null;
+        }
+        if (hasPeriods) {
+            ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Order Job=" + js1Job.getName(),
+                    "[convert2AdmissionTimeScheme][hasPeriods=true][not implemented yet]" + js1Job.getRunTime().getNodeText());
+            return null;
+        }
+        if (hasAts) {
+            ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Order Job=" + js1Job.getName(),
+                    "[convert2AdmissionTimeScheme][hasAts=true][not implemented yet]" + js1Job.getRunTime().getNodeText());
+            return null;
+        }
+        if (hasDates) {
+            ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Order Job=" + js1Job.getName(),
+                    "[convert2AdmissionTimeScheme][hasDates=true][not implemented yet]" + js1Job.getRunTime().getNodeText());
+            return null;
+        }
+        if (hasMonthDays) {
+            ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Order Job=" + js1Job.getName(),
+                    "[convert2AdmissionTimeScheme][hasMonthDays=true][not implemented yet]" + js1Job.getRunTime().getNodeText());
+            return null;
+        }
+        if (hasUltimos) {
+            ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Order Job=" + js1Job.getName(),
+                    "[convert2AdmissionTimeScheme][hasUltimos=true][not implemented yet]" + js1Job.getRunTime().getNodeText());
+            return null;
+        }
+        if (hasHolidays) {
+            ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Order Job=" + js1Job.getName(),
+                    "[convert2AdmissionTimeScheme][hasHolidays=true][not implemented yet]" + js1Job.getRunTime().getNodeText());
+            return null;
+        }
+
+        List<AdmissionTimePeriod> periods = new ArrayList<>();
+        if (hasSingleStart) {
+            try {
+                TimeHelper th = newTimeHelper(js1RunTime.getSingleStart());
+                LocalTime lt = LocalTime.of(th.hours, th.minutes, th.seconds);
+                DailyPeriod p = new DailyPeriod(Long.valueOf(lt.toSecondOfDay()));
+                p.setDuration(Long.valueOf(DAY_SECONDS));
+                periods.add(p);
+                return new AdmissionTimeScheme(periods);
+            } catch (Throwable e) {
+                ConverterReport.INSTANCE.addErrorRecord(js1Job.getPath(), "Order Job=" + js1Job.getName()
+                        + "[convert2AdmissionTimeScheme][hasSingleStart=true][" + js1Job.getRunTime().getNodeText() + "]" + e.toString(), e);
+                return null;
+            }
+        }
+
+        if (hasBeginEnd) {
+            try {
+                TimeHelper thBegin = newTimeHelper(getPeriodBegin(js1RunTime.getBegin()));
+                TimeHelper thEnd = newTimeHelper(getPeriodEnd(js1RunTime.getEnd()));
+                LocalTime lt = LocalTime.of(thBegin.hours, thBegin.minutes, thBegin.seconds);
+                DailyPeriod p = new DailyPeriod(Long.valueOf(lt.toSecondOfDay()));
+                p.setDuration(Long.valueOf(thEnd.toSeconds() - thBegin.toSeconds()));
+                periods.add(p);
+                return new AdmissionTimeScheme(periods);
+            } catch (Throwable e) {
+                ConverterReport.INSTANCE.addErrorRecord(js1Job.getPath(), "Order Job=" + js1Job.getName()
+                        + "[convert2AdmissionTimeScheme][hasSingleStart=true][" + js1Job.getRunTime().getNodeText() + "]" + e.toString(), e);
+                return null;
+            }
+        }
+
+        if (hasWeekDays) {
+            Map<com.sos.js7.converter.js1.common.runtime.Day, List<String>> starts = new HashMap<>();
+            List<String> lastStartPeriods = null;
+            for (com.sos.js7.converter.js1.common.runtime.WeekDays wd : js1RunTime.getWeekDays()) {
+                if (wd.getDays() != null) {
+                    for (com.sos.js7.converter.js1.common.runtime.Day d : wd.getDays()) {
+                        List<Integer> days = d.getDays();
+                        if (days != null && days.size() > 0) {
+                            if (d.getPeriods() != null) {
+                                List<String> startPeriods = new ArrayList<>();
+                                for (com.sos.js7.converter.js1.common.runtime.Period p : d.getPeriods()) {
+                                    if (p.getRepeat() != null || p.getAbsoluteRepeat() != null) {
+                                        ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Order Job=" + js1Job.getName(),
+                                                "[convert2AdmissionTimeScheme][hasWeekDays=true][period repeat or absolute_repeat][not implemented yet]"
+                                                        + js1Job.getRunTime().getNodeText());
+                                        return null;
+                                    }
+
+                                    String startPeriod = null;
+                                    if (p.getSingleStart() == null) {
+                                        StringBuilder sb = new StringBuilder();
+                                        sb.append(normalizeTime(getPeriodBegin(p.getBegin())));
+                                        sb.append("=");
+                                        sb.append(normalizeTime(getPeriodEnd(p.getEnd())));
+                                        startPeriod = sb.toString();
+                                    } else {
+                                        startPeriod = normalizeTime(p.getSingleStart());
+                                    }
+                                    startPeriods.add(startPeriod);
+                                }
+                                if (startPeriods.size() > 0) {
+                                    if (lastStartPeriods != null) {
+                                        if (lastStartPeriods.size() != startPeriods.size()) {
+                                            ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Order Job=" + js1Job.getName(),
+                                                    "[convert2AdmissionTimeScheme][hasWeekDays=true][multiple periods][not implemented yet]" + js1Job
+                                                            .getRunTime().getNodeText());
+                                            return null;
+                                        }
+
+                                        for (String s : startPeriods) {
+                                            if (!lastStartPeriods.contains(s)) {
+                                                ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Order Job=" + js1Job.getName(),
+                                                        "[convert2AdmissionTimeScheme][hasWeekDays=true][different periods][not implemented yet]"
+                                                                + js1Job.getRunTime().getNodeText());
+                                                return null;
+                                            }
+                                        }
+
+                                    }
+                                    starts.put(d, startPeriods);
+                                    lastStartPeriods = startPeriods;
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+            if (starts.size() > 0) {
+                List<Integer> l = starts.entrySet().stream().map(e -> e.getKey().getDays()).flatMap(e -> e.stream()).distinct().collect(Collectors
+                        .toList());
+                List<Integer> weekDays = convertWeekDays(l);
+                List<String> wdPeriods = starts.entrySet().stream().map(e -> e.getValue()).findFirst().get();
+                for (Integer weekDay : weekDays) {
+                    for (String singleStart : wdPeriods) {
+                        String[] arr = singleStart.split("=");
+                        boolean isSingleStart = arr.length == 1;
+                        TimeHelper thBegin = isSingleStart ? newTimeHelper(singleStart) : newTimeHelper(arr[0]);
+                        LocalTime lt = LocalTime.of(thBegin.hours, thBegin.minutes, thBegin.seconds);
+                        int secondsOfDay = lt.toSecondOfDay();
+
+                        WeekdayPeriod p = new WeekdayPeriod(weekdayToSeconds(weekDay, secondsOfDay));
+                        if (isSingleStart) {
+                            p.setDuration(Long.valueOf(DAY_SECONDS));
+                        } else {
+                            TimeHelper thEnd = newTimeHelper(arr[1]);
+                            p.setDuration(Long.valueOf(thEnd.toSeconds() - thBegin.toSeconds()));
+                        }
+                        periods.add(p);
+                    }
+                }
+            }
+
+        }
+        return periods.size() > 0 ? new AdmissionTimeScheme(periods) : null;
+    }
+
+    public static TimeHelper newTimeHelper(String val) {
+        return new JS7RunTimeConverter().new TimeHelper(val);
+    }
+
+    public static Long weekdayToSeconds(int day, LocalTime time) {
+        return weekdayToSeconds(day, time.toSecondOfDay());
+    }
+
+    public static Long weekdayToSeconds(int day, int secondsOfDay) {
+        return Long.valueOf(((day - 1) * DAY_SECONDS) + secondsOfDay);
     }
 
     public static Schedule convert(com.sos.js7.converter.js1.common.runtime.Schedule js1Schedule, String timeZone, List<String> workflowNames) {
@@ -37,13 +238,13 @@ public class JS7RunTimeConverter {
         return convert(js1Schedule.getRunTime(), timeZone, workflowNames);
     }
 
-    public static Schedule convert(com.sos.js7.converter.js1.common.runtime.RunTime js1RunTime, String timeZone, List<String> workflowNames) {
+    private static Schedule convert(com.sos.js7.converter.js1.common.runtime.RunTime js1RunTime, String timeZone, List<String> workflowNames) {
         if (js1RunTime == null || !js1RunTime.isConvertableWithoutCalendars()) {
             return null;
         }
 
         boolean hasSingleStart = js1RunTime.getSingleStart() != null;
-        boolean hasRepeat = js1RunTime.getRepeat() != null && js1RunTime.getBegin() != null && js1RunTime.getEnd() != null;
+        boolean hasRepeat = js1RunTime.getRepeat() != null;
         boolean hasPeriods = js1RunTime.getPeriods() != null;
         boolean hasAts = js1RunTime.getAts() != null;
         boolean hasDates = js1RunTime.getDates() != null;
@@ -52,10 +253,11 @@ public class JS7RunTimeConverter {
         boolean hasUltimos = js1RunTime.getUltimos() != null;
         boolean hasHolidays = js1RunTime.getHolidays() != null;
 
-        LOGGER.info(String.format(
-                "hasRepeat=%s,hasSingleStart=%s,hasPeriods=%s,hasAts=%s,hasDates=%s, hasWeekDays=%s,hasMonthDays=%s,hasUltimos=%s,hasHolidays=%s",
-                hasRepeat, hasSingleStart, hasPeriods, hasAts, hasDates, hasWeekDays, hasMonthDays, hasUltimos, hasHolidays));
-
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format(
+                    "hasRepeat=%s,hasSingleStart=%s,hasPeriods=%s,hasAts=%s,hasDates=%s, hasWeekDays=%s,hasMonthDays=%s,hasUltimos=%s,hasHolidays=%s",
+                    hasRepeat, hasSingleStart, hasPeriods, hasAts, hasDates, hasWeekDays, hasMonthDays, hasUltimos, hasHolidays));
+        }
         List<AssignedCalendars> working = new ArrayList<>();
         List<AssignedNonWorkingDayCalendars> nonWorking = new ArrayList<>();
 
@@ -131,7 +333,7 @@ public class JS7RunTimeConverter {
 
     private static void convertRepeat(List<AssignedCalendars> working, String repeat, String begin, String end, String timeZone,
             WhenHolidayType whenHolidayType) {
-        if (repeat == null || begin == null || end == null) {
+        if (repeat == null) {
             return;
         }
 
@@ -144,8 +346,8 @@ public class JS7RunTimeConverter {
         Period period = new Period();
         period.setWhenHoliday(whenHolidayType);
         period.setRepeat(normalizeTime(repeat));
-        period.setBegin(normalizeTime(begin));
-        period.setEnd(normalizeTime(end));
+        period.setBegin(normalizeTime(getPeriodBegin(begin)));
+        period.setEnd(normalizeTime(getPeriodEnd(end)));
         periods.add(period);
         c.setPeriods(periods);
         working.add(c);
@@ -363,15 +565,15 @@ public class JS7RunTimeConverter {
                     Period period = new Period();
                     period.setWhenHoliday(getWhenHolidayType(p.getWhenHoliday()));
                     period.setRepeat(normalizeTime(p.getAbsoluteRepeat()));
-                    period.setBegin(normalizeTime(p.getBegin()));
-                    period.setEnd(normalizeTime(p.getEnd()));
+                    period.setBegin(normalizeTime(getPeriodBegin(p.getBegin())));
+                    period.setEnd(normalizeTime(getPeriodEnd(p.getEnd())));
                     periods.add(period);
                 } else if (!SOSString.isEmpty(p.getRepeat()) && !p.getRepeat().equals("0")) {
                     Period period = new Period();
                     period.setWhenHoliday(getWhenHolidayType(p.getWhenHoliday()));
                     period.setRepeat(normalizeTime(p.getRepeat()));
-                    period.setBegin(normalizeTime(p.getBegin()));
-                    period.setEnd(normalizeTime(p.getEnd()));
+                    period.setBegin(normalizeTime(getPeriodBegin(p.getBegin())));
+                    period.setEnd(normalizeTime(getPeriodEnd(p.getEnd())));
                     periods.add(period);
                 }
             }
@@ -383,6 +585,14 @@ public class JS7RunTimeConverter {
             periods.add(period);
         }
         return periods;
+    }
+
+    private static String getPeriodBegin(String val) {
+        return SOSString.isEmpty(val) ? "00:00:00" : val;
+    }
+
+    private static String getPeriodEnd(String val) {
+        return SOSString.isEmpty(val) ? "24:00:00" : val;
     }
 
     private static List<Integer> convertWeekDays(List<Integer> l) {
@@ -413,16 +623,43 @@ public class JS7RunTimeConverter {
         }
     }
 
-    // TODO
-    private static String normalizeTime(String val) {
-        String[] arr = val.split(":");
-        switch (arr.length) {
-        case 1:
-            return val + ":00:00";
-        case 2:
-            return val + ":00";
-        default:
-            return val;
+    public static String normalizeTime(String val) {
+        int idx = val.indexOf(":");
+        if (idx > -1) {
+            String[] arr = val.split(":");
+            switch (arr.length) {
+            case 1:
+                return JS7ConverterHelper.toTimePart(val) + ":00:00";
+            case 2:
+                return JS7ConverterHelper.toTimePart(arr[0]) + ":" + JS7ConverterHelper.toTimePart(arr[1]) + ":00";
+            default:
+                return JS7ConverterHelper.toTimePart(arr[0]) + ":" + JS7ConverterHelper.toTimePart(arr[1]) + ":" + JS7ConverterHelper.toTimePart(
+                        arr[2]);
+            }
+        } else {
+            String v = LocalTime.MIN.plusSeconds(Long.parseLong(val)).toString();
+            String[] arr = v.split(":");
+            return arr.length == 2 ? v + ":00" : v;
+        }
+    }
+
+    public class TimeHelper {
+
+        int hours = 0;
+        int minutes = 0;
+        int seconds = 0;
+
+        private TimeHelper(String val) {
+            String n = normalizeTime(val);
+            String[] arr = n.split(":");
+
+            this.hours = Integer.parseInt(arr[0]);
+            this.minutes = Integer.parseInt(arr[1]);
+            this.seconds = Integer.parseInt(arr[2]);
+        }
+
+        public int toSeconds() {
+            return this.hours * 60 * 60 + this.minutes * 60 + this.seconds;
         }
     }
 
