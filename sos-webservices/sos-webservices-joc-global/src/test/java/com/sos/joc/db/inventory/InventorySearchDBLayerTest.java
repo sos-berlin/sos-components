@@ -74,24 +74,27 @@ public class InventorySearchDBLayerTest {
 
             RequestSearchAdvancedItem advanced = new RequestSearchAdvancedItem();
             // advanced.setJobCountFrom(Integer.valueOf(2));
-            advanced.setJobName("Job");
+            advanced.setJobName("job");
             advanced.setJobNameExactMatch(true);
-            advanced.setAgentName(null);
+            // advanced.setAgentName("agent");
             // advanced.setJobCriticality(JobCriticality.NORMAL);
             advanced.setJobResources(null);
             advanced.setNoticeBoards(null);
             advanced.setLock(null);
             advanced.setArgumentName(null);
             advanced.setArgumentValue(null);
-            advanced.setWorkflow("shell");
+            advanced.setFileOrderSource("dailyplan");
+            advanced.setWorkflow("dailyplan");
+            advanced.setCalendar("dailyplan");
+            advanced.setSchedule("dailyplan");
 
             factory = createFactory();
             session = factory.openStatelessSession();
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
             session.beginTransaction();
 
-            List<InventorySearchItem> items = dbLayer.getAdvancedSearchInventoryConfigurations(RequestSearchReturnType.WORKFLOW, search, folders,
-                    advanced);
+            List<InventorySearchItem> items = dbLayer.getAdvancedSearchInventoryConfigurations(RequestSearchReturnType.FILEORDERSOURCE, search,
+                    folders, advanced);
             // List<InventorySearchItem> items = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(ConfigurationType.WORKFLOW, search, folders,
             // advanced,"js7.x");
             LOGGER.info("RESULT=" + items.size());
