@@ -93,10 +93,10 @@ public class InventorySearchDBLayerTest {
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
             session.beginTransaction();
 
-            List<InventorySearchItem> items = dbLayer.getAdvancedSearchInventoryConfigurations(RequestSearchReturnType.FILEORDERSOURCE, search,
-                    folders, advanced);
-            // List<InventorySearchItem> items = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(ConfigurationType.WORKFLOW, search, folders,
-            // advanced,"js7.x");
+            // List<InventorySearchItem> items = dbLayer.getAdvancedSearchInventoryConfigurations(RequestSearchReturnType.FILEORDERSOURCE, search,
+            // folders, advanced);
+            List<InventorySearchItem> items = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(RequestSearchReturnType.WORKFLOW, search,
+                    folders, advanced, "js7.x");
             LOGGER.info("RESULT=" + items.size());
             for (InventorySearchItem item : items) {
                 LOGGER.info(SOSString.toString(item));
