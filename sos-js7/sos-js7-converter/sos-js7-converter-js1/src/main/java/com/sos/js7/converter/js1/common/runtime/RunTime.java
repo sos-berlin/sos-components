@@ -116,7 +116,12 @@ public class RunTime {
     }
 
     public boolean isConvertableWithoutCalendars() {
-        return !isEmpty() && !hasCalendars() && (singleStart != null || (repeat != null && begin != null && end != null));
+        return !isEmpty() && !hasCalendars();
+    }
+
+    public boolean hasChildElements() {
+        return periods != null || ats != null || dates != null || weekDays != null || monthDays != null || months != null || ultimos != null
+                || holidays != null || calendars != null;
     }
 
     private Schedule convertSchedule(DirectoryParserResult pr, SOSXMLXPath xpath, Node node, Map<String, String> m, Path currentPath)
