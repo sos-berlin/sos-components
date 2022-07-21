@@ -772,10 +772,10 @@ public class InventorySearchDBLayer extends DBLayer {
         if (searchInFolders) {
             hql.append("and (").append(foldersHql(folders)).append(") ");
         }
-        if (!isReleasable && !SOSString.isEmpty(controllerId)) {
+
+        controllerId = SOSString.isEmpty(controllerId) ? null : controllerId;
+        if (!isReleasable && controllerId != null) {
             hql.append("and mt.controllerId=:controllerId ");
-        } else {
-            controllerId = null;
         }
 
         /*------------------------*/
@@ -885,90 +885,248 @@ public class InventorySearchDBLayer extends DBLayer {
             break;
         case FILEORDERSOURCE:
         case SCHEDULE:
-            if (!SOSString.isEmpty(advanced.getWorkflow())) {
-                if (!advanced.getWorkflow().equals(FIND_ALL)) {
-                    workflow = advanced.getWorkflow();
+        case CALENDAR:
+            if (!SOSString.isEmpty(advanced.getWorkflow()) && !advanced.getWorkflow().equals(FIND_ALL)) {
+                workflow = advanced.getWorkflow();
+            }
+            switch (type) {
+            case FILEORDERSOURCE:
+                if (selectSchedule || selectCalendar) {
+                    String add = "where";
+                    hql.append("and exists (");
+                    hql.append("select subt.scheduleName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
+                    if (selectCalendar) {
+                        hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2CALENDARS).append(" subtc ");
+                    }
+                    if (workflow != null) {
+                        hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subti ");
+                    }
+                    if (selectCalendar) {
+                        hql.append("where subt.scheduleName=subtc.scheduleName ");
+                        add = "and";
+                    }
+                    if (workflow != null) {
+                        hql.append(add).append(" subti.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
+                        hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.content", "$.workflowName")).append(
+                                "=subt.workflowName").append(" ");
+                        hql.append(add).append(" lower(subt.workflowName) like :workflow ");
+                        if (controllerId != null) {
+                            hql.append("and subti.controllerId=:controllerId ");
+                        }
+                        add = "and";
+                    }
 
-                    switch (type) {
-                    case FILEORDERSOURCE:
+                    if (selectSchedule && !advanced.getSchedule().equals(FIND_ALL)) {
+                        schedule = advanced.getSchedule();
+                        hql.append(add).append(" lower(subt.scheduleName) like :schedule ");
+                        add = "and";
+                    }
+                    if (selectCalendar && !advanced.getCalendar().equals(FIND_ALL)) {
+                        calendar = advanced.getCalendar();
+                        hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
+                        add = "and";
+                    }
+                    hql.append(") ");
+                } else {
+                    // controllerId already used
+                    if (workflow != null) {
                         hql.append("and lower(");
                         hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.content", "$.workflowName"));
                         hql.append(") ");
                         hql.append("like :workflow ");
-                        break;
-                    case SCHEDULE:
-                        hql.append("and exists (");
-                        hql.append("select scheduleName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
-                        hql.append("where mt.name=subt.scheduleName ");
-                        hql.append("and lower(subt.workflowName) like :workflow ");
-                        hql.append(") ");
-                        break;
-                    default:
-                        break;
                     }
                 }
-            }
-
-            // type - SCHEDULE
-            if (!SOSString.isEmpty(advanced.getFileOrderSource())) {
-                hql.append("and exists (");
-                hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.content", "$.workflowName")).append(" ");
-                hql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subt ");
-                hql.append("where subt.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
-                if (!advanced.getFileOrderSource().equals(FIND_ALL)) {
-                    fileOrderSource = advanced.getFileOrderSource();
-                    hql.append("and lower(subt.name) like :fileOrderSource ");
-                }
-                if (workflow != null) {
-                    hql.append("and lower(");
-                    hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.content", "$.workflowName"));
+                break;
+            case SCHEDULE:
+                if (workflow != null || selectCalendar || selectFileOrderSource) {
+                    String add = "where";
+                    hql.append("and mt.name in (");
+                    hql.append("select subt.scheduleName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
+                    if (selectCalendar) {
+                        hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2CALENDARS).append(" subtc ");
+                    }
+                    if (selectFileOrderSource) {
+                        hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subti ");
+                    }
+                    if (selectCalendar) {
+                        hql.append(add).append(" subt.scheduleName=subtc.scheduleName ");
+                        add = "and";
+                    }
+                    if (selectFileOrderSource) {
+                        hql.append(add).append(" subti.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
+                        hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.content", "$.workflowName")).append(
+                                "=subt.workflowName").append(" ");
+                        if (controllerId != null) {
+                            hql.append("and subti.controllerId=:controllerId ");
+                        }
+                        add = "and";
+                    }
+                    if (workflow != null) {
+                        hql.append(add).append(" lower(subt.workflowName) like :workflow ");
+                        add = "and";
+                    }
+                    if (selectCalendar && !advanced.getCalendar().equals(FIND_ALL)) {
+                        calendar = advanced.getCalendar();
+                        hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
+                        add = "and";
+                    }
+                    if (selectFileOrderSource && !advanced.getFileOrderSource().equals(FIND_ALL)) {
+                        fileOrderSource = advanced.getFileOrderSource();
+                        hql.append(add).append(" lower(subti.name) like :fileOrderSource ");
+                        add = "and";
+                    }
                     hql.append(") ");
-                    hql.append("like :workflow ");
                 }
-                if (controllerId != null) {
-                    hql.append("and subt.controllerId=:controllerId ");
+                break;
+            case CALENDAR:
+                if (workflow != null || selectSchedule || selectFileOrderSource) {
+                    hql.append("and mt.name in (");
+                    hql.append("select subtc.calendarName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
+                    hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2CALENDARS).append(" subtc ");
+                    if (selectFileOrderSource) {
+                        hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subti ");
+                    }
+                    hql.append("where subt.scheduleName=subtc.scheduleName ");
+                    if (selectFileOrderSource) {
+                        hql.append("and subti.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
+                        hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.content", "$.workflowName")).append(
+                                "=subt.workflowName").append(" ");
+                        if (controllerId != null) {
+                            hql.append("and subti.controllerId=:controllerId ");
+                        }
+                    }
+                    if (workflow != null) {
+                        hql.append("and lower(subt.workflowName) like :workflow ");
+                    }
+                    if (selectSchedule && !advanced.getSchedule().equals(FIND_ALL)) {
+                        schedule = advanced.getSchedule();
+                        hql.append("and lower(subt.scheduleName) like :schedule ");
+                    }
+                    if (selectFileOrderSource && !advanced.getFileOrderSource().equals(FIND_ALL)) {
+                        fileOrderSource = advanced.getFileOrderSource();
+                        hql.append("and lower(subti.name) like :fileOrderSource ");
+                    }
+                    hql.append(") ");
                 }
-                hql.append(") ");
+                break;
+
+            default:
+                break;
             }
 
-            // type - FILEORDERSOURCE
-            if (!SOSString.isEmpty(advanced.getSchedule())) {
-                hql.append("and exists (");
-                hql.append("select scheduleName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
-                String add = " where ";
-                if (!advanced.getSchedule().equals(FIND_ALL)) {
-                    schedule = advanced.getSchedule();
-                    hql.append(add).append("lower(subt.scheduleName) like :schedule ");
-                    add = " and ";
-                }
-                if (workflow != null) {
-                    hql.append(add).append("lower(subt.workflowName) like :workflow ");
-                }
-                hql.append(") ");
-            }
-
+            // ----------------------------------------------------
             hql.append("and exists(");// start exists
             hql.append("  select sw.id from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
             hql.append("  ,").append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY).append(" swdh ");
             hql.append("  where sw.id=swdh.searchWorkflowId ");
+            if (controllerId != null) {
+                hql.append(" and swdh.controllerId=:controllerId ");
+            }
             hql.append("  and swdh.deploymentHistoryId in (");
-            hql.append("    select dc.id from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc ");
+            hql.append("    select ic.id from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" ic ");
             switch (type) {
             case FILEORDERSOURCE:
-                hql.append("    where dc.name=").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.content", "$.workflowName"));
+                if (selectSchedule || selectCalendar) {
+                    hql.append("    where ic.name in(");
+                    hql.append("         select subt.workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
+                    hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subti ");
+                    if (selectCalendar) {
+                        hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2CALENDARS).append(" subtc ");
+                    }
+                    hql.append("where subti.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
+                    hql.append("and mt.name=subti.name ");
+                    hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.content", "$.workflowName")).append(
+                            "=subt.workflowName").append(" ");
+                    if (workflow != null) {
+                        hql.append(" and lower(subt.workflowName) like :workflow ");
+                    }
+                    if (selectCalendar) {
+                        hql.append(" and subt.scheduleName=subtc.scheduleName ");
+                        if (calendar != null) {
+                            hql.append(" and  lower(subtc.calendarName) like :calendar ");
+                        }
+                    }
+                    if (controllerId != null) {
+                        hql.append(" and subti.controllerId=:controllerId ");
+                    }
+                    hql.append(") ");
+                    break;
+                } else {
+                    if (workflow != null) {
+                        hql.append(" where ic.name=").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.content", "$.workflowName"));
+                        hql.append(" and lower(ic.name) like :workflow ");
+                    } else {
+                        hql.append(" where 1=1 ");
+                    }
+                }
                 break;
             case SCHEDULE:
-                hql.append("    where dc.name in(");
-                hql.append("         select workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
-                hql.append("         where mt.name=subt.scheduleName ");
-                hql.append("    ) ");
+                hql.append("    where ic.name in(");
+                hql.append("         select subt.workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
+                if (selectCalendar) {
+                    hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2CALENDARS).append(" subtc ");
+                }
+                if (selectFileOrderSource) {
+                    hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subti ");
+                }
+                hql.append(" where mt.name=subt.scheduleName ");
+                if (selectFileOrderSource) {
+                    hql.append("and subti.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
+                    hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.content", "$.workflowName")).append(
+                            "=subt.workflowName").append(" ");
+                    if (fileOrderSource != null) {
+                        hql.append("and lower(subti.name) like :fileOrderSource ");
+                    }
+                    if (controllerId != null) {
+                        hql.append(" and subti.controllerId=:controllerId ");
+                    }
+                }
+                if (selectCalendar) {
+                    hql.append(" and subt.scheduleName=subtc.scheduleName ");
+                    if (calendar != null) {
+                        hql.append(" and  lower(subtc.calendarName) like :calendar ");
+                    }
+                }
+                if (workflow != null) {
+                    hql.append(" and lower(subt.workflowName) like :workflow ");
+                }
+                hql.append(") ");
+                break;
+            case CALENDAR:
+                hql.append("    where ic.name in(");
+                hql.append("         select subt.workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
+                hql.append("         ,").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2CALENDARS).append(" subtc ");
+                if (selectFileOrderSource) {
+                    hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subti ");
+                }
+                hql.append(" where mt.name=subtc.calendarName ");
+                hql.append(" and subt.scheduleName=subtc.scheduleName ");
+                if (selectFileOrderSource) {
+                    hql.append("and subti.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
+                    hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.content", "$.workflowName")).append(
+                            "=subt.workflowName").append(" ");
+                    if (fileOrderSource != null) {
+                        hql.append("and lower(subti.name) like :fileOrderSource ");
+                    }
+                    if (controllerId != null) {
+                        hql.append(" and subti.controllerId=:controllerId ");
+                    }
+                }
+                if (workflow != null) {
+                    hql.append(" and  lower(subt.workflowName) like :workflow ");
+                }
+                if (schedule != null) {
+                    hql.append(" and  lower(subt.scheduleName) like :schedule ");
+                }
+                hql.append(") ");
                 break;
             default:
                 break;
             }
-            hql.append("    and dc.type=").append(ConfigurationType.WORKFLOW.intValue()).append(" ");
+            // -------------------------------------------------------
+            hql.append("    and ic.type=").append(ConfigurationType.WORKFLOW.intValue()).append(" ");
             if (controllerId != null) {
-                hql.append("and dc.controllerId=:controllerId ");
+                hql.append("and ic.controllerId=:controllerId ");
             }
             hql.append("  ) ");
             if (advanced.getJobCountFrom() != null) {

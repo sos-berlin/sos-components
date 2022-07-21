@@ -95,7 +95,7 @@ public class InventorySearchDBLayerTest {
 
             // List<InventorySearchItem> items = dbLayer.getAdvancedSearchInventoryConfigurations(RequestSearchReturnType.FILEORDERSOURCE, search,
             // folders, advanced);
-            List<InventorySearchItem> items = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(RequestSearchReturnType.WORKFLOW, search,
+            List<InventorySearchItem> items = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(RequestSearchReturnType.CALENDAR, search,
                     folders, advanced, "js7.x");
             LOGGER.info("RESULT=" + items.size());
             for (InventorySearchItem item : items) {
