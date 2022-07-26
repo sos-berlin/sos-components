@@ -1007,7 +1007,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
     private Variables removeVariables(Variables vars, List<String> toRemove) throws IOException {
-        toRemove.forEach(k -> vars.getAdditionalProperties().remove(k));
+        if (toRemove != null) {
+            toRemove.forEach(k -> vars.getAdditionalProperties().remove(k));
+        }
         return vars;
     }
 
