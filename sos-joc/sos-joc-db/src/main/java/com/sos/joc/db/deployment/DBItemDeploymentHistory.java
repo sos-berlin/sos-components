@@ -19,7 +19,6 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.common.IDeployObject;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 
 @Entity
 @Table(name = DBLayer.TABLE_DEP_HISTORY, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]", "[TYPE]", "[CONTROLLER_ID]",

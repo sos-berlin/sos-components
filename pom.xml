@@ -35,7 +35,7 @@
 
     <sos.engine.version>2.4.0</sos.engine.version>
     <api.schema.version>${project.version}</api.schema.version>
-    <inventory.schema.version>1.4.0</inventory.schema.version>
+    <inventory.schema.version>1.5.0-SNAPSHOT</inventory.schema.version>
     <sos.license.version>1.2.0-SNAPSHOT</sos.license.version>
 
     <!-- 3rd Party version properties and the dependencyManagement have to 

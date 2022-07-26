@@ -339,8 +339,7 @@ public class Validator {
             // TODO check JobResources references in Job
             try {
                 Job job = entry.getValue();
-                JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(job), URI.create(JocInventory.SCHEMA_LOCATION.get(
-                        ConfigurationType.JOB)));
+                JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(job), URI.create("classpath:/raml/inventory/schemas/job/job-schema.json"));
                 if (job.getJobResourceNames() != null) {
                     jobResources.addAll(job.getJobResourceNames());
                 }
