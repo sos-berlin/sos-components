@@ -143,7 +143,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                             folder.getWorkflows().add(config);
                             break;
                         case JOB:
-                            folder.getJobs().add(config);
+                            folder.getJobTemplates().add(config);
                             break;
                         case JOBCLASS:
                             folder.getJobClasses().add(config);
@@ -180,7 +180,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 }
 
                 folder.setWorkflows(sort(folder.getWorkflows()));
-                folder.setJobs(sort(folder.getJobs()));
+                folder.setJobTemplates(sort(folder.getJobTemplates()));
                 folder.setJobClasses(sort(folder.getJobClasses()));
                 folder.setJobResources(sort(folder.getJobResources()));
                 folder.setLocks(sort(folder.getLocks()));

@@ -25,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deliveryDate",
     "path",
     "workflows",
-    "jobs",
+    "jobTemplates",
     "jobClasses",
     "jobResources",
     "locks",
@@ -60,9 +60,9 @@ public class ResponseFolder {
     @JsonProperty("workflows")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<ResponseFolderItem> workflows = new LinkedHashSet<ResponseFolderItem>();
-    @JsonProperty("jobs")
+    @JsonProperty("jobTemplates")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<ResponseFolderItem> jobs = new LinkedHashSet<ResponseFolderItem>();
+    private Set<ResponseFolderItem> jobTemplates = new LinkedHashSet<ResponseFolderItem>();
     @JsonProperty("jobClasses")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<ResponseFolderItem> jobClasses = new LinkedHashSet<ResponseFolderItem>();
@@ -146,14 +146,14 @@ public class ResponseFolder {
         this.workflows = workflows;
     }
 
-    @JsonProperty("jobs")
-    public Set<ResponseFolderItem> getJobs() {
-        return jobs;
+    @JsonProperty("jobTemplates")
+    public Set<ResponseFolderItem> getJobTemplates() {
+        return jobTemplates;
     }
 
-    @JsonProperty("jobs")
-    public void setJobs(Set<ResponseFolderItem> jobs) {
-        this.jobs = jobs;
+    @JsonProperty("jobTemplates")
+    public void setJobTemplates(Set<ResponseFolderItem> jobTemplates) {
+        this.jobTemplates = jobTemplates;
     }
 
     @JsonProperty("jobClasses")
@@ -238,12 +238,12 @@ public class ResponseFolder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("path", path).append("workflows", workflows).append("jobs", jobs).append("jobClasses", jobClasses).append("jobResources", jobResources).append("locks", locks).append("noticeBoards", noticeBoards).append("fileOrderSources", fileOrderSources).append("schedules", schedules).append("includeScripts", includeScripts).append("calendars", calendars).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("path", path).append("workflows", workflows).append("jobTemplates", jobTemplates).append("jobClasses", jobClasses).append("jobResources", jobResources).append("locks", locks).append("noticeBoards", noticeBoards).append("fileOrderSources", fileOrderSources).append("schedules", schedules).append("includeScripts", includeScripts).append("calendars", calendars).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(includeScripts).append(jobs).append(jobClasses).append(workflows).append(locks).append(noticeBoards).append(path).append(fileOrderSources).append(calendars).append(schedules).append(deliveryDate).append(jobResources).toHashCode();
+        return new HashCodeBuilder().append(includeScripts).append(jobClasses).append(workflows).append(locks).append(noticeBoards).append(path).append(fileOrderSources).append(calendars).append(schedules).append(jobTemplates).append(deliveryDate).append(jobResources).toHashCode();
     }
 
     @Override
@@ -255,7 +255,7 @@ public class ResponseFolder {
             return false;
         }
         ResponseFolder rhs = ((ResponseFolder) other);
-        return new EqualsBuilder().append(includeScripts, rhs.includeScripts).append(jobs, rhs.jobs).append(jobClasses, rhs.jobClasses).append(workflows, rhs.workflows).append(locks, rhs.locks).append(noticeBoards, rhs.noticeBoards).append(path, rhs.path).append(fileOrderSources, rhs.fileOrderSources).append(calendars, rhs.calendars).append(schedules, rhs.schedules).append(deliveryDate, rhs.deliveryDate).append(jobResources, rhs.jobResources).isEquals();
+        return new EqualsBuilder().append(includeScripts, rhs.includeScripts).append(jobClasses, rhs.jobClasses).append(workflows, rhs.workflows).append(locks, rhs.locks).append(noticeBoards, rhs.noticeBoards).append(path, rhs.path).append(fileOrderSources, rhs.fileOrderSources).append(calendars, rhs.calendars).append(schedules, rhs.schedules).append(jobTemplates, rhs.jobTemplates).append(deliveryDate, rhs.deliveryDate).append(jobResources, rhs.jobResources).isEquals();
     }
 
 }

@@ -206,7 +206,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 events.add(newFolder);
             }
             
-            session.commit();
+            Globals.commit(session);
             for (String event : events) {
                 JocInventory.postEvent(event);
             }
