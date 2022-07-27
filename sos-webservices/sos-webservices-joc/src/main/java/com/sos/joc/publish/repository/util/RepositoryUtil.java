@@ -33,18 +33,12 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.inventory.model.board.Board;
-import com.sos.inventory.model.calendar.Calendar;
-import com.sos.inventory.model.fileordersource.FileOrderSource;
-import com.sos.inventory.model.job.Job;
-import com.sos.inventory.model.jobclass.JobClass;
-import com.sos.inventory.model.jobresource.JobResource;
-import com.sos.inventory.model.lock.Lock;
-import com.sos.inventory.model.schedule.Schedule;
-import com.sos.inventory.model.script.Script;
-import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -57,7 +51,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.inventory.folder.Folder;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.OperationType;
@@ -85,6 +78,8 @@ public abstract class RepositoryUtil {
             return ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
         case INCLUDESCRIPT:
             return ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
+        case JOB:
+            return ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString();
         case JOBCLASS:
             return ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
         case JOBRESOURCE:
@@ -219,6 +214,8 @@ public abstract class RepositoryUtil {
             return ConfigurationType.SCHEDULE;
         } else if (path.toString().endsWith(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString())) {
             return ConfigurationType.INCLUDESCRIPT;
+        } else if (path.toString().endsWith(ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString())) {
+            return ConfigurationType.JOB;
         } else {
             return ConfigurationType.FOLDER;
         }
@@ -504,6 +501,9 @@ public abstract class RepositoryUtil {
                 case INCLUDESCRIPT:
                     extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                     break;
+                case JOB:
+                    extension = ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString();
+                    break;
                 case WORKINGDAYSCALENDAR:
                 case NONWORKINGDAYSCALENDAR:
                     extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
@@ -642,6 +642,9 @@ public abstract class RepositoryUtil {
                 case INCLUDESCRIPT:
                     extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                     break;
+                case JOB:
+                    extension = ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString();
+                    break;
                 case WORKINGDAYSCALENDAR:
                 case NONWORKINGDAYSCALENDAR:
                     extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
@@ -712,8 +715,7 @@ public abstract class RepositoryUtil {
                     }
                     String updatedContent = null;
                     if (!ConfigurationType.FOLDER.equals(objType)) {
-                        updatedContent = Globals.objectMapper.writeValueAsString(Globals.prettyPrintObjectMapper.readValue(content,
-                                getConfigurationClass(objType)));
+                        updatedContent = getConfiguration(content, objType);
                     }
                     if (updatedContent != null) {
                         boolean valid = true;
@@ -795,8 +797,7 @@ public abstract class RepositoryUtil {
                 }
                 String updatedContent = null;
                 if (!ConfigurationType.FOLDER.equals(objType)) {
-                    updatedContent = Globals.objectMapper.writeValueAsString(Globals.prettyPrintObjectMapper.readValue(content,
-                            getConfigurationClass(objType)));
+                    updatedContent = getConfiguration(content, objType);
                 }
                 InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession()); 
                 if (updatedContent != null) {
@@ -821,8 +822,7 @@ public abstract class RepositoryUtil {
                     ConfigurationType type = getConfigurationTypeFromFileExtension(pathFromRepo);
                     String updatedContent = null;
                     if (!ConfigurationType.FOLDER.equals(type)) {
-                        updatedContent = Globals.objectMapper.writeValueAsString(Globals.prettyPrintObjectMapper.readValue(content,
-                                getConfigurationClass(type)));
+                        updatedContent = getConfiguration(content, type);
                     }
                     if (updatedContent != null) {
                         boolean valid = true;
@@ -858,6 +858,8 @@ public abstract class RepositoryUtil {
             return Paths.get(cfg.getPath() + getExtension(ConfigurationType.FILEORDERSOURCE));
         case INCLUDESCRIPT:
             return Paths.get(cfg.getPath() + getExtension(ConfigurationType.INCLUDESCRIPT));
+        case JOB:
+            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.JOB));
         case JOBCLASS:
             return Paths.get(cfg.getPath() + getExtension(ConfigurationType.JOBCLASS));
         case JOBRESOURCE:
@@ -879,34 +881,12 @@ public abstract class RepositoryUtil {
         }
     }
 
-    private static Class<?> getConfigurationClass (ConfigurationType type) {
-        switch (type) {
-        case WORKFLOW:
-            return Workflow.class;
-        case FILEORDERSOURCE:
-            return FileOrderSource.class;
-        case LOCK:
-            return Lock.class;
-        case NOTICEBOARD:
-            return Board.class;
-        case JOBRESOURCE:
-            return JobResource.class;
-        case JOBCLASS:
-            return JobClass.class;
-        case JOB:
-            return Job.class;
-        case INCLUDESCRIPT:
-            return Script.class;
-        case SCHEDULE:
-            return Schedule.class;
-        case WORKINGDAYSCALENDAR:
-        case NONWORKINGDAYSCALENDAR:
-            return Calendar.class;
-        case FOLDER:
-            return Folder.class;
-        default:
+    private static String getConfiguration(byte[] content, ConfigurationType type) throws StreamReadException, DatabindException,
+            JsonProcessingException, IOException {
+        if (content == null || !JocInventory.CLASS_MAPPING.containsKey(type)) {
             return null;
         }
+        return Globals.objectMapper.writeValueAsString(Globals.prettyPrintObjectMapper.readValue(content, JocInventory.CLASS_MAPPING.get(type)));
     }
     
     private static Set<ConfigurationObject> getDeployableConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, String commitId, 
@@ -1240,6 +1220,16 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.INCLUDESCRIPT);
             }
         }
+        if (Globals.getConfigurationGlobalsGit().getHoldJobs().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldJobs().getValue().isEmpty()) {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobs().getValue())) {
+                types.add(ConfigurationType.JOB);
+            }
+        } else {
+            if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobs().getDefault())) {
+                types.add(ConfigurationType.JOB);
+            }
+        }
         if (Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue() != null 
                 && !Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue().isEmpty()) {
             if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue())) {
@@ -1325,6 +1315,16 @@ public abstract class RepositoryUtil {
         } else {
             if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getDefault())) {
                 types.add(ConfigurationType.INCLUDESCRIPT);
+            }
+        }
+        if (Globals.getConfigurationGlobalsGit().getHoldJobs().getValue() != null 
+                && !Globals.getConfigurationGlobalsGit().getHoldJobs().getValue().isEmpty()) {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobs().getValue())) {
+                types.add(ConfigurationType.JOB);
+            }
+        } else {
+            if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobs().getDefault())) {
+                types.add(ConfigurationType.JOB);
             }
         }
         if (Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue() != null 

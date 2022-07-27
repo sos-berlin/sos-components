@@ -4,7 +4,7 @@ package com.sos.joc.model.inventory.job;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.job.Job;
+import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * JS AgentRef Edit configuration
+ * Job Template Edit configuration
  * <p>
  * 
  * 
@@ -26,33 +26,33 @@ public class JobEdit
 {
 
     /**
-     * job
+     * JobTemplate
      * <p>
      * 
      * 
      */
     @JsonProperty("configuration")
-    private Job configuration;
+    private JobTemplate configuration;
 
     /**
-     * job
+     * JobTemplate
      * <p>
      * 
      * 
      */
     @JsonProperty("configuration")
-    public Job getConfiguration() {
+    public JobTemplate getConfiguration() {
         return configuration;
     }
 
     /**
-     * job
+     * JobTemplate
      * <p>
      * 
      * 
      */
     @JsonProperty("configuration")
-    public void setConfiguration(Job configuration) {
+    public void setConfiguration(JobTemplate configuration) {
         this.configuration = configuration;
     }
 

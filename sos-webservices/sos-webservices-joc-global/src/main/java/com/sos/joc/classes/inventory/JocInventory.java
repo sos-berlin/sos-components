@@ -41,6 +41,7 @@ import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobclass.JobClass;
 import com.sos.inventory.model.jobresource.JobResource;
+import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.script.Script;
@@ -96,7 +97,7 @@ public class JocInventory {
         {
             put(ConfigurationType.WORKINGDAYSCALENDAR, "classpath:/raml/inventory/schemas/calendar/calendar-schema.json");
             put(ConfigurationType.NONWORKINGDAYSCALENDAR, "classpath:/raml/inventory/schemas/calendar/calendar-schema.json");
-            put(ConfigurationType.JOB, "classpath:/raml/inventory/schemas/job/job-schema.json");
+            put(ConfigurationType.JOB, "classpath:/raml/inventory/schemas/jobTemplate/jobTemplate-schema.json");
             put(ConfigurationType.JOBCLASS, "classpath:/raml/inventory/schemas/jobClass/jobClass-schema.json");
             put(ConfigurationType.JOBRESOURCE, "classpath:/raml/inventory/schemas/jobresource/jobResource-schema.json");
             put(ConfigurationType.LOCK, "classpath:/raml/inventory/schemas/lock/lock-schema.json");
@@ -141,7 +142,7 @@ public class JocInventory {
         private static final long serialVersionUID = 1L;
 
         {
-            put(ConfigurationType.JOB, Job.class);
+            put(ConfigurationType.JOB, JobTemplate.class);
             put(ConfigurationType.JOBCLASS, JobClass.class);
             put(ConfigurationType.JOBRESOURCE, JobResource.class);
             put(ConfigurationType.LOCK, Lock.class);
@@ -156,13 +157,13 @@ public class JocInventory {
         }
     });
 
-    public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ConfigurationType.JOB,
+    public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             ConfigurationType.JOBCLASS, ConfigurationType.FILEORDERSOURCE, ConfigurationType.LOCK, ConfigurationType.WORKFLOW,
             ConfigurationType.JOBRESOURCE, ConfigurationType.NOTICEBOARD)));
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             ConfigurationType.SCHEDULE, ConfigurationType.INCLUDESCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR,
-            ConfigurationType.WORKINGDAYSCALENDAR)));
+            ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOB)));
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);

@@ -38,6 +38,7 @@ import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Workflow;
@@ -66,6 +67,7 @@ import com.sos.joc.model.inventory.board.BoardPublish;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.fileordersource.FileOrderSourceEdit;
 import com.sos.joc.model.inventory.fileordersource.FileOrderSourcePublish;
+import com.sos.joc.model.inventory.job.JobEdit;
 import com.sos.joc.model.inventory.jobclass.JobClassEdit;
 import com.sos.joc.model.inventory.jobclass.JobClassPublish;
 import com.sos.joc.model.inventory.jobresource.JobResourceEdit;
@@ -324,9 +326,9 @@ public class ImportUtils {
     }
     
     public static List<ConfigurationType> getImportOrder() {
-        return Arrays.asList(ConfigurationType.LOCK,  ConfigurationType.NOTICEBOARD, 
-                ConfigurationType.JOBRESOURCE, ConfigurationType.INCLUDESCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR,
-                ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
+        return Arrays.asList(ConfigurationType.LOCK, ConfigurationType.NOTICEBOARD, ConfigurationType.JOBRESOURCE, ConfigurationType.INCLUDESCRIPT,
+                ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOB, ConfigurationType.WORKFLOW,
+                ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
     }
 
     public static Map<ControllerObject, SignaturePath> readZipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo)
@@ -546,7 +548,7 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             WorkflowEdit workflowEdit = new WorkflowEdit();
-            com.sos.inventory.model.workflow.Workflow workflow = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
+            com.sos.inventory.model.workflow.Workflow workflow = Globals.objectMapper.readValue(outBuffer.toByteArray(),
                     com.sos.inventory.model.workflow.Workflow.class);
             workflow = JsonSerializer.emptyValuesToNull(workflow);
             if (checkObjectNotEmpty(workflow)) {
@@ -566,8 +568,8 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             JobResourceEdit jobResourceEdit = new JobResourceEdit();
-            com.sos.inventory.model.jobresource.JobResource jobResource = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8
-                    .displayName()), com.sos.inventory.model.jobresource.JobResource.class);
+            com.sos.inventory.model.jobresource.JobResource jobResource = Globals.objectMapper.readValue(outBuffer.toByteArray(),
+                    com.sos.inventory.model.jobresource.JobResource.class);
             if (checkObjectNotEmpty(jobResource)) {
                 jobResourceEdit.setConfiguration(jobResource);
             } else {
@@ -584,7 +586,7 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             LockEdit lockEdit = new LockEdit();
-            com.sos.inventory.model.lock.Lock lock = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
+            com.sos.inventory.model.lock.Lock lock = Globals.objectMapper.readValue(outBuffer.toByteArray(),
                     com.sos.inventory.model.lock.Lock.class);
             if (checkObjectNotEmpty(lock)) {
                 lockEdit.setConfiguration(lock);
@@ -601,7 +603,7 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             BoardEdit boardEdit = new BoardEdit();
-            com.sos.inventory.model.board.Board board = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
+            com.sos.inventory.model.board.Board board = Globals.objectMapper.readValue(outBuffer.toByteArray(),
                     com.sos.inventory.model.board.Board.class);
             if (checkObjectNotEmpty(board)) {
                 boardEdit.setConfiguration(board);
@@ -618,8 +620,8 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             JobClassEdit jobClassEdit = new JobClassEdit();
-            com.sos.inventory.model.jobclass.JobClass jobClass = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8
-                    .displayName()), com.sos.inventory.model.jobclass.JobClass.class);
+            com.sos.inventory.model.jobclass.JobClass jobClass = Globals.objectMapper.readValue(outBuffer.toByteArray(),
+                    com.sos.inventory.model.jobclass.JobClass.class);
             if (checkObjectNotEmpty(jobClass)) {
                 jobClassEdit.setConfiguration(jobClass);
             } else {
@@ -637,8 +639,8 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
-            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = Globals.objectMapper.readValue(outBuffer.toString(
-                    StandardCharsets.UTF_8.displayName()), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = Globals.objectMapper.readValue(outBuffer.toByteArray(),
+                    com.sos.inventory.model.fileordersource.FileOrderSource.class);
             fileOrderSource = JsonSerializer.emptyValuesToNull(fileOrderSource);
             if (checkObjectNotEmpty(fileOrderSource)) {
                 fileOrderSourceEdit.setConfiguration(fileOrderSource);
@@ -657,7 +659,7 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             ScheduleEdit scheduleEdit = new ScheduleEdit();
-            Schedule schedule = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Schedule.class);
+            Schedule schedule = Globals.objectMapper.readValue(outBuffer.toByteArray(), Schedule.class);
             if (checkObjectNotEmpty(schedule)) {
                 scheduleEdit.setConfiguration(schedule);
             } else {
@@ -675,7 +677,7 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             ScriptEdit scriptEdit = new ScriptEdit();
-            Script script = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Script.class);
+            Script script = Globals.objectMapper.readValue(outBuffer.toByteArray(), Script.class);
             if (checkObjectNotEmpty(script)) {
                 scriptEdit.setConfiguration(script);
             } else {
@@ -686,13 +688,31 @@ public class ImportUtils {
             scriptEdit.setPath(normalizedPath);
             scriptEdit.setObjectType(ConfigurationType.INCLUDESCRIPT);
             return scriptEdit;
+        } else if (entryName.endsWith(ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.value(),
+                    ""));
+            if (normalizedPath.startsWith("//")) {
+                normalizedPath = normalizedPath.substring(1);
+            }
+            JobEdit jobEdit = new JobEdit();
+            JobTemplate jobTemplate = Globals.objectMapper.readValue(outBuffer.toByteArray(), JobTemplate.class);
+            if (checkObjectNotEmpty(jobTemplate)) {
+                jobEdit.setConfiguration(jobTemplate);
+            } else {
+                throw new JocImportException(String.format("Job template with path %1$s not imported. Object values could not be mapped.",
+                        normalizedPath));
+            }
+            jobEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+            jobEdit.setPath(normalizedPath);
+            jobEdit.setObjectType(ConfigurationType.JOB);
+            return jobEdit;
         } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
             String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(),
                     ""));
             if (normalizedPath.startsWith("//")) {
                 normalizedPath = normalizedPath.substring(1);
             }
-            Calendar cal = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Calendar.class);
+            Calendar cal = Globals.objectMapper.readValue(outBuffer.toByteArray(), Calendar.class);
             if (checkObjectNotEmpty(cal)) {
                 if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                     WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
@@ -727,6 +747,14 @@ public class ImportUtils {
 
     private static boolean checkObjectNotEmpty(Script script) {
         if (script != null && script.getScript() == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
+    private static boolean checkObjectNotEmpty(JobTemplate job) {
+        if (job != null && job.getExecutable() == null) {
             return false;
         } else {
             return true;

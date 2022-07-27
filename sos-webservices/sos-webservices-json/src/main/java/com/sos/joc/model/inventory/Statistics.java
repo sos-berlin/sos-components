@@ -29,7 +29,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "numOfFileOrderSources",
     "numOfSchedules",
     "numOfCalendars",
-    "numOfIncludeScripts"
+    "numOfIncludeScripts",
+    "numOfJobTemplates"
 })
 public class Statistics {
 
@@ -125,6 +126,14 @@ public class Statistics {
      */
     @JsonProperty("numOfIncludeScripts")
     private Long numOfIncludeScripts;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfJobTemplates")
+    private Long numOfJobTemplates;
 
     /**
      * timestamp
@@ -372,14 +381,36 @@ public class Statistics {
         this.numOfIncludeScripts = numOfIncludeScripts;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfJobTemplates")
+    public Long getNumOfJobTemplates() {
+        return numOfJobTemplates;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfJobTemplates")
+    public void setNumOfJobTemplates(Long numOfJobTemplates) {
+        this.numOfJobTemplates = numOfJobTemplates;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("numOfJobs", numOfJobs).append("numOfWorkflows", numOfWorkflows).append("numOfLocks", numOfLocks).append("numOfNoticeBoards", numOfNoticeBoards).append("numOfJobResources", numOfJobResources).append("numOfFileOrderSources", numOfFileOrderSources).append("numOfSchedules", numOfSchedules).append("numOfCalendars", numOfCalendars).append("numOfIncludeScripts", numOfIncludeScripts).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("numOfJobs", numOfJobs).append("numOfWorkflows", numOfWorkflows).append("numOfLocks", numOfLocks).append("numOfNoticeBoards", numOfNoticeBoards).append("numOfJobResources", numOfJobResources).append("numOfFileOrderSources", numOfFileOrderSources).append("numOfSchedules", numOfSchedules).append("numOfCalendars", numOfCalendars).append("numOfIncludeScripts", numOfIncludeScripts).append("numOfJobTemplates", numOfJobTemplates).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(numOfNoticeBoards).append(numOfCalendars).append(surveyDate).append(numOfJobs).append(numOfFileOrderSources).append(numOfLocks).append(numOfSchedules).append(numOfIncludeScripts).append(deliveryDate).append(numOfJobResources).append(numOfWorkflows).toHashCode();
+        return new HashCodeBuilder().append(numOfCalendars).append(surveyDate).append(numOfFileOrderSources).append(numOfWorkflows).append(numOfNoticeBoards).append(numOfJobTemplates).append(numOfIncludeScripts).append(numOfJobs).append(numOfLocks).append(numOfSchedules).append(deliveryDate).append(numOfJobResources).toHashCode();
     }
 
     @Override
@@ -391,7 +422,7 @@ public class Statistics {
             return false;
         }
         Statistics rhs = ((Statistics) other);
-        return new EqualsBuilder().append(numOfNoticeBoards, rhs.numOfNoticeBoards).append(numOfCalendars, rhs.numOfCalendars).append(surveyDate, rhs.surveyDate).append(numOfJobs, rhs.numOfJobs).append(numOfFileOrderSources, rhs.numOfFileOrderSources).append(numOfLocks, rhs.numOfLocks).append(numOfSchedules, rhs.numOfSchedules).append(numOfIncludeScripts, rhs.numOfIncludeScripts).append(deliveryDate, rhs.deliveryDate).append(numOfJobResources, rhs.numOfJobResources).append(numOfWorkflows, rhs.numOfWorkflows).isEquals();
+        return new EqualsBuilder().append(numOfCalendars, rhs.numOfCalendars).append(surveyDate, rhs.surveyDate).append(numOfFileOrderSources, rhs.numOfFileOrderSources).append(numOfWorkflows, rhs.numOfWorkflows).append(numOfNoticeBoards, rhs.numOfNoticeBoards).append(numOfJobTemplates, rhs.numOfJobTemplates).append(numOfIncludeScripts, rhs.numOfIncludeScripts).append(numOfJobs, rhs.numOfJobs).append(numOfLocks, rhs.numOfLocks).append(numOfSchedules, rhs.numOfSchedules).append(deliveryDate, rhs.deliveryDate).append(numOfJobResources, rhs.numOfJobResources).isEquals();
     }
 
 }
