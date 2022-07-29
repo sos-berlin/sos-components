@@ -12,7 +12,6 @@ import com.sos.js7.converter.commons.config.JS7ConverterConfig.GenerateConfig;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig.JobConfig;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig.MockConfig;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig.ParserConfig;
-import com.sos.js7.converter.commons.config.JS7ConverterConfig.Platform;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig.ScheduleConfig;
 
 public class JS7ConverterTest {
@@ -29,8 +28,8 @@ public class JS7ConverterTest {
         parser.withExcludedDirectoryNames(".sos-templates;.svn;.configuration;").withExcludedDirectoryPaths("sos/;xxx/");
 
         AgentConfig agent = JS7Converter.CONFIG.getAgentConfig();
-        agent.withForcedPlatform(Platform.WINDOWS);
         agent.withDefaultControllerId("js7");
+        // agent.withMappings("agent=src/test/resources/agent_cluster.json");
         // agent.withForcedAgent("src/test/resources/agent_cluster.json");
         // agent.withForcedAgent(
         // "{\"standaloneAgent\":{\"agentName\":\"forced_agent_name\", \"url\":\"http://forced_agent:6666\",\"controllerId\":\"forced_agent_controller_id\"}}");
