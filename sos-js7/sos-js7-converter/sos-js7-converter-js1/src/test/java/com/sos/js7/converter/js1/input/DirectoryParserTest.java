@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSDate;
-import com.sos.js7.converter.commons.JS7ConverterConfig;
+import com.sos.js7.converter.commons.config.JS7ConverterConfig;
 import com.sos.js7.converter.js1.common.Folder;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 

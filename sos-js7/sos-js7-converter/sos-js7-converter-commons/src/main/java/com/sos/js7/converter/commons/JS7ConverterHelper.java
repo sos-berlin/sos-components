@@ -2,6 +2,7 @@ package com.sos.js7.converter.commons;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
+import com.sos.joc.model.agent.SubAgent;
 import com.sos.js7.converter.commons.report.ConverterReport;
 
 public class JS7ConverterHelper {
@@ -190,7 +192,10 @@ public class JS7ConverterHelper {
     }
 
     public static Node getDocumentRoot(Path p) throws Exception {
-        return SOSXML.parse(p).getDocumentElement();
+        if (Files.exists(p)) {
+            return SOSXML.parse(p).getDocumentElement();
+        }
+        return null;
     }
 
     public static Map<String, String> attribute2map(Node node) {
@@ -286,6 +291,13 @@ public class JS7ConverterHelper {
         }
         int i = p.lastIndexOf("/");
         return i > -1 ? p.substring(i + 1) : p;
+    }
+
+    public static List<SubAgent> copy(List<SubAgent> l) {
+        if (l == null) {
+            return null;
+        }
+        return new ArrayList<>(l);
     }
 
 }

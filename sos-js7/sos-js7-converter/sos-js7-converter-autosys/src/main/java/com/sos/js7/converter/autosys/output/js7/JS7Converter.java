@@ -55,11 +55,11 @@ import com.sos.js7.converter.autosys.input.AFileParser;
 import com.sos.js7.converter.autosys.input.DirectoryParser;
 import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
 import com.sos.js7.converter.autosys.report.AutosysReport;
-import com.sos.js7.converter.commons.JS7ConverterConfig;
-import com.sos.js7.converter.commons.JS7ConverterConfig.SubFolderConfig;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.JS7ConverterResult;
 import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
+import com.sos.js7.converter.commons.config.JS7ConverterConfig;
+import com.sos.js7.converter.commons.config.JS7ConverterConfig.SubFolderConfig;
 import com.sos.js7.converter.commons.output.OutputWriter;
 import com.sos.js7.converter.commons.report.ConverterReport;
 import com.sos.js7.converter.commons.report.ConverterReportWriter;
@@ -710,12 +710,12 @@ public class JS7Converter {
 
     private static Job setAgent(JS7ConverterResult result, Job j, JobCMD jilJob) {
         if (CONFIG.getAgentConfig().getForcedAgent() != null) {
-            j.setAgentName(CONFIG.getAgentConfig().getForcedAgent().getName());
+            j.setAgentName(CONFIG.getAgentConfig().getForcedAgent().getJS7AgentName());
         } else {
             // TODO agent cluster etc
             String name = normalizeName(result, jilJob, jilJob.getMachine().getValue());
             if (CONFIG.getAgentConfig().getMappings().containsKey(name)) {
-                name = CONFIG.getAgentConfig().getMappings().get(name).getName();
+                name = CONFIG.getAgentConfig().getMappings().get(name).getJS7AgentName();
             }
             j.setAgentName(name);
         }

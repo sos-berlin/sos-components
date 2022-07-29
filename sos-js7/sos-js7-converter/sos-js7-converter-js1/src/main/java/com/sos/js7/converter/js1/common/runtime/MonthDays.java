@@ -1,5 +1,6 @@
 package com.sos.js7.converter.js1.common.runtime;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import org.w3c.dom.Node;
@@ -12,9 +13,9 @@ public class MonthDays {
     private List<Day> days;
     private List<WeekDay> weekDays;
 
-    protected MonthDays(SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
-        this.days = RunTime.convertDay(xpath, node);
-        this.weekDays = RunTime.convertWeekDay(xpath, node);
+    protected MonthDays(Path path, SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
+        this.days = RunTime.convertDay(path, xpath, node);
+        this.weekDays = RunTime.convertWeekDay(path, xpath, node);
     }
 
     public List<Day> getDays() {

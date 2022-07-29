@@ -1,5 +1,6 @@
 package com.sos.js7.converter.js1.common.runtime;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -22,14 +23,14 @@ public class Month {
     // "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december".
     private String month;
 
-    protected Month(SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
+    protected Month(Path path, SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
         Map<String, String> m = JS7ConverterHelper.attribute2map(node);
         this.month = JS7ConverterHelper.stringValue(m.get(ATTR_MONTH));
 
-        this.periods = RunTime.convertPeriod(xpath, node);
-        this.monthDays = RunTime.convertMonthDays(xpath, node);
-        this.weekDays = RunTime.convertWeekDays(xpath, node);
-        this.ultimos = RunTime.convertUltimos(xpath, node);
+        this.periods = RunTime.convertPeriod(path, xpath, node);
+        this.monthDays = RunTime.convertMonthDays(path, xpath, node);
+        this.weekDays = RunTime.convertWeekDays(path, xpath, node);
+        this.ultimos = RunTime.convertUltimos(path, xpath, node);
     }
 
     public List<Period> getPeriods() {

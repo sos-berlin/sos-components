@@ -1,15 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="INFO">
+	<Properties>
+		<Property name="basePath">src/test/resources/output/logs</Property>
+	</Properties>
 	<Appenders>
 		<Console name="console" target="SYSTEM_OUT">
 			<PatternLayout
 				pattern="%d{HH:mm:ss.SSS}[%5p][%t](%F:%L) - %m%n" />
 		</Console>
+		<RollingFile name="fileLogger"
+			fileName="${basePath}/js1_converter.log"
+			filePattern="${basePath}/js1_converter-%d{yyyy-MM-dd}.log">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS}[%5p][%t](%F:%L) - %m%n" />
+			<Policies>
+				<SizeBasedTriggeringPolicy size="10MB" />
+			</Policies>
+		</RollingFile>
 	</Appenders>
 	<Loggers>
 		<Root level="info">
 			<AppenderRef ref="console" />
+			<!-- <AppenderRef ref="fileLogger" /> -->
 		</Root>
-		<Logger name="com.sos" level="debug" />
+		<Logger name="com.sos.js7" level="debug" />
 	</Loggers>
 </Configuration>

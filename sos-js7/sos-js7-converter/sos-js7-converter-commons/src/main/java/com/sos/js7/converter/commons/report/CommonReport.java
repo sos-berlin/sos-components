@@ -8,7 +8,7 @@ import com.sos.commons.util.SOSClassUtil;
 public abstract class CommonReport {
 
     public enum ReportHeader {
-        TYPE, FILE, JOB, MESSAGE
+        TYPE, FILE, TITLE, MESSAGE
     }
 
     public enum SuccessReportHeader {
@@ -24,36 +24,36 @@ public abstract class CommonReport {
     private CSVRecords warning = new CSVRecords(ReportHeader.class);
     private CSVRecords summary = new CSVRecords(SuccessReportHeader.class);
 
-    public void addErrorRecord(Path file, String job, Throwable e) {
-        addErrorRecord(file, job, new StringBuilder(e.toString()).append("\n").append(SOSClassUtil.getStackTrace(e)).toString());
+    public void addErrorRecord(Path file, String title, Throwable e) {
+        addErrorRecord(file, title, new StringBuilder(e.toString()).append("\n").append(SOSClassUtil.getStackTrace(e)).toString());
     }
 
     public void addErrorRecord(String msg) {
         addErrorRecord(null, null, msg);
     }
 
-    public void addErrorRecord(Path file, String job, String msg) {
-        addRecord(error, MessageType.ERROR, file, job, msg);
+    public void addErrorRecord(Path file, String title, String msg) {
+        addRecord(error, MessageType.ERROR, file, title, msg);
     }
 
-    public void addAnalyzerRecord(String job, String msg) {
-        addAnalyzerRecord(null, job, msg);
+    public void addAnalyzerRecord(String title, String msg) {
+        addAnalyzerRecord(null, title, msg);
     }
 
-    public void addAnalyzerRecord(Path file, String job, String msg) {
-        addRecord(analyzer, MessageType.INFO, file, job, msg);
+    public void addAnalyzerRecord(Path file, String title, String msg) {
+        addRecord(analyzer, MessageType.INFO, file, title, msg);
     }
 
-    public void addWarningRecord(String job, String msg) {
-        addWarningRecord(null, job, msg);
+    public void addWarningRecord(String title, String msg) {
+        addWarningRecord(null, title, msg);
     }
 
-    public void addWarningRecord(Path file, String job, String msg) {
-        addRecord(warning, MessageType.WARNING, file, job, msg);
+    public void addWarningRecord(Path file, String title, String msg) {
+        addRecord(warning, MessageType.WARNING, file, title, msg);
     }
 
-    private void addRecord(CSVRecords records, MessageType type, Path file, String job, String msg) {
-        records.addRecord(Arrays.asList(type.name(), file == null ? "" : file.toString(), job == null ? "" : job, msg));
+    private void addRecord(CSVRecords records, MessageType type, Path file, String title, String msg) {
+        records.addRecord(Arrays.asList(type.name(), file == null ? "" : file.toString(), title == null ? "" : title, msg));
     }
 
     public void addSummaryRecord(String val1, int val2) {
@@ -78,5 +78,13 @@ public abstract class CommonReport {
 
     public CSVRecords getSummary() {
         return summary;
+    }
+
+    public void clear() {
+        error.clear();
+        analyzer.clear();
+        warning.clear();
+        summary.clear();
+
     }
 }

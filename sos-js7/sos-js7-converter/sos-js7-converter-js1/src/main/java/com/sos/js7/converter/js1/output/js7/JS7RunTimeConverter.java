@@ -41,7 +41,7 @@ public class JS7RunTimeConverter {
     }
 
     public static AdmissionTimeScheme convert(OrderJob js1Job) {
-        if (js1Job == null || js1Job.getRunTime() == null) {
+        if (js1Job == null || js1Job.getRunTime() == null || js1Job.getRunTime().isEmpty()) {
             return null;
         }
 
@@ -49,7 +49,8 @@ public class JS7RunTimeConverter {
 
         boolean hasSingleStart = js1RunTime.getSingleStart() != null;
         boolean hasRepeat = js1RunTime.getRepeat() != null;
-        boolean hasBeginEnd = !hasSingleStart && !hasRepeat && !js1RunTime.hasChildElements();
+        boolean hasBeginEnd = !hasSingleStart && !hasRepeat && (js1RunTime.getBegin() != null || js1RunTime.getEnd() != null) && !js1RunTime
+                .hasChildElements();
         boolean hasPeriods = js1RunTime.getPeriods() != null;
         boolean hasAts = js1RunTime.getAts() != null;
         boolean hasDates = js1RunTime.getDates() != null;
@@ -57,12 +58,6 @@ public class JS7RunTimeConverter {
         boolean hasMonthDays = js1RunTime.getMonthDays() != null;
         boolean hasUltimos = js1RunTime.getUltimos() != null;
         boolean hasHolidays = js1RunTime.getHolidays() != null;
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format(
-                    "hasRepeat=%s,hasSingleStart=%s,hasBeginEnd=%s,hasPeriods=%s,hasAts=%s,hasDates=%s, hasWeekDays=%s,hasMonthDays=%s,hasUltimos=%s,hasHolidays=%s",
-                    hasRepeat, hasSingleStart, hasBeginEnd, hasPeriods, hasAts, hasDates, hasWeekDays, hasMonthDays, hasUltimos, hasHolidays));
-        }
 
         if (hasRepeat) {
             ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Order Job=" + js1Job.getName(),
@@ -98,6 +93,15 @@ public class JS7RunTimeConverter {
             ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "Order Job=" + js1Job.getName(),
                     "[convert2AdmissionTimeScheme][hasHolidays=true][not implemented yet]" + js1Job.getRunTime().getNodeText());
             return null;
+        }
+
+        if (!hasSingleStart && !hasBeginEnd && !hasWeekDays) {
+            return null;
+        }
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[convert2AdmissionTimeScheme][%s]hasSingleStart=%s,hasBeginEnd=%s,hasWeekDays=%s", js1RunTime
+                    .getCurrentPath(), hasSingleStart, hasBeginEnd, hasWeekDays));
         }
 
         List<AdmissionTimePeriod> periods = new ArrayList<>();
@@ -255,8 +259,9 @@ public class JS7RunTimeConverter {
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format(
-                    "hasRepeat=%s,hasSingleStart=%s,hasPeriods=%s,hasAts=%s,hasDates=%s, hasWeekDays=%s,hasMonthDays=%s,hasUltimos=%s,hasHolidays=%s",
-                    hasRepeat, hasSingleStart, hasPeriods, hasAts, hasDates, hasWeekDays, hasMonthDays, hasUltimos, hasHolidays));
+                    "[convert2schedule][%s]hasRepeat=%s,hasSingleStart=%s,hasPeriods=%s,hasAts=%s,hasDates=%s, hasWeekDays=%s,hasMonthDays=%s,hasUltimos=%s,hasHolidays=%s",
+                    js1RunTime.getCurrentPath(), hasRepeat, hasSingleStart, hasPeriods, hasAts, hasDates, hasWeekDays, hasMonthDays, hasUltimos,
+                    hasHolidays));
         }
         List<AssignedCalendars> working = new ArrayList<>();
         List<AssignedNonWorkingDayCalendars> nonWorking = new ArrayList<>();

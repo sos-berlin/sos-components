@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
-import com.sos.js7.converter.commons.JS7ConverterConfig.ParserConfig;
+import com.sos.js7.converter.commons.config.JS7ConverterConfig.ParserConfig;
 import com.sos.js7.converter.commons.report.ParserReport;
 
 public class DirectoryParser {
