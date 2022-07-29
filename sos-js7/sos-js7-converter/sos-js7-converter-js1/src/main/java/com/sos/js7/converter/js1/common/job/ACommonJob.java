@@ -3,6 +3,7 @@ package com.sos.js7.converter.js1.common.job;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -228,8 +229,13 @@ public abstract class ACommonJob {
             return null;
         }
         try {
-            return new ProcessClass(JS7Converter.findIncludeFile(pr, currentPath, Paths.get(includePath + EConfigFileExtensions.PROCESS_CLASS
-                    .extension())));
+            Path p = JS7Converter.findIncludeFile(pr, currentPath, Paths.get(includePath + EConfigFileExtensions.PROCESS_CLASS.extension()));
+            if (p != null) {
+                return new ProcessClass(p);
+            } else {
+                ParserReport.INSTANCE.addErrorRecord(currentPath, "[attribute=" + ATTR_PROCESS_CLASS + "]ProcessClass not found=" + includePath, "");
+                return null;
+            }
         } catch (Throwable e) {
             ParserReport.INSTANCE.addErrorRecord(currentPath, "[attribute=" + ATTR_PROCESS_CLASS + "]ProcessClass not found=" + includePath, e);
             return null;
@@ -496,7 +502,7 @@ public abstract class ACommonJob {
 
         private static final String ELEMENT_VARIABLE = "variable";
 
-        private Map<String, String> variables;
+        private Map<String, String> variables = new HashMap<>();
 
         public Environment(SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
             NodeList nl = xpath.selectNodes(node, "./" + ELEMENT_VARIABLE);

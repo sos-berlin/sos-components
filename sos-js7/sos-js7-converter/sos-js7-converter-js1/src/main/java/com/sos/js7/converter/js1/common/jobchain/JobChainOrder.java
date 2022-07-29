@@ -17,6 +17,7 @@ public class JobChainOrder {
 
     private static final String ATTR_PRIORITY = "priority";
     private static final String ATTR_TITLE = "title";
+    private static final String ATTR_STATE = "state";
 
     private static final String ELEMENT_PARAMS = "params";
     private static final String ELEMENT_RUN_TIME = "run_time";
@@ -30,6 +31,7 @@ public class JobChainOrder {
 
     private final Integer priority;
     private final String title;
+    private final String state;
 
     public JobChainOrder(DirectoryParserResult pr, Path file) throws Exception {
         this.path = file;
@@ -38,6 +40,7 @@ public class JobChainOrder {
         Map<String, String> m = JS7ConverterHelper.attribute2map(node);
         this.priority = JS7ConverterHelper.integerValue(m.get(ATTR_PRIORITY));
         this.title = m.get(ATTR_TITLE);
+        this.state = m.get(ATTR_STATE);
 
         SOSXMLXPath xpath = SOSXML.newXPath();
         Node params = xpath.selectNode(node, "./" + ELEMENT_PARAMS);
@@ -56,6 +59,10 @@ public class JobChainOrder {
 
     public String getName() {
         return name;
+    }
+
+    public String getState() {
+        return state;
     }
 
     public Params getParams() {

@@ -1,5 +1,6 @@
 package com.sos.js7.converter.js1.common.runtime;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import org.w3c.dom.Node;
@@ -11,8 +12,8 @@ public class Ultimos {
 
     private List<Day> days;
 
-    protected Ultimos(SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
-        this.days = RunTime.convertDay(xpath, node);
+    protected Ultimos(Path path, SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
+        this.days = RunTime.convertDay(path, xpath, node);
     }
 
     public List<Day> getDays() {

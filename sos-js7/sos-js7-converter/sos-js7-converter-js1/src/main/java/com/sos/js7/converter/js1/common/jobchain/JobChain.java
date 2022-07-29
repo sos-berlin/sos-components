@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -19,6 +21,8 @@ import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 import com.sos.js7.converter.js1.output.js7.JS7Converter;
 
 public class JobChain {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JobChain.class);
 
     private static final String ATTR_TITLE = "title";
     private static final String ATTR_PROCESS_CLASS = "process_class";
@@ -87,8 +91,13 @@ public class JobChain {
             return null;
         }
         try {
-            return new ProcessClass(JS7Converter.findIncludeFile(pr, currentPath, Paths.get(includePath + EConfigFileExtensions.PROCESS_CLASS
-                    .extension())));
+            Path p = JS7Converter.findIncludeFile(pr, currentPath, Paths.get(includePath + EConfigFileExtensions.PROCESS_CLASS.extension()));
+            if (p != null) {
+                return new ProcessClass(p);
+            } else {
+                ParserReport.INSTANCE.addErrorRecord(currentPath, "[attribute=" + attrName + "]ProcessClass not found=" + includePath, "");
+                return null;
+            }
         } catch (Throwable e) {
             ParserReport.INSTANCE.addErrorRecord(currentPath, "[attribute=" + attrName + "]ProcessClass not found=" + includePath, e);
             return null;
@@ -96,8 +105,12 @@ public class JobChain {
     }
 
     private Path handleFiles(DirectoryParserResult pr, List<Path> files) throws Exception {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         Path jobChainFile = null;
         for (Path file : files) {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[handleFiles][%s]%s", this.name, file));
+            }
             String fileName = file.getFileName().toString();
             if (fileName.endsWith(EConfigFileExtensions.ORDER.extension())) {
                 orders.add(new JobChainOrder(pr, file));
@@ -106,6 +119,9 @@ public class JobChain {
             } else if (fileName.endsWith(EConfigFileExtensions.JOB_CHAIN_CONFIG.extension())) {
                 config = new JobChainConfig(pr, file);
             }
+        }
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[handleFiles][%s]orders=%s,config=%s", this.name, orders.size(), (config == null ? "0" : config.getPath())));
         }
         return jobChainFile;
     }

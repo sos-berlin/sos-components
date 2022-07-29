@@ -13,6 +13,7 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSGzip;
 import com.sos.commons.util.SOSGzip.SOSGzipResult;
 import com.sos.commons.util.SOSPath;
+import com.sos.js7.converter.commons.config.JS7ConverterConfig;
 import com.sos.js7.converter.commons.output.ZipCompress;
 
 public abstract class JS7ConverterMain {

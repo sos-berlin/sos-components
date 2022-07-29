@@ -8,8 +8,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sos.js7.converter.autosys.input.XMLJobParser;
-import com.sos.js7.converter.commons.JS7ConverterConfig.Platform;
 import com.sos.js7.converter.commons.JS7ConverterMain;
+import com.sos.js7.converter.commons.config.JS7ConverterConfig.Platform;
 
 public class JS7ConverterTest {
 

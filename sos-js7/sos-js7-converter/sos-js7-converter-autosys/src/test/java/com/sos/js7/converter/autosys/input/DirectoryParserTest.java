@@ -13,7 +13,7 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
-import com.sos.js7.converter.commons.JS7ConverterConfig;
+import com.sos.js7.converter.commons.config.JS7ConverterConfig;
 
 public class DirectoryParserTest {
 

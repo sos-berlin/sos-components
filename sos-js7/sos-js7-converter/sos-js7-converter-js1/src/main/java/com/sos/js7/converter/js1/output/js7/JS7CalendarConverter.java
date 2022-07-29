@@ -16,7 +16,7 @@ import com.sos.inventory.model.calendar.RepetitionText;
 import com.sos.inventory.model.calendar.WeekDays;
 import com.sos.inventory.model.calendar.WeeklyDay;
 import com.sos.inventory.model.calendar.WhenHolidayType;
-import com.sos.js7.converter.commons.JS7ConverterConfig;
+import com.sos.js7.converter.commons.config.JS7ConverterConfig;
 import com.sos.js7.converter.js1.common.json.calendar.JS1Calendar;
 
 public class JS7CalendarConverter {
@@ -70,8 +70,8 @@ public class JS7CalendarConverter {
         }
         if (SOSString.isEmpty(name)) {
             name = defaultName;
-        } else if (name.startsWith("/")) {
-            name = name.substring(1);
+        } else if (name.startsWith("/")) {// /sos/cal1 -> sos_cal1
+            name = name.substring(1).replaceAll("/", "_");
         }
         return name;
     }

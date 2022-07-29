@@ -1,9 +1,11 @@
-package com.sos.js7.converter.commons;
+package com.sos.js7.converter.commons.config;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,8 +19,11 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
-import com.sos.js7.converter.commons.report.ParserReport;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.config.json.JS7Agent;
+import com.sos.js7.converter.commons.report.ConfigReport;
 
 public class JS7ConverterConfig {
 
@@ -39,6 +44,8 @@ public class JS7ConverterConfig {
     private final ScheduleConfig scheduleConfig;
     private final SubFolderConfig subFolderConfig;
 
+    private Path propertiesFile;
+
     public JS7ConverterConfig() {
         generateConfig = this.new GenerateConfig();
         parserConfig = this.new ParserConfig();
@@ -52,176 +59,146 @@ public class JS7ConverterConfig {
 
     // TODO reflection
     public Properties parse(Path propertiesFile) throws Exception {
+        this.propertiesFile = propertiesFile;
         Properties p = new Properties();
         if (Files.exists(propertiesFile)) {
             try (InputStream input = new FileInputStream(propertiesFile.toFile())) {
                 p.load(input);
 
                 p.entrySet().forEach(e -> {
+                    String key = e.getKey().toString().trim();
                     String val = e.getValue().toString().trim();
-                    switch (e.getKey().toString()) {
-                    // GENERATE
-                    case "generateConfig.workflows":
-                        try {
+                    try {
+                        switch (key) {
+                        // GENERATE
+                        case "generateConfig.workflows":
                             generateConfig.workflows = Boolean.parseBoolean(val);
-                        } catch (Throwable t) {
-                            LOGGER.warn(getWarnMessage("generateConfig.workflows", "boolean", val));
-                        }
-                        break;
-                    case "generateConfig.agents":
-                        try {
+                            break;
+                        case "generateConfig.agents":
                             generateConfig.agents = Boolean.parseBoolean(val);
-                        } catch (Throwable t) {
-                            LOGGER.warn(getWarnMessage("generateConfig.agents", "boolean", val));
-                        }
-                        break;
-                    case "generateConfig.locks":
-                        try {
+                            break;
+                        case "generateConfig.locks":
                             generateConfig.locks = Boolean.parseBoolean(val);
-                        } catch (Throwable t) {
-                            LOGGER.warn(getWarnMessage("generateConfig.locks", "boolean", val));
-                        }
-                        break;
-                    case "generateConfig.schedules":
-                        try {
+                            break;
+                        case "generateConfig.schedules":
                             generateConfig.schedules = Boolean.parseBoolean(val);
-                        } catch (Throwable t) {
-                            LOGGER.warn(getWarnMessage("generateConfig.schedules", "boolean", val));
-                        }
-                        break;
-                    case "generateConfig.calendars":
-                        try {
+                            break;
+                        case "generateConfig.calendars":
                             generateConfig.calendars = Boolean.parseBoolean(val);
-                        } catch (Throwable t) {
-                            LOGGER.warn(getWarnMessage("generateConfig.calendars", "boolean", val));
-                        }
-                        break;
-                    case "generateConfig.cyclicOrders":
-                        try {
+                            break;
+                        case "generateConfig.cyclicOrders":
                             generateConfig.cyclicOrders = Boolean.parseBoolean(val);
-                        } catch (Throwable t) {
-                            LOGGER.warn(getWarnMessage("generateConfig.cyclicOrders", "boolean", val));
-                        }
-                        break;
-                    // PARSER:
-                    case "parserConfig.excludedDirectoryNames":
-                        parserConfig.withExcludedDirectoryNames(val);
-                        break;
-                    case "parserConfig.excludedDirectoryPaths":
-                        parserConfig.withExcludedDirectoryPaths(val);
-                        break;
-                    // WORKFLOW
-                    case "workflowConfig.defaultTimeZone":
-                        workflowConfig.defaultTimeZone = val;
-                        break;
-                    // JOB
-                    case "jobConfig.scriptNewLine":
-                        jobConfig.scriptNewLine = val;
-                        break;
-                    case "jobConfig.forcedGraceTimeout":
-                        try {
+                            break;
+                        // PARSER:
+                        case "parserConfig.excludedDirectoryNames":
+                            parserConfig.withExcludedDirectoryNames(val);
+                            break;
+                        case "parserConfig.excludedDirectoryPaths":
+                            parserConfig.withExcludedDirectoryPaths(val);
+                            break;
+                        // WORKFLOW
+                        case "workflowConfig.defaultTimeZone":
+                            workflowConfig.defaultTimeZone = val;
+                            break;
+                        // JOB
+                        case "jobConfig.scriptNewLine":
+                            jobConfig.scriptNewLine = val;
+                            break;
+                        case "jobConfig.forcedGraceTimeout":
                             jobConfig.forcedGraceTimeout = Integer.parseInt(val);
-                        } catch (Throwable t) {
-                            LOGGER.warn(getWarnMessage("jobConfig.forcedGraceTimeout", "integer", val));
-                        }
-                        break;
-                    case "jobConfig.forcedParallelism":
-                        try {
+                            break;
+                        case "jobConfig.forcedParallelism":
                             jobConfig.forcedParallelism = Integer.parseInt(val);
-                        } catch (Throwable t) {
-                            LOGGER.warn(getWarnMessage("jobConfig.forcedParallelism", "integer", val));
-                        }
-                        break;
-                    case "jobConfig.forcedFailOnErrWritten":
-                        try {
+                            break;
+                        case "jobConfig.forcedFailOnErrWritten":
                             jobConfig.forcedFailOnErrWritten = Boolean.parseBoolean(val);
-                        } catch (Throwable t) {
-                            LOGGER.warn(getWarnMessage("jobConfig.forcedFailOnErrWritten", "boolean", val));
-                        }
-                        break;
-                    case "jobConfig.forcedV1Compatible":
-                        try {
+                            break;
+                        case "jobConfig.forcedV1Compatible":
                             jobConfig.forcedV1Compatible = Boolean.parseBoolean(val);
-                        } catch (Throwable t) {
-                            LOGGER.warn(getWarnMessage("jobConfig.forcedV1Compatible", "boolean", val));
-                        }
-                        break;
-                    case "jobConfig.jitl.forcedLogLevel":
-                        jobConfig.forcedJitlLogLevel = val;
-                        break;
-                    case "jobConfig.notification.mail.defaultTo":
-                        jobConfig.notificationMailDefaultTo = val;
-                        break;
-                    case "jobConfig.notification.mail.defaultCc":
-                        jobConfig.notificationMailDefaultCc = val;
-                        break;
-                    case "jobConfig.notification.mail.defaultBcc":
-                        jobConfig.notificationMailDefaultBcc = val;
-                        break;
-                    // AGENT
-                    case "agentConfig.mappings":
-                        agentConfig.withMappings(val);
-                        break;
-                    case "agentConfig.forcedPlatform":
-                        try {
+                            break;
+                        case "jobConfig.jitl.forcedLogLevel":
+                            jobConfig.forcedJitlLogLevel = val;
+                            break;
+                        case "jobConfig.notification.mail.defaultTo":
+                            jobConfig.notificationMailDefaultTo = val;
+                            break;
+                        case "jobConfig.notification.mail.defaultCc":
+                            jobConfig.notificationMailDefaultCc = val;
+                            break;
+                        case "jobConfig.notification.mail.defaultBcc":
+                            jobConfig.notificationMailDefaultBcc = val;
+                            break;
+                        // AGENT
+                        case "agentConfig.mappings":
+                            agentConfig.withMappings(val);
+                            break;
+                        case "agentConfig.forcedPlatform":
                             agentConfig.forcedPlatform = Platform.valueOf(val.toUpperCase());
-                        } catch (Throwable t) {
-                            LOGGER.warn(getWarnMessage("agentConfig.forcedPlatform", "Platform", val));
-                        }
-                        break;
-                    case "agentConfig.forcedAgent":
-                        agentConfig.withForcedAgent(val);
-                        break;
-                    case "agentConfig.defaultAgent":
-                        agentConfig.withDefaultAgent(val);
-                        break;
-                    // MOCK
-                    case "mockConfig.shell.windowsScript":
-                        mockConfig.windowsScript = val;
-                        break;
-                    case "mockConfig.shell.unixScript":
-                        mockConfig.unixScript = val;
-                        break;
-                    case "mockConfig.jitl.mockLevel":
-                        mockConfig.jitlJobsMockLevel = val;
-                        break;
-                    // SCHEDULE
-                    case "scheduleConfig.forcedWorkingDayCalendarName":
-                        scheduleConfig.forcedWorkingDayCalendarName = val;
-                        break;
-                    case "scheduleConfig.forcedNonWorkingDayCalendarName":
-                        scheduleConfig.forcedNonWorkingDayCalendarName = val;
-                        break;
-                    case "scheduleConfig.defaultWorkingDayCalendarName":
-                        scheduleConfig.defaultWorkingDayCalendarName = val;
-                        break;
-                    case "scheduleConfig.defaultNonWorkingDayCalendarName":
-                        scheduleConfig.defaultNonWorkingDayCalendarName = val;
-                        break;
-                    case "scheduleConfig.defaultTimeZone":
-                        scheduleConfig.defaultTimeZone = val;
-                        break;
-                    case "scheduleConfig.planOrders":
-                        try {
+                            break;
+                        case "agentConfig.forcedControllerId":
+                            agentConfig.withForcedControllerId(val);
+                            break;
+                        case "agentConfig.defaultControllerId":
+                            agentConfig.withDefaultControllerId(val);
+                            break;
+                        case "agentConfig.forcedAgent":
+                            agentConfig.withForcedAgent(val);
+                            break;
+                        case "agentConfig.defaultAgent":
+                            agentConfig.withDefaultAgent(val);
+                            break;
+                        // MOCK
+                        case "mockConfig.shell.windowsScript":
+                            mockConfig.windowsScript = val;
+                            break;
+                        case "mockConfig.shell.unixScript":
+                            mockConfig.unixScript = val;
+                            break;
+                        case "mockConfig.jitl.mockLevel":
+                            mockConfig.jitlJobsMockLevel = val;
+                            break;
+                        // SCHEDULE
+                        case "scheduleConfig.forcedWorkingDayCalendarName":
+                            scheduleConfig.forcedWorkingDayCalendarName = val;
+                            break;
+                        case "scheduleConfig.forcedNonWorkingDayCalendarName":
+                            scheduleConfig.forcedNonWorkingDayCalendarName = val;
+                            break;
+                        case "scheduleConfig.defaultWorkingDayCalendarName":
+                            scheduleConfig.defaultWorkingDayCalendarName = val;
+                            break;
+                        case "scheduleConfig.defaultNonWorkingDayCalendarName":
+                            scheduleConfig.defaultNonWorkingDayCalendarName = val;
+                            break;
+                        case "scheduleConfig.defaultTimeZone":
+                            scheduleConfig.defaultTimeZone = val;
+                            break;
+                        case "scheduleConfig.planOrders":
                             scheduleConfig.planOrders = Boolean.parseBoolean(val);
-                        } catch (Throwable t) {
-                            LOGGER.warn(getWarnMessage("scheduleConfig.planOrders", "boolean", val));
-                        }
-                        break;
-                    case "scheduleConfig.submitOrders":
-                        try {
+                            break;
+                        case "scheduleConfig.submitOrders":
                             scheduleConfig.submitOrders = Boolean.parseBoolean(val);
-                        } catch (Throwable t) {
-                            LOGGER.warn(getWarnMessage("scheduleConfig.submitOrders", "boolean", val));
+                            break;
+                        // SubFolders
+                        case "subFolderConfig.mappings":
+                            subFolderConfig.withMappings(val);
+                            break;
+                        case "subFolderConfig.separator":
+                            subFolderConfig.separator = val;
+                            break;
+                        default:
+                            if (key.startsWith("agentConfig.mappingsAgent")) {
+                                JS7Agent a = readAgentJson(val);
+                                if (a != null) {
+                                    agentConfig.mappingsAgents.put(key, a);
+                                }
+                            }
+                            break;
                         }
-                        break;
-                    // SubFolders
-                    case "subFolderConfig.mappings":
-                        subFolderConfig.withMappings(val);
-                        break;
-                    case "subFolderConfig.separator":
-                        subFolderConfig.separator = val;
-                        break;
+                    } catch (Throwable ee) {
+                        String msg = getErrorMessage(key, val);
+                        LOGGER.error(msg);
+                        ConfigReport.INSTANCE.addErrorRecord(null, msg, ee);
                     }
                 });
 
@@ -234,8 +211,29 @@ public class JS7ConverterConfig {
         return p;
     }
 
-    private String getWarnMessage(String name, String type, String value) {
-        return String.format("[%s][cannot parse %s value]%s", name, type, value);
+    private JS7Agent readAgentJson(final String val) throws Exception {
+        if (val == null) {
+            return null;
+        }
+        String value = val;
+        if (value.toLowerCase().endsWith(".json")) {
+            Path jsonFile = Paths.get(val);
+            if (!jsonFile.isAbsolute()) {
+                if (propertiesFile != null && propertiesFile.getParent() != null) {
+                    jsonFile = propertiesFile.getParent().resolve(val);
+                }
+            }
+            if (!Files.exists(jsonFile)) {
+                throw new Exception("[" + jsonFile.toAbsolutePath() + "]file not found");
+            }
+            value = SOSPath.readFile(jsonFile, StandardCharsets.UTF_8);
+        }
+        return JS7ConverterHelper.JSON_OM.readValue(value, JS7Agent.class);
+
+    }
+
+    private String getErrorMessage(String name, String value) {
+        return String.format("[cannot parse config][%s]%s", name, value);
     }
 
     public GenerateConfig getGenerateConfig() {
@@ -528,41 +526,52 @@ public class JS7ConverterConfig {
 
     public class AgentConfig {
 
+        private Map<String, JS7Agent> mappingsAgents = new HashMap<>();
         private Map<String, JS7Agent> mappings;
+        private String forcedControllerId;
+        private String defaultControllerId;
         private Platform forcedPlatform;
         private JS7Agent forcedAgent; // use this instead of evaluated agent name
         private JS7Agent defaultAgent;// when agent can't be evaluated
+
+        public AgentConfig withForcedControllerId(String val) {
+            this.forcedControllerId = val;
+            return this;
+        }
+
+        public AgentConfig withDefaultControllerId(String val) {
+            this.defaultControllerId = val;
+            return this;
+        }
 
         public AgentConfig withForcedPlatform(Platform val) {
             this.forcedPlatform = val;
             return this;
         }
 
-        public AgentConfig withForcedAgent(String val) {
-            this.forcedAgent = new JS7Agent(val);
+        public AgentConfig withForcedAgent(String val) throws Exception {
+            this.forcedAgent = readAgentJson(val);
             return this;
         }
 
-        public AgentConfig withDefaultAgent(String val) {
-            this.defaultAgent = new JS7Agent(val);
+        public AgentConfig withDefaultAgent(String val) throws Exception {
+            this.defaultAgent = readAgentJson(val);
             return this;
         }
 
         /** Agent mapping<br/>
          * Example 1<br>
-         * - input map: my_agent_1=agent=UNIX; my_agent_2=agent; my_agent_3=cluster=WINDOWS<br/>
+         * - input map:<br/>
+         * agentConfig.mappingsAgent1 = {"agentId":"primaryAgent", "platform":"UNIX", "controllerId":"js7","url":"http://localhost:4445"} <br/>
+         * agentConfig.mappings = my_agent_1=mappingsAgent1<br/>
          **/
         public AgentConfig withMappings(String mappings) {
             Map<String, JS7Agent> map = new HashMap<>();
             if (mappings != null) {
                 // map and remove duplicates
-                map = Stream.of(mappings.trim().split(LIST_VALUE_DELIMITER)).map(e -> e.split("=")).filter(e -> e.length == 2 || e.length == 3)
-                        .collect(Collectors.toMap(arr -> arr[0].trim(), arr -> {
-                            if (arr.length == 3) {
-                                return new JS7Agent(arr[1].trim() + "=" + arr[2].trim());
-                            } else {
-                                return new JS7Agent(arr[1].trim());
-                            }
+                map = Stream.of(mappings.trim().split(LIST_VALUE_DELIMITER)).map(e -> e.split("=")).filter(e -> e.length == 2 && mappingsAgents
+                        .containsKey(e[1].trim())).collect(Collectors.toMap(arr -> arr[0].trim(), arr -> {
+                            return mappingsAgents.get(arr[1].trim());
                         }, (oldValue, newValue) -> newValue));
             }
             return withMappings(map);
@@ -588,61 +597,23 @@ public class JS7ConverterConfig {
             return mappings;
         }
 
+        public String getForcedControllerId() {
+            return forcedControllerId;
+        }
+
+        public String getDefaultControllerId() {
+            return defaultControllerId;
+        }
+
         public Platform getForcedPlatform() {
             return forcedPlatform;
         }
 
         public boolean isEmpty() {
-            return (mappings == null || mappings.size() == 0) && forcedPlatform == null && forcedAgent == null && defaultAgent == null;
+            return (mappings == null || mappings.size() == 0) && forcedPlatform == null && forcedAgent == null && defaultAgent == null
+                    && forcedControllerId == null && defaultControllerId == null;
         }
 
-    }
-
-    public JS7Agent newJS7Agent(String name, Platform platform) {
-        return new JS7Agent(name, platform);
-    }
-
-    public class JS7Agent {
-
-        private String name;
-        private Platform platform;
-
-        private JS7Agent(String val) {
-            String[] v = val.split("=");
-            if (v.length > 0) {
-                name = v[0];
-                if (v.length > 1) {
-                    try {
-                        platform = Platform.valueOf(v[1].toUpperCase());
-                    } catch (Throwable e) {
-                        ParserReport.INSTANCE.addWarningRecord("[config]cannot evaluate platform for JS7 Agent=" + name, "Platform=" + v[1]);
-                    }
-                }
-            }
-        }
-
-        private JS7Agent(String name, Platform platform) {
-            this.name = name;
-            this.platform = platform;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public Platform getPlatform() {
-            return platform;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-            sb.append("[");
-            sb.append("name=").append(name);
-            sb.append(",platform=").append(platform);
-            sb.append("]");
-            return sb.toString();
-        }
     }
 
     public class MockConfig {

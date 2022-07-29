@@ -1,5 +1,6 @@
 package com.sos.js7.converter.js1.common.runtime;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -17,10 +18,10 @@ public class Date {
 
     private String date; // yyyy-mm-dd
 
-    protected Date(SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
+    protected Date(Path path, SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
         Map<String, String> m = JS7ConverterHelper.attribute2map(node);
         this.date = JS7ConverterHelper.stringValue(m.get(ATTR_DATE));
-        this.periods = RunTime.convertPeriod(xpath, node);
+        this.periods = RunTime.convertPeriod(path, xpath, node);
     }
 
     public List<Period> getPeriods() {

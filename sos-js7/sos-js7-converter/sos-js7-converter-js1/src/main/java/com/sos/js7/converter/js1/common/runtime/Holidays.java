@@ -1,5 +1,6 @@
 package com.sos.js7.converter.js1.common.runtime;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,8 +19,8 @@ public class Holidays {
     private List<Holiday> holidays;
     private List<Include> includes;
 
-    protected Holidays(SOSXMLXPath xpath, Node node) throws Exception {
-        this.weekDays = RunTime.convertWeekDays(xpath, node);
+    protected Holidays(Path path, SOSXMLXPath xpath, Node node) throws Exception {
+        this.weekDays = RunTime.convertWeekDays(path, xpath, node);
 
         NodeList l = xpath.selectNodes(node, "./" + ELEMENT_HOLIDAY);
         if (l != null && l.getLength() > 0) {

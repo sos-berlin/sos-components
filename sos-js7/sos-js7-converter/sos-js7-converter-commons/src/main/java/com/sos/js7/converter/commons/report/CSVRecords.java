@@ -25,4 +25,7 @@ public class CSVRecords {
         return records;
     }
 
+    public void clear() {
+        this.records.clear();
+    }
 }

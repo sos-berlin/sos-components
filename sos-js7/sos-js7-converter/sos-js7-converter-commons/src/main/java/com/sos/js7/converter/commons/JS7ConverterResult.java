@@ -11,11 +11,13 @@ import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.joc.model.agent.transfer.Agent;
 import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
 
 public class JS7ConverterResult {
 
     private JS7ExportObjects<Workflow> workflows = new JS7ExportObjects<>();
+    private JS7ExportObjects<Agent> agents = new JS7ExportObjects<>();
     private JS7ExportObjects<Calendar> calendars = new JS7ExportObjects<>();
     private JS7ExportObjects<Schedule> schedules = new JS7ExportObjects<>();
     private JS7ExportObjects<Board> boards = new JS7ExportObjects<>();
@@ -28,6 +30,10 @@ public class JS7ConverterResult {
 
     public void add(Path path, Workflow val) {
         workflows.addItem(path, val);
+    }
+
+    public void add(Path path, Agent val) {
+        agents.addItem(path, val);
     }
 
     public void addOrReplace(Path path, Workflow val) {
@@ -68,6 +74,10 @@ public class JS7ConverterResult {
 
     public JS7ExportObjects<Workflow> getWorkflows() {
         return workflows;
+    }
+
+    public JS7ExportObjects<Agent> getAgents() {
+        return agents;
     }
 
     public JS7ExportObjects<Calendar> getCalendars() {

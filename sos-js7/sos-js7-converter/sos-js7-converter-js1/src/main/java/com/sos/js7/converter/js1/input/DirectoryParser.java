@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSGzip;
 import com.sos.commons.util.SOSPath;
-import com.sos.js7.converter.commons.JS7ConverterConfig.ParserConfig;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.config.JS7ConverterConfig.ParserConfig;
 import com.sos.js7.converter.commons.output.ZipCompress;
 import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
@@ -45,7 +45,13 @@ public class DirectoryParser {
                 boolean checkExcludedDirectoryNames = config.hasExcludedDirectoryNames();
                 boolean checkExcludedDirectoryPaths = config.hasExcludedDirectoryPaths();
 
-                r.setRoot(parseFiles(r, new Folder(dir)));
+                Path yadeConfiguration = dir.resolve("sos").resolve(".configuration").resolve("yade").resolve("yade.xml");
+                if (Files.exists(yadeConfiguration)) {
+                    r.setYadeConfiguration(yadeConfiguration);
+                }
+
+                r.setRoot(new Folder(dir));
+                r.setRoot(parseFiles(r, r.getRoot()));
                 r.addCountFolders();
                 parseDirectory(config, r, r.getRoot(), level, checkExcludedDirectoryNames, checkExcludedDirectoryPaths);
             } catch (Throwable e) {
@@ -96,15 +102,22 @@ public class DirectoryParser {
     private static Folder parseDirectory(ParserConfig config, DirectoryParserResult r, Folder parentFolder, int level,
             boolean checkExcludedDirectoryNames, boolean checkExcludedDirectoryPaths) {
         String method = "parseDirectory";
-        LOGGER.debug(String.format("[%s][level=%s]%s", method, level, parentFolder.getPath()));
-
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[%s][level=%s][parent]%s", method, level, parentFolder.getPath()));
+        }
         File[] childFolders = parentFolder.getPath().toAbsolutePath().toFile().listFiles(f -> f.isDirectory());
         if (childFolders.length == 0) {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][level=%s][parent][%s][skip]0 subfolders", method, level, parentFolder.getPath()));
+            }
             return parentFolder;
         }
 
         level += 1;
         for (File childFolder : childFolders) {
+            LOGGER.info(String.format("[%s][level=%s]%s", method, level, childFolder.getPath()));
+
             if (checkExcludedDirectoryNames) {
                 if (config.getExcludedDirectoryNames().contains(childFolder.getName())) {
                     LOGGER.info(String.format("[%s][level=%s][%s][skip]because excluded name '%s'", method, level, childFolder, childFolder
@@ -140,8 +153,12 @@ public class DirectoryParser {
             return folder;
         }
 
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         Map<String, List<Path>> jobChains = new HashMap<>();
         for (File file : files) {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s]%s", method, file.getPath()));
+            }
             String fileName = file.getName();
             if (fileName.endsWith(EConfigFileExtensions.ORDER.extension())) {
                 r.addCountOrders();
@@ -188,8 +205,14 @@ public class DirectoryParser {
             }
         }
 
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[%s][%s]jobChains...", method, folder.getPath()));
+        }
         for (Map.Entry<String, List<Path>> entry : jobChains.entrySet()) {
             try {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][%s][jobChains]%s", method, folder.getPath(), entry.getKey()));
+                }
                 folder.addJobChain(r, entry.getKey(), entry.getValue());
             } catch (Throwable e) {
                 LOGGER.error(String.format("[%s]%s", method, e.toString()));
@@ -200,6 +223,9 @@ public class DirectoryParser {
         r.addCountStandaloneJobs(folder.getStandaloneJobs().size());
         r.addCountOrderJobs(folder.getOrderJobs().size());
 
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[%s][%s]end", method, folder.getPath()));
+        }
         return folder;
     }
 
@@ -218,6 +244,7 @@ public class DirectoryParser {
     public class DirectoryParserResult {
 
         private Folder root;
+        private Path yadeConfiguration;
 
         private int countFolders = 0;
         private int countOrders = 0;
@@ -234,6 +261,10 @@ public class DirectoryParser {
 
         protected void setRoot(Folder f) {
             root = f;
+        }
+
+        public void setYadeConfiguration(Path f) {
+            yadeConfiguration = f;
         }
 
         protected void addCountFolders() {
@@ -286,6 +317,10 @@ public class DirectoryParser {
 
         public Folder getRoot() {
             return root;
+        }
+
+        public Path getYadeConfiguration() {
+            return yadeConfiguration;
         }
 
         public int getCountFolders() {

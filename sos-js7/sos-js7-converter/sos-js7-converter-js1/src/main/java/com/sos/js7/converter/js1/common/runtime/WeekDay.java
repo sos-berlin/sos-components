@@ -1,5 +1,6 @@
 package com.sos.js7.converter.js1.common.runtime;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -24,11 +25,11 @@ public class WeekDay {
     // which="-1" to which="-4": From the fourth-last to the last week days in a month.
     private Integer which;
 
-    protected WeekDay(SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
+    protected WeekDay(Path path, SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
         Map<String, String> m = JS7ConverterHelper.attribute2map(node);
         this.day = JS7ConverterHelper.stringValue(m.get(ATTR_DAY));
         this.which = JS7ConverterHelper.integerValue(m.get(ATTR_WHICH));
-        this.periods = RunTime.convertPeriod(xpath, node);
+        this.periods = RunTime.convertPeriod(path, xpath, node);
     }
 
     public List<Period> getPeriods() {

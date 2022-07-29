@@ -9,6 +9,26 @@ public class ConverterReportWriter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConverterReportWriter.class);
 
+    public static void writeConfigReport(Path errorReport, Path warningReport, Path analyzerReport) {
+        String method = "writeConfigReport";
+        if (ConfigReport.INSTANCE.getError().getRecords().size() > 0) {
+            LOGGER.info(String.format("[%s][JS7][error][start]...", method));
+            ReportWriter.write(errorReport, ConfigReport.INSTANCE.getError());
+            LOGGER.info(String.format("[%s][JS7][error][end]", method));
+        }
+        if (ConfigReport.INSTANCE.getWarning().getRecords().size() > 0) {
+            LOGGER.info(String.format("[%s][JS7][warning][start]...", method));
+            ReportWriter.write(warningReport, ConfigReport.INSTANCE.getWarning());
+            LOGGER.info(String.format("[%s][JS7][warning][end]", method));
+        }
+        if (ConfigReport.INSTANCE.getAnalyzer().getRecords().size() > 0) {
+            LOGGER.info(String.format("[%s][JS7][analyzer][start]...", method));
+            ReportWriter.write(analyzerReport, ConfigReport.INSTANCE.getAnalyzer());
+            LOGGER.info(String.format("[%s][JS7][analyzer][end]", method));
+        }
+        ConfigReport.INSTANCE.clear();
+    }
+
     public static void writeParserReport(Path summaryReport, Path errorReport, Path warningReport, Path analyzerReport) {
         String method = "writeParserReport";
         if (ParserReport.INSTANCE.getSummary().getRecords().size() > 0) {
@@ -31,6 +51,7 @@ public class ConverterReportWriter {
             ReportWriter.write(analyzerReport, ParserReport.INSTANCE.getAnalyzer());
             LOGGER.info(String.format("[%s][JIL][analyzer][end]", method));
         }
+        ParserReport.INSTANCE.clear();
     }
 
     public static void writeConverterReport(Path errorReport, Path warningReport, Path analyzerReport) {
@@ -39,20 +60,24 @@ public class ConverterReportWriter {
             LOGGER.info(String.format("[%s][JS7][error][start]...", method));
             ReportWriter.write(errorReport, ConverterReport.INSTANCE.getError());
             LOGGER.info(String.format("[%s][JS7][error][end]", method));
+            ConverterReport.INSTANCE.getError().clear();
         }
         if (ConverterReport.INSTANCE.getWarning().getRecords().size() > 0) {
             LOGGER.info(String.format("[%s][JS7][warning][start]...", method));
             ReportWriter.write(warningReport, ConverterReport.INSTANCE.getWarning());
             LOGGER.info(String.format("[%s][JS7][warning][end]", method));
+            ConverterReport.INSTANCE.getWarning().clear();
         }
         if (ConverterReport.INSTANCE.getAnalyzer().getRecords().size() > 0) {
             LOGGER.info(String.format("[%s][JS7][analyzer][start]...", method));
             ReportWriter.write(analyzerReport, ConverterReport.INSTANCE.getAnalyzer());
             LOGGER.info(String.format("[%s][JS7][analyzer][end]", method));
+            ConverterReport.INSTANCE.getAnalyzer().clear();
         }
     }
 
     public static void writeSummaryReport(Path summaryReport) {
         ReportWriter.write(summaryReport, ConverterReport.INSTANCE.getSummary());
+        ConverterReport.INSTANCE.getSummary().clear();
     }
 }
