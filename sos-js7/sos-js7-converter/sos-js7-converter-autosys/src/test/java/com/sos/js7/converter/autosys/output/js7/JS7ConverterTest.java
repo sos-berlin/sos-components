@@ -1,6 +1,5 @@
 package com.sos.js7.converter.autosys.output.js7;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -9,20 +8,19 @@ import org.junit.Test;
 
 import com.sos.js7.converter.autosys.input.XMLJobParser;
 import com.sos.js7.converter.commons.JS7ConverterMain;
-import com.sos.js7.converter.commons.config.JS7ConverterConfig.Platform;
 
 public class JS7ConverterTest {
 
     @Ignore
     @Test
-    public void test() throws IOException {
+    public void test() throws Exception {
         Path input = Paths.get("src/test/resources/input/xml");
         Path outputDir = Paths.get("src/test/resources/output");
         Path reportDir = Paths.get("src/test/resources/output/report");
         Path archive = Paths.get("src/test/resources/js7_converted.tar.gz");
 
         JS7Converter.CONFIG.getGenerateConfig().withWorkflows(true).withSchedules(true).withLocks(true).withCyclicOrders(false);
-        JS7Converter.CONFIG.getAgentConfig().withForcedPlatform(Platform.UNIX).withMappings("abcd=agent;xyz=agent_cluster");// .withForcedName("my_agent_name");
+        JS7Converter.CONFIG.getAgentConfig().withMappings("abcd=agent;xyz=agent_cluster");// .withForcedName("my_agent_name");
         JS7Converter.CONFIG.getMockConfig().withUnixScript("$HOME/MockScript.sh");
         JS7Converter.CONFIG.getScheduleConfig().withDefaultWorkingDayCalendarName("AnyDays").withDefaultNonWorkingDayCalendarName(null)
                 .withPlanOrders(true).withSubmitOrders(true);

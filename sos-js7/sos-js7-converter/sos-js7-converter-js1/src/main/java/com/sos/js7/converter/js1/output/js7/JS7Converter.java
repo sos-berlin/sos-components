@@ -1066,8 +1066,16 @@ public class JS7Converter {
                 agent = source.getAgentCluster();
                 subagents = source.getAgentCluster().getSubagents();
             }
-            if (source.getJS7AgentName() == null && agent != null && JS7AgentConvertType.CONFIG_FORCED.equals(type)) {
-                source.setJS7AgentName(agent.getAgentName());
+
+            if (source.getJS7AgentName() == null && agent != null) {
+                switch (type) {
+                case CONFIG_FORCED:
+                case CONFIG_MAPPINGS:
+                    source.setJS7AgentName(agent.getAgentName());
+                    break;
+                default:
+                    break;
+                }
             }
         }
         if (agent == null) {

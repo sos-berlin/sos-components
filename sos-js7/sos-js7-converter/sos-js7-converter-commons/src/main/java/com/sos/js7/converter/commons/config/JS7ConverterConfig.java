@@ -132,9 +132,6 @@ public class JS7ConverterConfig {
                         case "agentConfig.mappings":
                             agentConfig.withMappings(val);
                             break;
-                        case "agentConfig.forcedPlatform":
-                            agentConfig.forcedPlatform = Platform.valueOf(val.toUpperCase());
-                            break;
                         case "agentConfig.forcedControllerId":
                             agentConfig.withForcedControllerId(val);
                             break;
@@ -185,14 +182,6 @@ public class JS7ConverterConfig {
                             break;
                         case "subFolderConfig.separator":
                             subFolderConfig.separator = val;
-                            break;
-                        default:
-                            if (key.startsWith("agentConfig.mappingsAgent")) {
-                                JS7Agent a = readAgentJson(val);
-                                if (a != null) {
-                                    agentConfig.mappingsAgents.put(key, a);
-                                }
-                            }
                             break;
                         }
                     } catch (Throwable ee) {
@@ -352,10 +341,10 @@ public class JS7ConverterConfig {
     public class GenerateConfig {
 
         private boolean workflows = true;
-        private boolean agents;
-        private boolean locks;
-        private boolean schedules;
-        private boolean calendars;
+        private boolean agents = true;
+        private boolean locks = true;
+        private boolean schedules = true;
+        private boolean calendars = true;
         private boolean cyclicOrders;
 
         public GenerateConfig withWorkflows(boolean val) {
@@ -526,11 +515,9 @@ public class JS7ConverterConfig {
 
     public class AgentConfig {
 
-        private Map<String, JS7Agent> mappingsAgents = new HashMap<>();
         private Map<String, JS7Agent> mappings;
         private String forcedControllerId;
         private String defaultControllerId;
-        private Platform forcedPlatform;
         private JS7Agent forcedAgent; // use this instead of evaluated agent name
         private JS7Agent defaultAgent;// when agent can't be evaluated
 
@@ -541,11 +528,6 @@ public class JS7ConverterConfig {
 
         public AgentConfig withDefaultControllerId(String val) {
             this.defaultControllerId = val;
-            return this;
-        }
-
-        public AgentConfig withForcedPlatform(Platform val) {
-            this.forcedPlatform = val;
             return this;
         }
 
@@ -562,17 +544,24 @@ public class JS7ConverterConfig {
         /** Agent mapping<br/>
          * Example 1<br>
          * - input map:<br/>
-         * agentConfig.mappingsAgent1 = {"agentId":"primaryAgent", "platform":"UNIX", "controllerId":"js7","url":"http://localhost:4445"} <br/>
-         * agentConfig.mappings = my_agent_1=mappingsAgent1<br/>
+         * agentConfig.mappings = my_agent_1={"agentId":"primaryAgent", "platform":"UNIX", "controllerId":"js7","url":"http://localhost:4445"}<br/>
          **/
-        public AgentConfig withMappings(String mappings) {
+        public AgentConfig withMappings(String mappings) throws Exception {
             Map<String, JS7Agent> map = new HashMap<>();
             if (mappings != null) {
-                // map and remove duplicates
-                map = Stream.of(mappings.trim().split(LIST_VALUE_DELIMITER)).map(e -> e.split("=")).filter(e -> e.length == 2 && mappingsAgents
-                        .containsKey(e[1].trim())).collect(Collectors.toMap(arr -> arr[0].trim(), arr -> {
-                            return mappingsAgents.get(arr[1].trim());
-                        }, (oldValue, newValue) -> newValue));
+                String[] arr = mappings.trim().split(LIST_VALUE_DELIMITER);
+                for (int i = 0; i < arr.length; i++) {
+                    String[] marr = arr[i].split("=");
+                    if (marr.length != 2) {
+                        continue;
+                    }
+                    String key = marr[0].trim();
+                    String val = marr[1].trim();
+                    JS7Agent a = readAgentJson(val);
+                    if (a != null) {
+                        map.put(key, a);
+                    }
+                }
             }
             return withMappings(map);
         }
@@ -605,13 +594,9 @@ public class JS7ConverterConfig {
             return defaultControllerId;
         }
 
-        public Platform getForcedPlatform() {
-            return forcedPlatform;
-        }
-
         public boolean isEmpty() {
-            return (mappings == null || mappings.size() == 0) && forcedPlatform == null && forcedAgent == null && defaultAgent == null
-                    && forcedControllerId == null && defaultControllerId == null;
+            return (mappings == null || mappings.size() == 0) && forcedAgent == null && defaultAgent == null && forcedControllerId == null
+                    && defaultControllerId == null;
         }
 
     }
