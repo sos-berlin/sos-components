@@ -537,7 +537,7 @@ public class Validator {
                     break;
                 case POST_NOTICES:
                     PostNotices pns = inst.cast();
-                    List<String> pnsNames = pns.getNoticeBoardNames();
+                    List<String> pnsNames = new ArrayList<>(pns.getNoticeBoardNames());
                     pnsNames.removeAll(boardNames);
                     if (boardNames.isEmpty() || !pnsNames.isEmpty()) {
                         throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + pnsNames

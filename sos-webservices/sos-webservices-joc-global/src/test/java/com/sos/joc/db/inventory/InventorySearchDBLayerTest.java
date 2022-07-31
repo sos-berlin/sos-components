@@ -78,8 +78,8 @@ public class InventorySearchDBLayerTest {
             advanced.setJobNameExactMatch(true);
             // advanced.setAgentName("agent");
             // advanced.setJobCriticality(JobCriticality.NORMAL);
-            advanced.setJobResources(null);
-            advanced.setNoticeBoards(null);
+            advanced.setJobResource(null);
+            advanced.setNoticeBoard(null);
             advanced.setLock(null);
             advanced.setArgumentName(null);
             advanced.setArgumentValue(null);

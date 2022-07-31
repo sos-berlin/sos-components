@@ -1,14 +1,16 @@
 package com.sos.joc.inventory.impl;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
@@ -16,10 +18,10 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.InventorySearchDBLayer;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.resource.ISearchResource;
 import com.sos.joc.model.inventory.search.RequestSearchAdvancedItem;
 import com.sos.joc.model.inventory.search.RequestSearchFilter;
@@ -32,24 +34,21 @@ import com.sos.schema.JsonValidator;
 public class SearchResourceImpl extends JOCResourceImpl implements ISearchResource {
 
     @Override
-    public JOCDefaultResponse post(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse postSearch(final String accessToken, final byte[] inBytes) {
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestSearchFilter.class);
             RequestSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestSearchFilter.class);
 
-            boolean controllerPermissions = false;
-            if (!SOSString.isEmpty(in.getControllerId())) {
-                controllerPermissions = getControllerPermissions(in.getControllerId(), accessToken).getWorkflows().getView();
-            }
-            boolean permission = getJocPermissions(accessToken).getInventory().getView() || controllerPermissions;
+            boolean permission = getJocPermissions(accessToken).getInventory().getView();
             JOCDefaultResponse response = checkPermissions(accessToken, in, permission);
             if (response != null) {
                 return response;
             }
 
             ResponseSearch answer = new ResponseSearch();
-            answer.setResults(SOSReflection.isEmpty(in.getAdvanced()) ? getBasicSearch(in) : getAdvancedSearch(in));
+            answer.setResults(getSearchResult(in, folderPermissions));
+            answer.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -58,8 +57,13 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
+    
+    public static List<ResponseSearchItem> getSearchResult(final RequestSearchFilter in, SOSAuthFolderPermissions folderPermissions)
+            throws Exception {
+        return SOSReflection.isEmpty(in.getAdvanced()) ? getBasicSearch(in, folderPermissions) : getAdvancedSearch(in, folderPermissions);
+    }
 
-    private List<ResponseSearchItem> getBasicSearch(final RequestSearchFilter in) throws Exception {
+    private static List<ResponseSearchItem> getBasicSearch(final RequestSearchFilter in, SOSAuthFolderPermissions folderPermissions) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -75,8 +79,8 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
 
             List<ResponseSearchItem> r = Collections.emptyList();
             if (items != null) {
-                r = items.stream().map(item -> toResponseSearchItem(item)).sorted(Comparator.comparing(ResponseSearchItem::getPath)).collect(
-                        Collectors.toList());
+                r = items.stream().map(item -> toResponseSearchItem(item, folderPermissions)).sorted(Comparator.comparing(
+                        ResponseSearchItem::getPath)).collect(Collectors.toList());
             }
             return r;
         } catch (Throwable e) {
@@ -86,7 +90,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         }
     }
 
-    private List<ResponseSearchItem> getAdvancedSearch(final RequestSearchFilter in) throws Exception {
+    private static List<ResponseSearchItem> getAdvancedSearch(final RequestSearchFilter in, SOSAuthFolderPermissions folderPermissions) throws Exception {
         SOSHibernateSession session = null;
         try {
             adjustAdvanced(in);
@@ -113,11 +117,11 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                     // TODO consider SCRIPT objects
                     switch (in.getReturnType()) {
                     case JOBRESOURCE:
-                        workflowAdvanced.setJobResources(item.getName());
+                        workflowAdvanced.setJobResource(item.getName());
                         checkWorkflow = true;
                         break;
                     case NOTICEBOARD:
-                        workflowAdvanced.setNoticeBoards(item.getName());
+                        workflowAdvanced.setNoticeBoard(item.getName());
                         checkWorkflow = true;
                         break;
                     case LOCK:
@@ -141,7 +145,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                         }
                     }
 
-                    ResponseSearchItem ri = toResponseSearchItem(item);
+                    ResponseSearchItem ri = toResponseSearchItem(item, folderPermissions);
                     r.add(ri);
                 }
             }
@@ -153,7 +157,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         }
     }
 
-    private void adjustAdvanced(final RequestSearchFilter in) {
+    private static void adjustAdvanced(final RequestSearchFilter in) {
         if (in.getAdvanced() == null) {
             return;
         }
@@ -165,10 +169,10 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             in.getAdvanced().setFileOrderSource(null);
             break;
         case JOBRESOURCE:
-            in.getAdvanced().setJobResources(null);
+            in.getAdvanced().setJobResource(null);
             break;
         case NOTICEBOARD:
-            in.getAdvanced().setNoticeBoards(null);
+            in.getAdvanced().setNoticeBoard(null);
             break;
         case LOCK:
             in.getAdvanced().setLock(null);
@@ -185,7 +189,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         }
     }
 
-    private RequestSearchAdvancedItem cloneAdvanced4WorkflowSearch(final RequestSearchFilter in) {
+    private static RequestSearchAdvancedItem cloneAdvanced4WorkflowSearch(final RequestSearchFilter in) {
         if (in.getAdvanced() == null) {
             return null;
         }
@@ -193,14 +197,14 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         item.setAgentName(in.getAdvanced().getAgentName());
         item.setArgumentName(in.getAdvanced().getArgumentName());
         item.setArgumentValue(in.getAdvanced().getArgumentValue());
-        item.setNoticeBoards(in.getAdvanced().getNoticeBoards());
+        item.setNoticeBoard(in.getAdvanced().getNoticeBoard());
         item.setFileOrderSource(in.getAdvanced().getFileOrderSource());
         item.setJobCountFrom(in.getAdvanced().getJobCountFrom());
         item.setJobCountTo(in.getAdvanced().getJobCountTo());
         item.setJobCriticality(in.getAdvanced().getJobCriticality());
         item.setJobName(in.getAdvanced().getJobName());
         item.setJobNameExactMatch(in.getAdvanced().getJobNameExactMatch());
-        item.setJobResources(in.getAdvanced().getJobResources());
+        item.setJobResource(in.getAdvanced().getJobResource());
         item.setLock(in.getAdvanced().getLock());
         item.setSchedule(in.getAdvanced().getSchedule());
         item.setIncludeScript(in.getAdvanced().getIncludeScript());
@@ -209,40 +213,21 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         return item;
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final RequestSearchFilter in, boolean permission) throws Exception {
-        JOCDefaultResponse response = initPermissions(in.getControllerId(), getPermitted(accessToken, in));
+    private JOCDefaultResponse checkPermissions(final String accessToken, final RequestSearchFilter in, boolean permission) {
+        JOCDefaultResponse response = initPermissions(in.getControllerId(), permission);
         if (response == null) {
             if (in.getFolders() != null) {
                 for (String folder : in.getFolders()) {
                     if (!folderPermissions.isPermittedForFolder(folder)) {
-                        return accessDeniedResponse();
+                        throw new JocFolderPermissionsException(folder);
                     }
                 }
             }
         }
         return response;
     }
-
-    private boolean getPermitted(String accessToken, RequestSearchFilter in) {
-        String controllerId = in.getControllerId();
-        Set<String> allowedControllers = Collections.emptySet();
-        boolean permitted = false;
-        if (controllerId == null || controllerId.isEmpty()) {
-            controllerId = "";
-            allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                    availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
-            permitted = !allowedControllers.isEmpty();
-            if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                allowedControllers = Collections.emptySet();
-            }
-        } else {
-            allowedControllers = Collections.singleton(controllerId);
-            permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
-        }
-        return permitted;
-    }
     
-    private ResponseSearchItem toResponseSearchItem(InventorySearchItem item) {
+    private static ResponseSearchItem toResponseSearchItem(InventorySearchItem item, SOSAuthFolderPermissions folderPermissions) {
         ResponseSearchItem ri = new ResponseSearchItem();
         ri.setId(item.getId());
         ri.setPath(item.getPath());

@@ -1,6 +1,7 @@
 
 package com.sos.joc.model.inventory.search;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -25,8 +26,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "schedule",
     "includeScript",
     "calendar",
-    "noticeBoards",
-    "jobResources",
+    "noticeBoard",
+    "jobResource",
     "jobName",
     "jobNameExactMatch",
     "jobCriticality",
@@ -80,13 +81,10 @@ public class RequestSearchAdvancedItem {
      */
     @JsonProperty("schedule")
     private String schedule;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("includeScript")
+    @JsonAlias({
+        "includeScripts"
+    })
     private String includeScript;
     /**
      * string without < and >
@@ -96,22 +94,16 @@ public class RequestSearchAdvancedItem {
      */
     @JsonProperty("calendar")
     private String calendar;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("noticeBoards")
-    private String noticeBoards;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("jobResources")
-    private String jobResources;
+    @JsonProperty("noticeBoard")
+    @JsonAlias({
+        "noticeBoards"
+    })
+    private String noticeBoard;
+    @JsonProperty("jobResource")
+    @JsonAlias({
+        "jobResources"
+    })
+    private String jobResource;
     /**
      * string without < and >
      * <p>
@@ -297,23 +289,11 @@ public class RequestSearchAdvancedItem {
         this.schedule = schedule;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("includeScript")
     public String getIncludeScript() {
         return includeScript;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("includeScript")
     public void setIncludeScript(String includeScript) {
         this.includeScript = includeScript;
@@ -341,48 +321,24 @@ public class RequestSearchAdvancedItem {
         this.calendar = calendar;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("noticeBoards")
-    public String getNoticeBoards() {
-        return noticeBoards;
+    @JsonProperty("noticeBoard")
+    public String getNoticeBoard() {
+        return noticeBoard;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("noticeBoards")
-    public void setNoticeBoards(String noticeBoards) {
-        this.noticeBoards = noticeBoards;
+    @JsonProperty("noticeBoard")
+    public void setNoticeBoard(String noticeBoard) {
+        this.noticeBoard = noticeBoard;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("jobResources")
-    public String getJobResources() {
-        return jobResources;
+    @JsonProperty("jobResource")
+    public String getJobResource() {
+        return jobResource;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("jobResources")
-    public void setJobResources(String jobResources) {
-        this.jobResources = jobResources;
+    @JsonProperty("jobResource")
+    public void setJobResource(String jobResource) {
+        this.jobResource = jobResource;
     }
 
     /**
@@ -595,12 +551,12 @@ public class RequestSearchAdvancedItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentName", agentName).append("workflow", workflow).append("fileOrderSource", fileOrderSource).append("lock", lock).append("schedule", schedule).append("includeScript", includeScript).append("calendar", calendar).append("noticeBoards", noticeBoards).append("jobResources", jobResources).append("jobName", jobName).append("jobNameExactMatch", jobNameExactMatch).append("jobCriticality", jobCriticality).append("jobCountFrom", jobCountFrom).append("jobCountTo", jobCountTo).append("jobScript", jobScript).append("argumentName", argumentName).append("argumentValue", argumentValue).append("envName", envName).append("envValue", envValue).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("workflow", workflow).append("fileOrderSource", fileOrderSource).append("lock", lock).append("schedule", schedule).append("includeScript", includeScript).append("calendar", calendar).append("noticeBoard", noticeBoard).append("jobResource", jobResource).append("jobName", jobName).append("jobNameExactMatch", jobNameExactMatch).append("jobCriticality", jobCriticality).append("jobCountFrom", jobCountFrom).append("jobCountTo", jobCountTo).append("jobScript", jobScript).append("argumentName", argumentName).append("argumentValue", argumentValue).append("envName", envName).append("envValue", envValue).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(calendar).append(jobName).append(workflow).append(argumentName).append(jobCriticality).append(includeScript).append(agentName).append(jobNameExactMatch).append(argumentValue).append(jobScript).append(envValue).append(noticeBoards).append(jobCountFrom).append(schedule).append(jobCountTo).append(envName).append(lock).append(fileOrderSource).append(jobResources).toHashCode();
+        return new HashCodeBuilder().append(calendar).append(jobName).append(workflow).append(argumentName).append(jobCriticality).append(includeScript).append(agentName).append(jobResource).append(jobNameExactMatch).append(argumentValue).append(jobScript).append(envValue).append(jobCountFrom).append(schedule).append(jobCountTo).append(envName).append(lock).append(fileOrderSource).append(noticeBoard).toHashCode();
     }
 
     @Override
@@ -612,7 +568,7 @@ public class RequestSearchAdvancedItem {
             return false;
         }
         RequestSearchAdvancedItem rhs = ((RequestSearchAdvancedItem) other);
-        return new EqualsBuilder().append(calendar, rhs.calendar).append(jobName, rhs.jobName).append(workflow, rhs.workflow).append(argumentName, rhs.argumentName).append(jobCriticality, rhs.jobCriticality).append(includeScript, rhs.includeScript).append(agentName, rhs.agentName).append(jobNameExactMatch, rhs.jobNameExactMatch).append(argumentValue, rhs.argumentValue).append(jobScript, rhs.jobScript).append(envValue, rhs.envValue).append(noticeBoards, rhs.noticeBoards).append(jobCountFrom, rhs.jobCountFrom).append(schedule, rhs.schedule).append(jobCountTo, rhs.jobCountTo).append(envName, rhs.envName).append(lock, rhs.lock).append(fileOrderSource, rhs.fileOrderSource).append(jobResources, rhs.jobResources).isEquals();
+        return new EqualsBuilder().append(calendar, rhs.calendar).append(jobName, rhs.jobName).append(workflow, rhs.workflow).append(argumentName, rhs.argumentName).append(jobCriticality, rhs.jobCriticality).append(includeScript, rhs.includeScript).append(agentName, rhs.agentName).append(jobResource, rhs.jobResource).append(jobNameExactMatch, rhs.jobNameExactMatch).append(argumentValue, rhs.argumentValue).append(jobScript, rhs.jobScript).append(envValue, rhs.envValue).append(jobCountFrom, rhs.jobCountFrom).append(schedule, rhs.schedule).append(jobCountTo, rhs.jobCountTo).append(envName, rhs.envName).append(lock, rhs.lock).append(fileOrderSource, rhs.fileOrderSource).append(noticeBoard, rhs.noticeBoard).isEquals();
     }
 
 }

@@ -1,8 +1,6 @@
 
 package com.sos.joc.model.inventory.search;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -20,13 +18,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "search",
-    "folders",
     "deployedOrReleased",
-    "returnType",
-    "advanced"
+    "returnType"
 })
-public class RequestSearchFilter {
+public class RequestSearchFilter
+    extends RequestBaseSearchFilter
+{
 
     /**
      * controllerId
@@ -36,16 +33,6 @@ public class RequestSearchFilter {
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("search")
-    private String search;
-    @JsonProperty("folders")
-    private List<String> folders = new ArrayList<String>();
     @JsonProperty("deployedOrReleased")
     private Boolean deployedOrReleased = false;
     /**
@@ -57,14 +44,6 @@ public class RequestSearchFilter {
      */
     @JsonProperty("returnType")
     private RequestSearchReturnType returnType;
-    /**
-     * Inventory advanced search
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("advanced")
-    private RequestSearchAdvancedItem advanced;
 
     /**
      * controllerId
@@ -86,38 +65,6 @@ public class RequestSearchFilter {
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("search")
-    public String getSearch() {
-        return search;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("search")
-    public void setSearch(String search) {
-        this.search = search;
-    }
-
-    @JsonProperty("folders")
-    public List<String> getFolders() {
-        return folders;
-    }
-
-    @JsonProperty("folders")
-    public void setFolders(List<String> folders) {
-        this.folders = folders;
     }
 
     @JsonProperty("deployedOrReleased")
@@ -154,36 +101,14 @@ public class RequestSearchFilter {
         this.returnType = returnType;
     }
 
-    /**
-     * Inventory advanced search
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("advanced")
-    public RequestSearchAdvancedItem getAdvanced() {
-        return advanced;
-    }
-
-    /**
-     * Inventory advanced search
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("advanced")
-    public void setAdvanced(RequestSearchAdvancedItem advanced) {
-        this.advanced = advanced;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("search", search).append("folders", folders).append("deployedOrReleased", deployedOrReleased).append("returnType", returnType).append("advanced", advanced).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("controllerId", controllerId).append("deployedOrReleased", deployedOrReleased).append("returnType", returnType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(search).append(folders).append(controllerId).append(advanced).append(deployedOrReleased).append(returnType).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(controllerId).append(deployedOrReleased).append(returnType).toHashCode();
     }
 
     @Override
@@ -195,7 +120,7 @@ public class RequestSearchFilter {
             return false;
         }
         RequestSearchFilter rhs = ((RequestSearchFilter) other);
-        return new EqualsBuilder().append(search, rhs.search).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(advanced, rhs.advanced).append(deployedOrReleased, rhs.deployedOrReleased).append(returnType, rhs.returnType).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(controllerId, rhs.controllerId).append(deployedOrReleased, rhs.deployedOrReleased).append(returnType, rhs.returnType).isEquals();
     }
 
 }
