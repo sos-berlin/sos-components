@@ -19,6 +19,6 @@ public interface ISearchResource {
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse post(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse postSearch(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
 
 }
