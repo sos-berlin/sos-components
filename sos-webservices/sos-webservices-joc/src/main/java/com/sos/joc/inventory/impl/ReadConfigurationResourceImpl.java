@@ -116,20 +116,11 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 }
             }
             
-            if (config.getType().equals(ConfigurationType.FILEORDERSOURCE.intValue())) {
-                // temp. for compatibility directory -> directoryExpr
-                FileOrderSource fos = (FileOrderSource) JocInventory.content2IJSObject(config.getContent(), config.getType());
-                if (fos.getDirectoryExpr() == null) {
-                    fos.setDirectoryExpr(JsonSerializer.quoteString(fos.getDirectory())); 
-                }
-                item.setConfiguration(fos);
+            if (in.getWithPositions() == Boolean.TRUE && config.getType().equals(ConfigurationType.WORKFLOW.intValue())) {
+                item.setConfiguration(WorkflowsHelper.addWorkflowPositions((Workflow) JocInventory.content2IJSObject(config.getContent(), config
+                        .getType())));
             } else {
-                if (in.getWithPositions() == Boolean.TRUE && config.getType().equals(ConfigurationType.WORKFLOW.intValue())) {
-                    item.setConfiguration(WorkflowsHelper.addWorkflowPositions((Workflow) JocInventory.content2IJSObject(config.getContent(), config
-                            .getType())));
-                } else {
-                    item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
-                }
+                item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
             }
             
             if (JocInventory.isDeployable(type)) {

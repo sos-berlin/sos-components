@@ -276,7 +276,23 @@ public class JocInventory {
         if (type.equals(ConfigurationType.WORKFLOW)) {
             return NoticeToNoticesConverter.convertInventoryWorkflow(content);
         }
-        return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
+        if (type.equals(ConfigurationType.SCHEDULE)) {
+            // JOC-1255 workflowName -> workflowNames
+            Schedule s = setWorkflowNames(Globals.objectMapper.readValue(content, Schedule.class));
+            s.setWorkflowName(null);
+            return s;
+        }
+        if (type.equals(ConfigurationType.FILEORDERSOURCE)) {
+            // for compatibility directory -> directoryExpr
+            FileOrderSource fos = Globals.objectMapper.readValue(content, FileOrderSource.class);
+            if (fos.getDirectoryExpr() == null || fos.getDirectoryExpr().isEmpty()) {
+                fos.setDirectoryExpr(JsonSerializer.quoteString(fos.getDirectory()));
+                fos.setDirectory(null);
+            }
+            return fos;
+        } else {
+            return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
+        }
     }
 
     public static void makeParentDirs(InventoryDBLayer dbLayer, Path parentFolder, Long auditLogId) throws SOSHibernateException {
