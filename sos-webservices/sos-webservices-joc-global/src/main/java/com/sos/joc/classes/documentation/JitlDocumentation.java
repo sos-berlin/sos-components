@@ -8,6 +8,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Date;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -26,6 +31,7 @@ public class JitlDocumentation {
 
     private static final String DOCUS = "/sos-jitl-jobdoc.zip";
     private static final String NOTIFICATION = "/notification.xml";
+    private static final String NOTIFICATION_XSD = "Notification_configuration_v1.0.xsd";
     private static final String MAINFOLDER = "/sos";
     public static final String FOLDER = MAINFOLDER + "/jitl-jobs";
     public static final String XSLT = FOLDER + "/js7_job_documentation_v1.1.xsl";
@@ -69,40 +75,66 @@ public class JitlDocumentation {
     
     private static void updateNotification(SOSHibernateSession session) {
         try {
-            Query<Long> query = session.createQuery("select count(*) from " + DBLayer.DBITEM_XML_EDITOR_CONFIGURATIONS + " where type=:type");
-            query.setParameter("type", "NOTIFICATION");
-            if (query.getSingleResult() == 0L) {
-                URL notificationUrl = JitlDocumentation.class.getClassLoader().getResource(NOTIFICATION);
-                if (notificationUrl != null) {
-                    Path notificationPath = Paths.get(notificationUrl.toURI());
-                    if (notificationPath != null && Files.exists(notificationPath)) {
-                        String notification = new String(Files.readAllBytes(Paths.get(notificationUrl.toURI())), StandardCharsets.UTF_8);
-                        DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
-                        item.setId(null);
-                        item.setType("NOTIFICATION");
-                        item.setName(notificationPath.getFileName().toString());
-                        item.setSchemaLocation("Notification_configuration_v1.0.xsd");
-                        item.setConfigurationDraft(null);
-                        item.setConfigurationDraftJson(null);
-                        item.setConfigurationReleased(notification);
-                        item.setConfigurationReleasedJson(null);
-                        item.setAuditLogId(0L);
-                        item.setAccount("root");
-                        item.setReleased(Date.from(Instant.now()));
-                        item.setModified(item.getReleased());
-                        item.setCreated(item.getReleased());
-                        
-                        //session.beginTransaction();
+
+            URL notificationUrl = JitlDocumentation.class.getClassLoader().getResource(NOTIFICATION);
+            if (notificationUrl != null) {
+                Path notificationPath = Paths.get(notificationUrl.toURI());
+                if (notificationPath != null && Files.exists(notificationPath)) {
+                    String notification = new String(Files.readAllBytes(notificationPath), StandardCharsets.UTF_8);
+                    String notificationFilename = notificationPath.getFileName().toString();
+
+                    Query<DBItemXmlEditorConfiguration> query = session.createQuery("from " + DBLayer.DBITEM_XML_EDITOR_CONFIGURATIONS
+                            + " where type in (:types)");
+                    query.setParameterList("types", Arrays.asList("NOTIFICATION", "NOTIFICATION_DEFAULT"));
+                    List<DBItemXmlEditorConfiguration> result = query.getResultList();
+                    Map<String, List<DBItemXmlEditorConfiguration>> resultMapByType = Collections.emptyMap();
+                    if (result != null) {
+                        resultMapByType = result.stream().collect(Collectors.groupingBy(DBItemXmlEditorConfiguration::getType));
+                    }
+
+                    if (!resultMapByType.containsKey("NOTIFICATION")) {
+                        DBItemXmlEditorConfiguration item = getNotificationDbItem(null, "NOTIFICATION", notification, notificationFilename);
+
                         session.save(item);
-                        //session.commit();
                         LOGGER.info(notificationPath.getFileName().toString() + " is inserted in database");
+                    }
+                    if (!resultMapByType.containsKey("NOTIFICATION_DEFAULT")) {
+                        DBItemXmlEditorConfiguration item = getNotificationDbItem(null, "NOTIFICATION_DEFAULT", notification, notificationFilename);
+
+                        session.save(item);
+                        //LOGGER.info(notificationPath.getFileName().toString() + " as default is inserted in database");
+                    } else {
+                        DBItemXmlEditorConfiguration item = getNotificationDbItem(resultMapByType.get("NOTIFICATION_DEFAULT").get(0),
+                                "NOTIFICATION_DEFAULT", notification, notificationFilename);
+                        session.update(item);
+                        //LOGGER.info(notificationPath.getFileName().toString() + " as default is update in database");
                     }
                 }
             }
         } catch (Exception e) {
-            Globals.rollback(session);
             LOGGER.warn("Problem inserting notification.xml in database", e);
         }
+    }
+    
+    private static DBItemXmlEditorConfiguration getNotificationDbItem(DBItemXmlEditorConfiguration item, String type, String notification,
+            String notificationFilename) {
+        if (item == null) {
+            item = new DBItemXmlEditorConfiguration();
+            item.setId(null);
+            item.setCreated(Date.from(Instant.now()));
+        }
+        item.setType(type);
+        item.setName(notificationFilename);
+        item.setSchemaLocation(NOTIFICATION_XSD);
+        item.setConfigurationDraft(null);
+        item.setConfigurationDraftJson(null);
+        item.setConfigurationReleased(notification);
+        item.setConfigurationReleasedJson(null);
+        item.setAuditLogId(0L);
+        item.setAccount("root");
+        item.setReleased(Date.from(Instant.now()));
+        item.setModified(item.getReleased());
+        return item;
     }
     
     private static boolean updateIsNecessary(DocumentationDBLayer dbLayer) {
