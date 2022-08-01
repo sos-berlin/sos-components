@@ -192,11 +192,14 @@ public class ImportUtils {
                     break;
                 case SCHEDULE:
                     if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.WORKFLOW)) {
-                    	if (((ScheduleEdit)configurationWithReference).getConfiguration().getWorkflowName().equals(updateableItem.getOldName()) ||
-                    			((ScheduleEdit)configurationWithReference).getConfiguration().getWorkflowName()
-                				.equals(updateableItem.getConfigurationObject().getName())) {
-                    		((ScheduleEdit)configurationWithReference).getConfiguration().setWorkflowName(updateableItem.getNewName());
-                    	}
+                        if (((ScheduleEdit)configurationWithReference).getConfiguration().getWorkflowNames() != null && 
+                                ((ScheduleEdit)configurationWithReference).getConfiguration().getWorkflowNames().contains(updateableItem.getOldName())) {
+                            ((ScheduleEdit)configurationWithReference).getConfiguration().setWorkflowNames(
+                                    ((ScheduleEdit)configurationWithReference).getConfiguration().getWorkflowNames().stream()
+                                    .map(item -> item.equals(updateableItem.getOldName()) ? updateableItem.getNewName() : item).collect(Collectors.toList()));
+                        } else if (updateableItem.getOldName().equals(((ScheduleEdit)configurationWithReference).getConfiguration().getWorkflowName())) {
+                            ((ScheduleEdit)configurationWithReference).getConfiguration().setWorkflowName(updateableItem.getNewName());
+                        }
                     } else  if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.WORKINGDAYSCALENDAR)) {
                     	List<AssignedCalendars> assignedCalendars = ((ScheduleEdit)configurationWithReference).getConfiguration().getCalendars();
                     	assignedCalendars.stream().forEach(item -> {
@@ -295,8 +298,10 @@ public class ImportUtils {
     }
 
     private static Set<ConfigurationObject> getUsedSchedulesFromArchiveByWorkflowName (String name, Set<ConfigurationObject> configurations) {
-    	return configurations.stream().filter(item -> ConfigurationType.SCHEDULE.equals(item.getObjectType())
-    			&& ((ScheduleEdit)item).getConfiguration().getWorkflowName().equals(name)).collect(Collectors.toSet());
+        return configurations.stream().filter(item -> ConfigurationType.SCHEDULE.equals(item.getObjectType()))
+                .filter(item -> (((ScheduleEdit)item).getConfiguration().getWorkflowNames() != null && ((ScheduleEdit)item).getConfiguration().getWorkflowNames().contains(name))
+                        || name.equals(((ScheduleEdit)item).getConfiguration().getWorkflowName()))
+                .collect(Collectors.toSet());
     }
 
     private static Set<ConfigurationObject> getUsedSchedulesFromArchiveByCalendarName (String name, Set<ConfigurationObject> configurations) {
