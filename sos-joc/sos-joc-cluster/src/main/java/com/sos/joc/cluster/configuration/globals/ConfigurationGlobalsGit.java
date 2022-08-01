@@ -24,6 +24,8 @@ public class ConfigurationGlobalsGit extends AConfigurationSection {
             GlobalSettingsSectionValueType.LIST);
     private ConfigurationEntry holdScriptIncludes = new ConfigurationEntry("git_hold_script_includes", DEFAULT_VALUE_ROLLOUT, VALUES,
             GlobalSettingsSectionValueType.LIST);
+    private ConfigurationEntry holdJobs = new ConfigurationEntry("git_hold_job_templates", DEFAULT_VALUE_ROLLOUT, VALUES,
+            GlobalSettingsSectionValueType.LIST);
 
     // default: local
     private ConfigurationEntry holdJobResources = new ConfigurationEntry("git_hold_job_resources", DEFAULT_VALUE_LOCAL, VALUES,
@@ -31,8 +33,6 @@ public class ConfigurationGlobalsGit extends AConfigurationSection {
     private ConfigurationEntry holdCalendars = new ConfigurationEntry("git_hold_calendars", DEFAULT_VALUE_LOCAL, VALUES,
             GlobalSettingsSectionValueType.LIST);
     private ConfigurationEntry holdSchedules = new ConfigurationEntry("git_hold_schedules", DEFAULT_VALUE_LOCAL, VALUES,
-            GlobalSettingsSectionValueType.LIST);
-    private ConfigurationEntry holdJobs = new ConfigurationEntry("git_hold_job_templates", DEFAULT_VALUE_LOCAL, VALUES,
             GlobalSettingsSectionValueType.LIST);
 
     public ConfigurationGlobalsGit() {
@@ -42,10 +42,10 @@ public class ConfigurationGlobalsGit extends AConfigurationSection {
         holdFileOrderSources.setOrdering(++index);
         holdNoticeBoards.setOrdering(++index);
         holdScriptIncludes.setOrdering(++index);
+        holdJobs.setOrdering(++index);
         holdJobResources.setOrdering(++index);
         holdCalendars.setOrdering(++index);
         holdSchedules.setOrdering(++index);
-        holdJobs.setOrdering(++index);
     }
 
     public ConfigurationEntry getHoldWorkflows() {
