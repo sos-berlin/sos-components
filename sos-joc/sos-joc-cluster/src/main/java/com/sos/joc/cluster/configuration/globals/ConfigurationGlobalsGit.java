@@ -69,7 +69,7 @@ public class ConfigurationGlobalsGit extends AConfigurationSection {
     }
     
     public ConfigurationEntry getHoldJobs() {
-        return holdScriptIncludes;
+        return holdJobs;
     }
 
     public ConfigurationEntry getHoldJobResources() {
