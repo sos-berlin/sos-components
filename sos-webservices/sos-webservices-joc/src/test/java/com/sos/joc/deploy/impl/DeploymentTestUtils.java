@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
@@ -22,6 +23,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.joc.Globals;
+import com.sos.joc.model.agent.transfer.AgentExportFilter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.path.PathFilter;
 import com.sos.joc.model.inventory.path.PathResponse;
@@ -1456,4 +1458,14 @@ public class DeploymentTestUtils {
         return filter;
     }
     
+    public static AgentExportFilter createAgentExportFilter() {
+        AgentExportFilter filter = new AgentExportFilter();
+        ExportFile file = new ExportFile();
+        file.setFilename("myAgentExport.zip");
+        file.setFormat(ArchiveFormat.ZIP);
+        filter.setExportFile(file);
+        List<String> agentIds = Arrays.asList("agent_cluster_001", "agent_001", "agent_002", "agent_003", "agent_006"); 
+        filter.setAgentIds(agentIds);
+        return filter;
+    }
 }

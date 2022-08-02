@@ -41,6 +41,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.Version;
+import com.sos.joc.model.agent.transfer.Agent;
 import com.sos.joc.model.common.IDeployObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -65,6 +66,7 @@ import com.sos.sign.model.workflow.Workflow;
 public class ExportUtils {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(ExportUtils.class);
+    private static final String AGENT_FILE_EXTENSION = ".agent.json";
     
     public static Set<ControllerObject> getFolderControllerObjectsForSigning(ExportFolderFilter filter, String account, DBLayerDeploy dbLayer,
             String commitId) throws SOSHibernateException {
@@ -724,5 +726,101 @@ public class ExportUtils {
         }
         return jocMetaInfo;
     }
-
+    
+    public static StreamingOutput writeAgentExportZipFile(Set<Agent> agents) {
+        StreamingOutput streamingOutput = new StreamingOutput() {
+            @Override
+            public void write(OutputStream output) throws IOException {
+                ZipOutputStream zipOut = null;
+                try {
+                    zipOut = new ZipOutputStream(new BufferedOutputStream(output), StandardCharsets.UTF_8);
+                    String content = null;
+                    String zipEntryName = null;
+                    for (Agent agent : agents) {
+                        if (agent.getAgentCluster() != null) {
+                            zipEntryName = agent.getAgentCluster().getAgentId() + AGENT_FILE_EXTENSION;
+                            content = Globals.prettyPrintObjectMapper.writeValueAsString(agent.getAgentCluster());
+                        } else if (agent.getStandaloneAgent() != null) {
+                            zipEntryName = agent.getStandaloneAgent().getAgentId() + AGENT_FILE_EXTENSION;
+                            content = Globals.prettyPrintObjectMapper.writeValueAsString(agent.getStandaloneAgent());
+                        }
+                        ZipEntry entry = new ZipEntry(zipEntryName);
+                        zipOut.putNextEntry(entry);
+                        zipOut.write(content.getBytes());
+                        zipOut.closeEntry();
+                    }
+                    zipOut.flush();
+                } finally {
+                    if (zipOut != null) {
+                        try {
+                            zipOut.close();
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            }
+        };
+        return streamingOutput;
+    }
+        
+    public static StreamingOutput writeAgentExportTarGzipFile(Set<Agent> agents) {
+        StreamingOutput streamingOutput = new StreamingOutput() {
+            @Override
+            public void write(OutputStream output) throws IOException {
+                GZIPOutputStream gzipOut = null;
+                TarArchiveOutputStream tarOut = null;
+                BufferedOutputStream bOut = null;
+                try {
+                    bOut = new BufferedOutputStream(output);
+                    gzipOut = new GZIPOutputStream(bOut);
+                    tarOut = new TarArchiveOutputStream(gzipOut);
+                    String content = null;
+                    String zipEntryName = null;
+                    for (Agent agent : agents) {
+                        if (agent.getAgentCluster() != null) {
+                            zipEntryName = agent.getAgentCluster().getAgentId() + AGENT_FILE_EXTENSION;
+                            content = Globals.prettyPrintObjectMapper.writeValueAsString(agent.getAgentCluster());
+                        } else if (agent.getStandaloneAgent() != null) {
+                            zipEntryName = agent.getStandaloneAgent().getAgentId() + AGENT_FILE_EXTENSION;
+                            content = Globals.prettyPrintObjectMapper.writeValueAsString(agent.getStandaloneAgent());
+                        }
+                        TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
+                        byte[] contentBytes = content.getBytes();
+                        entry.setSize(contentBytes.length);
+                        tarOut.putArchiveEntry(entry);
+                        tarOut.write(contentBytes);
+                        tarOut.closeArchiveEntry();
+                    }
+                
+                    tarOut.flush();
+                } finally {
+                    if (tarOut != null) {
+                        try {
+                            tarOut.finish();
+                            tarOut.close();
+                        } catch (Exception e) {
+                        }
+                    }
+                    if (gzipOut != null) {
+                        try {
+                            gzipOut.flush();
+                            gzipOut.close();
+                        } catch (Exception e) {
+                        }
+                    }
+                    if (bOut != null) {
+                        try {
+                            bOut.flush();
+                            bOut.close();
+                        } catch (Exception e) {
+                        }
+                    }
+    
+                }
+    
+            }
+        };
+        return streamingOutput;
+    }
+    
 }

@@ -460,7 +460,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         try {
             StringBuilder hql = new StringBuilder();
             hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
-            hql.append(" where agentId = :agentId)");
+            hql.append(" where agentId = :agentId");
             Query<DBItemInventoryAgentName> query = getSession().createQuery(hql.toString());
             query.setParameter("agentId", agentId);
             List<DBItemInventoryAgentName> result = getSession().getResultList(query);
