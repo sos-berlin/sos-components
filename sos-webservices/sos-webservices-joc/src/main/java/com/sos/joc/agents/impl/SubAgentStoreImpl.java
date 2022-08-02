@@ -17,9 +17,9 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.ISubAgentStore;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.agent.AgentHelper;
@@ -85,7 +85,7 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
 
             // check java name rules of SubagentIds
             for (String subagentId : requestedSubagentIds) {
-                CheckJavaVariableName.test("Subagent ID", subagentId);
+                SOSCheckJavaVariableName.test("Subagent ID", subagentId);
             }
             
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(null);
@@ -153,7 +153,7 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
 
         // checks java name rules of SubagentIds
         subAgentIds.forEach(id -> {
-            CheckJavaVariableName.test("Subagent ID", id);
+            SOSCheckJavaVariableName.test("Subagent ID", id);
         });
         
         Set<String> existingSubagentClusters = clusterDbLayer.getSubagentClusterMembers(subAgentIds).stream().map(

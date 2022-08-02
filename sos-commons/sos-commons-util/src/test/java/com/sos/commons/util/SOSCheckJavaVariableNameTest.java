@@ -1,18 +1,17 @@
-package com.sos.joc.classes;
+package com.sos.commons.util;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-
-public class CheckJavaVariableNameTest {
+public class SOSCheckJavaVariableNameTest {
     
     private String[] strings = {"こんにちは", "niño", "ha/lo", "final", "1st", null, "w.1", "2021-01-27", "come on", "see...more", "continue..."};
     
     private boolean test(String s) {
         try {
-            CheckJavaVariableName.test("orderId", s);
+            SOSCheckJavaVariableName.test("orderId", s);
             return true;
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
@@ -23,7 +22,7 @@ public class CheckJavaVariableNameTest {
     @Test
     public void testMakeStringRuleConform() {
         String s = "u'\\--j fg4$-";
-        s = CheckJavaVariableName.makeStringRuleConform(s);
+        s = SOSCheckJavaVariableName.makeStringRuleConform(s);
         System.out.println(s);
         assertTrue(test(s));
     }

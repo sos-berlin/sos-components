@@ -23,11 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.lock.Lock;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
@@ -157,9 +157,9 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         // Check Java variable name rules
         for (int i = 0; i < path.getNameCount(); i++) {
             if (i == path.getNameCount() - 1) {
-                CheckJavaVariableName.test("name", path.getName(i).toString());
+                SOSCheckJavaVariableName.test("name", path.getName(i).toString());
             } else {
-                CheckJavaVariableName.test("folder", path.getName(i).toString());
+                SOSCheckJavaVariableName.test("folder", path.getName(i).toString());
             }
         }
 

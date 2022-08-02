@@ -31,6 +31,7 @@ import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.Calendar;
@@ -47,7 +48,6 @@ import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.search.WorkflowConverter;
@@ -469,7 +469,7 @@ public class JocInventory {
                 path = Globals.normalizePath(inventoryPath);
                 Path p = Paths.get(path);
                 name = p.getFileName().toString();
-                CheckJavaVariableName.test(type.value().toLowerCase(), name);
+                SOSCheckJavaVariableName.test(type.value().toLowerCase(), name);
                 folder = normalizeFolder(p.getParent());
             }
         }
@@ -478,7 +478,7 @@ public class JocInventory {
             if (inventoryPath != null) {
                 path = inventoryPath.toString().replace('\\', '/');
                 name = inventoryPath.getFileName().toString();
-                CheckJavaVariableName.test(type.value().toLowerCase(), name);
+                SOSCheckJavaVariableName.test(type.value().toLowerCase(), name);
                 folder = normalizeFolder(inventoryPath.getParent());
             }
         }
@@ -1145,14 +1145,14 @@ public class JocInventory {
         }
 
         if (!suffix.isEmpty()) {
-            CheckJavaVariableName.test("suffix", suffix);
+            SOSCheckJavaVariableName.test("suffix", suffix);
             // determine number of suffix "-suffix<number>"
             Integer num = dbLayer.getSuffixNumber(suffix, name, type.intValue());
             if (num > 0) {
                 suffix += num;
             }
         } else if (!prefix.isEmpty()) {
-            CheckJavaVariableName.test("prefix", prefix);
+            SOSCheckJavaVariableName.test("prefix", prefix);
             // determine number of prefix "prefix<number>-"
             Integer num = dbLayer.getPrefixNumber(prefix, name, type.intValue());
             if (num > 0) {

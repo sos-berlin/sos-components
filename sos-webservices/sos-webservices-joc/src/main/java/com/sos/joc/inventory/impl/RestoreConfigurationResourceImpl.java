@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -160,9 +160,9 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 // Check Java variable name rules
                 for (int i = 0; i < pWithoutFix.getNameCount(); i++) {
                     if (i == pWithoutFix.getNameCount() - 1) {
-                        CheckJavaVariableName.test("name", pWithoutFix.getName(i).toString());
+                        SOSCheckJavaVariableName.test("name", pWithoutFix.getName(i).toString());
                     } else {
-                        CheckJavaVariableName.test("folder", pWithoutFix.getName(i).toString());
+                        SOSCheckJavaVariableName.test("folder", pWithoutFix.getName(i).toString());
                     }
                 }
                 

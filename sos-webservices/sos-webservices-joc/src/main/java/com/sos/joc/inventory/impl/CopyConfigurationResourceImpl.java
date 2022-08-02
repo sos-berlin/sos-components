@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
@@ -114,9 +114,9 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 // Check Java variable name rules
                 for (int i = 0; i < pWithoutFix.getNameCount(); i++) {
                     if (i == pWithoutFix.getNameCount() - 1) {
-                        CheckJavaVariableName.test("name", pWithoutFix.getName(i).toString());
+                        SOSCheckJavaVariableName.test("name", pWithoutFix.getName(i).toString());
                     } else {
-                        CheckJavaVariableName.test("folder", pWithoutFix.getName(i).toString());
+                        SOSCheckJavaVariableName.test("folder", pWithoutFix.getName(i).toString());
                     }
                 }
                 
@@ -350,9 +350,9 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 // Check Java variable name rules
                 for (int i = 0; i < p.getNameCount(); i++) {
                     if (i == p.getNameCount() - 1) {
-                        CheckJavaVariableName.test("name", p.getName(i).toString());
+                        SOSCheckJavaVariableName.test("name", p.getName(i).toString());
                     } else {
-                        CheckJavaVariableName.test("folder", p.getName(i).toString());
+                        SOSCheckJavaVariableName.test("folder", p.getName(i).toString());
                     }
                 }
                 String newPath = p.toString().replace('\\', '/');

@@ -7,8 +7,8 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -56,9 +56,9 @@ public class ValidateNameResourceImpl extends JOCResourceImpl implements IValida
             // Check Java variable name rules
             for (int i = 0; i < path.getNameCount(); i++) {
                 if (i == path.getNameCount() - 1) {
-                    CheckJavaVariableName.test("name", path.getName(i).toString());
+                    SOSCheckJavaVariableName.test("name", path.getName(i).toString());
                 } else {
-                    CheckJavaVariableName.test("folder", path.getName(i).toString());
+                    SOSCheckJavaVariableName.test("folder", path.getName(i).toString());
                 }
             }
             

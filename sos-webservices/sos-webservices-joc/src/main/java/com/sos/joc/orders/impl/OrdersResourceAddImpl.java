@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
@@ -86,7 +86,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             
             final String yyyymmdd = formatter.format(Instant.now());
             
-            final String defaultOrderName = CheckJavaVariableName.makeStringRuleConform(getAccount());
+            final String defaultOrderName = SOSCheckJavaVariableName.makeStringRuleConform(getAccount());
             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
             Function<AddOrder, Either<Err419, JFreshOrder>> mapper = order -> {
@@ -95,7 +95,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     if (order.getOrderName() == null || order.getOrderName().isEmpty()) {
                         order.setOrderName(defaultOrderName);
                     } else {
-                        CheckJavaVariableName.test("orderName", order.getOrderName());
+                        SOSCheckJavaVariableName.test("orderName", order.getOrderName());
                     }
                     Either<Problem, JWorkflow> e = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(JocInventory.pathToName(order
                             .getWorkflowPath())));
