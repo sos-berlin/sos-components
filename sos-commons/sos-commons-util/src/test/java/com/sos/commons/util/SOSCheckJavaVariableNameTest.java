@@ -11,7 +11,7 @@ public class SOSCheckJavaVariableNameTest {
     
     private boolean test(String s) {
         try {
-            SOSCheckJavaVariableName.test("orderId", s);
+            SOSCheckJavaVariableName.test("value", s);
             return true;
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
@@ -40,21 +40,29 @@ public class SOSCheckJavaVariableNameTest {
     @Test
     public void test3() {
         assertFalse(test(strings[2]));
+        String updated = SOSCheckJavaVariableName.makeStringRuleConform(strings[2]);
+        assertTrue(test(updated));
     }
     
     @Test
     public void test4() {
         assertFalse(test(strings[3]));
+        String updated = SOSCheckJavaVariableName.makeStringRuleConform(strings[3]);
+        assertTrue(test(updated));
     }
     
     @Test
     public void test5() {
         assertTrue(test(strings[4]));
+        String updated = SOSCheckJavaVariableName.makeStringRuleConform(strings[4]);
+        assertTrue(test(updated));
     }
     
     @Test
     public void test6() {
         assertFalse(test(strings[5]));
+        String updated = SOSCheckJavaVariableName.makeStringRuleConform(strings[5]);
+        assertFalse(test(updated));
     }
     
     @Test
@@ -70,16 +78,22 @@ public class SOSCheckJavaVariableNameTest {
     @Test
     public void test9() {
         assertFalse(test(strings[8]));
+        String updated = SOSCheckJavaVariableName.makeStringRuleConform(strings[8]);
+        assertTrue(test(updated));
     }
     
     @Test
     public void test10() {
         assertFalse(test(strings[9]));
+        String updated = SOSCheckJavaVariableName.makeStringRuleConform(strings[9]);
+        assertTrue(test(updated));
     }
     
     @Test
     public void test11() {
         assertFalse(test(strings[10]));
+        String updated = SOSCheckJavaVariableName.makeStringRuleConform(strings[10]);
+        assertTrue(test(updated));
     }
 
 }
