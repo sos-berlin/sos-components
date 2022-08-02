@@ -29,6 +29,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.model.agent.transfer.AgentExportFilter;
 import com.sos.joc.model.inventory.release.ReleasableRecallFilter;
 import com.sos.joc.model.notification.DeleteNotificationFilter;
 import com.sos.joc.model.notification.ReadNotificationFilter;
@@ -499,6 +500,13 @@ public class MappingTest {
         StoreSettingsFilter storeFilter = DeploymentTestUtils.createStoreSettingsFilter();
         LOGGER.trace("StoreSettingsFilter");
         LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(storeFilter));
+    }
+    
+    @Test
+    public void test32AgentExportFilter() throws JsonProcessingException {
+        AgentExportFilter agentExportFilter = DeploymentTestUtils.createAgentExportFilter();
+        LOGGER.info("AgentExportFilter");
+        LOGGER.info(Globals.prettyPrintObjectMapper.writeValueAsString(agentExportFilter));
     }
     
 }
