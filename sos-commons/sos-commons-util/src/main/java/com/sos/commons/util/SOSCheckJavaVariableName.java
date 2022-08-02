@@ -106,16 +106,16 @@ public class SOSCheckJavaVariableName {
         if (value == null || value.isEmpty()) {
             return "";
         }
-        if (javaReservedWords.contains(value)) {
-            return value.substring(0, 1).toUpperCase() + value.substring(1);
-        }
-        value = leadingHyphensAndDotsPattern.matcher(value).replaceAll("");
-        value = trailingHyphensAndDotsPattern.matcher(value).replaceAll("");
         value = controlCharsPattern.matcher(value).replaceAll("");
         value = punctuationAndSymbolCharsPattern.matcher(value).replaceAll("");
         value = value.replaceAll("\\s+", "-");
         value = value.replaceAll("--+", "-");
         value = value.replaceAll("\\.\\.+", ".");
+        value = leadingHyphensAndDotsPattern.matcher(value).replaceAll("");
+        value = trailingHyphensAndDotsPattern.matcher(value).replaceAll("");
+        if (javaReservedWords.contains(value)) {
+            value = value.substring(0, 1).toUpperCase() + value.substring(1);
+        }
         return value;
     }
     
