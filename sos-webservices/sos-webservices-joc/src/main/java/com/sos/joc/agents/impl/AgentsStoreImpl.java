@@ -14,9 +14,9 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsStore;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.agent.AgentHelper;
@@ -81,7 +81,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
             // check java name rules of AgentIds
             for (String agentId : agentIds.keySet()) {
-                CheckJavaVariableName.test("Agent ID", agentId);
+                SOSCheckJavaVariableName.test("Agent ID", agentId);
             }
 
             storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
@@ -200,10 +200,10 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
             // check java name rules of AgentIds
             for (String agentId : agentIds.keySet()) {
-                CheckJavaVariableName.test("Agent ID", agentId);
+                SOSCheckJavaVariableName.test("Agent ID", agentId);
             }
             for (String subagentId : requestedSubagentIds) {
-                CheckJavaVariableName.test("Subagent ID", subagentId);
+                SOSCheckJavaVariableName.test("Subagent ID", subagentId);
             }
 
             storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
