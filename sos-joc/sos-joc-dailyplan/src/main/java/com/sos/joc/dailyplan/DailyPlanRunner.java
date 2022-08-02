@@ -798,6 +798,10 @@ public class DailyPlanRunner extends TimerTask {
                     if (calendar == null) {
                         try {
                             calendar = getCalendar(controllerId, assignedCalendar.getCalendarName(), ConfigurationType.WORKINGDAYSCALENDAR);
+                            if (isDebugEnabled) {
+                                LOGGER.debug(String.format("[%s][%s][%s][%s][%s][WorkingDayCalendar=%s][db]%s", startupMode, method, controllerId,
+                                        dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), SOSString.toString(calendar)));
+                            }
                         } catch (DBMissingDataException e) {
                             LOGGER.warn(String.format("[%s][%s][%s][%s][%s][WorkingDayCalendar=%s][skip]not found", startupMode, method, controllerId,
                                     dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName()));
