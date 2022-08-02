@@ -14,16 +14,11 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.JocAuditLog;
-import com.sos.joc.classes.security.SOSBlocklist;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.security.blocklist.BlockedAccountsDeleteFilter;
-import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.model.security.sessions.ActiveSession;
 import com.sos.joc.model.security.sessions.ActiveSessions;
-import com.sos.joc.model.security.sessions.ActiveSessionsDeleteFilter;
+import com.sos.joc.model.security.sessions.ActiveSessionsCancelFilter;
 import com.sos.joc.model.security.sessions.ActiveSessionsFilter;
 import com.sos.joc.security.resource.IActiveSessionsResource;
 import com.sos.schema.JsonValidator;
@@ -31,112 +26,118 @@ import com.sos.schema.JsonValidator;
 @Path("iam")
 public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActiveSessionsResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ActiveSessionsResourceImpl.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ActiveSessionsResourceImpl.class);
 
-    private static final String API_CALL_SESSIONS = "./iam/sessions";
-    private static final String API_CALL_SESSIONS_DELETE = "./iam/sessions/DELETE";
+	private static final String API_CALL_SESSIONS = "./iam/sessions";
+	private static final String API_CALL_SESSIONS_DELETE = "./iam/sessions/cancel";
 
-    @Override
-    public JOCDefaultResponse postSessions(String accessToken, byte[] body) {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
+	@Override
+	public JOCDefaultResponse postSessions(String accessToken, byte[] body) {
+		SOSHibernateSession sosHibernateSession = null;
+		try {
 
-            initLogging(API_CALL_SESSIONS, body, accessToken);
-            ActiveSessionsFilter activeSessionsFilter = Globals.objectMapper.readValue(body, ActiveSessionsFilter.class);
-            JsonValidator.validateFailFast(body, ActiveSessionsFilter.class);
+			initLogging(API_CALL_SESSIONS, body, accessToken);
+			ActiveSessionsFilter activeSessionsFilter = Globals.objectMapper.readValue(body,
+					ActiveSessionsFilter.class);
+			JsonValidator.validateFailFast(body, ActiveSessionsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
+			JOCDefaultResponse jocDefaultResponse = initPermissions("",
+					getJocPermissions(accessToken).getAdministration().getAccounts().getView());
+			if (jocDefaultResponse != null) {
+				return jocDefaultResponse;
+			}
 
-            ActiveSessions activeSessions = new ActiveSessions();
+			ActiveSessions activeSessions = new ActiveSessions();
 
-            int count = 0;
-            for (SOSAuthCurrentAccount sosAuthCurrentAccount : Globals.jocWebserviceDataContainer.getCurrentAccountsList().getCurrentAccounts()
-                    .values()) {
-                if ((activeSessionsFilter.getLimit() == 0 || activeSessionsFilter.getLimit() > count) && activeSessionsFilter.getAccountName() == null
-                        || sosAuthCurrentAccount.getAccountname().equals(activeSessionsFilter.getAccountName())) {
-                    ActiveSession activeSession = new ActiveSession();
-                    long sessionTimeout = sosAuthCurrentAccount.getCurrentSubject().getSession().getTimeout();
-                    activeSession.setAccountName(sosAuthCurrentAccount.getAccountname());
-                    activeSession.setTimeout(sessionTimeout);
-                    activeSession.setIdentityService(sosAuthCurrentAccount.getIdentityServices().getIdentyServiceType() + ":" + sosAuthCurrentAccount
-                            .getIdentityServices().getIdentityServiceName());
-                    activeSessions.getActiveSessions().add(activeSession);
-                    activeSession.setId(sosAuthCurrentAccount.getId());
-                    count += 1;
-                }
-            }
+			int count = 0;
+			for (SOSAuthCurrentAccount sosAuthCurrentAccount : Globals.jocWebserviceDataContainer
+					.getCurrentAccountsList().getCurrentAccounts().values()) {
+				if ((activeSessionsFilter.getLimit() == 0 || activeSessionsFilter.getLimit() > count)
+						&& activeSessionsFilter.getAccountName() == null
+						|| sosAuthCurrentAccount.getAccountname().equals(activeSessionsFilter.getAccountName())) {
+					ActiveSession activeSession = new ActiveSession();
+					long sessionTimeout = sosAuthCurrentAccount.getCurrentSubject().getSession().getTimeout();
+					activeSession.setAccountName(sosAuthCurrentAccount.getAccountname());
+					activeSession.setTimeout(sessionTimeout);
+					activeSession.setIdentityService(sosAuthCurrentAccount.getIdentityServices().getIdentyServiceType()
+							+ ":" + sosAuthCurrentAccount.getIdentityServices().getIdentityServiceName());
+					activeSessions.getActiveSessions().add(activeSession);
+					activeSession.setId(sosAuthCurrentAccount.getId());
+					count += 1;
+				}
+			}
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(activeSessions));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
+			return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(activeSessions));
+		} catch (JocException e) {
+			e.addErrorMetaInfo(getJocError());
+			return JOCDefaultResponse.responseStatusJSError(e);
+		} catch (Exception e) {
+			return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+		} finally {
+			Globals.disconnect(sosHibernateSession);
+		}
 
-    }
+	}
 
-    private void removeSession(SOSAuthCurrentAccount currentAccount) {
+	private void cancelSession(SOSAuthCurrentAccount currentAccount) {
 
-        try {
-            if (currentAccount != null && currentAccount.getCurrentSubject() != null) {
-                SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
-                sosSessionHandler.getTimeout();
-                sosSessionHandler.stop();
-                Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(currentAccount.getAccessToken());
-            }
+		try {
+			if (currentAccount != null && currentAccount.getCurrentSubject() != null) {
+				SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
+				sosSessionHandler.getTimeout();
+				sosSessionHandler.stop();
+				Globals.jocWebserviceDataContainer.getCurrentAccountsList()
+						.removeAccount(currentAccount.getAccessToken());
+			}
 
-        } catch (Exception e) {
-        }
-    }
+		} catch (Exception e) {
+		}
+	}
 
-    @Override
-    public JOCDefaultResponse postSessionsDelete(String accessToken, byte[] body) {
+	@Override
+	public JOCDefaultResponse postSessionsCancel(String accessToken, byte[] body) {
 
-        try {
-            initLogging(API_CALL_SESSIONS_DELETE, body, accessToken);
-            JsonValidator.validate(body, ActiveSessionsDeleteFilter.class);
-            ActiveSessionsDeleteFilter activeSessionsDeleteFilter = Globals.objectMapper.readValue(body, ActiveSessionsDeleteFilter.class);
+		try {
+			initLogging(API_CALL_SESSIONS_DELETE, body, accessToken);
+			JsonValidator.validate(body, ActiveSessionsCancelFilter.class);
+			ActiveSessionsCancelFilter activeSessionsCancelFilter = Globals.objectMapper.readValue(body,
+					ActiveSessionsCancelFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
+			JOCDefaultResponse jocDefaultResponse = initPermissions("",
+					getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+			if (jocDefaultResponse != null) {
+				return jocDefaultResponse;
+			}
 
-            for (SOSAuthCurrentAccount sosAuthCurrentAccount : Globals.jocWebserviceDataContainer.getCurrentAccountsList().getCurrentAccounts()
-                    .values()) {
-                if (activeSessionsDeleteFilter.getAccountNames() != null) {
-                    for (String accountName : activeSessionsDeleteFilter.getAccountNames()) {
-                        if (sosAuthCurrentAccount.getAccountname().equals(accountName)) {
-                            removeSession(sosAuthCurrentAccount);
-                        }
-                    }
-                }
-                if (activeSessionsDeleteFilter.getIds() != null) {
-                    for (String id : activeSessionsDeleteFilter.getIds()) {
-                        if (sosAuthCurrentAccount.getId().equals(id)) {
-                            removeSession(sosAuthCurrentAccount);
-                        }
-                    }
-                }
-            }
+			for (SOSAuthCurrentAccount sosAuthCurrentAccount : Globals.jocWebserviceDataContainer
+					.getCurrentAccountsList().getCurrentAccounts().values()) {
+				if (activeSessionsCancelFilter.getAccountNames() != null) {
+					for (String accountName : activeSessionsCancelFilter.getAccountNames()) {
+						if (sosAuthCurrentAccount.getAccountname().equals(accountName)) {
+							cancelSession(sosAuthCurrentAccount);
+						}
+					}
+				}
+				if (activeSessionsCancelFilter.getIds() != null) {
+					for (String id : activeSessionsCancelFilter.getIds()) {
+						if (sosAuthCurrentAccount.getId().equals(id)) {
+							cancelSession(sosAuthCurrentAccount);
+						}
+					}
+				}
+			}
 
-            storeAuditLog(activeSessionsDeleteFilter.getAuditLog(), CategoryType.IDENTITY);
+			storeAuditLog(activeSessionsCancelFilter.getAuditLog(), CategoryType.IDENTITY);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (
+			return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+		} catch (
 
-        JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        }
-    }
+		JocException e) {
+			e.addErrorMetaInfo(getJocError());
+			return JOCDefaultResponse.responseStatusJSError(e);
+		} catch (Exception e) {
+			return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+		}
+	}
 
 }

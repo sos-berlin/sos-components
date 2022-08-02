@@ -17,9 +17,9 @@ public interface IActiveSessionsResource {
     public JOCDefaultResponse postSessions(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
     
     @POST
-    @Path("sessions/delete")
+    @Path("sessions/cancel")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postSessionsDelete(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+    public JOCDefaultResponse postSessionsCancel(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 
   
 }

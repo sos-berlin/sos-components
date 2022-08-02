@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * ActiveSessionsDelete Filter
+ * ActiveSessionsCancelFilter Filter
  * <p>
  * 
  * 
@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "ids",
     "auditLog"
 })
-public class ActiveSessionsDeleteFilter {
+public class ActiveSessionsCancelFilter {
 
     @JsonProperty("accountNames")
     private List<String> accountNames = new ArrayList<String>();
@@ -43,7 +43,7 @@ public class ActiveSessionsDeleteFilter {
      * No args constructor for use in serialization
      * 
      */
-    public ActiveSessionsDeleteFilter() {
+    public ActiveSessionsCancelFilter() {
     }
 
     /**
@@ -52,7 +52,7 @@ public class ActiveSessionsDeleteFilter {
      * @param ids
      * @param accountNames
      */
-    public ActiveSessionsDeleteFilter(List<String> accountNames, List<String> ids, AuditParams auditLog) {
+    public ActiveSessionsCancelFilter(List<String> accountNames, List<String> ids, AuditParams auditLog) {
         super();
         this.accountNames = accountNames;
         this.ids = ids;
@@ -116,10 +116,10 @@ public class ActiveSessionsDeleteFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ActiveSessionsDeleteFilter) == false) {
+        if ((other instanceof ActiveSessionsCancelFilter) == false) {
             return false;
         }
-        ActiveSessionsDeleteFilter rhs = ((ActiveSessionsDeleteFilter) other);
+        ActiveSessionsCancelFilter rhs = ((ActiveSessionsCancelFilter) other);
         return new EqualsBuilder().append(ids, rhs.ids).append(auditLog, rhs.auditLog).append(accountNames, rhs.accountNames).isEquals();
     }
 
