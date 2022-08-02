@@ -1,4 +1,4 @@
-package com.sos.joc.classes;
+package com.sos.commons.util;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -8,9 +8,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import io.vavr.control.Either;
-
-public class CheckJavaVariableName {
+public class SOSCheckJavaVariableName {
 
     private static final List<String> javaReservedWords = Arrays.asList("abstract", "continue", "for", "new", "switch", "assert", "default", "goto",
             "package", "synchronized", "boolean", "do", "if", "private", "this", "break", "double", "implements", "protected", "throw", "byte",
@@ -61,7 +59,11 @@ public class CheckJavaVariableName {
      *      true iff 'value' complies all rules 
      */
     public static boolean test(String value) {
-        return check(value).isRight();
+        if(check(value) == null) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -72,32 +74,32 @@ public class CheckJavaVariableName {
      *      otherwise the left hand side string of the 'either' contains an error message 
      *      to use in String.format(either.getLeft(), "myString").
      */
-    public static Either<String, Void> check(String value) {
+    public static String check(String value) {
         if (value == null || value.isEmpty()) {
-            return Either.left(errorMessages.get(Result.EMPTY));
+            return errorMessages.get(Result.EMPTY);
         }
         if (spaceChars.test(value)) {
-            return Either.left(errorMessages.get(Result.SPACE));
+            return errorMessages.get(Result.SPACE);
         }
         if (punctuationAndSymbolChars.test(value)) {
-            return Either.left(errorMessages.get(Result.PUNCTUATION));
+            return errorMessages.get(Result.PUNCTUATION);
         }
 //        if (digits.test(value.substring(0, 1))) {
-//            return Either.left(errorMessages.get(Result.DIGIT));
+//            return errorMessages.get(Result.DIGIT);
 //        }
         if (leadingHyphensAndDots.test(value) || trailingHyphensAndDots.test(value)) {
-            return Either.left(errorMessages.get(Result.LEADING_OR_TRAILING));
+            return errorMessages.get(Result.LEADING_OR_TRAILING);
         }
         if (consecutiveHyphensAndDots.test(value)) {
-            return Either.left(errorMessages.get(Result.IN_A_ROW));
+            return errorMessages.get(Result.IN_A_ROW);
         }
         if (controlChars.test(value)) {
-            return Either.left(errorMessages.get(Result.CONTROL));
+            return errorMessages.get(Result.CONTROL);
         }
         if (javaReservedWords.contains(value)) {
-            return Either.left(errorMessages.get(Result.RESERVED));
+            return errorMessages.get(Result.RESERVED);
         }
-        return Either.right(null);
+        return null;
     }
     
     public static String makeStringRuleConform(String value) {
@@ -126,9 +128,9 @@ public class CheckJavaVariableName {
      *      will be raise iff 'value' doesn't comply all rules
      */
     public static void test(String key, String value) throws IllegalArgumentException {
-        Either<String, Void> either = check(value);
-        if (either.isLeft()) {
-            throw new IllegalArgumentException(String.format(either.getLeft(), key, value));
+        String errorMessage = check(value);
+        if (errorMessage != null) {
+            throw new IllegalArgumentException(String.format(errorMessage, key, value));
         }
     }
 

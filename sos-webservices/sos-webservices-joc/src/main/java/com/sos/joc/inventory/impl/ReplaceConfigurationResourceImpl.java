@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
@@ -98,7 +98,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                     notFolderFilter).filter(regexFilter).collect(Collectors.toList());
             for (DBItemInventoryConfiguration item : dBFolderContent) {
                 String newName = item.getName().replaceAll(search, in.getReplace());
-                CheckJavaVariableName.test("name", newName);
+                SOSCheckJavaVariableName.test("name", newName);
                 List<DBItemInventoryConfiguration> names = dbLayer.getConfigurationByName(newName, item.getType());
                 if (!names.isEmpty()) {
                     throw new JocObjectAlreadyExistException("Cannot rename " + item.getName() + " to " + newName);
@@ -155,7 +155,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                     return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
                 }
 
-                CheckJavaVariableName.test("name", newName);
+                SOSCheckJavaVariableName.test("name", newName);
 
                 if (!config.getName().equalsIgnoreCase(p.getFileName().toString())) { // if not only upper-lower case is changed then check if target exists
                     DBItemInventoryConfiguration targetItem = dbLayer.getConfiguration(p.toString().replace('\\', '/'), config.getType());

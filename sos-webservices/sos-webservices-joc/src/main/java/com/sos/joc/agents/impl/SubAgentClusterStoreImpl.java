@@ -13,9 +13,9 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.ISubAgentClusterStore;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.agent.AgentHelper;
@@ -64,7 +64,7 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
 
             // check java name rules of SubagentClusterIds
             for (String subagentClusterId : subagentClusterIds.keySet()) {
-                CheckJavaVariableName.test("Subagent Cluster ID", subagentClusterId);
+                SOSCheckJavaVariableName.test("Subagent Cluster ID", subagentClusterId);
             }
             
             storeAuditLog(agentStoreParameter.getAuditLog(), CategoryType.CONTROLLER);

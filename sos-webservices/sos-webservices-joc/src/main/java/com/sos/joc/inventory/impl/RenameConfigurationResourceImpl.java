@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
@@ -108,9 +108,9 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             // Check Java variable name rules
             for (int i = 0; i < p.getNameCount(); i++) {
                 if (i == p.getNameCount() - 1) {
-                    CheckJavaVariableName.test("name", p.getName(i).toString());
+                    SOSCheckJavaVariableName.test("name", p.getName(i).toString());
                 } else {
-                    CheckJavaVariableName.test("folder", p.getName(i).toString());
+                    SOSCheckJavaVariableName.test("folder", p.getName(i).toString());
                 }
             }
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());

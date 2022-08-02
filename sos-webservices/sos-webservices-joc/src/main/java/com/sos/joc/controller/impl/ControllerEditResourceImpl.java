@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.controller.model.command.Overview;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -140,7 +140,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             
             ClusterAgent cWatcher = null;
             if (clusterWatcher != null) {
-                CheckJavaVariableName.test("Agent ID", clusterWatcher.getAgentId());
+                SOSCheckJavaVariableName.test("Agent ID", clusterWatcher.getAgentId());
                 agentDBLayer.agentIdAlreadyExists(Collections.singleton(clusterWatcher.getAgentId()), controllerId);
                 
                 cWatcher = new ClusterAgent();
@@ -313,7 +313,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     if (clusterWatcher.getPrimaryDirectorId() == null || clusterWatcher.getPrimaryDirectorId().isEmpty()) {
                         clusterWatcher.setPrimaryDirectorId(clusterWatcher.getAgentId());
                     } else {
-                        CheckJavaVariableName.test("Primary Director ID", clusterWatcher.getPrimaryDirectorId());
+                        SOSCheckJavaVariableName.test("Primary Director ID", clusterWatcher.getPrimaryDirectorId());
                         // TODO check uniqueness
                     }
                     
