@@ -11,14 +11,14 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.impl.SearchResourceImpl;
-import com.sos.joc.inventory.resource.ISearchResource;
+import com.sos.joc.boards.resource.ISearchResource;
 import com.sos.joc.model.inventory.search.RequestDeployedSearchFilter;
 import com.sos.joc.model.inventory.search.RequestSearchFilter;
 import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 import com.sos.joc.model.inventory.search.ResponseSearch;
 import com.sos.schema.JsonValidator;
 
-@Path("notice/boards")
+@Path("notice")
 public class BoardsSearchImpl extends JOCResourceImpl implements ISearchResource {
 
     private static final String API_CALL = "./notice/boards/search";
