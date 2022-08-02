@@ -43,8 +43,11 @@ public class MailHandler {
 
             putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_HOST, args.getMailSmtpHost());
             putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_PORT, args.getMailSmtpPort());
-            putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_USER, args.getMailSmtpUser());
-            putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_PASSWORD, args.getMailSmtpPassword());
+            if (args.getMailSmtpUser() != null && !args.getMailSmtpUser().isEmpty() && args.getMailSmtpPassword() != null && !args
+                    .getMailSmtpPassword().isEmpty()) {
+                putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_USER, args.getMailSmtpUser());
+                putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_PASSWORD, args.getMailSmtpPassword());
+            }
 
             sosMail = new SOSMail(smtpProperties);
             sosMail.setCredentialStoreArguments(csArgs);
@@ -141,13 +144,12 @@ public class MailHandler {
         }
     }
 
-	private void log(JobLogger logger, String log) {
-		if (logger != null) {
-			logger.info(log);
-		} else {
-			LOGGER.info(log);
-		}
-	}
+    private void log(JobLogger logger, String log) {
+        if (logger != null) {
+            logger.info(log);
+        } else {
+            LOGGER.info(log);
+        }
+    }
 
-	 
 }
