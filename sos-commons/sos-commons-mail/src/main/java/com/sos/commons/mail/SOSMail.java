@@ -229,7 +229,7 @@ public class SOSMail {
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.class", "com.sun.mail.SMTPTransport");
 
-        if (SOSString.isEmpty(getUser())) {
+        if (!SOSString.isEmpty(getUser())) {
             props.put("mail.smtp.auth", "true");
         } else {
             props.put("mail.smtp.auth", "false");
