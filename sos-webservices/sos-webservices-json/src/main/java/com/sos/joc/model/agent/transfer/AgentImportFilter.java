@@ -20,6 +20,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "format",
+    "overwrite",
+    "controllerId",
     "auditLog"
 })
 public class AgentImportFilter {
@@ -33,6 +35,16 @@ public class AgentImportFilter {
      */
     @JsonProperty("format")
     private ArchiveFormat format = ArchiveFormat.fromValue("ZIP");
+    @JsonProperty("overwrite")
+    private Boolean overwrite;
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * auditParams
      * <p>
@@ -66,6 +78,38 @@ public class AgentImportFilter {
         this.format = format;
     }
 
+    @JsonProperty("overwrite")
+    public Boolean getOverwrite() {
+        return overwrite;
+    }
+
+    @JsonProperty("overwrite")
+    public void setOverwrite(Boolean overwrite) {
+        this.overwrite = overwrite;
+    }
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
+
     /**
      * auditParams
      * <p>
@@ -90,12 +134,12 @@ public class AgentImportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("format", format).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("format", format).append("overwrite", overwrite).append("controllerId", controllerId).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(format).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(format).append(controllerId).append(auditLog).append(overwrite).toHashCode();
     }
 
     @Override
@@ -107,7 +151,7 @@ public class AgentImportFilter {
             return false;
         }
         AgentImportFilter rhs = ((AgentImportFilter) other);
-        return new EqualsBuilder().append(format, rhs.format).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(format, rhs.format).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(overwrite, rhs.overwrite).isEquals();
     }
 
 }

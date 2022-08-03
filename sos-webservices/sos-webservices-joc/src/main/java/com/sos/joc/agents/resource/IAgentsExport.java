@@ -12,11 +12,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 
 public interface IAgentsExport {
 
-    @Path("export")
-    @GET
-    @Consumes(MediaType.APPLICATION_JSON)
-    public JOCDefaultResponse getExport(@HeaderParam("X-Access-Token") String xAccessToken, String  agentsExportFilter);
-
     @POST
     @Path("export")
     @Produces({ MediaType.APPLICATION_JSON })

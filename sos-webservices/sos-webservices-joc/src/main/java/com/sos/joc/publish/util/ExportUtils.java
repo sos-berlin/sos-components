@@ -737,12 +737,11 @@ public class ExportUtils {
                     String content = null;
                     String zipEntryName = null;
                     for (Agent agent : agents) {
+                        content = Globals.prettyPrintObjectMapper.writeValueAsString(agent);
                         if (agent.getAgentCluster() != null) {
                             zipEntryName = agent.getAgentCluster().getAgentId() + AGENT_FILE_EXTENSION;
-                            content = Globals.prettyPrintObjectMapper.writeValueAsString(agent.getAgentCluster());
                         } else if (agent.getStandaloneAgent() != null) {
                             zipEntryName = agent.getStandaloneAgent().getAgentId() + AGENT_FILE_EXTENSION;
-                            content = Globals.prettyPrintObjectMapper.writeValueAsString(agent.getStandaloneAgent());
                         }
                         ZipEntry entry = new ZipEntry(zipEntryName);
                         zipOut.putNextEntry(entry);
@@ -777,12 +776,11 @@ public class ExportUtils {
                     String content = null;
                     String zipEntryName = null;
                     for (Agent agent : agents) {
+                        content = Globals.prettyPrintObjectMapper.writeValueAsString(agent);
                         if (agent.getAgentCluster() != null) {
                             zipEntryName = agent.getAgentCluster().getAgentId() + AGENT_FILE_EXTENSION;
-                            content = Globals.prettyPrintObjectMapper.writeValueAsString(agent.getAgentCluster());
                         } else if (agent.getStandaloneAgent() != null) {
                             zipEntryName = agent.getStandaloneAgent().getAgentId() + AGENT_FILE_EXTENSION;
-                            content = Globals.prettyPrintObjectMapper.writeValueAsString(agent.getStandaloneAgent());
                         }
                         TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
                         byte[] contentBytes = content.getBytes();

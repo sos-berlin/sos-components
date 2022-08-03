@@ -59,6 +59,7 @@ import com.sos.joc.exceptions.JocImportException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.SuffixPrefix;
+import com.sos.joc.model.agent.transfer.Agent;
 import com.sos.joc.model.calendar.NonWorkingDaysCalendarEdit;
 import com.sos.joc.model.calendar.WorkingDaysCalendarEdit;
 import com.sos.joc.model.inventory.ConfigurationObject;
@@ -95,7 +96,9 @@ import com.sos.webservices.order.initiator.model.ScheduleEdit;
 public class ImportUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportUtils.class);
+    private static final String AGENT_FILE_EXTENSION = ".agent.json";
     public static final String JOC_META_INFO_FILENAME = "meta_inf";
+
     
     public static UpdateableConfigurationObject createUpdateableConfiguration(DBItemInventoryConfiguration existingConfiguration, 
     		ConfigurationObject configuration, Set<ConfigurationObject> configurations, String prefix, String suffix, String targetFolder, DBLayerDeploy dbLayer)
@@ -1048,6 +1051,113 @@ public class ImportUtils {
             return signaturePath;
         }
         return null;
+    }
+
+    public static Set<Agent> readAgentsFromZipFileContent(InputStream inputStream) 
+            throws IOException, JocUnsupportedFileTypeException, JocConfigurationException {
+        Set<Agent> agents = new HashSet<Agent>();
+        ZipInputStream zipStream = null;
+        try {
+            zipStream = new ZipInputStream(inputStream);
+            ZipEntry entry = null;
+            while ((entry = zipStream.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String entryName = entry.getName().replace('\\', '/');
+                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+                byte[] binBuffer = new byte[8192];
+                int binRead = 0;
+                while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
+                    outBuffer.write(binBuffer, 0, binRead);
+                }
+                Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer, entryName);
+                if (fromArchive != null) {
+                    agents.add(fromArchive);
+                }
+            }
+        } finally {
+            if (zipStream != null) {
+                try {
+                    zipStream.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+        return agents;
+    }
+    
+    public static Set<Agent> readAgentsFromTarGzipFileContent(InputStream inputStream)
+            throws IOException, JocUnsupportedFileTypeException, JocConfigurationException {
+        Set<Agent> agents = new HashSet<Agent>();
+        GZIPInputStream gzipInputStream = null;
+        TarArchiveInputStream tarArchiveInputStream = null;
+        try {
+            gzipInputStream = new GZIPInputStream(inputStream);
+            tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream);
+            ArchiveEntry entry = null;
+            while ((entry = tarArchiveInputStream.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String entryName = entry.getName().replace('\\', '/');
+                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+                byte[] binBuffer = new byte[8192];
+                int binRead = 0;
+                while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
+                    outBuffer.write(binBuffer, 0, binRead);
+                }
+                Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer, entryName);
+                if (fromArchive != null) {
+                    agents.add(fromArchive);
+                }
+            }
+        } finally {
+            try {
+                if (tarArchiveInputStream != null) {
+                    tarArchiveInputStream.close();
+                }
+                if (gzipInputStream != null) {
+                    gzipInputStream.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+        return agents;
+    }
+
+    private static Agent createAgentFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String entryName)
+            throws JsonParseException, JsonMappingException, IOException {
+        String agentId = entryName.replace(AGENT_FILE_EXTENSION, "");
+        Agent agent = Globals.objectMapper.readValue(outBuffer.toByteArray(), Agent.class);
+        if(agent.getAgentCluster() != null) {
+            if(!agentId.equals(agent.getAgentCluster().getAgentId())) {
+                agent.getAgentCluster().setAgentId(agentId);
+                agent.getAgentCluster().setDeployed(false);
+                agent.getAgentCluster().setDisabled(false);
+                agent.getAgentCluster().setHidden(false);
+                agent.getAgentCluster().getSubagents().forEach(subagent -> {
+                    subagent.setAgentId(agentId);
+                    subagent.setDeployed(false);
+                    subagent.setDisabled(false);
+                    subagent.setIsClusterWatcher(false);
+                    subagent.setSyncState(null);
+                    subagent.setWithGenerateSubagentCluster(false);
+                });
+            }
+        } else {
+            if(!agentId.equals(agent.getStandaloneAgent().getAgentId())) {
+                agent.getStandaloneAgent().setAgentId(agentId);
+                agent.getStandaloneAgent().setDeployed(false);
+                agent.getStandaloneAgent().setDisabled(false);
+                agent.getStandaloneAgent().setHidden(false);
+                agent.getStandaloneAgent().setIsClusterWatcher(false);
+                agent.getStandaloneAgent().setOrdering(0);
+                agent.getStandaloneAgent().setSyncState(null);
+            }
+        }
+        return agent;
+        
     }
 
 }

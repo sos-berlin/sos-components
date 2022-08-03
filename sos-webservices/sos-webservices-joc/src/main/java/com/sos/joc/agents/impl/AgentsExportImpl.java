@@ -30,11 +30,6 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
     private static final String API_CALL = "./agents/export";
 
     @Override
-    public JOCDefaultResponse getExport(String xAccessToken, String  agentsExportFilter) {
-        return postExport(xAccessToken, agentsExportFilter.getBytes());
-    }
-    
-    @Override
     public JOCDefaultResponse postExport(String xAccessToken, byte[] agentsExportFilter) {
         SOSHibernateSession hibernateSession = null;
         StreamingOutput stream = null;
