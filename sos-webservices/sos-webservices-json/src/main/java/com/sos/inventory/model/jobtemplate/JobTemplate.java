@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.job.AdmissionTimeScheme;
+import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.Executable;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.inventory.model.job.notification.JobNotification;
@@ -34,7 +35,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "timeout",
     "graceTimeout",
     "failOnErrWritten",
-    "parameters",
+    "arguments",
+    "defaultArguments",
     "jobResourceNames",
     "title",
     "description",
@@ -55,7 +57,7 @@ public class JobTemplate implements IInventoryObject, IConfigurationObject, IRel
      */
     @JsonProperty("version")
     @JsonPropertyDescription("inventory repository version")
-    private String version = "1.5.0";
+    private String version = "1.4.1";
     /**
      * 
      * (Required)
@@ -98,8 +100,17 @@ public class JobTemplate implements IInventoryObject, IConfigurationObject, IRel
      * 
      * 
      */
-    @JsonProperty("parameters")
-    private Parameters parameters;
+    @JsonProperty("arguments")
+    private Parameters arguments;
+    /**
+     * key-value pairs particularly to assign parameters to environment
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("defaultArguments")
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Environment defaultArguments;
     @JsonProperty("jobResourceNames")
     private List<String> jobResourceNames = null;
     /**
@@ -182,11 +193,12 @@ public class JobTemplate implements IInventoryObject, IConfigurationObject, IRel
      * @param admissionTimeScheme
      * @param notification
      * @param graceTimeout
+     * @param defaultArguments
      * @param skipIfNoAdmissionForOrderDay
+     * @param arguments
      * @param documentationName
-     * @param parameters
      */
-    public JobTemplate(String version, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, Parameters parameters, List<String> jobResourceNames, String title, String description, String documentationName, JobCriticality criticality, String warnIfShorter, String warnIfLonger, JobNotification notification) {
+    public JobTemplate(String version, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, Parameters arguments, Environment defaultArguments, List<String> jobResourceNames, String title, String description, String documentationName, JobCriticality criticality, String warnIfShorter, String warnIfLonger, JobNotification notification) {
         super();
         this.version = version;
         this.executable = executable;
@@ -196,7 +208,8 @@ public class JobTemplate implements IInventoryObject, IConfigurationObject, IRel
         this.timeout = timeout;
         this.graceTimeout = graceTimeout;
         this.failOnErrWritten = failOnErrWritten;
-        this.parameters = parameters;
+        this.arguments = arguments;
+        this.defaultArguments = defaultArguments;
         this.jobResourceNames = jobResourceNames;
         this.title = title;
         this.description = description;
@@ -347,9 +360,9 @@ public class JobTemplate implements IInventoryObject, IConfigurationObject, IRel
      * 
      * 
      */
-    @JsonProperty("parameters")
-    public Parameters getParameters() {
-        return parameters;
+    @JsonProperty("arguments")
+    public Parameters getArguments() {
+        return arguments;
     }
 
     /**
@@ -358,9 +371,31 @@ public class JobTemplate implements IInventoryObject, IConfigurationObject, IRel
      * 
      * 
      */
-    @JsonProperty("parameters")
-    public void setParameters(Parameters parameters) {
-        this.parameters = parameters;
+    @JsonProperty("arguments")
+    public void setArguments(Parameters arguments) {
+        this.arguments = arguments;
+    }
+
+    /**
+     * key-value pairs particularly to assign parameters to environment
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("defaultArguments")
+    public Environment getDefaultArguments() {
+        return defaultArguments;
+    }
+
+    /**
+     * key-value pairs particularly to assign parameters to environment
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("defaultArguments")
+    public void setDefaultArguments(Environment defaultArguments) {
+        this.defaultArguments = defaultArguments;
     }
 
     @JsonProperty("jobResourceNames")
@@ -529,12 +564,12 @@ public class JobTemplate implements IInventoryObject, IConfigurationObject, IRel
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionForOrderDay", skipIfNoAdmissionForOrderDay).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("parameters", parameters).append("jobResourceNames", jobResourceNames).append("title", title).append("description", description).append("documentationName", documentationName).append("criticality", criticality).append("warnIfShorter", warnIfShorter).append("warnIfLonger", warnIfLonger).append("notification", notification).toString();
+        return new ToStringBuilder(this).append("version", version).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionForOrderDay", skipIfNoAdmissionForOrderDay).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("arguments", arguments).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("description", description).append("documentationName", documentationName).append("criticality", criticality).append("warnIfShorter", warnIfShorter).append("warnIfLonger", warnIfLonger).append("notification", notification).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(warnIfLonger).append(parallelism).append(jobResourceNames).append(criticality).append(failOnErrWritten).append(description).append(title).append(version).append(executable).append(timeout).append(warnIfShorter).append(admissionTimeScheme).append(notification).append(graceTimeout).append(skipIfNoAdmissionForOrderDay).append(documentationName).append(parameters).toHashCode();
+        return new HashCodeBuilder().append(warnIfLonger).append(parallelism).append(jobResourceNames).append(criticality).append(failOnErrWritten).append(description).append(title).append(version).append(executable).append(timeout).append(warnIfShorter).append(admissionTimeScheme).append(notification).append(graceTimeout).append(defaultArguments).append(skipIfNoAdmissionForOrderDay).append(arguments).append(documentationName).toHashCode();
     }
 
     @Override
@@ -546,7 +581,7 @@ public class JobTemplate implements IInventoryObject, IConfigurationObject, IRel
             return false;
         }
         JobTemplate rhs = ((JobTemplate) other);
-        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(parallelism, rhs.parallelism).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(failOnErrWritten, rhs.failOnErrWritten).append(description, rhs.description).append(title, rhs.title).append(version, rhs.version).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(admissionTimeScheme, rhs.admissionTimeScheme).append(notification, rhs.notification).append(graceTimeout, rhs.graceTimeout).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).append(documentationName, rhs.documentationName).append(parameters, rhs.parameters).isEquals();
+        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(parallelism, rhs.parallelism).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(failOnErrWritten, rhs.failOnErrWritten).append(description, rhs.description).append(title, rhs.title).append(version, rhs.version).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(admissionTimeScheme, rhs.admissionTimeScheme).append(notification, rhs.notification).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).append(arguments, rhs.arguments).append(documentationName, rhs.documentationName).isEquals();
     }
 
 }

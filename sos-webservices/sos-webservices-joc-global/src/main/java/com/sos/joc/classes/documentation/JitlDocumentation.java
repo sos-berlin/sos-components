@@ -102,12 +102,14 @@ public class JitlDocumentation {
                         DBItemXmlEditorConfiguration item = getNotificationDbItem(null, "NOTIFICATION_DEFAULT", notification, notificationFilename);
 
                         session.save(item);
-                        //LOGGER.info(notificationPath.getFileName().toString() + " as default is inserted in database");
+                        LOGGER.info(notificationPath.getFileName().toString() + " as default is inserted in database");
                     } else {
-                        DBItemXmlEditorConfiguration item = getNotificationDbItem(resultMapByType.get("NOTIFICATION_DEFAULT").get(0),
-                                "NOTIFICATION_DEFAULT", notification, notificationFilename);
-                        session.update(item);
-                        //LOGGER.info(notificationPath.getFileName().toString() + " as default is update in database");
+                        DBItemXmlEditorConfiguration item = resultMapByType.get("NOTIFICATION_DEFAULT").get(0);
+                        if (!notification.equals(item.getConfigurationReleased())) {
+                            item = getNotificationDbItem(item, "NOTIFICATION_DEFAULT", notification, notificationFilename);
+                            session.update(item);
+                            LOGGER.info(notificationPath.getFileName().toString() + " as default is update in database");
+                        }
                     }
                 }
             }

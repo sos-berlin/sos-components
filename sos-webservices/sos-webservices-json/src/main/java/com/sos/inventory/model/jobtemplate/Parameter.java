@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "type",
     "default",
+    "required",
     "description",
     "facet",
     "list",
@@ -44,6 +45,8 @@ public class Parameter {
     @JsonProperty("default")
     @JsonPropertyDescription("this value has to have the data type of the 'type' attribute")
     private Object _default;
+    @JsonProperty("required")
+    private Boolean required = false;
     /**
      * disallow <script and <svg/on
      * <p>
@@ -89,11 +92,13 @@ public class Parameter {
      * @param list
      * @param message
      * @param facet
+     * @param required
      */
-    public Parameter(ParameterType type, Object _default, String description, String facet, List<String> list, String message) {
+    public Parameter(ParameterType type, Object _default, Boolean required, String description, String facet, List<String> list, String message) {
         super();
         this.type = type;
         this._default = _default;
+        this.required = required;
         this.description = description;
         this.facet = facet;
         this.list = list;
@@ -140,6 +145,16 @@ public class Parameter {
     @JsonProperty("default")
     public void setDefault(Object _default) {
         this._default = _default;
+    }
+
+    @JsonProperty("required")
+    public Boolean getRequired() {
+        return required;
+    }
+
+    @JsonProperty("required")
+    public void setRequired(Boolean required) {
+        this.required = required;
     }
 
     /**
@@ -220,12 +235,12 @@ public class Parameter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("type", type).append("_default", _default).append("description", description).append("facet", facet).append("list", list).append("message", message).toString();
+        return new ToStringBuilder(this).append("type", type).append("_default", _default).append("required", required).append("description", description).append("facet", facet).append("list", list).append("message", message).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(_default).append(description).append(type).append(list).append(message).append(facet).toHashCode();
+        return new HashCodeBuilder().append(_default).append(description).append(type).append(list).append(message).append(facet).append(required).toHashCode();
     }
 
     @Override
@@ -237,7 +252,7 @@ public class Parameter {
             return false;
         }
         Parameter rhs = ((Parameter) other);
-        return new EqualsBuilder().append(_default, rhs._default).append(description, rhs.description).append(type, rhs.type).append(list, rhs.list).append(message, rhs.message).append(facet, rhs.facet).isEquals();
+        return new EqualsBuilder().append(_default, rhs._default).append(description, rhs.description).append(type, rhs.type).append(list, rhs.list).append(message, rhs.message).append(facet, rhs.facet).append(required, rhs.required).isEquals();
     }
 
 }
