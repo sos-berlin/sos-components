@@ -77,7 +77,7 @@ public class JobChain {
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
-                AJobChainNode jcn = AJobChainNode.parse(n);
+                AJobChainNode jcn = AJobChainNode.parse(path,n);
                 if (jcn != null) {
                     nodes.add(jcn);
                 }

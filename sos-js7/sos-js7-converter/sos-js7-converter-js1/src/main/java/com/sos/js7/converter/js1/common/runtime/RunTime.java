@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -24,7 +22,7 @@ import com.sos.js7.converter.js1.output.js7.JS7Converter;
 
 public class RunTime {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RunTime.class);
+    //private static final Logger LOGGER = LoggerFactory.getLogger(RunTime.class);
 
     private static final String ATTR_SINGLE_START = "single_start";
     private static final String ATTR_BEGIN = "begin";

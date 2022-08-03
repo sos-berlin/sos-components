@@ -57,4 +57,5 @@ public class JS7ConverterTest {
         JS7Converter.convert(input, outputDir, reportDir);
         JS7ConverterMain.createArchiveFile(outputDir, archive);
     }
+
 }
