@@ -1,5 +1,6 @@
 package com.sos.js7.converter.js1.common.jobchain.node;
 
+import java.nio.file.Path;
 import java.util.Map;
 
 import org.w3c.dom.Node;
@@ -15,6 +16,8 @@ public abstract class AJobChainNode {
     private final Map<String, String> attributes;
     private final JobChainNodeType type;
 
+    private Path path;
+
     protected AJobChainNode(Node node, JobChainNodeType type) {
         this.attributes = JS7ConverterHelper.attribute2map(node);
         this.type = type;
@@ -24,7 +27,7 @@ public abstract class AJobChainNode {
         return attributes;
     }
 
-    public static AJobChainNode parse(Node node) {
+    public static AJobChainNode parse(Path path, Node node) {
         AJobChainNode jcn = null;
         switch (node.getNodeName().toLowerCase()) {
         case "job_chain_node":
@@ -43,10 +46,21 @@ public abstract class AJobChainNode {
             jcn = new JobChainNodeEnd(node, JobChainNodeType.END);
             break;
         }
+        if (jcn != null) {
+            jcn.setPath(path);
+        }
         return jcn;
     }
 
     public JobChainNodeType getType() {
         return type;
+    }
+
+    private void setPath(Path val) {
+        path = val;
+    }
+
+    public Path getPath() {
+        return path;
     }
 }

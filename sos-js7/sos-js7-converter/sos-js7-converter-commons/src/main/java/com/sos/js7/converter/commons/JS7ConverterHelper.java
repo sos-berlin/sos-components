@@ -5,10 +5,13 @@ import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,6 +35,8 @@ public class JS7ConverterHelper {
 
     public static ObjectMapper JSON_OM = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+
+    private final static Set<Character> QUOTED_CHARS = new HashSet<>(Arrays.asList('\"', '$', '\n'));
 
     public static String stringValue(String val) {
         return val == null ? null : StringUtils.strip(val.trim(), "\"");
@@ -238,10 +243,63 @@ public class JS7ConverterHelper {
         }
     }
 
-    /** JITL Jobs arguments<br/>
-     * SHELL Jobs env<br/>
-     * TODO JSON quote?<br/>
+    /** <br/>
+     * TODO NUMBER<br/>
+     * TODO use js7.js7.data_for_java.value.JExpression<br />
+     * --- js7.data.value.expression.Expression.quote<br />
+     * --- js7.data.value.ValuePrinter.quoteString<br />
      */
+
+    public static String quoteValue4JS7(String val) {
+        boolean preferSingleOverDoubleQuotes = true;
+        if (SOSString.isEmpty(val)) {
+            return "\"\"";
+        } else if (val.startsWith("$")) {
+            return val;
+        } else if (val.equalsIgnoreCase("true") || val.equalsIgnoreCase("false")) {
+            return val;
+        } else if (!val.contains("'") && (preferSingleOverDoubleQuotes || hasQuotedChars(val)) && !val.contains(
+                "\r")) {/* because '-parsing removes \r */
+            return new StringBuilder().append("'").append(val).append("'").toString();
+        } else {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\"");
+            char[] arr = val.toCharArray();
+            for (int i = 0; i < arr.length; i++) {
+                char c = arr[i];
+                switch (c) {
+                case '\\':
+                    sb.append("\\\\");
+                    break;
+                case '"':
+                    sb.append("\\\"");
+                    break;
+                case '$':
+                    sb.append("\\$");
+                    break;
+                case '\r':
+                    sb.append("\\r");
+                    break;
+                case '\n':
+                    sb.append("\\n");
+                    break;
+                case '\t':
+                    sb.append("\\t");
+                    break;
+                default:
+                    sb.append(c);
+                    break;
+                }
+            }
+            sb.append("\"");
+            return sb.toString();
+        }
+    }
+
+    private static boolean hasQuotedChars(String val) {
+        return val.codePoints().mapToObj(c -> Character.valueOf((char) c)).filter(e -> QUOTED_CHARS.contains(e)).findFirst().orElse(null) != null;
+    }
+
     public static String quoteJS7StringValueWithDoubleQuotes(String val) {
         if (SOSString.isEmpty(val)) {
             return val;

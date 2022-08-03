@@ -120,7 +120,7 @@ public abstract class ACommonJob {
         } else {
             job = new OrderJob();
         }
-        job.name = EConfigFileExtensions.getName(EConfigFileExtensions.JOB, file.getFileName().toString());
+        job.name = EConfigFileExtensions.getJobName(file);
         job.path = file;
         job.parse(pr, node, map, file);
         return job;
