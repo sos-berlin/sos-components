@@ -145,7 +145,15 @@ public class WorkflowSearcher {
         if (regex == null || jobs.isEmpty()) {
             return jobs;
         }
-        return jobs.stream().filter(j -> j.getJob().getJobClass() != null && j.getJob().getJobClass().matches(regex)).collect(Collectors.toList());
+        return jobs.stream().filter(j -> j.getJob().getJobClassName() != null && j.getJob().getJobClassName().matches(regex)).collect(Collectors.toList());
+    }
+    
+    public List<WorkflowJob> getJobsByJobTemplate(String regex) {
+        setAllJobs();
+        if (regex == null || jobs.isEmpty()) {
+            return jobs;
+        }
+        return jobs.stream().filter(j -> j.getJob().getJobTemplateName() != null && j.getJob().getJobTemplateName().matches(regex)).collect(Collectors.toList());
     }
 
     public List<WorkflowJob> getJobsByScript(String regex) {

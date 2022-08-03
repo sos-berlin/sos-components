@@ -47,6 +47,7 @@ import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobresource.JobResource;
+import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.workflow.Branch;
@@ -138,7 +139,8 @@ public class Validator {
     private static void validate(ConfigurationType type, byte[] configBytes, IConfigurationObject config, InventoryDBLayer dbLayer,
             Set<String> visibleAgentNames) throws SOSJsonSchemaException, IOException, SOSHibernateException, JocConfigurationException {
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
-        if (ConfigurationType.WORKFLOW.equals(type) || ConfigurationType.SCHEDULE.equals(type) || ConfigurationType.FILEORDERSOURCE.equals(type)) {
+        if (ConfigurationType.WORKFLOW.equals(type) || ConfigurationType.SCHEDULE.equals(type) || ConfigurationType.FILEORDERSOURCE.equals(type)
+                || ConfigurationType.JOB.equals(type)) {
             SOSHibernateSession session = null;
             try {
                 if (dbLayer == null) {
@@ -198,6 +200,11 @@ public class Validator {
                     if (fileOrderSource.getDirectoryExpr() != null) {
                         validateExpression("$.directoryExpr: ", fileOrderSource.getDirectoryExpr());
                     }
+                } else if (ConfigurationType.JOB.equals(type)) {
+                    JobTemplate jobTemplate = (JobTemplate) config;
+                    validateJobTemplateJob(jobTemplate, dbLayer.getScriptNames());
+                    // TODO something like validateOrderPreparation(workflow.getOrderPreparation());
+                    validateJobResourceRefs(jobTemplate.getJobResourceNames(), dbLayer);
                 }
             } finally {
                 Globals.disconnect(session);
@@ -213,10 +220,10 @@ public class Validator {
         } else if (ConfigurationType.NOTICEBOARD.equals(type)) {
             Board board = (Board) config;
             if (board.getPostOrderToNoticeId() != null) {
-                validateExpression("$.postOrderToNotice: ", board.getPostOrderToNoticeId());
+                validateExpression("$.postOrderToNoticeId: ", board.getPostOrderToNoticeId());
             }
             if (board.getExpectOrderToNoticeId() != null) {
-                validateExpression("$.expectOrderToNotice: ", board.getExpectOrderToNoticeId());
+                validateExpression("$.expectOrderToNoticeId: ", board.getExpectOrderToNoticeId());
             }
             if (board.getEndOfLife() != null) {
                 validateExpression("$.endOfLife: ", board.getEndOfLife());
@@ -225,7 +232,7 @@ public class Validator {
     }
 
     private static void validateJobResourceRefs(List<String> jobResources, InventoryDBLayer dbLayer) throws SOSHibernateException {
-        if (!jobResources.isEmpty()) {
+        if (jobResources != null && !jobResources.isEmpty()) {
             List<DBItemInventoryConfiguration> dbJobResources = dbLayer.getConfigurationByNames(jobResources, ConfigurationType.JOBRESOURCE
                     .intValue());
             if (dbJobResources == null || dbJobResources.isEmpty()) {
@@ -328,7 +335,47 @@ public class Validator {
 //            }
 //        }
 //    }
+    
+    private static void validateJobTemplateJob(JobTemplate jobTemplate, Set<String> releasedScripts) throws JsonProcessingException, IOException,
+            SOSJsonSchemaException {
 
+        switch (jobTemplate.getExecutable().getTYPE()) {
+        case InternalExecutable:
+            ExecutableJava ej = jobTemplate.getExecutable().cast();
+            if (ej.getArguments() != null) {
+                validateExpression("$.executable.arguments", ej.getArguments().getAdditionalProperties());
+            }
+            break;
+        case ScriptExecutable:
+        case ShellScriptExecutable:
+            ExecutableScript es = jobTemplate.getExecutable().cast();
+            if (es.getEnv() != null) {
+                validateExpression("$.executable.env", es.getEnv().getAdditionalProperties());
+            }
+            if (es.getScript() != null) {
+                Matcher m = scriptIncludePattern.matcher(es.getScript());
+                while (m.find()) {
+                    String scriptName = m.group(2);
+                    if (!releasedScripts.contains(scriptName)) {
+                        throw new JocConfigurationException("$.executable.script referenced an unknown script '" + scriptName + "'");
+                    }
+                    try {
+                        JsonConverter.parseReplaceInclude(m.group(3)); // m.group(3) = "--replace="","" ...
+                    } catch (Exception e) {
+                        throw new JocConfigurationException("$.executable.script: Invalid script include '" + m.group(0)
+                                + "'. Replace arguments must have the form: --replace=\"...\",\"...\"");
+                    }
+                }
+                m = scriptIncludeWithoutScriptPattern.matcher(es.getScript());
+                while (m.find()) {
+                    throw new JocConfigurationException("$.executable.script contains script include without script name");
+                }
+            }
+            break;
+        }
+        validateJobNotification(jobTemplate);
+    }
+    
     private static List<String> validateWorkflowJobs(Workflow workflow, Set<String> releasedScripts) throws JsonProcessingException, IOException,
             SOSJsonSchemaException {
         List<String> jobResources = new ArrayList<>();
@@ -339,7 +386,8 @@ public class Validator {
             // TODO check JobResources references in Job
             try {
                 Job job = entry.getValue();
-                JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(job), URI.create("classpath:/raml/inventory/schemas/job/job-schema.json"));
+                JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(job), URI.create(
+                        "classpath:/raml/inventory/schemas/job/job-schema.json"));
                 if (job.getJobResourceNames() != null) {
                     jobResources.addAll(job.getJobResourceNames());
                 }
@@ -406,6 +454,32 @@ public class Validator {
                 throw new JocConfigurationException(String.format(
                         "$.jobs['%s'].notification: reduce recipients, max json length %s (current length=%s) exceeded", jobName,
                         HistoryConstants.MAX_LEN_NOTIFICATION, content.length()));
+            }
+
+        } catch (JsonProcessingException e) {
+
+        }
+    }
+    
+    private static void validateJobNotification(JobTemplate jobTemplate) throws JocConfigurationException {
+        if (jobTemplate == null || jobTemplate.getNotification() == null || jobTemplate.getNotification().getMail() == null) {
+            return;
+        }
+        if (jobTemplate.getNotification().getTypes() != null && jobTemplate.getNotification().getTypes().size() > 0) {
+            // to is required, when cc or bcc defined and the mail is not suppressed
+            if (SOSString.isEmpty(jobTemplate.getNotification().getMail().getTo())) {
+                if (!SOSString.isEmpty(jobTemplate.getNotification().getMail().getCc()) || !SOSString.isEmpty(jobTemplate.getNotification().getMail()
+                        .getBcc())) {
+                    throw new JocConfigurationException("$.notification.mail: missing \"to\"");
+                }
+            }
+        }
+        try {
+            String content = Globals.objectMapper.writeValueAsString(jobTemplate.getNotification());
+            if (content.length() > HistoryConstants.MAX_LEN_NOTIFICATION) {
+                throw new JocConfigurationException(String.format(
+                        "$.notification: reduce recipients, max json length %s (current length=%s) exceeded", HistoryConstants.MAX_LEN_NOTIFICATION,
+                        content.length()));
             }
 
         } catch (JsonProcessingException e) {

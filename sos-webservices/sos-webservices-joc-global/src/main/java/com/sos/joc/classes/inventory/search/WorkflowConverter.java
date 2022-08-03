@@ -135,6 +135,7 @@ public class WorkflowConverter {
         private List<String> titles;
         private List<String> agentIds;
         private List<String> jobClasses;
+        private List<String> jobTemplates;
         private List<String> jobResources;
         private List<String> criticalities;
         private List<String> documentationNames;
@@ -152,6 +153,7 @@ public class WorkflowConverter {
             titles = new ArrayList<String>();
             agentIds = new ArrayList<String>();
             jobClasses = new ArrayList<String>();
+            jobTemplates = new ArrayList<String>();
             jobResources = new ArrayList<String>();
             criticalities = new ArrayList<String>();
             documentationNames = new ArrayList<String>();
@@ -179,6 +181,7 @@ public class WorkflowConverter {
             jsonAddStringValues(builder, "titles", titles);
             jsonAddStringValues(builder, "agentIds", agentIds);
             jsonAddStringValues(builder, "jobClasses", jobClasses);
+            jsonAddStringValues(builder, "jobTemplates", jobTemplates);
             jsonAddStringValues(builder, "jobResources", jobResources);
             jsonAddStringValues(builder, "criticalities", criticalities);
             jsonAddStringValues(builder, "documentationNames", documentationNames);
@@ -213,6 +216,10 @@ public class WorkflowConverter {
 
         public List<String> getJobClasses() {
             return jobClasses;
+        }
+
+        public List<String> getJobTemplates() {
+            return jobTemplates;
         }
 
         public List<String> getJobResources() {
@@ -252,8 +259,11 @@ public class WorkflowConverter {
                 if (!SOSString.isEmpty(job.getAgentName())) {
                     agentIds.add(job.getAgentName());
                 }
-                if (!SOSString.isEmpty(job.getJobClass())) {
-                    jobClasses.add(job.getJobClass());
+                if (!SOSString.isEmpty(job.getJobClassName())) {
+                    jobClasses.add(job.getJobClassName());
+                }
+                if (!SOSString.isEmpty(job.getJobTemplateName())) {
+                    jobTemplates.add(job.getJobTemplateName());
                 }
                 if (job.getJobResourceNames() != null && !job.getJobResourceNames().isEmpty()) {
                     jobResources.addAll(job.getJobResourceNames());
@@ -305,6 +315,7 @@ public class WorkflowConverter {
             titles = WorkflowConverter.removeDuplicates(titles);
             agentIds = WorkflowConverter.removeDuplicates(agentIds);
             jobClasses = WorkflowConverter.removeDuplicates(jobClasses);
+            jobTemplates = WorkflowConverter.removeDuplicates(jobTemplates);
             jobResources = WorkflowConverter.removeDuplicates(jobResources);
             criticalities = WorkflowConverter.removeDuplicates(criticalities);
             documentationNames = WorkflowConverter.removeDuplicates(documentationNames);

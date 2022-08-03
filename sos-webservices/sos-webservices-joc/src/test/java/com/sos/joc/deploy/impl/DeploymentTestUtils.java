@@ -24,6 +24,7 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.joc.Globals;
 import com.sos.joc.model.agent.transfer.AgentExportFilter;
+import com.sos.joc.model.agent.transfer.AgentImportFilter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.path.PathFilter;
 import com.sos.joc.model.inventory.path.PathResponse;
@@ -1466,6 +1467,14 @@ public class DeploymentTestUtils {
         filter.setExportFile(file);
         List<String> agentIds = Arrays.asList("agent_cluster_001", "agent_001", "agent_002", "agent_003", "agent_006"); 
         filter.setAgentIds(agentIds);
+        return filter;
+    }
+    
+    public static AgentImportFilter createAgentImportFilter() {
+        AgentImportFilter filter = new AgentImportFilter();
+        filter.setControllerId("testsuite");
+        filter.setOverwrite(false);
+        filter.setFormat(ArchiveFormat.ZIP);
         return filter;
     }
 }

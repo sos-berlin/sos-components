@@ -112,10 +112,15 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
 
-    public List<DBItemInventoryAgentInstance> getAgentsByControllerIds(Collection<String> controllerIds) throws DBInvalidDataException,
+    public List<DBItemInventoryAgentInstance> getAllAgents() throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
-        return getAgentsByControllerIds(controllerIds, false, false);
-    }
+        return getAgentsByControllerIds(null, false, false);
+}
+
+    public List<DBItemInventoryAgentInstance> getAgentsByControllerIds(Collection<String> controllerIds) throws DBInvalidDataException,
+    DBMissingDataException, DBConnectionRefusedException {
+return getAgentsByControllerIds(controllerIds, false, false);
+}
 
     public List<DBItemInventoryAgentInstance> getAgentsByControllerIds(Collection<String> controllerIds, boolean onlyWatcher,
             boolean onlyVisibleAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
