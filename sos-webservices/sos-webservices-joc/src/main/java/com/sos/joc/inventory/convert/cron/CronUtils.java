@@ -111,7 +111,7 @@ public class CronUtils {
                             if (isSystemCrontab) {
                                 command = command.split("\\s", 2)[1];
                             }
-                            ExecutableScript script = new ExecutableScript(command, env, false, null, null);
+                            ExecutableScript script = new ExecutableScript(command, env, false, null, null, null);
                             script.setTYPE(ExecutableType.ShellScriptExecutable);
                             Jobs jobs = createJob(script, calendar, agentName, subagentClusterId, timezone);
                             workflow.setJobs(jobs);

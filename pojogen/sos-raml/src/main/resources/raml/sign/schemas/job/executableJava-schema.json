@@ -1,0 +1,31 @@
+{
+  "title": "java executable",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.job.ExecutableJava",
+  "type": "object",
+  "extends" : {
+    "$ref": "executable-schema.json"
+  },
+  "required": [
+  	"className"
+  ],
+  "propertyOrder": [
+    "TYPE",
+    "className"
+  ],
+  "description": "executable with fixed property 'TYPE':'InternalExecutable'",
+  "properties": {
+    "className": {
+	  "type": "string",
+	  "minLength": 1
+	},
+	"jobArguments": {
+      "$ref": "../../../inventory/schemas/common/variables-schema.json"
+    },
+    "arguments": {
+      "$ref": "../../../inventory/schemas/job/env-schema.json"
+    }
+  },
+  "additionalProperties": false
+}
+

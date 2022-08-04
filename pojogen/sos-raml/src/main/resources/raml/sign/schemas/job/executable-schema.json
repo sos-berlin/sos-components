@@ -1,0 +1,15 @@
+{
+  "title": "abstract executable",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.job.Executable",
+  "type": "object",
+  "required": [
+    "TYPE"
+  ],
+  "properties": {
+    "TYPE": {
+      "$ref": "../../../inventory/schemas/job/executableType-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

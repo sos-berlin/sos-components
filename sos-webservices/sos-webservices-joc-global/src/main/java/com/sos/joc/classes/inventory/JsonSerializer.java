@@ -309,6 +309,18 @@ public class JsonSerializer {
         return null;
     }
     
+    private static com.sos.sign.model.job.JobReturnCode emptyReturnCodeToNull(com.sos.sign.model.job.JobReturnCode j) {
+        if (j != null) {
+            emptyCollectionsToNull(j.getFailure());
+            emptyCollectionsToNull(j.getSuccess());
+            if (j.getFailure() == null && j.getSuccess() == null) {
+                return null;
+            }
+            return j;
+        }
+        return null;
+    }
+    
     private static void emptyExecutableToNull(Executable e, JobReturnCode rc) {
         switch (e.getTYPE()) {
         case InternalExecutable:
@@ -319,6 +331,39 @@ public class JsonSerializer {
         case ShellScriptExecutable:
         case ScriptExecutable:
             ExecutableScript es = e.cast();
+            es.setTYPE(ExecutableType.ShellScriptExecutable);
+            if (es.getReturnCodeMeaning() == null) {
+                es.setReturnCodeMeaning(emptyReturnCodeToNull(rc));
+            } else {
+                es.setReturnCodeMeaning(emptyReturnCodeToNull(es.getReturnCodeMeaning()));
+            }
+            es.setEnv(emptyEnvToNull(es.getEnv()));
+            if (es.getV1Compatible() == Boolean.FALSE) {
+                es.setV1Compatible(null);
+            }
+            if (es.getLogin() != null) {
+                if (es.getLogin().getWithUserProfile() == Boolean.FALSE) {
+                    es.getLogin().setWithUserProfile(null);
+                }
+                if (es.getLogin().getWithUserProfile() == null && (es.getLogin().getCredentialKey() == null || es.getLogin().getCredentialKey()
+                        .isEmpty())) {
+                    es.setLogin(null);
+                }
+            }
+            break;
+        }
+    }
+    
+    private static void emptyExecutableToNull(com.sos.sign.model.job.Executable e, com.sos.sign.model.job.JobReturnCode rc) {
+        switch (e.getTYPE()) {
+        case InternalExecutable:
+            com.sos.sign.model.job.ExecutableJava ej = e.cast();
+            ej.setArguments(emptyEnvToNull(ej.getArguments()));
+            ej.setJobArguments(emptyVarsToNull(ej.getJobArguments()));
+            break;
+        case ShellScriptExecutable:
+        case ScriptExecutable:
+            com.sos.sign.model.job.ExecutableScript es = e.cast();
             es.setTYPE(ExecutableType.ShellScriptExecutable);
             if (es.getReturnCodeMeaning() == null) {
                 es.setReturnCodeMeaning(emptyReturnCodeToNull(rc));

@@ -1,11 +1,13 @@
 
-package com.sos.inventory.model.job;
+package com.sos.sign.model.job;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.job.Environment;
+import com.sos.inventory.model.job.ExecutableType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -21,7 +23,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "className",
     "jobArguments",
-    "returnCodeMeaning",
     "arguments"
 })
 public class ExecutableJava
@@ -45,14 +46,6 @@ public class ExecutableJava
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables jobArguments;
     /**
-     * job return code warning
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("returnCodeMeaning")
-    private JobReturnCodeWarning returnCodeMeaning;
-    /**
      * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
@@ -71,17 +64,15 @@ public class ExecutableJava
 
     /**
      * 
-     * @param returnCodeMeaning
      * @param className
      * @param jobArguments
      * @param arguments
      * @param tYPE
      */
-    public ExecutableJava(String className, Variables jobArguments, JobReturnCodeWarning returnCodeMeaning, Environment arguments, ExecutableType tYPE) {
+    public ExecutableJava(String className, Variables jobArguments, Environment arguments, ExecutableType tYPE) {
         super(tYPE);
         this.className = className;
         this.jobArguments = jobArguments;
-        this.returnCodeMeaning = returnCodeMeaning;
         this.arguments = arguments;
     }
 
@@ -128,28 +119,6 @@ public class ExecutableJava
     }
 
     /**
-     * job return code warning
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("returnCodeMeaning")
-    public JobReturnCodeWarning getReturnCodeMeaning() {
-        return returnCodeMeaning;
-    }
-
-    /**
-     * job return code warning
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("returnCodeMeaning")
-    public void setReturnCodeMeaning(JobReturnCodeWarning returnCodeMeaning) {
-        this.returnCodeMeaning = returnCodeMeaning;
-    }
-
-    /**
      * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
@@ -173,12 +142,12 @@ public class ExecutableJava
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("className", className).append("jobArguments", jobArguments).append("returnCodeMeaning", returnCodeMeaning).append("arguments", arguments).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("className", className).append("jobArguments", jobArguments).append("arguments", arguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(returnCodeMeaning).append(className).append(jobArguments).append(arguments).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(className).append(jobArguments).append(arguments).toHashCode();
     }
 
     @Override
@@ -190,7 +159,7 @@ public class ExecutableJava
             return false;
         }
         ExecutableJava rhs = ((ExecutableJava) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(returnCodeMeaning, rhs.returnCodeMeaning).append(className, rhs.className).append(jobArguments, rhs.jobArguments).append(arguments, rhs.arguments).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(className, rhs.className).append(jobArguments, rhs.jobArguments).append(arguments, rhs.arguments).isEquals();
     }
 
 }

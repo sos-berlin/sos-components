@@ -80,7 +80,7 @@ public class Job implements IConfigurationObject
     @JsonProperty("skipIfNoAdmissionForOrderDay")
     private Boolean skipIfNoAdmissionForOrderDay = false;
     /**
-     * job
+     * job return code meaning
      * <p>
      * 
      * 
@@ -328,7 +328,7 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * job
+     * job return code meaning
      * <p>
      * 
      * 
@@ -339,7 +339,7 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * job
+     * job return code meaning
      * <p>
      * 
      * 

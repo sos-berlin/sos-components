@@ -30,16 +30,16 @@
 					"agentRefPath": "/my_agents/agent1",
 					"executable": {
 						"TYPE": "ExecutableScript",
-						"script": "@echo off\r\necho %SCHEDULER_PARAM_JOB% running>&2\r\necho job=%SCHEDULER_PARAM_JOB% > %SCHEDULER_RETURN_VALUES%\r\nexit %SCHEDULER_PARAM_RC%"
+						"script": "@echo off\r\necho %SCHEDULER_PARAM_JOB% running>&2\r\necho job=%SCHEDULER_PARAM_JOB% > %SCHEDULER_RETURN_VALUES%\r\nexit %SCHEDULER_PARAM_RC%",
+						"returnCodeMeaning": {
+							"success": [
+								0,
+								2,
+								5
+							]
+						}
 					},
-					"taskLimit": 1,
-					"returnCodeMeaning": {
-						"success": [
-							0,
-							2,
-							5
-						]
-					}
+					"taskLimit": 1
 				}
 			}
 		},
@@ -100,16 +100,16 @@
 					"agentRefPath": "/my_agents/agent1",
 					"executable": {
 						"TYPE": "ExecutableScript",
-						"script": "@echo off\r\necho %SCHEDULER_PARAM_JOB% running\r\necho job=%SCHEDULER_PARAM_JOB%> %SCHEDULER_RETURN_VALUES%\r\nexit %SCHEDULER_PARAM_RC%"
+						"script": "@echo off\r\necho %SCHEDULER_PARAM_JOB% running\r\necho job=%SCHEDULER_PARAM_JOB%> %SCHEDULER_RETURN_VALUES%\r\nexit %SCHEDULER_PARAM_RC%",
+						"returnCodeMeaning": {
+							"success": [
+								0,
+								2,
+								5
+							]
+						}
 					},
-					"taskLimit": 1,
-					"returnCodeMeaning": {
-						"success": [
-							0,
-							2,
-							5
-						]
-					}
+					"taskLimit": 1
 				}
 			}
 		},
@@ -159,14 +159,14 @@
 					"agentRefPath": "/my_agents/agent1",
 					"executable": {
 						"TYPE": "ExecutableScript",
-						"script": "@echo off\r\necho %SCHEDULER_PARAM_JOB% running\r\necho jobname=%SCHEDULER_PARAM_JOB% > %SCHEDULER_RETURN_VALUES%\r\nexit %SCHEDULER_PARAM_RC%"
-					},
-					"returnCodeMeaning": {
-						"success": [
-							0,
-							2,
-							5
-						]
+						"script": "@echo off\r\necho %SCHEDULER_PARAM_JOB% running\r\necho jobname=%SCHEDULER_PARAM_JOB% > %SCHEDULER_RETURN_VALUES%\r\nexit %SCHEDULER_PARAM_RC%",
+						"returnCodeMeaning": {
+							"success": [
+								0,
+								2,
+								5
+							]
+						}
 					},
 					"taskLimit": 1
 				},
@@ -174,14 +174,14 @@
 					"agentRefPath": "/my_agents/agent1",
 					"executable": {
 						"TYPE": "ExecutableScript",
-						"script": "@echo off\r\necho %SCHEDULER_PARAM_JOB% running\r\necho jobname=%SCHEDULER_PARAM_JOB% > %SCHEDULER_RETURN_VALUES%\r\nexit %SCHEDULER_PARAM_RC%"
-					},
-					"returnCodeMeaning": {
-						"success": [
-							0,
-							2,
-							5
-						]
+						"script": "@echo off\r\necho %SCHEDULER_PARAM_JOB% running\r\necho jobname=%SCHEDULER_PARAM_JOB% > %SCHEDULER_RETURN_VALUES%\r\nexit %SCHEDULER_PARAM_RC%",
+						"returnCodeMeaning": {
+							"success": [
+								0,
+								2,
+								5
+							]
+						}
 					},
 					"taskLimit": 1
 				}
@@ -257,14 +257,14 @@
 					"agentRefPath": "/my_agents/agent1",
 					"executable": {
 						"TYPE": "ExecutablePath",
-						"path": "/test1.cmd"
-					},
-					"returnCodeMeaning": {
-						"success": [
-							0,
-							2,
-							5
-						]
+						"path": "/test1.cmd",
+						"returnCodeMeaning": {
+							"success": [
+								0,
+								2,
+								5
+							]
+						}
 					},
 					"taskLimit": 1
 				}
@@ -308,14 +308,14 @@
 					"agentRefPath": "/my_agents/test-agent-1",
 					"executable": {
 						"TYPE": "ExecutablePath",
-						"path": "/test1.cmd"
-					},
-					"returnCodeMeaning": {
-						"success": [
-							0,
-							2,
-							5
-						]
+						"path": "/test1.cmd",
+						"returnCodeMeaning": {
+							"success": [
+								0,
+								2,
+								5
+							]
+						}
 					},
 					"taskLimit": 1
 				}
