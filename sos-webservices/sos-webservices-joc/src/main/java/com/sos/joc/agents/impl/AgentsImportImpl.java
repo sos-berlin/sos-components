@@ -24,7 +24,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
@@ -83,8 +82,7 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
             }
             
             
-            DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog(), CategoryType.CONTROLLER);
-            Long auditLogId = dbAuditItem.getId();
+            storeAuditLog(filter.getAuditLog(), CategoryType.CONTROLLER);
             stream = body.getEntityAs(InputStream.class);
             
             Set<Agent> agents = new HashSet<Agent>();
