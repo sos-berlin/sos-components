@@ -99,7 +99,7 @@ public class ExportUtils {
     
     public static Set<ConfigurationObject> getFolderConfigurationObjectsForShallowCopy(ExportFolderFilter filter, String account,
             DBLayerDeploy dbLayer) throws SOSHibernateException {
-        Map<String, ConfigurationObject> allObjectsMap = new HashMap<String, ConfigurationObject>();
+        Set<ConfigurationObject> allObjects = new HashSet<ConfigurationObject>();
         if (filter != null && filter.getShallowCopy() != null) {
             Set<DBItemInventoryReleasedConfiguration> allReleasedItems = new HashSet<DBItemInventoryReleasedConfiguration>();
             Set<DBItemDeploymentHistory> allDeployedItems = new HashSet<DBItemDeploymentHistory>();
@@ -110,27 +110,29 @@ public class ExportUtils {
             if (!filter.getShallowCopy().getWithoutDeployed()) {
                 allDeployedItems.addAll(getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(folderPaths, recursive, null, dbLayer));
                 allDeployedItems.stream().filter(Objects::nonNull).filter(item -> filterTypes.contains(ConfigurationType.fromValue(item.getType())))
-                .forEach(item -> allObjectsMap.put(item.getName(), getConfigurationObjectFromDBItem(item)));
+                .forEach(item -> allObjects.add(getConfigurationObjectFromDBItem(item)));
             }
             if(!filter.getShallowCopy().getWithoutReleased()) {
                 allReleasedItems.addAll(getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(folderPaths, recursive, dbLayer));
                 allReleasedItems.stream().filter(Objects::nonNull).filter(item -> filterTypes.contains(ConfigurationType.fromValue(item.getType())))
-                    .forEach(item -> allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item)));
+                    .forEach(item -> allObjects.add(PublishUtils.getConfigurationObjectFromDBItem(item)));
             }
             if (!filter.getShallowCopy().getWithoutDrafts()) {
                 allDraftItems.addAll(getDeployableInventoryConfigurationsfromFolders(folderPaths, recursive, dbLayer));
+                allDraftItems.addAll(getReleasableInventoryConfigurationsWithoutReleasedfromFolders(folderPaths, recursive, dbLayer));
                 if (filter.getShallowCopy().getOnlyValidObjects()) {
                     allDraftItems = allDraftItems.stream().filter(item -> item.getValid()).filter(Objects::nonNull).collect(Collectors.toSet());
                 }
                 allDraftItems.stream().filter(Objects::nonNull).filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum())).forEach(
                         item -> {
-                            if (!allObjectsMap.containsKey(item.getName())) {
-                                allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item));
+                            ConfigurationObject cfg = PublishUtils.getConfigurationObjectFromDBItem(item);
+                            if (!allObjects.contains(cfg)) {
+                                allObjects.add(cfg);
                             }
                         });
             }
         }
-        return new HashSet<ConfigurationObject>(allObjectsMap.values());
+        return allObjects;
     }
     
 

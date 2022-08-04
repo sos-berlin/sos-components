@@ -1736,7 +1736,7 @@ public abstract class PublishUtils {
     public static Set<ConfigurationObject> getReleasableObjectsFromDB(ReleasablesFilter filter, DBLayerDeploy dbLayer)
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
             SOSHibernateException {
-        Map<String, ConfigurationObject> allObjectsMap = new HashMap<String, ConfigurationObject>();
+        Set<ConfigurationObject> allObjects = new HashSet<ConfigurationObject>();
         if (filter != null) {
             if (filter.getDraftConfigurations() != null && !filter.getDraftConfigurations().isEmpty()) {
                 List<Configuration> draftFolders = filter.getDraftConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
@@ -1752,8 +1752,9 @@ public abstract class PublishUtils {
                 if (!allItems.isEmpty()) {
                     allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
                         .forEach(item -> {
-                                if (!allObjectsMap.containsKey(item.getName())) {
-                                    allObjectsMap.put(item.getName(), getConfigurationObjectFromDBItem(item));
+                            ConfigurationObject cfg = getConfigurationObjectFromDBItem(item);
+                                if (!allObjects.contains(cfg)) {
+                                    allObjects.add(cfg);
                                 }
                             }
                         );
@@ -1773,16 +1774,16 @@ public abstract class PublishUtils {
                 if (!allItems.isEmpty()) {
                     allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
                         .forEach(item -> {
-                                if (!allObjectsMap.containsKey(item.getName())) {
-                                    allObjectsMap.put(item.getName(), getConfigurationObjectFromDBItem(item));
+                            ConfigurationObject cfg = getConfigurationObjectFromDBItem(item);
+                                if (!allObjects.contains(cfg)) {
+                                    allObjects.add(cfg);
                                 }
                             }
                         );
                 }
             }
         }
-        Set<ConfigurationObject> withoutDuplicates = new HashSet<ConfigurationObject>(allObjectsMap.values());
-        return withoutDuplicates;
+        return allObjects;
     }
 
     public static ConfigurationObject getConfigurationObjectFromDBItem(DBItemDeploymentHistory item, String commitId) {
