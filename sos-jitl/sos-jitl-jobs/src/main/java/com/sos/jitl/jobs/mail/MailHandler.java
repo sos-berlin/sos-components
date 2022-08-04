@@ -53,6 +53,7 @@ public class MailHandler {
             sosMail.setCredentialStoreArguments(csArgs);
             sosMail.setProperties(smtpProperties);
             sosMail.setFrom(args.getFrom());
+            sosMail.setQueueMailOnError(false);
 
             if (args.getContentType() != null) {
                 sosMail.setContentType(args.getContentType());
