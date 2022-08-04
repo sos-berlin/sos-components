@@ -1,8 +1,6 @@
 package com.sos.joc.agents.impl;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -13,16 +11,13 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsStore;
+import com.sos.joc.agents.util.AgentStoreUtils;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.agent.AgentHelper;
-import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
-import com.sos.joc.db.inventory.DBItemInventoryAgentName;
-import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
 import com.sos.joc.event.EventBus;
@@ -68,15 +63,15 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
             // check uniqueness of AgentId
             agentIds.entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
-                throw new JocBadRequestException(getUniquenessMsg("AgentId", e));
+                throw new JocBadRequestException(AgentStoreUtils.getUniquenessMsg("AgentId", e));
             });
 
-            checkUniquenessOfAgentNames(agentStoreParameter.getAgents());
+            AgentStoreUtils.checkUniquenessOfAgentNames(agentStoreParameter.getAgents());
 
             // check uniqueness of AgentUrl
             agentStoreParameter.getAgents().stream().collect(Collectors.groupingBy(Agent::getUrl, Collectors.counting())).entrySet().stream().filter(
                     e -> e.getValue() > 1L).findAny().ifPresent(e -> {
-                        throw new JocBadRequestException(getUniquenessMsg("Agent url", e));
+                        throw new JocBadRequestException(AgentStoreUtils.getUniquenessMsg("Agent url", e));
                     });
 
             // check java name rules of AgentIds
@@ -92,57 +87,58 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
 
             Map<String, Agent> agentMap = agentStoreParameter.getAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function.identity()));
-            List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(null);
-            Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds.keySet());
-            int position = -1;
-            
-            if (dbAgents != null && !dbAgents.isEmpty()) {
-                for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-                    if (position < dbAgent.getOrdering()) {
-                        position = dbAgent.getOrdering();
-                    }
-                    Agent agent = agentMap.remove(dbAgent.getAgentId());
-                    if (agent == null) {
-                        continue;
-                    }
-                    if (!dbAgent.getControllerId().equals(controllerId)) {
-                        throw new JocBadRequestException(String.format("Agent '%s' is already assigned for Controller '%s'", dbAgent.getAgentId(),
-                                dbAgent.getControllerId()));
-                    }
-                    dbAgent.setHidden(agent.getHidden());
-                    dbAgent.setAgentName(agent.getAgentName());
-                    dbAgent.setTitle(agent.getTitle());
-                    
-                    if (!dbAgent.getUri().equals(agent.getUrl())) {
-                        dbAgent.setDeployed(false);
-                    }
-                    dbAgent.setUri(agent.getUrl());
-                    agentDBLayer.updateAgent(dbAgent);
-
-                    updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
-                }
-            }
-
-            for (Agent agent : agentMap.values()) {
-                DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
-                dbAgent.setId(null);
-                dbAgent.setAgentId(agent.getAgentId());
-                dbAgent.setAgentName(agent.getAgentName());
-                dbAgent.setControllerId(controllerId);
-                dbAgent.setHidden(agent.getHidden());
-                dbAgent.setDisabled(false);
-                dbAgent.setIsWatcher(false);
-                dbAgent.setOsId(0L);
-                dbAgent.setStartedAt(null);
-                dbAgent.setUri(agent.getUrl());
-                dbAgent.setVersion(null);
-                dbAgent.setTitle(agent.getTitle());
-                dbAgent.setDeployed(false);
-                dbAgent.setOrdering(++position);
-                agentDBLayer.saveAgent(dbAgent);
-                
-                updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
-            }
+            AgentStoreUtils.storeStandaloneAgent(agentMap, controllerId, true, agentDBLayer);
+//            List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(null);
+//            Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds.keySet());
+//            int position = -1;
+//            
+//            if (dbAgents != null && !dbAgents.isEmpty()) {
+//                for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
+//                    if (position < dbAgent.getOrdering()) {
+//                        position = dbAgent.getOrdering();
+//                    }
+//                    Agent agent = agentMap.remove(dbAgent.getAgentId());
+//                    if (agent == null) {
+//                        continue;
+//                    }
+//                    if (!dbAgent.getControllerId().equals(controllerId)) {
+//                        throw new JocBadRequestException(String.format("Agent '%s' is already assigned for Controller '%s'", dbAgent.getAgentId(),
+//                                dbAgent.getControllerId()));
+//                    }
+//                    dbAgent.setHidden(agent.getHidden());
+//                    dbAgent.setAgentName(agent.getAgentName());
+//                    dbAgent.setTitle(agent.getTitle());
+//                    
+//                    if (!dbAgent.getUri().equals(agent.getUrl())) {
+//                        dbAgent.setDeployed(false);
+//                    }
+//                    dbAgent.setUri(agent.getUrl());
+//                    agentDBLayer.updateAgent(dbAgent);
+//
+//                    updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
+//                }
+//            }
+//
+//            for (Agent agent : agentMap.values()) {
+//                DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
+//                dbAgent.setId(null);
+//                dbAgent.setAgentId(agent.getAgentId());
+//                dbAgent.setAgentName(agent.getAgentName());
+//                dbAgent.setControllerId(controllerId);
+//                dbAgent.setHidden(agent.getHidden());
+//                dbAgent.setDisabled(false);
+//                dbAgent.setIsWatcher(false);
+//                dbAgent.setOsId(0L);
+//                dbAgent.setStartedAt(null);
+//                dbAgent.setUri(agent.getUrl());
+//                dbAgent.setVersion(null);
+//                dbAgent.setTitle(agent.getTitle());
+//                dbAgent.setDeployed(false);
+//                dbAgent.setOrdering(++position);
+//                agentDBLayer.saveAgent(dbAgent);
+//                
+//                updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
+//            }
 
             Globals.commit(connection);
             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, agentIds.keySet()));
@@ -183,17 +179,17 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
             // check uniqueness of AgentId in request
             agentIds.entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
-                throw new JocBadRequestException(getUniquenessMsg("AgentId", e));
+                throw new JocBadRequestException(AgentStoreUtils.getUniquenessMsg("AgentId", e));
             });
 
-            checkUniquenessOfAgentNames(agentStoreParameter.getClusterAgents());
+            AgentStoreUtils.checkUniquenessOfAgentNames(agentStoreParameter.getClusterAgents());
 
             // check uniqueness of SubagentUrl in request
             Set<SubAgent> requestedSubagents = agentStoreParameter.getClusterAgents().stream().map(ClusterAgent::getSubagents).flatMap(List::stream)
                     .collect(Collectors.toSet());
             requestedSubagents.stream().collect(Collectors.groupingBy(SubAgent::getUrl, Collectors.counting())).entrySet().stream().filter(e -> e
                     .getValue() > 1L).findAny().ifPresent(e -> {
-                        throw new JocBadRequestException(getUniquenessMsg("Subagent url", e));
+                        throw new JocBadRequestException(AgentStoreUtils.getUniquenessMsg("Subagent url", e));
                     });
             
             Set<String> requestedSubagentIds = requestedSubagents.stream().map(SubAgent::getSubagentId).collect(Collectors.toSet());
@@ -216,72 +212,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
             Map<String, ClusterAgent> agentMap = agentStoreParameter.getClusterAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function
                     .identity()));
-            List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(null);
-            Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds.keySet());
-            
-            List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
-                    controllerId));
-            
-            // check uniqueness of SubagentUrl with DB
-            Set<String> requestedSubagentUrls = requestedSubagents.stream().map(SubAgent::getUrl).collect(Collectors.toSet());
-            dbSubAgents.stream().filter(s -> !requestedSubagentIds.contains(s.getSubAgentId())).filter(s -> requestedSubagentUrls.contains(s
-                    .getUri())).findAny().ifPresent(s -> {
-                        throw new JocBadRequestException(String.format("Subagent url %s is already used by Subagent %s", s.getUri(), s.getSubAgentId()));
-                    });
-            dbAgents.stream().filter(a -> a.getUri() != null && !a.getUri().isEmpty()).filter(a -> requestedSubagentUrls.contains(a.getUri())).filter(
-                    a -> agentMap.get(a.getAgentId()) == null || !agentMap.get(a.getAgentId()).getSubagents().stream().map(SubAgent::getUrl).collect(
-                            Collectors.toSet()).contains(a.getUri())).findAny().ifPresent(s -> {
-                                throw new JocBadRequestException(String.format("Subagent url %s is already used by Agent %s", s.getUri(), s
-                                        .getAgentId()));
-                            });
-            
-            int position = -1;
-            if (dbAgents != null && !dbAgents.isEmpty()) {
-                for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-                    if (position < dbAgent.getOrdering()) {
-                        position = dbAgent.getOrdering();
-                    }
-                    ClusterAgent agent = agentMap.remove(dbAgent.getAgentId());
-                    if (agent == null) {
-                        continue;
-                    }
-                    if (!dbAgent.getControllerId().equals(controllerId)) {
-                        throw new JocBadRequestException(String.format("Agent '%s' is already assigned for Controller '%s'", dbAgent.getAgentId(),
-                                dbAgent.getControllerId()));
-                    }
-                    dbAgent.setHidden(agent.getHidden());
-                    dbAgent.setAgentName(agent.getAgentName());
-                    dbAgent.setTitle(agent.getTitle());
-                    agentDBLayer.updateAgent(dbAgent);
-                    
-                    SubAgentStoreImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
-
-                    updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
-                }
-            }
-
-            for (ClusterAgent agent : agentMap.values()) {
-                DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
-                dbAgent.setId(null);
-                dbAgent.setAgentId(agent.getAgentId());
-                dbAgent.setAgentName(agent.getAgentName());
-                dbAgent.setControllerId(controllerId);
-                dbAgent.setHidden(agent.getHidden());
-                dbAgent.setIsWatcher(false);
-                dbAgent.setOsId(0L);
-                dbAgent.setUri(agent.getSubagents().get(0).getUrl());
-                dbAgent.setStartedAt(null);
-                dbAgent.setVersion(null);
-                dbAgent.setTitle(agent.getTitle());
-                dbAgent.setDeployed(false);
-                dbAgent.setDisabled(false);
-                dbAgent.setOrdering(++position);
-                agentDBLayer.saveAgent(dbAgent);
-
-                SubAgentStoreImpl.saveOrUpdate(agentDBLayer, subagentClusterDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
-                
-                updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
-            }
+            AgentStoreUtils.storeClusterAgent(agentMap, requestedSubagents, requestedSubagentIds, controllerId, true, agentDBLayer, subagentClusterDBLayer);
 
             Globals.commit(connection);
             Globals.disconnect(connection);
@@ -306,43 +237,4 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
         }
     }
 
-    private static void updateAliases(InventoryAgentInstancesDBLayer agentDBLayer, Agent agent, Collection<DBItemInventoryAgentName> dbAliases)
-            throws SOSHibernateException {
-        if (dbAliases != null) {
-            for (DBItemInventoryAgentName dbAlias : dbAliases) {
-                agentDBLayer.getSession().delete(dbAlias);
-            }
-        }
-        // TODO read aliases to provide that per controller aliases hould map unique to agentId
-        // Collection<String> a = agentDBLayer.getAgentNamesByAgentIds(Collections.singleton(agent.getAgentId())).values();
-        Set<String> aliases = agent.getAgentNameAliases();
-        if (aliases != null && !aliases.isEmpty()) {
-            aliases.remove(agent.getAgentName());
-            for (String name : aliases) {
-                DBItemInventoryAgentName a = new DBItemInventoryAgentName();
-                a.setAgentId(agent.getAgentId());
-                a.setAgentName(name);
-                agentDBLayer.getSession().save(a);
-            }
-        }
-    }
-
-    // check uniqueness of AgentName/-aliases
-    private static void checkUniquenessOfAgentNames(List<? extends Agent> agents) throws JocBadRequestException {
-        agents.stream().map(a -> {
-            if (a.getAgentNameAliases() == null) {
-                a.setAgentNameAliases(Collections.singleton(a.getAgentName()));
-            } else {
-                a.getAgentNameAliases().add(a.getAgentName());
-            }
-            return a.getAgentNameAliases();
-        }).flatMap(Set::stream).collect(Collectors.groupingBy(s -> s, Collectors.counting())).entrySet().stream().filter(e -> e.getValue() > 1L)
-                .findAny().ifPresent(e -> {
-                    throw new JocBadRequestException(getUniquenessMsg("AgentName/-aliase", e));
-                });
-    }
-
-    private static String getUniquenessMsg(String key, Map.Entry<String, Long> e) {
-        return key + " has to be unique: " + e.getKey() + " is used " + (e.getValue() == 2L ? "twice" : e.getValue() + " times");
-    }
 }
