@@ -36,8 +36,7 @@ public class AgentStoreUtils {
 
     public static void storeStandaloneAgent(Agent agent, String controllerId, boolean overwrite, InventoryAgentInstancesDBLayer dbLayer)
             throws SOSHibernateException {
-        Map<String, Agent> agentMap = new HashMap<String, Agent>();
-        agentMap.put(agent.getAgentId(), agent);
+        Map<String, Agent> agentMap = Collections.singletonMap(agent.getAgentId(), agent);
         storeStandaloneAgent(agentMap, controllerId, overwrite, dbLayer);
     }
     
@@ -95,8 +94,7 @@ public class AgentStoreUtils {
     
     public static void storeClusterAgent(ClusterAgent clusterAgent, String controllerId, boolean overwrite,
             InventoryAgentInstancesDBLayer agentDbLayer, InventorySubagentClustersDBLayer subagentDbLayer) throws SOSHibernateException {
-        Map<String, ClusterAgent> clusterAgentMap = new HashMap<String, ClusterAgent>();
-        clusterAgentMap.put(clusterAgent.getAgentId(), clusterAgent);
+        Map<String, ClusterAgent> clusterAgentMap = Collections.singletonMap(clusterAgent.getAgentId(), clusterAgent);
         Set<SubAgent> requestedSubagents = clusterAgent.getSubagents().stream().collect(Collectors.toSet());
         Set<String> requestedSubagentIds = requestedSubagents.stream().map(SubAgent::getSubagentId).collect(Collectors.toSet());
         storeClusterAgent(clusterAgentMap, requestedSubagents, requestedSubagentIds, controllerId, overwrite, agentDbLayer, subagentDbLayer);
@@ -169,8 +167,7 @@ public class AgentStoreUtils {
     
     public static List<DBItemInventorySubAgentCluster> storeSubagentCluster (SubagentCluster subagentCluster,
             InventorySubagentClustersDBLayer agentClusterDBLayer, Date modified) throws SOSHibernateException {
-        Map<String, SubagentCluster> subagentClusterMap = new HashMap<String, SubagentCluster>();
-        subagentClusterMap.put(subagentCluster.getSubagentClusterId(), subagentCluster);
+        Map<String, SubagentCluster> subagentClusterMap = Collections.singletonMap(subagentCluster.getSubagentClusterId(), subagentCluster);
         return storeSubagentCluster(subagentClusterMap, agentClusterDBLayer, modified);
     }
     
