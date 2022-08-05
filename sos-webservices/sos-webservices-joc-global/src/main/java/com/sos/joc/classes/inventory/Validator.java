@@ -204,6 +204,10 @@ public class Validator {
                     JobTemplate jobTemplate = (JobTemplate) config;
                     validateJobTemplateJob(jobTemplate, dbLayer.getScriptNames());
                     // TODO something like validateOrderPreparation(workflow.getOrderPreparation());
+                    if (!ExecutableType.InternalExecutable.equals(jobTemplate.getExecutable().getTYPE())) {
+                        ExecutableScript script = jobTemplate.getExecutable().cast();
+                        validateEnvironmentKeys(script.getEnv(), "$.executable.env");
+                    }
                     validateJobResourceRefs(jobTemplate.getJobResourceNames(), dbLayer);
                 }
             } finally {
