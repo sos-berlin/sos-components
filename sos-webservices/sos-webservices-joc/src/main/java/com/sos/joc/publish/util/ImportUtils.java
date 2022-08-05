@@ -335,7 +335,7 @@ public class ImportUtils {
     
     public static List<ConfigurationType> getImportOrder() {
         return Arrays.asList(ConfigurationType.LOCK, ConfigurationType.NOTICEBOARD, ConfigurationType.JOBRESOURCE, ConfigurationType.INCLUDESCRIPT,
-                ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOB, ConfigurationType.WORKFLOW,
+                ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE, ConfigurationType.WORKFLOW,
                 ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
     }
 
@@ -712,7 +712,7 @@ public class ImportUtils {
             }
             jobEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             jobEdit.setPath(normalizedPath);
-            jobEdit.setObjectType(ConfigurationType.JOB);
+            jobEdit.setObjectType(ConfigurationType.JOBTEMPLATE);
             return jobEdit;
         } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
             String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(),

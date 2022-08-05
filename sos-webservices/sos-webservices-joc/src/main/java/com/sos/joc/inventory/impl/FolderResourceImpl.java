@@ -142,7 +142,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         case WORKFLOW:
                             folder.getWorkflows().add(config);
                             break;
-                        case JOB:
+                        case JOBTEMPLATE:
                             folder.getJobTemplates().add(config);
                             break;
                         case JOBCLASS:

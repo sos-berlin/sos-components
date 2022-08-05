@@ -56,7 +56,7 @@ public class TreePermanent {
                 if ((treeForInventory || treeForInventoryTrash) && inventoryPermission) {
                     types.add(TreeType.FOLDER);
                     types.add(TreeType.WORKFLOW);
-                    types.add(TreeType.JOB);
+                    types.add(TreeType.JOBTEMPLATE);
                     types.add(TreeType.JOBCLASS);
                     types.add(TreeType.LOCK);
                     types.add(TreeType.FILEORDERSOURCE);
@@ -78,7 +78,7 @@ public class TreePermanent {
                     }
                 }
                 break;
-            case JOB:
+            case JOBTEMPLATE:
                 if (treeForInventory || treeForInventoryTrash) {
                     if (inventoryPermission) {
                         types.add(type);
