@@ -78,7 +78,7 @@ public abstract class RepositoryUtil {
             return ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
         case INCLUDESCRIPT:
             return ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
-        case JOB:
+        case JOBTEMPLATE:
             return ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString();
         case JOBCLASS:
             return ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
@@ -215,7 +215,7 @@ public abstract class RepositoryUtil {
         } else if (path.toString().endsWith(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString())) {
             return ConfigurationType.INCLUDESCRIPT;
         } else if (path.toString().endsWith(ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString())) {
-            return ConfigurationType.JOB;
+            return ConfigurationType.JOBTEMPLATE;
         } else {
             return ConfigurationType.FOLDER;
         }
@@ -501,7 +501,7 @@ public abstract class RepositoryUtil {
                 case INCLUDESCRIPT:
                     extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                     break;
-                case JOB:
+                case JOBTEMPLATE:
                     extension = ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString();
                     break;
                 case WORKINGDAYSCALENDAR:
@@ -642,7 +642,7 @@ public abstract class RepositoryUtil {
                 case INCLUDESCRIPT:
                     extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                     break;
-                case JOB:
+                case JOBTEMPLATE:
                     extension = ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString();
                     break;
                 case WORKINGDAYSCALENDAR:
@@ -858,8 +858,8 @@ public abstract class RepositoryUtil {
             return Paths.get(cfg.getPath() + getExtension(ConfigurationType.FILEORDERSOURCE));
         case INCLUDESCRIPT:
             return Paths.get(cfg.getPath() + getExtension(ConfigurationType.INCLUDESCRIPT));
-        case JOB:
-            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.JOB));
+        case JOBTEMPLATE:
+            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.JOBTEMPLATE));
         case JOBCLASS:
             return Paths.get(cfg.getPath() + getExtension(ConfigurationType.JOBCLASS));
         case JOBRESOURCE:
@@ -1223,11 +1223,11 @@ public abstract class RepositoryUtil {
         if (Globals.getConfigurationGlobalsGit().getHoldJobs().getValue() != null 
                 && !Globals.getConfigurationGlobalsGit().getHoldJobs().getValue().isEmpty()) {
             if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobs().getValue())) {
-                types.add(ConfigurationType.JOB);
+                types.add(ConfigurationType.JOBTEMPLATE);
             }
         } else {
             if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobs().getDefault())) {
-                types.add(ConfigurationType.JOB);
+                types.add(ConfigurationType.JOBTEMPLATE);
             }
         }
         if (Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue() != null 
@@ -1320,11 +1320,11 @@ public abstract class RepositoryUtil {
         if (Globals.getConfigurationGlobalsGit().getHoldJobs().getValue() != null 
                 && !Globals.getConfigurationGlobalsGit().getHoldJobs().getValue().isEmpty()) {
             if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobs().getValue())) {
-                types.add(ConfigurationType.JOB);
+                types.add(ConfigurationType.JOBTEMPLATE);
             }
         } else {
             if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobs().getDefault())) {
-                types.add(ConfigurationType.JOB);
+                types.add(ConfigurationType.JOBTEMPLATE);
             }
         }
         if (Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue() != null 

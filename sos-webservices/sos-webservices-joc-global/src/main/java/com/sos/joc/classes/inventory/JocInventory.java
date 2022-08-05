@@ -97,7 +97,7 @@ public class JocInventory {
         {
             put(ConfigurationType.WORKINGDAYSCALENDAR, "classpath:/raml/inventory/schemas/calendar/calendar-schema.json");
             put(ConfigurationType.NONWORKINGDAYSCALENDAR, "classpath:/raml/inventory/schemas/calendar/calendar-schema.json");
-            put(ConfigurationType.JOB, "classpath:/raml/inventory/schemas/jobTemplate/jobTemplate-schema.json");
+            put(ConfigurationType.JOBTEMPLATE, "classpath:/raml/inventory/schemas/jobTemplate/jobTemplate-schema.json");
             put(ConfigurationType.JOBCLASS, "classpath:/raml/inventory/schemas/jobClass/jobClass-schema.json");
             put(ConfigurationType.JOBRESOURCE, "classpath:/raml/inventory/schemas/jobresource/jobResource-schema.json");
             put(ConfigurationType.LOCK, "classpath:/raml/inventory/schemas/lock/lock-schema.json");
@@ -142,7 +142,7 @@ public class JocInventory {
         private static final long serialVersionUID = 1L;
 
         {
-            put(ConfigurationType.JOB, JobTemplate.class);
+            put(ConfigurationType.JOBTEMPLATE, JobTemplate.class);
             put(ConfigurationType.JOBCLASS, JobClass.class);
             put(ConfigurationType.JOBRESOURCE, JobResource.class);
             put(ConfigurationType.LOCK, Lock.class);
@@ -163,7 +163,7 @@ public class JocInventory {
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             ConfigurationType.SCHEDULE, ConfigurationType.INCLUDESCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR,
-            ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOB)));
+            ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE)));
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);

@@ -391,7 +391,7 @@ public class JobHistoryDBLayer {
                 if (filter.getExcludedJobs() != null && !filter.getExcludedJobs().isEmpty()) {
                     List<String> l = new ArrayList<String>();
                     for (Entry<String, Set<String>> entry : filter.getExcludedJobs().entrySet()) {
-                        String s = "workflowPath != '" + entry.getKey() + "'";
+                        String s = "workflowName != '" + entry.getKey() + "'";
                         if (!entry.getValue().isEmpty() && !entry.getValue().contains(null)) {
                             if (entry.getValue().size() == 1) {
                                 s += " or jobName != '" + entry.getValue().iterator().next() + "'";

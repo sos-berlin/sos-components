@@ -140,7 +140,7 @@ public class Validator {
             Set<String> visibleAgentNames) throws SOSJsonSchemaException, IOException, SOSHibernateException, JocConfigurationException {
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
         if (ConfigurationType.WORKFLOW.equals(type) || ConfigurationType.SCHEDULE.equals(type) || ConfigurationType.FILEORDERSOURCE.equals(type)
-                || ConfigurationType.JOB.equals(type)) {
+                || ConfigurationType.JOBTEMPLATE.equals(type)) {
             SOSHibernateSession session = null;
             try {
                 if (dbLayer == null) {
@@ -200,7 +200,7 @@ public class Validator {
                     if (fileOrderSource.getDirectoryExpr() != null) {
                         validateExpression("$.directoryExpr: ", fileOrderSource.getDirectoryExpr());
                     }
-                } else if (ConfigurationType.JOB.equals(type)) {
+                } else if (ConfigurationType.JOBTEMPLATE.equals(type)) {
                     JobTemplate jobTemplate = (JobTemplate) config;
                     validateJobTemplateJob(jobTemplate, dbLayer.getScriptNames());
                     // TODO something like validateOrderPreparation(workflow.getOrderPreparation());
