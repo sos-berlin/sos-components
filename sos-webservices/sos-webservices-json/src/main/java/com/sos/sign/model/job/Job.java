@@ -9,8 +9,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.job.AdmissionTimeScheme;
 import com.sos.inventory.model.job.Environment;
-import com.sos.inventory.model.job.Executable;
-import com.sos.inventory.model.job.JobReturnCode;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -74,7 +72,7 @@ public class Job {
     @JsonProperty("skipIfNoAdmissionForOrderDay")
     private Boolean skipIfNoAdmissionForOrderDay = false;
     /**
-     * job
+     * job return code meaning
      * <p>
      * 
      * 
@@ -253,7 +251,7 @@ public class Job {
     }
 
     /**
-     * job
+     * job return code meaning
      * <p>
      * 
      * 
@@ -264,7 +262,7 @@ public class Job {
     }
 
     /**
-     * job
+     * job return code meaning
      * <p>
      * 
      * 

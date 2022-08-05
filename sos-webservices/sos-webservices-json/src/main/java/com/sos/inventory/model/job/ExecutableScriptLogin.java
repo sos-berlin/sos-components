@@ -8,6 +8,13 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+
+/**
+ * executable script login
+ * <p>
+ * 
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "credentialKey",
@@ -15,6 +22,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class ExecutableScriptLogin {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("credentialKey")
     private String credentialKey;
     @JsonProperty("withUserProfile")
@@ -38,11 +50,21 @@ public class ExecutableScriptLogin {
         this.withUserProfile = withUserProfile;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("credentialKey")
     public String getCredentialKey() {
         return credentialKey;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("credentialKey")
     public void setCredentialKey(String credentialKey) {
         this.credentialKey = credentialKey;

@@ -24,10 +24,10 @@
   		"minLength": 1
 	},
 	"executable": {
-	  "javaType": "com.sos.inventory.model.job.Executable",
+	  "javaType": "com.sos.sign.model.job.Executable",
 	  "oneOf": [
-	    { "$ref": "../../../inventory/schemas/job/executableScript-schema.json" },
-	    { "$ref": "../../../inventory/schemas/job/executableJava-schema.json" }
+	    { "$ref": "executableScript-schema.json" },
+	    { "$ref": "executableJava-schema.json" }
 	  ]
 	},
 	"admissionTimeScheme" : {
@@ -38,7 +38,7 @@
 		"default": false
 	},
     "returnCodeMeaning": {
-      "$ref": "../../../inventory/schemas/job/jobReturnCode-schema.json"
+      "$ref": "jobReturnCode-schema.json"
     },
     "parallelism": {
       "alias": "taskLimit",

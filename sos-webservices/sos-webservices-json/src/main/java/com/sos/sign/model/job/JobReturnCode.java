@@ -1,5 +1,5 @@
 
-package com.sos.inventory.model.job;
+package com.sos.sign.model.job;
 
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -21,9 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "success",
     "failure"
 })
-public class JobReturnCode
-    extends JobReturnCodeWarning
-{
+public class JobReturnCode {
 
     @JsonProperty("success")
     private List<Integer> success = null;
@@ -41,10 +39,9 @@ public class JobReturnCode
      * 
      * @param success
      * @param failure
-     * @param warning
      */
-    public JobReturnCode(List<Integer> success, List<Integer> failure, List<Integer> warning) {
-        super(warning);
+    public JobReturnCode(List<Integer> success, List<Integer> failure) {
+        super();
         this.success = success;
         this.failure = failure;
     }
@@ -71,12 +68,12 @@ public class JobReturnCode
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("success", success).append("failure", failure).toString();
+        return new ToStringBuilder(this).append("success", success).append("failure", failure).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(success).append(failure).toHashCode();
+        return new HashCodeBuilder().append(success).append(failure).toHashCode();
     }
 
     @Override
@@ -88,7 +85,7 @@ public class JobReturnCode
             return false;
         }
         JobReturnCode rhs = ((JobReturnCode) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(success, rhs.success).append(failure, rhs.failure).isEquals();
+        return new EqualsBuilder().append(success, rhs.success).append(failure, rhs.failure).isEquals();
     }
 
 }

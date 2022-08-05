@@ -80,17 +80,17 @@
 			"agentId": "agent-1",
 			"executable": {
 				"TYPE": "ShellScriptExecutable",
-				"script": "job_1 script"
+				"script": "job_1 script",
+				"returnCodeMeaning": {
+					"success": [
+						0,
+						5
+					]
+				}
 			},
 			"defaultArguments": {
 				"job_1_arg_1": "job_1_arg_1 value",
 				"job_1_arg_2": "job_1_arg_2 value"
-			},
-			"returnCodeMeaning": {
-				"success": [
-					0,
-					5
-				]
 			},
 			"taskLimit": 1
 		},
@@ -98,17 +98,17 @@
 			"agentId": "agent-1",
 			"executable": {
 				"TYPE": "ShellScriptExecutable",
-				"script": "job_2 script"
+				"script": "job_2 script",
+				"returnCodeMeaning": {
+					"success": [
+						0
+					]
+				}
 			},
 			"defaultArguments": {
 				"job_2_arg_1": true,
 				"job_2_arg_2": 1,
 				"job_2_arg_3": 1.50
-			},
-			"returnCodeMeaning": {
-				"success": [
-					0
-				]
 			},
 			"taskLimit": 1
 		},
@@ -116,12 +116,12 @@
 			"agentId": "agent-1",
 			"executable": {
 				"TYPE": "ShellScriptExecutable",
-				"script": "job_2 script"
-			},
-			"returnCodeMeaning": {
-				"success": [
-					0
-				]
+				"script": "job_2 script",
+				"returnCodeMeaning": {
+					"success": [
+						0
+					]
+				}
 			},
 			"taskLimit": 1
 		},
@@ -129,12 +129,12 @@
 			"agentId": "agent-2",
 			"executable": {
 				"TYPE": "ShellScriptExecutable",
-				"script": "job_3 script"
-			},
-			"returnCodeMeaning": {
-				"success": [
-					0
-				]
+				"script": "job_3 script",
+				"returnCodeMeaning": {
+					"success": [
+						0
+					]
+				}
 			},
 			"taskLimit": 1
 		}

@@ -1,0 +1,40 @@
+{
+  "title": "executable script",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.job.ExecutableScript",
+  "type": "object",
+  "extends" : {
+    "$ref": "executable-schema.json"
+  },
+  "required": [
+  	"script"
+  ],
+  "propertyOrder": [
+    "TYPE",
+    "script",
+    "env",
+    "v1Compatible"
+  ],
+  "description": "executable with fixed property 'TYPE':'ShellScriptExecutable'",
+  "properties": {
+    "script": {
+	  "type": "string",
+	  "minLength": 1
+	},
+    "env": {
+      "$ref": "../../../inventory/schemas/job/env-schema.json"
+    },
+	"v1Compatible": {
+      "type": "boolean",
+      "default": false
+    },
+    "returnCodeMeaning": {
+      "$ref": "jobReturnCode-schema.json"
+    },
+    "login": {
+		"$ref": "../../../inventory/schemas/job/executableScriptLogin-schema.json"
+	}
+  },
+  "additionalProperties": false
+}
+

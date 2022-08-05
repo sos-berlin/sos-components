@@ -32,6 +32,7 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.agent.SubAgent;
+import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.joc.model.agent.transfer.Agent;
 import com.sos.joc.model.agent.transfer.AgentImportFilter;
 import com.sos.joc.model.audit.AuditParams;
@@ -111,11 +112,13 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
                 throw new JocBadRequestException(AgentStoreUtils.getUniquenessMsg("AgentId", e));
             });
             // check uniqueness of agentName
-            List<com.sos.joc.model.agent.Agent> mappedAgents = agents.stream().map(agent -> agent.getAgentCluster() != null ? agent.getAgentCluster() : agent.getStandaloneAgent()).collect(Collectors.toList());
+            List<com.sos.joc.model.agent.Agent> mappedAgents = agents.stream()
+                    .map(agent -> agent.getAgentCluster() != null ? agent.getAgentCluster() : agent.getStandaloneAgent())
+                    .collect(Collectors.toList());
             AgentStoreUtils.checkUniquenessOfAgentNames(mappedAgents);
             // check uniqueness of AgentUrl
-            mappedAgents.stream().collect(Collectors.groupingBy(com.sos.joc.model.agent.Agent::getUrl, Collectors.counting())).entrySet().stream()
-                .filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
+            mappedAgents.stream().collect(Collectors.groupingBy(com.sos.joc.model.agent.Agent::getUrl, Collectors.counting())).entrySet()
+                .stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
                         throw new JocBadRequestException(AgentStoreUtils.getUniquenessMsg("Agent url", e));
                     });
             // check java name rules of AgentIds
@@ -139,9 +142,19 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
                     } catch (SOSHibernateException e) {
                         throw new JocSosHibernateException(e);
                     }
+                    if(agent.getSubagentClusters() != null) {
+                        for(SubagentCluster subagentCluster : agent.getSubagentClusters()) {
+                            try {
+                                AgentStoreUtils.storeSubagentCluster(subagentCluster, subagentClusterDbLayer, Date.from(Instant.now()));
+                            } catch (SOSHibernateException e) {
+                                throw new JocSosHibernateException(e);
+                            }
+                        }
+                    }
                 } else {
                     try {
-                        AgentStoreUtils.storeStandaloneAgent(agent.getStandaloneAgent(), filter.getControllerId(), filter.getOverwrite(), agentInstanceDbLayer);
+                        AgentStoreUtils.storeStandaloneAgent(agent.getStandaloneAgent(), filter.getControllerId(), filter.getOverwrite(),
+                                agentInstanceDbLayer);
                     } catch (SOSHibernateException e) {
                         throw new JocSosHibernateException(e);
                     }

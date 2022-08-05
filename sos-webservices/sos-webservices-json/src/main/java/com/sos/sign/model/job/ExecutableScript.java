@@ -1,10 +1,13 @@
 
-package com.sos.inventory.model.job;
+package com.sos.sign.model.job;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.job.Environment;
+import com.sos.inventory.model.job.ExecutableScriptLogin;
+import com.sos.inventory.model.job.ExecutableType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;

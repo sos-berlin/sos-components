@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.joc.Globals;
 import com.sos.joc.model.agent.transfer.AgentExportFilter;
 import com.sos.joc.model.agent.transfer.AgentImportFilter;
@@ -89,6 +88,7 @@ import com.sos.sign.model.instruction.Instruction;
 import com.sos.sign.model.instruction.Instructions;
 import com.sos.sign.model.instruction.NamedJob;
 import com.sos.sign.model.instruction.OptionalInstructions;
+import com.sos.sign.model.job.ExecutableScript;
 import com.sos.sign.model.job.Job;
 import com.sos.sign.model.workflow.Branch;
 import com.sos.sign.model.workflow.BranchWorkflow;

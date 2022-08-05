@@ -123,7 +123,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
 
                         if (!in.getExcludeJobs().isEmpty()) {
                             dbFilter.setExcludedJobs(in.getExcludeJobs().stream().filter(Objects::nonNull).peek(job -> job.setWorkflowPath(
-                                    WorkflowPaths.getPath(job.getWorkflowPath()))).collect(Collectors.groupingBy(JobPath::getWorkflowPath, Collectors
+                                    JocInventory.pathToName(job.getWorkflowPath()))).collect(Collectors.groupingBy(JobPath::getWorkflowPath, Collectors
                                             .mapping(JobPath::getJob, Collectors.toSet()))));
                         }
 
