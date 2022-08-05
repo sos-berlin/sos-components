@@ -12,6 +12,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +28,10 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.TryCatch;
-import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.inventory.model.job.JobReturnCode;
 import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Branch;
+import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.ListParameterType;
 import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
@@ -38,6 +40,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.model.common.IDeployObject;
+import com.sos.sign.model.job.ExecutableScript;
 import com.sos.sign.model.workflow.ListParameters;
 import com.sos.sign.model.workflow.OrderPreparation;
 import com.sos.sign.model.workflow.Parameter;
@@ -101,6 +104,7 @@ public class JsonConverter {
             if (hasScriptIncludes.test(json)) {
                 includeScripts(workflowName, signWorkflow.getJobs(), releasedScripts);
             }
+            considerReturnCodeWarnings(invWorkflow.getJobs(), signWorkflow.getJobs());
         }
         
         if (LOGGER.isDebugEnabled()) {
@@ -108,6 +112,43 @@ public class JsonConverter {
         }
         
         return signWorkflow;
+    }
+    
+    // not private because of unit test
+    protected static void considerReturnCodeWarnings(Jobs invJobs, com.sos.sign.model.workflow.Jobs signJobs) {
+        if (signJobs.getAdditionalProperties() != null && invJobs.getAdditionalProperties() != null) {
+            invJobs.getAdditionalProperties().forEach((jobName, invJob) -> {
+                switch (invJob.getExecutable().getTYPE()) {
+                case InternalExecutable:
+                    break;
+                case ShellScriptExecutable:
+                case ScriptExecutable:
+                    com.sos.inventory.model.job.ExecutableScript invEs = invJob.getExecutable().cast();
+                    JobReturnCode rc = invEs.getReturnCodeMeaning();
+                    if (rc != null && rc.getWarning() != null && !rc.getWarning().isEmpty()) {
+                        com.sos.sign.model.job.Job signJob = signJobs.getAdditionalProperties().get(jobName);
+                        if (signJob != null) {
+                            ExecutableScript signEs = signJob.getExecutable().cast();
+                            if (signEs != null) {
+                                if (rc.getSuccess() != null) {
+                                    signEs.getReturnCodeMeaning().setSuccess(Stream.of(rc.getSuccess(), rc.getWarning()).flatMap(List::stream)
+                                            .distinct().sorted().collect(Collectors.toList()));
+                                } else if (rc.getFailure() != null) {
+                                    signEs.getReturnCodeMeaning().getFailure().removeAll(rc.getWarning());
+                                } else {
+                                    if (signEs.getReturnCodeMeaning() == null) {
+                                        signEs.setReturnCodeMeaning(new com.sos.sign.model.job.JobReturnCode());
+                                    }
+                                    signEs.getReturnCodeMeaning().setSuccess(Stream.of(Collections.singletonList(0), rc.getWarning()).flatMap(
+                                            List::stream).distinct().sorted().collect(Collectors.toList()));
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+            });
+        }
     }
     
     private static void includeScripts(String workflowName, com.sos.sign.model.workflow.Jobs signJobs, Map<String, String> releasedScripts) {
