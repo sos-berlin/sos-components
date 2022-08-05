@@ -165,7 +165,7 @@ public class Validator {
                             .keySet();
                     validateInstructions(workflow.getInstructions(), "instructions", jobNames, workflow.getOrderPreparation(),
                             new HashMap<String, String>(), boardNames, dbLayer);
-                    // validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
+                    validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
                     validateLockRefs(json, dbLayer);
                     //validateBoardRefs(json, dbLayer);
                     validateJobResourceRefs(jobResources, dbLayer);
@@ -715,24 +715,25 @@ public class Validator {
         });
     }
 
-    private static void validateKey(String key, String position) {
+    private static void validateKey(String key, String position, String argName) {
         if (!checkKey.test(key)) {
             if (firstCharOfKeyIsNumber.test(key)) {
-                throw new JocConfigurationException(String.format("%s['%s']: the variable name must not start with a number.", position, key));
+                throw new JocConfigurationException(String.format("%s['%s']: the %s name must not start with a number.", position, key, argName));
             }
-            throw new JocConfigurationException(String.format("%s['%s']: only characters 'a-zA-Z0-9_' are allowed in the variabe name.", position,
-                    key));
+            throw new JocConfigurationException(String.format("%s['%s']: only characters 'a-zA-Z0-9_' are allowed in the %s name.", position,
+                    key, argName));
         }
     }
 
+    @SuppressWarnings("unused")
     private static void validateArgumentKeys(Environment arguments, String position) throws JocConfigurationException {
         final Map<String, String> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
-        args.keySet().forEach(key -> validateKey(key, position));
+        args.keySet().forEach(key -> validateKey(key, position, "argument"));
     }
 
     private static void validateEnvironmentKeys(Environment arguments, String position) throws JocConfigurationException {
         final Map<String, String> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
-        args.keySet().forEach(key -> validateKey(key, position));
+        args.keySet().forEach(key -> validateKey(key, position, "variable"));
     }
 
     @SuppressWarnings("unused")
@@ -805,13 +806,12 @@ public class Validator {
         }
     }
 
-    @SuppressWarnings("unused")
     private static void validateJobArguments(Jobs jobs, Requirements orderPreparation) {
         if (jobs != null) {
             jobs.getAdditionalProperties().forEach((key, value) -> {
                 // validateArguments(value.getDefaultArguments(), orderPreparation, "$.jobs['" + key + "'].defaultArguments");
-                validateArgumentKeys(value.getDefaultArguments(), "$.jobs['" + key + "'].defaultArguments");
-                if (ExecutableType.ScriptExecutable.equals(value.getExecutable().getTYPE())) {
+                // validateArgumentKeys(value.getDefaultArguments(), "$.jobs['" + key + "'].defaultArguments");
+                if (!ExecutableType.InternalExecutable.equals(value.getExecutable().getTYPE())) {
                     ExecutableScript script = value.getExecutable().cast();
                     validateEnvironmentKeys(script.getEnv(), "$.jobs['" + key + "'].executable.env");
                 }
