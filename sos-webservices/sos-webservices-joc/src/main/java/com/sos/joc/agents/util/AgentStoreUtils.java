@@ -28,6 +28,8 @@ import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.SubAgent;
+import com.sos.joc.model.agent.SubAgentId;
+import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.joc.model.agent.SubagentDirectorType;
 
 public class AgentStoreUtils {
@@ -163,6 +165,63 @@ public class AgentStoreUtils {
             AgentStoreUtils.saveOrUpdate(agentDbLayer, subagentDbLayer, dbAgent, dbSubAgents, agent.getSubagents(), overwrite);
             updateAliases(agentDbLayer, agent, allAliases.get(agent.getAgentId()));
         }
+    }
+    
+    public static List<DBItemInventorySubAgentCluster> storeSubagentCluster (SubagentCluster subagentCluster,
+            InventorySubagentClustersDBLayer agentClusterDBLayer, Date modified) throws SOSHibernateException {
+        Map<String, SubagentCluster> subagentClusterMap = new HashMap<String, SubagentCluster>();
+        subagentClusterMap.put(subagentCluster.getSubagentClusterId(), subagentCluster);
+        return storeSubagentCluster(subagentClusterMap, agentClusterDBLayer, modified);
+    }
+    
+    public static List<DBItemInventorySubAgentCluster> storeSubagentCluster (Map<String, SubagentCluster> subagentClusterMap, 
+            InventorySubagentClustersDBLayer agentClusterDBLayer, Date modified) throws SOSHibernateException {
+        List<String> subagentClusterIds = subagentClusterMap.keySet().stream().collect(Collectors.toList());
+        List<DBItemInventorySubAgentCluster> dbsubagentClusters = agentClusterDBLayer.getSubagentClusters(subagentClusterIds);
+        List<DBItemInventorySubAgentClusterMember> dbsubagentClusterMembers = 
+                agentClusterDBLayer.getSubagentClusterMembers(subagentClusterIds);
+        
+        Map<String, List<DBItemInventorySubAgentClusterMember>> dbsubagentClusterMembersMap = Collections.emptyMap();
+        if (dbsubagentClusterMembers != null) {
+            dbsubagentClusterMembersMap = dbsubagentClusterMembers.stream().collect(Collectors.groupingBy(
+                    DBItemInventorySubAgentClusterMember::getSubAgentClusterId));
+        }
+        
+        // update
+        if (dbsubagentClusters != null) {
+            for (DBItemInventorySubAgentCluster dbsubagentCluster : dbsubagentClusters) {
+                SubagentCluster s = subagentClusterMap.remove(dbsubagentCluster.getSubAgentClusterId());
+                if (!dbsubagentCluster.getAgentId().equals(s.getAgentId())) {
+                    throw new JocBadRequestException(String.format("Subagent Cluster ID '%s' is already used for Agent '%s'",
+                            dbsubagentCluster.getSubAgentClusterId(), dbsubagentCluster.getAgentId()));
+                }
+                dbsubagentCluster.setDeployed(false);
+                dbsubagentCluster.setModified(modified);
+                dbsubagentCluster.setTitle(s.getTitle());
+                agentClusterDBLayer.getSession().update(dbsubagentCluster);
+                updateMembers(agentClusterDBLayer.getSession(), dbsubagentClusterMembersMap, s.getSubagentIds(), s.getSubagentClusterId(),
+                        modified);
+            }
+        }
+        // insert
+        int position = agentClusterDBLayer.getMaxOrdering();
+        for (SubagentCluster s : subagentClusterMap.values()) {
+            if (s.getSubagentIds().isEmpty()) { //don't store a new subagent cluster with an empty cluster
+                continue;
+            }
+            DBItemInventorySubAgentCluster dbsubagentCluster = new DBItemInventorySubAgentCluster();
+            dbsubagentCluster.setId(null);
+            dbsubagentCluster.setDeployed(false);
+            dbsubagentCluster.setModified(modified);
+            dbsubagentCluster.setAgentId(s.getAgentId());
+            dbsubagentCluster.setTitle(s.getTitle());
+            dbsubagentCluster.setSubAgentClusterId(s.getSubagentClusterId());
+            dbsubagentCluster.setOrdering(++position);
+            agentClusterDBLayer.getSession().save(dbsubagentCluster);
+
+            updateMembers(agentClusterDBLayer.getSession(), dbsubagentClusterMembersMap, s.getSubagentIds(), s.getSubagentClusterId(), modified);
+        }
+        return dbsubagentClusters;
     }
     
     public static void updateAliases(InventoryAgentInstancesDBLayer agentDBLayer, Agent agent, Collection<DBItemInventoryAgentName> dbAliases)
@@ -375,4 +434,52 @@ public class AgentStoreUtils {
             connection.save(dbSubagentClusterMember);
     }
     
+    private static void updateMembers(SOSHibernateSession connection, 
+            Map<String, List<DBItemInventorySubAgentClusterMember>> dbsubagentClusterMembersMap,
+            List<SubAgentId> subAgents, String subagentClusterId, Date now) throws SOSHibernateException {
+        
+        // TODO check if subagentId in inventory
+        List<DBItemInventorySubAgentClusterMember> members = dbsubagentClusterMembersMap.remove(subagentClusterId);
+        if (subAgents == null) {
+            subAgents = Collections.emptyList();
+        }
+        if (members == null) {
+            members = Collections.emptyList();
+        }
+        
+        Map<String, Long> subagentIds = subAgents.stream().collect(Collectors.groupingBy(SubAgentId::getSubagentId, Collectors.counting()));
+        // check uniqueness of SubagentIds per Subagent Cluster
+        subagentIds.entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
+            throw new JocBadRequestException("Subagent ID has to be unique per Subagent Cluster: " + e.getKey() + " is used " + (e.getValue() == 2L
+                    ? "twice" : e.getValue() + " times"));
+        });
+        
+        Map<String, SubAgentId> subagentMap = subAgents.stream().collect(Collectors.toMap(SubAgentId::getSubagentId, Function.identity()));
+        
+        // update member
+        for (DBItemInventorySubAgentClusterMember member : members) {
+            if (subagentMap.isEmpty()) {
+                connection.delete(member);
+            } else {
+                SubAgentId subAgent = subagentMap.remove(member.getSubAgentId());
+                if (subAgent == null) {
+                    connection.delete(member);
+                } else {
+                    member.setModified(now);
+                    member.setPriority(subAgent.getPriority());
+                    connection.update(member);
+                }
+            }
+        }
+        // insert member
+        for (SubAgentId subAgent : subagentMap.values()) {
+            DBItemInventorySubAgentClusterMember member = new DBItemInventorySubAgentClusterMember();
+            member.setId(null);
+            member.setModified(now);
+            member.setPriority(subAgent.getPriority());
+            member.setSubAgentId(subAgent.getSubagentId());
+            member.setSubAgentClusterId(subagentClusterId);
+            connection.save(member);
+        }
+    }
 }
