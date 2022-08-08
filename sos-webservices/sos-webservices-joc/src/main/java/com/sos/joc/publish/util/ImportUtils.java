@@ -33,6 +33,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
@@ -345,6 +346,7 @@ public class ImportUtils {
         Set<ControllerObject> objects = new HashSet<ControllerObject>();
         Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
         Map<ControllerObject, SignaturePath> objectsWithSignature = new HashMap<ControllerObject, SignaturePath>();
+        Set<String> notImported = new HashSet<String>();
         ZipInputStream zipStream = null;
         try {
             zipStream = new ZipInputStream(inputStream);
@@ -354,6 +356,11 @@ public class ImportUtils {
                     continue;
                 }
                 String entryName = entry.getName().replace('\\', '/');
+                String filename = Paths.get(entryName).getFileName().toString();
+                if(!SOSCheckJavaVariableName.test(filename)) {
+                    notImported.add(filename);
+                    continue;
+                }
                 ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
                 byte[] binBuffer = new byte[8192];
                 int binRead = 0;
@@ -390,6 +397,10 @@ public class ImportUtils {
                 } catch (IOException e) {
                 }
             }
+            if(!notImported.isEmpty()) {
+                LOGGER.warn("The following files were not imported, as the filenames do not comply to the JS7 naming rules.");
+                LOGGER.warn(String.format("%1$s", notImported.toString()));
+            }
         }
         return objectsWithSignature;
     }
@@ -399,6 +410,7 @@ public class ImportUtils {
             DBOpenSessionException {
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
         ZipInputStream zipStream = null;
+        Set<String> notImported = new HashSet<String>();
         try {
             zipStream = new ZipInputStream(inputStream);
             ZipEntry entry = null;
@@ -407,6 +419,11 @@ public class ImportUtils {
                     continue;
                 }
                 String entryName = entry.getName().replace('\\', '/');
+                String filename = Paths.get(entryName).getFileName().toString();
+                if(!SOSCheckJavaVariableName.test(filename)) {
+                    notImported.add(filename);
+                    continue;
+                }
                 ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
                 byte[] binBuffer = new byte[8192];
                 int binRead = 0;
@@ -433,6 +450,10 @@ public class ImportUtils {
                     zipStream.close();
                 } catch (IOException e) {
                 }
+            }
+            if(!notImported.isEmpty()) {
+                LOGGER.warn("The following files were not imported, as the filenames do not comply to the JS7 naming rules.");
+                LOGGER.warn(String.format("%1$s", notImported.toString()));
             }
         }
         return objects;
@@ -446,6 +467,7 @@ public class ImportUtils {
         Map<ControllerObject, SignaturePath> objectsWithSignature = new HashMap<ControllerObject, SignaturePath>();
         GZIPInputStream gzipInputStream = null;
         TarArchiveInputStream tarArchiveInputStream = null;
+        Set<String> notImported = new HashSet<String>();
         try {
             gzipInputStream = new GZIPInputStream(inputStream);
             tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream);
@@ -455,6 +477,11 @@ public class ImportUtils {
                     continue;
                 }
                 String entryName = entry.getName().replace('\\', '/');
+                String filename = Paths.get(entryName).getFileName().toString();
+                if(!SOSCheckJavaVariableName.test(filename)) {
+                    notImported.add(filename);
+                    continue;
+                }
                 ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
                 byte[] binBuffer = new byte[8192];
                 int binRead = 0;
@@ -494,6 +521,10 @@ public class ImportUtils {
                 }
             } catch (Exception e) {
             }
+            if(!notImported.isEmpty()) {
+                LOGGER.warn("The following files were not imported, as the filenames do not comply to the JS7 naming rules.");
+                LOGGER.warn(String.format("%1$s", notImported.toString()));
+            }
         }
         return objectsWithSignature;
     }
@@ -504,6 +535,7 @@ public class ImportUtils {
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
         GZIPInputStream gzipInputStream = null;
         TarArchiveInputStream tarArchiveInputStream = null;
+        Set<String> notImported = new HashSet<String>();
         try {
             gzipInputStream = new GZIPInputStream(inputStream);
             tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream);
@@ -513,6 +545,11 @@ public class ImportUtils {
                     continue;
                 }
                 String entryName = entry.getName().replace('\\', '/');
+                String filename = Paths.get(entryName).getFileName().toString();
+                if(!SOSCheckJavaVariableName.test(filename)) {
+                    notImported.add(filename);
+                    continue;
+                }
                 ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
                 byte[] binBuffer = new byte[8192];
                 int binRead = 0;
@@ -542,6 +579,10 @@ public class ImportUtils {
                     gzipInputStream.close();
                 }
             } catch (Exception e) {
+            }
+            if(!notImported.isEmpty()) {
+                LOGGER.warn("The following files were not imported, as the filenames do not comply to the JS7 naming rules.");
+                LOGGER.warn(String.format("%1$s", notImported.toString()));
             }
         }
         return objects;
