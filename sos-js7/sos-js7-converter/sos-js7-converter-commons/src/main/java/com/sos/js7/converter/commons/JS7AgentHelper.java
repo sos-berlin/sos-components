@@ -1,7 +1,12 @@
 package com.sos.js7.converter.commons;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.ClusterAgent;
+import com.sos.joc.model.agent.SubAgentId;
+import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
 
 public class JS7AgentHelper {
@@ -65,4 +70,38 @@ public class JS7AgentHelper {
         return a;
     }
 
+    public static List<SubagentCluster> copy(List<SubagentCluster> clusters) {
+        if (clusters == null) {
+            return null;
+        }
+        List<SubagentCluster> a = new ArrayList<>();
+        for (SubagentCluster c : clusters) {
+            a.add(copy(c));
+        }
+        return a;
+    }
+
+    private static SubagentCluster copy(SubagentCluster cluster) {
+        SubagentCluster a = new SubagentCluster();
+        a.setAgentId(cluster.getAgentId());
+        a.setControllerId(cluster.getControllerId());
+        a.setDeployed(cluster.getDeployed());
+        a.setOrdering(cluster.getOrdering());
+        a.setSubagentClusterId(cluster.getSubagentClusterId());
+        a.setSubagentIds(copySubAgentId(cluster.getSubagentIds()));
+        a.setSyncState(cluster.getSyncState());
+        a.setTitle(cluster.getTitle());
+        return a;
+    }
+
+    private static List<SubAgentId> copySubAgentId(List<SubAgentId> subagentIds) {
+        List<SubAgentId> a = new ArrayList<>();
+        for (SubAgentId subagentId : subagentIds) {
+            SubAgentId id = new SubAgentId();
+            id.setPriority(subagentId.getPriority());
+            id.setSubagentId(subagentId.getSubagentId());
+            a.add(id);
+        }
+        return a;
+    }
 }

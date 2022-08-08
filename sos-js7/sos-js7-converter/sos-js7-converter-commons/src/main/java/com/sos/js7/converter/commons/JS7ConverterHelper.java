@@ -300,39 +300,6 @@ public class JS7ConverterHelper {
         return val.codePoints().mapToObj(c -> Character.valueOf((char) c)).filter(e -> QUOTED_CHARS.contains(e)).findFirst().orElse(null) != null;
     }
 
-    public static String quoteJS7StringValueWithDoubleQuotes(String val) {
-        if (SOSString.isEmpty(val)) {
-            return val;
-        }
-        // if (val.equals("$FILE")) {
-        if (val.startsWith("$")) {
-            return val;
-        }
-        if (val.equalsIgnoreCase("true") || val.equalsIgnoreCase("false")) {
-            return val;
-        }
-
-        return "\"" + val.replaceAll("\\\\", "\\\\\\\\") + "\"";
-        // return "\"" + val + "\"";
-    }
-
-    public static String quoteJS7StringValueWithSingleQuotes(String val) {
-        if (SOSString.isEmpty(val)) {
-            return val;
-        }
-        // if (val.equals("$FILE")) {
-        if (val.startsWith("$")) {
-            return val;
-        }
-        if (val.equalsIgnoreCase("true") || val.equalsIgnoreCase("false")) {
-            return val;
-        }
-        if (val.indexOf("'") > -1) {
-            return quoteJS7StringValueWithDoubleQuotes(val);
-        }
-        return "'" + val + "'";
-    }
-
     // /sos/xxx/ -> /sos/xxx/
     // /sos -> /sos/
     // \sos\xxx -> /sos/xxx/

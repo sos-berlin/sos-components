@@ -115,6 +115,7 @@ public class JS7JobHelper {
             // SPLIT/JOIN
             case Script.JAVA_JITL_SPLITTER_JOB:
             case Script.JAVA_JITL_JOIN_JOB:
+            case Script.JAVA_JITL_SYNCHRONIZER_JOB:
                 break;
             default:
                 shellJob = new ShellJobHelper(language, jc);

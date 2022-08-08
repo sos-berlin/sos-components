@@ -862,7 +862,7 @@ public class JS7Converter {
     }
 
     private static String normalizeName(JS7ConverterResult result, Condition c) {
-        return normalizeName(result, c.getName(), String.format("[contition][%s][%s]", c.getType(), c));
+        return normalizeName(result, c.getName(), String.format("[condition][%s][%s]", c.getType(), c));
     }
 
     private static String normalizeName(JS7ConverterResult result, String name, String msg) {
