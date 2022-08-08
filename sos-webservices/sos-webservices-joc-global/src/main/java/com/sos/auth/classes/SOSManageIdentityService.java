@@ -4,8 +4,6 @@ import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
@@ -156,8 +153,7 @@ public class SOSManageIdentityService {
 
     }
 
-    private void createLdapSettings(SOSHibernateSession sosHibernateSession, String ldapName, Map<String, List<String>> mainSection)
-            throws SOSHibernateException {
+    private void createLdapSettings(SOSHibernateSession sosHibernateSession, String ldapName, Map<String, List<String>> mainSection) {
         DBItemJocConfiguration dbItem = new DBItemJocConfiguration();
         if (mainSection.get(ldapName + ".groupRolesMap") == null) {
             dbItem.setObjectType("LDAP-JOC");
@@ -262,14 +258,8 @@ public class SOSManageIdentityService {
 
     }
 
-    public String hash(String secret) {
-        String hash = "";
-        try {
-            hash = SOSPasswordHasher.hash(secret);
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            LOGGER.error("", e);
-        }
-        return hash;
+    public String hash(String secret) throws Exception {
+        return SOSPasswordHasher.hash(secret);
     }
 
     public static void download() {
@@ -289,7 +279,7 @@ public class SOSManageIdentityService {
         if (osName != null && osName.toLowerCase().trim().startsWith("windows")) {
             s.append("Usage: joc_manage_identity_service.cmd ");
         } else {
-            s.append("Usage: joc_manage_identity_service.cmd import|hash %s secret|shiro_ini_file hibernate_config_file");
+            s.append("Usage: joc_manage_identity_service.sh import|hash %s secret|shiro_ini_file hibernate_config_file");
         }
         s.append(String.format(" import|hash %s secret|shiro_ini_file hibernate_config_file", SOSManageIdentityService.class.getSimpleName())).append(
                 System.lineSeparator());
@@ -325,7 +315,11 @@ public class SOSManageIdentityService {
             switch (command) {
             case "hash":
                 String secret = args[1];
-                System.out.println(sosShiroImport.hash(secret));
+                try {
+                    System.out.println(sosShiroImport.hash(secret));
+                } catch (Exception e1) {
+                    e1.printStackTrace(System.err);
+                }
                 break;
             case "import":
                 if (haveShiro) {

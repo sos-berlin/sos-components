@@ -79,7 +79,7 @@ public abstract class RepositoryUtil {
         case INCLUDESCRIPT:
             return ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
         case JOBTEMPLATE:
-            return ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString();
+            return ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString();
         case JOBCLASS:
             return ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
         case JOBRESOURCE:
@@ -214,7 +214,7 @@ public abstract class RepositoryUtil {
             return ConfigurationType.SCHEDULE;
         } else if (path.toString().endsWith(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString())) {
             return ConfigurationType.INCLUDESCRIPT;
-        } else if (path.toString().endsWith(ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString())) {
+        } else if (path.toString().endsWith(ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString())) {
             return ConfigurationType.JOBTEMPLATE;
         } else {
             return ConfigurationType.FOLDER;
@@ -502,7 +502,7 @@ public abstract class RepositoryUtil {
                     extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                     break;
                 case JOBTEMPLATE:
-                    extension = ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString();
+                    extension = ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString();
                     break;
                 case WORKINGDAYSCALENDAR:
                 case NONWORKINGDAYSCALENDAR:
@@ -643,7 +643,7 @@ public abstract class RepositoryUtil {
                     extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                     break;
                 case JOBTEMPLATE:
-                    extension = ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString();
+                    extension = ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString();
                     break;
                 case WORKINGDAYSCALENDAR:
                 case NONWORKINGDAYSCALENDAR:

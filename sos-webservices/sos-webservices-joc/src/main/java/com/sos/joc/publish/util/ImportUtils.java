@@ -737,8 +737,8 @@ public class ImportUtils {
             scriptEdit.setPath(normalizedPath);
             scriptEdit.setObjectType(ConfigurationType.INCLUDESCRIPT);
             return scriptEdit;
-        } else if (entryName.endsWith(ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.value(),
+        } else if (entryName.endsWith(ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.value(),
                     ""));
             if (normalizedPath.startsWith("//")) {
                 normalizedPath = normalizedPath.substring(1);

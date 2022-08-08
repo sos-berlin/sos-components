@@ -11,7 +11,7 @@ public enum ConfigurationObjectFileExtension {
     SCHEDULE_FILE_EXTENSION(".schedule.json"),
     CALENDAR_FILE_EXTENSION(".calendar.json"),
     SCRIPT_FILE_EXTENSION(".script.json"),
-    JOB_FILE_EXTENSION(".job.json");
+    JOBTEMPLATE_FILE_EXTENSION(".jobtemplate.json");
 
 
     private final String value;
