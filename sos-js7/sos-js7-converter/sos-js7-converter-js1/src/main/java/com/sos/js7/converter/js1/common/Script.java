@@ -11,6 +11,7 @@ public class Script {
 
     public static final String JAVA_JITL_SPLITTER_JOB = "com.sos.jitl.splitter.JobChainSplitterJSAdapterClass";
     public static final String JAVA_JITL_JOIN_JOB = "com.sos.jitl.join.JobSchedulerJoinOrdersJSAdapterClass";
+    public static final String JAVA_JITL_SYNCHRONIZER_JOB = "com.sos.jitl.sync.JobSchedulerSynchronizeJobChainsJSAdapterClass";
 
     private static final String ATTR_COM_CLASS = "com_class";
     private static final String ATTR_FILENAME = "filename";
@@ -51,6 +52,10 @@ public class Script {
 
     public boolean isJavaJITLJoinJob() {
         return javaClass != null && javaClass.equals(JAVA_JITL_JOIN_JOB);
+    }
+
+    public boolean isJavaJITLSynchronizerJob() {
+        return javaClass != null && javaClass.equals(JAVA_JITL_SYNCHRONIZER_JOB);
     }
 
     public Include getInclude() {

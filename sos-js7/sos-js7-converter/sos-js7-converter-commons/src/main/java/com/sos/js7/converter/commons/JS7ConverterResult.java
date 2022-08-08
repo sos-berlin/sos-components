@@ -67,6 +67,11 @@ public class JS7ConverterResult {
     }
 
     @SuppressWarnings("rawtypes")
+    public JS7ExportObject getExportObjectWorkflowByPath(Path path) {
+        return workflows.getItems().stream().filter(o -> o.getOriginalPath().getPath().equals(path)).findAny().orElse(null);
+    }
+
+    @SuppressWarnings("rawtypes")
     public JS7ExportObject getExportObjectWorkflowByJobName(String name) {
         return workflows.getItems().stream().filter(o -> o.getObject().getJobs() != null && o.getObject().getJobs().getAdditionalProperties() != null
                 && o.getObject().getJobs().getAdditionalProperties().containsKey(name)).findAny().orElse(null);

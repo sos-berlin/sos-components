@@ -34,8 +34,8 @@ public class JS7ConverterTest {
         // agent.withForcedAgent(
         // "{\"standaloneAgent\":{\"agentName\":\"forced_agent_name\", \"url\":\"http://forced_agent:6666\",\"controllerId\":\"forced_agent_controller_id\"}}");
         // agent.withDefaultAgent(
-        // "{\"standaloneAgent\":{\"agentName\":\"default_agent_name\",
-        // \"url\":\"http://default_agent:6666\",\"controllerId\":\"default_agent_controller_id\"}}");
+        // "{\"standaloneAgent\":{\"agentName\":\"default_agent_name\",\"url\":\"http://default_agent:6666\",\"controllerId\":\"default_agent_controller_id\"}}");
+        // agent.withDefaultAgent("{\"standaloneAgent\":{\"agentName\":\"agent_name\"}}");
 
         MockConfig mock = JS7Converter.CONFIG.getMockConfig();
         mock.withUnixScript("$HOME/MockScript.sh").withWindowsScript("echo 123").withJitlJobsMockLevel("ERROR");

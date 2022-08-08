@@ -250,6 +250,10 @@ public abstract class ACommonJob {
         return script != null && script.isJavaJITLJoinJob();
     }
 
+    public boolean isJavaJITLSynchronizerJob() {
+        return script != null && script.isJavaJITLSynchronizerJob();
+    }
+
     public ACommonJob(Type type) {
         this.type = type;
     }
