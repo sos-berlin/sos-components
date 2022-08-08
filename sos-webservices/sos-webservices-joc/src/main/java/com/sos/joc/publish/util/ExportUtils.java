@@ -457,7 +457,7 @@ public class ExportUtils {
                                 extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                                 break;
                             case JOBTEMPLATE:
-                                extension = ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString();
+                                extension = ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString();
                                 break;
                             case WORKINGDAYSCALENDAR:
                             case NONWORKINGDAYSCALENDAR:
@@ -653,7 +653,7 @@ public class ExportUtils {
                                 extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                                 break;
                             case JOBTEMPLATE:
-                                extension = ConfigurationObjectFileExtension.JOB_FILE_EXTENSION.toString();
+                                extension = ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString();
                                 break;
                             case WORKINGDAYSCALENDAR:
                             case NONWORKINGDAYSCALENDAR:
