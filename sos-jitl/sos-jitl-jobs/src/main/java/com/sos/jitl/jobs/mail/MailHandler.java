@@ -40,7 +40,7 @@ public class MailHandler {
                     }
                 }
             }
-
+            //smtpProperties.put("mail.smtp.ssl.protocols", "asdfasdfasdf");
             putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_HOST, args.getMailSmtpHost());
             putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_PORT, args.getMailSmtpPort());
             if (args.getMailSmtpUser() != null && !args.getMailSmtpUser().isEmpty() && args.getMailSmtpPassword() != null && !args
@@ -51,7 +51,6 @@ public class MailHandler {
 
             sosMail = new SOSMail(smtpProperties);
             sosMail.setCredentialStoreArguments(csArgs);
-            sosMail.setProperties(smtpProperties);
             sosMail.setFrom(args.getFrom());
             sosMail.setQueueMailOnError(false);
 
