@@ -70,7 +70,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
                 List<Long> submissions = dbLayer.getSubmissionIds(controllerId, date);
                 if (submissions == null || submissions.size() == 0) {
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s][skip]submissions not found", controllerId, in.getFilter().getDailyPlanDate()));
+                        LOGGER.debug(String.format("[%s][%s][skip]couldn't find submissions", controllerId, in.getFilter().getDailyPlanDate()));
                     }
                     continue;
                 }

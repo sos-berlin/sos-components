@@ -184,7 +184,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 
             } else { // try update controllers with given controllerId
                 if (dbControllers.isEmpty()) {
-                    throw new DBMissingDataException(String.format("Controller(s) with ID '%s' not found. Don't specify the \"controllerId\" in the request for a new registration.", controllerId));
+                    throw new DBMissingDataException(String.format("Couldn't find Controller(s) with ID '%s'. Don't specify the \"controllerId\" in the request for a new registration.", controllerId));
                 }
                 if (body.getControllers().size() == 1) {  // standalone from request
                     RegisterParameter controller = body.getControllers().get(0);

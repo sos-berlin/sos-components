@@ -84,7 +84,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 identityService.setOrdering(dbItemIamIdentityService.getOrdering());
                 identityService.setRequired(dbItemIamIdentityService.getRequired());
             } else {
-                throw new JocObjectNotExistException("Object identity service <" + identityServiceFilter.getIdentityServiceName() + "> not found");
+                throw new JocObjectNotExistException("Couldn't find the identity service <" + identityServiceFilter.getIdentityServiceName() + ">");
             }
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
@@ -200,7 +200,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             filter.setIdentityServiceName(identityServiceRename.getIdentityServiceOldName());
             DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
             if (dbItemIamIdentityService == null) {
-                throw new JocObjectNotExistException("Object Identity Service <" + identityServiceRename.getIdentityServiceOldName() + "> not found");
+                throw new JocObjectNotExistException("Couldn't find the Identity Service <" + identityServiceRename.getIdentityServiceOldName() + ">");
             }
             iamIdentityServiceDBLayer.rename(identityServiceRename.getIdentityServiceOldName(), identityServiceRename.getIdentityServiceNewName());
 
@@ -254,7 +254,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
             int count = iamIdentityServiceDBLayer.deleteCascading(filter);
             if (count == 0) {
-                throw new JocObjectNotExistException("Object Identity Service<" + identityServiceFilter.getIdentityServiceName() + "> not found");
+                throw new JocObjectNotExistException("Couldn't find the Identity Service<" + identityServiceFilter.getIdentityServiceName() + ">");
             }
 
             storeAuditLog(identityServiceFilter.getAuditLog(), CategoryType.IDENTITY);

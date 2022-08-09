@@ -19,7 +19,7 @@ public class SecurityHelper {
         iamIdentityServiceFilter.setIdentityServiceName(identityServiceName);
         DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(iamIdentityServiceFilter);
         if (dbItemIamIdentityService == null) {
-            throw new JocObjectNotExistException("Object Identity Service <" + identityServiceName + "> not found");
+            throw new JocObjectNotExistException("Couldn't find the Identity Service <" + identityServiceName + ">");
         }
         return dbItemIamIdentityService;
     }
@@ -31,7 +31,7 @@ public class SecurityHelper {
         iamRoleFilter.setRoleName(roleName);
         DBItemIamRole dbItemIamRole = iamRoleDBLayer.getUniqueRole(iamRoleFilter);
         if (dbItemIamRole == null) {
-            throw new JocObjectNotExistException("Object Role <" + roleName + "> not found");
+            throw new JocObjectNotExistException("Couldn't find the role <" + roleName + ">");
         }
         return dbItemIamRole;
     }

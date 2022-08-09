@@ -175,7 +175,7 @@ public class JocCockpitProperties {
                         LOGGER.warn("", e);
                     }
                 } else {
-                    LOGGER.warn(String.format("%1$s=%2$s is set but file (%3$s) not found.", propKeyLog4J, log4jConf, p.toString()));
+                    LOGGER.warn(String.format("%1$s=%2$s is set but couldn't find the file (%3$s).", propKeyLog4J, log4jConf, p.toString()));
                 }
             }
         }
@@ -195,7 +195,7 @@ public class JocCockpitProperties {
                         LOGGER.warn("", e);
                     }
                 } else {
-                    LOGGER.warn(String.format("%1$s=%2$s is set but file (%3$s) not found.", propKeyLog4J, log4jConf, p.toString()));
+                    LOGGER.warn(String.format("%1$s=%2$s is set but couldn't find the file (%3$s).", propKeyLog4J, log4jConf, p.toString()));
                 }
             }
         }

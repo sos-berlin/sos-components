@@ -137,7 +137,7 @@ public class WorkflowSearcher {
         if (regex == null || jobs.isEmpty()) {
             return jobs;
         }
-        return jobs.stream().filter(j -> j.getJob().getAgentName() != null && j.getJob().getAgentName().matches(regex)).collect(Collectors.toList());
+        return jobs.stream().filter(j -> j.getJob().getAgentName() != null).filter(j -> j.getJob().getAgentName().matches(regex)).collect(Collectors.toList());
     }
 
     public List<WorkflowJob> getJobsByJobClass(String regex) {
@@ -145,7 +145,7 @@ public class WorkflowSearcher {
         if (regex == null || jobs.isEmpty()) {
             return jobs;
         }
-        return jobs.stream().filter(j -> j.getJob().getJobClassName() != null && j.getJob().getJobClassName().matches(regex)).collect(Collectors.toList());
+        return jobs.stream().filter(j -> j.getJob().getJobClassName() != null).filter(j -> j.getJob().getJobClassName().matches(regex)).collect(Collectors.toList());
     }
     
     public List<WorkflowJob> getJobsByJobTemplate(String regex) {
@@ -153,7 +153,8 @@ public class WorkflowSearcher {
         if (regex == null || jobs.isEmpty()) {
             return jobs;
         }
-        return jobs.stream().filter(j -> j.getJob().getJobTemplateName() != null && j.getJob().getJobTemplateName().matches(regex)).collect(Collectors.toList());
+        return jobs.stream().filter(j -> j.getJob().getJobTemplate() != null).filter(j -> j.getJob().getJobTemplate().getName() != null).filter(j -> j.getJob()
+                .getJobTemplate().getName().matches(regex)).collect(Collectors.toList());
     }
 
     public List<WorkflowJob> getJobsByScript(String regex) {
@@ -161,7 +162,7 @@ public class WorkflowSearcher {
         if (regex == null || jobs.isEmpty()) {
             return jobs;
         }
-        return jobs.stream().filter(j -> j.getJob().getExecutable() != null && ExecutableType.ScriptExecutable.equals(j.getJob().getExecutable()
+        return jobs.stream().filter(j -> j.getJob().getExecutable() != null).filter(j -> ExecutableType.ScriptExecutable.equals(j.getJob().getExecutable()
                 .getTYPE())).filter(j -> ((ExecutableScript) j.getJob().getExecutable()).getScript().matches(regex)).collect(Collectors.toList());
     }
 

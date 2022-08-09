@@ -60,7 +60,7 @@ public class AboutImpl extends JOCResourceImpl implements IAboutResource {
                 Version v = Globals.objectMapper.readValue(stream, Version.class);
                 return MediaType.TEXT_PLAIN.equals(mediaType) ? versionClassToString(v) : v;
             } else {
-                throw new JocException(new JocError("JOC-002", String.format("Version file %1$s not found in classpath", versionFile)));
+                throw new JocException(new JocError("JOC-002", String.format("Couldn't find version file %1$s in classpath", versionFile)));
             }
         } catch (JocException e) {
             throw e;

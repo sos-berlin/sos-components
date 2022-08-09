@@ -399,7 +399,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         setSocketTimeout(Globals.httpSocketTimeout);
         setSSLContext(SSLContext.getInstance().getSSLContext());
         if (url.startsWith("https:") && SSLContext.getInstance().getTrustStore() == null) {
-            throw new ControllerConnectionRefusedException("Required truststore not found");
+            throw new ControllerConnectionRefusedException("Couldn't find required truststore");
         }
         ProxyCoupled evt = Proxies.getJOCCredentials(this.url);
         if (evt != null) {

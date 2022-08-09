@@ -47,7 +47,7 @@ public class DocumentationEditResourceImpl extends JOCResourceImpl implements ID
             
             DBItemDocumentation dbItem = dbLayer.getDocumentation(path);
             if (dbItem == null) {
-                throw new DBMissingDataException("A documentation with the name (" + path + ") could not be found");
+                throw new DBMissingDataException("Couldn't find a documentation with the name (" + path + ")");
             }
             JocAuditLog.storeAuditLogDetail(new AuditLogDetail(path, ObjectType.DOCUMENTATION.intValue()), connection, dbAudit);
             

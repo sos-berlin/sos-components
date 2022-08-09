@@ -105,7 +105,7 @@ public class LogOrderContent {
                 }
                 return orderLog;
             } else {
-                LOGGER.debug(String.format("[%s]LOG file not found. try to read fron db...", logFile));
+                LOGGER.debug(String.format("[%s]LOG file not found. Try to read from db...", logFile));
                 // only for the rare moment that the file is deleted and now in the database
                 OrderLog oLog = getLogFromDb();
                 if (oLog != null) {
@@ -126,9 +126,9 @@ public class LogOrderContent {
         err.setErrorReason(null);
         err.setErrorState(".");
         if (JocClusterService.getInstance().isRunning()) {
-            err.setErrorText("Snapshot log not found");
+            err.setErrorText("Couldn't find the snapshot log");
         } else {
-            err.setErrorText("Standby JOC Cockpit instance has no access to snapshot log");
+            err.setErrorText("Standby JOC Cockpit instance has no access to the snapshot log");
         }
         //err.setErrorState("Failed");
         //err.setErrorCode("99");
@@ -145,12 +145,12 @@ public class LogOrderContent {
             connection = Globals.createSosHibernateStatelessConnection("./order/log");
             DBItemHistoryOrder historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
             if (historyOrderItem == null) {
-                throw new DBMissingDataException(String.format("Order (Id:%d) not found", historyId));
+                throw new DBMissingDataException(String.format("Couldn't find the Order (Id:%d)", historyId));
             }// else if (historyOrderItem.getMainParentId() != historyId) {
              // historyId = historyOrderItem.getMainParentId();
              // historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
              // if (historyOrderItem == null) {
-             // throw new DBMissingDataException(String.format("MainOrder (Id:%d) not found", historyId));
+             // throw new DBMissingDataException(String.format("Couldn't find the MainOrder (Id:%d)", historyId));
              // }
              // }
             if (!folderPermissions.isPermittedForFolder(historyOrderItem.getWorkflowFolder())) {
@@ -163,12 +163,12 @@ public class LogOrderContent {
                     // Order is running
                     return null;
                 } else {
-                    throw new DBMissingDataException(String.format("The log of the order %s (history id:%d) doesn't found", orderId, historyId));
+                    throw new DBMissingDataException(String.format("Couldn't find the log of the order %s (history id:%d)", orderId, historyId));
                 }
             } else {
                 DBItemHistoryLog historyDBItem = connection.get(DBItemHistoryLog.class, historyOrderItem.getLogId());
                 if (historyDBItem == null) {
-                    throw new DBMissingDataException(String.format("The log of the order %s (history id:%d) doesn't found", orderId, historyId));
+                    throw new DBMissingDataException(String.format("Couldn't find the log of the order %s (history id:%d)", orderId, historyId));
                 } else {
                     unCompressedLength = historyDBItem.getFileSizeUncomressed();
                     if (!historyDBItem.fileContentIsNull()) {
@@ -265,7 +265,7 @@ public class LogOrderContent {
             };
         }
         if (out == null) {
-            throw new ControllerInvalidResponseDataException(String.format("Order Log (Id:%d) not found", historyId));
+            throw new ControllerInvalidResponseDataException(String.format("Couldn't find the Order Log (Id:%d)", historyId));
         }
 
         return out;

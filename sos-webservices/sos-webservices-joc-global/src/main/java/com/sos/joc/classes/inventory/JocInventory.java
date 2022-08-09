@@ -522,7 +522,7 @@ public class JocInventory {
         if (id != null) {
             config = dbLayer.getConfiguration(id);
             if (config == null) {
-                throw new DBMissingDataException(String.format("configuration not found: %s", id));
+                throw new DBMissingDataException(String.format("Couldn't find the configuration: %s", id));
             }
             if (isFolder(config.getType())) {
                 boolean isPermittedForFolder = folderPermissions.isPermittedForFolder(config.getPath());
@@ -564,13 +564,13 @@ public class JocInventory {
                     }
                     config = dbLayer.getConfiguration(path, type.intValue());
                     if (config == null) {
-                        throw new DBMissingDataException(String.format("%s not found: %s", type.value().toLowerCase(), path));
+                        throw new DBMissingDataException(String.format("Couldn't find the %s: %s", type.value().toLowerCase(), path));
                     }
                 }
             } else if (name != null) {// name
                 List<DBItemInventoryConfiguration> configs = dbLayer.getConfigurationByName(name, type.intValue());
                 if (configs == null || configs.isEmpty()) {
-                    throw new DBMissingDataException(String.format("configuration not found: %s", name));
+                    throw new DBMissingDataException(String.format("Couldn't find the configuration: %s", name));
                 }
                 config = configs.get(0); // TODO
                 if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
@@ -603,7 +603,7 @@ public class JocInventory {
         if (id != null) {
             config = dbLayer.getTrashConfiguration(id);
             if (config == null) {
-                throw new DBMissingDataException(String.format("configuration not found: %s", id));
+                throw new DBMissingDataException(String.format("Couldn't find the configuration: %s", id));
             }
             if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
                 throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
@@ -623,7 +623,7 @@ public class JocInventory {
                 }
                 config = dbLayer.getTrashConfiguration(path, type.intValue());
                 if (config == null) {
-                    throw new DBMissingDataException(String.format("%s not found: %s", type.value().toLowerCase(), path));
+                    throw new DBMissingDataException(String.format("Couldn't find the %s: %s", type.value().toLowerCase(), path));
                 }
             }
         }
@@ -916,7 +916,7 @@ public class JocInventory {
                 }
             }
             break;
-        case JOBRESOURCE: // determine Workflows with Jobs containing JobResource
+        case JOBRESOURCE: // determine Workflows and JobTemplates with Jobs containing JobResource
             List<DBItemInventoryConfiguration> workflows2 = dbLayer.getUsedWorkflowsByJobResource(config.getName());
             if (workflows2 != null && !workflows2.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflows2) {
@@ -1074,52 +1074,83 @@ public class JocInventory {
             }
             break;
         case INCLUDESCRIPT: // determine Workflows with script reference in INCLUDE line of a job script
-            List<DBItemInventoryConfiguration> workflows4 = dbLayer.getWorkflowsWithIncludedScripts();
+            List<DBItemInventoryConfiguration> workflowsOrJobTemplates = dbLayer.getWorkflowsAndJobTemplatesWithIncludedScripts();
             Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + config
                     .getName() + "\\s*").asPredicate();
-            if (workflows4 != null && !workflows4.isEmpty()) {
-                for (DBItemInventoryConfiguration workflow : workflows4) {
-                    if (hasScriptInclude.test(workflow.getContent())) {
-                        Workflow w = Globals.objectMapper.readValue(workflow.getContent(), Workflow.class);
-                        if (w.getJobs() != null) {
-                            Map<String, Job> replacedJobs = new HashMap<>();
-                            w.getJobs().getAdditionalProperties().forEach((jobName, job) -> {
-                                if (job.getExecutable() != null && ExecutableType.ShellScriptExecutable.equals(job.getExecutable().getTYPE())) {
-                                    ExecutableScript es = job.getExecutable().cast();
-                                    if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
-                                        String[] scriptLines = es.getScript().split("\n");
-                                        for (int i = 0; i < scriptLines.length; i++) {
-                                            String line = scriptLines[i];
-                                            if (hasScriptInclude.test(line)) {
-                                                Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
-                                                if (m.find()) {
-                                                    if (config.getName().equals(m.group(2))) {
-                                                        scriptLines[i] = m.group(1) + JsonConverter.scriptInclude + " " + newName + " " + m.group(3);
+            if (workflowsOrJobTemplates != null && !workflowsOrJobTemplates.isEmpty()) {
+                for (DBItemInventoryConfiguration workflowOrJobTemplate : workflowsOrJobTemplates) {
+                    if (hasScriptInclude.test(workflowOrJobTemplate.getContent())) {
+                        if (ConfigurationType.WORKFLOW.equals(workflowOrJobTemplate.getTypeAsEnum())) {
+                            Workflow w = Globals.objectMapper.readValue(workflowOrJobTemplate.getContent(), Workflow.class);
+                            if (w.getJobs() != null) {
+                                Map<String, Job> replacedJobs = new HashMap<>();
+                                w.getJobs().getAdditionalProperties().forEach((jobName, job) -> {
+                                    if (job.getExecutable() != null && ExecutableType.ShellScriptExecutable.equals(job.getExecutable().getTYPE())) {
+                                        ExecutableScript es = job.getExecutable().cast();
+                                        if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
+                                            String[] scriptLines = es.getScript().split("\n");
+                                            for (int i = 0; i < scriptLines.length; i++) {
+                                                String line = scriptLines[i];
+                                                if (hasScriptInclude.test(line)) {
+                                                    Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
+                                                    if (m.find()) {
+                                                        if (config.getName().equals(m.group(2))) {
+                                                            scriptLines[i] = m.group(1) + JsonConverter.scriptInclude + " " + newName + " " + m.group(
+                                                                    3);
+                                                        }
                                                     }
                                                 }
                                             }
+                                            es.setScript(String.join("\n", scriptLines));
+                                            replacedJobs.put(jobName, job);
                                         }
-                                        es.setScript(String.join("\n", scriptLines));
-                                        replacedJobs.put(jobName, job);
                                     }
+                                });
+                                replacedJobs.forEach((jobName, job) -> w.getJobs().setAdditionalProperty(jobName, job));
+                                workflowOrJobTemplate.setContent(Globals.objectMapper.writeValueAsString(w));
+                                workflowOrJobTemplate.setDeployed(false);
+                            }
+                        } else if (ConfigurationType.JOBTEMPLATE.equals(workflowOrJobTemplate.getTypeAsEnum())) {
+                            JobTemplate jt = Globals.objectMapper.readValue(workflowOrJobTemplate.getContent(), JobTemplate.class);
+                            if (jt.getExecutable() != null && ExecutableType.ShellScriptExecutable.equals(jt.getExecutable().getTYPE())) {
+                                ExecutableScript es = jt.getExecutable().cast();
+                                if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
+                                    String[] scriptLines = es.getScript().split("\n");
+                                    for (int i = 0; i < scriptLines.length; i++) {
+                                        String line = scriptLines[i];
+                                        if (hasScriptInclude.test(line)) {
+                                            Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
+                                            if (m.find()) {
+                                                if (config.getName().equals(m.group(2))) {
+                                                    scriptLines[i] = m.group(1) + JsonConverter.scriptInclude + " " + newName + " " + m.group(
+                                                            3);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    es.setScript(String.join("\n", scriptLines));
+                                    workflowOrJobTemplate.setContent(Globals.objectMapper.writeValueAsString(jt));
+                                    workflowOrJobTemplate.setDeployed(false);
                                 }
-                            });
-                            replacedJobs.forEach((jobName, job) -> w.getJobs().setAdditionalProperty(jobName, job));
-                            workflow.setContent(Globals.objectMapper.writeValueAsString(w));
-                            workflow.setDeployed(false);
+                            }
                         }
-                        int i = items.indexOf(workflow);
+                        int i = items.indexOf(workflowOrJobTemplate);
                         if (i != -1) {
-                            items.get(i).setContent(workflow.getContent());
+                            items.get(i).setContent(workflowOrJobTemplate.getContent());
                             items.get(i).setDeployed(false);
                         } else {
-                            JocInventory.updateConfiguration(dbLayer, workflow);
-                            events.add(workflow.getFolder());
+                            JocInventory.updateConfiguration(dbLayer, workflowOrJobTemplate);
+                            events.add(workflowOrJobTemplate.getFolder());
                         }
                     }
                 }
             }
             break;
+            
+//        case JOBTEMPLATE: // determine Workflows with Job Templates reference
+//            List<DBItemInventoryConfiguration> workflows5 = dbLayer.getWorkflowsWithJobTemplates();
+//            break;
+            
         default:
             break;
         }

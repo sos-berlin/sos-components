@@ -136,7 +136,7 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
         Set<String> knownLabels = new HashSet<>();
         Either<Problem, JWorkflow> workflowV = currentState.repo().pathToCheckedWorkflow(wj.getWorkflowPath());
         if (workflowV == null || workflowV.isLeft()) {
-            throw new ControllerObjectNotExistException("Workflow '" + wj.getPath() + "' not found.");
+            throw new ControllerObjectNotExistException("Couldn't find the the Workflow '" + wj.getPath() + "'.");
         }
 
         Workflow wV = workflowV.get().asScala();

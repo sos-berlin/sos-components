@@ -78,7 +78,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
                 filter.setRoleId(dbItemIamRole.getId());
                 role.getControllers().addAll(iamRoleDBLayer.getIamControllersForRole(filter));
             } else {
-                throw new JocObjectNotExistException("Object role <" + roleFilter.getRoleName() + "> not found");
+                throw new JocObjectNotExistException("Couldn't find the role <" + roleFilter.getRoleName() + ">");
             }
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(role));
 
@@ -188,7 +188,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
 
             int count = iamRoleDBLayer.renameRole(dbItemIamIdentityService.getId(), roleRename.getRoleOldName(), roleRename.getRoleNewName());
             if (count == 0) {
-                throw new JocObjectNotExistException("Object role <" + roleRename.getRoleOldName() + "> not found");
+                throw new JocObjectNotExistException("Couldn't find the role <" + roleRename.getRoleOldName() + ">");
             }
 
             storeAuditLog(roleRename.getAuditLog(), CategoryType.IDENTITY);
@@ -239,7 +239,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
                 iamRoleFilter.setRoleName(roleName);
                 int count = iamRoleDBLayer.deleteCascading(iamRoleFilter);
                 if (count == 0) {
-                    throw new JocObjectNotExistException("Object <" + roleName + "> not found");
+                    throw new JocObjectNotExistException("Couldn't find the role <" + roleName + ">");
                 }
             }
 

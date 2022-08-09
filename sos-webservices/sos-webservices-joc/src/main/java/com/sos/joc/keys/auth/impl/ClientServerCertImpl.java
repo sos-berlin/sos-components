@@ -83,7 +83,7 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
                         }
                     }
                 } else {
-                    throw new JocAuthenticationException(String.format("One-time token %1$s not found or has expired and was removed from the system.", token));
+                    throw new JocAuthenticationException(String.format("One-time token %1$s couldn't find or has expired and was removed from the system.", token));
                 }
             } else {
                 throw new JocAuthenticationException("No valid one-time token(s) found!");

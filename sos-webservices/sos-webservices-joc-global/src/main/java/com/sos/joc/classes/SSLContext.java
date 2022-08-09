@@ -133,7 +133,7 @@ public class SSLContext {
                 if (p != null) {
                     if (!Files.exists(p)) {
                         resetKeyStore();
-                        LOGGER.error(String.format("keystore path (%1$s) is set but file (%2$s) not found.", kPath, p.toString()));
+                        LOGGER.error(String.format("keystore path (%1$s) is set but couldn't find the file (%2$s).", kPath, p.toString()));
                     } else {
                         try {
                             if (reloadKeyStore(p, kType, kPass, kMPass)) {
@@ -175,7 +175,7 @@ public class SSLContext {
                 if (p != null) {
                     if (!Files.exists(p)) {
                         resetTrustStore();
-                        LOGGER.error(String.format("truststore path (%1$s) is set but file (%2$s) not found.", tPath, p.toString()));
+                        LOGGER.error(String.format("truststore path (%1$s) is set but couldn't find the file (%2$s).", tPath, p.toString()));
                     } else {
                         try {
                             if (reloadTrustStore(p, tType, tPass)) {

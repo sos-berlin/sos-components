@@ -50,9 +50,9 @@ public class ControllerApiContext {
                 "https://"))) {
             JHttpsConfig httpsConfig = credentials.getHttpsConfig();
             if (httpsConfig.asScala().trustStoreRefs() == null || JavaConverters.asJava(httpsConfig.asScala().trustStoreRefs()).isEmpty()) {
-                throw new ControllerConnectionRefusedException("Required truststore not found");
+                throw new ControllerConnectionRefusedException("Couldn't find required truststore");
             } else if (credentials.getAccount().toScala().isEmpty() && !httpsConfig.asScala().keyStoreRef().nonEmpty()) {
-                throw new ControllerConnectionRefusedException("Neither account is specified nor client certificate was found");
+                throw new ControllerConnectionRefusedException("Neither account is specified nor client certificate couldn't find");
             }
         }
     }

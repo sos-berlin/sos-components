@@ -66,7 +66,7 @@ public class ReadAddOrderPositionsImpl extends JOCResourceImpl implements IReadA
                 Workflow w = Globals.objectMapper.readValue(config.getContent(), Workflow.class);
                 entry.setPositions(WorkflowsHelper.getWorkflowAddOrderPositions(w));
             } else {
-                throw new DBMissingDataException(String.format("Workflow instructions not found: %s", in.getWorkflowPath()));
+                throw new DBMissingDataException(String.format("Couldn't find Workflow instructions: %s", in.getWorkflowPath()));
             }
             entry.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entry));

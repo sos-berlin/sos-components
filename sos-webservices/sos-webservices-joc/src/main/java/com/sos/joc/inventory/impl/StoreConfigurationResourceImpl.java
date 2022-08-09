@@ -11,6 +11,7 @@ import javax.ws.rs.Path;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.inventory.model.calendar.CalendarType;
+import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
@@ -185,6 +186,10 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     if (lock.getLimit() == null) {
                         lock.setLimit(1);
                     }
+                    break;
+                case JOBTEMPLATE:
+                    JobTemplate jt = (JobTemplate) in.getConfiguration();
+                    jt.setHash(null);
                     break;
                 case SCHEDULE:
                     Schedule schedule = (Schedule) in.getConfiguration();
