@@ -174,7 +174,7 @@ public class JocServletContainer extends ServletContainer {
                     }
                 });
             } else {
-                LOGGER.warn("cleanup log files: " + logDir.toString() + " not found");
+                LOGGER.warn("Couldn't find the cleanup log files: " + logDir.toString());
             }
         } catch (Exception e) {
             LOGGER.warn("cleanup log files: " + e.toString());

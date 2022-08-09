@@ -87,7 +87,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 				permissionItem.setPermission(permission);
 			} else {
 				throw new JocObjectNotExistException(
-						"Object permission <" + permissionFilter.getPermissionPath() + "> not found");
+						"Couldn't find the permission <" + permissionFilter.getPermissionPath() + ">");
 			}
 
 			return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(permissionItem));
@@ -204,7 +204,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 
 			if (count == 0) {
 				throw new JocObjectNotExistException(
-						"Object permission <" + permissionRename.getOldPermissionPath() + "> not found");
+						"Couldn't find the permission <" + permissionRename.getOldPermissionPath() + ">");
 			}
 
 			storeAuditLog(permissionRename.getAuditLog(), CategoryType.IDENTITY);
@@ -261,7 +261,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 				iamPermissionFilter.setPermission(permission);
 				int count = iamPermissionDBLayer.delete(iamPermissionFilter);
 				if (count == 0) {
-					throw new JocObjectNotExistException("Object <" + permission + "> not found");
+					throw new JocObjectNotExistException("Couldn't find the permission <" + permission + ">");
 				}
 			}
 			Globals.commit(sosHibernateSession);

@@ -133,7 +133,7 @@ public class DbInstaller {
                 throw new SOSHibernateException("Error occurred while creating the database tables.");
             }
         } else {
-            throw new SOSHibernateConfigurationException("Folder with SQL scripts not found: " + inputDir.toString());
+            throw new SOSHibernateConfigurationException("Couldn't find the folder with SQL scripts: " + inputDir.toString());
         }
     }
 

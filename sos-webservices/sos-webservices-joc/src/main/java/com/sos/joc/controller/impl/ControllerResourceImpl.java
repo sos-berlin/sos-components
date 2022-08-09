@@ -70,7 +70,7 @@ public class ControllerResourceImpl extends JOCResourceImpl implements IControll
                 List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(jobSchedulerBody.getControllerId());
                 if (controllerInstances == null) {
                     // read db again?
-                    throw new DBMissingDataException(String.format("No Controller found with id %s for security level %s", jobSchedulerBody
+                    throw new DBMissingDataException(String.format("Couldn't find Controller with id %s for security level %s", jobSchedulerBody
                             .getControllerId(), Globals.getJocSecurityLevel()));
                 }
                 schedulerInstance = States.getActiveControllerNode(controllerInstances, Proxy.of(jobSchedulerBody.getControllerId()).currentState()
@@ -79,7 +79,7 @@ public class ControllerResourceImpl extends JOCResourceImpl implements IControll
             } else {
                 schedulerInstance = instanceLayer.getInventoryInstanceByURI(jobSchedulerBody.getUrl());
                 if (schedulerInstance == null) {
-                    throw new DBMissingDataException(String.format("No Controller found with url %s for security level %s", jobSchedulerBody
+                    throw new DBMissingDataException(String.format("Couldn't find Controller with url %s for security level %s", jobSchedulerBody
                             .getUrl(), Globals.getJocSecurityLevel()));
                 }
             }

@@ -153,7 +153,7 @@ public class Globals {
 
         confFile = sosCockpitProperties.getProperty(HIBERNATE_CONFIGURATION_FILE, "hibernate.cfg.xml");
         if (confFile.trim().isEmpty()) {
-            throw new JocConfigurationException(String.format("Property '%1$s' not found in %2$s", HIBERNATE_CONFIGURATION_FILE, sosCockpitProperties
+            throw new JocConfigurationException(String.format("Couldn't find the property '%1$s' in %2$s", HIBERNATE_CONFIGURATION_FILE, sosCockpitProperties
                     .getPropertiesFile()));
         }
 
@@ -161,13 +161,13 @@ public class Globals {
         Path p = sosCockpitProperties.resolvePath(confFile);
         if (p != null) {
             if (!Files.exists(p) || Files.isDirectory(p)) {
-                throw new JocConfigurationException(String.format("hibernate configuration (%1$s) is set but file (%2$s) not found.", confFile, p
+                throw new JocConfigurationException(String.format("hibernate configuration (%1$s) is set but couldn't find the file (%2$s).", confFile, p
                         .toString()));
             } else {
                 confFile = p.toString().replace('\\', '/');
             }
         } else {
-            throw new JocConfigurationException(String.format("hibernate configuration (%1$s) is set but file not found.", confFile));
+            throw new JocConfigurationException(String.format("hibernate configuration (%1$s) is set but couldn't find the file.", confFile));
         }
         return p;
     }
@@ -190,14 +190,14 @@ public class Globals {
                     version = Json.createReader(stream).readObject().getString("version", "unknown");
                     LOGGER.info("JOC Cockpit version = " + version);
                 } else {
-                    LOGGER.warn(String.format("Version file %1$s not found in classpath", versionFile));
+                    LOGGER.warn(String.format("Couldn't find the version file '%1$s' in the classpath", versionFile));
                 }
             }
             if (!"unknown".equals(version)) {
                 curVersion = version;
             }
         } catch (Exception e) {
-            LOGGER.warn(String.format("Error while reading %1$s from classpath: ", versionFile), e);
+            LOGGER.warn(String.format("Error while reading %1$s from the classpath: ", versionFile), e);
         } finally {
             try {
                 if (stream != null) {
@@ -225,14 +225,14 @@ public class Globals {
                     version = Json.createReader(stream).readObject().getString("version", "unknown");
                     LOGGER.info("API schema version = " + version);
                 } else {
-                    LOGGER.warn(String.format("Version file %1$s not found in classpath", versionFile));
+                    LOGGER.warn(String.format("Couldn't find the version file '%1$s' in the classpath", versionFile));
                 }
             }
             if (!"unknown".equals(version)) {
                 apiVersion = version;
             }
         } catch (Exception e) {
-            LOGGER.warn(String.format("Error while reading %1$s from classpath: ", versionFile), e);
+            LOGGER.warn(String.format("Error while reading %1$s from the classpath: ", versionFile), e);
         } finally {
             try {
                 if (stream != null) {
@@ -260,14 +260,14 @@ public class Globals {
                     version = Json.createReader(stream).readObject().getString("version", "unknown");
                     LOGGER.info("Inventory schema version = " + version);
                 } else {
-                    LOGGER.warn(String.format("Version file %1$s not found in classpath", versionFile));
+                    LOGGER.warn(String.format("Couldn't find the version file '%1$s' in the classpath", versionFile));
                 }
             }
             if (!"unknown".equals(version)) {
                 inventoryVersion = version;
             }
         } catch (Exception e) {
-            LOGGER.warn(String.format("Error while reading %1$s from classpath: ", versionFile), e);
+            LOGGER.warn(String.format("Error while reading %1$s from the classpath: ", versionFile), e);
         } finally {
             try {
                 if (stream != null) {

@@ -112,7 +112,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
             
             java.nio.file.Path path = Paths.get(System.getProperty("java.io.tmpdir"), filename);
             if (!Files.isReadable(path)) {
-                throw new ControllerObjectNotExistException("Temp. file '" + filename + "' not found.");
+                throw new ControllerObjectNotExistException("Couldn't find temp. file '" + filename + "'.");
             }
 
             final java.nio.file.Path downPath = Files.move(path, path.getParent().resolve(path.getFileName().toString() + ".zip"),

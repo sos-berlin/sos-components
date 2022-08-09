@@ -83,10 +83,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
 				folderItem.setFolder(folder);
 				folderItem.setIdentityServiceName(folderFilter.getIdentityServiceName());
 				folderItem.setRoleName(folderFilter.getRoleName());
-			} else {
-				throw new JocObjectNotExistException(
-						"Object permission <" + folderFilter.getFolderName() + "> not found");
-			}
+            } else {
+                throw new JocObjectNotExistException("Couldn't find the permission <" + folderFilter.getFolderName() + ">");
+            }
 			return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(folderItem));
 
 		} catch (JocException e) {
@@ -197,8 +196,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
 					folderRename.getNewFolder().getFolder(), folderRename.getNewFolder().getRecursive());
 
 			if (count == 0) {
-				throw new JocObjectNotExistException(
-						"Object folder <" + folderRename.getOldFolderName() + "> not found");
+				throw new JocObjectNotExistException("Couldn't find the folder <" + folderRename.getOldFolderName() + ">");
 			}
 
 			storeAuditLog(folderRename.getAuditLog(), CategoryType.IDENTITY);
@@ -255,7 +253,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
 				iamPermissionFilter.setFolder(folder);
 				int count = iamPermissionDBLayer.delete(iamPermissionFilter);
 				if (count == 0) {
-					throw new JocObjectNotExistException("Object <" + folder + "> not found");
+					throw new JocObjectNotExistException("Couldn't find the folder <" + folder + ">");
 				}
 			}
 			Globals.commit(sosHibernateSession);

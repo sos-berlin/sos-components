@@ -97,7 +97,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
                 JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(connection);
                 DBItemJocInstance member = dbLayer.getInstance(in.getMemberId());
                 if (member == null) {
-                    throw new DBMissingDataException(String.format("cluster member not found: %s", in.getMemberId()));
+                    throw new DBMissingDataException(String.format("Couldn't find cluster member: %s", in.getMemberId()));
                 }
                 DBItemJocCluster activeMember = dbLayer.getCluster();
                 boolean isInactive = activeMember == null || !activeMember.getMemberId().equals(in.getMemberId());

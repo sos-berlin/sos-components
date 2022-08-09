@@ -172,9 +172,9 @@ public class LogTaskContent {
         }
         String s = ZonedDateTime.now().format(formatter);
         if (JocClusterService.getInstance().isRunning()) {
-            s += " [INFO] Snapshot log not found\r\n";
+            s += " [INFO] Couldn't find the snapshot log\r\n";
         } else {
-            s += " [INFO] Standby JOC Cockpit instance has no access to snapshot log\r\n";
+            s += " [INFO] Standby JOC Cockpit instance has no access to the snapshot log\r\n";
         }
         unCompressedLength = s.length() * 1L;
         complete = true;
@@ -200,7 +200,7 @@ public class LogTaskContent {
             connection = Globals.createSosHibernateStatelessConnection("./task/log");
             DBItemHistoryOrderStep historyOrderStepItem = connection.get(DBItemHistoryOrderStep.class, historyId);
             if (historyOrderStepItem == null) {
-                throw new DBMissingDataException(String.format("Task (Id:%d) not found", historyId));
+                throw new DBMissingDataException(String.format("Couldn't find the Task (Id:%d)", historyId));
             }
             if (folderPermissions != null && !folderPermissions.isPermittedForFolder(historyOrderStepItem.getWorkflowFolder())) {
                 throw new JocFolderPermissionsException("folder access denied: " + historyOrderStepItem.getWorkflowFolder());
@@ -214,12 +214,12 @@ public class LogTaskContent {
                     // Task is running
                     return null;
                 } else {
-                    throw new DBMissingDataException(String.format("The log of the job %s (task id:%d) doesn't found", jobName, historyId));
+                    throw new DBMissingDataException(String.format("Couldn't find the log of the job %s (task id:%d)", jobName, historyId));
                 }
             } else {
                 DBItemHistoryLog historyDBItem = connection.get(DBItemHistoryLog.class, historyOrderStepItem.getLogId());
                 if (historyDBItem == null) {
-                    throw new DBMissingDataException(String.format("The log of the job %s (task id:%d) doesn't found", jobName, historyId));
+                    throw new DBMissingDataException(String.format("Couldn't find the log of the job %s (task id:%d)", jobName, historyId));
                 } else {
                     unCompressedLength = historyDBItem.getFileSizeUncomressed();
                     complete = true;

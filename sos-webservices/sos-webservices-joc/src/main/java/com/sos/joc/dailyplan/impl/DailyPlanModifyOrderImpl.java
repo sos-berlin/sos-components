@@ -893,7 +893,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             DBLayerReleasedConfigurations dbLayer = new DBLayerReleasedConfigurations(session);
             DBItemInventoryReleasedConfiguration config = dbLayer.getReleasedConfiguration(id);
             if (config == null) {
-                throw new DBMissingDataException(String.format("calendar '%s' not found", id));
+                throw new DBMissingDataException(String.format("Couldn't find calendar '%s'", id));
             }
 
             Calendar calendar = new ObjectMapper().readValue(config.getContent(), Calendar.class);

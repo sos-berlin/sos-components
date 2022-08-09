@@ -109,7 +109,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 if (invContentFromDepHistory != null) {
                     config.setContent(invContentFromDepHistory);
                 } else {
-                    throw new DBMissingDataException(String.format("deployed configuration not found: %s:%s (%s)", type.value().toLowerCase(), config
+                    throw new DBMissingDataException(String.format("Couldn't find deployed configuration: %s:%s (%s)", type.value().toLowerCase(), config
                             .getPath(), in.getCommitId()));
                 }
             }

@@ -70,7 +70,7 @@ public class FolderPermissionEvaluator {
                 }
                 String wpath = WorkflowPaths.getPathOrNull(path);
                 if (wpath == null) {// to avoid a NPE exception by p.getParent() for not deployed workflows
-                    LOGGER.debug(String.format("[%s][skip]deployment path not found", path));
+                    LOGGER.debug(String.format("[%s][skip]couldn't find deployment path", path));
                     continue;
                 }
                 LOGGER.debug(String.format("[path=%s]wpath=%s", path, wpath));

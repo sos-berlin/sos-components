@@ -62,14 +62,14 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
                 if (calendarIdIsDefined) {
                     calendarItem = dbLayer.getReleasedConfiguration(in.getId());
                     if (calendarItem == null) {
-                        throw new DBMissingDataException(String.format("calendar with id '%1$d' not found", in.getId()));
+                        throw new DBMissingDataException(String.format("Couldn't find calendar with id '%1$d'", in.getId()));
                     }
                     in.setPath(calendarItem.getPath());
                 } else {
                     String calendarName = JocInventory.pathToName(in.getPath());
                     calendarItem = dbLayer.getReleasedConfiguration(calendarName, ConfigurationType.WORKINGDAYSCALENDAR.intValue());
                     if (calendarItem == null) {
-                        throw new DBMissingDataException(String.format("calendar '%1$s' not found", calendarName));
+                        throw new DBMissingDataException(String.format("Couldn't calendar '%1$s'", calendarName));
                     }
                     in.setId(calendarItem.getId());
                 }

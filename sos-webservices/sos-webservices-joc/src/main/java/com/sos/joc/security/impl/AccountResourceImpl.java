@@ -127,7 +127,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 roles.stream().map(role -> role.getRoleName()).collect(Collectors.toList());
                 account.setRoles(roles.stream().map(role -> role.getRoleName()).collect(Collectors.toList()));
             } else {
-                throw new JocObjectNotExistException("Object account <" + accountFilter.getAccountName() + "> not found");
+                throw new JocObjectNotExistException("Couldn't find the account <" + accountFilter.getAccountName() + ">");
             }
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(account));
 
@@ -316,7 +316,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             int count = iamAccountDBLayer.renameAccount(dbItemIamIdentityService.getId(), accountRename.getAccountOldName(), accountRename
                     .getAccountNewName());
             if (count == 0) {
-                throw new JocObjectNotExistException("Object account <" + accountRename.getAccountOldName() + "> not found");
+                throw new JocObjectNotExistException("Couldn't find the account <" + accountRename.getAccountOldName() + ">");
             }
 
             storeAuditLog(accountRename.getAuditLog(), CategoryType.IDENTITY);
@@ -376,7 +376,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 iamAccountFilter.setAccountName(accountName);
                 int count = iamAccountDBLayer.deleteCascading(iamAccountFilter);
                 if (count == 0) {
-                    throw new JocObjectNotExistException("Object <" + accountName + "> disabled=" + iamAccountFilter.getDisabled() + " not found");
+                    throw new JocObjectNotExistException("Couldn't find the account <" + accountName + "> disabled=" + iamAccountFilter.getDisabled() + "");
                 }
             }
             Globals.commit(sosHibernateSession);

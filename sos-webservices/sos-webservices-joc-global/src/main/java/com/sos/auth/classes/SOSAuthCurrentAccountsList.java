@@ -113,7 +113,7 @@ public class SOSAuthCurrentAccountsList {
         }
 
         sosAuthCurrentAccountAnswer.setAccessToken(NOT_VALID);
-        sosAuthCurrentAccountAnswer.setMessage("account " + account + " not found");
+        sosAuthCurrentAccountAnswer.setMessage("Couldn't find the account " + account + "");
         return sosAuthCurrentAccountAnswer;
     }
 

@@ -58,7 +58,7 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
 
             Path logDir = Paths.get(logDirectory);
             if (!Files.exists(logDir)) {
-                throw new FileNotFoundException("JOC Cockpit logs directory not found:" + toAbsolutePath(logDir));
+                throw new FileNotFoundException("Couldn't find JOC Cockpit logs directory:" + toAbsolutePath(logDir));
             }
             
             List<String> filenames = new ArrayList<String>();
@@ -106,7 +106,7 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
     private JOCDefaultResponse postLog(String accessToken, JOClog jocLog) throws FileNotFoundException {
         Path logDir = Paths.get(logDirectory);
         if (!Files.exists(logDir)) {
-            throw new FileNotFoundException("JOC Cockpit logs directory not found:" + toAbsolutePath(logDir));
+            throw new FileNotFoundException("Couldn't find JOC Cockpit logs directory:" + toAbsolutePath(logDir));
         }
         
         String logFilename = (jocLog.getFilename() != null && !jocLog.getFilename().isEmpty()) ? jocLog.getFilename() : currentLogFileName;
@@ -157,7 +157,7 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
     private static DirectoryStream<Path> getFileListStream(final Path folder, final Predicate<String> pattern) throws IOException {
 
         if (folder == null) {
-            throw new FileNotFoundException("JOC Cockpit logs directory not specified!!");
+            throw new FileNotFoundException("JOC Cockpit logs directory is not specified!!");
         }
         if (!Files.isDirectory(folder)) {
             throw new FileNotFoundException("JOC Cockpit logs directory does not exist: " + folder);

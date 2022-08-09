@@ -62,8 +62,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 iamIdentityServiceFilter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
                 DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(iamIdentityServiceFilter);
                 if (dbItemIamIdentityService == null) {
-                    throw new JocObjectNotExistException("Object Identity Service <" + identityServiceFilter.getIdentityServiceName()
-                            + "> not found");
+                    throw new JocObjectNotExistException("Couldn't find the Identity Service <" + identityServiceFilter.getIdentityServiceName()
+                            + ">");
                 }
 
                 SOSSecurityDBConfiguration sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
@@ -135,7 +135,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
 
                 if (dbItemIamIdentityService == null) {
-                    throw new JocObjectNotExistException("Object Identity Service <" + identityServiceName + "> not found");
+                    throw new JocObjectNotExistException("Couldn't find the Identity Service <" + identityServiceName + ">");
                 }
 
                 sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
