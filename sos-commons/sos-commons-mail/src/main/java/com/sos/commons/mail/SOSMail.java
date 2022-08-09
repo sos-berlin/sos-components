@@ -148,6 +148,14 @@ public class SOSMail {
     }
 
     public SOSMail(Properties smtpProperties) throws Exception {
+        if (smtpProperties != null) {
+            if (smtpProperties.getProperty(PROPERTY_NAME_SMTP_USER) != null && smtpProperties.getProperty(PROPERTY_NAME_SMTP_USER).isEmpty()) {
+                smtpProperties.remove(PROPERTY_NAME_SMTP_USER);
+                if (smtpProperties.getProperty(PROPERTY_NAME_SMTP_PASSWORD) != null) {
+                    smtpProperties.remove(PROPERTY_NAME_SMTP_PASSWORD);
+                }
+            }
+        }
         this.smtpProperties = smtpProperties;
     }
 
@@ -160,8 +168,10 @@ public class SOSMail {
     public SOSMail(final String smtpHost, final String smtpUser, final String smtpUserPassword) throws Exception {
         this.smtpProperties = new Properties();
         setHost(smtpHost);
-        setUser(smtpUser);
-        setPassword(smtpUserPassword);
+        if (!SOSString.isEmpty(smtpUser)) {
+            setUser(smtpUser);
+            setPassword(smtpUserPassword);
+        }
         init();
     }
 
@@ -169,11 +179,12 @@ public class SOSMail {
         this.smtpProperties = new Properties();
         setHost(smtpHost);
         setPort(smtpPort);
-        setUser(smtpUser);
-        setPassword(smtpUserPassword);
+        if (!SOSString.isEmpty(smtpUser)) {
+            setUser(smtpUser);
+            setPassword(smtpUserPassword);
+        }
         init();
     }
-
     private void initPriority() throws MessagingException {
         switch (priority) {
         case PRIORITY_HIGHEST:
@@ -202,15 +213,6 @@ public class SOSMail {
         initMessage();
         clearRecipients();
         clearAttachments();
-    }
-
-    public void setProperties(Properties smtpProperties) {
-        this.smtpProperties = new Properties();
-        for (Map.Entry<Object, Object> e : smtpProperties.entrySet()) {
-            String key = (String) e.getKey();
-            String value = (String) e.getValue();
-            this.smtpProperties.put(key, value);
-        }
     }
 
     private void initMessage() throws Exception {
