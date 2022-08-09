@@ -42,7 +42,7 @@ public class TreePermanent {
 
         if (bodyTypes == null || bodyTypes.isEmpty()) {
             if (treeForInventory || treeForInventoryTrash) {
-                bodyTypes = Arrays.asList(TreeType.INVENTORY, TreeType.DOCUMENTATION); 
+                bodyTypes = Arrays.asList(TreeType.INVENTORY, TreeType.DOCUMENTATION);
             } else {
                 bodyTypes = Arrays.asList(TreeType.values());
             }
@@ -79,10 +79,8 @@ public class TreePermanent {
                 }
                 break;
             case JOBTEMPLATE:
-                if (treeForInventory || treeForInventoryTrash) {
-                    if (inventoryPermission) {
-                        types.add(type);
-                    }
+                if (inventoryPermission) {
+                    types.add(type);
                 }
                 break;
             case JOBCLASS:
@@ -175,14 +173,12 @@ public class TreePermanent {
         return new ArrayList<TreeType>(types);
     }
 
-    public static SortedSet<Tree> initFoldersByFoldersForInventory(TreeFilter treeBody)
-            throws JocException {
+    public static SortedSet<Tree> initFoldersByFoldersForInventory(TreeFilter treeBody) throws JocException {
         Set<Integer> inventoryTypes = new HashSet<Integer>();
         inventoryTypes = treeBody.getTypes().stream().map(TreeType::intValue).collect(Collectors.toSet());
         // DOCUMENTATION is not part of INV_CONFIGURATIONS
         // boolean withDocus = inventoryTypes.removeIf(i -> i == TreeType.DOCUMENTATION.intValue());
         inventoryTypes.removeIf(i -> i == TreeType.DOCUMENTATION.intValue());
-        
 
         SOSHibernateSession session = null;
         try {
@@ -249,13 +245,11 @@ public class TreePermanent {
         }
     }
     
-    public static SortedSet<Tree> initFoldersByFoldersForInventoryTrash(TreeFilter treeBody)
-            throws JocException {
+    public static SortedSet<Tree> initFoldersByFoldersForInventoryTrash(TreeFilter treeBody) throws JocException {
         Set<Integer> inventoryTypes = new HashSet<Integer>();
         inventoryTypes = treeBody.getTypes().stream().map(TreeType::intValue).collect(Collectors.toSet());
         // DOCUMENTATION is not part of INV_CONFIGURATION_TRASH
         inventoryTypes.removeIf(i -> i == TreeType.DOCUMENTATION.intValue());
-        
 
         SOSHibernateSession session = null;
         try {
@@ -296,13 +290,12 @@ public class TreePermanent {
         }
     }
     
-    public static SortedSet<Tree> initFoldersByFoldersForViews(TreeFilter treeBody)
-            throws JocException {
-        
+    public static SortedSet<Tree> initFoldersByFoldersForViews(TreeFilter treeBody) throws JocException {
+
         boolean withDocus = false;
         boolean onlyWithAssignReference = treeBody.getOnlyWithAssignReference() == Boolean.TRUE;
-        List<TreeType> possibleInventoryTypes = Arrays.asList(TreeType.SCHEDULE, TreeType.INCLUDESCRIPT, TreeType.WORKINGDAYSCALENDAR,
-                TreeType.NONWORKINGDAYSCALENDAR);
+        List<TreeType> possibleInventoryTypes = Arrays.asList(TreeType.JOBTEMPLATE, TreeType.SCHEDULE, TreeType.INCLUDESCRIPT,
+                TreeType.WORKINGDAYSCALENDAR, TreeType.NONWORKINGDAYSCALENDAR);
         Set<Integer> possibleDeployIntTypes = Arrays.asList(DeployType.values()).stream().map(DeployType::intValue).collect(Collectors.toSet());
         Set<Integer> deployTypes = new HashSet<>();
         Set<Integer> inventoryTypes = new HashSet<>();

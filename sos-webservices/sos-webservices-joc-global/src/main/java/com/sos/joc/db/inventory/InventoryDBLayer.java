@@ -809,6 +809,35 @@ public class InventoryDBLayer extends DBLayer {
             return result;
         }
     }
+    
+    public List<DBItemInventoryReleasedConfiguration> getReleasedJobTemplatesByNames(List<String> names) throws SOSHibernateException {
+        if (names == null) {
+            names = Collections.emptyList();
+        }
+        if (names.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventoryReleasedConfiguration> result = new ArrayList<>();
+            for (int i = 0; i < names.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getReleasedJobTemplatesByNames(SOSHibernate.getInClausePartition(i, names)));
+            }
+            return result;
+        } else {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+            hql.append(" where type = :type");
+            if (!names.isEmpty()) {
+                hql.append(" and lower(name) in (:names)");
+            }
+            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+            if (!names.isEmpty()) {
+                query.setParameterList("names", names.stream().map(String::toLowerCase).collect(Collectors.toSet()));
+            }
+            query.setParameter("type", ConfigurationType.JOBTEMPLATE.intValue());
+            List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        }
+    }
 
     public List<DBItemInventoryReleasedConfiguration> getConfigurationsByType(Collection<Integer> types) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
