@@ -1310,14 +1310,34 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<DBItemInventoryConfiguration> getWorkflowsWithIncludedScripts() throws SOSHibernateException {
+    public List<DBItemInventoryConfiguration> getWorkflowsAndJobTemplatesWithIncludedScripts() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where type=:type and content like :include");
+        hql.append(" where type in (:types) and content like :include");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+        query.setParameterList("types", Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.JOBTEMPLATE.intValue()));
         query.setParameter("include", "%" + JsonConverter.scriptInclude + "%");
         return getSession().getResultList(query);
     }
+    
+//    public List<DBItemInventoryConfiguration> getWorkflowsWithJobTemplates() throws SOSHibernateException {
+//        StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+//        hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+//        hql.append("on ic.id=sw.inventoryConfigurationId ");
+//        hql.append("where ic.type=:type ");
+//        hql.append("and ic.deployed=sw.deployed ");
+//        hql.append("and (");
+//        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "ic.jsonContent", "$.jobTemplateNames");
+//        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":jobTemplateName"));
+//        hql.append(" or ");
+//        String jsonFunc2 = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.jobResources");
+//        hql.append(SOSHibernateRegexp.getFunction(jsonFunc2, ":jobTemplateName"));
+//        hql.append(")");
+//
+//        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+//        query.setParameter("jobResourceName", getRegexpParameter(jobResourceName, ""));
+//        query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+//        return getSession().getResultList(query);
+//    }
 
     public List<DBItemInventoryConfiguration> getUsedSchedulesByWorkflowName(String workflowName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select c from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" c ");

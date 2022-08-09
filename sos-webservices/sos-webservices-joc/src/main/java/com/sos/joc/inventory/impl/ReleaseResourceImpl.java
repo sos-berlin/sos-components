@@ -17,6 +17,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
@@ -323,6 +325,13 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         case SCHEDULE:
             errors.addAll(checkScheduleConfiguration(dbLayer, item, cachedWorkflows));
             break;
+        case JOBTEMPLATE:
+            try {
+                addHash(item);
+            } catch (Exception e) {
+                errors.add(new BulkError().get(new JocReleaseException(ConfigurationType.JOBTEMPLATE, item.getPath(), e), getJocError(), item
+                        .getPath()));
+            }
         default:
             break;
         }
@@ -343,7 +352,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         if (w == null) {
                             String wj = dbLayer.getDeployedJsonByConfigurationName(ConfigurationType.WORKFLOW, name);
                             if (wj == null) {
-                                throw new Exception(workflowMsg + "workflow deployment not found");
+                                throw new Exception(workflowMsg + " couldn't find workflow deployment");
                             }
                             w = Globals.objectMapper.readValue(wj, Workflow.class);
                             cachedWorkflows.put(name, w);
@@ -361,8 +370,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 }
             }
         } catch (Throwable e) {
-            errors.add(new BulkError().get(new JocReleaseException(ConfigurationType.SCHEDULE, item.getPath(), e), new JocError(
-                    "error on release schedule"), item.getPath()));
+            errors.add(new BulkError().get(new JocReleaseException(ConfigurationType.SCHEDULE, item.getPath(), e), getJocError(), item.getPath()));
         }
         return errors;
     }
@@ -392,5 +400,13 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         dbLayer.deleteReleasedItemsByConfigurationIds(Collections.singletonList(conf.getId()));
         JocInventory.deleteInventoryConfigurationAndPutToTrash(conf, dbLayer);
         JocAuditLog.storeAuditLogDetail(new AuditLogDetail(conf.getPath(), conf.getType()), dbLayer.getSession(), dbAuditLog);
+    }
+    
+    private static void addHash(DBItemInventoryConfiguration conf) throws IOException {
+        if (ConfigurationType.JOBTEMPLATE.intValue() == conf.getType()) {
+            JobTemplate jt = (JobTemplate) JocInventory.content2IJSObject(conf.getContent(), ConfigurationType.JOBTEMPLATE.intValue());
+            jt.setHash(SOSString.hash256(conf.getContent()));
+            conf.setContent(Globals.objectMapper.writeValueAsString(jt));
+        }
     }
 }
