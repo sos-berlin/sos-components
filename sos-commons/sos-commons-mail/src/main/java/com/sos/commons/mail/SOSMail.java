@@ -185,6 +185,7 @@ public class SOSMail {
         }
         init();
     }
+
     private void initPriority() throws MessagingException {
         switch (priority) {
         case PRIORITY_HIGHEST:
@@ -597,8 +598,19 @@ public class SOSMail {
             SOSCredentialStoreResolver r = credentialStoreArguments.newResolver();
 
             addMailProperty(PROPERTY_NAME_SMTP_HOST, r.resolve(getHost()));
-            addMailProperty(PROPERTY_NAME_SMTP_USER, r.resolve(getUser()));
-            addMailProperty(PROPERTY_NAME_SMTP_PASSWORD, r.resolve(getPassword()));
+
+            if (smtpProperties.getProperty(PROPERTY_NAME_SMTP_USER) != null && smtpProperties.getProperty(PROPERTY_NAME_SMTP_USER).isEmpty()) {
+                smtpProperties.remove(PROPERTY_NAME_SMTP_USER);
+                if (smtpProperties.getProperty(PROPERTY_NAME_SMTP_PASSWORD) != null) {
+                    smtpProperties.remove(PROPERTY_NAME_SMTP_PASSWORD);
+                }
+            }
+
+            String user = r.resolve(getUser());
+            if (!SOSString.isEmpty(user)) {
+                addMailProperty(PROPERTY_NAME_SMTP_USER, user);
+                addMailProperty(PROPERTY_NAME_SMTP_PASSWORD, r.resolve(getPassword()));
+            }
         }
     }
 
