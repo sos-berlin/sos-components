@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.job.notification.JobNotification;
+import com.sos.inventory.model.job.notification.JobNotificationMail;
 import com.sos.inventory.model.job.notification.JobNotificationType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.history.HistoryNotification;
@@ -250,6 +251,7 @@ public class NotifierMail extends ANotifier {
 
     private NotifyResult checkJobNotification(NotificationType type, DBItemMonitoringOrderStep mos) {
         if (mos != null && !SOSString.isEmpty(mos.getJobNotification())) {
+            boolean isDebugEnabled = LOGGER.isDebugEnabled();
             JobNotification jn = null;
             try {
                 jn = Globals.objectMapper.readValue(mos.getJobNotification(), JobNotification.class);
@@ -258,14 +260,16 @@ public class NotifierMail extends ANotifier {
                         mos.getJobNotification(), e.toString()), e);
             }
             if (HistoryNotification.isJobMailNotificationEmpty(jn)) {
-                if (LOGGER.isDebugEnabled()) {
+                if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][skip][job=%s][job notification][%s]missing settings", ANotifier.getTypeAsString(type), mos
                             .getJobName(), mos.getJobNotification()));
                 }
                 return null;
+            } else if (jn.getMail() == null) {
+                jn.setMail(new JobNotificationMail());
             }
 
-            if (LOGGER.isDebugEnabled()) {
+            if (isDebugEnabled) {
                 LOGGER.debug(String.format("[%s][job=%s][use job notification]%s", ANotifier.getTypeAsString(type), mos.getJobName(), mos
                         .getJobNotification()));
             }
