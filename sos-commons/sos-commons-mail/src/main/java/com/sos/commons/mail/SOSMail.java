@@ -148,7 +148,6 @@ public class SOSMail {
     }
 
     public SOSMail(Properties smtpProperties) throws Exception {
-        this.smtpProperties = smtpProperties;
         if (smtpProperties != null) {
             if (smtpProperties.getProperty(PROPERTY_NAME_SMTP_USER) != null && smtpProperties.getProperty(PROPERTY_NAME_SMTP_USER).isEmpty()) {
                 smtpProperties.remove(PROPERTY_NAME_SMTP_USER);
@@ -157,6 +156,7 @@ public class SOSMail {
                 }
             }
         }
+        this.smtpProperties = smtpProperties;
     }
 
     public SOSMail(final String smtpHost) throws Exception {
