@@ -88,57 +88,6 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
             Map<String, Agent> agentMap = agentStoreParameter.getAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function.identity()));
             AgentStoreUtils.storeStandaloneAgent(agentMap, controllerId, true, agentDBLayer);
-//            List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(null);
-//            Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds.keySet());
-//            int position = -1;
-//            
-//            if (dbAgents != null && !dbAgents.isEmpty()) {
-//                for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-//                    if (position < dbAgent.getOrdering()) {
-//                        position = dbAgent.getOrdering();
-//                    }
-//                    Agent agent = agentMap.remove(dbAgent.getAgentId());
-//                    if (agent == null) {
-//                        continue;
-//                    }
-//                    if (!dbAgent.getControllerId().equals(controllerId)) {
-//                        throw new JocBadRequestException(String.format("Agent '%s' is already assigned for Controller '%s'", dbAgent.getAgentId(),
-//                                dbAgent.getControllerId()));
-//                    }
-//                    dbAgent.setHidden(agent.getHidden());
-//                    dbAgent.setAgentName(agent.getAgentName());
-//                    dbAgent.setTitle(agent.getTitle());
-//                    
-//                    if (!dbAgent.getUri().equals(agent.getUrl())) {
-//                        dbAgent.setDeployed(false);
-//                    }
-//                    dbAgent.setUri(agent.getUrl());
-//                    agentDBLayer.updateAgent(dbAgent);
-//
-//                    updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
-//                }
-//            }
-//
-//            for (Agent agent : agentMap.values()) {
-//                DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
-//                dbAgent.setId(null);
-//                dbAgent.setAgentId(agent.getAgentId());
-//                dbAgent.setAgentName(agent.getAgentName());
-//                dbAgent.setControllerId(controllerId);
-//                dbAgent.setHidden(agent.getHidden());
-//                dbAgent.setDisabled(false);
-//                dbAgent.setIsWatcher(false);
-//                dbAgent.setOsId(0L);
-//                dbAgent.setStartedAt(null);
-//                dbAgent.setUri(agent.getUrl());
-//                dbAgent.setVersion(null);
-//                dbAgent.setTitle(agent.getTitle());
-//                dbAgent.setDeployed(false);
-//                dbAgent.setOrdering(++position);
-//                agentDBLayer.saveAgent(dbAgent);
-//                
-//                updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
-//            }
 
             Globals.commit(connection);
             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, agentIds.keySet()));

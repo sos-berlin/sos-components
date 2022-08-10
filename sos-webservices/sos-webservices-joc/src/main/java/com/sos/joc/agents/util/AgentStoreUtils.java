@@ -69,25 +69,25 @@ public class AgentStoreUtils {
                     updateAliases(dbLayer, agentFound, allAliases.get(agentFound.getAgentId()));
                 }
             }
-            for (Agent newAgent : agentMap.values()) {
-                DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
-                dbAgent.setId(null);
-                dbAgent.setAgentId(newAgent.getAgentId());
-                dbAgent.setAgentName(newAgent.getAgentName());
-                dbAgent.setControllerId(controllerId);
-                dbAgent.setHidden(newAgent.getHidden());
-                dbAgent.setDisabled(false);
-                dbAgent.setIsWatcher(false);
-                dbAgent.setOsId(0L);
-                dbAgent.setStartedAt(null);
-                dbAgent.setUri(newAgent.getUrl());
-                dbAgent.setVersion(null);
-                dbAgent.setTitle(newAgent.getTitle());
-                dbAgent.setDeployed(false);
-                dbAgent.setOrdering(++position);
-                dbLayer.saveAgent(dbAgent);
-                updateAliases(dbLayer, newAgent, allAliases.get(newAgent.getAgentId()));
-            }
+        }
+        for (Agent newAgent : agentMap.values()) {
+            DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
+            dbAgent.setId(null);
+            dbAgent.setAgentId(newAgent.getAgentId());
+            dbAgent.setAgentName(newAgent.getAgentName());
+            dbAgent.setControllerId(controllerId);
+            dbAgent.setHidden(newAgent.getHidden());
+            dbAgent.setDisabled(false);
+            dbAgent.setIsWatcher(false);
+            dbAgent.setOsId(0L);
+            dbAgent.setStartedAt(null);
+            dbAgent.setUri(newAgent.getUrl());
+            dbAgent.setVersion(null);
+            dbAgent.setTitle(newAgent.getTitle());
+            dbAgent.setDeployed(false);
+            dbAgent.setOrdering(++position);
+            dbLayer.saveAgent(dbAgent);
+            updateAliases(dbLayer, newAgent, allAliases.get(newAgent.getAgentId()));
         }
     }
     
