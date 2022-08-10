@@ -50,9 +50,9 @@ public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> 
         resultMap.put("body", monitoringCheckReturn.getSubject());
 
         monitoringJobReturn.setResultMap(resultMap);
-        if (monitoringCheckReturn.isSuccess()) {
-            monitoringJobReturn.setExitCode(1);
-        }
+      //  if (monitoringCheckReturn.isSuccess()) {
+      //      monitoringJobReturn.setExitCode(1);
+      //  }
 
         return monitoringJobReturn;
     }
