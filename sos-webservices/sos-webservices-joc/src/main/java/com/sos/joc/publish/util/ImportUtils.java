@@ -420,6 +420,7 @@ public class ImportUtils {
                 }
                 String entryName = entry.getName().replace('\\', '/');
                 String filename = Paths.get(entryName).getFileName().toString();
+                filename = filename.replaceFirst("\\.[^.]+\\.json$", "");
                 if(!SOSCheckJavaVariableName.test(filename)) {
                     notImported.add(filename);
                     continue;
