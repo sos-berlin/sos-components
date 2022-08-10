@@ -44,7 +44,6 @@ import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
-import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
@@ -165,7 +164,7 @@ public class Validator {
                             .keySet();
                     validateInstructions(workflow.getInstructions(), "instructions", jobNames, workflow.getOrderPreparation(),
                             new HashMap<String, String>(), boardNames, dbLayer);
-                    validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
+                    //validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
                     validateLockRefs(json, dbLayer);
                     //validateBoardRefs(json, dbLayer);
                     validateJobResourceRefs(jobResources, dbLayer);
@@ -204,10 +203,6 @@ public class Validator {
                     JobTemplate jobTemplate = (JobTemplate) config;
                     validateJobTemplateJob(jobTemplate, dbLayer.getScriptNames());
                     // TODO something like validateOrderPreparation(workflow.getOrderPreparation());
-                    if (!ExecutableType.InternalExecutable.equals(jobTemplate.getExecutable().getTYPE())) {
-                        ExecutableScript script = jobTemplate.getExecutable().cast();
-                        validateEnvironmentKeys(script.getEnv(), "$.executable.env");
-                    }
                     validateJobResourceRefs(jobTemplate.getJobResourceNames(), dbLayer);
                 }
             } finally {
@@ -356,6 +351,8 @@ public class Validator {
             if (es.getEnv() != null) {
                 validateExpression("$.executable.env", es.getEnv().getAdditionalProperties());
             }
+            validateEnvironmentKeys(es.getEnv(), "$.executable.env");
+            checkReturnCodeMeaning(es, "$.");
             if (es.getScript() != null) {
                 Matcher m = scriptIncludePattern.matcher(es.getScript());
                 while (m.find()) {
@@ -412,6 +409,8 @@ public class Validator {
                 if (es.getEnv() != null) {
                     validateExpression("$.jobs['" + entry.getKey() + "'].executable.env", es.getEnv().getAdditionalProperties());
                 }
+                validateEnvironmentKeys(es.getEnv(), "$.jobs['" + entry.getKey() + "'].executable.env");
+                checkReturnCodeMeaning(es, "$.jobs['" + entry.getKey() + "']");
                 if (es.getScript() != null) {
                     Matcher m = scriptIncludePattern.matcher(es.getScript());
                     while (m.find()) {
@@ -438,6 +437,14 @@ public class Validator {
             validateJobNotification(entry.getKey(), entry.getValue());
         }
         return jobResources;
+    }
+    
+    private static void checkReturnCodeMeaning(ExecutableScript es, String position) {
+        if (es.getReturnCodeMeaning() != null) {
+            if (es.getReturnCodeMeaning().getSuccess() != null && es.getReturnCodeMeaning().getFailure() != null) {
+                throw new JocConfigurationException(position + ".executable.returnCodeMeaning: only one of 'success' or 'failure' may be specified.");
+            }
+        }
     }
 
     private static void validateJobNotification(String jobName, Job job) throws JocConfigurationException {
@@ -793,7 +800,6 @@ public class Validator {
         }
     }
 
-    @SuppressWarnings("unused")
     private static void validateOrderParameterisations(List<OrderParameterisation> variableSets, Requirements orderPreparation, String position)
             throws JocConfigurationException {
         if (variableSets != null) {
@@ -815,10 +821,6 @@ public class Validator {
             jobs.getAdditionalProperties().forEach((key, value) -> {
                 // validateArguments(value.getDefaultArguments(), orderPreparation, "$.jobs['" + key + "'].defaultArguments");
                 // validateArgumentKeys(value.getDefaultArguments(), "$.jobs['" + key + "'].defaultArguments");
-                if (!ExecutableType.InternalExecutable.equals(value.getExecutable().getTYPE())) {
-                    ExecutableScript script = value.getExecutable().cast();
-                    validateEnvironmentKeys(script.getEnv(), "$.jobs['" + key + "'].executable.env");
-                }
             });
         }
     }
