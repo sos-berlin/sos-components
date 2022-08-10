@@ -1,10 +1,14 @@
 package com.sos.jitl.jobs.jocapi;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
@@ -23,6 +27,7 @@ import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
+import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
@@ -95,10 +100,10 @@ public class ApiExecutor {
         this.jobLogger = jobLogger;
     }
 
-    public ApiResponse login() throws SOSAuthenticationFailedException, Exception {
+    public ApiResponse login() throws SOSMissingDataException {
         logDebug("***ApiExecutor***");
         jocUris = getUris();
-        
+
         for (String uri : jocUris) {
             try {
                 tryCreateClient(uri);
@@ -114,17 +119,19 @@ public class ApiExecutor {
                     logDebug(String.format("connection to URI %1$s failed, trying next Uri.", jocUri.resolve(WS_API_LOGIN).toString()));
                     continue;
                 }
+            } catch (SOSMissingDataException ea) {
+                throw ea;
             } catch (Exception e) {
                 logDebug(String.format("connection to URI %1$s failed, trying next Uri.", jocUri.resolve(WS_API_LOGIN).toString()));
             }
         }
         if (this.jocUri == null) {
-            throw new Exception("no uri provided for api server.");
+            throw new SOSMissingDataException("no uri provided for api server.");
         }
         return new ApiResponse(null, null, null, null);
     }
 
-    public ApiResponse post(String token, String apiUrl, String body) throws Exception {
+    public ApiResponse post(String token, String apiUrl, String body) throws SOSConnectionRefusedException, SOSBadRequestException {
         if (token == null) {
             throw new SOSBadRequestException("no access token provided. permission denied.");
         } else {
@@ -151,7 +158,7 @@ public class ApiExecutor {
         }
     }
 
-    public ApiResponse logout(String token) throws Exception {
+    public ApiResponse logout(String token) throws SOSBadRequestException {
         if (token != null && jocUri != null) {
             try {
                 client.addHeader(ACCESS_TOKEN_HEADER, token);
@@ -180,7 +187,12 @@ public class ApiExecutor {
 
     }
 
-    private void applySSLContextCredentials(SOSRestApiClient client) throws Exception {
+    public List<String> getJocUris() {
+        return jocUris;
+    }
+
+    private void applySSLContextCredentials(SOSRestApiClient client) throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
+            IOException, SOSSSLException, SOSMissingDataException {
         Config config = readConfig();
         List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(config);
         logDebug("read Trustore from: " + config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(
@@ -200,12 +212,13 @@ public class ApiExecutor {
         }
     }
 
-    private void tryCreateClient(String jocUri) throws Exception {
+    private void tryCreateClient(String jocUri) throws SOSMissingDataException, KeyStoreException, NoSuchAlgorithmException, CertificateException,
+            SOSSSLException, IOException {
         if (client != null) {
             client.closeHttpClient();
         }
         Config config = readConfig();
-        
+
         for (Entry<String, ConfigValue> entry : config.entrySet()) {
             if (entry.getKey().startsWith("js7")) {
                 if (!DO_NOT_LOG_KEY.contains(entry.getKey())) {
@@ -213,7 +226,7 @@ public class ApiExecutor {
                 }
             }
         }
-        
+
         client = new SOSRestApiClient();
         logDebug("initiate REST api client");
         if (jocUri.toLowerCase().startsWith("https:")) {
@@ -256,7 +269,7 @@ public class ApiExecutor {
                 }
             }
             if ((username == null || username.isEmpty()) && (pwd == null || pwd.isEmpty())) {
-                logError("no username and password configured in private.conf");
+                throw new SOSMissingDataException("no username and password configured in private.conf");
             } else {
                 String basicAuth = Base64.getMimeEncoder().encodeToString((username + ":" + pwd).getBytes());
                 client.setBasicAuthorization(basicAuth);
@@ -274,8 +287,8 @@ public class ApiExecutor {
     public Config readConfig() throws SOSMissingDataException {
         String agentConfDirPath = System.getenv(AGENT_CONF_DIR_ENV_PARAM);
         if (agentConfDirPath == null) {
-            throw new SOSMissingDataException(String.format("Environment variable %1$s not set. Can´t read credentials from agents private.conf file.",
-                    AGENT_CONF_DIR_ENV_PARAM));
+            throw new SOSMissingDataException(String.format(
+                    "Environment variable %1$s not set. Can´t read credentials from agents private.conf file.", AGENT_CONF_DIR_ENV_PARAM));
         }
         logDebug("agentConfDirPath: " + agentConfDirPath);
         Path agentConfDir = Paths.get(agentConfDirPath);
