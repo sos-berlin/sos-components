@@ -190,9 +190,10 @@ public class MonitoringChecker {
             }
             if (monitoringCheckReturn.isSuccess()) {
                 monitoringCheckReturn.setSubject("JS7 Monitor: Notice from: " + mailSmtpFrom + " at: " + monitorReportDate);
+                monitoringCheckReturn.setBody(monitoringCheckReturn.getSubject());
             } else {
-                monitoringCheckReturn.setSubject("JS7 Monitor: Alert from: " + mailSmtpFrom + "(" + monitoringCheckReturn.getMessage() + ") at: "
-                        + monitorReportDate);
+                monitoringCheckReturn.setSubject("JS7 Monitor: Alert from: " + mailSmtpFrom + " at: " + monitorReportDate);
+                monitoringCheckReturn.setBody(monitoringCheckReturn.getSubject() + "\n" + monitoringCheckReturn.getMessage());
             }
             return monitoringCheckReturn;
 
