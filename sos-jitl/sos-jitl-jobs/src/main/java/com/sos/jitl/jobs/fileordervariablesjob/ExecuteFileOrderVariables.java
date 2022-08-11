@@ -28,13 +28,13 @@ public class ExecuteFileOrderVariables {
         Map<String, Object> variables = new HashMap<String, Object>();
         try {
             BufferedReader r = null;
-            r = Files.newBufferedReader(Paths.get(args.getSourceFile()));
+            r = Files.newBufferedReader(Paths.get(args.getJs7SourceFile()));
 
             for (String line; (line = r.readLine()) != null;) {
                 if (!line.isEmpty()) {
                     String[] v = line.split("=");
                     if (v.length < 2 && !line.contains("=")) {
-                        throw new SOSException(line + " in file " + args.getSourceFile() + " is not a valid variable assignment <name>=<value>");
+                        throw new SOSException(line + " in file " + args.getJs7SourceFile() + " is not a valid variable assignment <name>=<value>");
                     }
                     String vName = v[0].trim();
                     String vValue = line.substring(line.indexOf("=") + 1).trim();
