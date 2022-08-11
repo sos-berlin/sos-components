@@ -195,9 +195,9 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             LogTaskContent logTaskContent = new LogTaskContent(taskFilter, folderPermissions);
             switch (apiCall) {
             case API_CALL_LOG:
-                return JOCDefaultResponse.responsePlainStatus200(logTaskContent.getStreamOutput(), logTaskContent.getHeaders());
+                return JOCDefaultResponse.responsePlainStatus200(logTaskContent.getStreamOutput(false), logTaskContent.getHeaders());
             default:  // API_CALL_DOWNLOAD:
-                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(logTaskContent.getStreamOutput(), logTaskContent.getDownloadFilename(),
+                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(logTaskContent.getStreamOutput(true), logTaskContent.getDownloadFilename(),
                         logTaskContent.getUnCompressedLength());
             }
 

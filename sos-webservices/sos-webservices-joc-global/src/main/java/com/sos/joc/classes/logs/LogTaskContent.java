@@ -52,6 +52,7 @@ public class LogTaskContent {
     private Long eventId = null;
     private boolean complete = false;
     private SOSAuthFolderPermissions folderPermissions = null;
+    private static final long MAX_LOG_SIZE = 10 * 1024 * 1024L; //10MB
 
     public LogTaskContent(TaskFilter taskFilter, SOSAuthFolderPermissions folderPermissions) {
         this.historyId = taskFilter.getTaskId();
@@ -98,13 +99,13 @@ public class LogTaskContent {
                 StandardCharsets.UTF_8.name()), historyId);
     }
 
-    public StreamingOutput getStreamOutput() throws JocMissingRequiredParameterException, JocConfigurationException, DBOpenSessionException,
+    public StreamingOutput getStreamOutput(boolean forDownload) throws JocMissingRequiredParameterException, JocConfigurationException, DBOpenSessionException,
             SOSHibernateException, DBMissingDataException, ControllerInvalidResponseDataException {
         if (historyId == null) {
             throw new JocMissingRequiredParameterException("undefined 'taskId'");
         }
         StreamingOutput out = null;
-        byte[] compressedLog = getLogFromDb();
+        byte[] compressedLog = getLogFromDb(forDownload);
         if (compressedLog != null) {
             final InputStream inStream = new ByteArrayInputStream(compressedLog);
             out = new StreamingOutput() {
@@ -127,7 +128,7 @@ public class LogTaskContent {
                 }
             };
         } else {
-            final InputStream inStream = getLogSnapshotFromHistoryService();
+            final InputStream inStream = getLogSnapshotFromHistoryService(forDownload);
             out = new StreamingOutput() {
 
                 @Override
@@ -157,7 +158,10 @@ public class LogTaskContent {
         return out;
     }
 
-    private InputStream getLogSnapshotFromHistoryService() {
+    private InputStream getLogSnapshotFromHistoryService(boolean forDownload) {
+        if (!forDownload && complete && unCompressedLength > MAX_LOG_SIZE) {
+            return getTooBigMessage("");
+        }
         try {
             Path tasklog = Paths.get("logs", "history", orderMainParentId.toString(), orderId.toString() + "_" + historyId + ".log");
             if (Files.exists(tasklog)) {
@@ -165,6 +169,9 @@ public class LogTaskContent {
                 complete = false;
                 unCompressedLength = Files.size(tasklog);
                 RunningTaskLogs.getInstance().subscribe(historyId);
+                if (!forDownload && unCompressedLength > MAX_LOG_SIZE) {
+                    return getTooBigMessage(" snapshot");
+                }
                 return Files.newInputStream(tasklog);
             }
         } catch (IOException e) {
@@ -180,21 +187,29 @@ public class LogTaskContent {
         complete = true;
         return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
     }
+    
+    private InputStream getTooBigMessage(String kindOfLog) {
+        String s = ZonedDateTime.now().format(formatter);
+        String s1 = s + " [INFO] The size of the" + kindOfLog + " log is too big: " + unCompressedLength + " bytes\r\n";
+        s1 += s + " [INFO] Try to download the log\r\n";
+        unCompressedLength = s1.length() * 1L;
+        return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
+    }
 
     public InputStream getLogStream() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException,
             IOException {
         if (historyId != null) {
-            byte[] compressedLog = getLogFromDb();
+            byte[] compressedLog = getLogFromDb(true);
             if (compressedLog != null) {
                 return new GZIPInputStream(new ByteArrayInputStream(compressedLog));
             } else {
-                return getLogSnapshotFromHistoryService();
+                return getLogSnapshotFromHistoryService(true);
             }
         }
         return null;
     }
 
-    private byte[] getLogFromDb() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException {
+    private byte[] getLogFromDb(boolean forDownload) throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException {
         SOSHibernateSession connection = null;
         try {
             connection = Globals.createSosHibernateStatelessConnection("./task/log");
@@ -223,6 +238,9 @@ public class LogTaskContent {
                 } else {
                     unCompressedLength = historyDBItem.getFileSizeUncomressed();
                     complete = true;
+                    if (!forDownload && unCompressedLength > MAX_LOG_SIZE) {
+                        return null;
+                    }
                     return historyDBItem.getFileContent();
                 }
             }
