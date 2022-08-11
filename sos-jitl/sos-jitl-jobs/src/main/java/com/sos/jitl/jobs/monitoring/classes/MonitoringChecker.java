@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.sos.commons.exception.SOSException;
+import com.sos.jitl.jobs.common.Globals;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.joc.model.agent.AgentV;
 import com.sos.joc.model.controller.Controller;

@@ -6,13 +6,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
+import com.sos.jitl.jobs.common.Globals;
+import com.sos.jitl.jobs.common.JitlJobReturn;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.maintenance.MaintenanceWindowJobArguments.StateValues;
-import com.sos.jitl.jobs.maintenance.classes.Globals;
 import com.sos.jitl.jobs.maintenance.classes.MaintenanceWindowImpl;
-import com.sos.jitl.jobs.maintenance.classes.MaintenanceWindowJobReturn;
-
+ 
 import js7.data_for_java.order.JOutcome;
 
 public class MaintenanceWindowJob extends ABlockingInternalJob<MaintenanceWindowJobArguments> {
@@ -25,19 +25,19 @@ public class MaintenanceWindowJob extends ABlockingInternalJob<MaintenanceWindow
     public JOutcome.Completed onOrderProcess(JobStep<MaintenanceWindowJobArguments> step) throws Exception {
 
         try {
-            MaintenanceWindowJobReturn maintenanceWindowJobReturn = process(step, step.getArguments());
-            return step.success(maintenanceWindowJobReturn.getExitCode(), maintenanceWindowJobReturn.getResultMap());
+            JitlJobReturn jitlJobReturn = process(step, step.getArguments());
+            return step.success(jitlJobReturn.getExitCode(), jitlJobReturn.getResultMap());
         } catch (Throwable e) {
             throw e;
         }
     }
 
-    private MaintenanceWindowJobReturn process(JobStep<MaintenanceWindowJobArguments> step, MaintenanceWindowJobArguments args) throws Exception {
+    private JitlJobReturn process(JobStep<MaintenanceWindowJobArguments> step, MaintenanceWindowJobArguments args) throws Exception {
         JobLogger logger = null;
         if (step != null) {
             logger = step.getLogger();
         }
-        MaintenanceWindowJobReturn maintenanceWindowJobReturn = new MaintenanceWindowJobReturn();
+        JitlJobReturn maintenanceWindowJobReturn = new JitlJobReturn();
         maintenanceWindowJobReturn.setExitCode(0);
         Map<String, Object> resultMap = new HashMap<String, Object>();
 

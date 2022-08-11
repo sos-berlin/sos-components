@@ -4,10 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.jitl.jobs.checkhistory.classes.CheckHistoryJobReturn;
-import com.sos.jitl.jobs.checkhistory.classes.Globals;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
+import com.sos.jitl.jobs.common.Globals;
+import com.sos.jitl.jobs.common.JitlJobReturn;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 
@@ -23,20 +23,20 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
     public JOutcome.Completed onOrderProcess(JobStep<CheckHistoryJobArguments> step) throws Exception {
 
         try {
-            CheckHistoryJobReturn checkHistoryJobReturn = process(step, step.getArguments());
-            return step.success(checkHistoryJobReturn.getExitCode(), checkHistoryJobReturn.getResultMap());
+            JitlJobReturn jitlJobReturn = process(step, step.getArguments());
+            return step.success(jitlJobReturn.getExitCode(), jitlJobReturn.getResultMap());
 
         } catch (Throwable e) {
             throw e;
         }
     }
 
-    private CheckHistoryJobReturn process(JobStep<CheckHistoryJobArguments> step, CheckHistoryJobArguments args) throws Exception {
+    private JitlJobReturn process(JobStep<CheckHistoryJobArguments> step, CheckHistoryJobArguments args) throws Exception {
         JobLogger logger = null;
         if (step != null) {
             logger = step.getLogger();
         }
-        CheckHistoryJobReturn checkHistoryJobReturn = new CheckHistoryJobReturn();
+        JitlJobReturn checkHistoryJobReturn = new JitlJobReturn();
         checkHistoryJobReturn.setExitCode(0);
         Map<String, Object> resultMap = new HashMap<String, Object>();
         resultMap.put("js7CheckHistoryResult", false);

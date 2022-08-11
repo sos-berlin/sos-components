@@ -5,11 +5,11 @@ import java.util.List;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.jitl.jobs.checkhistory.classes.CheckHistoryHelper;
-import com.sos.jitl.jobs.checkhistory.classes.Globals;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryFilter;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryWebserviceExecuter;
 import com.sos.jitl.jobs.checkhistory.classes.ParameterResolver;
+import com.sos.jitl.jobs.common.Globals;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;

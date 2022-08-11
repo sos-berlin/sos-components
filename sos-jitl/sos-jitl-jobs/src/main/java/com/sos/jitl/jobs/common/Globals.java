@@ -1,4 +1,4 @@
-package com.sos.jitl.jobs.checkhistory.classes;
+package com.sos.jitl.jobs.common;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -6,7 +6,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.sos.jitl.jobs.common.JobLogger;
 
 public class Globals {
 
@@ -41,9 +40,9 @@ public class Globals {
         }
     }
 
-    public static void error(JobLogger logger, String log,Exception e) {
+    public static void error(JobLogger logger, String log, Exception e) {
         if (logger != null) {
-            logger.error(log,e);
+            logger.error(log, e);
         } else {
             System.out.println(log);
         }
@@ -54,6 +53,6 @@ public class Globals {
             logger.warn(log);
         } else {
             System.out.println(log);
-        }        
+        }
     }
 }

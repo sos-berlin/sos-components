@@ -1,5 +1,6 @@
 package com.sos.jitl.jobs.monitoring.classes;
 
+import com.sos.jitl.jobs.common.Globals;
 import com.sos.jitl.jobs.common.JobLogger;
 
 public class MonitoringCheckReturn {

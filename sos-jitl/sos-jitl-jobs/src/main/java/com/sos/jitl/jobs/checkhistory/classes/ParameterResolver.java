@@ -1,6 +1,7 @@
 package com.sos.jitl.jobs.checkhistory.classes;
 
 import com.sos.commons.exception.SOSException;
+import com.sos.jitl.jobs.common.Globals;
 import com.sos.jitl.jobs.common.JobLogger;
 
 public class ParameterResolver {
