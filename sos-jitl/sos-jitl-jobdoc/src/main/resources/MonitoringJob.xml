@@ -49,6 +49,7 @@
                 <note>
                     <title>Parameter &lt;from&gt; for the email job</title>
                     <p>This value is used as a part of the subject for the result email</p>
+                </note>
                          
             </param>
       
