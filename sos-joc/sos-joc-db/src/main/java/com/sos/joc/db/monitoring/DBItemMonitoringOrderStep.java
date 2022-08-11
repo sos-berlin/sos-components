@@ -10,12 +10,10 @@ import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 
-import com.sos.history.JobWarning;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.HistoryConstants;
-import com.sos.joc.db.common.MonitoringConstants;
 
 @Entity
 @Table(name = DBLayer.TABLE_MON_ORDER_STEPS)
@@ -104,12 +102,6 @@ public class DBItemMonitoringOrderStep extends DBItem {
 
     @Column(name = "[ERROR_TEXT]", nullable = true)
     private String errorText;
-
-    @Column(name = "[WARN]", nullable = false)
-    private Integer warn;
-
-    @Column(name = "[WARN_TEXT]", nullable = true)
-    private String warnText;
 
     /** Foreign key - TABLE_HISTORY_LOGS.ID, KEY */
     @Column(name = "[LOG_ID]", nullable = true)
@@ -338,25 +330,6 @@ public class DBItemMonitoringOrderStep extends DBItem {
         return errorText;
     }
 
-    public void setWarn(Integer val) {
-        if (val == null) {
-            val = JobWarning.NONE.intValue();
-        }
-        warn = val;
-    }
-
-    public Integer getWarn() {
-        return warn;
-    }
-
-    public void setWarnText(String val) {
-        warnText = normalizeWarnText(val);
-    }
-
-    public String getWarnText() {
-        return warnText;
-    }
-
     public Long getLogId() {
         return logId;
     }
@@ -392,11 +365,6 @@ public class DBItemMonitoringOrderStep extends DBItem {
     }
 
     @Transient
-    public static String normalizeWarnText(String val) {
-        return normalizeValue(val, MonitoringConstants.MAX_LEN_WARN_TEXT);
-    }
-
-    @Transient
     public static String normalizeWorkflowPosition(String val) {
         return normalizeValue(val, HistoryConstants.MAX_LEN_WORKFLOW_POSITION);
     }
@@ -410,17 +378,4 @@ public class DBItemMonitoringOrderStep extends DBItem {
         }
     }
 
-    @Transient
-    public void setWarn(JobWarning val) {
-        setWarn(val == null ? null : val.intValue());
-    }
-
-    @Transient
-    public JobWarning getWarnAsEnum() {
-        try {
-            return JobWarning.fromValue(warn);
-        } catch (IllegalArgumentException e) {
-            return JobWarning.NONE;
-        }
-    }
 }

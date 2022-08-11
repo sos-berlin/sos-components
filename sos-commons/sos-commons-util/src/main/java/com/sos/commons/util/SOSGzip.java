@@ -45,12 +45,12 @@ public class SOSGzip {
             throw new Exception("missing path");
         }
         if (SOSPath.toFile(source).isFile()) {
-            return compressFile(source);
+            return gzipCompressFile(source);
         }
-        return compressDirectory(source, setAllFileAttributes);
+        return gzipTarCompressDirectory(source, setAllFileAttributes);
     }
 
-    /** compress file or directory to a byte array<br/>
+    /** GZIP compress file to a byte array<br/>
      * Note: Memory usage<br/>
      * - source - 1,5GB txt file ~ 8MB memory<br />
      * - source - 1,5GB binary file ~ 1,5GB memory<br />
@@ -58,7 +58,7 @@ public class SOSGzip {
      * @param source
      * @return
      * @throws Exception */
-    private static SOSGzipResult compressFile(Path source) throws Exception {
+    private static SOSGzipResult gzipCompressFile(Path source) throws Exception {
         SOSGzipResult result = (new SOSGzip()).new SOSGzipResult();
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); InputStream fis = Files.newInputStream(source); GZIPOutputStream gos =
                 new GZIPOutputStream(bos)) {
@@ -78,7 +78,7 @@ public class SOSGzip {
         return result;
     }
 
-    /** compressing without empty folders
+    /** GZIP TAR compressing without empty folders
      * 
      * @param source
      * @param setAllFileAttributes<br/>
@@ -88,7 +88,7 @@ public class SOSGzip {
      *            87895 files - true ~ 50s, false - 31s
      * @return
      * @throws Exception */
-    private static SOSGzipResult compressDirectory(Path source, boolean setAllFileAttributes) throws Exception {
+    private static SOSGzipResult gzipTarCompressDirectory(Path source, boolean setAllFileAttributes) throws Exception {
         SOSGzipResult result = (new SOSGzip()).new SOSGzipResult();
         if (source == null) {
             return result;

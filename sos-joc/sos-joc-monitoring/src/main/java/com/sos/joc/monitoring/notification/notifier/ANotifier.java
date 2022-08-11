@@ -222,11 +222,25 @@ public abstract class ANotifier {
             tableFields.putAll(mos.toMap(true, PREFIX_TABLE_ORDER_STEPS, timeZone, true));
             adjustFields(PREFIX_TABLE_ORDER_STEPS);
         }
+
+        // TODO - to remove later
+        // introduced with 2.4.1 - duplicate new MON_N_WARN/WARN_TEXT names into deprecated MON_OS_WARN/WARN_TEXT
+        boolean compatibilityMode = true;
         if (mn == null) {
             tableFields.putAll(DBItem.toEmptyValuesMap(DBItemNotification.class, true, PREFIX_TABLE_NOTIFICATIONS));
+
+            if (compatibilityMode) {
+                putTableField(PREFIX_TABLE_ORDER_STEPS + "_WARN", "");
+                putTableField(PREFIX_TABLE_ORDER_STEPS + "_WARN_TEXT", "");
+            }
         } else {
             tableFields.putAll(mn.toMap(true, PREFIX_TABLE_NOTIFICATIONS, timeZone, true));
             adjustFields(PREFIX_TABLE_NOTIFICATIONS);
+
+            if (compatibilityMode) {
+                putTableField(PREFIX_TABLE_ORDER_STEPS + "_WARN", tableFields.get(PREFIX_TABLE_NOTIFICATIONS + "_WARN"));
+                putTableField(PREFIX_TABLE_ORDER_STEPS + "_WARN_TEXT", tableFields.get(PREFIX_TABLE_NOTIFICATIONS + "_WARN_TEXT"));
+            }
         }
     }
 
@@ -240,6 +254,7 @@ public abstract class ANotifier {
             try {
                 tableFields.put(tablePrefix + "_STATE", OrderStateText.fromValue(Integer.valueOf(state)).value());
             } catch (Throwable e) {
+                putTableField(tablePrefix + "_STATE", state);
             }
             break;
         case PREFIX_TABLE_ORDER_STEPS:
@@ -247,11 +262,7 @@ public abstract class ANotifier {
             try {
                 tableFields.put(tablePrefix + "_JOB_CRITICALITY", JobCriticality.fromValue(Integer.valueOf(criticality)).value());
             } catch (Throwable e) {
-            }
-            String warn = tableFields.get(tablePrefix + "_WARN");
-            try {
-                tableFields.put(tablePrefix + "_WARN", JobWarning.fromValue(Integer.valueOf(warn)).value());
-            } catch (Throwable e) {
+                putTableField(tablePrefix + "_JOB_CRITICALITY", criticality);
             }
             break;
         case PREFIX_TABLE_NOTIFICATIONS:
@@ -259,15 +270,23 @@ public abstract class ANotifier {
             try {
                 tableFields.put(tablePrefix + "_TYPE", NotificationType.fromValue(Integer.valueOf(type)).value());
             } catch (Throwable e) {
+                putTableField(tablePrefix + "_TYPE", type);
             }
             String range = tableFields.get(tablePrefix + "_RANGE");
             try {
                 tableFields.put(tablePrefix + "_RANGE", NotificationRange.fromValue(Integer.valueOf(range)).value());
             } catch (Throwable e) {
+                putTableField(tablePrefix + "_RANGE", range);
+            }
+            String warn = tableFields.get(tablePrefix + "_WARN");
+            try {
+                tableFields.put(tablePrefix + "_WARN", JobWarning.fromValue(Integer.valueOf(warn)).value());
+            } catch (Throwable e) {
+                putTableField(tablePrefix + "_WARN", warn);
             }
             String recoveredId = tableFields.get(tablePrefix + "_RECOVERED_ID");
             if (recoveredId.equals("0")) {
-                tableFields.put(tablePrefix + "_RECOVERED_ID", "");
+                putTableField(tablePrefix + "_RECOVERED_ID", "");
             }
             if (tableFields.containsKey(tablePrefix + "_HAS_MONITORS")) {
                 tableFields.remove(tablePrefix + "_HAS_MONITORS");
@@ -297,11 +316,19 @@ public abstract class ANotifier {
     }
 
     private void setSeverity(String tablePrefix) {
+        if (tablePrefix.equals(PREFIX_TABLE_NOTIFICATIONS)) {
+            return;
+        }
         String severity = tableFields.get(tablePrefix + "_SEVERITY");
         try {
             tableFields.put(tablePrefix + "_SEVERITY", HistorySeverity.getName(Integer.valueOf(severity)));
         } catch (Throwable e) {
+            putTableField(tablePrefix + "_SEVERITY", severity);
         }
+    }
+
+    private void putTableField(String fieldName, String value) {
+        tableFields.put(fieldName, value == null ? "" : value);
     }
 
     protected JocHref getJocHref() {

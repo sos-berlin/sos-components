@@ -1,5 +1,7 @@
 package com.sos.joc.history.helper;
 
+import java.util.List;
+
 import com.sos.inventory.model.job.JobCriticality;
 
 public class CachedWorkflowJob {
@@ -10,16 +12,18 @@ public class CachedWorkflowJob {
     private final String subagentClusterId;
     private final String warnIfLonger;
     private final String warnIfShorter;
+    private final List<Integer> warnReturnCodes;
     private final String notification;
 
     public CachedWorkflowJob(JobCriticality criticality, String title, String agentName, String subagentClusterId, String warnIfLonger,
-            String warnIfShorter, String notification) {
+            String warnIfShorter, List<Integer> warnReturnCodes, String notification) {
         this.criticality = criticality;
         this.title = title;
         this.agentName = agentName;
         this.subagentClusterId = subagentClusterId;
         this.warnIfLonger = warnIfLonger;
         this.warnIfShorter = warnIfShorter;
+        this.warnReturnCodes = warnReturnCodes;
         this.notification = notification;
     }
 
@@ -45,6 +49,10 @@ public class CachedWorkflowJob {
 
     public String getWarnIfShorter() {
         return warnIfShorter;
+    }
+
+    public List<Integer> getWarnReturnCodes() {
+        return warnReturnCodes;
     }
 
     public String getNotification() {

@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -37,6 +38,7 @@ import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.history.AHistoryBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
+import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.db.joc.DBItemJocVariable;
@@ -70,6 +72,8 @@ public class HistoryMonitoringModel implements Serializable {
     private static final int THREAD_POOL_CORE_POOL_SIZE = 1;
     /** 1day */
     private static final int MAX_LONGER_THAN_SECONDS = 24 * 60 * 60;
+    /** 1day */
+    private static final int MAX_PAYLOAD_SECONDS = 24 * 60 * 60;
 
     private final SOSHibernateFactory factory;
     private final JocConfiguration jocConfiguration;
@@ -101,12 +105,40 @@ public class HistoryMonitoringModel implements Serializable {
 
     @Subscribe({ HistoryOrderEvent.class, HistoryTaskEvent.class })
     public void handleHistoryEvents(HistoryEvent evt) {
-        // AJocClusterService.setLogger(serviceIdentifier);
-        // LOGGER.info("[EV]" + SOSString.toString(evt));
-
         AJocClusterService.setLogger(serviceIdentifier);
+        // LOGGER.info("[EV]" + SOSString.toString(evt));
         if (evt.getPayload() != null) {
-            payloads.add((AHistoryBean) evt.getPayload());
+            add2Payload((AHistoryBean) evt.getPayload());
+        }
+    }
+
+    private void add2Payload(AHistoryBean bean) {
+        if (bean == null || bean.getEventId() == null) {
+            return;
+        }
+        Instant eventDate = JocClusterUtil.eventId2Instant(bean.getEventId());
+        if (eventDate == null) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[%s][missing eventDate]%s", serviceIdentifier, SOSString.toString(bean)));
+            }
+        } else {
+            Instant now = Instant.now();
+            long nowSeconds = now.getEpochSecond();
+            long eventDateSeconds = eventDate.getEpochSecond();
+            if ((nowSeconds - eventDateSeconds) <= MAX_PAYLOAD_SECONDS) {
+                payloads.add(bean);
+            } else {
+                if (LOGGER.isDebugEnabled()) {
+                    try {
+                        LOGGER.debug(String.format("[%s][skip][now=%s-eventDate=%s > MAX_PAYLOAD_SECONDS=%s]%s", serviceIdentifier, SOSDate
+                                .getDateTimeAsString(Date.from(now)), SOSDate.getDateTimeAsString(Date.from(eventDate)), MAX_PAYLOAD_SECONDS,
+                                SOSString.toString(bean)));
+                    } catch (SOSInvalidDataException e) {
+                        LOGGER.debug(String.format("[%s][skip][nowSeconds=%s-eventDateSeconds=%s > MAX_PAYLOAD_SECONDS=%s]%s", serviceIdentifier,
+                                nowSeconds, eventDateSeconds, MAX_PAYLOAD_SECONDS, SOSString.toString(bean)));
+                    }
+                }
+            }
         }
     }
 
@@ -319,7 +351,7 @@ public class HistoryMonitoringModel implements Serializable {
         DBLayerMonitoring dbLayer = new DBLayerMonitoring(serviceIdentifier + "_" + IDENTIFIER, serviceIdentifier);
         try {
             setLastActivityStart();
-            dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
+            // dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
 
             Date endTime = getEventIdAsDate(calculatedEventId);
             Map<Long, HistoryOrderStepResult> w = new HashMap<>();
@@ -335,8 +367,8 @@ public class HistoryMonitoringModel implements Serializable {
                     try {
                         LOGGER.info(String.format(
                                 "[%s][%s][handleLongerThan][UTC][start=%s,calculated current=%s][%s]orderId=%s,workflow=%s,job=%s(historyId=%s)",
-                                serviceIdentifier, IDENTIFIER, SOSDate.getTimeAsString(hosb.getStartTime()), SOSDate.getTimeAsString(stepEndTime), r
-                                        .getWarn().getText(), hosb.getOrderId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb.getHistoryId()));
+                                serviceIdentifier, IDENTIFIER, SOSDate.getTimeAsString(hosb.getStartTime()), SOSDate.getTimeAsString(stepEndTime),
+                                warn.getText(), hosb.getOrderId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb.getHistoryId()));
                     } catch (Throwable e) {
                         LOGGER.warn(e.toString(), e);
                     }
@@ -346,40 +378,16 @@ public class HistoryMonitoringModel implements Serializable {
                 return toNotify;
             }
 
-            dbLayer.getSession().beginTransaction();
             for (Map.Entry<Long, HistoryOrderStepResult> entry : w.entrySet()) {
-                HistoryOrderStepResult sr = entry.getValue();
-
-                if (tmpLogging) {
-                    DBItemMonitoringOrderStep os = dbLayer.getMonitoringOrderStep(entry.getKey(), false);
-                    LOGGER.info(String.format("    [tmp][%s][%s][handleLongerThan][tmp][1][entryKey=%s]%s", serviceIdentifier, IDENTIFIER, entry
-                            .getKey(), SOSString.toString(os)));
-                }
-
-                int r = dbLayer.updateOrderStepOnLongerThan(entry.getKey(), sr.getWarn());
-
-                if (tmpLogging) {
-                    DBItemMonitoringOrderStep os = dbLayer.getMonitoringOrderStep(entry.getKey(), false);
-                    LOGGER.info(String.format("    [tmp][%s][%s][handleLongerThan][tmp][2][entryKey=%s]%s", serviceIdentifier, IDENTIFIER, entry
-                            .getKey(), SOSString.toString(os)));
-                    LOGGER.info(String.format("    [tmp][%s][%s][handleLongerThan][tmp][3][r=%s][entryKey=%s]HistoryOrderStepResult step=%s,warn=%s",
-                            serviceIdentifier, IDENTIFIER, r, entry.getKey(), SOSString.toString(sr.getStep()), SOSString.toString(sr.getWarn())));
-                }
-
                 if (longerThan.containsKey(entry.getKey())) {
                     longerThan.remove(entry.getKey());
                 }
-                if (r != 0) {
-                    toNotify.getSteps().add(sr);
-                }
+                toNotify.getSteps().add(entry.getValue());
             }
-            dbLayer.getSession().commit();
-
             LOGGER.info(String.format("[%s][%s][handleLongerThan][processed=%s]toNotify steps=%s", serviceIdentifier, IDENTIFIER, w.size(), toNotify
                     .getSteps().size()));
-
         } catch (Throwable ex) {
-            dbLayer.rollback();
+            // dbLayer.rollback();
             LOGGER.error(ex.toString(), ex);
         } finally {
             dbLayer.close();
@@ -537,7 +545,6 @@ public class HistoryMonitoringModel implements Serializable {
         item.setStartVariables(hosb.getStartVariables());
 
         item.setError(false);
-        item.setWarn(JobWarning.NONE);
 
         item.setCreated(new Date());
         item.setModified(item.getCreated());
@@ -560,17 +567,34 @@ public class HistoryMonitoringModel implements Serializable {
 
     private HistoryOrderStepResult orderStepProcessed(DBLayerMonitoring dbLayer, HistoryOrderStepBean hosb) throws SOSHibernateException {
         HistoryOrderStepResult r = analyzeExecutionTimeOnProcessed(dbLayer, hosb);
+        r.addWarn(analyzeReturnCode(hosb));
+
         dbLayer.setOrderStepEnd(r);
 
         if (tmpLogging) {
-            if (r.getWarn() != null) {
+            for (HistoryOrderStepResultWarn warn : r.getWarnings()) {
                 LOGGER.info(String.format("    [tmp][%s][%s][orderStepProcessed][on WARN]step=%s", serviceIdentifier, IDENTIFIER, SOSString.toString(r
                         .getStep())));
-                LOGGER.info(String.format("            [on WARN]warn=%s", SOSString.toString(r.getWarn())));
+                LOGGER.info(String.format("            [on WARN]warn=%s", SOSString.toString(warn)));
             }
         }
 
         return r;
+    }
+
+    private HistoryOrderStepResultWarn analyzeReturnCode(HistoryOrderStepBean hosb) {
+        HistoryOrderStepResultWarn warn = null;
+        if (hosb.getReturnCode() != null && hosb.getWarnReturnCodes() != null && hosb.getWarnReturnCodes().contains(hosb.getReturnCode())) {
+            warn = new HistoryOrderStepResultWarn(JobWarning.RETURN_CODE, "Job return code " + hosb.getReturnCode()
+                    + " matches to the configured warning return codes " + String.join(",", hosb.getWarnReturnCodes().stream().map(e -> String
+                            .valueOf(e)).collect(Collectors.toList())));
+
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[%s][%s][%s][workflowPath=%s,job=%s(historyId=%s)]%s", serviceIdentifier, IDENTIFIER, hosb
+                        .getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb.getHistoryId(), SOSString.toString(warn)));
+            }
+        }
+        return warn;
     }
 
     private HistoryOrderStepResult analyzeExecutionTimeOnProcessed(DBLayerMonitoring dbLayer, HistoryOrderStepBean hosb) {
@@ -692,6 +716,9 @@ public class HistoryMonitoringModel implements Serializable {
 
                     if (avg == null) {
                         // get from database
+                        if (dbLayer.getSession() == null) {
+                            dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
+                        }
                         avg = dbLayer.getJobAvg(hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName());
                     }
                     if (isDebugEnabled) {
@@ -988,19 +1015,25 @@ public class HistoryMonitoringModel implements Serializable {
     public class HistoryOrderStepResult {
 
         private final HistoryOrderStepBean step;
-        private final HistoryOrderStepResultWarn warn;
+        private final List<HistoryOrderStepResultWarn> warnings = new ArrayList<>();
 
         public HistoryOrderStepResult(HistoryOrderStepBean step, HistoryOrderStepResultWarn warn) {
             this.step = step;
-            this.warn = warn;
+            this.warnings.add(warn);
         }
 
         public HistoryOrderStepBean getStep() {
             return step;
         }
 
-        public HistoryOrderStepResultWarn getWarn() {
-            return warn;
+        public void addWarn(HistoryOrderStepResultWarn warn) {
+            if (warn != null) {
+                warnings.add(warn);
+            }
+        }
+
+        public List<HistoryOrderStepResultWarn> getWarnings() {
+            return warnings;
         }
     }
 

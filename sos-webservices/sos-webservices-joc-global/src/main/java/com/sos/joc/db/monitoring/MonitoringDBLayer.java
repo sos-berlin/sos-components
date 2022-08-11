@@ -144,6 +144,8 @@ public class MonitoringDBLayer extends DBLayer {
         hql.append(",n.created as created");
         hql.append(",n.notificationId as notificationId");
         hql.append(",n.hasMonitors as hasMonitors");
+        hql.append(",n.warn as orderStepWarn");
+        hql.append(",n.warnText as orderStepWarnText");
         hql.append(",o.historyId as orderHistoryId");
         hql.append(",o.controllerId as controllerId");
         hql.append(",o.orderId as orderId");
@@ -162,8 +164,6 @@ public class MonitoringDBLayer extends DBLayer {
         hql.append(",os.returnCode as orderStepReturnCode");
         hql.append(",os.error as orderStepError");
         hql.append(",os.errorText as orderStepErrorText");
-        hql.append(",os.warn as orderStepWarn");
-        hql.append(",os.warnText as orderStepWarnText");
         hql.append(",a.account as acknowledgementAccount");
         hql.append(",a.comment as acknowledgementComment");
         hql.append(",a.created as acknowledgementCreated ");
