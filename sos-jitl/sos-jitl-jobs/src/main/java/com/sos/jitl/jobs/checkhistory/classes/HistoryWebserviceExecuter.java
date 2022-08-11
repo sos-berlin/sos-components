@@ -1,5 +1,6 @@
 package com.sos.jitl.jobs.checkhistory.classes;
 
+import com.sos.jitl.jobs.common.Globals;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;

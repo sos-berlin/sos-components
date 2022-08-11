@@ -25,8 +25,7 @@ public class HistoryItem {
     private boolean historyItemFound = false;
     private boolean result = false;
     private int count = 0;
-    private OrderHistory orderHistory;
-    private TaskHistory taskHistory;
+
 
     private String getIso8601String(Date d) {
         if (d != null) {
@@ -40,7 +39,6 @@ public class HistoryItem {
     }
 
     public HistoryItem(OrderHistory orderHistory) {
-        this.orderHistory = orderHistory;
         result = orderHistory != null;
         historyItemFound = orderHistory != null;
 
@@ -60,7 +58,6 @@ public class HistoryItem {
     }
 
     public HistoryItem(TaskHistory taskHistory) {
-        this.taskHistory = taskHistory;
         result = taskHistory != null;
         historyItemFound = taskHistory != null;
 

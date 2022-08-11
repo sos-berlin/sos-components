@@ -1,8 +1,8 @@
-package com.sos.jitl.jobs.checkhistory.classes;
+package com.sos.jitl.jobs.common;
 
 import java.util.Map;
 
-public class CheckHistoryJobReturn {
+public class JitlJobReturn {
 
     private Integer exitCode;
     private Map<String, Object> resultMap;
