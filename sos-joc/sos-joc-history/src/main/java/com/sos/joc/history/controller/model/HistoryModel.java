@@ -123,6 +123,7 @@ public class HistoryModel {
     private final String variableName;
     private Long storedEventId;
     private Long maxLogSize2Store = Long.valueOf(1_024 * 1_024 * 1_024);// TODO read from settings
+    private boolean useMaxLogSize2Store = false;
     private boolean closed = false;
     private int maxTransactions = 100;
     private long transactionCounter;
@@ -986,9 +987,19 @@ public class HistoryModel {
 
                     if (cleanupLogFiles) {
                         if (co.getParentId().longValue() == 0L) {
-                            SOSPath.deleteIfExists(log.getParent());
+                            try {
+                                SOSPath.deleteIfExists(log.getParent());
+                            } catch (Throwable e) {
+                                LOGGER.warn(String.format("[%s][%s][%s][error on delete order directory][%s]%s", identifier, eventType, orderId, log
+                                        .getParent(), e.toString()), e);
+                            }
                         } else {
-                            Files.delete(log);
+                            try {
+                                Files.delete(log);
+                            } catch (Throwable e) {
+                                LOGGER.warn(String.format("[%s][%s][%s][error on delete log file][%s]%s", identifier, eventType, orderId, log, e
+                                        .toString()), e);
+                            }
                         }
                     }
                 }
@@ -1872,21 +1883,25 @@ public class HistoryModel {
                 item.setFileLinesUncomressed(SOSPath.getLineCount(file));
 
                 if (item.getCompressed()) {// task
-                    if (item.getFileSizeUncomressed() > maxLogSize2Store) {
-                        Path f = handleFileOnNonCompress(file, item.getFileSizeUncomressed(), null);
+                    if (useMaxLogSize2Store && item.getFileSizeUncomressed() > maxLogSize2Store) {
+                        Path f = moveOriginalLogFile(file, item.getFileSizeUncomressed(), null);
                         if (f == null) {
                             item = null;
                         } else {
+                            item.setFileSizeUncomressed(Files.size(f));
+                            item.setFileLinesUncomressed(SOSPath.getLineCount(f));
                             item.setFileContent(SOSGzip.compress(f, false).getCompressed());
                         }
                     } else {
                         try {
                             item.setFileContent(SOSGzip.compress(file, false).getCompressed());
                         } catch (Throwable e) {
-                            Path f = handleFileOnNonCompress(file, item.getFileSizeUncomressed(), e);
+                            Path f = moveOriginalLogFile(file, item.getFileSizeUncomressed(), e);
                             if (f == null) {
                                 item = null;
                             } else {
+                                item.setFileSizeUncomressed(Files.size(f));
+                                item.setFileLinesUncomressed(SOSPath.getLineCount(f));
                                 item.setFileContent(SOSGzip.compress(f, false).getCompressed());
                             }
                         }
@@ -1903,11 +1918,12 @@ public class HistoryModel {
             }
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][%s]%s", identifier, file.toString(), e.toString()), e);
+            item = null;
         }
         return item;
     }
 
-    private Path handleFileOnNonCompress(Path file, Long fileSizeUncomressed, Throwable t) {
+    private Path moveOriginalLogFile(Path file, Long fileSizeUncomressed, Throwable t) {
         StringBuilder prefix = new StringBuilder();
         prefix.append("[JOC][History][").append(file).append("]");
 
