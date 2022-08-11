@@ -121,7 +121,7 @@ public class Job implements IConfigurationObject
     @JsonProperty("jobClassName")
     private String jobClassName;
     @JsonProperty("jobTemplate")
-    private JobTemplate jobTemplate;
+    private JobTemplateRef jobTemplate;
     /**
      * key-value pairs particularly to assign parameters to environment
      * <p>
@@ -215,7 +215,7 @@ public class Job implements IConfigurationObject
      * @param subagentClusterId
      * @param documentationName
      */
-    public Job(String agentName, String subagentClusterId, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClassName, JobTemplate jobTemplate, Environment defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobCriticality criticality, String warnIfShorter, String warnIfLonger, JobNotification notification) {
+    public Job(String agentName, String subagentClusterId, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClassName, JobTemplateRef jobTemplate, Environment defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobCriticality criticality, String warnIfShorter, String warnIfLonger, JobNotification notification) {
         super();
         this.agentName = agentName;
         this.subagentClusterId = subagentClusterId;
@@ -426,12 +426,12 @@ public class Job implements IConfigurationObject
     }
 
     @JsonProperty("jobTemplate")
-    public JobTemplate getJobTemplate() {
+    public JobTemplateRef getJobTemplate() {
         return jobTemplate;
     }
 
     @JsonProperty("jobTemplate")
-    public void setJobTemplate(JobTemplate jobTemplate) {
+    public void setJobTemplate(JobTemplateRef jobTemplate) {
         this.jobTemplate = jobTemplate;
     }
 

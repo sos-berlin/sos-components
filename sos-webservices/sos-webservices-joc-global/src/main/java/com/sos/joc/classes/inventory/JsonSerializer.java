@@ -22,6 +22,7 @@ import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.JobReturnCode;
+import com.sos.inventory.model.job.JobReturnCodeWarning;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
@@ -77,6 +78,8 @@ public class JsonSerializer {
             return (T) emptyBoardValuesToNull((com.sos.inventory.model.board.Board) config);
         } else if (com.sos.inventory.model.fileordersource.FileOrderSource.class.isInstance(config)) {
             return (T) emptyFileOrderSourceValuesToNull((com.sos.inventory.model.fileordersource.FileOrderSource) config);
+        } else if (com.sos.inventory.model.jobtemplate.JobTemplate.class.isInstance(config)) {
+            return (T) emptyJobTemplateValuesToNull((com.sos.inventory.model.jobtemplate.JobTemplate) config);
         }
         return config;
     }
@@ -221,6 +224,21 @@ public class JsonSerializer {
         return j;
     }
     
+    private static com.sos.inventory.model.jobtemplate.JobTemplate emptyJobTemplateValuesToNull(com.sos.inventory.model.jobtemplate.JobTemplate jt) {
+        if (jt != null) {
+            jt.setFailOnErrWritten(defaultToNull(jt.getFailOnErrWritten(), Boolean.FALSE));
+            jt.setParallelism(defaultToNull(jt.getParallelism(), 1));
+            jt.setDefaultArguments(emptyEnvToNullAndQuoteStrings(jt.getDefaultArguments()));
+            emptyStringCollectionsToNull(jt.getJobResourceNames());
+            emptyExecutableToNull(jt.getExecutable(), null);
+            jt.setGraceTimeout(defaultToNull(jt.getGraceTimeout(), 15));
+            jt.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(jt.getAdmissionTimeScheme()));
+            jt.setSkipIfNoAdmissionForOrderDay(defaultToNull(jt.getSkipIfNoAdmissionForOrderDay(), Boolean.FALSE));
+            jt.setHash(null);
+        }
+        return jt;
+    }
+    
     private static AdmissionTimeScheme emptyAdmissionTimeSchemeToNull(AdmissionTimeScheme obj) {
         if (obj != null && obj.getPeriods() == null) {
             return null;
@@ -301,7 +319,19 @@ public class JsonSerializer {
         if (j != null) {
             emptyCollectionsToNull(j.getFailure());
             emptyCollectionsToNull(j.getSuccess());
-            if (j.getFailure() == null && j.getSuccess() == null) {
+            emptyCollectionsToNull(j.getWarning());
+            if (j.getFailure() == null && j.getSuccess() == null && j.getWarning() == null) {
+                return null;
+            }
+            return j;
+        }
+        return null;
+    }
+    
+    private static JobReturnCodeWarning emptyReturnCodeWarningToNull(JobReturnCodeWarning j) {
+        if (j != null) {
+            emptyCollectionsToNull(j.getWarning());
+            if (j.getWarning() == null) {
                 return null;
             }
             return j;
@@ -327,6 +357,7 @@ public class JsonSerializer {
             ExecutableJava ej = e.cast();
             ej.setArguments(emptyEnvToNull(ej.getArguments()));
             ej.setJobArguments(emptyVarsToNull(ej.getJobArguments()));
+            ej.setReturnCodeMeaning(emptyReturnCodeWarningToNull(ej.getReturnCodeMeaning()));
             break;
         case ShellScriptExecutable:
         case ScriptExecutable:

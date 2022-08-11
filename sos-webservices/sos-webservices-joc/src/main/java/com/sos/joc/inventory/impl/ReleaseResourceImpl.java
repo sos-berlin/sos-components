@@ -28,6 +28,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -404,8 +405,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     
     private static void addHash(DBItemInventoryConfiguration conf) throws IOException {
         if (ConfigurationType.JOBTEMPLATE.intValue() == conf.getType()) {
-            JobTemplate jt = (JobTemplate) JocInventory.content2IJSObject(conf.getContent(), ConfigurationType.JOBTEMPLATE.intValue());
-            jt.setHash(SOSString.hash256(conf.getContent()));
+            JobTemplate jt = JsonSerializer.emptyValuesToNull((JobTemplate) JocInventory.content2IJSObject(conf.getContent(),
+                    ConfigurationType.JOBTEMPLATE.intValue()));
+            jt.setHash(JocInventory.hash(jt));
             conf.setContent(Globals.objectMapper.writeValueAsString(jt));
         }
     }
