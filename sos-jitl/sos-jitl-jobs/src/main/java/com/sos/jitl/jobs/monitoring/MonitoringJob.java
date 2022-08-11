@@ -15,6 +15,9 @@ import js7.data_for_java.order.JOutcome;
 
 public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> {
 
+    private static final String NOT_HEALTHY = "not healthy";
+    private static final String HEALTHY = "healthy";
+
     public MonitoringJob(JobContext jobContext) {
         super(jobContext);
     }
@@ -47,12 +50,15 @@ public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> 
         resultMap.put("monitorReportFile", monitoringReturnParameters.getMonitorReportFile());
         MonitoringCheckReturn monitoringCheckReturn = executeMonitoring.checkStatusInformation(monitoringStatus, monitoringReturnParameters);
         resultMap.put("subject", monitoringCheckReturn.getSubject());
-        resultMap.put("body", monitoringCheckReturn.getSubject());
+        resultMap.put("body", monitoringCheckReturn.getBody());
 
         monitoringJobReturn.setResultMap(resultMap);
-      //  if (monitoringCheckReturn.isSuccess()) {
-      //      monitoringJobReturn.setExitCode(1);
-      //  }
+        if (monitoringCheckReturn.isSuccess()) {
+            resultMap.put("result", HEALTHY);
+        }else {
+            resultMap.put("result", NOT_HEALTHY);
+        }
+        
 
         return monitoringJobReturn;
     }

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
+<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xhtml="http://www.w3.org/1999/xhtml"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+
+    <job name  = "MonitoringJob"
+         title = "Checks the status of the Controller, Agents and JOC"
+         category="Monitoring;JITL">
+        <script language   = "java"
+                java_class = "com.sos.jitl.jobs.monitoring.MonitoringJob"
+                resource   = "1"/>
+    </job>
+
+    <configuration>
+ 
+        <params id="job_parameter">
+            <param name="controller_id" required="true">
+                <note>
+                	<title>The Controller ID indicates the Controller that has to be checked.</title>
+                	<p>
+                        The argument holds the Controller ID that has to be checked. This can be a controller cluster or a standalone controller.
+                     </p>
+                </note>
+            </param>
+
+            <param name="monitor_report_dir" required="true">
+                <note>
+                	<title>The directory where the check result is stored</title>
+                	<p>
+                	When executing the check, the result of the check is stored in a file. This file is a json file with the name monitor.&lt;yyyy-mm-dd&gt>.&lt;HH-mm-ss.ms&gt;.json
+                    </p>
+                  
+                </note>
+            </param>                     
+
+            <param name="monitor_report_max_files" required="one of workflow or job">
+                <note>
+                    <title>Limit for the maximum number of files in &lt;monitor_report_dir&gt; </title>
+                   <p>
+                	This is a limit for the maximum number of files in &lt;monitor_report_dir&gt;. When the limit is reached, the oldest files will be deleted.
+                    </p>
+                </note>
+            </param>
+                     
+                <param name="mail_smtp_from" required="false">
+                <note>
+                    <title>Parameter &lt;from&gt; for the email job</title>
+                    <p>This value is used as a part of the subject for the result email</p>
+                         
+            </param>
+      
+             
+        </params>
+                
+        <params id="return_parameter">
+            
+            <param name="monitorReportDate" required="false">
+                <note>
+                    <title>The monitor report date</title>
+                    <p>
+						Returns the date of the check in the format yyyy-MM-dd.HH-mm-ss.K
+                    </p>
+                </note>
+            </param>
+            <param name="monitorReportFile" required="false">
+                <note>
+                    <title>The name of the result file</title>
+                    <p>
+  						Returns the name of the file with the result of the check queries. 
+                    </p>
+                </note>
+            </param>
+            <param name="subject" required="false">
+                <note>
+                    <title>The subject for the result email</title>
+                    <p>
+                        Returns the subject for the result email.
+                        <ul>
+                        <li>JS7 Monitor: Notice from: &lt;mailSmtpFrom&gt; at: &lt;monitorReportDate&gt;</li>
+                        <li>JS7 Monitor: Alert from: &lt;mailSmtpFrom&gt; at: &lt;monitorReportDate&gt;</li>
+                        </ul>
+                    </p>
+                </note>
+            </param>
+            <param name="body" required="false">
+                <note>
+                    <title>The body for the result email</title>
+                    <p>
+                        returns the body for the result email. This is the subject and a message.
+                    </p>
+                </note>
+            </param>             
+            <param name="result" required="false">
+                <note>
+                    <title>Whether the check returns healthy or not healthy</title>
+                    <p>
+                        Returns the result for the check
+                        <ul>
+                        <li>healty</li>
+                        <li>not healthy</li>
+                        </ul>
+                    </p>
+                </note>
+            </param>
+             
+            
+
+        </params>
+
+    </configuration>
+
+    <documentation>
+    
+        <note>
+            <title>What is the purpose of this job?</title>
+            <p>
+                The job checks whether controller, agents and JOC Cockpit are healthy.
+            </p>
+        </note>
+    
+        
+         
+    </documentation>
+
+</description>
