@@ -1,17 +1,17 @@
 package com.sos.jitl.jobs.monitoring.classes;
 
+import com.sos.jitl.jobs.common.JobLogger;
+
 public class MonitoringCheckReturn {
 
     private String message;
     private String subject;
     private String body;
 
-    
     public String getBody() {
         return body;
     }
 
-    
     public void setBody(String body) {
         this.body = body;
     }
@@ -34,7 +34,8 @@ public class MonitoringCheckReturn {
         this.message = message;
     }
 
-    public void setErrorMessage(String message) {
+    public void setErrorMessage(JobLogger logger, String message) {
+        Globals.warn(logger, message);
         this.message = message;
         this.success = false;
     }
