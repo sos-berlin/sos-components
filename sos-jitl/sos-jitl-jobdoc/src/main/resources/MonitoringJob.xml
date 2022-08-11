@@ -30,7 +30,7 @@
                 <note>
                 	<title>The directory where the check result is stored</title>
                 	<p>
-                	When executing the check, the result of the check is stored in a file. This file is a json file with the name monitor.&lt;yyyy-mm-dd&gt>.&lt;HH-mm-ss.ms&gt;.json
+                	When executing the check, the result of the check is stored in a file. This file is a json file with the name monitor.&lt;yyyy-mm-dd&gt;>.&lt;HH-mm-ss.ms&gt;.json
                     </p>
                   
                 </note>
