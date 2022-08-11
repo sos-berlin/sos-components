@@ -3,16 +3,21 @@ package com.sos.joc.monitoring.model;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.sos.history.JobWarning;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.joc.monitoring.db.LastWorkflowNotificationDBItemEntity;
+import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResultWarn;
 import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
 
@@ -32,13 +37,13 @@ public class NotifyAnalyzer {
     private DBItemMonitoringOrderStep orderStep;
 
     private Map<String, LastWorkflowNotificationDBItemEntity> toRecovery;
-    private List<String> sendedWarnings;
+    private Map<String, Set<JobWarning>> sendedWarnings;
 
     // TODO
     private boolean checkPeriodAge = false;
 
     protected boolean analyze(DBLayerMonitoring dbLayer, List<Notification> list, HistoryOrderBean hob, HistoryOrderStepBean hosb,
-            NotificationType type) throws Exception {
+            NotificationType type, List<HistoryOrderStepResultWarn> warnings) throws Exception {
         if (hob == null) {
             range = NotificationRange.WORKFLOW_JOB;
             orderId = hosb.getHistoryOrderId();
@@ -68,9 +73,17 @@ public class NotifyAnalyzer {
             }
             break;
         case WARNING:
-            List<String> ws = dbLayer.getNotificationNotificationIds(type, range, orderId, stepId);
-            if (ws != null && ws.size() > 0) {
-                sendedWarnings = ws;
+            List<DBItemNotification> wns = dbLayer.getNotifications(type, range, orderId, stepId);
+            if (wns != null && wns.size() > 0) {
+                sendedWarnings = new HashMap<>();
+                for (DBItemNotification wn : wns) {
+                    Set<JobWarning> set = sendedWarnings.get(wn.getNotificationId());
+                    if (set == null) {
+                        set = new HashSet<>();
+                    }
+                    set.add(wn.getWarnAsEnum());
+                    sendedWarnings.put(wn.getNotificationId(), set);
+                }
             }
             break;
         default:
@@ -141,7 +154,7 @@ public class NotifyAnalyzer {
         return toRecovery;
     }
 
-    public List<String> getSendedWarnings() {
+    public Map<String, Set<JobWarning>> getSendedWarnings() {
         return sendedWarnings;
     }
 

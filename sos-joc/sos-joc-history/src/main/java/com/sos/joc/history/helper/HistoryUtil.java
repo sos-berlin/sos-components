@@ -1,8 +1,6 @@
 package com.sos.joc.history.helper;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.util.Date;
 import java.util.Map;
 
 import javax.json.Json;
@@ -29,11 +27,6 @@ public class HistoryUtil {
         return li > -1 ? path.substring(0, li) : path;
     }
 
-    public static String getBasenameFromPath(String path) {
-        int li = path.lastIndexOf("/");
-        return li > -1 ? path.substring(li + 1) : path;
-    }
-
     public static String getForkChildNameFromOrderId(String forkChildOrderId) {
         int li = forkChildOrderId.lastIndexOf("|");
         return li > -1 ? forkChildOrderId.substring(li + 1) : forkChildOrderId;
@@ -48,22 +41,6 @@ public class HistoryUtil {
 
     public static String nl2sp(String value) {
         return value.replaceAll("\\r\\n|\\r|\\n", " ");
-    }
-
-    public static Date getEventIdAsDate(Long eventId) {
-        return eventId == null ? null : Date.from(eventId2Instant(eventId));
-    }
-
-    public static Instant eventId2Instant(Long eventId) {
-        return Instant.ofEpochMilli(eventId / 1000);
-    }
-
-    public static Instant timestamp2Instant(Long timestamp) {
-        return Instant.ofEpochMilli(timestamp);
-    }
-
-    public static Long getDateAsEventId(Date date) {
-        return date == null ? null : date.getTime() * 1_000;
     }
 
     public static String json2String(Object o) throws JsonProcessingException {

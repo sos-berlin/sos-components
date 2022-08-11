@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSSerializer;
@@ -22,6 +23,7 @@ import com.sos.joc.cluster.bean.history.AHistoryBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
+import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.model.SerializedHistoryResult;
 import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
@@ -45,10 +47,10 @@ public class DBLayerMonitoringTest {
 
             LOGGER.info(SOSString.toString(dbLayer.getLastNotification("1", NotificationRange.WORKFLOW, 663L)));
 
-            List<String> result = dbLayer.getNotificationNotificationIds(NotificationType.SUCCESS, NotificationRange.WORKFLOW, 711L, 1014L);
+            List<DBItemNotification> result = dbLayer.getNotifications(NotificationType.SUCCESS, NotificationRange.WORKFLOW, 711L, 1014L);
             LOGGER.info("RESULT SIZE= " + result.size());
-            for (String n : result) {
-                LOGGER.info(" " + n);
+            for (DBItemNotification n : result) {
+                LOGGER.info(" " + SOSHibernate.toString(n));
             }
 
         } catch (Exception e) {
@@ -99,7 +101,7 @@ public class DBLayerMonitoringTest {
             i1.setCreated(new Date());
             i1.setModified(i1.getCreated());
 
-            HistoryOrderStepBean b1 = new HistoryOrderStepBean(EventType.OrderProcessingStarted, 1647619880839002L, i1, "200%", null, null);
+            HistoryOrderStepBean b1 = new HistoryOrderStepBean(EventType.OrderProcessingStarted, 1647619880839002L, i1, "200%", null, null, null);
             longerThan.put(b1.getHistoryId(), b1);
 
             saveJocVariable(factory, new SOSSerializer<SerializedHistoryResult>().serializeCompressed2bytes(new SerializedHistoryResult(payloads,

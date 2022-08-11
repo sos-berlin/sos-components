@@ -25,11 +25,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSGzip;
 import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
+import com.sos.inventory.model.job.ExecutableJava;
+import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.classes.history.HistoryNotification;
 import com.sos.joc.classes.history.HistoryPosition;
@@ -37,6 +41,7 @@ import com.sos.joc.classes.inventory.search.WorkflowSearcher;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowJob;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
+import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
@@ -117,6 +122,7 @@ public class HistoryModel {
     private String identifier;
     private final String variableName;
     private Long storedEventId;
+    private Long maxLogSize2Store = Long.valueOf(1_024 * 1_024 * 1_024);// TODO read from settings
     private boolean closed = false;
     private int maxTransactions = 100;
     private long transactionCounter;
@@ -492,7 +498,7 @@ public class HistoryModel {
     }
 
     private String eventIdAsTime(Long eventId) {
-        return eventId.equals(Long.valueOf(0)) ? "0" : SOSDate.getTimeAsString(HistoryUtil.eventId2Instant(eventId));
+        return eventId.equals(Long.valueOf(0)) ? "0" : SOSDate.getTimeAsString(JocClusterUtil.eventId2Instant(eventId));
     }
 
     private String getCachedSummary() {
@@ -734,7 +740,7 @@ public class HistoryModel {
             }
             AgentCouplingFailed cf = cachedAgentsCouplingFailed.getLast(current.getAgentId(), current.getReadyEventId());
             if (cf != null) {
-                previous.setCouplingFailedTime(HistoryUtil.getEventIdAsDate(cf.getEventId()));
+                previous.setCouplingFailedTime(JocClusterUtil.getEventIdAsDate(cf.getEventId()));
                 previous.setCouplingFailedMessage(cf.getMessage());
 
                 if (previous.getLastKnownTime() != null) {
@@ -773,7 +779,7 @@ public class HistoryModel {
             item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setOrderId(entry.getOrderId());
 
-            String workflowName = HistoryUtil.getBasenameFromPath(entry.getWorkflowPath());
+            String workflowName = JocClusterUtil.getBasenameFromPath(entry.getWorkflowPath());
             CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, entry.getWorkflowVersionId());
 
             item.setWorkflowPath(cw.getPath());
@@ -1032,7 +1038,7 @@ public class HistoryModel {
     }
 
     private LogEntry createOrderLogEntry(Long eventId, FatOutcome outcome, CachedOrderStep cos, EventType eventType) {
-        LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, eventType, HistoryUtil.getEventIdAsDate(eventId), null);
+        LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, eventType, JocClusterUtil.getEventIdAsDate(eventId), null);
         boolean stepHasError = (cos != null && cos.getError() != null);
         if (outcome != null) {
             le.setReturnCode(outcome.getReturnCode());
@@ -1189,7 +1195,7 @@ public class HistoryModel {
             item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setOrderId(forkOrder.getOrderId());
 
-            String workflowName = HistoryUtil.getBasenameFromPath(entry.getWorkflowPath());
+            String workflowName = JocClusterUtil.getBasenameFromPath(entry.getWorkflowPath());
             CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, entry.getWorkflowVersionId());
 
             item.setWorkflowPath(cw.getPath());
@@ -1279,7 +1285,7 @@ public class HistoryModel {
                     endedOrderSteps, true));
         }
 
-        LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, EventType.OrderJoined, HistoryUtil.getEventIdAsDate(entry.getEventId()), null);
+        LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, EventType.OrderJoined, JocClusterUtil.getEventIdAsDate(entry.getEventId()), null);
         CachedOrder co = getCachedOrderByCurrentOrderId(dbLayer, entry.getOrderId(), entry.getEventId());
         le.onOrderJoined(co, entry.getPosition(), entry.getChilds().stream().map(s -> s.getOrderId()).collect(Collectors.toList()), entry
                 .getOutcome());
@@ -1307,7 +1313,7 @@ public class HistoryModel {
             item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setOrderId(entry.getOrderId());
 
-            String workflowName = HistoryUtil.getBasenameFromPath(entry.getWorkflowPath());
+            String workflowName = JocClusterUtil.getBasenameFromPath(entry.getWorkflowPath());
             CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, entry.getWorkflowVersionId());
             CachedWorkflowJob job = cw.getJob(entry.getJobName());
 
@@ -1361,7 +1367,7 @@ public class HistoryModel {
             dbLayer.updateOrderOnOrderStep(co.getId(), co.getCurrentHistoryOrderStepId());
 
             CachedOrderStep cos = new CachedOrderStep(item, ca.getTimezone());
-            LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderProcessingStarted, HistoryUtil.getEventIdAsDate(entry.getEventId()),
+            LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderProcessingStarted, JocClusterUtil.getEventIdAsDate(entry.getEventId()),
                     agentStartTime);
             le.onOrderStep(cos, ca.getTimezone());
             storeLog2File(le);
@@ -1370,7 +1376,7 @@ public class HistoryModel {
             tryStoreCurrentState(dbLayer, entry.getEventId());
 
             return new HistoryOrderStepBean(EventType.OrderProcessingStarted, entry.getEventId(), item, job.getWarnIfLonger(), job.getWarnIfShorter(),
-                    item.getJobNotification());
+                    job.getWarnReturnCodes(), item.getJobNotification());
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
             if (cve == null) {
@@ -1416,7 +1422,7 @@ public class HistoryModel {
             checkControllerTimezone(dbLayer);
             cos.setEndTime(entry.getEventDatetime());
 
-            LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderProcessed, HistoryUtil.getEventIdAsDate(entry.getEventId()), cos
+            LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderProcessed, JocClusterUtil.getEventIdAsDate(entry.getEventId()), cos
                     .getEndTime());
             if (entry.getOutcome() != null) {
                 cos.setReturnCode(entry.getOutcome().getReturnCode());
@@ -1474,7 +1480,7 @@ public class HistoryModel {
 
     private HistoryOrderStepBean onOrderStepProcessed(DBLayerHistory dbLayer, Long eventId, CachedOrder co, CachedOrderStep cos, LogEntry le,
             String endVariables) throws Exception {
-        String workflowName = HistoryUtil.getBasenameFromPath(co.getWorkflowPath());
+        String workflowName = JocClusterUtil.getBasenameFromPath(co.getWorkflowPath());
         CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, co.getWorkflowVersionId());
         CachedWorkflowJob job = cw.getJob(cos.getJobName());
         HistoryOrderStepBean hosb = cos.convert(EventType.OrderProcessed, eventId, controllerConfiguration.getCurrent().getId(), co
@@ -1487,6 +1493,7 @@ public class HistoryModel {
         hosb.setErrorText(le.getErrorText());
         hosb.setWarnIfLonger(job.getWarnIfLonger());
         hosb.setWarnIfShorter(job.getWarnIfShorter());
+        hosb.setWarnReturnCodes(job.getWarnReturnCodes());
         return hosb;
     }
 
@@ -1517,7 +1524,8 @@ public class HistoryModel {
             cos.setStdError(entry.getChunck());
         }
         if (cos.getEndTime() == null) {
-            LogEntry le = new LogEntry(LogEntry.LogLevel.INFO, eventType, HistoryUtil.getEventIdAsDate(entry.getEventId()), entry.getEventDatetime());
+            LogEntry le = new LogEntry(LogEntry.LogLevel.INFO, eventType, JocClusterUtil.getEventIdAsDate(entry.getEventId()), entry
+                    .getEventDatetime());
 
             le.onOrderStep(cos, entry.getChunck());
             storeLog2File(le, cos);
@@ -1673,7 +1681,7 @@ public class HistoryModel {
                             identifier, controllerConfiguration.getCurrent().getId(), agentId, controllerTimezone, getDateAsString(readyTime), uri));
 
                     item = new DBItemHistoryAgent();
-                    item.setReadyEventId(HistoryUtil.getDateAsEventId(readyTime));
+                    item.setReadyEventId(JocClusterUtil.getDateAsEventId(readyTime));
                     item.setControllerId(controllerConfiguration.getCurrent().getId());
                     item.setAgentId(agentId);
                     item.setUri(uri);
@@ -1690,7 +1698,7 @@ public class HistoryModel {
                             controllerConfiguration.getCurrent().getId(), agentId, controllerTimezone, getDateAsString(readyTime)));
 
                     item = new DBItemHistoryAgent();
-                    item.setReadyEventId(HistoryUtil.getDateAsEventId(readyTime));
+                    item.setReadyEventId(JocClusterUtil.getDateAsEventId(readyTime));
                     item.setControllerId(controllerConfiguration.getCurrent().getId());
                     item.setAgentId(agentId);
                     item.setUri(inst.getUri());
@@ -1773,9 +1781,32 @@ public class HistoryModel {
                 }
             }
             map.put(job.getName(), new CachedWorkflowJob(job.getJob().getCriticality(), job.getJob().getTitle(), job.getJob().getAgentName(), job
-                    .getJob().getSubagentClusterId(), job.getJob().getWarnIfLonger(), job.getJob().getWarnIfShorter(), notification));
+                    .getJob().getSubagentClusterId(), job.getJob().getWarnIfLonger(), job.getJob().getWarnIfShorter(), getWarningReturnCodes(job
+                            .getJob()), notification));
         }
         return map;
+    }
+
+    private List<Integer> getWarningReturnCodes(com.sos.inventory.model.job.Job job) {
+        List<Integer> result = null;
+        if (job.getExecutable() != null && job.getExecutable().getTYPE() != null) {
+            switch (job.getExecutable().getTYPE()) {
+            case ShellScriptExecutable:
+            case ScriptExecutable:
+                ExecutableScript es = (ExecutableScript) job.getExecutable();
+                if (es != null && es.getReturnCodeMeaning() != null) {
+                    result = es.getReturnCodeMeaning().getWarning();
+                }
+                break;
+            case InternalExecutable:
+                ExecutableJava ej = (ExecutableJava) job.getExecutable();
+                if (ej != null && ej.getReturnCodeMeaning() != null) {
+                    result = ej.getReturnCodeMeaning().getWarning();
+                }
+                break;
+            }
+        }
+        return result;
     }
 
     private void addCachedWorkflow(String key, CachedWorkflow cw) {
@@ -1826,32 +1857,102 @@ public class HistoryModel {
             Path file) throws Exception {
 
         DBItemHistoryLog item = null;
-        if (Files.exists(file)) {
-            item = new DBItemHistoryLog();
-            item.setControllerId(controllerConfiguration.getCurrent().getId());
+        try {
+            if (Files.exists(file)) {
+                item = new DBItemHistoryLog();
+                item.setControllerId(controllerConfiguration.getCurrent().getId());
 
-            item.setHistoryOrderMainParentId(orderMainParentId);
-            item.setHistoryOrderId(orderId);
-            item.setHistoryOrderStepId(orderStepId);
-            item.setCompressed(compressed);
+                item.setHistoryOrderMainParentId(orderMainParentId);
+                item.setHistoryOrderId(orderId);
+                item.setHistoryOrderStepId(orderStepId);
+                item.setCompressed(compressed);
 
-            item.setFileBasename(SOSPath.getFileNameWithoutExtension(file.getFileName()));
-            item.setFileSizeUncomressed(Files.size(file));
-            item.setFileLinesUncomressed(SOSPath.getLineCount(file));
+                item.setFileBasename(SOSPath.getFileNameWithoutExtension(file.getFileName()));
+                item.setFileSizeUncomressed(Files.size(file));
+                item.setFileLinesUncomressed(SOSPath.getLineCount(file));
 
-            if (item.getCompressed()) {// task
-                item.setFileContent(SOSGzip.compress(file, false).getCompressed());
-            } else {// order
-                item.setFileContent(SOSPath.readFile(file, Collectors.joining(",", "[", "]")).getBytes(StandardCharsets.UTF_8));
+                if (item.getCompressed()) {// task
+                    if (item.getFileSizeUncomressed() > maxLogSize2Store) {
+                        Path f = handleFileOnNonCompress(file, item.getFileSizeUncomressed(), null);
+                        if (f == null) {
+                            item = null;
+                        } else {
+                            item.setFileContent(SOSGzip.compress(f, false).getCompressed());
+                        }
+                    } else {
+                        try {
+                            item.setFileContent(SOSGzip.compress(file, false).getCompressed());
+                        } catch (Throwable e) {
+                            Path f = handleFileOnNonCompress(file, item.getFileSizeUncomressed(), e);
+                            if (f == null) {
+                                item = null;
+                            } else {
+                                item.setFileContent(SOSGzip.compress(f, false).getCompressed());
+                            }
+                        }
+                    }
+                } else {// order
+                    item.setFileContent(SOSPath.readFile(file, Collectors.joining(",", "[", "]")).getBytes(StandardCharsets.UTF_8));
+                }
+                if (item != null) {
+                    item.setCreated(new Date());
+                    dbLayer.getSession().save(item);
+                }
+            } else {
+                LOGGER.error(String.format("[%s][%s]file not found", identifier, file.toString()));
             }
-
-            item.setCreated(new Date());
-
-            dbLayer.getSession().save(item);
-        } else {
-            LOGGER.error(String.format("[%s][%s]file not found", identifier, file.toString()));
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][%s]%s", identifier, file.toString(), e.toString()), e);
         }
         return item;
+    }
+
+    private Path handleFileOnNonCompress(Path file, Long fileSizeUncomressed, Throwable t) {
+        StringBuilder prefix = new StringBuilder();
+        prefix.append("[JOC][History][").append(file).append("]");
+
+        StringBuilder result = new StringBuilder();
+        result.append(prefix).append("Log file ");
+        result.append("(uncompressed size=").append(SOSShell.byteCountToDisplaySize(fileSizeUncomressed)).append(")");
+        if (t == null) {
+            result.append(" will be moved because too big.");
+        } else {
+            result.append(" will be moved because exception:").append(HistoryUtil.NEW_LINE);
+            result.append(SOSClassUtil.getStackTrace(t));
+        }
+        result.append(HistoryUtil.NEW_LINE);
+
+        Path historyDir = Paths.get(historyConfiguration.getLogDir());
+        if (historyDir.getParent() == null) {
+            result.append(prefix).append("Log file cannot be moved because a history parent directory not exists.");
+        } else {
+            try {
+                Path target = historyDir.getParent().resolve("history_" + file.getFileName());
+                SOSPath.renameTo(file, target);
+                result.append(prefix).append("Log file moved to ").append(target).append(".");
+            } catch (Throwable ex) {
+                try {
+                    result.append(prefix).append("Log file cannot be moved to ").append(historyDir.getParent()).append(":").append(
+                            HistoryUtil.NEW_LINE);
+                    result.append(SOSClassUtil.getStackTrace(ex)).append(HistoryUtil.NEW_LINE);
+                    result.append(prefix).append("Log file will be deleted.");
+                    SOSPath.deleteIfExists(file);
+                } catch (Throwable e) {
+                    result.append(HistoryUtil.NEW_LINE);
+                    result.append(prefix).append("Log file cannot be deleted:").append(HistoryUtil.NEW_LINE);
+                    result.append(SOSClassUtil.getStackTrace(e));
+                }
+            }
+        }
+
+        try {
+            file = Files.write(file, result.toString().getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[handleFileOnNonCompress][%s][truncate existing]%s", file, e.toString()), e);
+            return null;
+        }
+
+        return file;
     }
 
     private Path getOrderLog(Path dir, Long orderId) {

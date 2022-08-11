@@ -13,6 +13,7 @@ import com.sos.history.JobWarning;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
+import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
@@ -27,7 +28,6 @@ import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResult;
-import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResultWarn;
 import com.sos.joc.monitoring.model.NotifyAnalyzer;
 import com.sos.joc.monitoring.notification.notifier.NotifyResult;
 import com.sos.monitoring.notification.NotificationRange;
@@ -181,8 +181,6 @@ public class DBLayerMonitoring extends DBLayer {
     }
 
     public int setOrderStepEnd(HistoryOrderStepResult result) throws SOSHibernateException {
-        HistoryOrderStepResultWarn warn = result.getWarn();
-
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDER_STEPS).append(" ");
         hql.append("set endTime=:endTime ");
         hql.append(",endVariables=:endVariables ");
@@ -194,10 +192,6 @@ public class DBLayerMonitoring extends DBLayer {
         hql.append(",errorCode=:errorCode ");
         hql.append(",errorText=:errorText ");
         hql.append(",modified=:modified ");
-        if (warn != null) {
-            hql.append(",warn=:warnReason ");
-            hql.append(",warnText=:warnText ");
-        }
         hql.append("where historyId=:historyId");
 
         Query<DBItemMonitoringOrderStep> query = getSession().createQuery(hql.toString());
@@ -212,30 +206,7 @@ public class DBLayerMonitoring extends DBLayer {
         query.setParameter("errorCode", DBItemHistoryOrderStep.normalizeErrorCode(hosb.getErrorCode()));
         query.setParameter("errorText", DBItemHistoryOrderStep.normalizeErrorText(hosb.getErrorText()));
         query.setParameter("modified", new Date());
-        // do not overwrite (set warnReason=0, warnText=null) if warn == null, because maybe a warning was created by longerThan
-        // in this case, a notification has already been send out...
-        if (warn != null) {
-            query.setParameter("warnReason", warn.getReason().intValue());
-            query.setParameter("warnText", warn.getText());
-        }
         query.setParameter("historyId", hosb.getHistoryId());
-        return getSession().executeUpdate(query);
-    }
-
-    public int updateOrderStepOnLongerThan(Long historyId, HistoryOrderStepResultWarn warn) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDER_STEPS).append(" ");
-        hql.append("set modified=:modified ");
-        hql.append(",warn=:warnReason ");
-        hql.append(",warnText=:warnText ");
-        hql.append("where historyId=:historyId ");
-        hql.append("and warn=:warnNone");
-
-        Query<DBItemMonitoringOrderStep> query = getSession().createQuery(hql.toString());
-        query.setParameter("modified", new Date());
-        query.setParameter("warnReason", warn.getReason().intValue());
-        query.setParameter("warnText", warn.getText());
-        query.setParameter("historyId", historyId);
-        query.setParameter("warnNone", JobWarning.NONE.intValue());
         return getSession().executeUpdate(query);
     }
 
@@ -314,9 +285,9 @@ public class DBLayerMonitoring extends DBLayer {
         return item;
     }
 
-    public List<String> getNotificationNotificationIds(NotificationType type, NotificationRange range, Long orderId, Long stepId)
+    public List<DBItemNotification> getNotifications(NotificationType type, NotificationRange range, Long orderId, Long stepId)
             throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select n.notificationId from ").append(DBLayer.DBITEM_MON_NOTIFICATIONS).append(" n ");
+        StringBuilder hql = new StringBuilder("select n from ").append(DBLayer.DBITEM_MON_NOTIFICATIONS).append(" n ");
         hql.append(",").append(DBLayer.DBITEM_MON_NOT_WORKFLOWS).append(" w ");
         hql.append("where n.id=w.notificationId ");
         hql.append("and n.type=:type ");
@@ -324,7 +295,7 @@ public class DBLayerMonitoring extends DBLayer {
         hql.append("and w.orderHistoryId=:orderId ");
         hql.append("and w.orderStepHistoryId=:stepId");
 
-        Query<String> query = getSession().createQuery(hql.toString());
+        Query<DBItemNotification> query = getSession().createQuery(hql.toString());
         query.setParameter("type", type.intValue());
         query.setParameter("range", range.intValue());
         query.setParameter("orderId", orderId);
@@ -357,13 +328,15 @@ public class DBLayerMonitoring extends DBLayer {
     }
 
     public DBItemNotification saveNotification(Notification notification, NotifyAnalyzer analyzer, NotificationType type,
-            Long recoveredNotificationId) throws SOSHibernateException {
+            Long recoveredNotificationId, JobWarning warn, String warnText) throws SOSHibernateException {
         DBItemNotification item = new DBItemNotification();
         item.setType(type);
         item.setRange(analyzer.getRange());
         item.setNotificationId(notification.getNotificationId());
         item.setRecoveredId(recoveredNotificationId);
         item.setHasMonitors(notification.getMonitors().size() > 0);
+        item.setWarn(warn);
+        item.setWarnText(warnText);
         item.setCreated(new Date());
         getSession().save(item);
 
@@ -420,7 +393,7 @@ public class DBLayerMonitoring extends DBLayer {
         hql.append(",0) ");// ,0 precision only because of MSSQL
         hql.append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
         hql.append("where controllerId=:controllerId ");
-        hql.append("and workflowPath=:workflowPath ");
+        hql.append("and workflowName=:workflowName ");
         hql.append("and jobName=:jobName ");
         hql.append("and severity=:severity ");
         hql.append("and endTime >= startTime ");
@@ -428,7 +401,7 @@ public class DBLayerMonitoring extends DBLayer {
         // hibernate returns Long and not Double ...
         Query<Long> query = getSession().createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
-        query.setParameter("workflowPath", workflowPath);
+        query.setParameter("workflowName", JocClusterUtil.getBasenameFromPath(workflowPath));
         query.setParameter("jobName", jobName);
         query.setParameter("severity", HistorySeverity.SUCCESSFUL);
         return getSession().getSingleValue(query);
@@ -507,8 +480,6 @@ public class DBLayerMonitoring extends DBLayer {
         item.setErrorReason(history.getErrorReason());
         item.setErrorCode(history.getErrorCode());
         item.setErrorText(history.getErrorText());
-        item.setWarn(JobWarning.NONE);
-        item.setWarnText(null);
         item.setLogId(history.getLogId());
 
         item.setCreated(new Date());
