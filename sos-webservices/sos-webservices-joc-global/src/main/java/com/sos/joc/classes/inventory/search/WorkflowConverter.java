@@ -28,7 +28,7 @@ import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.JobCriticality;
-import com.sos.inventory.model.job.JobTemplate;
+import com.sos.inventory.model.job.JobTemplateRef;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.classes.inventory.NoticeToNoticesConverter;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowInstruction;
@@ -268,7 +268,7 @@ public class WorkflowConverter {
                     jobClasses.add(job.getJobClassName());
                 }
                 if (job.getJobTemplate() != null) {
-                    JobTemplate jt = job.getJobTemplate();
+                    JobTemplateRef jt = job.getJobTemplate();
                     if (!SOSString.isEmpty(jt.getName())) {
                         jobTemplates.put(jt.getName(), jt.getHash() != null ? jt.getHash() : "");
                     }

@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "name",
     "hash"
 })
-public class JobTemplate {
+public class JobTemplateRef {
 
     /**
      * string without < and >
@@ -36,14 +36,12 @@ public class JobTemplate {
      */
     @JsonProperty("hash")
     private String hash;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
-
+    
     /**
      * No args constructor for use in serialization
      * 
      */
-    public JobTemplate() {
+    public JobTemplateRef() {
     }
 
     /**
@@ -51,7 +49,7 @@ public class JobTemplate {
      * @param name
      * @param hash
      */
-    public JobTemplate(String name, String hash) {
+    public JobTemplateRef(String name, String hash) {
         super();
         this.name = name;
         this.hash = hash;
@@ -101,24 +99,14 @@ public class JobTemplate {
         this.hash = hash;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("hash", hash).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("name", name).append("hash", hash).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(additionalProperties).append(hash).toHashCode();
+        return new HashCodeBuilder().append(name).append(hash).toHashCode();
     }
 
     @Override
@@ -126,11 +114,11 @@ public class JobTemplate {
         if (other == this) {
             return true;
         }
-        if ((other instanceof JobTemplate) == false) {
+        if ((other instanceof JobTemplateRef) == false) {
             return false;
         }
-        JobTemplate rhs = ((JobTemplate) other);
-        return new EqualsBuilder().append(name, rhs.name).append(additionalProperties, rhs.additionalProperties).append(hash, rhs.hash).isEquals();
+        JobTemplateRef rhs = ((JobTemplateRef) other);
+        return new EqualsBuilder().append(name, rhs.name).append(hash, rhs.hash).isEquals();
     }
 
 }
