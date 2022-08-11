@@ -31,6 +31,15 @@ public class SOSGzip {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSGzip.class);
 
+    private static final int BUFFER_SIZE = 8_192; // 8*1_024
+
+    /** compress file or directory to a byte array<br/>
+     * Note: Memory usage
+     * 
+     * @param source
+     * @param setAllFileAttributes
+     * @return
+     * @throws Exception */
     public static SOSGzipResult compress(Path source, boolean setAllFileAttributes) throws Exception {
         if (source == null) {
             throw new Exception("missing path");
@@ -41,14 +50,24 @@ public class SOSGzip {
         return compressDirectory(source, setAllFileAttributes);
     }
 
+    /** compress file or directory to a byte array<br/>
+     * Note: Memory usage<br/>
+     * - source - 1,5GB txt file ~ 8MB memory<br />
+     * - source - 1,5GB binary file ~ 1,5GB memory<br />
+     * 
+     * @param source
+     * @return
+     * @throws Exception */
     private static SOSGzipResult compressFile(Path source) throws Exception {
-        // TODO use commons.compress implementation
-        // merge into compressDirectory
-        byte[] uncompressedData = Files.readAllBytes(source);
         SOSGzipResult result = (new SOSGzip()).new SOSGzipResult();
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(uncompressedData.length); GZIPOutputStream gzipOS = new GZIPOutputStream(bos)) {
-            gzipOS.write(uncompressedData);
-            gzipOS.close();
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); InputStream fis = Files.newInputStream(source); GZIPOutputStream gos =
+                new GZIPOutputStream(bos)) {
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int len;
+            while ((len = fis.read(buffer)) > 0) {
+                gos.write(buffer, 0, len);
+            }
+            gos.close();
 
             result.addFile(source);
             result.setCompressed(bos.toByteArray());
