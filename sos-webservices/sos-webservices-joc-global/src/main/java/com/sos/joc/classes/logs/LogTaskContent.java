@@ -52,21 +52,24 @@ public class LogTaskContent {
     private Long eventId = null;
     private boolean complete = false;
     private SOSAuthFolderPermissions folderPermissions = null;
-    private static final long MAX_LOG_SIZE = 10 * 1024 * 1024L; //10MB
+    private Long maxLogSize = 10 * 1024 * 1024L; //10MB
 
     public LogTaskContent(TaskFilter taskFilter, SOSAuthFolderPermissions folderPermissions) {
         this.historyId = taskFilter.getTaskId();
         this.folderPermissions = folderPermissions;
+        this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxLogSizeForDisplayInBytes();
         // this.controllerId = taskFilter.getControllerId();
     }
 
     public LogTaskContent(Long taskId, SOSAuthFolderPermissions folderPermissions) {
         this.historyId = taskId;
         this.folderPermissions = folderPermissions;
+        this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxLogSizeForDisplayInBytes();
     }
     
     public LogTaskContent(Long taskId) {
         this.historyId = taskId;
+        this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxLogSizeForDisplayInBytes();
     }
 
     public Map<String, Object> getHeaders() {
@@ -159,7 +162,7 @@ public class LogTaskContent {
     }
 
     private InputStream getLogSnapshotFromHistoryService(boolean forDownload) {
-        if (!forDownload && complete && unCompressedLength > MAX_LOG_SIZE) {
+        if (!forDownload && complete && unCompressedLength > maxLogSize) {
             return getTooBigMessage("");
         }
         try {
@@ -169,7 +172,7 @@ public class LogTaskContent {
                 complete = false;
                 unCompressedLength = Files.size(tasklog);
                 RunningTaskLogs.getInstance().subscribe(historyId);
-                if (!forDownload && unCompressedLength > MAX_LOG_SIZE) {
+                if (!forDownload && unCompressedLength > maxLogSize) {
                     return getTooBigMessage(" snapshot");
                 }
                 return Files.newInputStream(tasklog);
@@ -238,7 +241,7 @@ public class LogTaskContent {
                 } else {
                     unCompressedLength = historyDBItem.getFileSizeUncomressed();
                     complete = true;
-                    if (!forDownload && unCompressedLength > MAX_LOG_SIZE) {
+                    if (!forDownload && unCompressedLength > maxLogSize) {
                         return null;
                     }
                     return historyDBItem.getFileContent();

@@ -65,6 +65,11 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry disableWarningOnLicenseExpiration = new ConfigurationEntry("disable_warning_on_license_expiration", "false",
             GlobalSettingsSectionValueType.BOOLEAN);
     
+    private ConfigurationEntry maxLogSizeForDisplay = new ConfigurationEntry("max_tasklog_size_for_display", "10",
+            GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+    private ConfigurationEntry maxLogSizeForDisk = new ConfigurationEntry("max_tasklog_size_in_history", "500",
+            GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+    
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
 
@@ -101,6 +106,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
         encoding.setOrdering(++index);
         disableWarningOnLicenseExpiration.setOrdering(++index);
+        
+        maxLogSizeForDisk.setOrdering(++index);
+        maxLogSizeForDisplay.setOrdering(++index);
+        
     }
 
     public static List<String> getAuditLogComments() {
@@ -153,6 +162,22 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     
     public ConfigurationEntry getDisableWarningOnLicenseExpiration() {
         return disableWarningOnLicenseExpiration;
+    }
+    
+    public ConfigurationEntry getMaxLogSizeForDisk() {
+        return maxLogSizeForDisk;
+    }
+    
+    public ConfigurationEntry getMaxLogSizeForDisplay() {
+        return maxLogSizeForDisplay;
+    }
+    
+    public Long getMaxLogSizeForDisplayInBytes() {
+        if (maxLogSizeForDisplay.getValue() != null) {
+            return Long.valueOf(maxLogSizeForDisplay.getValue()) * 1024 * 1024;
+        } else {
+            return Long.valueOf(maxLogSizeForDisplay.getDefault()) * 1024 * 1024;
+        }
     }
 
     public Map<ShowViewName, Boolean> getShowViews() {
