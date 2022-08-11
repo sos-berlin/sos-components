@@ -1,6 +1,7 @@
 package com.sos.joc.cluster.bean.history;
 
 import java.util.Date;
+import java.util.List;
 
 import com.sos.controller.model.event.EventType;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
@@ -40,6 +41,7 @@ public class HistoryOrderStepBean extends AHistoryBean {
     private String warnIfLonger;
     private String warnIfShorter;
     private Long warnIfLongerAvgSeconds;
+    private List<Integer> warnReturnCodes;
 
     private String notification;
 
@@ -48,7 +50,7 @@ public class HistoryOrderStepBean extends AHistoryBean {
     }
 
     public HistoryOrderStepBean(EventType eventType, Long eventId, DBItemHistoryOrderStep item, String warnIfLonger, String warnIfShorter,
-            String notification) {
+            List<Integer> warnReturnCodes, String notification) {
         super(eventType, eventId, item.getControllerId(), item.getId());
 
         this.workflowPosition = item.getWorkflowPosition();
@@ -81,6 +83,7 @@ public class HistoryOrderStepBean extends AHistoryBean {
 
         this.warnIfLonger = warnIfLonger;
         this.warnIfShorter = warnIfShorter;
+        this.warnReturnCodes = warnReturnCodes;
 
         this.notification = notification;
 
@@ -324,6 +327,14 @@ public class HistoryOrderStepBean extends AHistoryBean {
 
     public Long getWarnIfLongerAvgSeconds() {
         return warnIfLongerAvgSeconds;
+    }
+
+    public void setWarnReturnCodes(List<Integer> val) {
+        warnReturnCodes = val;
+    }
+
+    public List<Integer> getWarnReturnCodes() {
+        return warnReturnCodes;
     }
 
     public String getNotification() {

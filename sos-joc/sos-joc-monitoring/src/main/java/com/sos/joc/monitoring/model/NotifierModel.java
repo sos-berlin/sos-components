@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.history.JobWarning;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -34,6 +35,7 @@ import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.joc.monitoring.db.LastWorkflowNotificationDBItemEntity;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResult;
+import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResultWarn;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.ToNotify;
 import com.sos.joc.monitoring.notification.notifier.ANotifier;
 import com.sos.joc.monitoring.notification.notifier.NotifyResult;
@@ -117,16 +119,16 @@ public class NotifierModel {
         if (hosb.getError()) {
             result = conf.findWorkflowMatches(conf.getOnError(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            notify(conf, result, null, hosb, NotificationType.ERROR);
+            notify(conf, result, null, hosb, NotificationType.ERROR, null);
         } else {
             // RECOVERY
             result = conf.findWorkflowMatches(conf.getOnError(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            notify(conf, result, null, hosb, NotificationType.RECOVERED);
+            notify(conf, result, null, hosb, NotificationType.RECOVERED, null);
             // SUCCESS
             result = conf.findWorkflowMatches(conf.getOnSuccess(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            notify(conf, result, null, hosb, NotificationType.SUCCESS);
+            notify(conf, result, null, hosb, NotificationType.SUCCESS, null);
 
         }
     }
@@ -136,15 +138,15 @@ public class NotifierModel {
         switch (type) {
         case ERROR:
             result = conf.findWorkflowMatches(conf.getOnError(), hob.getControllerId(), hob.getWorkflowPath());
-            notify(conf, result, hob, null, NotificationType.ERROR);
+            notify(conf, result, hob, null, NotificationType.ERROR, null);
             break;
         case SUCCESS:
             // RECOVERY
             result = conf.findWorkflowMatches(conf.getOnError(), hob.getControllerId(), hob.getWorkflowPath());
-            notify(conf, result, hob, null, NotificationType.RECOVERED);
+            notify(conf, result, hob, null, NotificationType.RECOVERED, null);
             // SUCCESS
             result = conf.findWorkflowMatches(conf.getOnSuccess(), hob.getControllerId(), hob.getWorkflowPath());
-            notify(conf, result, hob, null, NotificationType.SUCCESS);
+            notify(conf, result, hob, null, NotificationType.SUCCESS, null);
 
             break;
         default:
@@ -152,7 +154,8 @@ public class NotifierModel {
         }
     }
 
-    private boolean notify(Configuration conf, List<Notification> list, HistoryOrderBean hob, HistoryOrderStepBean hosb, NotificationType type) {
+    private boolean notify(Configuration conf, List<Notification> list, HistoryOrderBean hob, HistoryOrderStepBean hosb, NotificationType type,
+            List<HistoryOrderStepResultWarn> warnings) {
         if (list.size() == 0) {
             return false;
         }
@@ -162,15 +165,24 @@ public class NotifierModel {
             dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
             dbLayer.getSession().beginTransaction();
 
-            if (!analyzer.analyze(dbLayer, list, hob, hosb, type)) {
+            if (!analyzer.analyze(dbLayer, list, hob, hosb, type, warnings)) {
                 return false;
             }
 
             Map<Long, DBItemMonitoringOrderStep> steps = new HashMap<>();
             boolean notified = false;
+            boolean isWarning = NotificationType.WARNING.equals(type) && warnings != null;
             for (Notification notification : list) {
-                if (notify(conf, analyzer, notification, type, steps)) {
-                    notified = true;
+                if (isWarning) {
+                    for (HistoryOrderStepResultWarn warning : warnings) {
+                        if (notify(conf, analyzer, notification, type, steps, warning)) {
+                            notified = true;
+                        }
+                    }
+                } else {
+                    if (notify(conf, analyzer, notification, type, steps, null)) {
+                        notified = true;
+                    }
                 }
             }
             dbLayer.getSession().commit();
@@ -185,10 +197,11 @@ public class NotifierModel {
     }
 
     private boolean notify(Configuration conf, NotifyAnalyzer analyzer, Notification notification, NotificationType type,
-            Map<Long, DBItemMonitoringOrderStep> steps) throws Exception {
+            Map<Long, DBItemMonitoringOrderStep> steps, HistoryOrderStepResultWarn warning) throws Exception {
 
         DBItemMonitoringOrderStep os = analyzer.getOrderStep();
         Long recoveredId = null;
+        JobWarning warn = JobWarning.NONE;
         String warnText = null;
         switch (type) {
         case ERROR:
@@ -213,12 +226,17 @@ public class NotifierModel {
             }
             break;
         case WARNING:
-            if (type.equals(NotificationType.WARNING)) {
-                if (analyzer.getSendedWarnings() != null && analyzer.getSendedWarnings().contains(notification.getNotificationId())) {
+            if (warning == null || warning.getReason() == null) {
+                return false;
+            }
+            if (analyzer.getSendedWarnings() != null && analyzer.getSendedWarnings().containsKey(notification.getNotificationId())) {
+                if (analyzer.getSendedWarnings().get(notification.getNotificationId()).contains(warning.getReason())) {
                     return false;
                 }
             }
-            warnText = os.getWarnText();
+
+            warn = warning.getReason();
+            warnText = warning.getText();
             break;
         case ACKNOWLEDGED:
             return false;
@@ -234,7 +252,7 @@ public class NotifierModel {
 
         DBItemNotification mn = null;
         try {
-            mn = dbLayer.saveNotification(notification, analyzer, type, recoveredId);
+            mn = dbLayer.saveNotification(notification, analyzer, type, recoveredId, warn, warnText);
         } catch (Throwable e) {
             LOGGER.error(String.format("[notification id=%s][%s]%s[failed]%s", notification.getNotificationId(), ANotifier.getTypeAsString(type),
                     ANotifier.getInfo(analyzer), e.toString()), e);
@@ -291,11 +309,11 @@ public class NotifierModel {
     }
 
     private void notifyStepWarning(Configuration conf, HistoryOrderStepResult r) {
-        if (conf.getOnWarning().size() > 0 && r.getWarn() != null) {
+        if (conf.getOnWarning().size() > 0 && r.getWarnings().size() > 0) {
             HistoryOrderStepBean hosb = r.getStep();
             List<Notification> result = conf.findWorkflowMatches(conf.getOnWarning(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb
                     .getJobName(), hosb.getJobLabel(), hosb.getCriticality(), hosb.getReturnCode(), true);
-            notify(conf, result, null, hosb, NotificationType.WARNING);
+            notify(conf, result, null, hosb, NotificationType.WARNING, r.getWarnings());
         }
     }
 

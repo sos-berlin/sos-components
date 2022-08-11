@@ -25,6 +25,7 @@ import com.sos.inventory.model.schedule.OrderPositions;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.dailyplan.common.PlannedOrder;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.SearchStringHelper;
@@ -783,8 +784,9 @@ public class DBLayerDailyPlannedOrders {
         }
         return result;
     }
-    
-    public int updateDailyPlanOrdersByCyclicMainPart(String controllerId, String mainPart, String orderParameterisation) throws SOSHibernateException {
+
+    public int updateDailyPlanOrdersByCyclicMainPart(String controllerId, String mainPart, String orderParameterisation)
+            throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("set orderParameterisation=:orderParameterisation ");
         hql.append(", modified=:modified ");
@@ -1158,14 +1160,14 @@ public class DBLayerDailyPlannedOrders {
         hql.append(",0) ");// ,0 precision only because of MSSQL
         hql.append("from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
         hql.append("where controllerId = :controllerId ");
-        hql.append("and workflowPath = :workflowPath ");
+        hql.append("and workflowName = :workflowName ");
         hql.append("and parentId = 0 ");
         hql.append("and severity=:severity ");
         hql.append("and endTime >= startTime ");
 
         Query<Long> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
-        query.setParameter("workflowPath", workflowPath);
+        query.setParameter("workflowName", JocClusterUtil.getBasenameFromPath(workflowPath));
         query.setParameter("severity", HistorySeverity.SUCCESSFUL);
         return session.getSingleValue(query);
     }

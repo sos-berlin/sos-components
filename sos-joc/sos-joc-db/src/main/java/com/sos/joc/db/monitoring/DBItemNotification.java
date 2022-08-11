@@ -13,8 +13,10 @@ import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 
+import com.sos.history.JobWarning;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.MonitoringConstants;
 import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
 
@@ -45,6 +47,12 @@ public class DBItemNotification extends DBItem {
     @Column(name = "[HAS_MONITORS]", nullable = false)
     @Type(type = "numeric_boolean")
     private boolean hasMonitors;
+
+    @Column(name = "[WARN]", nullable = false)
+    private Integer warn;
+
+    @Column(name = "[WARN_TEXT]", nullable = true)
+    private String warnText;
 
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
@@ -109,6 +117,25 @@ public class DBItemNotification extends DBItem {
         return hasMonitors;
     }
 
+    public void setWarn(Integer val) {
+        if (val == null) {
+            val = JobWarning.NONE.intValue();
+        }
+        warn = val;
+    }
+
+    public Integer getWarn() {
+        return warn;
+    }
+
+    public void setWarnText(String val) {
+        warnText = normalizeWarnText(val);
+    }
+
+    public String getWarnText() {
+        return warnText;
+    }
+
     public void setCreated(Date val) {
         created = val;
     }
@@ -143,5 +170,24 @@ public class DBItemNotification extends DBItem {
     @Transient
     public void setRange(NotificationRange val) {
         setRange(val == null ? null : val.intValue());
+    }
+
+    @Transient
+    public static String normalizeWarnText(String val) {
+        return normalizeValue(val, MonitoringConstants.MAX_LEN_WARN_TEXT);
+    }
+
+    @Transient
+    public void setWarn(JobWarning val) {
+        setWarn(val == null ? null : val.intValue());
+    }
+
+    @Transient
+    public JobWarning getWarnAsEnum() {
+        try {
+            return JobWarning.fromValue(warn);
+        } catch (IllegalArgumentException e) {
+            return JobWarning.NONE;
+        }
     }
 }
