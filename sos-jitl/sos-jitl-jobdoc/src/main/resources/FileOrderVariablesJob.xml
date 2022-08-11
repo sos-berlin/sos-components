@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
+<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xhtml="http://www.w3.org/1999/xhtml"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+
+    <job name  = "FileOrderVariablesJob"
+         title = "Adds variables from a file to the order"
+         category="Variables;JITL">
+        <script language   = "java"
+                java_class = "com.sos.jitl.jobs.fileordervariablesjob.FileOrderVariablesJob"
+                resource   = "1"/>
+    </job>
+
+    <configuration>
+ 
+        <params id="job_parameter">
+            <param name="js7_source_file" required="true">
+                <note>
+                	<title>The name of the input file.</title>
+                	<p>
+                	<ul>
+<li>Variables for file orders can be used from incoming files:</li>
+<li>The incoming file can hold pairs of names and values similar to the temporary file available from the $JS7_RETURN_VALUES environment variable for return values of shell jobs: &lt;name&gt;=&lt;value&gt;.
+pairs of names/values are separated from each other by EOL which can be CR, CRLF or LF.</li>
+<li>The &lt;value&gt; can include the = character.</li>
+<li>The &lt;value&gt; can include any Unicode characters.</li>
+<li>If the related incoming file holds pairs of names and values for variables then they are added to the order as return values from the  JITL job.</li>
+<li>If the related incoming file is empty then no return values are created and no error occurs.</li>
+<li>If the related incoming file includes content that does not match name/value pairs then an error is raised.</li>
+<li>The JITL job does not use any arguments to specify its processing mode. Instead, users can add any arguments to this job that are expected to match the name of a name/value pair in the incoming file:</li>
+<li>job arguments that are not assigned a value are considered optional for the incoming file. Respective return values are created only if the incoming file provides the variable. This includes that the incoming file specifies an empty value for the variable.</li>
+<li>job arguments that are assigned a value are considered optional.</li>
+<li>If the incoming file does not provide the variable then a return value with the JITL Job's default value is created.</li>
+<li>If the incoming file provides a variable - optionally with an empty value - then a return value with the value from the incoming file is created.</li>
+<li>For pairs of names/values for which no job arguments are specified the JITL Job will raise an error.</li>
+</ul>                     
+</p>
+                </note>
+            </param>
+            
+        </params>
+    
+
+    </configuration>
+
+    <documentation>
+    
+        <note>
+            <title>What is the purpose of this job?</title>
+            <p>
+                The job adds variables from a file to the order 
+            </p>
+        </note>
+    
+        
+         
+    </documentation>
+
+</description>
