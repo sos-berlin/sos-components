@@ -8,13 +8,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.jobtemplate.Parameters;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * job
+ * job wizard
  * <p>
  * 
  * 
@@ -27,7 +28,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "assignReference",
     "title",
     "javaClass",
-    "params"
+    "params",
+    "arguments"
 })
 public class Job {
 
@@ -83,8 +85,21 @@ public class Job {
      */
     @JsonProperty("javaClass")
     private String javaClass;
+    /**
+     * deprecated: use 'arguments'
+     * 
+     */
     @JsonProperty("params")
+    @JsonPropertyDescription("deprecated: use 'arguments'")
     private List<Param> params = new ArrayList<Param>();
+    /**
+     * parameters
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("arguments")
+    private Parameters arguments;
 
     /**
      * timestamp
@@ -222,24 +237,54 @@ public class Job {
         this.javaClass = javaClass;
     }
 
+    /**
+     * deprecated: use 'arguments'
+     * 
+     */
     @JsonProperty("params")
     public List<Param> getParams() {
         return params;
     }
 
+    /**
+     * deprecated: use 'arguments'
+     * 
+     */
     @JsonProperty("params")
     public void setParams(List<Param> params) {
         this.params = params;
     }
 
+    /**
+     * parameters
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("arguments")
+    public Parameters getArguments() {
+        return arguments;
+    }
+
+    /**
+     * parameters
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("arguments")
+    public void setArguments(Parameters arguments) {
+        this.arguments = arguments;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("docPath", docPath).append("docName", docName).append("assignReference", assignReference).append("title", title).append("javaClass", javaClass).append("params", params).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("docPath", docPath).append("docName", docName).append("assignReference", assignReference).append("title", title).append("javaClass", javaClass).append("params", params).append("arguments", arguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(assignReference).append(docName).append(javaClass).append(deliveryDate).append(title).append(params).append(docPath).toHashCode();
+        return new HashCodeBuilder().append(assignReference).append(docName).append(javaClass).append(arguments).append(deliveryDate).append(title).append(params).append(docPath).toHashCode();
     }
 
     @Override
@@ -251,7 +296,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(assignReference, rhs.assignReference).append(docName, rhs.docName).append(javaClass, rhs.javaClass).append(deliveryDate, rhs.deliveryDate).append(title, rhs.title).append(params, rhs.params).append(docPath, rhs.docPath).isEquals();
+        return new EqualsBuilder().append(assignReference, rhs.assignReference).append(docName, rhs.docName).append(javaClass, rhs.javaClass).append(arguments, rhs.arguments).append(deliveryDate, rhs.deliveryDate).append(title, rhs.title).append(params, rhs.params).append(docPath, rhs.docPath).isEquals();
     }
 
 }
