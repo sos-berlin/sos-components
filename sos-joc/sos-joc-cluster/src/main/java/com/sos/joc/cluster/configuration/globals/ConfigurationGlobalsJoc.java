@@ -65,9 +65,11 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry disableWarningOnLicenseExpiration = new ConfigurationEntry("disable_warning_on_license_expiration", "false",
             GlobalSettingsSectionValueType.BOOLEAN);
     
-    private ConfigurationEntry maxLogSizeForDisplay = new ConfigurationEntry("max_tasklog_size_for_display", "10",
+    private ConfigurationEntry logMaxDisplaySize = new ConfigurationEntry("log_maximum_display_size", "10",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
-    private ConfigurationEntry maxLogSizeForDisk = new ConfigurationEntry("max_tasklog_size_in_history", "500",
+    private ConfigurationEntry logApplicableSize = new ConfigurationEntry("log_applicable_size", "500",
+            GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+    private ConfigurationEntry logMaxSize = new ConfigurationEntry("log_maximum_size", "1000",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     
     private Charset encodingCharset = null;
@@ -107,9 +109,9 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         encoding.setOrdering(++index);
         disableWarningOnLicenseExpiration.setOrdering(++index);
         
-        maxLogSizeForDisk.setOrdering(++index);
-        maxLogSizeForDisplay.setOrdering(++index);
-        
+        logMaxDisplaySize.setOrdering(++index);
+        logApplicableSize.setOrdering(++index);
+        logMaxSize.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -164,20 +166,20 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         return disableWarningOnLicenseExpiration;
     }
     
-    public ConfigurationEntry getMaxLogSizeForDisk() {
-        return maxLogSizeForDisk;
+    public ConfigurationEntry getMaxSize() {
+        return logMaxSize;
     }
     
-    public ConfigurationEntry getMaxLogSizeForDisplay() {
-        return maxLogSizeForDisplay;
+    public ConfigurationEntry getApplicableSize() {
+        return logApplicableSize;
     }
     
-    public Long getMaxLogSizeForDisplayInBytes() {
-        if (maxLogSizeForDisplay.getValue() != null) {
-            return Long.valueOf(maxLogSizeForDisplay.getValue()) * 1024 * 1024;
-        } else {
-            return Long.valueOf(maxLogSizeForDisplay.getDefault()) * 1024 * 1024;
-        }
+    public ConfigurationEntry getMaxDisplaySize() {
+        return logMaxDisplaySize;
+    }
+    
+    public Long getMaxDisplaySizeInBytes() {
+        return getLogSizeInBytes(logMaxDisplaySize);
     }
 
     public Map<ShowViewName, Boolean> getShowViews() {
@@ -224,6 +226,14 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             return Boolean.TRUE;
         } else {
             return Boolean.FALSE;
+        }
+    }
+    
+    private Long getLogSizeInBytes(ConfigurationEntry c) {
+        if (c.getValue() != null) {
+            return Long.valueOf(c.getValue()) * 1024 * 1024;
+        } else {
+            return Long.valueOf(c.getDefault()) * 1024 * 1024;
         }
     }
 }
