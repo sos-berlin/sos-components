@@ -3,6 +3,7 @@ package com.sos.joc.wizard.impl;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -209,15 +210,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                                 break;
                             case Number:
                                 try {
-                                    if (defaultVal.matches("\\d+(\\.\\d+)?")) {
-                                        if (defaultVal.contains(".")) {
-                                            param2.setDefault(Double.parseDouble(defaultVal));
-                                        } else {
-                                            param2.setDefault(Long.parseLong(defaultVal));
-                                        }
-                                    } else {
-                                        param2.setDefault(defaultVal);
-                                    }
+                                    param2.setDefault(new BigDecimal(defaultVal));
                                 } catch (Exception e) {
                                     param2.setDefault(defaultVal);
                                 }
@@ -330,11 +323,11 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
         ParameterType _default = ParameterType.String;
         if (value != null) {
             value = value.toLowerCase();
-            if (value.contains("bool")) {
+            if (value.contains("boolean")) {
                 return ParameterType.Boolean; 
             }
             if (value.contains("integer") || value.contains("number") || value.contains("long") || value.contains("float") || value.contains(
-                    "double") || value.contains("bigdecimal")) {
+                    "double") || value.contains("biginteger") || value.contains("bigdecimal")) {
                 return ParameterType.Number;
             }
         }

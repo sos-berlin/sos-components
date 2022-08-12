@@ -113,7 +113,6 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                 RequestSearchAdvancedItem workflowAdvanced = cloneAdvanced4WorkflowSearch(in);
                 for (InventorySearchItem item : sorted) {
                     boolean checkWorkflow = false;
-                    // TODO consider SCRIPT objects
                     switch (in.getReturnType()) {
                     case JOBRESOURCE:
                         workflowAdvanced.setJobResource(item.getName());
@@ -185,6 +184,9 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         case CALENDAR:
             in.getAdvanced().setCalendar(null);
             break;
+        case JOBTEMPLATE:
+            in.getAdvanced().setJobTemplate(null);
+            break;
         }
     }
 
@@ -208,6 +210,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         item.setSchedule(in.getAdvanced().getSchedule());
         item.setIncludeScript(in.getAdvanced().getIncludeScript());
         item.setCalendar(in.getAdvanced().getCalendar());
+        item.setJobTemplate(in.getAdvanced().getJobTemplate());
         item.setWorkflow(null);
         return item;
     }

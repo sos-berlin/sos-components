@@ -791,6 +791,7 @@ public class InventorySearchDBLayer extends DBLayer {
         boolean jobNameExactMatch = advanced.getJobNameExactMatch() != null && advanced.getJobNameExactMatch();
         String jobNameForExactMatch = SOSString.isEmpty(advanced.getJobName()) ? "" : advanced.getJobName();
         String jobResource = null;
+        // TODO String jobTemplate = null;
         String jobScript = null;
         String includeScript = null;
         String noticeBoard = null;
@@ -873,6 +874,7 @@ public class InventorySearchDBLayer extends DBLayer {
                 jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             }
             jobResource = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResource(), "sw.jobs", "$.jobResources");
+            // TODO jobTemplate = setHQLAndGetParameterValue(hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
             includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
             noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions",
@@ -1145,6 +1147,7 @@ public class InventorySearchDBLayer extends DBLayer {
                 jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             }
             jobResource = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResource(), "sw.jobs", "$.jobResources");
+            // TODO jobTemplate = setHQLAndGetParameterValue(hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
             includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
             noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions",
@@ -1210,6 +1213,10 @@ public class InventorySearchDBLayer extends DBLayer {
         if (jobResource != null) {
             query.setParameter("jobResources", '%' + jobResource.toLowerCase() + '%');
         }
+        /* TODO
+        if (jobTemplate != null) {
+            query.setParameter("jobTemplate", '%' + jobTemplate.toLowerCase() + '%');
+        } */
         if (jobScript != null) {
             query.setParameter("jobScript", '%' + jobScript.toLowerCase() + '%');
         }
@@ -1333,6 +1340,7 @@ public class InventorySearchDBLayer extends DBLayer {
         case SCHEDULE:
         case INCLUDESCRIPT:
         case CALENDAR:
+        case JOBTEMPLATE:
             return true;
         default:
             return false;
