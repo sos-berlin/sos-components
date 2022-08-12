@@ -64,14 +64,13 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry encoding = new ConfigurationEntry("encoding", null, GlobalSettingsSectionValueType.STRING);
     private ConfigurationEntry disableWarningOnLicenseExpiration = new ConfigurationEntry("disable_warning_on_license_expiration", "false",
             GlobalSettingsSectionValueType.BOOLEAN);
-    
+
     private ConfigurationEntry logMaxDisplaySize = new ConfigurationEntry("log_maximum_display_size", "10",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     private ConfigurationEntry logApplicableSize = new ConfigurationEntry("log_applicable_size", "500",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
-    private ConfigurationEntry logMaxSize = new ConfigurationEntry("log_maximum_size", "1000",
-            GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
-    
+    private ConfigurationEntry logMaxSize = new ConfigurationEntry("log_maximum_size", "1000", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
 
@@ -108,7 +107,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
         encoding.setOrdering(++index);
         disableWarningOnLicenseExpiration.setOrdering(++index);
-        
+
         logMaxDisplaySize.setOrdering(++index);
         logApplicableSize.setOrdering(++index);
         logMaxSize.setOrdering(++index);
@@ -161,23 +160,23 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     public ConfigurationEntry getEncoding() {
         return encoding;
     }
-    
+
     public ConfigurationEntry getDisableWarningOnLicenseExpiration() {
         return disableWarningOnLicenseExpiration;
     }
-    
-    public ConfigurationEntry getMaxSize() {
+
+    public ConfigurationEntry getLogMaxSize() {
         return logMaxSize;
     }
-    
-    public ConfigurationEntry getApplicableSize() {
+
+    public ConfigurationEntry getLogApplicableSize() {
         return logApplicableSize;
     }
-    
+
     public ConfigurationEntry getMaxDisplaySize() {
         return logMaxDisplaySize;
     }
-    
+
     public Long getMaxDisplaySizeInBytes() {
         return getLogSizeInBytes(logMaxDisplaySize);
     }
@@ -228,7 +227,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             return Boolean.FALSE;
         }
     }
-    
+
     private Long getLogSizeInBytes(ConfigurationEntry c) {
         if (c.getValue() != null) {
             return Long.valueOf(c.getValue()) * 1024 * 1024;
