@@ -15,7 +15,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.inventory.DBItemInventoryFavorite;
-import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;

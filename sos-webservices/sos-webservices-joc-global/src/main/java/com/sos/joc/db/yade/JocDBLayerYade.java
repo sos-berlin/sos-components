@@ -20,7 +20,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.SearchStringHelper;
-import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.yade.FilesFilter;
 import com.sos.yade.commons.Yade;
