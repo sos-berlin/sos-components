@@ -4,7 +4,8 @@
 	xmlns:xi="http://www.w3.org/2001/XInclude" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     name="max_processed_mails" 
-    default_value="1000" 
+    default_value="1000"
+    data_type="integer" 
     required="false">
     <note>
         <title>maximum number of processed mails</title>

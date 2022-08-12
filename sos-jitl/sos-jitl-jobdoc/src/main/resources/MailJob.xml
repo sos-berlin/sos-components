@@ -170,7 +170,7 @@
                 </note>
             </param>
         
-            <param name="mail.smtp.port" required="false">
+            <param name="mail.smtp.port" required="false" data_type="integer">
                 <note>
                     <title>Mail server port</title>
                     <p>

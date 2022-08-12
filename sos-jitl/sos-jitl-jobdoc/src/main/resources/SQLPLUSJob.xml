@@ -80,7 +80,7 @@
                 </note>
             </param>
 
-           <param name="timeout" required="false" default_value="unlimitted">
+           <param name="timeout" required="false" data_type="integer">
                 <note>
                     <title>Timeout for the command to be executed by the SQL*Plus Client</title>
                     <p>

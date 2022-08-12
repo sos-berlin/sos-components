@@ -6,6 +6,7 @@
     name="mail.pop3.port" 
     default_display_value="110 (without SSL) or 995 (with SSL)"
     default_value="110"
+    data_type="integer"
     required="false">
     <note>
         <title>POP3 mail server port</title>
