@@ -586,8 +586,8 @@ public class HistoryMonitoringModel implements Serializable {
         HistoryOrderStepResultWarn warn = null;
         if (hosb.getReturnCode() != null && hosb.getWarnReturnCodes() != null && hosb.getWarnReturnCodes().contains(hosb.getReturnCode())) {
             warn = new HistoryOrderStepResultWarn(JobWarning.RETURN_CODE, "Job return code " + hosb.getReturnCode()
-                    + " matches to the configured warning return codes " + String.join(",", hosb.getWarnReturnCodes().stream().map(e -> String
-                            .valueOf(e)).collect(Collectors.toList())));
+                    + " matches the configured warning return codes " + String.join(",", hosb.getWarnReturnCodes().stream().map(e -> String.valueOf(
+                            e)).collect(Collectors.toList())));
 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("[%s][%s][%s][workflowPath=%s,job=%s(historyId=%s)]%s", serviceIdentifier, IDENTIFIER, hosb
