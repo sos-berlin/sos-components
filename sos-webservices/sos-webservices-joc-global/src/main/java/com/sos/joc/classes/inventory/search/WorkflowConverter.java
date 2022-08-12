@@ -136,7 +136,7 @@ public class WorkflowConverter {
         private List<String> titles;
         private List<String> agentIds;
         private List<String> jobClasses;
-        private Map<String, String> jobTemplates;
+        private Map<String, Set<String>> jobTemplates;
         private List<String> jobResources;
         private List<String> criticalities;
         private List<String> documentationNames;
@@ -154,7 +154,7 @@ public class WorkflowConverter {
             titles = new ArrayList<String>();
             agentIds = new ArrayList<String>();
             jobClasses = new ArrayList<String>();
-            jobTemplates = new HashMap<String, String>();
+            jobTemplates = new HashMap<String, Set<String>>();
             jobResources = new ArrayList<String>();
             criticalities = new ArrayList<String>();
             documentationNames = new ArrayList<String>();
@@ -185,9 +185,9 @@ public class WorkflowConverter {
             jsonAddStringValues(builder, "jobResources", jobResources);
             jsonAddStringValues(builder, "criticalities", criticalities);
             jsonAddStringValues(builder, "documentationNames", documentationNames);
-            if (jobTemplates.size() > 0) {
+            if (!jobTemplates.isEmpty()) {
                 JsonObjectBuilder b = Json.createObjectBuilder();
-                jobTemplates.forEach((k, v) -> b.add(k, v));
+                jobTemplates.forEach((k, v) -> jsonAddStringValues(b, k, v));
                 builder.add("jobTemplates", b);
             }
             mainInfo = builder.build();
@@ -223,7 +223,7 @@ public class WorkflowConverter {
             return jobClasses;
         }
 
-        public Map<String, String> getJobTemplates() {
+        public Map<String, Set<String>> getJobTemplates() {
             return jobTemplates;
         }
 
@@ -270,7 +270,8 @@ public class WorkflowConverter {
                 if (job.getJobTemplate() != null) {
                     JobTemplateRef jt = job.getJobTemplate();
                     if (!SOSString.isEmpty(jt.getName())) {
-                        jobTemplates.put(jt.getName(), jt.getHash() != null ? jt.getHash() : "");
+                        jobTemplates.putIfAbsent(jt.getName(), new HashSet<String>());
+                        jobTemplates.get(jt.getName()).add(jt.getHash() != null ? jt.getHash() : "");
                     }
                 }
                 if (job.getJobResourceNames() != null && !job.getJobResourceNames().isEmpty()) {
