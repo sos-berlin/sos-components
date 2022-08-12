@@ -5,6 +5,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     name="mail.pop3.ssl.enable" 
     default_value="false" 
+    data_type="boolean" 
     required="false">
     <note>
         <title>Flag to enable SSL connections to the POP3 mail server</title>

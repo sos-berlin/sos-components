@@ -1,7 +1,5 @@
 package com.sos.auth.classes;
 
-import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
-import com.sos.auth.classes.SOSServicePermissionIam;
 
 public class GlobalsTest {
 

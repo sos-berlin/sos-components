@@ -6,7 +6,8 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	name="min_file_size" 
 	default_value="-1"
-	required="false">
+	data_type="integer" 
+    required="false">
 	<note>
 		<title>minimum size of one or multiple files </title>
 		<p>

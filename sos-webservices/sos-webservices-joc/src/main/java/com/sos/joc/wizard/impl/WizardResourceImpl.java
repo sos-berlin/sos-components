@@ -37,6 +37,9 @@ import org.xml.sax.SAXException;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.xml.SOSXML;
+import com.sos.inventory.model.jobtemplate.Parameter;
+import com.sos.inventory.model.jobtemplate.ParameterType;
+import com.sos.inventory.model.jobtemplate.Parameters;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -60,6 +63,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
     private static final String API_CALL_JOB = "./wizard/job";
     private static final Logger LOGGER = LoggerFactory.getLogger(WizardResourceImpl.class);
     private static final String JITLJOB_NAMESPACE = "http://www.sos-berlin.com/schema/js7_job_documentation_v1.1";
+    
 
     @Override
     public JOCDefaultResponse postJobs(final String accessToken) {
@@ -160,6 +164,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
             job.setDocPath(jitlDoc.getPath());
             job.setAssignReference(jitlDoc.getDocRef());
             job.setParams(null);
+            job.setArguments(null);
 
             if (paramsNodes.getLength() > 0) {
                 Transformer transformer = null;
@@ -168,6 +173,8 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                     transformer = factory.newTransformer(new StreamSource(new StringReader(xsltItem.getContent())));
                 }
                 List<Param> params = new ArrayList<>();
+                Parameters params2 = new Parameters();
+                
                 JocError jocError = getJocError();
 
                 for (int i = 0; i < paramsNodes.getLength(); i++) {
@@ -177,15 +184,62 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                     Element paramNode = (Element) paramsNodes.item(i);
                     try {
                         Param param = new Param();
-                        if (paramNode.hasAttribute("default_value")) {
-                            param.setDefaultValue(paramNode.getAttribute("default_value"));
-                        } else if (paramNode.hasAttribute("DefaultValue")) {
-                            param.setDefaultValue(paramNode.getAttribute("DefaultValue"));
+                        Parameter param2 = new Parameter();
+                        
+                        ParameterType dataType = ParameterType.String;
+                        if (paramNode.hasAttribute("DataType")) {
+                            dataType = fromValue(paramNode.getAttribute("DataType"));
+                        } else if (paramNode.hasAttribute("data_type")) {
+                            dataType = fromValue(paramNode.getAttribute("data_type"));
                         }
+                        param2.setType(dataType);
+                        
+                        String defaultVal = null;
+                        if (paramNode.hasAttribute("DefaultValue")) {
+                            defaultVal = paramNode.getAttribute("DefaultValue");
+                        } else if (paramNode.hasAttribute("default_value")) {
+                            defaultVal = paramNode.getAttribute("default_value");
+                        }
+                        param.setDefaultValue(defaultVal);
+                        
+                        if (defaultVal != null && !defaultVal.isEmpty()) {
+                            switch (dataType) {
+                            case Boolean:
+                                param2.setDefault(Boolean.parseBoolean(defaultVal));
+                                break;
+                            case Number:
+                                try {
+                                    if (defaultVal.matches("\\d+(\\.\\d+)?")) {
+                                        if (defaultVal.contains(".")) {
+                                            param2.setDefault(Double.parseDouble(defaultVal));
+                                        } else {
+                                            param2.setDefault(Long.parseLong(defaultVal));
+                                        }
+                                    } else {
+                                        param2.setDefault(defaultVal);
+                                    }
+                                } catch (Exception e) {
+                                    param2.setDefault(defaultVal);
+                                }
+                                break;
+                            default:
+                                param2.setDefault(defaultVal);
+                                break;
+                            }
+                        } else {
+                            param2.setDefault(null);
+                        }
+                        
+                        String description = getDescription(transformer, paramNode);
                         param.setName(paramNode.getAttribute("name"));
-                        param.setRequired("true".equals(paramNode.getAttribute("required")));
-                        param.setDescription(getDescription(transformer, paramNode));
+                        param.setRequired("true".equalsIgnoreCase(paramNode.getAttribute("required")));
+                        param.setDescription(description);
                         params.add(param);
+                        
+                        param2.setRequired("true".equalsIgnoreCase(paramNode.getAttribute("required")));
+                        param2.setDescription(description);
+                        
+                        params2.setAdditionalProperty(paramNode.getAttribute("name"), param2);
 
                     } catch (Throwable e) {
                         if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
@@ -197,11 +251,12 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                 }
 
                 job.setParams(params);
+                job.setArguments(params2);
             }
 
             job.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(job);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(job));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -269,6 +324,21 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
             }
         }
         return paramDoc;
+    }
+    
+    private static ParameterType fromValue(String value) {
+        ParameterType _default = ParameterType.String;
+        if (value != null) {
+            value = value.toLowerCase();
+            if (value.contains("bool")) {
+                return ParameterType.Boolean; 
+            }
+            if (value.contains("integer") || value.contains("number") || value.contains("long") || value.contains("float") || value.contains(
+                    "double") || value.contains("bigdecimal")) {
+                return ParameterType.Number;
+            }
+        }
+        return _default;
     }
 
 }

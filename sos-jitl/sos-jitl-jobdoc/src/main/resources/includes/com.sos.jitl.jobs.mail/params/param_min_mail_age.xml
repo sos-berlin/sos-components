@@ -5,6 +5,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     name="min_mail_age" 
     default_value="0" 
+    data_type="integer"
     required="false">
     <note>
         <title>minimum age of a mail</title>

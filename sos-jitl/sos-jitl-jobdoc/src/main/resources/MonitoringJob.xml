@@ -36,7 +36,7 @@
                 </note>
             </param>                     
 
-            <param name="monitor_report_max_files" required="one of workflow or job">
+            <param name="monitor_report_max_files" required="one of workflow or job" data_type="integer">
                 <note>
                     <title>Limit for the maximum number of files in &lt;monitor_report_dir&gt; </title>
                    <p>

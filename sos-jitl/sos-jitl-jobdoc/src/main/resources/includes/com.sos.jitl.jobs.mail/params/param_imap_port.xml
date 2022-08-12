@@ -5,6 +5,8 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     name="mail.imap.port" 
     default_display_value="143 (without SSL) or 993 (with SSL)" 
+    default_value="143"
+    data_type="integer"
     required="false">
     <note>
         <title>IMAP mail server port</title>

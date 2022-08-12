@@ -2,7 +2,7 @@
 <param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
        xmlns:xhtml="http://www.w3.org/1999/xhtml"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       name="proxy_host" required="false" DataType="java.lang.Integer">
+       name="proxy_host" required="false" DataType="java.lang.String">
 	<note>
 		<p>
 			The argument specifies the host name or the IP address of a proxy server should 

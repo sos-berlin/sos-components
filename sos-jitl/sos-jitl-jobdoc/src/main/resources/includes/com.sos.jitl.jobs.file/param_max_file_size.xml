@@ -4,6 +4,7 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        name="max_file_size"
        default_value="-1"
+       data_type="integer" 
        required="false">
 	<note>
 		<title>maximum size of a file</title>
