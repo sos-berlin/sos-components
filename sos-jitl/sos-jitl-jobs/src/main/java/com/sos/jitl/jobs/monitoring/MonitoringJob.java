@@ -34,11 +34,10 @@ public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> 
         }
     }
 
-    private JitlJobReturn process(JobStep<MonitoringJobArguments> step, MonitoringJobArguments args) throws Exception {
+   protected JitlJobReturn process(JobStep<MonitoringJobArguments> step, MonitoringJobArguments args) throws Exception {
         JobLogger logger = null;
-        if (step != null) {
-            logger = step.getLogger();
-        }
+        logger = step.getLogger();
+
         JitlJobReturn monitoringJobReturn = new JitlJobReturn();
         monitoringJobReturn.setExitCode(0);
         Map<String, Object> resultMap = new HashMap<String, Object>();
@@ -63,30 +62,5 @@ public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> 
         return monitoringJobReturn;
     }
 
-    public static void main(String[] args) {
 
-        MonitoringJobArguments arguments = new MonitoringJobArguments();
-
-        // arguments.setQuery("isCompletedSuccessful(startedFrom=-1d,startedTo=-1d)");
-        // arguments.setQuery("isCompleted(startedFrom=-100d, count>5)");
-
-        // arguments.setQuery("lastCompletedSuccessful");
-        // arguments.setJob("job2");
-        // arguments.setJob("jobCheckHistory2");
-        arguments.setControllerId("controller");
-        arguments.setMailSmtpFrom("a@b.de");
-        arguments.setMonitorReportDir("c:/temp/1111");
-        arguments.setMonitorReportMaxFiles(3L);
-
-        MonitoringJob monitoringJob = new MonitoringJob(null);
-
-        try {
-            monitoringJob.process(null, arguments);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            System.exit(0);
-        }
-    }
 }

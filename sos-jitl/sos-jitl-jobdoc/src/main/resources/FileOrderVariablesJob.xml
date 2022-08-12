@@ -17,10 +17,11 @@
     <configuration>
  
         <params id="job_parameter">
-            <param name="js7_source_file" required="true">
+            <param name="js7_source_file" required="false">
                 <note>
                 	<title>The name of the input file.</title>
                 	<p>
+                	When no fileordersource is assigned to the workflow then the input filename can be specified with this job argument.
                 	<ul>
 <li>Variables for file orders can be used from incoming files:</li>
 <li>The incoming file can hold pairs of names and values similar to the temporary file available from the $JS7_RETURN_VALUES environment variable for return values of shell jobs: &lt;name&gt;=&lt;value&gt;.

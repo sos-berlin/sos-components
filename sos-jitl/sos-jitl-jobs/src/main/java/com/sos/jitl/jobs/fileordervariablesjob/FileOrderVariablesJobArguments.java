@@ -6,7 +6,7 @@ import com.sos.jitl.jobs.common.JobArguments;
 
 public class FileOrderVariablesJobArguments extends JobArguments {
 
-    private JobArgument<String> js7SourceFile = new JobArgument<String>("js7_source_file", true);
+    private JobArgument<String> js7SourceFile = new JobArgument<String>("js7_source_file", false);
 
     public FileOrderVariablesJobArguments() {
         super(new SOSCredentialStoreArguments());
