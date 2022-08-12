@@ -1,6 +1,11 @@
 package com.sos.joc.history.helper;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 import javax.json.Json;
@@ -25,6 +30,10 @@ public class HistoryUtil {
             return path.substring(0, 1);
         }
         return li > -1 ? path.substring(0, li) : path;
+    }
+
+    public static Path getOrderLogDirectory(Path logDir, Long historyOrderMainParentId) {
+        return logDir.resolve(String.valueOf(historyOrderMainParentId));
     }
 
     public static String getForkChildNameFromOrderId(String forkChildOrderId) {
@@ -67,6 +76,32 @@ public class HistoryUtil {
             convert2JsonType(b, entry.getKey(), entry.getValue());
         }
         return b.build().toString();
+    }
+
+    /** OK for history<br/>
+     * not compares total && firstBytesSize && lastBytesSize<br/>
+     */
+    public static StringBuilder readFirstLastBytes(Path file, int firstBytesSize, int lastBytesSize, String msgBetweenFirstLast) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        try (SeekableByteChannel ch = Files.newByteChannel(file)) {
+            long total = ch.size();
+            if (firstBytesSize > 0) {
+                ByteBuffer buffer = ByteBuffer.allocate(firstBytesSize);
+                ch.read(buffer);
+                sb.append(new String(buffer.array(), StandardCharsets.UTF_8));
+            }
+            if (lastBytesSize > 0 && total - lastBytesSize > 0) {
+                if (firstBytesSize > 0 && msgBetweenFirstLast != null) {
+                    sb.append(msgBetweenFirstLast);
+                }
+                ch.position(total - lastBytesSize);
+
+                ByteBuffer buffer = ByteBuffer.allocate(lastBytesSize);
+                ch.read(buffer);
+                sb.append(new String(buffer.array(), StandardCharsets.UTF_8));
+            }
+        }
+        return sb;
     }
 
     private static void convert2JsonType(JsonObjectBuilder b, String name, js7.data.value.Value value) {

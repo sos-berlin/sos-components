@@ -1,5 +1,6 @@
 package com.sos.joc.history.controller.configuration;
 
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,8 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.history.helper.HistoryUtil;
 
-public class HistoryConfiguration {
+public class HistoryConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryConfiguration.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
@@ -29,6 +31,15 @@ public class HistoryConfiguration {
 
     // seconds
     private int waitIntervalOnError = 5;
+
+    // MB
+    private int logApplicableMBSize = 500;
+    private int logMaximumMBSize = 1_000;
+
+    // Bytes
+    private int logApplicableByteSize = mb2bytes(logApplicableMBSize);
+    private int logMaximumByteSize = mb2bytes(logMaximumMBSize * 1_024 * 1_024);
+    private int logTruncateFirstLastByteSize = 100 * 1_024;
 
     public void load(final Properties conf) throws Exception {
         if (conf.getProperty("history_log_dir") != null) {
@@ -70,6 +81,10 @@ public class HistoryConfiguration {
         }
     }
 
+    private static int mb2bytes(int mb) {
+        return mb * 1_024 * 1_024;
+    }
+
     public String getLogDir() {
         return logDir;
     }
@@ -94,4 +109,33 @@ public class HistoryConfiguration {
         return waitIntervalOnError;
     }
 
+    public void setLogApplicableMBSize(int val) {
+        logApplicableMBSize = val;
+        logApplicableByteSize = mb2bytes(val);
+    }
+
+    public int getLogApplicableMBSize() {
+        return logApplicableMBSize;
+    }
+
+    public int getLogApplicableByteSize() {
+        return logApplicableByteSize;
+    }
+
+    public void setLogMaximumMBSize(int val) {
+        logMaximumMBSize = val;
+        logMaximumByteSize = mb2bytes(val);
+    }
+
+    public int getLogMaximumMBSize() {
+        return logMaximumMBSize;
+    }
+
+    public int getLogMaximumByteSize() {
+        return logMaximumByteSize;
+    }
+
+    public int getLogTruncateFirstLastByteSize() {
+        return logTruncateFirstLastByteSize;
+    }
 }

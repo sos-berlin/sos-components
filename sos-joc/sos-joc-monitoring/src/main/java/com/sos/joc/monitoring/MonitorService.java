@@ -87,6 +87,11 @@ public class MonitorService extends AJocClusterService {
 
     }
 
+    @Override
+    public void update(StartupMode mode, AConfigurationSection configuration) {
+
+    }
+
     private void close(StartupMode mode) {
         if (history != null) {
             history.close(mode);
@@ -113,4 +118,5 @@ public class MonitorService extends AJocClusterService {
             LOGGER.info(String.format("[%s]database factory closed", IDENTIFIER));
         }
     }
+
 }

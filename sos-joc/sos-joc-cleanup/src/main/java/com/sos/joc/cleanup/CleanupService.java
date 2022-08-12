@@ -135,6 +135,11 @@ public class CleanupService extends AJocClusterService {
 
     }
 
+    @Override
+    public void update(StartupMode mode, AConfigurationSection configuration) {
+
+    }
+
     private void setConfig(ConfigurationGlobalsCleanup configuration) {
         config = new CleanupServiceConfiguration(configuration);
         config.setHibernateConfiguration(getJocConfig().getHibernateConfiguration());

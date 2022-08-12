@@ -47,10 +47,14 @@ public class ProxyService extends AJocClusterService {
     public JocServiceAnswer getInfo() {
         return new JocServiceAnswer();
     }
-    
+
     @Override
     public void update(List<ControllerConfiguration> controllers, String controllerId, Action action) {
-        
+
+    }
+
+    @Override
+    public void update(StartupMode mode, AConfigurationSection configuration) {
     }
 
 }

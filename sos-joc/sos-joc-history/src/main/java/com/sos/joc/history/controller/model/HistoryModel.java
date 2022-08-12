@@ -60,7 +60,6 @@ import com.sos.joc.event.bean.history.HistoryOrderTaskStarted;
 import com.sos.joc.event.bean.history.HistoryOrderTaskTerminated;
 import com.sos.joc.event.bean.history.HistoryOrderTerminated;
 import com.sos.joc.event.bean.history.HistoryOrderUpdated;
-import com.sos.joc.history.HistoryService;
 import com.sos.joc.history.controller.configuration.HistoryConfiguration;
 import com.sos.joc.history.controller.exception.FatEventOrderNotFoundException;
 import com.sos.joc.history.controller.exception.FatEventOrderStepNotFoundException;
@@ -122,8 +121,6 @@ public class HistoryModel {
     private String identifier;
     private final String variableName;
     private Long storedEventId;
-    private Long maxLogSize2Store = Long.valueOf(1_024 * 1_024 * 1_024);// TODO read from settings
-    private boolean useMaxLogSize2Store = false;
     private boolean closed = false;
     private int maxTransactions = 100;
     private long transactionCounter;
@@ -418,6 +415,11 @@ public class HistoryModel {
         }
 
         return storedEventId;
+    }
+
+    // Another thread
+    public void updateHistoryConfiguration(HistoryConfiguration config) {
+        historyConfiguration = config;
     }
 
     // OrderStarted
@@ -1883,8 +1885,9 @@ public class HistoryModel {
                 item.setFileLinesUncomressed(SOSPath.getLineCount(file));
 
                 if (item.getCompressed()) {// task
-                    if (useMaxLogSize2Store && item.getFileSizeUncomressed() > maxLogSize2Store) {
-                        Path f = moveOriginalLogFile(file, item.getFileSizeUncomressed(), null);
+                    if (historyConfiguration.getLogApplicableByteSize() > 0 && item.getFileSizeUncomressed() > historyConfiguration
+                            .getLogApplicableByteSize()) {
+                        Path f = truncateOriginalLogFile(file, item.getFileSizeUncomressed());
                         if (f == null) {
                             item = null;
                         } else {
@@ -1923,19 +1926,43 @@ public class HistoryModel {
         return item;
     }
 
+    private Path truncateOriginalLogFile(Path file, Long fileSizeUncomressed) {
+        StringBuilder prefix = new StringBuilder();
+        prefix.append("[JOC][History][").append(file).append("]");
+
+        StringBuilder banner = new StringBuilder();
+        banner.append("LOG OUTPUT").append(SOSShell.byteCountToDisplaySize(fileSizeUncomressed)).append(" ");
+        banner.append("EXCEEDS APPLICABLE SIZE OF ").append(historyConfiguration.getLogApplicableMBSize()).append(" MB ");
+        banner.append("AND IS TRUNCATED TO THE FIRST AND LAST 100 KB.");
+
+        LOGGER.warn(String.format("[%s][%s]%s", identifier, file, banner));
+
+        StringBuilder between = new StringBuilder();
+        between.append(prefix).append(HistoryUtil.NEW_LINE).append("LAST 100 KB.").append(HistoryUtil.NEW_LINE);
+        try {
+            StringBuilder result = new StringBuilder();
+            result.append(prefix);
+            result.append(banner);
+            result.append(HistoryUtil.readFirstLastBytes(file, historyConfiguration.getLogTruncateFirstLastByteSize(), historyConfiguration
+                    .getLogTruncateFirstLastByteSize(), between.toString()));
+
+            file = Files.write(file, result.toString().getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (Exception e) {
+            LOGGER.warn(String.format("[truncateOriginalLogFile][%s]%s", file, e.toString()), e);
+            return null;
+        }
+        return file;
+    }
+
     private Path moveOriginalLogFile(Path file, Long fileSizeUncomressed, Throwable t) {
         StringBuilder prefix = new StringBuilder();
         prefix.append("[JOC][History][").append(file).append("]");
 
         StringBuilder result = new StringBuilder();
         result.append(prefix).append("Log file ");
-        result.append("(uncompressed size=").append(SOSShell.byteCountToDisplaySize(fileSizeUncomressed)).append(")");
-        if (t == null) {
-            result.append(" will be moved because too big.");
-        } else {
-            result.append(" will be moved because exception:").append(HistoryUtil.NEW_LINE);
-            result.append(SOSClassUtil.getStackTrace(t));
-        }
+        result.append("(uncompressed size=").append(SOSShell.byteCountToDisplaySize(fileSizeUncomressed)).append(") ");
+        result.append("will be moved because exception:").append(HistoryUtil.NEW_LINE);
+        result.append(SOSClassUtil.getStackTrace(t));
         result.append(HistoryUtil.NEW_LINE);
 
         Path historyDir = Paths.get(historyConfiguration.getLogDir());
@@ -1964,10 +1991,9 @@ public class HistoryModel {
         try {
             file = Files.write(file, result.toString().getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (Throwable e) {
-            LOGGER.warn(String.format("[handleFileOnNonCompress][%s][truncate existing]%s", file, e.toString()), e);
+            LOGGER.warn(String.format("[moveOriginalLogFile][%s][truncate existing]%s", file, e.toString()), e);
             return null;
         }
-
         return file;
     }
 
@@ -1980,7 +2006,7 @@ public class HistoryModel {
     }
 
     private Path getOrderLogDirectory(LogEntry entry) {
-        return HistoryService.getOrderLogDirectory(Paths.get(historyConfiguration.getLogDir()), entry.getHistoryOrderMainParentId());
+        return HistoryUtil.getOrderLogDirectory(Paths.get(historyConfiguration.getLogDir()), entry.getHistoryOrderMainParentId());
     }
 
     private OrderLogEntry createOrderLogEntry(LogEntry logEntry) {
