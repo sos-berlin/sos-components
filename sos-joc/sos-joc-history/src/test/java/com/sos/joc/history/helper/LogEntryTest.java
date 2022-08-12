@@ -26,4 +26,17 @@ public class LogEntryTest {
         byte[] b = new StringBuilder("[").append(new String(Files.readAllBytes(file))).append("]").toString().getBytes();
         System.out.println(new String(b));
     }
+
+    @Ignore
+    @Test
+    public void testReadFirstLastBytes() throws Exception {
+        Path file = Paths.get("pom.xml");
+        int firstBytesSize = 10;
+        int lastBytesSize = 10;
+        String msgBetweenFirstLast = "\n-----------BetweenFirstLast-----------\n";
+
+        StringBuilder sb = HistoryUtil.readFirstLastBytes(file, firstBytesSize, lastBytesSize, msgBetweenFirstLast);
+        System.out.println(sb);
+    }
+
 }

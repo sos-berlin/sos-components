@@ -39,6 +39,9 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.notifier.Mailer;
 import com.sos.joc.cluster.notifier.MailerConfiguration;
@@ -207,12 +210,19 @@ public class HistoryService extends AJocClusterService {
         threadPool.submit(task);
     }
 
+    @Override
+    public void update(StartupMode mode, AConfigurationSection configuration) {
+        AJocClusterService.setLogger(IDENTIFIER);
+        updateHistoryConfiguration();
+    }
+
     private void setConfig() {
         AJocClusterService.setLogger(IDENTIFIER);
         try {
             Properties conf = Globals.sosCockpitProperties == null ? new Properties() : Globals.sosCockpitProperties.getProperties();
             config = new HistoryConfiguration();
             config.load(conf);
+            updateHistoryConfigLogSize(true);
 
             mailerConfig = new MailerConfiguration();// TODO
             mailerConfig.load(conf);
@@ -220,6 +230,51 @@ public class HistoryService extends AJocClusterService {
             LOGGER.error(ex.toString(), ex);
         } finally {
             // AJocClusterService.clearAllLoggers();
+        }
+    }
+
+    private boolean updateHistoryConfigLogSize(boolean onStart) {
+        int oldLogApplicableMBSize = config.getLogApplicableMBSize();
+        int oldLogMaximumMBSize = config.getLogMaximumMBSize();
+        ConfigurationGlobals cg = Globals.configurationGlobals;
+
+        boolean result = false;
+        if (cg != null) {
+            ConfigurationGlobalsJoc joc = (ConfigurationGlobalsJoc) cg.getConfigurationSection(DefaultSections.joc);
+            if (joc != null) {
+                try {
+                    config.setLogApplicableMBSize(Integer.parseInt(joc.getLogApplicableSize().getValue()));
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[%s][%s=%s][use default %s][error]%s", StartupMode.settings_changed.name(), joc.getLogApplicableSize()
+                            .getName(), joc.getLogApplicableSize().getValue(), config.getLogApplicableMBSize(), e.toString()));
+                }
+                try {
+                    config.setLogMaximumMBSize(Integer.parseInt(joc.getLogMaxSize().getValue()));
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[%s][%s=%s][use default %s][error]%s", StartupMode.settings_changed.name(), joc.getLogMaxSize()
+                            .getName(), joc.getLogMaxSize().getValue(), config.getLogMaximumMBSize(), e.toString()));
+                }
+
+                result = (oldLogApplicableMBSize != config.getLogApplicableMBSize()) || (oldLogMaximumMBSize != config.getLogMaximumMBSize());
+                if (result && !onStart) {
+                    LOGGER.info(String.format("[%s][old %s=%s,%s=%s][new %s=%s,%s=%s]", StartupMode.settings_changed.name(), joc
+                            .getLogApplicableSize().getName(), oldLogApplicableMBSize, joc.getLogMaxSize().getName(), oldLogMaximumMBSize, joc
+                                    .getLogApplicableSize().getName(), config.getLogApplicableMBSize(), joc.getLogMaxSize().getName(), config
+                                            .getLogMaximumMBSize()));
+                }
+            }
+        }
+        return result;
+    }
+
+    // Another thread
+    public void updateHistoryConfiguration() {
+        if (updateHistoryConfigLogSize(false)) {
+            if (activeHandlers.size() > 0) {
+                for (HistoryControllerHandler h : activeHandlers) {
+                    h.updateHistoryConfiguration(config);
+                }
+            }
         }
     }
 
@@ -455,10 +510,6 @@ public class HistoryService extends AJocClusterService {
                 LOGGER.warn(String.format("[%s][%s]%s", caller, method, e.toString()), e);
             }
         }
-    }
-
-    public static Path getOrderLogDirectory(Path logDir, Long historyOrderMainParentId) {
-        return logDir.resolve(String.valueOf(historyOrderMainParentId));
     }
 
     private int closeEventHandlers(StartupMode mode) {

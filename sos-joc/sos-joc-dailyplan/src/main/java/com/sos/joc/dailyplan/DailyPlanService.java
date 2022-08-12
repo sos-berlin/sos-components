@@ -103,6 +103,11 @@ public class DailyPlanService extends AJocClusterService {
 
     }
 
+    @Override
+    public void update(StartupMode mode, AConfigurationSection configuration) {
+
+    }
+
     private void schedule(DailyPlanSettings settings) {
         if (timer != null) {
             timer.cancel();

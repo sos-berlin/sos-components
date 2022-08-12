@@ -100,7 +100,6 @@ public class HistoryControllerHandler {
     private static final String TORN_PROBLEM_CODE = "SnapshotForUnknownEventId";
 
     private final SOSHibernateFactory factory;
-    private final HistoryConfiguration config;
     private final ControllerConfiguration controllerConfig;
     private final INotifier notifier;
     private final String controllerId;
@@ -109,6 +108,7 @@ public class HistoryControllerHandler {
     private JControllerApi api;
     private EventFluxStopper stopper = new EventFluxStopper();
     private final Object lockObject = new Object();
+    private HistoryConfiguration config;
     private HistoryModel model;
 
     private AtomicBoolean closed = new AtomicBoolean(false);
@@ -130,6 +130,14 @@ public class HistoryControllerHandler {
         this.controllerId = controllerConfig.getCurrent().getId();
         this.serviceIdentifier = serviceIdentifier;
         setIdentifier(controllerConfig.getCurrent().getType());
+    }
+
+    // Another thread
+    public void updateHistoryConfiguration(HistoryConfiguration config) {
+        this.config = config;
+        if (this.model != null) {
+            this.model.updateHistoryConfiguration(config);
+        }
     }
 
     public void start() {

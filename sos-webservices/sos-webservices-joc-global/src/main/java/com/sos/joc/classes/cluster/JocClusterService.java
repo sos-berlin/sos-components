@@ -252,9 +252,6 @@ public class JocClusterService {
 
                         cluster.setConfigurationGlobalsChanged(new AtomicReference<List<String>>(sections));
 
-                        AJocClusterService.setLogger();
-                        LOGGER.info(String.format("[%s]restart %s services", StartupMode.settings_changed.name(), sections.size()));
-                        AJocClusterService.removeLogger();
                         // TODO restart asynchronous
                         for (String identifier : sections) {
                             AConfigurationSection section = null;
@@ -262,15 +259,24 @@ public class JocClusterService {
                                 ClusterServices.valueOf(identifier);
                                 section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.valueOf(identifier));
                             } catch (Throwable e) {
-                                AJocClusterService.setLogger();
-                                LOGGER.info(String.format("[%s][%s][skip]is not a service", StartupMode.settings_changed.name(), identifier));
-                                AJocClusterService.removeLogger();
+                                if (LOGGER.isDebugEnabled()) {
+                                    AJocClusterService.setLogger();
+                                    LOGGER.debug(String.format("[%s][%s][restart][skip]is not a service", StartupMode.settings_changed.name(),
+                                            identifier));
+                                    AJocClusterService.removeLogger();
+                                }
                             }
                             if (section != null) {
                                 AJocClusterService.setLogger();
                                 LOGGER.info(String.format("[%s][%s]restart", StartupMode.settings_changed.name(), identifier));
                                 AJocClusterService.removeLogger();
                                 cluster.getHandler().restartService(identifier, StartupMode.settings_changed, section);
+                            }
+                        }
+                        if (sections.contains(DefaultSections.joc.name())) {
+                            AConfigurationSection joc = Globals.configurationGlobals.getConfigurationSection(DefaultSections.joc);
+                            if (joc != null) {
+                                cluster.getHandler().updateService(ClusterServices.history.name(), StartupMode.settings_changed, joc);
                             }
                         }
                     }

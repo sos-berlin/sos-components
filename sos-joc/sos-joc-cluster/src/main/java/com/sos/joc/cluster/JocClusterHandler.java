@@ -222,6 +222,18 @@ public class JocClusterHandler {
         s.update(cluster.getControllers(), controllerId, action);
     }
 
+    public void updateService(String identifier, StartupMode mode, AConfigurationSection configuration) {
+        Optional<IJocClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
+        if (!os.isPresent()) {
+            AJocClusterService.setLogger();
+            LOGGER.error((String.format("handler not found for %s", identifier)));
+            AJocClusterService.removeLogger();
+            return;
+        }
+        IJocClusterService s = os.get();
+        s.update(mode, configuration);
+    }
+
     public JocClusterAnswer restartService(String identifier, StartupMode mode, AConfigurationSection configuration) {
         Optional<IJocClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {

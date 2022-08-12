@@ -26,4 +26,6 @@ public interface IJocClusterService {
     public JocServiceAnswer getInfo();
 
     public void update(List<ControllerConfiguration> controllers, String controllerId, Action action);
+
+    public void update(StartupMode mode, AConfigurationSection configuration);
 }
