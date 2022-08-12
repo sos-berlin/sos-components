@@ -57,19 +57,19 @@ public class LogTaskContent {
     public LogTaskContent(TaskFilter taskFilter, SOSAuthFolderPermissions folderPermissions) {
         this.historyId = taskFilter.getTaskId();
         this.folderPermissions = folderPermissions;
-        this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxLogSizeForDisplayInBytes();
+        this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
         // this.controllerId = taskFilter.getControllerId();
     }
 
     public LogTaskContent(Long taskId, SOSAuthFolderPermissions folderPermissions) {
         this.historyId = taskId;
         this.folderPermissions = folderPermissions;
-        this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxLogSizeForDisplayInBytes();
+        this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
     }
     
     public LogTaskContent(Long taskId) {
         this.historyId = taskId;
-        this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxLogSizeForDisplayInBytes();
+        this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
     }
 
     public Map<String, Object> getHeaders() {
