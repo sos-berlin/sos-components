@@ -16,6 +16,8 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
+import com.sos.inventory.model.jobtemplate.JobTemplate;
+import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -130,10 +132,11 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                     oldDBFolderContent = Collections.emptyList();
                 }
 
-                List<Integer> typesForReferences = Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.WORKINGDAYSCALENDAR
-                        .intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue(), ConfigurationType.LOCK.intValue(),
-                        ConfigurationType.NOTICEBOARD.intValue(), ConfigurationType.JOBRESOURCE.intValue(), ConfigurationType.INCLUDESCRIPT.intValue());
-                
+                List<Integer> typesForReferences = Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.JOBTEMPLATE.intValue(),
+                        ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue(), ConfigurationType.LOCK
+                                .intValue(), ConfigurationType.NOTICEBOARD.intValue(), ConfigurationType.JOBRESOURCE.intValue(),
+                        ConfigurationType.INCLUDESCRIPT.intValue());
+
                 // JOC-1232: FIX
                 List<AuditLogDetail> auditLogDetails = new ArrayList<>();
                 Map<ConfigurationType, Map<String, String>> oldToNewName = new HashMap<ConfigurationType, Map<String,String>>();
@@ -265,13 +268,6 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                                     .entrySet()) {
                                 json = json.replaceAll("(\"lockName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
                             }
-                            // notice, notices Instructions
-                            Map<String, String> oldNewBoardNames = oldToNewName.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptyMap());
-                            if (oldNewBoardNames.size() > 0) {
-                                Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
-                                WorkflowsHelper.updateWorkflowBoardname(oldNewBoardNames, w.getInstructions());
-                                json = Globals.objectMapper.writeValueAsString(w);
-                            }
                             // addOrder Instructions
                             for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptyMap())
                                     .entrySet()) {
@@ -283,24 +279,40 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                                 json = json.replaceAll(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + oldNewName
                                         .getKey() + "(\\s*)", "$1" + JsonConverter.scriptInclude + " " + oldNewName.getValue() + "$2");
                             }
+                            // notice, notices Instructions, jobResources, jobTemplate
+                            Map<String, String> oldNewBoardNames = oldToNewName.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptyMap());
                             Map<String, String> oldNewJobResourceNames = oldToNewName.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptyMap());
-                            if (oldNewJobResourceNames.size() > 0) {
+                            Map<String, String> oldNewJobTemplateNames = oldToNewName.getOrDefault(ConfigurationType.JOBTEMPLATE, Collections.emptyMap());
+                            if (oldNewBoardNames.size() > 0 || oldNewJobResourceNames.size() > 0 || oldNewJobTemplateNames.size() > 0) {
                                 Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
-                                // JobResources on Workflow level
-                                if (w.getJobResourceNames() != null) {
-                                    w.setJobResourceNames(w.getJobResourceNames().stream().map(s -> oldNewJobResourceNames.getOrDefault(s, s))
-                                            .collect(Collectors.toList()));
+
+                                if (oldNewBoardNames.size() > 0) {
+                                    WorkflowsHelper.updateWorkflowBoardname(oldNewBoardNames, w.getInstructions());
                                 }
-                                // JobResources on Job level
-                                if (w.getJobs() != null) {
-                                    w.getJobs().getAdditionalProperties().forEach((k, v) -> {
-                                        if (v.getJobResourceNames() != null) {
-                                            v.setJobResourceNames(v.getJobResourceNames().stream().map(s -> oldNewJobResourceNames.getOrDefault(s, s))
-                                                    .collect(Collectors.toList()));
-                                        }
-                                    });
-                                    json = Globals.objectMapper.writeValueAsString(w);
+                                if (oldNewJobResourceNames.size() > 0 || oldNewJobTemplateNames.size() > 0) {
+                                    // JobResources on Workflow level
+                                    if (oldNewJobResourceNames.size() > 0 && w.getJobResourceNames() != null) {
+                                        w.setJobResourceNames(w.getJobResourceNames().stream().map(s -> oldNewJobResourceNames.getOrDefault(s, s))
+                                                .collect(Collectors.toList()));
+                                    }
+                                    // JobResources on Job level and JobTemplate.name
+                                    if (w.getJobs() != null) {
+                                        w.getJobs().getAdditionalProperties().forEach((k, v) -> {
+                                            if (oldNewJobResourceNames.size() > 0 && v.getJobResourceNames() != null) {
+                                                v.setJobResourceNames(v.getJobResourceNames().stream().map(s -> oldNewJobResourceNames.getOrDefault(s,
+                                                        s)).collect(Collectors.toList()));
+                                            }
+                                            if (oldNewJobTemplateNames.size() > 0 && v.getJobTemplate() != null) {
+                                                String oldName = v.getJobTemplate().getName();
+                                                if (oldName != null) {
+                                                    v.getJobTemplate().setName(oldNewJobTemplateNames.getOrDefault(oldName, oldName));
+                                                }
+                                            }
+                                        });
+                                    }
                                 }
+                                
+                                json = Globals.objectMapper.writeValueAsString(w);
                             }
                             break;
                         case FILEORDERSOURCE:
@@ -311,10 +323,18 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                             }
                             break;
                         case SCHEDULE:
-                            for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptyMap())
-                                    .entrySet()) {
-                                json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue()
-                                        + "\"");
+                            Map<String, String> oldNewWorkflowNames = oldToNewName.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptyMap());
+                            if (oldNewWorkflowNames.size() > 0) {
+                                Schedule sc = Globals.objectMapper.readValue(json, Schedule.class);
+                                for (Map.Entry<String, String> oldNewName : oldNewWorkflowNames.entrySet()) {
+                                    json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue()
+                                            + "\"");
+                                }
+                                if (sc.getWorkflowNames() != null) {
+                                    sc.setWorkflowNames(sc.getWorkflowNames().stream().map(s -> oldNewWorkflowNames.getOrDefault(s, s))
+                                            .collect(Collectors.toList()));
+                                    json = Globals.objectMapper.writeValueAsString(sc);
+                                }
                             }
                             for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, Collections
                                     .emptyMap()).entrySet()) {
@@ -327,6 +347,23 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                                         + "\"");
                             }
                             break;
+                        case JOBTEMPLATE:
+                            // include scripts
+                            for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptyMap())
+                                    .entrySet()) {
+                                json = json.replaceAll(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + oldNewName
+                                        .getKey() + "(\\s*)", "$1" + JsonConverter.scriptInclude + " " + oldNewName.getValue() + "$2");
+                            }
+                            // JobResources
+                            Map<String, String> oldNewJobResourceNames2 = oldToNewName.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptyMap());
+                            if (oldNewJobResourceNames2.size() > 0) {
+                                JobTemplate jt = Globals.objectMapper.readValue(json, JobTemplate.class);
+                                if (jt.getJobResourceNames() != null) {
+                                    jt.setJobResourceNames(jt.getJobResourceNames().stream().map(s -> oldNewJobResourceNames2.getOrDefault(s, s))
+                                            .collect(Collectors.toList()));
+                                    json = Globals.objectMapper.writeValueAsString(jt);
+                                }
+                            }
                         default:
                             break;
                         }

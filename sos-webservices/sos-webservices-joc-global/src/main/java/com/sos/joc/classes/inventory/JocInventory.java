@@ -116,7 +116,6 @@ public class JocInventory {
                 private static final long serialVersionUID = 1L;
 
                 {
-                    // TODO put(InstructionType.AWAIT, "classpath:/raml/inventory/schemas/instruction/await-schema.json");
                     put(InstructionType.EXECUTE_NAMED, "classpath:/raml/inventory/schemas/instruction/namedJob-schema.json");
                     put(InstructionType.FAIL, "classpath:/raml/inventory/schemas/instruction/fail-schema.json");
                     put(InstructionType.FINISH, "classpath:/raml/inventory/schemas/instruction/finish-schema.json");
@@ -124,7 +123,6 @@ public class JocInventory {
                     put(InstructionType.FORKLIST, "classpath:/raml/inventory/schemas/instruction/forkList-schema.json");
                     put(InstructionType.IF, "classpath:/raml/inventory/schemas/instruction/ifelse-schema.json");
                     put(InstructionType.LOCK, "classpath:/raml/inventory/schemas/instruction/lock-schema.json");
-                    // TODO put(InstructionType.PUBLISH, "classpath:/raml/inventory/schemas/instruction/publish-schema.json");
                     put(InstructionType.RETRY, "classpath:/raml/inventory/schemas/instruction/retryInCatch-schema.json");
                     put(InstructionType.TRY, "classpath:/raml/inventory/schemas/instruction/retry-schema.json");
                     put(InstructionType.PROMPT, "classpath:/raml/inventory/schemas/instruction/prompt-schema.json");
@@ -897,21 +895,29 @@ public class JocInventory {
     public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, List<DBItemInventoryConfiguration> items,
             InventoryDBLayer dbLayer) throws JsonParseException, JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
         Set<String> events = new HashSet<>();
+        if (config.getName().equals(newName)) {
+            return events;
+        }
+        Predicate<String> workflowNamePredicate = Pattern.compile("\"workflowName\"\\s*:\\s*\"" + config.getName() + "\"").asPredicate();
         switch (config.getTypeAsEnum()) {
         case LOCK: // determine Workflows with Lock instructions
             List<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
             if (workflows != null && !workflows.isEmpty()) {
+                Predicate<String> lockNamePredicate = Pattern.compile("\"lockName\"\\s*:\\s*\"" + config.getName() + "\"").asPredicate();
                 for (DBItemInventoryConfiguration workflow : workflows) {
-                    workflow.setContent(workflow.getContent().replaceAll("(\"lockName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
-                            + "\""));
-                    workflow.setDeployed(false);
-                    int i = items.indexOf(workflow);
-                    if (i != -1) {
-                        items.get(i).setContent(workflow.getContent());
-                        items.get(i).setDeployed(false);
-                    } else {
-                        JocInventory.updateConfiguration(dbLayer, workflow);
-                        events.add(workflow.getFolder());
+                    boolean changed = lockNamePredicate.test(workflow.getContent());
+                    if (changed) {
+                        workflow.setContent(workflow.getContent().replaceAll("(\"lockName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
+                                + "\""));
+                        workflow.setDeployed(false);
+                        int i = items.indexOf(workflow);
+                        if (i != -1) {
+                            items.get(i).setContent(workflow.getContent());
+                            items.get(i).setDeployed(false);
+                        } else {
+                            JocInventory.updateConfiguration(dbLayer, workflow);
+                            events.add(workflow.getFolder());
+                        }
                     }
                 }
             }
@@ -920,36 +926,69 @@ public class JocInventory {
             List<DBItemInventoryConfiguration> workflows2 = dbLayer.getUsedWorkflowsByJobResource(config.getName());
             if (workflows2 != null && !workflows2.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflows2) {
+                    boolean changed = false;
                     Workflow w = Globals.objectMapper.readValue(workflow.getContent(), Workflow.class);
                     // JobResources on Workflow level
                     if (w.getJobResourceNames() != null && w.getJobResourceNames().contains(config.getName())) {
                         for (int i = 0; i < w.getJobResourceNames().size(); i++) {
                             if (w.getJobResourceNames().get(i).equals(config.getName())) {
                                 w.getJobResourceNames().set(i, newName);
+                                changed = true;
                             }
                         }
                     }
                     // JobResources on Job level
                     if (w.getJobs() != null) {
-                        w.getJobs().getAdditionalProperties().forEach((k, v) -> {
-                            if (v.getJobResourceNames() != null && v.getJobResourceNames().contains(config.getName())) {
-                                for (int i = 0; i < v.getJobResourceNames().size(); i++) {
-                                    if (v.getJobResourceNames().get(i).equals(config.getName())) {
-                                        v.getJobResourceNames().set(i, newName);
+                        for (Map.Entry<String, Job> entry : w.getJobs().getAdditionalProperties().entrySet()) {
+                            Job j = entry.getValue();
+                            if (j.getJobResourceNames() != null && j.getJobResourceNames().contains(config.getName())) {
+                                for (int i = 0; i < j.getJobResourceNames().size(); i++) {
+                                    if (j.getJobResourceNames().get(i).equals(config.getName())) {
+                                        j.getJobResourceNames().set(i, newName);
+                                        changed = true;
                                     }
                                 }
                             }
-                        });
+                        }
+                    }
+                    if (changed) {
                         workflow.setContent(Globals.objectMapper.writeValueAsString(w));
                         workflow.setDeployed(false);
+                        int i = items.indexOf(workflow);
+                        if (i != -1) {
+                            items.get(i).setContent(workflow.getContent());
+                            items.get(i).setDeployed(false);
+                        } else {
+                            JocInventory.updateConfiguration(dbLayer, workflow);
+                            events.add(workflow.getFolder());
+                        }
                     }
-                    int i = items.indexOf(workflow);
-                    if (i != -1) {
-                        items.get(i).setContent(workflow.getContent());
-                        items.get(i).setDeployed(false);
-                    } else {
-                        JocInventory.updateConfiguration(dbLayer, workflow);
-                        events.add(workflow.getFolder());
+                }
+            }
+            List<DBItemInventoryConfiguration> jobTemplates = dbLayer.getUsedJobTemplatesByJobResource(config.getName());
+            if (jobTemplates != null && !jobTemplates.isEmpty()) {
+                for (DBItemInventoryConfiguration jobTemplate : jobTemplates) {
+                    boolean changed = false;
+                    JobTemplate jt = Globals.objectMapper.readValue(jobTemplate.getContent(), JobTemplate.class);
+                    if (jt.getJobResourceNames() != null && jt.getJobResourceNames().contains(config.getName())) {
+                        for (int i = 0; i < jt.getJobResourceNames().size(); i++) {
+                            if (jt.getJobResourceNames().get(i).equals(config.getName())) {
+                                jt.getJobResourceNames().set(i, newName);
+                                changed = true;
+                            }
+                        }
+                        if (changed) {
+                            jobTemplate.setContent(Globals.objectMapper.writeValueAsString(jt));
+                            jobTemplate.setReleased(false);
+                            int i = items.indexOf(jobTemplate);
+                            if (i != -1) {
+                                items.get(i).setContent(jobTemplate.getContent());
+                                items.get(i).setReleased(false);
+                            } else {
+                                JocInventory.updateConfiguration(dbLayer, jobTemplate);
+                                events.add(jobTemplate.getFolder());
+                            }
+                        }
                     }
                 }
             }
@@ -959,9 +998,8 @@ public class JocInventory {
             List<DBItemInventoryConfiguration> workflow3 = dbLayer.getUsedWorkflowsByBoardName(config.getName());
             if (workflow3 != null && !workflow3.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflow3) {
-//                    workflow.setContent(workflow.getContent().replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + config.getName() + "\"", "$1"
-//                            + newName + "\""));
                     Workflow w = Globals.objectMapper.readValue(workflow.getContent(), Workflow.class);
+                    // TODO updateWorkflowBoardname should return true iff something changed
                     WorkflowsHelper.updateWorkflowBoardname(Collections.singletonMap(config.getName(), newName), w.getInstructions());
                     workflow.setContent(Globals.objectMapper.writeValueAsString(w));
                     workflow.setDeployed(false);
@@ -981,6 +1019,7 @@ public class JocInventory {
             List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(config.getName());
             if (schedules != null && !schedules.isEmpty()) {
                 for (DBItemInventoryConfiguration schedule : schedules) {
+                    boolean changed = false;
                     Schedule s = Globals.objectMapper.readValue(schedule.getContent(), Schedule.class);
 
                     if (s.getWorkflowNames() == null) {
@@ -998,6 +1037,7 @@ public class JocInventory {
                     for (String w : s.getWorkflowNames()) {
                         if (w.equals(config.getName())) {
                             wn.add(newName);
+                            changed = true;
                         } else {
                             wn.add(w);
                         }
@@ -1008,48 +1048,56 @@ public class JocInventory {
                     if (s.getWorkflowNames().size() > 0) {
                         s.setWorkflowName(s.getWorkflowNames().get(0));
                     }
-
-                    schedule.setContent(Globals.objectMapper.writeValueAsString(s));
-                    schedule.setReleased(false);
-                    int i = items.indexOf(schedule);
-                    if (i != -1) {
-                        items.get(i).setContent(schedule.getContent());
-                        items.get(i).setReleased(false);
-                    } else {
-                        JocInventory.updateConfiguration(dbLayer, schedule);
-                        events.add(schedule.getFolder());
+                    
+                    if (changed) {
+                        schedule.setContent(Globals.objectMapper.writeValueAsString(s));
+                        schedule.setReleased(false);
+                        int i = items.indexOf(schedule);
+                        if (i != -1) {
+                            items.get(i).setContent(schedule.getContent());
+                            items.get(i).setReleased(false);
+                        } else {
+                            JocInventory.updateConfiguration(dbLayer, schedule);
+                            events.add(schedule.getFolder());
+                        }
                     }
                 }
             }
             List<DBItemInventoryConfiguration> fileOrderSources = dbLayer.getUsedFileOrderSourcesByWorkflowName(config.getName());
             if (fileOrderSources != null && !fileOrderSources.isEmpty()) {
                 for (DBItemInventoryConfiguration fileOrderSource : fileOrderSources) {
-                    fileOrderSource.setContent(fileOrderSource.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"", "$1"
-                            + newName + "\""));
-                    fileOrderSource.setDeployed(false);
-                    int i = items.indexOf(fileOrderSource);
-                    if (i != -1) {
-                        items.get(i).setContent(fileOrderSource.getContent());
-                        items.get(i).setDeployed(false);
-                    } else {
-                        JocInventory.updateConfiguration(dbLayer, fileOrderSource);
-                        events.add(fileOrderSource.getFolder());
+                    boolean changed = workflowNamePredicate.test(fileOrderSource.getContent());
+                    if (changed) {
+                        fileOrderSource.setContent(fileOrderSource.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"",
+                                "$1" + newName + "\""));
+                        fileOrderSource.setDeployed(false);
+                        int i = items.indexOf(fileOrderSource);
+                        if (i != -1) {
+                            items.get(i).setContent(fileOrderSource.getContent());
+                            items.get(i).setDeployed(false);
+                        } else {
+                            JocInventory.updateConfiguration(dbLayer, fileOrderSource);
+                            events.add(fileOrderSource.getFolder());
+                        }
                     }
                 }
             }
             List<DBItemInventoryConfiguration> addOrderWorkflows = dbLayer.getUsedWorkflowsByAddOrdersWorkflowName(config.getName());
             if (addOrderWorkflows != null && !addOrderWorkflows.isEmpty()) {
                 for (DBItemInventoryConfiguration addOrderWorkflow : addOrderWorkflows) {
-                    addOrderWorkflow.setContent(addOrderWorkflow.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"",
-                            "$1" + newName + "\""));
-                    addOrderWorkflow.setDeployed(false);
-                    int i = items.indexOf(addOrderWorkflow);
-                    if (i != -1) {
-                        items.get(i).setContent(addOrderWorkflow.getContent());
-                        items.get(i).setDeployed(false);
-                    } else {
-                        JocInventory.updateConfiguration(dbLayer, addOrderWorkflow);
-                        events.add(addOrderWorkflow.getFolder());
+                    boolean changed = workflowNamePredicate.test(addOrderWorkflow.getContent());
+                    if (changed) {
+                        addOrderWorkflow.setContent(addOrderWorkflow.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName()
+                                + "\"", "$1" + newName + "\""));
+                        addOrderWorkflow.setDeployed(false);
+                        int i = items.indexOf(addOrderWorkflow);
+                        if (i != -1) {
+                            items.get(i).setContent(addOrderWorkflow.getContent());
+                            items.get(i).setDeployed(false);
+                        } else {
+                            JocInventory.updateConfiguration(dbLayer, addOrderWorkflow);
+                            events.add(addOrderWorkflow.getFolder());
+                        }
                     }
                 }
             }
@@ -1058,17 +1106,21 @@ public class JocInventory {
         case NONWORKINGDAYSCALENDAR:
             List<DBItemInventoryConfiguration> schedules1 = dbLayer.getUsedSchedulesByCalendarName(config.getName());
             if (schedules1 != null && !schedules1.isEmpty()) {
+                Predicate<String> calendarNamePredicate = Pattern.compile("\"calendarName\"\\s*:\\s*\"" + config.getName() + "\"").asPredicate();
                 for (DBItemInventoryConfiguration schedule : schedules1) {
-                    schedule.setContent(schedule.getContent().replaceAll("(\"calendarName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
-                            + "\""));
-                    schedule.setReleased(false);
-                    int i = items.indexOf(schedule);
-                    if (i != -1) {
-                        items.get(i).setContent(schedule.getContent());
-                        items.get(i).setReleased(false);
-                    } else {
-                        JocInventory.updateConfiguration(dbLayer, schedule);
-                        events.add(schedule.getFolder());
+                    boolean changed = calendarNamePredicate.test(schedule.getContent());
+                    if (changed) {
+                        schedule.setContent(schedule.getContent().replaceAll("(\"calendarName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
+                                + "\""));
+                        schedule.setReleased(false);
+                        int i = items.indexOf(schedule);
+                        if (i != -1) {
+                            items.get(i).setContent(schedule.getContent());
+                            items.get(i).setReleased(false);
+                        } else {
+                            JocInventory.updateConfiguration(dbLayer, schedule);
+                            events.add(schedule.getFolder());
+                        }
                     }
                 }
             }
@@ -1130,14 +1182,18 @@ public class JocInventory {
                                     }
                                     es.setScript(String.join("\n", scriptLines));
                                     workflowOrJobTemplate.setContent(Globals.objectMapper.writeValueAsString(jt));
-                                    workflowOrJobTemplate.setDeployed(false);
+                                    workflowOrJobTemplate.setReleased(false);
                                 }
                             }
                         }
                         int i = items.indexOf(workflowOrJobTemplate);
                         if (i != -1) {
                             items.get(i).setContent(workflowOrJobTemplate.getContent());
-                            items.get(i).setDeployed(false);
+                            if (ConfigurationType.WORKFLOW.equals(workflowOrJobTemplate.getTypeAsEnum())) {
+                                items.get(i).setDeployed(false);
+                            } else if (ConfigurationType.JOBTEMPLATE.equals(workflowOrJobTemplate.getTypeAsEnum())) {
+                                items.get(i).setReleased(false);
+                            }
                         } else {
                             JocInventory.updateConfiguration(dbLayer, workflowOrJobTemplate);
                             events.add(workflowOrJobTemplate.getFolder());
@@ -1147,9 +1203,37 @@ public class JocInventory {
             }
             break;
             
-//        case JOBTEMPLATE: // determine Workflows with Job Templates reference
-//            List<DBItemInventoryConfiguration> workflows5 = dbLayer.getWorkflowsWithJobTemplates();
-//            break;
+        case JOBTEMPLATE:
+            List<DBItemInventoryConfiguration> workflows5 = dbLayer.getUsedWorkflowsByJobTemplateName(config.getName());
+            if (workflows5 != null && !workflows5.isEmpty()) {
+                for (DBItemInventoryConfiguration workflow : workflows5) {
+                    boolean changed = false;
+                    Workflow w = Globals.objectMapper.readValue(workflow.getContent(), Workflow.class);
+                    if (w.getJobs() != null) {
+                        for (Map.Entry<String, Job> entry : w.getJobs().getAdditionalProperties().entrySet()) {
+                            Job j = entry.getValue();
+                            if (j.getJobTemplate() != null && j.getJobTemplate().getName() != null && j.getJobTemplate().getName().equals(config
+                                    .getName())) {
+                                j.getJobTemplate().setName(newName);
+                                changed = true;
+                            }
+                        }
+                    }
+                    if (changed) { // TODO is it really ok that setDeployed(false)? I think, NO
+                        workflow.setContent(Globals.objectMapper.writeValueAsString(w));
+                        //workflow.setDeployed(false);
+                        int i = items.indexOf(workflow);
+                        if (i != -1) {
+                            items.get(i).setContent(workflow.getContent());
+                            //items.get(i).setDeployed(false);
+                        } else {
+                            JocInventory.updateConfiguration(dbLayer, workflow);
+                            events.add(workflow.getFolder());
+                        }
+                    }
+                }
+            }
+            break;
             
         default:
             break;
