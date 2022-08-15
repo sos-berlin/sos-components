@@ -70,7 +70,7 @@ public class ExecuteMonitoring {
             MonitoringStatus monitoringStatus = new MonitoringStatus();
             monitoringStatus.setAgentStatus(agentStatus);
             monitoringStatus.setControllerStatus(monitoringControllerStatus);
-            monitoringStatus.setFrom(args.getMailSmtpFrom());
+            monitoringStatus.setFrom(args.getFrom());
             monitoringStatus.setJocStatus(monitoringJocStatus);
             monitoringStatus.setOrderSnapshot(ordersSummary);
             monitoringStatus.setOrderSummary(ordersHistoricSummary);
@@ -133,7 +133,7 @@ public class ExecuteMonitoring {
             throws SOSException {
         MonitoringChecker montitoringChecker = new MonitoringChecker(this.logger);
         return montitoringChecker.doCheck(monitoringStatus, monitoringReturnParameters.getMonitorReportFile(), monitoringReturnParameters
-                .getMonitorReportDate(), args.getMailSmtpFrom());
+                .getMonitorReportDate(), args.getFrom());
     }
 
 }

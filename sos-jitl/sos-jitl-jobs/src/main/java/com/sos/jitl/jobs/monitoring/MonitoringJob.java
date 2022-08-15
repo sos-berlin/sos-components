@@ -7,6 +7,7 @@ import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.common.JitlJobReturn;
+import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringCheckReturn;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringReturnParameters;
 import com.sos.joc.model.jitl.monitoring.MonitoringStatus;
@@ -34,33 +35,32 @@ public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> 
         }
     }
 
-   protected JitlJobReturn process(JobStep<MonitoringJobArguments> step, MonitoringJobArguments args) throws Exception {
+    protected JitlJobReturn process(JobStep<MonitoringJobArguments> step, MonitoringJobArguments args) throws Exception {
         JobLogger logger = null;
         logger = step.getLogger();
+        Map<String, Object> jobArguments = Job.asNameValueMap(step.getAllCurrentArguments());
 
         JitlJobReturn monitoringJobReturn = new JitlJobReturn();
+
         monitoringJobReturn.setExitCode(0);
         Map<String, Object> resultMap = new HashMap<String, Object>();
 
+        if (args.getControllerId() == null || args.getControllerId().isEmpty()) {
+            args.setControllerId((String) jobArguments.get("js7ControllerId"));
+        }
         ExecuteMonitoring executeMonitoring = new ExecuteMonitoring(logger, args);
         MonitoringStatus monitoringStatus = executeMonitoring.getStatusInformations();
         MonitoringReturnParameters monitoringReturnParameters = executeMonitoring.prepareOuput(monitoringStatus);
-        resultMap.put("monitorReportDate", monitoringReturnParameters.getMonitorReportDate());
-        resultMap.put("monitorReportFile", monitoringReturnParameters.getMonitorReportFile());
+        resultMap.put("monitor_report_date", monitoringReturnParameters.getMonitorReportDate());
+        resultMap.put("monitor_reportFile", monitoringReturnParameters.getMonitorReportFile());
         MonitoringCheckReturn monitoringCheckReturn = executeMonitoring.checkStatusInformation(monitoringStatus, monitoringReturnParameters);
         resultMap.put("subject", monitoringCheckReturn.getSubject());
         resultMap.put("body", monitoringCheckReturn.getBody());
 
         monitoringJobReturn.setResultMap(resultMap);
-        if (monitoringCheckReturn.isSuccess()) {
-            resultMap.put("result", HEALTHY);
-        }else {
-            resultMap.put("result", NOT_HEALTHY);
-        }
-        
+        resultMap.put("result", monitoringCheckReturn.getCount());
 
         return monitoringJobReturn;
     }
-
 
 }

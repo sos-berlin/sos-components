@@ -17,6 +17,7 @@ import com.sos.joc.model.joc.ControllerConnectionState;
 public class MonitoringChecker {
 
     private JobLogger logger;
+    private Integer count=0;
 
     public MonitoringChecker(JobLogger logger) {
         super();
@@ -28,24 +29,29 @@ public class MonitoringChecker {
         monitoringCheckReturn.setSuccess(true);
 
         if (controller.getConnectionState() == null) {
+            count +=1;
             monitoringCheckReturn.setErrorMessage(logger, "check-ControllerStatus: empty connection status");
         } else {
             if (controller.getConnectionState().getSeverity() != 0) {
+                count +=1;
                 monitoringCheckReturn.setErrorMessage(logger, "check-ControllerStatus: unhealthy connection status: " + controller
                         .getConnectionState().get_text() + ":" + controller.getConnectionState().getSeverity());
             }
         }
 
         if (controller.getComponentState() == null) {
+            count +=1;
             monitoringCheckReturn.setErrorMessage(logger, "check-ControllerStatus: empty component status");
         } else {
             if (controller.getComponentState().getSeverity() != 0) {
+                count +=1;
                 monitoringCheckReturn.setErrorMessage(logger, "check-ControllerStatus: unhealthy component status: " + controller.getComponentState()
                         .get_text() + ":" + controller.getComponentState().getSeverity());
             }
         }
 
         if (controller.getRole() == null) {
+            count +=1;
             monitoringCheckReturn.setErrorMessage(logger, "check-ControllerStatus: Controller not assigned a role");
         }
 
@@ -53,15 +59,18 @@ public class MonitoringChecker {
 
         if (isCluster) {
             if (controller.getClusterNodeState() == null) {
+                count +=1;
                 monitoringCheckReturn.setErrorMessage(logger, "check-ControllerStatus: empty cluster node state");
             } else {
                 if (controller.getClusterNodeState().getSeverity() != 0) {
+                    count +=1;
                     monitoringCheckReturn.setErrorMessage(logger, "check-ControllerStatus: unhealthy cluster node state " + controller
                             .getClusterNodeState().get_text() + ":" + controller.getClusterNodeState().getSeverity());
                 }
             }
 
             if (!controller.getIsCoupled()) {
+                count +=1;
                 monitoringCheckReturn.setErrorMessage(logger, "check-ControllerStatus: cluster not coupled");
             }
         }
@@ -76,10 +85,12 @@ public class MonitoringChecker {
 
         for (AgentV agentV : listOfAgents) {
             if (agentV.getState() == null) {
+                count +=1;
                 monitoringCheckReturn.setErrorMessage(logger,
                         "check-AgentStatus: unhealthy Agent status '$($status.state._text)', severity '$($status.state.severity)' for Agent ID '$($status.agentId)', Agent Name '$($status.agentName)': $($status.errorMessage)");
             } else {
                 if (agentV.getState().getSeverity() != 0) {
+                    count +=1;
                     monitoringCheckReturn.setErrorMessage(logger, "check-AgentStatus: unhealthy Agent status " + agentV.getState().get_text()
                             + ", severity " + agentV.getState().getSeverity() + " for Agent ID " + agentV.getAgentId() + ", Agent Name " + agentV
                                     .getAgentName() + ":" + agentV.getErrorMessage());
@@ -94,18 +105,22 @@ public class MonitoringChecker {
         monitoringCheckReturn.setSuccess(true);
 
         if (cockpit.getConnectionState() == null) {
+            count +=1;
             monitoringCheckReturn.setErrorMessage(logger, "check-JOCStatus: empty connection status");
         } else {
             if (cockpit.getConnectionState().getSeverity() != 0) {
+                count +=1;
                 monitoringCheckReturn.setErrorMessage(logger, "check-JOCStatus: unhealthy connection status " + cockpit.getConnectionState()
                         .get_text() + ":" + cockpit.getConnectionState().getSeverity());
             }
         }
 
         if (cockpit.getComponentState() == null) {
+            count +=1;
             monitoringCheckReturn.setErrorMessage(logger, "check-JOCStatus: empty component status");
         } else {
             if (cockpit.getComponentState().getSeverity() != 0) {
+                count +=1;
                 monitoringCheckReturn.setErrorMessage(logger, "check-JOCStatus: unhealthy component status " + cockpit.getComponentState().get_text()
                         + ":" + cockpit.getComponentState().getSeverity());
             }
@@ -115,6 +130,7 @@ public class MonitoringChecker {
 
         if (isCluster) {
             if (cockpit.getClusterNodeState().getSeverity() != 0) {
+                count +=1;
                 monitoringCheckReturn.setErrorMessage(logger, "check-JOCStatus: unhealthy cluster node state " + cockpit.getClusterNodeState()
                         .get_text() + ":" + cockpit.getClusterNodeState().getSeverity());
             }
@@ -123,6 +139,7 @@ public class MonitoringChecker {
         if (cockpit.getControllerConnectionStates() == null) {
             for (ControllerConnectionState controllerConnectionState : cockpit.getControllerConnectionStates()) {
                 if (controllerConnectionState.getState().getSeverity() != 0) {
+                    count +=1;
                     monitoringCheckReturn.setErrorMessage(logger, "check-JOCStatus: unhealthy Controller connection status controller"
                             + controllerConnectionState.getState().get_text() + " for role " + controllerConnectionState.getRole() + ":"
                             + controllerConnectionState.getState().getSeverity());
@@ -152,6 +169,7 @@ public class MonitoringChecker {
 
         try {
             if (monitoringStatus.getControllerStatus() == null || monitoringStatus.getControllerStatus().getVolatileStatus() == null) {
+                count +=1;
                 monitoringCheckReturn.setErrorMessage(logger, "sosMonitor: empty Controller status");
                 monitoringCheckReturn.setSuccess(false);
             } else {
@@ -162,6 +180,7 @@ public class MonitoringChecker {
             }
 
             if (monitoringStatus.getAgentStatus() == null || monitoringStatus.getAgentStatus().size() == 0) {
+                count +=1;
                 monitoringCheckReturn.setErrorMessage(logger, "sosMonitor: empty Agent status");
                 monitoringCheckReturn.setSuccess(false);
             } else {
@@ -172,6 +191,7 @@ public class MonitoringChecker {
             }
 
             if (monitoringStatus.getJocStatus() == null) {
+                count +=1;
                 monitoringCheckReturn.setErrorMessage(logger, "sosMonitor: empty JOC Cockpit status");
                 monitoringCheckReturn.setSuccess(false);
             } else {
@@ -189,13 +209,11 @@ public class MonitoringChecker {
                     }
                 }
             }
-            if (monitoringCheckReturn.isSuccess()) {
-                monitoringCheckReturn.setSubject("JS7 Monitor: Notice from: " + mailSmtpFrom + " at: " + monitorReportDate);
-                monitoringCheckReturn.setBody(monitoringCheckReturn.getSubject());
-            } else {
-                monitoringCheckReturn.setSubject("JS7 Monitor: Alert from: " + mailSmtpFrom + " at: " + monitorReportDate);
-                monitoringCheckReturn.setBody(monitoringCheckReturn.getSubject() + "\n" + monitoringCheckReturn.getMessage());
-            }
+
+            monitoringCheckReturn.setSubject("JS7 Monitor: Notice from: " + mailSmtpFrom + " at: " + monitorReportDate);
+            monitoringCheckReturn.setBody(monitoringCheckReturn.getSubject());
+            monitoringCheckReturn.setCount(count);
+
             return monitoringCheckReturn;
 
         } catch (Exception e) {
