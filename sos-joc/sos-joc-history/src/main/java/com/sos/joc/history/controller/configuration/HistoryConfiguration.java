@@ -9,6 +9,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.history.helper.HistoryUtil;
 
 public class HistoryConfiguration implements Serializable {
@@ -37,9 +38,8 @@ public class HistoryConfiguration implements Serializable {
     private int logMaximumMBSize = 1_000;
 
     // Bytes
-    private int logApplicableByteSize = mb2bytes(logApplicableMBSize);
-    private int logMaximumByteSize = mb2bytes(logMaximumMBSize * 1_024 * 1_024);
-    private int logTruncateFirstLastByteSize = 100 * 1_024;
+    private int logApplicableByteSize = JocClusterUtil.mb2bytes(logApplicableMBSize);
+    private int logMaximumByteSize = JocClusterUtil.mb2bytes(logMaximumMBSize * 1_024 * 1_024);
 
     public void load(final Properties conf) throws Exception {
         if (conf.getProperty("history_log_dir") != null) {
@@ -81,10 +81,6 @@ public class HistoryConfiguration implements Serializable {
         }
     }
 
-    private static int mb2bytes(int mb) {
-        return mb * 1_024 * 1_024;
-    }
-
     public String getLogDir() {
         return logDir;
     }
@@ -111,7 +107,7 @@ public class HistoryConfiguration implements Serializable {
 
     public void setLogApplicableMBSize(int val) {
         logApplicableMBSize = val;
-        logApplicableByteSize = mb2bytes(val);
+        logApplicableByteSize = JocClusterUtil.mb2bytes(val);
     }
 
     public int getLogApplicableMBSize() {
@@ -124,7 +120,7 @@ public class HistoryConfiguration implements Serializable {
 
     public void setLogMaximumMBSize(int val) {
         logMaximumMBSize = val;
-        logMaximumByteSize = mb2bytes(val);
+        logMaximumByteSize = JocClusterUtil.mb2bytes(val);
     }
 
     public int getLogMaximumMBSize() {
@@ -135,7 +131,4 @@ public class HistoryConfiguration implements Serializable {
         return logMaximumByteSize;
     }
 
-    public int getLogTruncateFirstLastByteSize() {
-        return logTruncateFirstLastByteSize;
-    }
 }
