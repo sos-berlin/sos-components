@@ -13,7 +13,7 @@ public class MonitoringJobTest {
 
         MonitoringJobArguments arguments = new MonitoringJobArguments();
         arguments.setControllerId("controller");
-        arguments.setMailSmtpFrom("a@b.de");
+        arguments.setFrom("a@b.de");
         arguments.setMonitorReportDir("c:/temp/1111");
         arguments.setMonitorReportMaxFiles(3L);
         MonitoringJob job = new MonitoringJob(null);

@@ -6,6 +6,7 @@ import com.sos.jitl.jobs.common.JobLogger;
 public class MonitoringCheckReturn {
 
     private String message;
+    private Integer count = 0;
     private String subject;
     private String body;
 
@@ -33,6 +34,14 @@ public class MonitoringCheckReturn {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public Integer getCount() {
+        return count;
+    }
+
+    public void setCount(Integer count) {
+        this.count = count;
     }
 
     public void setErrorMessage(JobLogger logger, String message) {

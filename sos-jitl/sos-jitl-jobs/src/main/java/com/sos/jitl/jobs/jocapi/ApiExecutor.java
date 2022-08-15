@@ -139,8 +139,8 @@ public class ApiExecutor {
                 try {
                     client.addHeader(ACCESS_TOKEN_HEADER, token);
                     client.addHeader(CONTENT_TYPE, APPLICATION_JSON);
-                    logInfo("REQUEST: " + apiUrl);
-                    logInfo("PARAMS: " + body);
+                    logDebug("REQUEST: " + apiUrl);
+                    logDebug("PARAMS: " + body);
                     if (!apiUrl.toLowerCase().startsWith(WS_API_PREFIX)) {
                         apiUrl = WS_API_PREFIX + apiUrl;
                     }

@@ -6,10 +6,10 @@ import com.sos.jitl.jobs.common.JobArguments;
 
 public class MonitoringJobArguments extends JobArguments {
 
-    private JobArgument<String> controllerId = new JobArgument<String>("controller_id", true);
+    private JobArgument<String> controllerId = new JobArgument<String>("controller_id", false);
     private JobArgument<String> monitorReportDir = new JobArgument<String>("monitor_report_dir", true);
     private JobArgument<Long> monitorReportMaxFiles = new JobArgument<Long>("monitor_report_max_files", true);
-    private JobArgument<String> mailSmtpFrom = new JobArgument<String>("mail_smtp_from", false);
+    private JobArgument<String> from = new JobArgument<String>("from", false);
 
     public MonitoringJobArguments() {
         super(new SOSCredentialStoreArguments());
@@ -23,12 +23,12 @@ public class MonitoringJobArguments extends JobArguments {
         this.controllerId.setValue(controller);
     }
 
-    public String getMailSmtpFrom() {
-        return mailSmtpFrom.getValue();
+    public String getFrom() {
+        return from.getValue();
     }
 
-    public void setMailSmtpFrom(String mailSmtpFrom) {
-        this.mailSmtpFrom.setValue(mailSmtpFrom);
+    public void setFrom(String from) {
+        this.from.setValue(from);
     }
 
     public String getMonitorReportDir() {
