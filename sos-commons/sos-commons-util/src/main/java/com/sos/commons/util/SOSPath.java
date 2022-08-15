@@ -430,9 +430,13 @@ public class SOSPath {
     }
 
     /** read first/last 100KB of a ~ 5,7GB file in ~ 0.012s<br/>
-     * TODO - read last lines handling: current situation - reads the last lines that may have been read from the first lines read ...<br/>
+     * TODO - read last lines handling: current situation<br/>
+     * --- reading lines that may have been read by reading the "firstBytes2read".<br/>
+     * --- does not read when lastBytes2read >= total<br/>
+     * --- ...<br/>
      */
-    public static StringBuilder readFirstLastBytes(Path file, int firstBytes2read, int lastBytes2read, String msgBetweenFirstLast) throws Exception {
+    public static StringBuilder readFirstLastBytes(Path file, int firstBytes2read, int lastBytes2read, StringBuilder msgBetweenFirstLast)
+            throws Exception {
         StringBuilder sb = new StringBuilder();
         boolean readLastBytes = true;
 

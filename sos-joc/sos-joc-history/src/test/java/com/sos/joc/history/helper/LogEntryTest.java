@@ -42,7 +42,7 @@ public class LogEntryTest {
         Path file = Paths.get("pom.xml");
         int firstBytes2read = 100 * 1_024;
         int lastBytes2read = 100 * 1_024;
-        String msgBetweenFirstLast = "\n-----------BetweenFirstLast-----------\n";
+        StringBuilder msgBetweenFirstLast = new StringBuilder("\n-----------BetweenFirstLast-----------\n");
 
         StringBuilder sb = SOSPath.readFirstLastBytes(file, firstBytes2read, lastBytes2read, msgBetweenFirstLast);
         LOGGER.info("duration=" + SOSDate.getDuration(start, Instant.now()));

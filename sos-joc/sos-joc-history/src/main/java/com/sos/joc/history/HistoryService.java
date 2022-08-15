@@ -465,27 +465,40 @@ public class HistoryService extends AJocClusterService {
             ConfigurationGlobalsJoc joc = (ConfigurationGlobalsJoc) cg.getConfigurationSection(DefaultSections.joc);
             if (joc != null) {
                 try {
+                    int logMaximumMBSize = Integer.parseInt(joc.getLogMaxSize().getValue());
                     int logApplicableMBSize = Integer.parseInt(joc.getLogApplicableSize().getValue());
-                    if (logApplicableMBSize > 0) {
+                    if (logMaximumMBSize > 0 || logApplicableMBSize > 0) {
 
+                        int logMaximumBytes = JocClusterUtil.mb2bytes(logMaximumMBSize);
                         int logApplicableBytes = JocClusterUtil.mb2bytes(logApplicableMBSize);
                         List<Path> bigFiles = new ArrayList<>();
                         try (Stream<Path> stream = Files.walk(logDir)) {
                             bigFiles = stream.filter(f -> {
                                 try {
-                                    return Files.isRegularFile(f) && Files.size(f) > logApplicableBytes;
+                                    long size = Files.size(f);
+                                    return Files.isRegularFile(f) && (size > logApplicableBytes || size > logMaximumBytes);
                                 } catch (IOException e) {
                                     return false;
                                 }
                             }).map(Path::normalize).collect(Collectors.toList());
                         }
                         for (Path p : bigFiles) {
-                            JocClusterUtil.truncateHistoryOriginalLogFile(caller, p, Files.size(p), logApplicableMBSize);
+                            long size = Files.size(p);
+
+                            boolean truncateIsMaximum = false;
+                            int truncateExeededMBSize = 0;
+                            if (size > logMaximumBytes) {
+                                truncateIsMaximum = true;
+                                truncateExeededMBSize = logMaximumMBSize;
+                            } else {
+                                truncateExeededMBSize = logApplicableMBSize;
+                            }
+                            JocClusterUtil.truncateHistoryOriginalLogFile(caller, p, size, truncateExeededMBSize, truncateIsMaximum);
                         }
                     }
                 } catch (Throwable e) {
-                    LOGGER.warn(String.format("[%s][truncateLogs][%s=%s][error]%s", caller, joc.getLogApplicableSize().getName(), joc
-                            .getLogApplicableSize().getValue(), e.toString()));
+                    LOGGER.warn(String.format("[%s][truncateLogs][%s=%s][%s=%s][error]%s", caller, joc.getLogMaxSize().getName(), joc.getLogMaxSize()
+                            .getValue(), joc.getLogApplicableSize().getName(), joc.getLogApplicableSize().getValue(), e.toString()));
                 }
             }
         }

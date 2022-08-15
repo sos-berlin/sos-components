@@ -1886,10 +1886,20 @@ public class HistoryModel {
                 item.setFileLinesUncomressed(SOSPath.getLineCount(file));
 
                 if (item.getCompressed()) {// task
-                    if (historyConfiguration.getLogApplicableByteSize() > 0 && item.getFileSizeUncomressed() > historyConfiguration
-                            .getLogApplicableByteSize()) {
+                    boolean truncate = false;
+                    boolean truncateIsMaximum = false;
+                    int truncateExeededMBSize = 0;
+                    if (item.getFileSizeUncomressed() > historyConfiguration.getLogMaximumByteSize()) {
+                        truncate = true;
+                        truncateIsMaximum = true;
+                        truncateExeededMBSize = historyConfiguration.getLogMaximumMBSize();
+                    } else if (item.getFileSizeUncomressed() > historyConfiguration.getLogApplicableByteSize()) {
+                        truncate = true;
+                        truncateExeededMBSize = historyConfiguration.getLogApplicableMBSize();
+                    }
+                    if (truncate) {
                         Path f = JocClusterUtil.truncateHistoryOriginalLogFile(identifier + "][" + method, file, item.getFileSizeUncomressed(),
-                                historyConfiguration.getLogApplicableMBSize());
+                                truncateExeededMBSize, truncateIsMaximum);
                         if (f == null) {
                             item = null;
                         } else {
@@ -2045,6 +2055,8 @@ public class HistoryModel {
         boolean newLine;
         boolean append;
 
+        boolean log2file = true;
+
         switch (entry.getEventType()) {
         case OrderProcessingStarted:
             // order log
@@ -2102,6 +2114,10 @@ public class HistoryModel {
                     if (SOSPath.endsWithNewLine(file)) {
                         append = true;
                     }
+                    cos.setLogSize(Files.size(file));
+                    if (cos.getLogSize() > historyConfiguration.getLogMaximumByteSize()) {
+                        log2file = false;
+                    }
                 } catch (FileNotFoundException e) {
                     LOGGER.error(String.format("[%s]%s", file, e.toString()));
                 }
@@ -2109,16 +2125,23 @@ public class HistoryModel {
                 if (cos.isLastStdEndsWithNewLine().booleanValue()) {
                     append = true;
                 }
+                if (cos.getLogSize() > historyConfiguration.getLogMaximumByteSize()) {
+                    log2file = false;
+                } else {
+                    cos.addLogSize(entry.getChunk().getBytes().length);
+                }
             }
 
-            if (append) {
-                String outType = entry.getEventType().equals(EventType.OrderStdoutWritten) ? "STDOUT" : "STDERR";
-                content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
-                content.append("[").append(outType).append("]  ");
+            if (log2file) {
+                if (append) {
+                    String outType = entry.getEventType().equals(EventType.OrderStdoutWritten) ? "STDOUT" : "STDERR";
+                    content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
+                    content.append("[").append(outType).append("]  ");
+                }
+                cos.setLastStdEndsWithNewLine(SOSPath.endsWithNewLine(entry.getChunk()));
+                content.append(entry.getChunk());
+                postEventTaskLog(entry, content.toString(), newLine);
             }
-            cos.setLastStdEndsWithNewLine(SOSPath.endsWithNewLine(entry.getChunk()));
-            content.append(entry.getChunk());
-            postEventTaskLog(entry, content.toString(), newLine);
             break;
         case OrderStarted:
         case OrderAdded:
@@ -2140,14 +2163,15 @@ public class HistoryModel {
         }
 
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][%s][%s]%s", identifier, entry.getEventType().value(), entry.getOrderId(), file));
+            LOGGER.debug(String.format("[%s][%s][%s][%s]log2file=%s", identifier, entry.getEventType().value(), entry.getOrderId(), file, log2file));
         }
-        log2file(file, content, newLine, entry.getEventType());
+        if (log2file) {
+            log2file(file, content, newLine, entry.getEventType());
 
-        if (orderEntry != null && !entry.getHistoryOrderId().equals(entry.getHistoryOrderMainParentId())) {
-            write2MainOrderLog(entry, dir, (orderEntryContent == null ? content : orderEntryContent), newLine, entry.getEventType());
+            if (orderEntry != null && !entry.getHistoryOrderId().equals(entry.getHistoryOrderMainParentId())) {
+                write2MainOrderLog(entry, dir, (orderEntryContent == null ? content : orderEntryContent), newLine, entry.getEventType());
+            }
         }
-
         return file;
     }
 

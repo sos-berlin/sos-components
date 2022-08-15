@@ -44,25 +44,34 @@ public class JocClusterUtil {
         return mb * 1_024 * 1_024;
     }
 
-    public static Path truncateHistoryOriginalLogFile(String caller, Path file, Long fileSizeUncomressed, int logApplicableMBSize) {
+    public static Path truncateHistoryOriginalLogFile(String caller, Path file, Long fileSizeUncomressed, int exceededMBSize, boolean isMaximum) {
         StringBuilder prefix = new StringBuilder();
         prefix.append("[JOC][History][").append(file).append("]");
 
-        StringBuilder banner = new StringBuilder();
-        banner.append("LOG OUTPUT ").append(SOSShell.byteCountToDisplaySize(fileSizeUncomressed)).append(" ");
-        banner.append("EXCEEDS APPLICABLE SIZE OF ").append(logApplicableMBSize).append(" MB ");
-        banner.append("AND IS TRUNCATED TO THE FIRST AND LAST 100 KB.");
+        int lastBytes2read = -1;
+        StringBuilder between = null;
 
+        StringBuilder banner = new StringBuilder();
+        banner.append("LOG OUTPUT ").append(SOSShell.byteCountToDisplaySize(fileSizeUncomressed)).append(" EXCEEDS ");
+        if (isMaximum) {
+            banner.append("MAXIMUM SIZE OF ").append(exceededMBSize).append(" MB ");
+            banner.append("AND IS TRUNCATED TO 100 KB.");
+        } else {
+            banner.append("APPLICABLE SIZE OF ").append(exceededMBSize).append(" MB ");
+            banner.append("AND IS TRUNCATED TO THE FIRST AND LAST 100 KB.");
+
+            lastBytes2read = HISTORY_LOG_TRUNCATE_FIRST_LAST_BYTES;
+            between = new StringBuilder();
+            between.append(HISTORY_LOG_NEW_LINE).append(prefix).append("LAST 100 KB.").append(HISTORY_LOG_NEW_LINE);
+        }
         LOGGER.warn(String.format("[%s][%s]%s", caller, file, banner));
 
-        StringBuilder between = new StringBuilder();
-        between.append(HISTORY_LOG_NEW_LINE).append(prefix).append("LAST 100 KB.").append(HISTORY_LOG_NEW_LINE);
         try {
             StringBuilder result = new StringBuilder();
             result.append(prefix);
             result.append(banner);
-            result.append(SOSPath.readFirstLastBytes(file, HISTORY_LOG_TRUNCATE_FIRST_LAST_BYTES, HISTORY_LOG_TRUNCATE_FIRST_LAST_BYTES, between
-                    .toString()));
+            result.append(HISTORY_LOG_NEW_LINE);
+            result.append(SOSPath.readFirstLastBytes(file, HISTORY_LOG_TRUNCATE_FIRST_LAST_BYTES, lastBytes2read, between));
 
             file = Files.write(file, result.toString().getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (Exception e) {
