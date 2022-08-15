@@ -392,7 +392,7 @@ public class HistoryEventEntry {
                     Completed c = (Completed) outcome;
                     handleNamedValues(c);
                     isSucceeded = c.isSucceeded();
-                    isFailed = c.isFailed();
+                    isFailed = !isSucceeded; //c.isFailed();
                     if (isFailed) {
                         type = OutcomeType.failed;
                         if (outcome instanceof Failed) {
@@ -455,7 +455,7 @@ public class HistoryEventEntry {
 
             private void handleFailed(Failed failed) {
                 isSucceeded = failed.isSucceeded();
-                isFailed = failed.isFailed();
+                isFailed = !isSucceeded;
                 type = OutcomeType.failed;
                 handleNamedValues(failed);
                 setError(failed);
@@ -464,7 +464,7 @@ public class HistoryEventEntry {
             private void handleDisrupted(Outcome outcome, Disrupted problem) {
                 returnCode = null; // TODO ?
                 isSucceeded = problem.isSucceeded();
-                isFailed = problem.isFailed();
+                isFailed = !isSucceeded; //problem.isFailed();
                 type = OutcomeType.disrupted;
                 if (isFailed) {
                     try {
@@ -482,7 +482,7 @@ public class HistoryEventEntry {
             private void handleKilled(Outcome outcome, Killed problem) {
                 returnCode = null;
                 isSucceeded = problem.isSucceeded();
-                isFailed = problem.isFailed();
+                isFailed = !isSucceeded; //problem.isFailed();
                 type = OutcomeType.killed;
 
                 if (isFailed) {
@@ -497,7 +497,7 @@ public class HistoryEventEntry {
             private void handleTimedOut(Outcome outcome, TimedOut problem) {
                 returnCode = null;
                 isSucceeded = problem.isSucceeded();
-                isFailed = problem.isFailed();
+                isFailed = !isSucceeded; //problem.isFailed();
                 type = OutcomeType.timedout;
 
                 if (isFailed) {
