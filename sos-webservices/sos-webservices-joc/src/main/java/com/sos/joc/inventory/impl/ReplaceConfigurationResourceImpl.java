@@ -152,7 +152,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 final java.nio.file.Path p = Paths.get(config.getFolder()).resolve(newName);
 
                 if (config.getName().equals(newName)) { // Nothing to do
-                    return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+                    //return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+                    continue;
                 }
 
                 SOSCheckJavaVariableName.test("name", newName);
@@ -183,7 +184,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 events.add(config.getFolder());
             }
 
-            session.commit();
+            Globals.commit(session);
             for (String event : events) {
                 JocInventory.postEvent(event);
             }
