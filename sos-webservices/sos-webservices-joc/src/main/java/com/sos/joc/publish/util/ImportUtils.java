@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Matcher;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -39,15 +40,18 @@ import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -138,6 +142,15 @@ public class ImportUtils {
         	case NONWORKINGDAYSCALENDAR:
         		referencedBy.addAll(getUsedSchedulesFromArchiveByCalendarName(oldName, configurations));
         		break;
+        	case JOBRESOURCE:
+                referencedBy.addAll(getUsedWorkflowsFromArchiveByJobResourceName(oldName, configurations));
+                break;
+            case JOBTEMPLATE:
+        	    referencedBy.addAll(getUsedWorkflowsFromArchiveByJobTemplateName(oldName, configurations));
+        	    break;
+            case INCLUDESCRIPT:
+                referencedBy.addAll(getUsedWorkflowsFromArchiveByIncludeScriptName(oldName, configurations));
+                break;
     		default:
     			break;
         }
@@ -158,6 +171,8 @@ public class ImportUtils {
     	}
     	// update configurations referenced by existing configuration from DB
     	if (updateableItem.getReferencedBy() != null && !updateableItem.getReferencedBy().isEmpty()) {
+    	    Map<String, String> oldNewNames =  Collections.singletonMap(updateableItem.getOldName(), updateableItem .getNewName());
+            
         	for (ConfigurationObject configurationWithReference : updateableItem.getReferencedBy()) {
                 switch (configurationWithReference.getObjectType()) {
                 case WORKFLOW:
@@ -171,18 +186,60 @@ public class ImportUtils {
                         }
                     } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.NOTICEBOARD)) {
                         try {
-                            String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
-                            json = json.replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
-                            ((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
-                        } catch (IOException e) {
+                            WorkflowsHelper.updateWorkflowBoardname(oldNewNames, ((Workflow) configurationWithReference.getConfiguration())
+                                    .getInstructions());
+                        } catch (Exception e) {
                             throw new JocImportException(e);
                         }
                     } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.WORKFLOW)) {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
                             json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
-                            ((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
+                            configurationWithReference.setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
                         } catch (IOException e) {
+                            throw new JocImportException(e);
+                        }
+                    } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.JOBRESOURCE)) {
+                        try {
+                            Workflow w = (Workflow) configurationWithReference.getConfiguration();
+                            if (w.getJobResourceNames() != null) {
+                                w.setJobResourceNames(w.getJobResourceNames().stream().map(s -> oldNewNames.getOrDefault(s, s)).collect(Collectors
+                                        .toList()));
+                            }
+                            if (w.getJobs() != null && w.getJobs().getAdditionalProperties() != null) {
+                                w.getJobs().getAdditionalProperties().forEach((k, v) -> {
+                                    if (v.getJobResourceNames() != null) {
+                                        v.setJobResourceNames(v.getJobResourceNames().stream().map(s -> oldNewNames.getOrDefault(s, s)).collect(
+                                                Collectors.toList()));
+                                    }
+                                });
+                            }
+                        } catch (Exception e) {
+                            throw new JocImportException(e);
+                        }
+                    } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.JOBTEMPLATE)) {
+                        try {
+                            Workflow w = (Workflow) configurationWithReference.getConfiguration();
+                            if (w.getJobs() != null && w.getJobs().getAdditionalProperties() != null) {
+                                w.getJobs().getAdditionalProperties().forEach((k, v) -> {
+                                    if (v.getJobTemplate() != null) {
+                                        String oldName = v.getJobTemplate().getName();
+                                        if (oldName != null) {
+                                            v.getJobTemplate().setName(oldNewNames.getOrDefault(oldName, oldName));
+                                        }
+                                    }
+                                });
+                            }
+                        } catch (Exception e) {
+                            throw new JocImportException(e);
+                        }
+                    } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.INCLUDESCRIPT)) {
+                        try {
+                            String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
+                            json = json.replaceAll(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + updateableItem
+                                    .getOldName() + "(\\s*)", "$1" + JsonConverter.scriptInclude + " " + updateableItem.getNewName() + "$2");
+                            configurationWithReference.setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
+                        } catch (Exception e) {
                             throw new JocImportException(e);
                         }
                     }
@@ -223,6 +280,28 @@ public class ImportUtils {
                     	});
                     }
                     break;
+                case JOBTEMPLATE:
+                    if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.INCLUDESCRIPT)) {
+                        try {
+                            String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
+                            json = json.replaceAll(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + updateableItem
+                                    .getOldName() + "(\\s*)", "$1" + JsonConverter.scriptInclude + " " + updateableItem.getNewName() + "$2");
+                            configurationWithReference.setConfiguration(Globals.objectMapper.readValue(json, JobTemplate.class));
+                        } catch (Exception e) {
+                            throw new JocImportException(e);
+                        }
+                    } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.JOBRESOURCE)) {
+                        try {
+                            JobTemplate jt = (JobTemplate) configurationWithReference.getConfiguration();
+                            if (jt.getJobResourceNames() != null) {
+                                jt.setJobResourceNames(jt.getJobResourceNames().stream().map(s -> oldNewNames.getOrDefault(s, s)).collect(
+                                        Collectors.toList()));
+                            }
+                        } catch (Exception e) {
+                            throw new JocImportException(e);
+                        }
+                    } 
+                    break;
                 default:
                     break;
                 }
@@ -246,13 +325,13 @@ public class ImportUtils {
     }
     
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByWorkflowName (String name, Set<ConfigurationObject> configurations) {
+        Predicate<String> hasWorkflow = Pattern.compile("\"workflowName\"\\s*:\\s*\"" + name + "\"").asPredicate();
         return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
                 .map(item -> {
                     Workflow wf = (Workflow)item.getConfiguration();
                     try {
                         String wfJson = Globals.objectMapper.writeValueAsString(wf);
-                        Matcher matcher = Pattern.compile("(\"workflowName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
-                        if (matcher.find()) {
+                        if (hasWorkflow.test(wfJson)) {
                             return item;
                         }
                     } catch (JsonProcessingException e) {
@@ -263,13 +342,11 @@ public class ImportUtils {
     }
 
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByLockId (String name, Set<ConfigurationObject> configurations) {
+        Predicate<String> hasLock = Pattern.compile("\"lockName\"\\s*:\\s*\"" + name + "\"").asPredicate();
         return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
                 .map(item -> {
-                    Workflow wf = (Workflow)item.getConfiguration();
                     try {
-                        String wfJson = Globals.objectMapper.writeValueAsString(wf);
-                        Matcher matcher = Pattern.compile("(\"lockName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
-                        if (matcher.find()) {
+                        if (hasLock.test(Globals.objectMapper.writeValueAsString(item.getConfiguration()))) {
                             return item;
                         }
                     } catch (JsonProcessingException e) {
@@ -280,13 +357,67 @@ public class ImportUtils {
     }
 
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByBoardName (String name, Set<ConfigurationObject> configurations) {
+        Predicate<String> hasNoticeBoard = Pattern.compile("\"(?:noticeB|b)oardName\"\\s*:\\s*\"" + name + "\"").asPredicate();
+        Predicate<String> hasNoticeBoards = Pattern.compile("\"(?:noticeB|b)oardNames\"\\s*:\\s*").asPredicate();
         return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
                 .map(item -> {
-                    Workflow wf = (Workflow)item.getConfiguration();
                     try {
-                        String wfJson = Globals.objectMapper.writeValueAsString(wf);
-                        Matcher matcher = Pattern.compile("(\"(?:noticeB|b)oardName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
-                        if (matcher.find()) {
+                        String wfJson = Globals.objectMapper.writeValueAsString(item.getConfiguration());
+                        if (hasNoticeBoard.test(wfJson)) {
+                            return item;
+                        }
+                        if (hasNoticeBoards.test(wfJson)) {
+                            // TODO check name
+                            return item;
+                        }
+                    } catch (JsonProcessingException e) {
+                        LOGGER.error(e.getMessage(), e);
+                    }
+                    return null;
+                }).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+    
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByJobResourceName (String name, Set<ConfigurationObject> configurations) {
+        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
+                .map(item -> {
+                    Workflow wf = (Workflow) item.getConfiguration();
+                    if (wf.getJobResourceNames() != null && wf.getJobResourceNames().contains(name)) {
+                        return item;
+                    }
+                    if (wf.getJobs() != null && wf.getJobs().getAdditionalProperties() != null) {
+                        for (Job job : wf.getJobs().getAdditionalProperties().values()) {
+                            if (job.getJobResourceNames() != null && job.getJobResourceNames().contains(name)) {
+                                return item;
+                            }
+                        }
+                    }
+                    return null;
+                }).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+    
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByJobTemplateName (String name, Set<ConfigurationObject> configurations) {
+        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
+                .map(item -> {
+                    Workflow wf = (Workflow) item.getConfiguration();
+                    if (wf.getJobs() != null && wf.getJobs().getAdditionalProperties() != null) {
+                        for (Job job : wf.getJobs().getAdditionalProperties().values()) {
+                            if (job.getJobTemplate() != null && job.getJobTemplate().getName() != null && job.getJobTemplate().getName().equals(
+                                    name)) {
+                                return item;
+                            }
+                        }
+                    }
+                    return null;
+                }).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+    
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByIncludeScriptName (String name, Set<ConfigurationObject> configurations) {
+        Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + name
+                + "\\s*").asPredicate();
+        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
+                .map(item -> {
+                    try {
+                        if (hasScriptInclude.test(Globals.objectMapper.writeValueAsString(item.getConfiguration()))) {
                             return item;
                         }
                     } catch (JsonProcessingException e) {
