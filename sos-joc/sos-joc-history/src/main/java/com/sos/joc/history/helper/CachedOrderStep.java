@@ -28,6 +28,7 @@ public class CachedOrderStep {
     private CachedOrderStepError error;
     private Boolean lastStdEndsWithNewLine;
     private StringBuilder stdError;
+    private long logSize;
 
     public CachedOrderStep(DBItemHistoryOrderStep item, String timezone) {
         this.id = item.getId();
@@ -152,6 +153,18 @@ public class CachedOrderStep {
 
     public Boolean isLastStdEndsWithNewLine() {
         return lastStdEndsWithNewLine;
+    }
+
+    public void setLogSize(long val) {
+        logSize = val;
+    }
+
+    public void addLogSize(long val) {
+        logSize += val;
+    }
+
+    public long getLogSize() {
+        return logSize;
     }
 
     public void setStdError(String val) {
