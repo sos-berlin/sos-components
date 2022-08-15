@@ -1869,6 +1869,7 @@ public class HistoryModel {
     private DBItemHistoryLog storeLogFile2Db(DBLayerHistory dbLayer, Long orderMainParentId, Long orderId, Long orderStepId, boolean compressed,
             Path file) throws Exception {
 
+        String method = "storeLogFile2Db";
         DBItemHistoryLog item = null;
         try {
             if (Files.exists(file)) {
@@ -1887,7 +1888,8 @@ public class HistoryModel {
                 if (item.getCompressed()) {// task
                     if (historyConfiguration.getLogApplicableByteSize() > 0 && item.getFileSizeUncomressed() > historyConfiguration
                             .getLogApplicableByteSize()) {
-                        Path f = truncateOriginalLogFile(file, item.getFileSizeUncomressed());
+                        Path f = JocClusterUtil.truncateHistoryOriginalLogFile(identifier + "][" + method, file, item.getFileSizeUncomressed(),
+                                historyConfiguration.getLogApplicableMBSize());
                         if (f == null) {
                             item = null;
                         } else {
@@ -1917,41 +1919,13 @@ public class HistoryModel {
                     dbLayer.getSession().save(item);
                 }
             } else {
-                LOGGER.error(String.format("[%s][%s]file not found", identifier, file.toString()));
+                LOGGER.error(String.format("[%s][%s][%s]file not found", identifier, method, file.toString()));
             }
         } catch (Throwable e) {
-            LOGGER.error(String.format("[%s][%s]%s", identifier, file.toString(), e.toString()), e);
+            LOGGER.error(String.format("[%s][%s][%s]%s", identifier, method, file.toString(), e.toString()), e);
             item = null;
         }
         return item;
-    }
-
-    private Path truncateOriginalLogFile(Path file, Long fileSizeUncomressed) {
-        StringBuilder prefix = new StringBuilder();
-        prefix.append("[JOC][History][").append(file).append("]");
-
-        StringBuilder banner = new StringBuilder();
-        banner.append("LOG OUTPUT").append(SOSShell.byteCountToDisplaySize(fileSizeUncomressed)).append(" ");
-        banner.append("EXCEEDS APPLICABLE SIZE OF ").append(historyConfiguration.getLogApplicableMBSize()).append(" MB ");
-        banner.append("AND IS TRUNCATED TO THE FIRST AND LAST 100 KB.");
-
-        LOGGER.warn(String.format("[%s][%s]%s", identifier, file, banner));
-
-        StringBuilder between = new StringBuilder();
-        between.append(prefix).append(HistoryUtil.NEW_LINE).append("LAST 100 KB.").append(HistoryUtil.NEW_LINE);
-        try {
-            StringBuilder result = new StringBuilder();
-            result.append(prefix);
-            result.append(banner);
-            result.append(HistoryUtil.readFirstLastBytes(file, historyConfiguration.getLogTruncateFirstLastByteSize(), historyConfiguration
-                    .getLogTruncateFirstLastByteSize(), between.toString()));
-
-            file = Files.write(file, result.toString().getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        } catch (Exception e) {
-            LOGGER.warn(String.format("[truncateOriginalLogFile][%s]%s", file, e.toString()), e);
-            return null;
-        }
-        return file;
     }
 
     private Path moveOriginalLogFile(Path file, Long fileSizeUncomressed, Throwable t) {
@@ -1961,9 +1935,9 @@ public class HistoryModel {
         StringBuilder result = new StringBuilder();
         result.append(prefix).append("Log file ");
         result.append("(uncompressed size=").append(SOSShell.byteCountToDisplaySize(fileSizeUncomressed)).append(") ");
-        result.append("will be moved because exception:").append(HistoryUtil.NEW_LINE);
+        result.append("will be moved because exception:").append(JocClusterUtil.HISTORY_LOG_NEW_LINE);
         result.append(SOSClassUtil.getStackTrace(t));
-        result.append(HistoryUtil.NEW_LINE);
+        result.append(JocClusterUtil.HISTORY_LOG_NEW_LINE);
 
         Path historyDir = Paths.get(historyConfiguration.getLogDir());
         if (historyDir.getParent() == null) {
@@ -1976,13 +1950,13 @@ public class HistoryModel {
             } catch (Throwable ex) {
                 try {
                     result.append(prefix).append("Log file cannot be moved to ").append(historyDir.getParent()).append(":").append(
-                            HistoryUtil.NEW_LINE);
-                    result.append(SOSClassUtil.getStackTrace(ex)).append(HistoryUtil.NEW_LINE);
+                            JocClusterUtil.HISTORY_LOG_NEW_LINE);
+                    result.append(SOSClassUtil.getStackTrace(ex)).append(JocClusterUtil.HISTORY_LOG_NEW_LINE);
                     result.append(prefix).append("Log file will be deleted.");
                     SOSPath.deleteIfExists(file);
                 } catch (Throwable e) {
-                    result.append(HistoryUtil.NEW_LINE);
-                    result.append(prefix).append("Log file cannot be deleted:").append(HistoryUtil.NEW_LINE);
+                    result.append(JocClusterUtil.HISTORY_LOG_NEW_LINE);
+                    result.append(prefix).append("Log file cannot be deleted:").append(JocClusterUtil.HISTORY_LOG_NEW_LINE);
                     result.append(SOSClassUtil.getStackTrace(e));
                 }
             }
@@ -2217,7 +2191,7 @@ public class HistoryModel {
             writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             writer.write(content.toString());
             if (newLine) {
-                writer.write(HistoryUtil.NEW_LINE);
+                writer.write(JocClusterUtil.HISTORY_LOG_NEW_LINE);
             }
         } catch (Throwable e) {
             throw e;

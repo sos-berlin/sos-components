@@ -8,6 +8,8 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -425,6 +427,64 @@ public class SOSPath {
             }
         }
         return false;
+    }
+
+    /** read first/last 100KB of a ~ 5,7GB file in ~ 0.012s<br/>
+     * TODO - read last lines handling: current situation - reads the last lines that may have been read from the first lines read ...<br/>
+     */
+    public static StringBuilder readFirstLastBytes(Path file, int firstBytes2read, int lastBytes2read, String msgBetweenFirstLast) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        boolean readLastBytes = true;
+
+        try (SeekableByteChannel ch = Files.newByteChannel(file)) {
+            long total = ch.size();
+            if (firstBytes2read > 0) {
+                if (firstBytes2read >= total) {
+                    readLastBytes = false;
+                }
+                sb.append(readFirstLastBytes(ch, firstBytes2read, true));
+            }
+            if (readLastBytes && lastBytes2read > 0 && total - lastBytes2read > 0) {
+                if (firstBytes2read > 0 && msgBetweenFirstLast != null) {
+                    sb.append(msgBetweenFirstLast);
+                }
+                ch.position(total - lastBytes2read);
+                sb.append(readFirstLastBytes(ch, lastBytes2read, false));
+            }
+        }
+        return sb;
+    }
+
+    private static StringBuilder readFirstLastBytes(SeekableByteChannel ch, int bytes2read, boolean firstBytes) throws IOException {
+        int bufferSize = 8 * 1_024;
+        if (bufferSize > bytes2read) {
+            bufferSize = bytes2read;
+        }
+
+        int totalBufferAllocated = 0;
+        boolean end = false;
+
+        StringBuilder sb = new StringBuilder();
+        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+        while (ch.read(buffer) > 0) {// read in chunks - max size is the defined bufferSize
+            totalBufferAllocated += bufferSize;
+            buffer.flip(); // The limit is set to the current position and then the position is set to zero
+
+            int limit = buffer.limit();
+            if (firstBytes && totalBufferAllocated > bytes2read) {
+                limit = limit - (totalBufferAllocated - bytes2read);
+                end = true;
+            }
+            for (int i = 0; i < limit; i++) {
+                sb.append((char) buffer.get());
+            }
+            if (end) {
+                buffer = ByteBuffer.allocate(0);
+            } else if (totalBufferAllocated < bytes2read) {
+                buffer.clear(); // Prepare next buffer read. The position is set to zero, the limit is set to the capacity.
+            }
+        }
+        return sb;
     }
 
     public class SOSPathResult {

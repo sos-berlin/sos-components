@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -34,6 +35,7 @@ import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
+import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -398,13 +400,16 @@ public class HistoryService extends AJocClusterService {
                             if (subfolders == 0 || SOSPath.isDirectoryEmpty(logDir)) {
                                 LOGGER.info(String.format("[%s][compress][skip][%s]is empty", method, logDir));
                             } else {
+                                // truncate the logs that exceed the log applicable size
+                                truncateLogs(method, logDir);
+
                                 // compress
                                 LOGGER.info(String.format("[%s][compress][%s]start..", method, logDir));
                                 SOSGzipResult gr = SOSGzip.compress(logDir, false);
 
                                 // write compressed to database
                                 dbLayer.setSession(factory.openStatelessSession(IDENTIFIER + "_" + method));
-                                compress(method, dbLayer, gr);
+                                storeCompress(method, dbLayer, gr);
                                 dbLayer.close();
 
                                 // log compressed results
@@ -454,8 +459,40 @@ public class HistoryService extends AJocClusterService {
         }
     }
 
-    private void compress(String caller, DBLayerHistory dbLayer, SOSGzipResult gr) throws Exception {
-        String method = "compress";
+    private void truncateLogs(String caller, Path logDir) {
+        ConfigurationGlobals cg = Globals.configurationGlobals;
+        if (cg != null) {
+            ConfigurationGlobalsJoc joc = (ConfigurationGlobalsJoc) cg.getConfigurationSection(DefaultSections.joc);
+            if (joc != null) {
+                try {
+                    int logApplicableMBSize = Integer.parseInt(joc.getLogApplicableSize().getValue());
+                    if (logApplicableMBSize > 0) {
+
+                        int logApplicableBytes = JocClusterUtil.mb2bytes(logApplicableMBSize);
+                        List<Path> bigFiles = new ArrayList<>();
+                        try (Stream<Path> stream = Files.walk(logDir)) {
+                            bigFiles = stream.filter(f -> {
+                                try {
+                                    return Files.isRegularFile(f) && Files.size(f) > logApplicableBytes;
+                                } catch (IOException e) {
+                                    return false;
+                                }
+                            }).map(Path::normalize).collect(Collectors.toList());
+                        }
+                        for (Path p : bigFiles) {
+                            JocClusterUtil.truncateHistoryOriginalLogFile(caller, p, Files.size(p), logApplicableMBSize);
+                        }
+                    }
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[%s][truncateLogs][%s=%s][error]%s", caller, joc.getLogApplicableSize().getName(), joc
+                            .getLogApplicableSize().getValue(), e.toString()));
+                }
+            }
+        }
+    }
+
+    private void storeCompress(String caller, DBLayerHistory dbLayer, SOSGzipResult gr) throws Exception {
+        String method = "storeCompress";
         Instant start = Instant.now();
         dbLayer.beginTransaction();
         if (gr.getDirectories().size() == 0) {
