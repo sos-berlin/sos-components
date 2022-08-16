@@ -84,16 +84,18 @@ public class MonitoringChecker {
         monitoringCheckReturn.setSuccess(true);
 
         for (AgentV agentV : listOfAgents) {
-            if (agentV.getState() == null) {
-                count += 1;
-                monitoringCheckReturn.setErrorMessage(logger,
-                        "check-AgentStatus: unhealthy Agent status '$($status.state._text)', severity '$($status.state.severity)' for Agent ID '$($status.agentId)', Agent Name '$($status.agentName)': $($status.errorMessage)");
-            } else {
-                if (agentV.getState().getSeverity() != 0) {
+            if (!agentV.getDisabled()) {
+                if (agentV.getState() == null) {
                     count += 1;
-                    monitoringCheckReturn.setErrorMessage(logger, "check-AgentStatus: unhealthy Agent status " + agentV.getState().get_text()
-                            + ", severity " + agentV.getState().getSeverity() + " for Agent ID " + agentV.getAgentId() + ", Agent Name " + agentV
-                                    .getAgentName() + ":" + agentV.getErrorMessage());
+                    monitoringCheckReturn.setErrorMessage(logger,
+                            "check-AgentStatus: unhealthy Agent status '$($status.state._text)', severity '$($status.state.severity)' for Agent ID '$($status.agentId)', Agent Name '$($status.agentName)': $($status.errorMessage)");
+                } else {
+                    if (agentV.getState().getSeverity() != 0) {
+                        count += 1;
+                        monitoringCheckReturn.setErrorMessage(logger, "check-AgentStatus: unhealthy Agent status " + agentV.getState().get_text()
+                                + ", severity " + agentV.getState().getSeverity() + " for Agent ID " + agentV.getAgentId() + ", Agent Name " + agentV
+                                        .getAgentName() + ":" + agentV.getErrorMessage());
+                    }
                 }
             }
         }
