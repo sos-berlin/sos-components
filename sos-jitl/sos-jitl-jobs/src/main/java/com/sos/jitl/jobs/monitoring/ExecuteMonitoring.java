@@ -6,9 +6,6 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,7 +18,7 @@ import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringCheckReturn;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringChecker;
-import com.sos.jitl.jobs.monitoring.classes.MonitoringReturnParameters;
+import com.sos.jitl.jobs.monitoring.classes.MonitoringParameters;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringWebserviceExecuter;
 import com.sos.joc.model.agent.AgentV;
 import com.sos.joc.model.jitl.monitoring.MonitoringControllerStatus;
@@ -31,8 +28,6 @@ import com.sos.joc.model.order.OrdersHistoricSummary;
 import com.sos.joc.model.order.OrdersSummary;
 
 public class ExecuteMonitoring {
-
-    private static final String REPORTFILE_DATEFORMAT = "yyyy-MM-dd.HH-mm-ss.K";
 
     private MonitoringJobArguments args;
     private JobLogger logger;
@@ -58,7 +53,6 @@ public class ExecuteMonitoring {
                 String message = apiResponse.getStatusCode() + " " + apiExecutor.getClient().getHttpResponse().getStatusLine().getReasonPhrase();
                 throw new SOSException(message);
             }
-
             MonitoringWebserviceExecuter monitoringWebserviceExecuter = new MonitoringWebserviceExecuter(logger, apiExecutor);
             MonitoringControllerStatus monitoringControllerStatus = monitoringWebserviceExecuter.getControllerStatus(accessToken, args
                     .getControllerId());
@@ -93,14 +87,16 @@ public class ExecuteMonitoring {
         }
     }
 
-    public MonitoringReturnParameters prepareOuput(MonitoringStatus monitoringStatus) throws IOException {
-        MonitoringReturnParameters monitoringReturnParameters = new MonitoringReturnParameters();
+    public MonitoringParameters result2File(MonitoringStatus monitoringStatus, MonitoringParameters monitoringParameters, Integer resultCount)
+            throws IOException {
         Files.createDirectories(Paths.get(args.getMonitorReportDir()));
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(REPORTFILE_DATEFORMAT).withZone(ZoneId.systemDefault());
-
-        String monitorReportDate = formatter.format(Instant.now());
-        String filename = args.getMonitorReportDir() + "/monitor." + monitorReportDate + ".json";
+        String filename;
+        if (resultCount == 0) {
+            filename = args.getMonitorReportDir() + "/monitor." + monitoringParameters.getMonitorFileReportDate() + ".notice.json";
+        } else {
+            filename = args.getMonitorReportDir() + "/monitor." + monitoringParameters.getMonitorFileReportDate() + ".alert.json";
+        }
         Globals.debug(logger, "Report Filename: " + filename);
 
         String output = Globals.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(monitoringStatus);
@@ -124,16 +120,14 @@ public class ExecuteMonitoring {
             }
         }
 
-        monitoringReturnParameters.setMonitorReportDate(monitorReportDate);
-        monitoringReturnParameters.setMonitorReportFile(filename);
-        return monitoringReturnParameters;
+        monitoringParameters.setMonitorReportFile(filename);
+        return monitoringParameters;
     }
 
-    public MonitoringCheckReturn checkStatusInformation(MonitoringStatus monitoringStatus, MonitoringReturnParameters monitoringReturnParameters)
+    public MonitoringCheckReturn checkStatusInformation(MonitoringStatus monitoringStatus, MonitoringParameters monitoringParameters)
             throws SOSException {
         MonitoringChecker montitoringChecker = new MonitoringChecker(this.logger);
-        return montitoringChecker.doCheck(monitoringStatus, monitoringReturnParameters.getMonitorReportFile(), monitoringReturnParameters
-                .getMonitorReportDate(), args.getFrom());
+        return montitoringChecker.doCheck(monitoringStatus, monitoringParameters, args.getFrom());
     }
 
 }

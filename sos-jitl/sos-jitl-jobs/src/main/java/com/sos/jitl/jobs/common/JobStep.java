@@ -347,7 +347,7 @@ public class JobStep<A extends JobArguments> {
             if (internalStep == null) {
                 return null;
             }
-            controllerId = internalStep.controllerId().toString();
+            controllerId = internalStep.controllerId().string();
         }
         return controllerId;
     }

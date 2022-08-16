@@ -1,21 +1,13 @@
 package com.sos.jitl.jobs.fileordervariablesjob;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobLogger;
-import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.common.JitlJobReturn;
 import com.sos.jitl.jobs.common.Job;
-import com.sos.jitl.jobs.common.JobArgument.Type;
-import com.sos.jitl.jobs.monitoring.classes.MonitoringCheckReturn;
-import com.sos.jitl.jobs.monitoring.classes.MonitoringReturnParameters;
-import com.sos.joc.model.jitl.monitoring.MonitoringStatus;
+import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.JobStep;
 
-import js7.data.value.StringValue;
 import js7.data_for_java.order.JOutcome;
 
 public class FileOrderVariablesJob extends ABlockingInternalJob<FileOrderVariablesJobArguments> {
