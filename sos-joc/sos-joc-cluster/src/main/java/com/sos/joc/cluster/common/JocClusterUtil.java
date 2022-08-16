@@ -52,11 +52,12 @@ public class JocClusterUtil {
         StringBuilder between = null;
 
         StringBuilder banner = new StringBuilder();
-        banner.append("LOG OUTPUT ").append(SOSShell.byteCountToDisplaySize(fileSizeUncomressed)).append(" EXCEEDS ");
         if (isMaximum) {
+            banner.append("LOG OUTPUT EXCEEDS ");
             banner.append("MAXIMUM SIZE OF ").append(exceededMBSize).append(" MB ");
             banner.append("AND IS TRUNCATED TO 100 KB.");
         } else {
+            banner.append("LOG OUTPUT ").append(SOSShell.byteCountToDisplaySize(fileSizeUncomressed)).append(" EXCEEDS ");
             banner.append("APPLICABLE SIZE OF ").append(exceededMBSize).append(" MB ");
             banner.append("AND IS TRUNCATED TO THE FIRST AND LAST 100 KB.");
 
