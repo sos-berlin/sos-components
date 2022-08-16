@@ -126,7 +126,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 // TODO: process transformation rules 
                 LOGGER.info(String.format("Imported from JS7 JOC Cockpit version: %1$s", jocMetaInfo.getJocVersion()));
                 LOGGER.info(String.format("  with inventory schema version: %1$s", jocMetaInfo.getInventorySchemaVersion()));
-                LOGGER.info(String.format("  and API version: %1$s", jocMetaInfo.getApiVersion()));
+                LOGGER.info(String.format("  and API schema version: %1$s", jocMetaInfo.getApiVersion()));
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
