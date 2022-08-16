@@ -265,9 +265,9 @@ public class SOSShell {
                 DecimalFormat df = new DecimalFormat("#,###.##");
                 float sizeKb = 1024.0f;
                 float sizeMb = sizeKb * sizeKb;
-                msg = df.format(bytes / sizeMb) + "MB";
+                msg = df.format(bytes / sizeMb) + " MB";
             } catch (Throwable e) {
-                msg = String.valueOf(bytes) + "B";
+                msg = String.valueOf(bytes) + " B";
             }
         }
         return msg;
