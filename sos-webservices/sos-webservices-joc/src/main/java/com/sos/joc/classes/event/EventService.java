@@ -24,6 +24,8 @@ import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
+import com.sos.joc.event.bean.agent.AgentVersionUpdatedEvent;
+import com.sos.joc.event.bean.agent.SubagentVersionUpdatedEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogChangedEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogWorkflowEvent;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
@@ -105,9 +107,11 @@ import js7.data.workflow.WorkflowPathControlPath;
 import js7.data.workflow.instructions.BoardInstruction;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
+import js7.data_for_java.subagent.JSubagentItem;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.proxy.javaapi.eventbus.JControllerEventBus;
 import scala.collection.JavaConverters;
+import scala.compat.java8.OptionConverters;
 
 public class EventService {
 
@@ -469,9 +473,21 @@ public class EventService {
                 
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
                 addEvent(createAgentEvent(eventId, ((AgentPath) key).string()));
+                if (evt instanceof AgentRefStateEvent.AgentReady) {
+                    OptionConverters.toJava(((AgentRefStateEvent.AgentReady) evt).platformInfo()).ifPresent(p -> EventBus.getInstance().post(
+                            new AgentVersionUpdatedEvent(controllerId, ((AgentPath) key).string(), p.js7Version().string())));
+                }
 
             } else if (evt instanceof SubagentItemStateEvent && !(evt instanceof SubagentItemStateEvent.SubagentEventsObserved$)) {
                 addEvent(createAgentEvent(eventId, ((SubagentId) key).string()));
+                if (evt instanceof SubagentItemStateEvent.SubagentDedicated) {
+                    JSubagentItem subAgentItem = currentState.idToSubagentItem().get((SubagentId) key);
+                    if (subAgentItem != null) {
+                        OptionConverters.toJava(((SubagentItemStateEvent.SubagentDedicated) evt).platformInfo()).ifPresent(p -> EventBus.getInstance()
+                                .post(new SubagentVersionUpdatedEvent(controllerId, subAgentItem.agentPath().string(), ((SubagentId) key).string(), p
+                                        .js7Version().string())));
+                    }
+                }
                 
             } else if (evt instanceof BoardEvent) {
                 addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
