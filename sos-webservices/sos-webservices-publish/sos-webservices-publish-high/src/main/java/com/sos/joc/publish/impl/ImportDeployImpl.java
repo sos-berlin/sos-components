@@ -131,7 +131,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 // TODO: process transformation rules
                 LOGGER.info(String.format("Imported from JS7 JOC Cockpit version: %1$s", jocMetaInfo.getJocVersion()));
                 LOGGER.info(String.format("  with inventory schema version: %1$s", jocMetaInfo.getInventorySchemaVersion()));
-                LOGGER.info(String.format("  and API version: %1$s", jocMetaInfo.getApiVersion()));
+                LOGGER.info(String.format("  and API schema version: %1$s", jocMetaInfo.getApiVersion()));
             }
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
