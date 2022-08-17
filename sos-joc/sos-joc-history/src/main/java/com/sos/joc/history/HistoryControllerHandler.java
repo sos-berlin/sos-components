@@ -245,6 +245,7 @@ public class HistoryControllerHandler {
                             try {
                                 lastActivityStart.set(new Date().getTime());
                                 eventId.set(model.process(list));
+                                list.clear();
                                 releaseEvents(eventId.get());
                                 lastActivityEnd.set(new Date().getTime());
                             } catch (Throwable e) {

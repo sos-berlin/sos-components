@@ -33,7 +33,7 @@ public class LogEntry {
     private String agentName = ".";
     private String agentUri = ".";
     private String subagentClusterId = null;
-    private String chunk;
+    private String info;
     private Integer state;
     private boolean error;
     private String errorState;
@@ -59,7 +59,7 @@ public class LogEntry {
         historyOrderMainParentId = order.getMainParentId();
         historyOrderId = order.getId();
         position = SOSString.isEmpty(workflowPosition) ? "0" : workflowPosition;
-        chunk = order.getOrderId();
+        info = order.getOrderId();
     }
 
     public void onOrderLock(CachedOrder order, AFatEventOrderLock entry) {
@@ -88,7 +88,7 @@ public class LogEntry {
         historyOrderMainParentId = order.getMainParentId();
         historyOrderId = order.getId();
         position = workflowPosition;
-        chunk = String.join(", ", childs);
+        info = String.join(", ", childs);
         if (outcome != null) {
             returnCode = outcome.getReturnCode();
             if (outcome.isFailed()) {
@@ -101,7 +101,7 @@ public class LogEntry {
         onOrderStep(orderStep, null);
     }
 
-    public void onOrderStep(CachedOrderStep orderStep, String entryChunk) {
+    public void onOrderStep(CachedOrderStep orderStep, String entryInfo) {
         orderId = orderStep.getOrderId();
         historyOrderMainParentId = orderStep.getHistoryOrderMainParentId();
         historyOrderId = orderStep.getHistoryOrderId();
@@ -117,7 +117,7 @@ public class LogEntry {
         switch (eventType) {
         case OrderProcessingStarted:
             String add = subagentClusterId == null ? "" : ", subagentClusterId=" + subagentClusterId;
-            chunk = String.format("[Start] Job=%s, Agent (url=%s, id=%s, name=%s%s)", jobName, agentUri, agentId, agentName, add);
+            info = String.format("[Start] Job=%s, Agent (url=%s, id=%s, name=%s%s)", jobName, agentUri, agentId, agentName, add);
             return;
         case OrderProcessed:
             returnCode = orderStep.getReturnCode();
@@ -149,10 +149,10 @@ public class LogEntry {
                     sb.append(", ").append(String.join(", ", errorInfo));
                 }
             }
-            chunk = sb.toString();
+            info = sb.toString();
             return;
         default:
-            chunk = entryChunk;
+            info = entryInfo;
             break;
         }
 
@@ -226,8 +226,8 @@ public class LogEntry {
         return agentDatetime;
     }
 
-    public String getChunk() {
-        return chunk;
+    public String getInfo() {
+        return info;
     }
 
     public void setState(Integer val) {

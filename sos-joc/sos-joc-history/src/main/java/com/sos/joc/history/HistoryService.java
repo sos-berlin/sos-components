@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -35,8 +34,8 @@ import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -61,8 +60,6 @@ public class HistoryService extends AJocClusterService {
     private static final String IDENTIFIER = ClusterServices.history.name();
     private static final long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;// in seconds
 
-    private final Path logDir;
-
     private HistoryConfiguration config;
     private MailerConfiguration mailerConfig;
     private JocClusterHibernateFactory factory;
@@ -76,7 +73,6 @@ public class HistoryService extends AJocClusterService {
     public HistoryService(final JocConfiguration jocConf, ThreadGroup parentThreadGroup) {
         super(jocConf, parentThreadGroup, IDENTIFIER);
         setConfig();
-        logDir = Paths.get(config.getLogDir());
     }
 
     @Override
@@ -238,6 +234,7 @@ public class HistoryService extends AJocClusterService {
     private boolean updateHistoryConfigLogSize(boolean onStart) {
         int oldLogApplicableMBSize = config.getLogApplicableMBSize();
         int oldLogMaximumMBSize = config.getLogMaximumMBSize();
+        int oldLogMaximumDisplayMBSize = config.getLogMaximumDisplayMBSize();
         ConfigurationGlobals cg = Globals.configurationGlobals;
 
         boolean result = false;
@@ -257,12 +254,21 @@ public class HistoryService extends AJocClusterService {
                             .getName(), joc.getLogMaxSize().getValue(), config.getLogMaximumMBSize(), e.toString()));
                 }
 
-                result = (oldLogApplicableMBSize != config.getLogApplicableMBSize()) || (oldLogMaximumMBSize != config.getLogMaximumMBSize());
+                try {
+                    config.setLogMaximumDisplayMBSize(Integer.parseInt(joc.getMaxDisplaySize().getValue()));
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[%s][%s=%s][use default %s][error]%s", StartupMode.settings_changed.name(), joc.getLogMaxSize()
+                            .getName(), joc.getLogMaxSize().getValue(), config.getLogMaximumMBSize(), e.toString()));
+                }
+
+                result = (oldLogApplicableMBSize != config.getLogApplicableMBSize()) || (oldLogMaximumMBSize != config.getLogMaximumMBSize()
+                        || oldLogMaximumDisplayMBSize != config.getLogMaximumDisplayMBSize());
                 if (result && !onStart) {
-                    LOGGER.info(String.format("[%s][old %s=%s,%s=%s][new %s=%s,%s=%s]", StartupMode.settings_changed.name(), joc
+                    LOGGER.info(String.format("[%s][old %s=%s,%s=%s,%s=%s][new %s=%s,%s=%s,%s=%s]", StartupMode.settings_changed.name(), joc
                             .getLogApplicableSize().getName(), oldLogApplicableMBSize, joc.getLogMaxSize().getName(), oldLogMaximumMBSize, joc
-                                    .getLogApplicableSize().getName(), config.getLogApplicableMBSize(), joc.getLogMaxSize().getName(), config
-                                            .getLogMaximumMBSize()));
+                                    .getMaxDisplaySize().getName(), oldLogMaximumDisplayMBSize, joc.getLogApplicableSize().getName(), config
+                                            .getLogApplicableMBSize(), joc.getLogMaxSize().getName(), config.getLogMaximumMBSize(), joc
+                                                    .getMaxDisplaySize().getName(), config.getLogMaximumDisplayMBSize()));
                 }
             }
         }
@@ -281,14 +287,14 @@ public class HistoryService extends AJocClusterService {
     }
 
     private void checkLogDirectory() throws Exception {
-        if (!Files.exists(logDir)) {
+        if (!Files.exists(config.getLogDir())) {
             try {
-                Files.createDirectory(logDir);
+                Files.createDirectory(config.getLogDir());
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("[history_log_dir=%s]created", logDir));
+                    LOGGER.debug(String.format("[history_log_dir=%s]created", config.getLogDir()));
                 }
             } catch (Throwable e) {
-                throw new Exception(String.format("[%s][can't create directory]%s", logDir.toAbsolutePath(), e.toString()), e);
+                throw new Exception(String.format("[%s][can't create directory]%s", config.getLogDir(), e.toString()), e);
             }
         }
     }
@@ -329,8 +335,8 @@ public class HistoryService extends AJocClusterService {
                         dbLayer.close();
 
                         // decompress
-                        LOGGER.info(String.format("[%s][%s]start..", method, logDir));
-                        SOSGzipResult gr = SOSGzip.decompress(compressed, logDir, true);
+                        LOGGER.info(String.format("[%s][%s]start..", method, config.getLogDir()));
+                        SOSGzipResult gr = SOSGzip.decompress(compressed, config.getLogDir(), true);
                         LOGGER.info(String.format("[%s][end]%s", method, gr));
                         gr.getDirectories().forEach(d -> {
                             LOGGER.info(String.format("    [decompressed]%s", d));
@@ -382,7 +388,7 @@ public class HistoryService extends AJocClusterService {
                     default:
                         // TODO select List<Long> (convert to Set) and remove "old" folders before compress
                         Long orderLogs = dbLayer.getCountNotFinishedOrderLogs();
-                        long subfolders = SOSPath.getCountSubfolders(logDir, 1);
+                        long subfolders = SOSPath.getCountSubfolders(config.getLogDir(), 1);
                         LOGGER.info(String.format("[%s][db: not finished order logs=%s][log directory: subfolders=%s]", method, orderLogs,
                                 subfolders));
 
@@ -397,15 +403,15 @@ public class HistoryService extends AJocClusterService {
                             }
                             dbLayer.close();
 
-                            if (subfolders == 0 || SOSPath.isDirectoryEmpty(logDir)) {
-                                LOGGER.info(String.format("[%s][compress][skip][%s]is empty", method, logDir));
+                            if (subfolders == 0 || SOSPath.isDirectoryEmpty(config.getLogDir())) {
+                                LOGGER.info(String.format("[%s][compress][skip][%s]is empty", method, config.getLogDir()));
                             } else {
                                 // truncate the logs that exceed the log applicable size
-                                truncateLogs(method, logDir);
+                                truncateLogs(method, config.getLogDir());
 
                                 // compress
-                                LOGGER.info(String.format("[%s][compress][%s]start..", method, logDir));
-                                SOSGzipResult gr = SOSGzip.compress(logDir, false);
+                                LOGGER.info(String.format("[%s][compress][%s]start..", method, config.getLogDir()));
+                                SOSGzipResult gr = SOSGzip.compress(config.getLogDir(), false);
 
                                 // write compressed to database
                                 dbLayer.setSession(factory.openStatelessSession(IDENTIFIER + "_" + method));
@@ -440,8 +446,8 @@ public class HistoryService extends AJocClusterService {
 
             if (hasOnlyFinished) {
                 // cleanup
-                LOGGER.info(String.format("[%s][cleanup][%s]start..", method, logDir));
-                SOSPathResult pr = SOSPath.cleanupDirectory(logDir);
+                LOGGER.info(String.format("[%s][cleanup][%s]start..", method, config.getLogDir()));
+                SOSPathResult pr = SOSPath.cleanupDirectory(config.getLogDir());
                 LOGGER.info(String.format("[%s][cleanup][end]%s", method, pr));
                 pr.getDirectories().forEach(d -> {
                     LOGGER.info(String.format("    [deleted]%s", d));
@@ -520,14 +526,14 @@ public class HistoryService extends AJocClusterService {
 
     private void cleanupAllLogs(String caller) throws IOException {
         String method = "cleanupAllLogs";
-        LOGGER.info(String.format("[%s][%s][%s]start..", caller, method, logDir));
-        SOSPathResult r = SOSPath.cleanupDirectory(logDir);
+        LOGGER.info(String.format("[%s][%s][%s]start..", caller, method, config.getLogDir()));
+        SOSPathResult r = SOSPath.cleanupDirectory(config.getLogDir());
         LOGGER.info(String.format("[%s][%s][end]%s", caller, method, r));
     }
 
     // TODO duplicate method (some changes) - see com.sos.joc.cleanup.model.CleanupTaskHistory
     private void cleanupNotReferencedLogs(DBLayerHistory dbLayer, String caller) {
-        Path dir = logDir.toAbsolutePath();
+        Path dir = config.getLogDir().toAbsolutePath();
         if (Files.exists(dir)) {
             String method = "cleanupNotReferencedLogs";
             LOGGER.info(String.format("[%s][%s]%s", caller, method, dir));
