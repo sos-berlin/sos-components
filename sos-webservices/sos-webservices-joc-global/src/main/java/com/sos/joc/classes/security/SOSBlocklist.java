@@ -43,10 +43,7 @@ public class SOSBlocklist {
 
         for (String accountName : blockedAccountsFilter.getAccountNames()) {
             iamAccountFilter.setAccountName(accountName);
-            int count = iamAccountDBLayer.deleteBlockedAccount(iamAccountFilter);
-            if (count == 0) {
-                throw new JocObjectNotExistException("Couldn't find the account <" + accountName + ">");
-            }
+            iamAccountDBLayer.deleteBlockedAccount(iamAccountFilter);
         }
     }
 }
