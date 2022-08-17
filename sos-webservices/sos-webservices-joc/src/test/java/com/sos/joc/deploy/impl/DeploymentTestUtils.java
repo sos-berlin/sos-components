@@ -31,6 +31,7 @@ import com.sos.joc.model.inventory.release.Releasable;
 import com.sos.joc.model.inventory.release.ReleasableRecallFilter;
 import com.sos.joc.model.joc.Js7LicenseInfo;
 import com.sos.joc.model.joc.LicenseType;
+import com.sos.joc.model.joc.VersionsFilter;
 import com.sos.joc.model.notification.DeleteNotificationFilter;
 import com.sos.joc.model.notification.ReadNotificationFilter;
 import com.sos.joc.model.notification.StoreNotificationFilter;
@@ -1475,6 +1476,13 @@ public class DeploymentTestUtils {
         filter.setControllerId("testsuite");
         filter.setOverwrite(false);
         filter.setFormat(ArchiveFormat.ZIP);
+        return filter;
+    }
+    
+    public static VersionsFilter createVersionsFilter() {
+        VersionsFilter filter = new VersionsFilter();
+        filter.setAgentIds(Arrays.asList("primaryAgentID","standaloneAgentID","agent_cluster_001"));
+        filter.setControllerIds(Arrays.asList("controller", "standalone", "testsuite"));
         return filter;
     }
 }

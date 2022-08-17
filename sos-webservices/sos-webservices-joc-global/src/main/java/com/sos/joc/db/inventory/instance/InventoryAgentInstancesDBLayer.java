@@ -745,6 +745,24 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
 
+    public List<DBItemInventorySubAgentInstance> getSubAgentsByAgentId(String agentId) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(
+                    " where agentId = :agentId");
+            Query<DBItemInventorySubAgentInstance> query = getSession().createQuery(hql.toString());
+            query.setParameter("agentId", agentId);
+            List<DBItemInventorySubAgentInstance> result = getSession().getResultList(query);
+            if (result != null) {
+                return result;
+            }
+            return Collections.emptyList();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     public Map<String, List<DBItemInventorySubAgentInstance>> getSubAgentInstancesByControllerIds(Collection<String> controllerIds,
             boolean onlyWatcher, boolean onlyVisibleAgents) {
         try {
