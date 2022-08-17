@@ -14,9 +14,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.hibernate.query.Query;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
+import com.sos.joc.Globals;
+import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
@@ -24,7 +28,12 @@ import com.sos.joc.db.inventory.DBItemInventorySubAgentClusterMember;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.agent.AgentVersionUpdatedEvent;
+import com.sos.joc.event.bean.agent.SubagentVersionUpdatedEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.SubAgent;
@@ -33,7 +42,19 @@ import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.joc.model.agent.SubagentDirectorType;
 
 public class AgentStoreUtils {
+    
+    private static AgentStoreUtils instance;
 
+    private AgentStoreUtils() {
+        EventBus.getInstance().register(this);
+    }
+
+    protected static AgentStoreUtils getInstance() {
+        if (instance == null) {
+            instance = new AgentStoreUtils();
+        }
+        return instance;
+    }
     public static void storeStandaloneAgent(Agent agent, String controllerId, boolean overwrite, InventoryAgentInstancesDBLayer dbLayer)
             throws SOSHibernateException {
         Map<String, Agent> agentMap = new HashMap<String, Agent>(1);
@@ -481,5 +502,57 @@ public class AgentStoreUtils {
             member.setSubAgentClusterId(subagentClusterId);
             connection.save(member);
         }
+    }
+    
+    @Subscribe({ AgentVersionUpdatedEvent.class })
+    public void updateAgentVersion(AgentVersionUpdatedEvent event) {
+        SOSHibernateSession connection = null;
+        try {
+            connection = initDBConnection();
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+            hql.append(" where agentId=:agentId ");
+            Query<DBItemInventoryAgentInstance> query = connection.createQuery(hql.toString());
+            query.setParameter("agentId", event.getAgentId());
+            query.setMaxResults(1);
+            DBItemInventoryAgentInstance result = connection.getSingleResult(query);
+            if(result != null && !result.getVersion().equals(event.getVersion())) {
+                result.setVersion(event.getVersion());
+                connection.update(result);
+            }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } finally {
+            closeDBConnection(connection);
+        }
+    }
+
+    @Subscribe({ SubagentVersionUpdatedEvent.class })
+    public void updateSubagentVersion(SubagentVersionUpdatedEvent event) {
+        SOSHibernateSession connection = null;
+        try {
+            connection = initDBConnection();
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
+            hql.append(" where subAgentId=:subagentId");
+            Query<DBItemInventorySubAgentInstance> query = connection.createQuery(hql.toString());
+            query.setParameter("subagentId", event.getSubagentId());
+            query.setMaxResults(1);
+            DBItemInventorySubAgentInstance result = connection.getSingleResult(query);
+            if(result != null && !result.getVersion().equals(event.getVersion())) {
+                result.setVersion(event.getVersion());
+                connection.update(result);
+            }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } finally {
+            closeDBConnection(connection);
+        }
+    }
+
+    private static SOSHibernateSession initDBConnection() {
+        return Globals.createSosHibernateStatelessConnection(AgentStoreUtils.class.getSimpleName());
+    }
+    
+    private static void closeDBConnection(SOSHibernateSession connection) {
+        Globals.disconnect(connection);
     }
 }
