@@ -431,7 +431,8 @@ public class JocCluster {
                             return null;
                         }
                     }
-                    LOGGER.info(String.format("[%s][heartBeat exceeded][%s]%s", mode, item.getHeartBeat(), item.getMemberId()));
+                    LOGGER.info(String.format("[%s][heartBeat exceeded][UTC][%s]%s", mode, SOSDate.getDateTimeAsString(item.getHeartBeat()), item
+                            .getMemberId()));
 
                     boolean update = true;
                     // to avoid start of the current instance if a switchMember defined
@@ -556,7 +557,7 @@ public class JocCluster {
                         return getErrorAnswer(new Exception(String.format("memberId=%s not found", newMemberId)));
                     }
                     if (isHeartBeatExceeded(switchInstance.getHeartBeat())) {
-                        return getErrorAnswer(new Exception(String.format("[memberId=%s][last heart beat too old]%s", newMemberId, SOSDate
+                        return getErrorAnswer(new Exception(String.format("[memberId=%s][last heart beat too old][UTC]%s", newMemberId, SOSDate
                                 .getDateTimeAsString(switchInstance.getHeartBeat()))));
                     }
                 }
@@ -667,8 +668,8 @@ public class JocCluster {
                     }
                     try {
                         if (isHeartBeatExceeded(item.getSwitchHeartBeat())) {
-                            LOGGER.info(String.format("[%s][switch][skip][newMemberId=%s]switchHeartBeat=%s exceeded", mode, item.getSwitchMemberId(),
-                                    item.getSwitchHeartBeat()));
+                            LOGGER.info(String.format("[%s][switch][skip][newMemberId=%s][UTC]switchHeartBeat=%s exceeded", mode, item
+                                    .getSwitchMemberId(), SOSDate.getDateTimeAsString(item.getSwitchHeartBeat())));
                         } else {
                             LOGGER.info("[" + mode + "][switch][stop current]newMemberId=" + item.getSwitchMemberId());
                             if (handler.isActive()) {
