@@ -7,7 +7,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
-import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.security.blocklist.BlockedAccount;
 import com.sos.joc.model.security.blocklist.BlockedAccountsDeleteFilter;
 
