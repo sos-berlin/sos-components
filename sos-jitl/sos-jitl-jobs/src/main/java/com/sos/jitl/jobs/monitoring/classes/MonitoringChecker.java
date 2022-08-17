@@ -1,13 +1,12 @@
 package com.sos.jitl.jobs.monitoring.classes;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.jitl.jobs.common.Globals;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.joc.model.agent.AgentV;
+import com.sos.joc.model.agent.SubagentV;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.controller.Role;
 import com.sos.joc.model.jitl.monitoring.MonitoringStatus;
@@ -84,22 +83,63 @@ public class MonitoringChecker {
         monitoringCheckReturn.setSuccess(true);
 
         for (AgentV agentV : listOfAgents) {
+
             if (!agentV.getDisabled()) {
-                if (agentV.getState() == null) {
+                if (agentV.getHealthState() == null) {
                     count += 1;
-                    monitoringCheckReturn.setErrorMessage(logger,
-                            "check-AgentStatus: unhealthy Agent status '$($status.state._text)', severity '$($status.state.severity)' for Agent ID '$($status.agentId)', Agent Name '$($status.agentName)': $($status.errorMessage)");
+                    monitoringCheckReturn.setErrorMessage(logger, "check-AgentStatus: empty health state");
                 } else {
-                    if (agentV.getState().getSeverity() != 0) {
+                    if (agentV.getHealthState().getSeverity() != 0) {
                         count += 1;
-                        monitoringCheckReturn.setErrorMessage(logger, "check-AgentStatus: unhealthy Agent status " + agentV.getState().get_text()
-                                + ", severity " + agentV.getState().getSeverity() + " for Agent ID " + agentV.getAgentId() + ", Agent Name " + agentV
-                                        .getAgentName() + ":" + agentV.getErrorMessage());
+                        monitoringCheckReturn.setErrorMessage(logger, "check-AgentStatus: unhealthy Agent health status " + agentV.getHealthState()
+                                .get_text() + ", severity " + agentV.getHealthState().getSeverity() + " for Agent ID " + agentV.getAgentId()
+                                + ", Agent Name " + agentV.getAgentName() + ":" + agentV.getErrorMessage());
+                    }
+
+                    if (agentV.getState() != null) {
+                        if (agentV.getState().getSeverity() != 0) {
+                            count += 1;
+                            monitoringCheckReturn.setErrorMessage(logger, "check-AgentStatus: unhealthy Agent status " + agentV.getState().get_text()
+                                    + ", severity " + agentV.getState().getSeverity() + " for Agent ID " + agentV.getAgentId() + ", Agent Name "
+                                    + agentV.getAgentName() + ":" + agentV.getErrorMessage());
+                        }
+                    } else {
+                        if (agentV.getSubagents() == null) {
+                            count += 1;
+                            monitoringCheckReturn.setErrorMessage(logger, "check-AgentStatus: empty agent status and could not find subagents");
+                        } else {
+                            checkSubAgentStatus(agentV.getSubagents());
+                        }
+                    }
+
+                }
+            }
+        }
+        return monitoringCheckReturn;
+    }
+
+    private MonitoringCheckReturn checkSubAgentStatus(List<SubagentV> listOfSubAgents) {
+        MonitoringCheckReturn monitoringCheckReturn = new MonitoringCheckReturn();
+        monitoringCheckReturn.setSuccess(true);
+
+        for (SubagentV subagentV : listOfSubAgents) {
+
+            if (!subagentV.getDisabled()) {
+                if (subagentV.getState() == null) {
+                    count += 1;
+                    monitoringCheckReturn.setErrorMessage(logger, "check-AgentStatus: empty subagent status");
+                } else {
+                    if (subagentV.getState().getSeverity() != 0) {
+                        count += 1;
+                        monitoringCheckReturn.setErrorMessage(logger, "check-AgentStatus: unhealthy Agent status " + subagentV.getState().get_text()
+                                + ", severity " + subagentV.getState().getSeverity() + " for Agent ID " + subagentV.getAgentId() + ", Agent Name "
+                                + subagentV.getAgentName() + ":" + subagentV.getErrorMessage());
                     }
                 }
             }
         }
         return monitoringCheckReturn;
+
     }
 
     private MonitoringCheckReturn checkJOCStatus(Cockpit cockpit) {
@@ -174,15 +214,19 @@ public class MonitoringChecker {
                 monitoringCheckReturn.onErrorSetMessage(_monitoringCheckReturn);
             }
 
-            if (monitoringStatus.getAgentStatus() == null || monitoringStatus.getAgentStatus().size() == 0) {
-                count += 1;
-                monitoringCheckReturn.setErrorMessage(logger, "sosMonitor: empty Agent status");
-                monitoringCheckReturn.setSuccess(false);
+            if (monitoringStatus.getAgentStatus() == null) {
+
             } else {
-                MonitoringCheckReturn _monitoringCheckReturn = new MonitoringCheckReturn();
-                _monitoringCheckReturn = this.checkAgentStatus(monitoringStatus.getAgentStatus());
-                monitoringCheckReturn.setSuccess(monitoringCheckReturn.isSuccess() && _monitoringCheckReturn.isSuccess());
-                monitoringCheckReturn.onErrorSetMessage(_monitoringCheckReturn);
+                if (monitoringStatus.getAgentStatus() == null || monitoringStatus.getAgentStatus().size() == 0) {
+                    count += 1;
+                    monitoringCheckReturn.setErrorMessage(logger, "sosMonitor: empty Agent status");
+                    monitoringCheckReturn.setSuccess(false);
+                } else {
+                    MonitoringCheckReturn _monitoringCheckReturn = new MonitoringCheckReturn();
+                    _monitoringCheckReturn = this.checkAgentStatus(monitoringStatus.getAgentStatus());
+                    monitoringCheckReturn.setSuccess(monitoringCheckReturn.isSuccess() && _monitoringCheckReturn.isSuccess());
+                    monitoringCheckReturn.onErrorSetMessage(_monitoringCheckReturn);
+                }
             }
 
             if (monitoringStatus.getJocStatus() == null) {
