@@ -31,7 +31,7 @@ public class ExecuteFileOrderVariables {
             r = Files.newBufferedReader(Paths.get(args.getJs7SourceFile()));
 
             for (String line; (line = r.readLine()) != null;) {
-                if (!line.isEmpty()) {
+                if (!line.trim().isEmpty()) {
                     String[] v = line.split("=");
                     if (v.length < 2 && !line.contains("=")) {
                         throw new SOSException(line + " in file " + args.getJs7SourceFile() + " is not a valid variable assignment <name>=<value>");
