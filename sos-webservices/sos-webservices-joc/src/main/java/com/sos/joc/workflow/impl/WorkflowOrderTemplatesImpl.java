@@ -24,6 +24,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.workflow.OrderParameterisations;
 import com.sos.joc.model.workflow.Schedules;
 import com.sos.joc.model.workflow.WorkflowFilter;
+import com.sos.joc.model.workflow.WorkflowPathFilter;
 import com.sos.joc.workflow.resource.IWorkflowOrderTemplates;
 import com.sos.schema.JsonValidator;
 
@@ -40,7 +41,7 @@ public class WorkflowOrderTemplatesImpl extends JOCResourceImpl implements IWork
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, WorkflowFilter.class);
-            WorkflowFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowFilter.class);
+            WorkflowPathFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowPathFilter.class);
             String controllerId = workflowFilter.getControllerId();
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getWorkflows()
                     .getView());
@@ -52,7 +53,7 @@ public class WorkflowOrderTemplatesImpl extends JOCResourceImpl implements IWork
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryDBLayer dbLayer = new InventoryDBLayer(connection);
-            String workflame = JocInventory.pathToName(workflowFilter.getWorkflowId().getPath());
+            String workflame = JocInventory.pathToName(workflowFilter.getWorkflowPath());
             List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(workflame);
             
             entity.setSchedules(schedules.stream().filter(hasOrderParameterisation).map(item -> {
