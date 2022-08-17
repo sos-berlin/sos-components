@@ -3,12 +3,12 @@ package com.sos.joc.history.controller.configuration;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSPath;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.history.helper.HistoryUtil;
 
@@ -19,7 +19,7 @@ public class HistoryConfiguration implements Serializable {
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     // Directory, History LOGS
-    private String logDir = "logs/history";
+    private Path logDir = SOSPath.toAbsolutePath("logs/history");
     // commit after n db operations
     private int maxTransactions = 100;
 
@@ -36,27 +36,28 @@ public class HistoryConfiguration implements Serializable {
     // MB
     private int logApplicableMBSize = 500;
     private int logMaximumMBSize = 1_000;
+    private int logMaximumDisplayMBSize = 10;
 
     // Bytes
     private int logApplicableByteSize = JocClusterUtil.mb2bytes(logApplicableMBSize);
-    private int logMaximumByteSize = JocClusterUtil.mb2bytes(logMaximumMBSize * 1_024 * 1_024);
+    private int logMaximumByteSize = JocClusterUtil.mb2bytes(logMaximumMBSize);
+    private int logMaximumDisplayByteSize = JocClusterUtil.mb2bytes(logMaximumDisplayMBSize);
 
     public void load(final Properties conf) throws Exception {
         if (conf.getProperty("history_log_dir") != null) {
-            logDir = HistoryUtil.resolveVars(conf.getProperty("history_log_dir").trim());
+            logDir = SOSPath.toAbsolutePath(HistoryUtil.resolveVars(conf.getProperty("history_log_dir").trim()));
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[history_log_dir=%s]%s", conf.getProperty("history_log_dir"), logDir));
             }
         }
-        Path ld = Paths.get(logDir);
-        if (!Files.exists(ld)) {
+        if (!Files.exists(logDir)) {
             try {
-                Files.createDirectory(ld);
+                Files.createDirectory(logDir);
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[history_log_dir=%s]created", logDir));
                 }
             } catch (Throwable e) {
-                throw new Exception(String.format("[%s][can't create directory]%s", ld.toAbsolutePath(), e.toString()), e);
+                throw new Exception(String.format("[%s][can't create directory]%s", logDir, e.toString()), e);
             }
         }
 
@@ -81,7 +82,7 @@ public class HistoryConfiguration implements Serializable {
         }
     }
 
-    public String getLogDir() {
+    public Path getLogDir() {
         return logDir;
     }
 
@@ -131,4 +132,16 @@ public class HistoryConfiguration implements Serializable {
         return logMaximumByteSize;
     }
 
+    public void setLogMaximumDisplayMBSize(int val) {
+        logMaximumDisplayMBSize = val;
+        logMaximumDisplayByteSize = JocClusterUtil.mb2bytes(val);
+    }
+
+    public int getLogMaximumDisplayMBSize() {
+        return logMaximumDisplayMBSize;
+    }
+
+    public int getLogMaximumDisplayByteSize() {
+        return logMaximumDisplayByteSize;
+    }
 }
