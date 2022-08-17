@@ -84,7 +84,7 @@ public class LogOrderContent {
         try {
             Path logFile = Paths.get("logs", "history", mainParentHistoryId.toString(), historyId + ".log");
             if (Files.exists(logFile)) {
-                LOGGER.debug(String.format("[%s]LOG file found", logFile));
+                LOGGER.debug(String.format("[%s]Log file found", logFile));
                 orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(SOSPath.readFile(logFile, Collectors.joining(",", "[", "]")),
                         OrderLogEntry[].class)));
                 unCompressedLength = Files.size(logFile);
@@ -105,7 +105,7 @@ public class LogOrderContent {
                 }
                 return orderLog;
             } else {
-                LOGGER.debug(String.format("[%s]LOG file not found. Try to read from db...", logFile));
+                LOGGER.debug(String.format("[%s]Log file not found. Try to read from db...", logFile));
                 // only for the rare moment that the file is deleted and now in the database
                 OrderLog oLog = getLogFromDb();
                 if (oLog != null) {
