@@ -8,6 +8,11 @@ public class SubagentVersionUpdatedEvent extends AgentVersionEvent {
         putVariable("subagentId", agentId);
     }
     
+    public SubagentVersionUpdatedEvent(String controllerId, String agentId, String subagentId, String version, String javaVersion) {
+        super("SubagentVersionUpdated", controllerId, agentId, version, javaVersion);
+        putVariable("subagentId", agentId);
+    }
+    
     public String getSubagentId() {
         return (String) getVariables().get("subagentId");
     }

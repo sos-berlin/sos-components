@@ -7,4 +7,8 @@ public class AgentVersionUpdatedEvent extends AgentVersionEvent {
         super("AgentVersionUpdated", controllerId, agentId, version);
     }
     
+    public AgentVersionUpdatedEvent(String controllerId, String agentId, String version, String javaVersion) {
+        super("AgentVersionUpdated", controllerId, agentId, version, javaVersion);
+    }
+    
 }
