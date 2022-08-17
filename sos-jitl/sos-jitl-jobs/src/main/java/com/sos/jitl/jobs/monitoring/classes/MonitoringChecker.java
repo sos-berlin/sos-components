@@ -85,11 +85,11 @@ public class MonitoringChecker {
         for (AgentV agentV : listOfAgents) {
 
             if (!agentV.getDisabled()) {
-                if (agentV.getHealthState() == null) {
+                if (agentV.getState() == null && agentV.getHealthState() == null) {
                     count += 1;
                     monitoringCheckReturn.setErrorMessage(logger, "check-AgentStatus: empty health state");
                 } else {
-                    if (agentV.getHealthState().getSeverity() != 0) {
+                    if (agentV.getHealthState() != null && agentV.getHealthState().getSeverity() != 0) {
                         count += 1;
                         monitoringCheckReturn.setErrorMessage(logger, "check-AgentStatus: unhealthy Agent health status " + agentV.getHealthState()
                                 .get_text() + ", severity " + agentV.getHealthState().getSeverity() + " for Agent ID " + agentV.getAgentId()
@@ -104,7 +104,7 @@ public class MonitoringChecker {
                                     + agentV.getAgentName() + ":" + agentV.getErrorMessage());
                         }
                     } else {
-                        if (agentV.getSubagents() == null) {
+                        if (agentV.getSubagents() == null || agentV.getSubagents().size() == 0) {
                             count += 1;
                             monitoringCheckReturn.setErrorMessage(logger, "check-AgentStatus: empty agent status and could not find subagents");
                         } else {
