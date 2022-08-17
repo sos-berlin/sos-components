@@ -31,13 +31,8 @@ public class RequestFilters
      */
     @JsonProperty("search")
     private String search;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("replace")
-    private String replace;
+    private String replace = "";
 
     /**
      * 
@@ -59,21 +54,11 @@ public class RequestFilters
         this.search = search;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("replace")
     public String getReplace() {
         return replace;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("replace")
     public void setReplace(String replace) {
         this.replace = replace;

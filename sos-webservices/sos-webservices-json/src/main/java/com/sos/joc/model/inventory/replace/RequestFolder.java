@@ -43,13 +43,8 @@ public class RequestFolder {
      */
     @JsonProperty("search")
     private String search;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("replace")
-    private String replace;
+    private String replace = "";
     /**
      * auditParams
      * <p>
@@ -103,21 +98,11 @@ public class RequestFolder {
         this.search = search;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("replace")
     public String getReplace() {
         return replace;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("replace")
     public void setReplace(String replace) {
         this.replace = replace;
