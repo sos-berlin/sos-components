@@ -475,7 +475,7 @@ public class EventService {
                 addEvent(createAgentEvent(eventId, ((AgentPath) key).string()));
                 if (evt instanceof AgentRefStateEvent.AgentReady) {
                     OptionConverters.toJava(((AgentRefStateEvent.AgentReady) evt).platformInfo()).ifPresent(p -> EventBus.getInstance().post(
-                            new AgentVersionUpdatedEvent(controllerId, ((AgentPath) key).string(), p.js7Version().string())));
+                            new AgentVersionUpdatedEvent(controllerId, ((AgentPath) key).string(), p.js7Version().string(), p.java().version())));
                 }
 
             } else if (evt instanceof SubagentItemStateEvent && !(evt instanceof SubagentItemStateEvent.SubagentEventsObserved$)) {
@@ -484,8 +484,8 @@ public class EventService {
                     JSubagentItem subAgentItem = currentState.idToSubagentItem().get((SubagentId) key);
                     if (subAgentItem != null) {
                         OptionConverters.toJava(((SubagentItemStateEvent.SubagentDedicated) evt).platformInfo()).ifPresent(p -> EventBus.getInstance()
-                                .post(new SubagentVersionUpdatedEvent(controllerId, subAgentItem.agentPath().string(), ((SubagentId) key).string(), p
-                                        .js7Version().string())));
+                                .post(new SubagentVersionUpdatedEvent(controllerId, subAgentItem.agentPath().string(), ((SubagentId) key).string(),
+                                        p.js7Version().string(), p.java().version())));
                     }
                 }
                 

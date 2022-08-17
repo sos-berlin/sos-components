@@ -515,9 +515,19 @@ public class AgentStoreUtils {
             query.setParameter("agentId", event.getAgentId());
             query.setMaxResults(1);
             DBItemInventoryAgentInstance result = connection.getSingleResult(query);
-            if(result != null && !result.getVersion().equals(event.getVersion())) {
-                result.setVersion(event.getVersion());
-                connection.update(result);
+            boolean updated = false;
+            if(result != null) {
+                if(!result.getVersion().equals(event.getVersion())) {
+                    result.setVersion(event.getVersion());
+                    updated = true;
+                }
+                if(!result.getJavaVersion().equals(event.getJavaVersion())) {
+                    result.setJavaVersion(event.getJavaVersion());
+                    updated = true;
+                }
+                if(updated) {
+                    connection.update(result);
+                }
             }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
@@ -537,9 +547,19 @@ public class AgentStoreUtils {
             query.setParameter("subagentId", event.getSubagentId());
             query.setMaxResults(1);
             DBItemInventorySubAgentInstance result = connection.getSingleResult(query);
-            if(result != null && !result.getVersion().equals(event.getVersion())) {
-                result.setVersion(event.getVersion());
-                connection.update(result);
+            boolean updated = false;
+            if(result != null) {
+                if(!result.getVersion().equals(event.getVersion())) {
+                    result.setVersion(event.getVersion());
+                    updated = true;
+                }
+                if(!result.getJavaVersion().equals(event.getJavaVersion())) {
+                    result.setJavaVersion(event.getJavaVersion());
+                    updated = true;
+                }
+                if(updated) {
+                    connection.update(result);
+                }
             }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
