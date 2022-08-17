@@ -32,6 +32,7 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.model.agent.transfer.AgentExportFilter;
 import com.sos.joc.model.agent.transfer.AgentImportFilter;
 import com.sos.joc.model.inventory.release.ReleasableRecallFilter;
+import com.sos.joc.model.joc.VersionsFilter;
 import com.sos.joc.model.notification.DeleteNotificationFilter;
 import com.sos.joc.model.notification.ReadNotificationFilter;
 import com.sos.joc.model.notification.StoreNotificationFilter;
@@ -516,4 +517,13 @@ public class MappingTest {
         LOGGER.trace("AgentImportFilter");
         LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(agentImportFilter));
     }
+    
+    @Test
+    public void test34VersionsFilter() throws JsonProcessingException {
+        VersionsFilter versionsFilter = DeploymentTestUtils.createVersionsFilter();
+        LOGGER.trace("VersionsFilter");
+        LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(versionsFilter));
+    }
+    
+    
 }
