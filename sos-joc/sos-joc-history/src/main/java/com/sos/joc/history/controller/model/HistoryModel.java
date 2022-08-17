@@ -1,12 +1,10 @@
 package com.sos.joc.history.controller.model;
 
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.Instant;
@@ -1540,8 +1538,8 @@ public class HistoryModel {
             LogEntry le = new LogEntry(LogEntry.LogLevel.INFO, eventType, JocClusterUtil.getEventIdAsDate(entry.getEventId()), entry
                     .getEventDatetime());
 
-            le.onOrderStep(cos, entry.getChunck());
-            storeLog2File(le, cos);
+            le.onOrderStep(cos);
+            storeLog2File(le, cos, entry.getChunck());
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
         } else {
@@ -1949,17 +1947,17 @@ public class HistoryModel {
         result.append(SOSClassUtil.getStackTrace(t));
         result.append(JocClusterUtil.HISTORY_LOG_NEW_LINE);
 
-        Path historyDir = Paths.get(historyConfiguration.getLogDir());
-        if (historyDir.getParent() == null) {
+        Path historyLogParentDir = historyConfiguration.getLogDir().getParent();
+        if (historyLogParentDir == null) {
             result.append(prefix).append("Log file cannot be moved because a history parent directory not exists.");
         } else {
             try {
-                Path target = historyDir.getParent().resolve("history_" + file.getFileName());
+                Path target = historyLogParentDir.resolve("history_" + file.getFileName());
                 SOSPath.renameTo(file, target);
                 result.append(prefix).append("Log file moved to ").append(target).append(".");
             } catch (Throwable ex) {
                 try {
-                    result.append(prefix).append("Log file cannot be moved to ").append(historyDir.getParent()).append(":").append(
+                    result.append(prefix).append("Log file cannot be moved to ").append(historyLogParentDir).append(":").append(
                             JocClusterUtil.HISTORY_LOG_NEW_LINE);
                     result.append(SOSClassUtil.getStackTrace(ex)).append(JocClusterUtil.HISTORY_LOG_NEW_LINE);
                     result.append(prefix).append("Log file will be deleted.");
@@ -1990,7 +1988,7 @@ public class HistoryModel {
     }
 
     private Path getOrderLogDirectory(LogEntry entry) {
-        return HistoryUtil.getOrderLogDirectory(Paths.get(historyConfiguration.getLogDir()), entry.getHistoryOrderMainParentId());
+        return HistoryUtil.getOrderLogDirectory(historyConfiguration.getLogDir(), entry.getHistoryOrderMainParentId());
     }
 
     private OrderLogEntry createOrderLogEntry(LogEntry logEntry) {
@@ -2042,13 +2040,14 @@ public class HistoryModel {
     }
 
     private Path storeLog2File(LogEntry entry) throws Exception {
-        return storeLog2File(entry, null);
+        return storeLog2File(entry, null, null);
     }
 
-    private Path storeLog2File(LogEntry entry, CachedOrderStep cos) throws Exception {
+    private Path storeLog2File(LogEntry entry, CachedOrderStep cos, String stdout) throws Exception {
 
         OrderLogEntry orderEntry = null;
         StringBuilder content = new StringBuilder();
+        String contentAsString = null;
         StringBuilder orderEntryContent = null;
         Path dir = getOrderLogDirectory(entry);
         Path file = null;
@@ -2056,6 +2055,7 @@ public class HistoryModel {
         boolean append;
 
         boolean log2file = true;
+        boolean postEvent = true;
 
         switch (entry.getEventType()) {
         case OrderProcessingStarted:
@@ -2072,14 +2072,16 @@ public class HistoryModel {
             orderEntry.setTaskId(entry.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder(HistoryUtil.json2String(orderEntry));
             postEventOrderLog(entry, orderEntry);
-            log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine, entry.getEventType());
+            log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent.toString(), newLine, entry.getEventType());
 
             // task log
             file = getOrderStepLog(dir, entry);
             content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
             content.append("[").append(entry.getLogLevel().name()).append("]    ");
-            content.append(entry.getChunk());
-            postEventTaskLog(entry, content.toString(), newLine);
+            content.append(entry.getInfo());
+
+            contentAsString = content.toString();
+            postEventTaskLog(entry, contentAsString, newLine);
             break;
         case OrderProcessed:
             // order log
@@ -2093,14 +2095,16 @@ public class HistoryModel {
             orderEntry.setTaskId(entry.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder(HistoryUtil.json2String(orderEntry));
             postEventOrderLog(entry, orderEntry);
-            log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine, entry.getEventType());
+            log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent.toString(), newLine, entry.getEventType());
 
             // task log
             file = getOrderStepLog(dir, entry);
             content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
             content.append("[").append(entry.getLogLevel().name()).append("]    ");
-            content.append(entry.getChunk());
-            postEventTaskLog(entry, content.toString(), newLine);
+            content.append(entry.getInfo());
+
+            contentAsString = content.toString();
+            postEventTaskLog(entry, contentAsString, newLine);
             break;
 
         case OrderStdoutWritten:
@@ -2111,24 +2115,34 @@ public class HistoryModel {
 
             if (cos.isLastStdEndsWithNewLine() == null) {
                 try {
-                    if (SOSPath.endsWithNewLine(file)) {
-                        append = true;
+                    if (Files.exists(file)) {
+                        if (SOSPath.endsWithNewLine(file)) {
+                            append = true;
+                        }
+                        cos.setLogSize(Files.size(file));
+                        if (cos.getLogSize() > historyConfiguration.getLogMaximumDisplayByteSize()) {
+                            postEvent = false;
+                        }
+                        if (cos.getLogSize() > historyConfiguration.getLogMaximumByteSize()) {
+                            log2file = false;
+                        }
+                    } else {
+                        cos.addLogSize(stdout.getBytes().length);
                     }
-                    cos.setLogSize(Files.size(file));
-                    if (cos.getLogSize() > historyConfiguration.getLogMaximumByteSize()) {
-                        log2file = false;
-                    }
-                } catch (FileNotFoundException e) {
-                    LOGGER.error(String.format("[%s]%s", file, e.toString()));
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, entry.getEventType(), file, e.toString()), e);
                 }
             } else {
                 if (cos.isLastStdEndsWithNewLine().booleanValue()) {
                     append = true;
                 }
+                if (cos.getLogSize() > historyConfiguration.getLogMaximumDisplayByteSize()) {
+                    postEvent = false;
+                }
                 if (cos.getLogSize() > historyConfiguration.getLogMaximumByteSize()) {
                     log2file = false;
                 } else {
-                    cos.addLogSize(entry.getChunk().getBytes().length);
+                    cos.addLogSize(stdout.getBytes().length);
                 }
             }
 
@@ -2138,9 +2152,12 @@ public class HistoryModel {
                     content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
                     content.append("[").append(outType).append("]  ");
                 }
-                cos.setLastStdEndsWithNewLine(SOSPath.endsWithNewLine(entry.getChunk()));
-                content.append(entry.getChunk());
-                postEventTaskLog(entry, content.toString(), newLine);
+                cos.setLastStdEndsWithNewLine(SOSPath.endsWithNewLine(stdout));
+                content.append(stdout);
+                contentAsString = content.toString();
+                if (postEvent) {
+                    postEventTaskLog(entry, contentAsString, newLine);
+                }
             }
             break;
         case OrderStarted:
@@ -2159,17 +2176,20 @@ public class HistoryModel {
                 orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
             }
             content.append(HistoryUtil.json2String(orderEntry));
+            contentAsString = content.toString();
             postEventOrderLog(entry, orderEntry);
         }
+        content = null;
 
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[%s][%s][%s][%s]log2file=%s", identifier, entry.getEventType().value(), entry.getOrderId(), file, log2file));
         }
         if (log2file) {
-            log2file(file, content, newLine, entry.getEventType());
+            log2file(file, contentAsString, newLine, entry.getEventType());
 
             if (orderEntry != null && !entry.getHistoryOrderId().equals(entry.getHistoryOrderMainParentId())) {
-                write2MainOrderLog(entry, dir, (orderEntryContent == null ? content : orderEntryContent), newLine, entry.getEventType());
+                write2MainOrderLog(entry, dir, (orderEntryContent == null ? contentAsString : orderEntryContent.toString()), newLine, entry
+                        .getEventType());
             }
         }
         return file;
@@ -2184,12 +2204,12 @@ public class HistoryModel {
         EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntry));
     }
 
-    private void write2MainOrderLog(LogEntry entry, Path dir, StringBuilder content, boolean newLine, EventType eventType) throws Exception {
+    private void write2MainOrderLog(LogEntry entry, Path dir, String content, boolean newLine, EventType eventType) throws Exception {
         Path file = getOrderLog(dir, entry.getHistoryOrderMainParentId());
         log2file(file, content, newLine, eventType);
     }
 
-    private void log2file(Path file, StringBuilder content, boolean newLine, EventType eventType) {
+    private void log2file(Path file, String content, boolean newLine, EventType eventType) {
         try {
             write2file(file, content, newLine);
         } catch (NoSuchFileException e) {// e.g. folders deleted
@@ -2209,26 +2229,12 @@ public class HistoryModel {
         }
     }
 
-    private void write2file(Path file, StringBuilder content, boolean newLine) throws Exception {
-        BufferedWriter writer = null;
-        try {
-            writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            writer.write(content.toString());
+    private void write2file(Path file, String content, boolean newLine) throws Exception {
+        try (BufferedWriter writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
+            writer.write(content);
+            writer.flush();
             if (newLine) {
                 writer.write(JocClusterUtil.HISTORY_LOG_NEW_LINE);
-            }
-        } catch (Throwable e) {
-            throw e;
-        } finally {
-            if (writer != null) {
-                try {
-                    writer.flush();
-                } catch (Throwable ex) {
-                }
-                try {
-                    writer.close();
-                } catch (Throwable ex) {
-                }
             }
         }
     }
