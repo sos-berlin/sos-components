@@ -193,9 +193,8 @@ public class LogTaskContent {
     
     private InputStream getTooBigMessage(String kindOfLog) {
         String s = ZonedDateTime.now().format(formatter);
-        Float f = Float.parseFloat(unCompressedLength + "");
-        f = f /(1024 * 1024);
-        String unCompressedLengthInMB = (f.toString() + ".0").replaceAll("(\\d+)(\\.\\d)?[\\d.]*", "$1$2") + "MB";
+        float f = unCompressedLength.floatValue() / (1024 * 1024);
+        String unCompressedLengthInMB = (f + ".0").replaceAll("(\\d+)(\\.\\d)?[\\d.]*", "$1$2") + "MB";
         String s1 = s + " [INFO] The size of the" + kindOfLog + " log is too big: " + unCompressedLengthInMB + "\r\n";
         String s2 = (!kindOfLog.isEmpty()) ? "No running log available. " : "";
         s1 += s + " [INFO] " + s2 + "Try to download the\" + kindOfLog + \" log\r\n";

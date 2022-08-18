@@ -695,7 +695,7 @@ public class JocInventory {
                 releasedItem.setFolder(item.getFolder());
                 releasedItem.setName(item.getName());
                 releasedItem.setPath(item.getPath());
-                dbLayer.getSession().update(item);
+                dbLayer.getSession().update(releasedItem);
             }
         }
     }
