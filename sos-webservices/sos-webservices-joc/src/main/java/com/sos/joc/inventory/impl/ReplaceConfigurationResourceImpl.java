@@ -91,13 +91,14 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             Predicate<String> regex = Pattern.compile(search, Pattern.CASE_INSENSITIVE).asPredicate();
             Predicate<DBItemInventoryConfiguration> regexFilter = item -> regex.test(item.getName());
             Predicate<DBItemInventoryConfiguration> notFolderFilter = item -> ConfigurationType.FOLDER.intValue() != item.getType();
+            String replace = in.getReplace() == null ? "" : in.getReplace();
 
             Set<String> events = new HashSet<>();
             
             List<DBItemInventoryConfiguration> dBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null).stream().filter(
                     notFolderFilter).filter(regexFilter).collect(Collectors.toList());
             for (DBItemInventoryConfiguration item : dBFolderContent) {
-                String newName = item.getName().replaceAll(search, in.getReplace());
+                String newName = item.getName().replaceAll(search, replace);
                 SOSCheckJavaVariableName.test("name", newName);
                 List<DBItemInventoryConfiguration> names = dbLayer.getConfigurationByName(newName, item.getType());
                 if (!names.isEmpty()) {
@@ -144,11 +145,12 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             Set<String> events = new HashSet<>();
             String search = in.getSearch().replaceAll("%", ".*");
+            String replace = in.getReplace() == null ? "" : in.getReplace();
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
             for (RequestFilter r : requests) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
 
-                String newName = config.getName().replaceAll(search, in.getReplace());
+                String newName = config.getName().replaceAll(search, replace);
                 final java.nio.file.Path p = Paths.get(config.getFolder()).resolve(newName);
 
                 if (config.getName().equals(newName)) { // Nothing to do

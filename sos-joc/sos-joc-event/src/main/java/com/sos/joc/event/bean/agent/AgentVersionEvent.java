@@ -14,7 +14,11 @@ public class AgentVersionEvent extends JOCEvent {
         super(jocEventName, controllerId, null);
         putVariable("agentId", agentId);
         putVariable("version", version);
-        putVariable("javaVersion", version);
+        if(javaVersion.length() > 30) {
+            putVariable("javaVersion", javaVersion.substring(0, 30));
+        } else {
+            putVariable("javaVersion", javaVersion);
+        }
     }
     
     public String getAgentId() {
