@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.sos.joc.model.joc.CompatibilityLevel;
+
 /**
  * - The general rule for compatibility between JOC Cockpit, Controller and Agent components includes that within a minor release such as 2.3
  *      1. a JOC Cockpit with a newer maintenance release number such as 2.3.2
@@ -39,45 +41,45 @@ public class CheckVersion {
         }
     });
     
-    public static CompatibiltyLevel checkControllerVersionMatches2Joc (String controllerVersion, String jocVersion) {
+    public static CompatibilityLevel checkControllerVersionMatches2Joc (String controllerVersion, String jocVersion) {
         List<Integer> controllerVersionSplitted = splitVersion(controllerVersion);
         List<Integer> jocVersionSplitted = splitVersion(jocVersion);
         if(jocCompatibleControllerExemptions.get(jocVersion) != null && !jocCompatibleControllerExemptions.get(jocVersion).isEmpty()) {
             if(jocCompatibleControllerExemptions.get(jocVersion).contains(controllerVersion)) {
-                return CompatibiltyLevel.PARTIALLY_COMPATIBLE;
+                return CompatibilityLevel.PARTIALLY_COMPATIBLE;
             } else {
-                return CompatibiltyLevel.NOT_COMPATIBLE;
+                return CompatibilityLevel.NOT_COMPATIBLE;
             }
         }
         if(controllerVersionSplitted.get(0) != jocVersionSplitted.get(0)) {
-            return CompatibiltyLevel.NOT_COMPATIBLE;
+            return CompatibilityLevel.NOT_COMPATIBLE;
         } else if(controllerVersionSplitted.get(1) != jocVersionSplitted.get(1)) {
-            return CompatibiltyLevel.NOT_COMPATIBLE;
+            return CompatibilityLevel.NOT_COMPATIBLE;
         } else if (controllerVersionSplitted.get(2) <= jocVersionSplitted.get(2)) {
-            return CompatibiltyLevel.COMPATIBLE;
+            return CompatibilityLevel.COMPATIBLE;
         } else {
-            return CompatibiltyLevel.NOT_COMPATIBLE;
+            return CompatibilityLevel.NOT_COMPATIBLE;
         }
     }
     
-    public static CompatibiltyLevel checkAgentVersionMatches2Controller(String agentVersion, String controllerVersion) {
+    public static CompatibilityLevel checkAgentVersionMatches2Controller(String agentVersion, String controllerVersion) {
         List<Integer> agentVersionSplitted = splitVersion(agentVersion);
         List<Integer> controllerVersionSplitted = splitVersion(controllerVersion);
         if(controllerCompatibleAgentExemptions.get(controllerVersion) != null && !controllerCompatibleAgentExemptions.get(controllerVersion).isEmpty()) {
             if(controllerCompatibleAgentExemptions.get(controllerVersion).contains(agentVersion)) {
-                return CompatibiltyLevel.PARTIALLY_COMPATIBLE;
+                return CompatibilityLevel.PARTIALLY_COMPATIBLE;
             } else {
-                return CompatibiltyLevel.NOT_COMPATIBLE;
+                return CompatibilityLevel.NOT_COMPATIBLE;
             }
         }
         if(agentVersionSplitted.get(0) != controllerVersionSplitted.get(0)) {
-            return CompatibiltyLevel.NOT_COMPATIBLE;
+            return CompatibilityLevel.NOT_COMPATIBLE;
         } else if (agentVersionSplitted.get(1) != controllerVersionSplitted.get(1)) {
-            return CompatibiltyLevel.NOT_COMPATIBLE;
+            return CompatibilityLevel.NOT_COMPATIBLE;
         } else if (agentVersionSplitted.get(2) <= controllerVersionSplitted.get(2)) {
-            return CompatibiltyLevel.COMPATIBLE;
+            return CompatibilityLevel.COMPATIBLE;
         } else {
-            return CompatibiltyLevel.NOT_COMPATIBLE;
+            return CompatibilityLevel.NOT_COMPATIBLE;
         }
     }
     

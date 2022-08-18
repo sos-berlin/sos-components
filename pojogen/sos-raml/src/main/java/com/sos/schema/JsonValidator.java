@@ -92,6 +92,7 @@ public class JsonValidator {
             put("OrderingSubagentClusters", "agent/orderingSubagentCluster-schema.json");
             put("AgentExportFilter", "agent/transfer/agentExportFilter-schema.json");
             put("AgentImportFilter", "agent/transfer/agentImportFilter-schema.json");
+            put("VersionsFilter", "joc/versionsFilter-schema.json");
 
             put ("JobTemplateFilter", "jobTemplate/jobTemplateFilter-schema.json");
             put ("JobTemplatesFilter", "jobTemplate/jobTemplatesFilter-schema.json");
