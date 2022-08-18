@@ -50,7 +50,7 @@ public class AgentStoreUtils {
 
     private AgentStoreUtils() {
         EventBus.getInstance().register(this);
-        LOGGER.trace("AgentStoreUtils has been registered for the EventBus.");
+        LOGGER.info("AgentStoreUtils has been registered for the EventBus.");
     }
 
     public static AgentStoreUtils getInstance() {
@@ -560,11 +560,15 @@ public class AgentStoreUtils {
             DBItemInventorySubAgentInstance result = connection.getSingleResult(query);
             boolean updated = false;
             if(result != null) {
-                if(!result.getVersion().equals(event.getVersion())) {
+                LOGGER.trace("result.getVersion() : " + result.getVersion());
+                LOGGER.trace("event.getVersion() : " + event.getVersion());
+                if(result.getVersion() == null || !result.getVersion().equals(event.getVersion())) {
                     result.setVersion(event.getVersion());
                     updated = true;
                 }
-                if(!result.getJavaVersion().equals(event.getJavaVersion())) {
+                LOGGER.trace("result.getJavaVersion() : " + result.getJavaVersion());
+                LOGGER.trace("event.getJavaVersion() : " + event.getJavaVersion());
+                if(result.getJavaVersion() == null || !result.getJavaVersion().equals(event.getJavaVersion())) {
                     result.setJavaVersion(event.getJavaVersion());
                     updated = true;
                 }
