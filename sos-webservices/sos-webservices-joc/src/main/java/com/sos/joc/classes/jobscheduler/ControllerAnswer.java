@@ -82,11 +82,12 @@ public class ControllerAnswer extends Controller {
     }
 
 	public void setFields() throws ControllerInvalidResponseDataException {
-		if (overviewJson != null) {
+	    setSurveyDate(Date.from(Instant.now()));
+		
+	    if (overviewJson != null) {
 			if (!dbInstance.getControllerId().equals(overviewJson.getId())) {
 				throw new ControllerInvalidResponseDataException("unexpected ControllerId " + overviewJson.getId());
 			}
-			setSurveyDate(Date.from(Instant.now()));
 			setStartedAt(Date.from(Instant.ofEpochMilli(overviewJson.getStartedAt() == null ? 0L : overviewJson.getStartedAt())));
 			Boolean isActive = null;
 			if (clusterStateJson != null) {
@@ -141,7 +142,6 @@ public class ControllerAnswer extends Controller {
 //            }
 			// dbInstance.setTimezone(val); TODO doesn't contain in answer yet
 		} else {
-			setSurveyDate(dbInstance.getModified());
 			setStartedAt(dbInstance.getStartedAt());
 			if (!onlyDb) {
 			    setComponentState(States.getComponentState(ComponentStateText.unknown));
