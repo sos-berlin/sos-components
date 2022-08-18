@@ -151,7 +151,7 @@ public class AssignedWorkflowsImpl extends JOCResourceImpl implements IAssignedW
         }
     }
     
-    private static JobTemplateState getState(JobTemplateStateText state) {
+    public static JobTemplateState getState(JobTemplateStateText state) {
         JobTemplateState s = new JobTemplateState();
         s.set_text(state);
         s.setSeverity(TEMPLATE_STATES.get(state));
