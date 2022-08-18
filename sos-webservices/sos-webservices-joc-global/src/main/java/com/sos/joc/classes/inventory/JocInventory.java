@@ -56,6 +56,7 @@ import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
@@ -682,6 +683,22 @@ public class JocInventory {
             handleWorkflowSearch(dbLayer, (Workflow) config, item.getId());
         }
     }
+    
+    private static void handleReleasedJobTemplate(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
+            throws SOSHibernateException {
+        if (ConfigurationType.JOBTEMPLATE.intValue().equals(item.getType())) {
+            // Only released job templates are assigned to jobs.
+            // If job template is renamed or moved then the assignment is missing
+            DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedConfigurationByInvId(item.getId());
+            if (releasedItem != null && ConfigurationType.JOBTEMPLATE.intValue().equals(item.getType()) && !item.getPath().equals(releasedItem
+                    .getPath())) {
+                releasedItem.setFolder(item.getFolder());
+                releasedItem.setName(item.getName());
+                releasedItem.setPath(item.getPath());
+                dbLayer.getSession().update(item);
+            }
+        }
+    }
 
     public static void handleWorkflowSearch(InventoryDBLayer dbLayer, Workflow workflow, Long inventoryId) throws JsonProcessingException,
             SOSHibernateException {
@@ -777,6 +794,7 @@ public class JocInventory {
         dbLayer.getSession().update(item);
 
         handleWorkflowSearch(dbLayer, item, config);
+        handleReleasedJobTemplate(dbLayer, item, config);
     }
 
     public static void insertConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws SOSHibernateException,

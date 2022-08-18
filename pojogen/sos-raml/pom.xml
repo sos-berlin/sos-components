@@ -139,6 +139,7 @@
 								<exclude>configuration/globals/*.json</exclude>
 								<exclude>security/*.json</exclude>
 								<exclude>agent/*.json</exclude>
+								<exclude>jobTemplate/*.json</exclude>
 							</excludes>
 						</configuration>
 						<goals>
@@ -184,6 +185,7 @@
 								<include>configuration/globals/*.json</include>
 								<include>order/orderIdMap*.json</include>
 								<include>agent/*.json</include>
+								<include>jobTemplate/*.json</include>
 							</includes>
 						</configuration>
 						<goals>

@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.jobtemplate.JobTemplate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -51,55 +52,17 @@ public class JobTemplatesResourceImpl extends JOCResourceImpl implements IJobTem
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            List<DBItemInventoryReleasedConfiguration> dbJobTemplates = null;
-
-            boolean withFolderFilter = jobTemplatesFilter.getFolders() != null && !jobTemplatesFilter.getFolders().isEmpty();
             final Set<Folder> folders = folderPermissions.getPermittedFolders(jobTemplatesFilter.getFolders());
-
-            if (jobTemplatesFilter.getJobTemplatePaths() != null && !jobTemplatesFilter.getJobTemplatePaths().isEmpty()) {
-                dbJobTemplates = dbLayer.getReleasedJobTemplatesByNames(jobTemplatesFilter.getJobTemplatePaths().stream().map(p -> JocInventory
-                        .pathToName(p)).distinct().collect(Collectors.toList()));
-
-            } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
-                // no folder permission
-            } else {
-                dbJobTemplates = dbLayer.getConfigurationsByType(Collections.singletonList(ConfigurationType.JOBTEMPLATE.intValue()));
-            }
-
+            
+            List<DBItemInventoryReleasedConfiguration> dbJobTemplates = getDbJobTemplates(jobTemplatesFilter, folders, dbLayer);
             JobTemplates entity = new JobTemplates();
 
             if (dbJobTemplates != null && !dbJobTemplates.isEmpty()) {
                 JocError jocError = getJocError();
 
-                entity.setJobTemplates(dbJobTemplates.stream().filter(item -> folderIsPermitted(item.getFolder(), folders)).map(item -> {
-                    try {
-                        JobTemplate jt = new JobTemplate();
-                        if (jobTemplatesFilter.getCompact() != Boolean.TRUE) {
-                            jt = Globals.objectMapper.readValue(item.getContent(), JobTemplate.class);
-                        } else {
-                            JobTemplate jt2 = Globals.objectMapper.readValue(item.getContent(), JobTemplate.class);
-                            jt.setDocumentationName(jt2.getDocumentationName());
-                            jt.setDescription(jt2.getDescription());
-                            jt.setTitle(jt2.getTitle());
-                            // following fields have default values in JSON schema
-                            jt.setVersion(null);
-                            jt.setFailOnErrWritten(null);
-                            jt.setSkipIfNoAdmissionForOrderDay(null);
-                            jt.setGraceTimeout(null);
-                            jt.setParallelism(null);
-                        }
-                        jt.setPath(item.getPath());
-                        jt.setName(item.getName());
-                        return jt;
-                    } catch (Exception e) {
-                        if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
-                            LOGGER.info(jocError.printMetaInfo());
-                            jocError.clearMetaInfo();
-                        }
-                        LOGGER.error(String.format("[%s] %s", item.getPath(), e.toString()));
-                        return null;
-                    }
-                }).filter(Objects::nonNull).collect(Collectors.toList()));
+                entity.setJobTemplates(dbJobTemplates.stream().filter(item -> folderIsPermitted(item.getFolder(), folders)).map(
+                        item -> getJobTemplate(item, jobTemplatesFilter.getCompact(), jocError)).filter(Objects::nonNull).collect(Collectors
+                                .toList()));
             }
 
             entity.setDeliveryDate(Date.from(Instant.now()));
@@ -112,6 +75,55 @@ public class JobTemplatesResourceImpl extends JOCResourceImpl implements IJobTem
         } finally {
             Globals.disconnect(session);
         }
+    }
+    
+    public static JobTemplate getJobTemplate(DBItemInventoryReleasedConfiguration item, Boolean compact, JocError jocError) {
+        try {
+            JobTemplate jt = new JobTemplate();
+            if (compact != Boolean.TRUE) {
+                jt = Globals.objectMapper.readValue(item.getContent(), JobTemplate.class);
+            } else {
+                JobTemplate jt2 = Globals.objectMapper.readValue(item.getContent(), JobTemplate.class);
+                jt.setDocumentationName(jt2.getDocumentationName());
+                jt.setDescription(jt2.getDescription());
+                jt.setTitle(jt2.getTitle());
+                jt.setHash(jt2.getHash());
+                // following fields have default values in JSON schema
+                jt.setVersion(null);
+                jt.setFailOnErrWritten(null);
+                jt.setSkipIfNoAdmissionForOrderDay(null);
+                jt.setGraceTimeout(null);
+                jt.setParallelism(null);
+            }
+            jt.setPath(item.getPath());
+            jt.setName(item.getName());
+            return jt;
+        } catch (Exception e) {
+            if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                LOGGER.info(jocError.printMetaInfo());
+                jocError.clearMetaInfo();
+            }
+            LOGGER.error(String.format("[%s] %s", item.getPath(), e.toString()));
+            return null;
+        }
+    }
+    
+    public static List<DBItemInventoryReleasedConfiguration> getDbJobTemplates(JobTemplatesFilter jobTemplatesFilter, Set<Folder> folders,
+            InventoryDBLayer dbLayer) throws SOSHibernateException {
+
+        List<DBItemInventoryReleasedConfiguration> dbJobTemplates = null;
+        boolean withFolderFilter = jobTemplatesFilter.getFolders() != null && !jobTemplatesFilter.getFolders().isEmpty();
+
+        if (jobTemplatesFilter.getJobTemplatePaths() != null && !jobTemplatesFilter.getJobTemplatePaths().isEmpty()) {
+            dbJobTemplates = dbLayer.getReleasedJobTemplatesByNames(jobTemplatesFilter.getJobTemplatePaths().stream().map(p -> JocInventory
+                    .pathToName(p)).distinct().collect(Collectors.toList()));
+
+        } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
+            // no folder permission
+        } else {
+            dbJobTemplates = dbLayer.getConfigurationsByType(Collections.singletonList(ConfigurationType.JOBTEMPLATE.intValue()));
+        }
+        return dbJobTemplates;
     }
 
 }
