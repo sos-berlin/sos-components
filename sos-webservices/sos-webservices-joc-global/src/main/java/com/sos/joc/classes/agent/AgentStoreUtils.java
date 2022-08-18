@@ -1,4 +1,4 @@
-package com.sos.joc.agents.util;
+package com.sos.joc.classes.agent;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -15,6 +15,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -44,12 +46,14 @@ import com.sos.joc.model.agent.SubagentDirectorType;
 public class AgentStoreUtils {
     
     private static AgentStoreUtils instance;
+    private static final Logger LOGGER = LoggerFactory.getLogger(AgentStoreUtils.class);
 
     private AgentStoreUtils() {
         EventBus.getInstance().register(this);
+        LOGGER.trace("AgentStoreUtils has been registered for the EventBus.");
     }
 
-    protected static AgentStoreUtils getInstance() {
+    public static AgentStoreUtils getInstance() {
         if (instance == null) {
             instance = new AgentStoreUtils();
         }
@@ -507,6 +511,7 @@ public class AgentStoreUtils {
     @Subscribe({ AgentVersionUpdatedEvent.class })
     public void updateAgentVersion(AgentVersionUpdatedEvent event) {
         SOSHibernateSession connection = null;
+        LOGGER.trace("AgentReadyEvent received -> update version of agent instance if neccessary.");
         try {
             connection = initDBConnection();
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
@@ -517,16 +522,21 @@ public class AgentStoreUtils {
             DBItemInventoryAgentInstance result = connection.getSingleResult(query);
             boolean updated = false;
             if(result != null) {
-                if(!result.getVersion().equals(event.getVersion())) {
+                LOGGER.trace("result.getVersion() : " + result.getVersion());
+                LOGGER.trace("event.getVersion() : " + event.getVersion());
+                if(result.getVersion() == null || !result.getVersion().equals(event.getVersion())) {
                     result.setVersion(event.getVersion());
                     updated = true;
                 }
-                if(!result.getJavaVersion().equals(event.getJavaVersion())) {
+                LOGGER.trace("result.getJavaVersion() : " + result.getJavaVersion());
+                LOGGER.trace("event.getJavaVersion() : " + event.getJavaVersion());
+                if(result.getJavaVersion() == null || !result.getJavaVersion().equals(event.getJavaVersion())) {
                     result.setJavaVersion(event.getJavaVersion());
                     updated = true;
                 }
                 if(updated) {
                     connection.update(result);
+                    LOGGER.trace("agent version updated to version " + event.getVersion());
                 }
             }
         } catch (SOSHibernateException e) {
@@ -539,6 +549,7 @@ public class AgentStoreUtils {
     @Subscribe({ SubagentVersionUpdatedEvent.class })
     public void updateSubagentVersion(SubagentVersionUpdatedEvent event) {
         SOSHibernateSession connection = null;
+        LOGGER.trace("AgentReadyEvent received -> update version of agent instance if neccessary.");
         try {
             connection = initDBConnection();
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
@@ -559,6 +570,7 @@ public class AgentStoreUtils {
                 }
                 if(updated) {
                     connection.update(result);
+                    LOGGER.trace("agent version updated to version " + event.getVersion());
                 }
             }
         } catch (SOSHibernateException e) {
