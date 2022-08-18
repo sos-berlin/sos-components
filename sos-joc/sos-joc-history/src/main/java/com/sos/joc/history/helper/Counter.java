@@ -72,7 +72,7 @@ public class Counter {
         if (controller.ready > 0 || controller.shutdown > 0 || controller.clusterCoupled > 0) {
             sb.append(toString(controller)).append(",");
         }
-        if (agent.ready > 0 || agent.couplingFailed > 0 || agent.shutdown > 0) {
+        if (agent.ready > 0 || agent.couplingFailed > 0 || agent.shutdown > 0 || agent.subagentDedicated > 0) {
             sb.append(toString(agent)).append(",");
         }
         sb.append(toString(order)).append(",").append(toString(orderStep));
@@ -116,6 +116,7 @@ public class Counter {
         private int ready = 0;
         private int couplingFailed = 0;
         private int shutdown = 0;
+        private int subagentDedicated = 0;
 
         public void addReady() {
             ready += 1;
@@ -127,6 +128,10 @@ public class Counter {
 
         public void addShutdown() {
             shutdown += 1;
+        }
+
+        public void addSubagentDedicated() {
+            subagentDedicated += 1;
         }
     }
 

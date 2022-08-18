@@ -27,6 +27,7 @@ import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderEvent.OrderSuspended$;
 import js7.data.order.OrderEvent.OrderSuspensionMarked;
+import js7.data.subagent.SubagentItemStateEvent.SubagentDedicated;
 
 public enum HistoryEventType {
 
@@ -39,6 +40,8 @@ public enum HistoryEventType {
     ClusterCoupled(ClusterCoupled.class.getSimpleName()),
 
     AgentReady(AgentReady.class.getSimpleName()),
+
+    AgentSubagentDedicated(SubagentDedicated.class.getSimpleName()),
 
     AgentCouplingFailed(AgentCouplingFailed.class.getSimpleName()),
 

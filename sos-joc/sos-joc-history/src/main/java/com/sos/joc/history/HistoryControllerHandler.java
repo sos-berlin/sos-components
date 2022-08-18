@@ -31,6 +31,7 @@ import com.sos.joc.history.controller.proxy.HistoryEventEntry.AgentInfo;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentCouplingFailed;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentReady;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentShutDown;
+import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentSubagentDedicated;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryClusterCoupled;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryControllerReady;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder;
@@ -44,6 +45,7 @@ import com.sos.joc.history.controller.proxy.fatevent.AFatEvent;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentCouplingFailed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentReady;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentShutDown;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentSubagentDedicated;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventClusterCoupled;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerShutDown;
@@ -289,11 +291,18 @@ public class HistoryControllerHandler {
 
             case AgentReady:
                 HistoryAgentReady ar = entry.getAgentReady();
+                ar.postEvent();
 
                 event = new FatEventAgentReady(entry.getEventId(), entry.getEventDate());
                 event.set(ar.getId(), ar.getUri(), ar.getTimezone());
                 break;
 
+            case AgentSubagentDedicated:
+                HistoryAgentSubagentDedicated ad = entry.getAgentSubagentDedicated();
+                ad.postEvent();
+
+                event = new FatEventAgentSubagentDedicated(entry.getEventId(), entry.getEventDate());
+                break;
             case AgentCouplingFailed:
                 HistoryAgentCouplingFailed acf = entry.getAgentCouplingFailed();
 
