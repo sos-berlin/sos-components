@@ -95,7 +95,7 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
             session = Globals.createSosHibernateStatelessConnection(API_CALL_STATE);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             DBItemInventoryReleasedConfiguration dbJobTemplate = dbLayer.getReleasedConfiguration(JocInventory.pathToName(jobTemplateFilter
-                    .getJobTemplatePath()), ConfigurationType.JOBTEMPLATE.intValue());
+                    .getJobTemplate().getName()), ConfigurationType.JOBTEMPLATE.intValue());
 
             JobTemplateState entity = AssignedWorkflowsImpl.getState(JobTemplateStateText.UNKNOWN);
             if (dbJobTemplate == null) {
@@ -103,7 +103,7 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
             } else {
                 com.sos.inventory.model.jobtemplate.JobTemplate jt = (com.sos.inventory.model.jobtemplate.JobTemplate) JocInventory.content2IJSObject(
                         dbJobTemplate.getContent(), ConfigurationType.JOBTEMPLATE.intValue());
-                if (jt.getHash() != null && jt.getHash().equals(jobTemplateFilter.getHash())) {
+                if (jt.getHash() != null && jt.getHash().equals(jobTemplateFilter.getJobTemplate().getHash())) {
                     entity = AssignedWorkflowsImpl.getState(JobTemplateStateText.IN_SYNC);
                 } else {
                     entity = AssignedWorkflowsImpl.getState(JobTemplateStateText.NOT_IN_SYNC);
