@@ -178,7 +178,7 @@ public class MonitoringChecker {
             }
         }
 
-        if (cockpit.getControllerConnectionStates() == null) {
+        if (cockpit.getControllerConnectionStates() != null) {
             for (ControllerConnectionState controllerConnectionState : cockpit.getControllerConnectionStates()) {
                 if (controllerConnectionState.getState().getSeverity() != 0) {
                     count += 1;
@@ -213,10 +213,7 @@ public class MonitoringChecker {
                 monitoringCheckReturn.setSuccess(monitoringCheckReturn.isSuccess() && _monitoringCheckReturn.isSuccess());
                 monitoringCheckReturn.onErrorSetMessage(_monitoringCheckReturn);
             }
-
-            if (monitoringStatus.getAgentStatus() == null) {
-
-            } else {
+            {
                 if (monitoringStatus.getAgentStatus() == null || monitoringStatus.getAgentStatus().size() == 0) {
                     count += 1;
                     monitoringCheckReturn.setErrorMessage(logger, "sosMonitor: empty Agent status");
