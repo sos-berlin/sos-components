@@ -24,8 +24,6 @@ import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
-import com.sos.joc.event.bean.agent.AgentVersionUpdatedEvent;
-import com.sos.joc.event.bean.agent.SubagentVersionUpdatedEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogChangedEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogWorkflowEvent;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
@@ -107,27 +105,25 @@ import js7.data.workflow.WorkflowPathControlPath;
 import js7.data.workflow.instructions.BoardInstruction;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
-import js7.data_for_java.subagent.JSubagentItem;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.proxy.javaapi.eventbus.JControllerEventBus;
 import scala.collection.JavaConverters;
-import scala.compat.java8.OptionConverters;
 
 public class EventService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventService.class);
-    //private static boolean isTraceEnabled = LOGGER.isTraceEnabled();
+    // private static boolean isTraceEnabled = LOGGER.isTraceEnabled();
     // OrderAdded, OrderProcessed, OrderProcessingStarted$ extends OrderCoreEvent
     // OrderStarted, OrderProcessingKilled$, OrderFailed, OrderFailedInFork, OrderRetrying, OrderBroken, OrderSuspended$
     // OrderResumed, OrderResumptionMarked, OrderCancellationMarked extends OrderActorEvent
     // OrderFinished, OrderCancelled, OrderDeleted$ extends OrderTerminated
     private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class,
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class,
-            OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class, OrderSuspended$.class, 
-            OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, 
-            OrderPrompted.class, OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, 
-            VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, UnsignedItemEvent.class, ItemDeleted.class, ItemAttached.class, 
-            BoardEvent.class, OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class, OrderNoticeEvent.class, SubagentItemStateEvent.class);
+            OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class, OrderSuspended$.class,
+            OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, OrderPrompted.class,
+            OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, VersionedItemAddedOrChanged.class,
+            UnsignedSimpleItemEvent.class, UnsignedItemEvent.class, ItemDeleted.class, ItemAttached.class, BoardEvent.class, OrderLockAcquired.class,
+            OrderLockQueued.class, OrderLockReleased.class, OrderNoticeEvent.class, SubagentItemStateEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
@@ -140,7 +136,7 @@ public class EventService {
         EventBus.getInstance().register(this);
         startEventService();
     }
-    
+
     protected void close() {
         if (evtBus != null) {
             evtBus.close();
@@ -155,7 +151,7 @@ public class EventService {
                 if (evtBus != null) {
                     LOGGER.info("Start EventBus");
                     evtBus.subscribe(eventsOfController, callbackOfController);
-                    //setOrders();
+                    // setOrders();
                 }
             }
         } catch (Exception e) {
@@ -166,15 +162,15 @@ public class EventService {
     public void addCondition(EventCondition cond) {
         conditions.add(cond);
     }
-    
+
     public void removeCondition(EventCondition cond) {
         conditions.remove(cond);
     }
-    
+
     private boolean atLeastOneConditionIsHold() {
         return conditions.stream().parallel().anyMatch(EventCondition::isHold);
     }
-    
+
     public CopyOnWriteArraySet<EventSnapshot> getEvents() {
         return events;
     }
@@ -182,7 +178,7 @@ public class EventService {
     public void setIsCurrentController(boolean val) {
         isCurrentController.set(val);
     }
-    
+
     @Subscribe({ ProxyRestarted.class, ProxyClosed.class, ProxyRemoved.class })
     public void processProxyEvent(ProxyEvent evt) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
@@ -216,7 +212,7 @@ public class EventService {
             addEvent(eventSnapshot);
         }
     }
-    
+
     @Subscribe({ HistoryOrderEvent.class })
     public void createHistoryOrderEvent(HistoryOrderEvent evt) {
         if (controllerId.equals(evt.getControllerId())) {
@@ -235,7 +231,7 @@ public class EventService {
             addEvent(eventSnapshot);
         }
     }
-    
+
     @Subscribe({ HistoryTaskEvent.class })
     public void createHistoryTaskEvent(HistoryTaskEvent evt) {
         if (controllerId.equals(evt.getControllerId())) {
@@ -248,7 +244,7 @@ public class EventService {
             addEvent(eventSnapshot);
         }
     }
-    
+
     @Subscribe({ YadeEvent.class })
     public void createHistoryTaskEvent(YadeEvent evt) {
         if (controllerId.equals(evt.getControllerId())) {
@@ -256,11 +252,11 @@ public class EventService {
             eventSnapshot.setEventId(evt.getEventId() / 1000);
             eventSnapshot.setEventType(evt.getKey());
             eventSnapshot.setObjectType(EventType.FILETRANSFER);
-            //eventSnapshot.setPath(evt.getTransferId().toString());
+            // eventSnapshot.setPath(evt.getTransferId().toString());
             addEvent(eventSnapshot);
         }
     }
-    
+
     @Subscribe({ InventoryEvent.class, InventoryTrashEvent.class })
     public void createInventoryEvent(InventoryEvent evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
@@ -270,7 +266,7 @@ public class EventService {
         eventSnapshot.setPath(evt.getFolder());
         addEvent(eventSnapshot);
     }
-    
+
     @Subscribe({ DocumentationEvent.class })
     public void createDocumentationEvent(DocumentationEvent evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
@@ -280,7 +276,7 @@ public class EventService {
         eventSnapshot.setPath(evt.getFolder());
         addEvent(eventSnapshot);
     }
-    
+
     @Subscribe({ ActiveClusterChangedEvent.class })
     public void createEvent(ActiveClusterChangedEvent evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
@@ -289,7 +285,7 @@ public class EventService {
         eventSnapshot.setObjectType(EventType.JOCCLUSTER);
         addEvent(eventSnapshot);
     }
-    
+
     @Subscribe({ DailyPlanEvent.class })
     public void createEvent(DailyPlanEvent evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
@@ -299,7 +295,7 @@ public class EventService {
         eventSnapshot.setMessage(evt.getDailyPlanDate());
         addEvent(eventSnapshot);
     }
-    
+
     @Subscribe({ NotificationCreated.class })
     public void createEvent(NotificationCreated evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
@@ -309,7 +305,7 @@ public class EventService {
         eventSnapshot.setMessage(evt.getNotificationId().toString());
         addEvent(eventSnapshot);
     }
-    
+
     @Subscribe({ AuditlogChangedEvent.class })
     public void createEvent(AuditlogChangedEvent evt) {
         if (evt.getControllerId() == null || controllerId.equals(evt.getControllerId())) {
@@ -320,7 +316,7 @@ public class EventService {
             addEvent(eventSnapshot);
         }
     }
-    
+
     @Subscribe({ AuditlogWorkflowEvent.class })
     public void createEvent(AuditlogWorkflowEvent evt) {
         if (controllerId.equals(evt.getControllerId())) {
@@ -332,7 +328,7 @@ public class EventService {
             addEvent(eventSnapshot);
         }
     }
-    
+
     @Subscribe({ AgentInventoryEvent.class })
     public void createEvent(AgentInventoryEvent evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
@@ -342,13 +338,13 @@ public class EventService {
         eventSnapshot.setMessage(evt.getAgentId());
         addEvent(eventSnapshot);
     }
-    
+
     @Subscribe({ ProxyCoupled.class })
     public void createEvent(ProxyCoupled evt) {
         if (controllerId.equals(evt.getControllerId())) {
-//            if (evt.isCoupled()) {
-//                setOrders();
-//            }
+            // if (evt.isCoupled()) {
+            // setOrders();
+            // }
             if (evt.isCoupled() != null) {
                 addEvent(createProxyEvent(evt.getEventId() / 1000, evt.isCoupled()));
             }
@@ -361,11 +357,11 @@ public class EventService {
     BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfController = (stampedEvt, currentState) -> {
         try {
             KeyedEvent<Event> event = stampedEvt.value();
-            long eventId = stampedEvt.eventId() / 1000000; //eventId per second
+            long eventId = stampedEvt.eventId() / 1000000; // eventId per second
             Object key = event.key();
             Event evt = event.event();
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(evt.toString()+", key="+SOSString.toString(key));
+                LOGGER.debug(evt.toString() + ", key=" + SOSString.toString(key));
             }
 
             if (evt instanceof OrderEvent) {
@@ -373,7 +369,7 @@ public class EventService {
                 String mainOrderId = orderId.string().substring(0, OrdersHelper.mainOrderIdLength);
                 JOrder optOrder = currentState.idToOrder().get(orderId);
                 if (optOrder != null) {
-                    //LOGGER.info(opt.get().toString());
+                    // LOGGER.info(opt.get().toString());
                     WorkflowId w = orders.get(mainOrderId);
                     if (w == null) {
                         w = mapWorkflowId(optOrder.workflowId());
@@ -390,64 +386,64 @@ public class EventService {
                                 eventId, boardPath.string())));
                     }
                 } else {
-                    //LOGGER.info("Order is not in current state");
+                    // LOGGER.info("Order is not in current state");
                     if (evt instanceof OrderDeleted$) {
                         if (orders.containsKey(mainOrderId)) {
                             addEvent(createWorkflowEventOfOrder(eventId, orders.get(mainOrderId)));
                             orders.remove(mainOrderId);
                         } else {
-                            //addEvent(createWorkflowEventOfDeletedOrder(eventId, orderId.string()));
-                            //LOGGER.warn("OrderDeleted event without known orderId is received: " + event.toString());
+                            // addEvent(createWorkflowEventOfDeletedOrder(eventId, orderId.string()));
+                            // LOGGER.warn("OrderDeleted event without known orderId is received: " + event.toString());
                         }
                     } else {
                         LOGGER.warn("Order event without orderId is received: " + event.toString());
                     }
-                } 
-                
+                }
+
             } else if (evt instanceof ControllerEvent || evt instanceof ClusterEvent) {
                 addEvent(createControllerEvent(eventId));
-                
+
             } else if (evt instanceof VersionedItemAddedOrChanged) {
-                    // VersionedItemAdded, VersionedItemChanged
-                    // VersionedItemRemoved -> see ItemDeleted
-                    String eventType = evt.getClass().getSimpleName().replaceFirst("Versioned", "");
-                    VersionedItemPath path = ((VersionedItemAddedOrChanged) evt).path();
-                    if (path instanceof WorkflowPath) {
-                        addEvent(createWorkflowEvent(eventId, path.string(), eventType));
-                    } else {
-                        // TODO other versioned objects
-                    }
-                
+                // VersionedItemAdded, VersionedItemChanged
+                // VersionedItemRemoved -> see ItemDeleted
+                String eventType = evt.getClass().getSimpleName().replaceFirst("Versioned", "");
+                VersionedItemPath path = ((VersionedItemAddedOrChanged) evt).path();
+                if (path instanceof WorkflowPath) {
+                    addEvent(createWorkflowEvent(eventId, path.string(), eventType));
+                } else {
+                    // TODO other versioned objects
+                }
+
             } else if (evt instanceof UnsignedSimpleItemEvent) {
                 // UnsignedSimpleItemAdded SimpleItemAddedAndChanged and SimpleItemChanged etc.
                 String eventType = evt.getClass().getSimpleName().replaceFirst(".*Simple", "");
                 UnsignedSimpleItemPath itemId = ((UnsignedSimpleItemEvent) evt).key();
                 if (itemId instanceof AgentPath || itemId instanceof SubagentId || itemId instanceof SubagentSelectionId) {
-                    //eventType = evt.getClass().getSimpleName().replaceFirst(".*SimpleItem", "Agent");
+                    // eventType = evt.getClass().getSimpleName().replaceFirst(".*SimpleItem", "Agent");
                     addEvent(createAgentEvent(eventId, itemId.string(), eventType));
                 } else if (itemId instanceof LockPath) {
                     addEvent(createLockEvent(eventId, itemId.string(), eventType));
-//                } else if (itemId instanceof OrderWatchPath) {
-//                 // We don't need an Item event for FileOrderSource
-//                    addEvent(createFileOrderSourceEvent(eventId, itemId.string(), eventType));
+                    // } else if (itemId instanceof OrderWatchPath) {
+                    // // We don't need an Item event for FileOrderSource
+                    // addEvent(createFileOrderSourceEvent(eventId, itemId.string(), eventType));
                 } else if (itemId instanceof BoardPath) {
                     addEvent(createBoardEvent(eventId, itemId.string(), eventType));
                 } else if (itemId instanceof WorkflowPathControlPath) {
                     addEvent(createWorkflowUpdatedEvent(eventId, itemId.string()));
                 }
-                
-//            } else if (evt instanceof SignedItemEvent) {
-//                // We don't need an Item event for JobResource
-//                String eventType = evt.getClass().getSimpleName().replaceFirst(".*Signed", "");
-//                SignableItemKey itemId = ((SignedItemEvent) evt).key();
-//                if (itemId instanceof JobResourcePath) {
-//                    addEvent(createJobResourceEvent(eventId, ((JobResourcePath) itemId).string(), eventType));
-//                }
-                
+
+                // } else if (evt instanceof SignedItemEvent) {
+                // // We don't need an Item event for JobResource
+                // String eventType = evt.getClass().getSimpleName().replaceFirst(".*Signed", "");
+                // SignableItemKey itemId = ((SignedItemEvent) evt).key();
+                // if (itemId instanceof JobResourcePath) {
+                // addEvent(createJobResourceEvent(eventId, ((JobResourcePath) itemId).string(), eventType));
+                // }
+
             } else if (evt instanceof UnsignedItemEvent) {
                 UnsignedVersionedItemId<? extends VersionedControlPath> itemId = ((UnsignedItemEvent) evt).key();
                 addEvent(createWorkflowUpdatedEvent(eventId, itemId.path().string()));
-                
+
             } else if (evt instanceof ItemDeleted) {
                 InventoryItemKey itemId = ((ItemDeleted) evt).key();
                 String eventType = "ItemDeleted";
@@ -464,38 +460,26 @@ public class EventService {
                 } else if (itemId instanceof VersionedItemId<?>) {
                     addEvent(createWorkflowEvent(eventId, mapWorkflowId((VersionedItemId<?>) itemId), eventType));
                 } // JobResourcePath, OrderWatchPath
-                
+
             } else if (evt instanceof ItemAttached) {
                 InventoryItemKey itemId = ((ItemAttached) evt).key();
                 if (itemId instanceof WorkflowPathControlPath) {
                     addEvent(createWorkflowUpdatedEvent(eventId, itemId.path().string()));
                 }
-                
+
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
                 addEvent(createAgentEvent(eventId, ((AgentPath) key).string()));
-//                if (evt instanceof AgentRefStateEvent.AgentReady) {
-//                    OptionConverters.toJava(((AgentRefStateEvent.AgentReady) evt).platformInfo()).ifPresent(p -> EventBus.getInstance().post(
-//                            new AgentVersionUpdatedEvent(controllerId, ((AgentPath) key).string(), p.js7Version().string(), p.java().version())));
-//                }
             } else if (evt instanceof SubagentItemStateEvent && !(evt instanceof SubagentItemStateEvent.SubagentEventsObserved$)) {
                 addEvent(createAgentEvent(eventId, ((SubagentId) key).string()));
-//                if (evt instanceof SubagentItemStateEvent.SubagentDedicated) {
-//                    JSubagentItem subAgentItem = currentState.idToSubagentItem().get((SubagentId) key);
-//                    if (subAgentItem != null) {
-//                        OptionConverters.toJava(((SubagentItemStateEvent.SubagentDedicated) evt).platformInfo()).ifPresent(p -> EventBus.getInstance()
-//                                .post(new SubagentVersionUpdatedEvent(controllerId, subAgentItem.agentPath().string(), ((SubagentId) key).string(),
-//                                        p.js7Version().string(), p.java().version())));
-//                    }
-//                }
             } else if (evt instanceof BoardEvent) {
                 addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
             }
-            
+
         } catch (Exception e) {
             LOGGER.warn(e.toString());
         }
     };
-    
+
     private static Optional<Set<BoardPath>> orderPositionToBoardPaths(JOrder order, JControllerState controllerState) {
         Optional<JOrder> orderOpt = order == null ? Optional.empty() : Optional.of(order);
         return orderOpt.map(o -> controllerState.asScala().instruction(o.asScala().workflowPosition())).flatMap(instruction -> tryCast(
@@ -506,14 +490,14 @@ public class EventService {
     private static <T> Optional<T> tryCast(Class<T> clazz, Object object) {
         return clazz.isAssignableFrom(object.getClass()) ? Optional.of((T) object) : Optional.empty();
     }
-    
+
     private WorkflowId mapWorkflowId(JWorkflowId workflowId) {
         WorkflowId w = new WorkflowId();
         w.setPath(workflowId.path().string());
         w.setVersionId(workflowId.versionId().string());
         return w;
     }
-    
+
     private WorkflowId mapWorkflowId(VersionedItemId<?> workflowId) {
         WorkflowId w = new WorkflowId();
         w.setPath(workflowId.path().string());
@@ -524,7 +508,7 @@ public class EventService {
     private EventSnapshot createWorkflowEventOfOrder(long eventId, WorkflowId workflowId) {
         return createWorkflowEvent(eventId, workflowId, "WorkflowStateChanged");
     }
-    
+
     private EventSnapshot createWorkflowEvent(long eventId, WorkflowId workflowId, String eventType) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
@@ -533,15 +517,15 @@ public class EventService {
         evt.setWorkflow(workflowId);
         return evt;
     }
-    
-//    private EventSnapshot createWorkflowEventOfDeletedOrder(long eventId, String orderId) {
-//        EventSnapshot evt = new EventSnapshot();
-//        evt.setEventId(eventId);
-//        evt.setEventType("WorkflowStateChanged");
-//        evt.setObjectType(EventType.WORKFLOW);
-//        evt.setMessage(orderId);
-//        return evt;
-//    }
+
+    // private EventSnapshot createWorkflowEventOfDeletedOrder(long eventId, String orderId) {
+    // EventSnapshot evt = new EventSnapshot();
+    // evt.setEventId(eventId);
+    // evt.setEventType("WorkflowStateChanged");
+    // evt.setObjectType(EventType.WORKFLOW);
+    // evt.setMessage(orderId);
+    // return evt;
+    // }
 
     private EventSnapshot createTaskEventOfOrder(long eventId, WorkflowId workflowId) {
         EventSnapshot evt = new EventSnapshot();
@@ -551,7 +535,7 @@ public class EventService {
         evt.setWorkflow(workflowId);
         return evt;
     }
-    
+
     private EventSnapshot createProxyEvent(long eventId, Boolean isCoupled) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
@@ -563,7 +547,7 @@ public class EventService {
         evt.setObjectType(EventType.CONTROLLER);
         return evt;
     }
-    
+
     private EventSnapshot createControllerEvent(long eventId) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
@@ -571,11 +555,11 @@ public class EventService {
         evt.setObjectType(EventType.CONTROLLER);
         return evt;
     }
-    
+
     private EventSnapshot createAgentEvent(long eventId, String path) {
         return createAgentEvent(eventId, path, "AgentStateChanged");
     }
-    
+
     private EventSnapshot createAgentEvent(long eventId, String path, String eventType) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
@@ -584,11 +568,11 @@ public class EventService {
         evt.setObjectType(EventType.AGENT);
         return evt;
     }
-    
+
     private EventSnapshot createLockEvent(long eventId, String path) {
         return createLockEvent(eventId, path, "LockStateChanged");
     }
-    
+
     private EventSnapshot createLockEvent(long eventId, String path, String eventType) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
@@ -597,11 +581,11 @@ public class EventService {
         evt.setObjectType(EventType.LOCK);
         return evt;
     }
-    
+
     private EventSnapshot createBoardEvent(long eventId, String path) {
         return createBoardEvent(eventId, path, "NoticeBoardStateChanged");
     }
-    
+
     private EventSnapshot createBoardEvent(long eventId, String path, String eventType) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
@@ -610,25 +594,25 @@ public class EventService {
         evt.setObjectType(EventType.NOTICEBOARD);
         return evt;
     }
-    
-//    private EventSnapshot createFileOrderSourceEvent(long eventId, String path, String eventType) {
-//        EventSnapshot evt = new EventSnapshot();
-//        evt.setEventId(eventId);
-//        evt.setEventType(eventType);
-//        evt.setPath(path);
-//        evt.setObjectType(EventType.FILEORDERSOURCE);
-//        return evt;
-//    }
-    
-//    private EventSnapshot createJobResourceEvent(long eventId, String path, String eventType) {
-//        EventSnapshot evt = new EventSnapshot();
-//        evt.setEventId(eventId);
-//        evt.setEventType(eventType);
-//        evt.setPath(path);
-//        evt.setObjectType(EventType.JOBRESOURCE);
-//        return evt;
-//    }
-    
+
+    // private EventSnapshot createFileOrderSourceEvent(long eventId, String path, String eventType) {
+    // EventSnapshot evt = new EventSnapshot();
+    // evt.setEventId(eventId);
+    // evt.setEventType(eventType);
+    // evt.setPath(path);
+    // evt.setObjectType(EventType.FILEORDERSOURCE);
+    // return evt;
+    // }
+
+    // private EventSnapshot createJobResourceEvent(long eventId, String path, String eventType) {
+    // EventSnapshot evt = new EventSnapshot();
+    // evt.setEventId(eventId);
+    // evt.setEventType(eventType);
+    // evt.setPath(path);
+    // evt.setObjectType(EventType.JOBRESOURCE);
+    // return evt;
+    // }
+
     private EventSnapshot createWorkflowEvent(long eventId, String path, String eventType) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
@@ -637,7 +621,7 @@ public class EventService {
         evt.setObjectType(EventType.WORKFLOW);
         return evt;
     }
-    
+
     private EventSnapshot createWorkflowUpdatedEvent(long eventId, String path) {
         return createWorkflowEvent(eventId, path, "WorkflowUpdated");
     }
@@ -652,7 +636,7 @@ public class EventService {
             }
         }
     }
-    
+
     private synchronized void signalAll() {
         try {
             if (LOGGER.isDebugEnabled()) {
@@ -660,7 +644,7 @@ public class EventService {
             }
             if (atLeastOneConditionIsHold() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
                 try {
-                    conditions.stream().forEach(EventCondition::signalAll); //without .parallel()
+                    conditions.stream().forEach(EventCondition::signalAll); // without .parallel()
                 } catch (Exception e) {
                     LOGGER.warn(e.toString());
                 } finally {
@@ -678,16 +662,16 @@ public class EventService {
     }
 
     protected EventServiceFactory.Mode hasOldEvent(Long eventId, EventCondition eventArrived) {
-        //LOGGER.info(events.toString());
+        // LOGGER.info(events.toString());
         if (events.stream().parallel().anyMatch(e -> eventId < e.getEventId())) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("has old Event for " + controllerId + ": true");
             }
-//            if (isCurrentController.get() && events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
-//                LOGGER.info("hasProblemEvent for " + controllerId + ": true");
-//                EventServiceFactory.signalEvent(eventArrived);
-//                return EventServiceFactory.Mode.IMMEDIATLY;
-//            }
+            // if (isCurrentController.get() && events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
+            // LOGGER.info("hasProblemEvent for " + controllerId + ": true");
+            // EventServiceFactory.signalEvent(eventArrived);
+            // return EventServiceFactory.Mode.IMMEDIATLY;
+            // }
             EventServiceFactory.signalEvent(eventArrived);
             return EventServiceFactory.Mode.TRUE;
         }
@@ -697,16 +681,17 @@ public class EventService {
         return EventServiceFactory.Mode.FALSE;
     }
 
-//    private void setOrders() {
-//        try {
-//            // possibly IllegalStateException
-//            // orders = Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any())
-//            // .collect(Collectors.toMap(o -> o.id().string().substring(0,OrdersHelper.mainOrderIdLength), o -> mapWorkflowId(o.workflowId())));
-//            Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any()).forEach(o -> orders.put(o.id().string().substring(0, OrdersHelper.mainOrderIdLength),
-//                    mapWorkflowId(o.workflowId())));
-//        } catch (Exception e) {
-//            //
-//        }
-//    }
+    // private void setOrders() {
+    // try {
+    // // possibly IllegalStateException
+    // // orders = Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any())
+    // // .collect(Collectors.toMap(o -> o.id().string().substring(0,OrdersHelper.mainOrderIdLength), o -> mapWorkflowId(o.workflowId())));
+    // Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any()).forEach(o -> orders.put(o.id().string().substring(0,
+    // OrdersHelper.mainOrderIdLength),
+    // mapWorkflowId(o.workflowId())));
+    // } catch (Exception e) {
+    // //
+    // }
+    // }
 
 }

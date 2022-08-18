@@ -14,6 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.agent.AgentVersionUpdatedEvent;
+import com.sos.joc.event.bean.agent.SubagentVersionUpdatedEvent;
 import com.sos.joc.history.controller.exception.FatEventProblemException;
 
 import io.vavr.control.Either;
@@ -42,6 +45,7 @@ import js7.data.order.Outcome.Failed;
 import js7.data.order.Outcome.Killed;
 import js7.data.order.Outcome.TimedOut;
 import js7.data.subagent.SubagentId;
+import js7.data.subagent.SubagentItemStateEvent.SubagentDedicated;
 import js7.data.value.Value;
 import js7.data.workflow.instructions.executable.WorkflowJob.Name;
 import js7.data_for_java.agent.JAgentRef;
@@ -135,6 +139,10 @@ public class HistoryEventEntry {
 
     public HistoryAgentReady getAgentReady() throws FatEventProblemException {
         return new HistoryAgentReady();
+    }
+
+    public HistoryAgentSubagentDedicated getAgentSubagentDedicated() throws FatEventProblemException {
+        return new HistoryAgentSubagentDedicated();
     }
 
     public HistoryOrder getOrder() throws FatEventProblemException {
@@ -761,6 +769,28 @@ public class HistoryEventEntry {
         }
     }
 
+    /** only post event - not used by the history */
+    public class HistoryAgentSubagentDedicated {
+
+        public HistoryAgentSubagentDedicated() throws FatEventProblemException {
+        }
+
+        public void postEvent() {
+            try {
+                SubagentDedicated ev = (SubagentDedicated) event;
+
+                SubagentId subAgentId = (SubagentId) keyedEvent.key();
+                JSubagentItem subAgentItem = eventAndState.state().idToSubagentItem().get(subAgentId);
+                if (subAgentItem != null) {
+                    OptionConverters.toJava(ev.platformInfo()).ifPresent(p -> EventBus.getInstance().post(new SubagentVersionUpdatedEvent(subAgentItem
+                            .agentPath().string(), subAgentId.string(), p.js7Version().string(), p.java().version())));
+                }
+            } catch (Throwable e) {
+                LOGGER.error(String.format("[postEvent][HistoryAgentSubagentDedicated]%s", e.toString()), e);
+            }
+        }
+    }
+
     public class HistoryAgentReady {
 
         private final String id;
@@ -802,6 +832,16 @@ public class HistoryEventEntry {
             }
             if (uri == null) {
                 uri = "unknown";
+            }
+        }
+
+        public void postEvent() {
+            try {
+                AgentReady ev = (AgentReady) event;
+                OptionConverters.toJava(ev.platformInfo()).ifPresent(p -> EventBus.getInstance().post(new AgentVersionUpdatedEvent(id, p.js7Version()
+                        .string(), p.java().version())));
+            } catch (Throwable e) {
+                LOGGER.error(String.format("[postEvent][AgentVersionUpdatedEvent][agent id=%s]%s", id, e.toString()), e);
             }
         }
 

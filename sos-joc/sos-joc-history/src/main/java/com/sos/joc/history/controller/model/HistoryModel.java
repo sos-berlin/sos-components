@@ -275,6 +275,9 @@ public class HistoryModel {
                         agentReady(dbLayer, (FatEventAgentReady) entry);
                         counter.getAgent().addReady();
                         break;
+                    case AgentSubagentDedicated:
+                        counter.getAgent().addSubagentDedicated();
+                        break;
                     case AgentCouplingFailed:
                         agentCouplingFailed(dbLayer, (FatEventAgentCouplingFailed) entry);
                         counter.getAgent().addCouplingFailed();
