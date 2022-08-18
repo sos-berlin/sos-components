@@ -4,6 +4,7 @@ package com.sos.joc.model.jobtemplate;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.controller.model.jobtemplate.JobTemplateRef;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -17,54 +18,52 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "hash"
+    "jobTemplate"
 })
-public class JobTemplateStateFilter
-    extends JobTemplateFilter
-{
+public class JobTemplateStateFilter {
 
     /**
-     * string without < and >
+     * JobTemplate
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("hash")
-    private String hash;
+    @JsonProperty("jobTemplate")
+    private JobTemplateRef jobTemplate;
 
     /**
-     * string without < and >
+     * JobTemplate
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("hash")
-    public String getHash() {
-        return hash;
+    @JsonProperty("jobTemplate")
+    public JobTemplateRef getJobTemplate() {
+        return jobTemplate;
     }
 
     /**
-     * string without < and >
+     * JobTemplate
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("hash")
-    public void setHash(String hash) {
-        this.hash = hash;
+    @JsonProperty("jobTemplate")
+    public void setJobTemplate(JobTemplateRef jobTemplate) {
+        this.jobTemplate = jobTemplate;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("hash", hash).toString();
+        return new ToStringBuilder(this).append("jobTemplate", jobTemplate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(hash).toHashCode();
+        return new HashCodeBuilder().append(jobTemplate).toHashCode();
     }
 
     @Override
@@ -76,7 +75,7 @@ public class JobTemplateStateFilter
             return false;
         }
         JobTemplateStateFilter rhs = ((JobTemplateStateFilter) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(hash, rhs.hash).isEquals();
+        return new EqualsBuilder().append(jobTemplate, rhs.jobTemplate).isEquals();
     }
 
 }
