@@ -4,14 +4,14 @@ import com.sos.joc.event.bean.JOCEvent;
 
 public class AgentVersionEvent extends JOCEvent {
     
-    public AgentVersionEvent(String jocEventName, String controllerId, String agentId, String version) {
-        super(jocEventName, controllerId, null);
+    public AgentVersionEvent(String jocEventName, String agentId, String version) {
+        super(jocEventName, null, null);
         putVariable("agentId", agentId);
         putVariable("version", version);
     }
     
-    public AgentVersionEvent(String jocEventName, String controllerId, String agentId, String version, String javaVersion) {
-        super(jocEventName, controllerId, null);
+    public AgentVersionEvent(String jocEventName, String agentId, String version, String javaVersion) {
+        super(jocEventName, null, null);
         putVariable("agentId", agentId);
         putVariable("version", version);
         if(javaVersion.length() > 30) {
