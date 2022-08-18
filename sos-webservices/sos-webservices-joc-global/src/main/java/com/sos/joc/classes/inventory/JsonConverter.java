@@ -410,7 +410,7 @@ public class JsonConverter {
         return quoteString(val.toString());
     }
     
-    private static String quoteString(String str) {
+    public static String quoteString(String str) {
         if (str == null) {
             return null;
         }
