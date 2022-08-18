@@ -147,6 +147,8 @@ public class ControllerAnswer extends Controller {
 			    setComponentState(States.getComponentState(ComponentStateText.unknown));
 			    setClusterNodeState(States.getClusterNodeState(null, dbInstance.getIsCluster()));
 			    setConnectionState(States.getConnectionState(ConnectionStateText.unreachable));
+			} else {
+			    setIsCoupled(null);
 			}
 		}
 		

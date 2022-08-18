@@ -171,10 +171,10 @@ public class LogTaskContent {
                 eventId = Instant.now().toEpochMilli();
                 complete = false;
                 unCompressedLength = Files.size(tasklog);
-                RunningTaskLogs.getInstance().subscribe(historyId);
                 if (!forDownload && unCompressedLength > maxLogSize) {
                     return getTooBigMessage(" snapshot");
                 }
+                RunningTaskLogs.getInstance().subscribe(historyId);
                 return Files.newInputStream(tasklog);
             }
         } catch (IOException e) {
@@ -193,9 +193,14 @@ public class LogTaskContent {
     
     private InputStream getTooBigMessage(String kindOfLog) {
         String s = ZonedDateTime.now().format(formatter);
-        String s1 = s + " [INFO] The size of the" + kindOfLog + " log is too big: " + unCompressedLength + " bytes\r\n";
-        s1 += s + " [INFO] Try to download the log\r\n";
+        Float f = Float.parseFloat(unCompressedLength + "");
+        f = f /(1024 * 1024);
+        String unCompressedLengthInMB = (f.toString() + ".0").replaceAll("(\\d+)(\\.\\d)?[\\d.]*", "$1$2") + "MB";
+        String s1 = s + " [INFO] The size of the" + kindOfLog + " log is too big: " + unCompressedLengthInMB + "\r\n";
+        String s2 = (!kindOfLog.isEmpty()) ? "No running log available. " : "";
+        s1 += s + " [INFO] " + s2 + "Try to download the\" + kindOfLog + \" log\r\n";
         unCompressedLength = s1.length() * 1L;
+        complete = true;
         return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
     }
 

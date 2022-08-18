@@ -97,11 +97,15 @@ public class ExecuteMonitoring {
         } else {
             filename = args.getMonitorReportDir() + "/monitor." + monitoringParameters.getMonitorFileReportDate() + ".alert.json";
         }
+        monitoringParameters.setMonitorReportFile(filename);
         Globals.debug(logger, "Report Filename: " + filename);
 
         String output = Globals.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(monitoringStatus);
         try (PrintWriter outWriter = new PrintWriter(filename)) {
+            Globals.log(logger, output);
             outWriter.println(output);
+        } catch (Exception e) {
+            Globals.error(logger, "", e);
         }
 
         long count = 0;
@@ -120,7 +124,6 @@ public class ExecuteMonitoring {
             }
         }
 
-        monitoringParameters.setMonitorReportFile(filename);
         return monitoringParameters;
     }
 
