@@ -41,11 +41,22 @@ Specifies the directory to which the job will store health status report files (
                 </note>
             </param>                     
 
-            <param name="monitor_report_max_files" required="one of workflow or job" data_type="integer">
+            <param name="monitor_report_max_files" required="false" default_value="30" data_type="integer">
                 <note>
                     <title>Limit for the maximum number of files in &lt;monitor_report_dir&gt; </title>
                    <p>
 The number of report files created will be limited to this value. Older report files will be removed when this value is exceeded                    </p>
+                </note>
+            </param>
+                     
+              
+
+            <param name="alert_on_failed_orders" required="false" default_value="-1" data_type="integer">
+                <note>
+                    <title>The maximum number of failed orders </title>
+                   <p>
+If the value is > -1 a number of failed orders that is greater then this value results in an alert. 
+Example: alert_on_failed_orders=0 --&gt; Alert if at least 1 failed order.
                 </note>
             </param>
                      
@@ -58,6 +69,7 @@ Specifies the e-mail address that is used to send mail for notices and alerts. T
                 </note>
                          
             </param>
+      
       
              
         </params>

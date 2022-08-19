@@ -12,6 +12,7 @@ import com.sos.joc.model.controller.Role;
 import com.sos.joc.model.jitl.monitoring.MonitoringStatus;
 import com.sos.joc.model.joc.Cockpit;
 import com.sos.joc.model.joc.ControllerConnectionState;
+import com.sos.joc.model.order.OrdersSummary;
 
 public class MonitoringChecker {
 
@@ -142,6 +143,25 @@ public class MonitoringChecker {
 
     }
 
+    private MonitoringCheckReturn checkOrderFailedStatus(OrdersSummary ordersSummary, MonitoringParameters monitoringParameters) {
+        MonitoringCheckReturn monitoringCheckReturn = new MonitoringCheckReturn();
+        monitoringCheckReturn.setSuccess(true);
+
+        if (ordersSummary == null) {
+            count += 1;
+            monitoringCheckReturn.setErrorMessage(logger, "check-checkOrderFailedStatus: empty OrdersSummary");
+        } else {
+            if (ordersSummary.getFailed() > monitoringParameters.getAlertdOnFailedOrders() && monitoringParameters.getAlertdOnFailedOrders() > -1) {
+                count += 1;
+                monitoringCheckReturn.setErrorMessage(logger, "checkOrderFailedStatus: unhealthy orders status " + ordersSummary.getFailed()
+                        + " failed orders ");
+            }
+
+        }
+        return monitoringCheckReturn;
+
+    }
+
     private MonitoringCheckReturn checkJOCStatus(Cockpit cockpit) {
         MonitoringCheckReturn monitoringCheckReturn = new MonitoringCheckReturn();
         monitoringCheckReturn.setSuccess(true);
@@ -245,6 +265,11 @@ public class MonitoringChecker {
                     }
                 }
             }
+
+            MonitoringCheckReturn _monitoringCheckReturn = new MonitoringCheckReturn();
+            _monitoringCheckReturn = this.checkOrderFailedStatus(monitoringStatus.getOrderSnapshot(), monitoringParameters);
+            monitoringCheckReturn.setSuccess(monitoringCheckReturn.isSuccess() && _monitoringCheckReturn.isSuccess());
+            monitoringCheckReturn.onErrorSetMessage(_monitoringCheckReturn);
 
             if (from == null) {
                 from = "";

@@ -48,8 +48,11 @@ public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> 
         Map<String, Object> resultMap = new HashMap<String, Object>();
 
         if (args.getControllerId() == null || args.getControllerId().isEmpty()) {
-            Globals.log(logger,"Setting controller_id=" + step.getControllerId());
+            Globals.log(logger, "Setting controller_id=" + step.getControllerId());
             args.setControllerId(step.getControllerId());
+        }
+        if (args.getMonitorReportMaxFiles() == null) {
+            args.setMonitorReportMaxFiles(30L);
         }
         MonitoringParameters monitoringParameters = new MonitoringParameters();
 
@@ -58,18 +61,19 @@ public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> 
 
         monitoringParameters.setMonitorFileReportDate(formatterFile.format(Instant.now()));
         monitoringParameters.setMonitorSubjectReportDate(formatterSubject.format(Instant.now()));
-        Globals.debug(logger,"Setting controller_id=" + step.getControllerId());
+        monitoringParameters.setAlertdOnFailedOrders(args.getAlertdOnFailedOrders());
+
+        Globals.debug(logger, "Setting controller_id=" + step.getControllerId());
 
         ExecuteMonitoring executeMonitoring = new ExecuteMonitoring(logger, args);
         MonitoringStatus monitoringStatus = executeMonitoring.getStatusInformations();
-        
-     
+
         MonitoringCheckReturn monitoringCheckReturn = executeMonitoring.checkStatusInformation(monitoringStatus, monitoringParameters);
-        executeMonitoring.result2File(monitoringStatus, monitoringParameters,monitoringCheckReturn.getCount());
-        
+        executeMonitoring.result2File(monitoringStatus, monitoringParameters, monitoringCheckReturn.getCount());
+
         Globals.log(logger, "monitor report date: " + monitoringParameters.getMonitorSubjectReportDate());
         Globals.log(logger, "monitor report file: " + monitoringParameters.getMonitorReportFile());
-        
+
         resultMap.put("monitor_report_date", monitoringParameters.getMonitorSubjectReportDate());
         resultMap.put("monitor_report_file", monitoringParameters.getMonitorReportFile());
         resultMap.put("subject", monitoringCheckReturn.getSubject());
