@@ -5,6 +5,17 @@ public class MonitoringParameters {
     private String monitorFileReportDate;
     private String monitorSubjectReportDate;
     private String monitorReportFile;
+    private Integer alertdOnFailedOrders = -1;
+
+    public Integer getAlertdOnFailedOrders() {
+        return alertdOnFailedOrders;
+    }
+
+    public void setAlertdOnFailedOrders(Integer alertdOnFailedOrders) {
+        if (alertdOnFailedOrders != null) {
+            this.alertdOnFailedOrders = alertdOnFailedOrders;
+        }
+    }
 
     public String getMonitorFileReportDate() {
         return monitorFileReportDate;

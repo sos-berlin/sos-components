@@ -8,7 +8,8 @@ public class MonitoringJobArguments extends JobArguments {
 
     private JobArgument<String> controllerId = new JobArgument<String>("controller_id", false);
     private JobArgument<String> monitorReportDir = new JobArgument<String>("monitor_report_dir", true);
-    private JobArgument<Long> monitorReportMaxFiles = new JobArgument<Long>("monitor_report_max_files", true);
+    private JobArgument<Long> monitorReportMaxFiles = new JobArgument<Long>("monitor_report_max_files", false);
+    private JobArgument<Integer> alertdOnFailedOrders = new JobArgument<Integer>("alert_on_failed_orders", false);
     private JobArgument<String> from = new JobArgument<String>("from", false);
 
     public MonitoringJobArguments() {
@@ -41,6 +42,14 @@ public class MonitoringJobArguments extends JobArguments {
 
     public Long getMonitorReportMaxFiles() {
         return monitorReportMaxFiles.getValue();
+    }
+
+    public void setAlertdOnFailedOrders(Integer alertdOnFailedOrders) {
+        this.alertdOnFailedOrders.setValue(alertdOnFailedOrders);
+    }
+
+    public Integer getAlertdOnFailedOrders() {
+        return alertdOnFailedOrders.getValue();
     }
 
     public void setMonitorReportMaxFiles(Long monitorReportMaxFiles) {
