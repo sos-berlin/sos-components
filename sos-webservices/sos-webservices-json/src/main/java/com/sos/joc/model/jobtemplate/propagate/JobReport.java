@@ -17,11 +17,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "jobTemplatePath",
     "state",
     "actions"
 })
 public class JobReport {
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobTemplatePath")
+    private String jobTemplatePath;
     /**
      * JobTemplate propagate Job report
      * <p>
@@ -32,6 +41,28 @@ public class JobReport {
     private JobReportState state;
     @JsonProperty("actions")
     private Actions actions;
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobTemplatePath")
+    public String getJobTemplatePath() {
+        return jobTemplatePath;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobTemplatePath")
+    public void setJobTemplatePath(String jobTemplatePath) {
+        this.jobTemplatePath = jobTemplatePath;
+    }
 
     /**
      * JobTemplate propagate Job report
@@ -67,12 +98,12 @@ public class JobReport {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("state", state).append("actions", actions).toString();
+        return new ToStringBuilder(this).append("jobTemplatePath", jobTemplatePath).append("state", state).append("actions", actions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(state).append(actions).toHashCode();
+        return new HashCodeBuilder().append(state).append(actions).append(jobTemplatePath).toHashCode();
     }
 
     @Override
@@ -84,7 +115,7 @@ public class JobReport {
             return false;
         }
         JobReport rhs = ((JobReport) other);
-        return new EqualsBuilder().append(state, rhs.state).append(actions, rhs.actions).isEquals();
+        return new EqualsBuilder().append(state, rhs.state).append(actions, rhs.actions).append(jobTemplatePath, rhs.jobTemplatePath).isEquals();
     }
 
 }
