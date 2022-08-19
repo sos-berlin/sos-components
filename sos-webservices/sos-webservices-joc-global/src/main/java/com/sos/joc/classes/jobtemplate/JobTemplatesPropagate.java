@@ -68,6 +68,7 @@ public class JobTemplatesPropagate {
 
         {
             put(JobReportStateText.SKIPPED, 0);
+            put(JobReportStateText.UPTODATE, 0);
             put(JobReportStateText.CHANGED, 1);
             put(JobReportStateText.CONFLICT, 2);
         }
