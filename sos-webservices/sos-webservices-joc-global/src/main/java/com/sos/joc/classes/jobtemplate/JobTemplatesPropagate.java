@@ -124,6 +124,7 @@ public class JobTemplatesPropagate {
             if (checkTemplateReference(jobTemplates, job.getKey(), job.getValue(), jReport)) {
                 jReport.setState(getState(JobReportStateText.CHANGED));
                 JobTemplate jt = jobTemplates.get(job.getValue().getJobTemplate().getName());
+                jReport.setJobTemplatePath(jt.getPath());
                 template2Job(jt, job.getValue(), jReport);
                 switch (jt.getExecutable().getTYPE()) {
                 case InternalExecutable:
@@ -193,12 +194,14 @@ public class JobTemplatesPropagate {
         }
         JobTemplate jobTemplate = jobTemplates.get(jtRef.getName());
         if (jtRef.getHash() != null && jtRef.getHash().equals(jobTemplate.getHash())) {
+            jReport.setJobTemplatePath(jobTemplate.getPath());
             jReport.setState(getState(JobReportStateText.UPTODATE, String.format(
                     "Job '%s' is created from the job template '%s'. Updating the job is not necessary because version is up to date.", jobName,
                     jobTemplate.getName())));
             return false;
         }
         if (!job.getExecutable().getTYPE().equals(jobTemplate.getExecutable().getTYPE())) {
+            jReport.setJobTemplatePath(jobTemplate.getPath());
             jReport.setState(getState(JobReportStateText.CONFLICT, String.format("Job '%s' is a %s job and the job template '%s' specifies a %s job",
                     jobName, EXECUTABLE_STRING.get(job.getExecutable().getTYPE()), jobTemplate.getName(), EXECUTABLE_STRING.get(jobTemplate.getExecutable().getTYPE()))));
             return false;
