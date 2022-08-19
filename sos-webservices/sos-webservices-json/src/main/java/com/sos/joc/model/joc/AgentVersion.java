@@ -20,7 +20,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "agentId",
     "subagentId",
     "uri",
-    "version"
+    "version",
+    "compatibility"
 })
 public class AgentVersion {
 
@@ -59,6 +60,14 @@ public class AgentVersion {
      */
     @JsonProperty("version")
     private String version;
+    /**
+     * Compatibility Level of JS7 components
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("compatibility")
+    private CompatibilityLevel compatibility;
 
     /**
      * string without < and >
@@ -154,14 +163,36 @@ public class AgentVersion {
         this.version = version;
     }
 
+    /**
+     * Compatibility Level of JS7 components
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("compatibility")
+    public CompatibilityLevel getCompatibility() {
+        return compatibility;
+    }
+
+    /**
+     * Compatibility Level of JS7 components
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("compatibility")
+    public void setCompatibility(CompatibilityLevel compatibility) {
+        this.compatibility = compatibility;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("subagentId", subagentId).append("uri", uri).append("version", version).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("subagentId", subagentId).append("uri", uri).append("version", version).append("compatibility", compatibility).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(subagentId).append(uri).append(version).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(subagentId).append(uri).append(version).append(compatibility).toHashCode();
     }
 
     @Override
@@ -173,7 +204,7 @@ public class AgentVersion {
             return false;
         }
         AgentVersion rhs = ((AgentVersion) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(subagentId, rhs.subagentId).append(uri, rhs.uri).append(version, rhs.version).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(subagentId, rhs.subagentId).append(uri, rhs.uri).append(version, rhs.version).append(compatibility, rhs.compatibility).isEquals();
     }
 
 }
