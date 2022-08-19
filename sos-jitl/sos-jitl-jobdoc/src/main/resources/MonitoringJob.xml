@@ -55,8 +55,11 @@ The number of report files created will be limited to this value. Older report f
                 <note>
                     <title>The maximum number of failed orders </title>
                    <p>
-If the value is > -1 a number of failed orders that is greater then this value results in an alert. 
-Example: max_failed_orders=0 --&gt; Alert if at least 1 failed order.
+ 
+
+The maximum number of failed orders that are considered acceptable for a health status check. If this number is exceeded then the result return variable will carry a non-zero value indicating a failed health status check.
+
+By default the number of failed orders is not considered for successful/unsuccessful health status checks.
 </p>
                 </note>
             </param>

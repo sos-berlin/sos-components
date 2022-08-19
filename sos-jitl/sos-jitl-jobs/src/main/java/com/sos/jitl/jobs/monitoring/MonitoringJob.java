@@ -19,8 +19,8 @@ import js7.data_for_java.order.JOutcome;
 
 public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> {
 
-    private static final String REPORTFILE_FILENAME_DATEFORMAT = "yyyy-MM-dd.HH-mm-ss.K'Z'";
-    private static final String REPORTFILE_SUBJECT_DATEFORMAT = "yyyy-MM-dd.HH:mm:ss.K'Z'";
+    private static final String REPORTFILE_FILENAME_DATEFORMAT = "yyyy-MM-dd.HH-mm-ss.SSS'Z'";
+    private static final String REPORTFILE_SUBJECT_DATEFORMAT = "yyyy-MM-dd.HH:mm:ss.SSS'Z'";
 
     public MonitoringJob(JobContext jobContext) {
         super(jobContext);
