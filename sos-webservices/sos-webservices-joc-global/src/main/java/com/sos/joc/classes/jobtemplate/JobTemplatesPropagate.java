@@ -67,10 +67,11 @@ public class JobTemplatesPropagate {
         private static final long serialVersionUID = 1L;
 
         {
-            put(JobReportStateText.SKIPPED, 0);
-            put(JobReportStateText.UPTODATE, 0);
-            put(JobReportStateText.CHANGED, 1);
+            put(JobReportStateText.SKIPPED, 6);
+            put(JobReportStateText.UPTODATE, 6);
+            put(JobReportStateText.CHANGED, 5);
             put(JobReportStateText.CONFLICT, 2);
+            put(JobReportStateText.PERMISSION_DENIED, 2);
         }
     });
     
@@ -198,8 +199,8 @@ public class JobTemplatesPropagate {
             return false;
         }
         if (!job.getExecutable().getTYPE().equals(jobTemplate.getExecutable().getTYPE())) {
-            jReport.setState(getState(JobReportStateText.CONFLICT, String.format("Job '%s' is a %s job and the job template specifies a %s job",
-                    jobName, EXECUTABLE_STRING.get(job.getExecutable().getTYPE()), EXECUTABLE_STRING.get(jobTemplate.getExecutable().getTYPE()))));
+            jReport.setState(getState(JobReportStateText.CONFLICT, String.format("Job '%s' is a %s job and the job template '%s' specifies a %s job",
+                    jobName, EXECUTABLE_STRING.get(job.getExecutable().getTYPE()), jobTemplate.getName(), EXECUTABLE_STRING.get(jobTemplate.getExecutable().getTYPE()))));
             return false;
         }
         return true;
