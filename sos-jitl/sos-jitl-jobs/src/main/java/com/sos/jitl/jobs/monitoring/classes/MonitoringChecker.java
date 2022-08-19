@@ -151,7 +151,7 @@ public class MonitoringChecker {
             count += 1;
             monitoringCheckReturn.setErrorMessage(logger, "check-checkOrderFailedStatus: empty OrdersSummary");
         } else {
-            if (ordersSummary.getFailed() >= monitoringParameters.getAlertdOnFailedOrders() && monitoringParameters.getAlertdOnFailedOrders() > -1) {
+            if (ordersSummary.getFailed() > monitoringParameters.getMaxFailedOrders() && monitoringParameters.getMaxFailedOrders() > -1) {
                 count += 1;
                 monitoringCheckReturn.setErrorMessage(logger, "checkOrderFailedStatus: unhealthy orders status " + ordersSummary.getFailed()
                         + " failed orders ");

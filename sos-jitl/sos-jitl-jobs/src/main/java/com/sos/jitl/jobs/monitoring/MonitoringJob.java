@@ -61,7 +61,7 @@ public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> 
 
         monitoringParameters.setMonitorFileReportDate(formatterFile.format(Instant.now()));
         monitoringParameters.setMonitorSubjectReportDate(formatterSubject.format(Instant.now()));
-        monitoringParameters.setAlertdOnFailedOrders(args.getAlertdOnFailedOrders());
+        monitoringParameters.setMaxFailedOrders(args.getMaxFailedOrders());
 
         Globals.debug(logger, "Setting controller_id=" + step.getControllerId());
 
