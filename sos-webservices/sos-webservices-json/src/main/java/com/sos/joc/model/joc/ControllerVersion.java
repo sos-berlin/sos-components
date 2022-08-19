@@ -19,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "uri",
-    "version"
+    "version",
+    "compatibility"
 })
 public class ControllerVersion {
 
@@ -50,6 +51,14 @@ public class ControllerVersion {
      */
     @JsonProperty("version")
     private String version;
+    /**
+     * Compatibility Level of JS7 components
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("compatibility")
+    private CompatibilityLevel compatibility;
 
     /**
      * string without < and >
@@ -123,14 +132,36 @@ public class ControllerVersion {
         this.version = version;
     }
 
+    /**
+     * Compatibility Level of JS7 components
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("compatibility")
+    public CompatibilityLevel getCompatibility() {
+        return compatibility;
+    }
+
+    /**
+     * Compatibility Level of JS7 components
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("compatibility")
+    public void setCompatibility(CompatibilityLevel compatibility) {
+        this.compatibility = compatibility;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("uri", uri).append("version", version).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("uri", uri).append("version", version).append("compatibility", compatibility).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(uri).append(version).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(uri).append(version).append(compatibility).toHashCode();
     }
 
     @Override
@@ -142,7 +173,7 @@ public class ControllerVersion {
             return false;
         }
         ControllerVersion rhs = ((ControllerVersion) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(uri, rhs.uri).append(version, rhs.version).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(uri, rhs.uri).append(version, rhs.version).append(compatibility, rhs.compatibility).isEquals();
     }
 
 }
