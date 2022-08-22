@@ -104,7 +104,7 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
             report.setDeliveryDate(now);
             if (!jobTemplateNamesPerWorkflowName.isEmpty()) {
 
-                JobTemplatesPropagate propagate = new JobTemplatesPropagate(jobTemplatesFilter);
+                JobTemplatesPropagate propagate = new JobTemplatesPropagate(jobTemplatesFilter, permittedFolders);
 
                 DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), jobTemplatesFilter.getAuditLog());
 
