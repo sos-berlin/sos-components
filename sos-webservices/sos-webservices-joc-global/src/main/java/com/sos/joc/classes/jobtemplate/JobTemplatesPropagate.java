@@ -172,6 +172,7 @@ public class JobTemplatesPropagate {
         //j.setDefaultArguments(jt.getDefaultArguments());
         j.setDocumentationName(jt.getDocumentationName());
         j.setFailOnErrWritten(jt.getFailOnErrWritten());
+        j.setWarnOnErrWritten(jt.getWarnOnErrWritten());
         j.setGraceTimeout(jt.getGraceTimeout());
         j.setJobResourceNames(jt.getJobResourceNames());
         j.getJobTemplate().setHash(jt.getHash());
