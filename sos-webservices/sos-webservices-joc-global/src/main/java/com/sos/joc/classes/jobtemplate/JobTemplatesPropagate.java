@@ -120,7 +120,7 @@ public class JobTemplatesPropagate {
     private WorkflowReport template2Job(String workflowPath, Workflow w, Map<String, JobTemplate> jobTemplates)
             throws JsonParseException, JsonMappingException, IOException {
         WorkflowReport wReport = new WorkflowReport();
-        wReport.setWorkflowPath(workflowPath);
+        wReport.setPath(workflowPath);
         wReport.setState(getState(JobReportStateText.SKIPPED));
         wReport.setJobs(new JobReports());
         

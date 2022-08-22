@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "workflowPath",
+    "path",
     "state",
     "jobs"
 })
@@ -30,9 +30,9 @@ public class WorkflowReport {
      * absolute path of an object.
      * 
      */
-    @JsonProperty("workflowPath")
+    @JsonProperty("path")
     @JsonPropertyDescription("absolute path of an object.")
-    private String workflowPath;
+    private String path;
     /**
      * JobTemplate propagate Job report
      * <p>
@@ -50,9 +50,9 @@ public class WorkflowReport {
      * absolute path of an object.
      * 
      */
-    @JsonProperty("workflowPath")
-    public String getWorkflowPath() {
-        return workflowPath;
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
     }
 
     /**
@@ -61,9 +61,9 @@ public class WorkflowReport {
      * absolute path of an object.
      * 
      */
-    @JsonProperty("workflowPath")
-    public void setWorkflowPath(String workflowPath) {
-        this.workflowPath = workflowPath;
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
     }
 
     /**
@@ -100,12 +100,12 @@ public class WorkflowReport {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("workflowPath", workflowPath).append("state", state).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).append("path", path).append("state", state).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(state).append(workflowPath).append(jobs).toHashCode();
+        return new HashCodeBuilder().append(state).append(path).append(jobs).toHashCode();
     }
 
     @Override
@@ -117,7 +117,7 @@ public class WorkflowReport {
             return false;
         }
         WorkflowReport rhs = ((WorkflowReport) other);
-        return new EqualsBuilder().append(state, rhs.state).append(workflowPath, rhs.workflowPath).append(jobs, rhs.jobs).isEquals();
+        return new EqualsBuilder().append(state, rhs.state).append(path, rhs.path).append(jobs, rhs.jobs).isEquals();
     }
 
 }

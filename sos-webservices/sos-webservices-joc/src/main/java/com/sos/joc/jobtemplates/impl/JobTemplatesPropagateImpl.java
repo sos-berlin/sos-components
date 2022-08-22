@@ -117,7 +117,7 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
                     }
                     if (!folderIsPermitted(dbWorkflow.getFolder(), permittedFolders)) {
                         WorkflowReport wr = new WorkflowReport();
-                        wr.setWorkflowPath(dbWorkflow.getPath());
+                        wr.setPath(dbWorkflow.getPath());
                         wr.setState(JobTemplatesPropagate.getState(JobReportStateText.PERMISSION_DENIED));
                         continue;
                     }
@@ -127,7 +127,7 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
                 }
                 // post events
                 if (!report.getWorkflows().isEmpty()) {
-                    report.getWorkflows().stream().filter(JobTemplatesPropagate.workflowIsChanged).map(WorkflowReport::getWorkflowPath).map(
+                    report.getWorkflows().stream().filter(JobTemplatesPropagate.workflowIsChanged).map(WorkflowReport::getPath).map(
                             path -> getParent(path)).distinct().forEach(folder -> JocInventory.postEvent(folder));
                 }
             }
