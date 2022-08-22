@@ -210,6 +210,7 @@ public class JsonSerializer {
             } else {
                 j.getAdditionalProperties().forEach((key, job) -> {
                     job.setFailOnErrWritten(defaultToNull(job.getFailOnErrWritten(), Boolean.FALSE));
+                    job.setWarnOnErrWritten(defaultToNull(job.getWarnOnErrWritten(), Boolean.FALSE));
                     job.setParallelism(defaultToNull(job.getParallelism(), 1));
                     job.setDefaultArguments(emptyEnvToNullAndQuoteStrings(job.getDefaultArguments()));
                     emptyStringCollectionsToNull(job.getJobResourceNames());
@@ -227,6 +228,7 @@ public class JsonSerializer {
     private static com.sos.inventory.model.jobtemplate.JobTemplate emptyJobTemplateValuesToNull(com.sos.inventory.model.jobtemplate.JobTemplate jt) {
         if (jt != null) {
             jt.setFailOnErrWritten(defaultToNull(jt.getFailOnErrWritten(), Boolean.FALSE));
+            jt.setWarnOnErrWritten(defaultToNull(jt.getWarnOnErrWritten(), Boolean.FALSE));
             jt.setParallelism(defaultToNull(jt.getParallelism(), 1));
             jt.setDefaultArguments(emptyEnvToNullAndQuoteStrings(jt.getDefaultArguments()));
             emptyStringCollectionsToNull(jt.getJobResourceNames());
