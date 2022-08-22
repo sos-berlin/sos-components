@@ -32,6 +32,7 @@ import com.sos.inventory.model.jobtemplate.Parameter;
 import com.sos.inventory.model.jobtemplate.Parameters;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Workflow;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -40,13 +41,14 @@ import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.jobtemplate.propagate.Actions;
 import com.sos.joc.model.jobtemplate.propagate.JobReport;
 import com.sos.joc.model.jobtemplate.propagate.JobReportState;
 import com.sos.joc.model.jobtemplate.propagate.JobReportStateText;
 import com.sos.joc.model.jobtemplate.propagate.JobReports;
-import com.sos.joc.model.jobtemplate.propagate.JobTemplatesPropagateFilter;
+import com.sos.joc.model.jobtemplate.propagate.JobTemplatesPropagateBaseFilter;
 import com.sos.joc.model.jobtemplate.propagate.WorkflowReport;
 
 public class JobTemplatesPropagate {
@@ -81,20 +83,22 @@ public class JobTemplatesPropagate {
 
     private boolean withAdmissionTime = false;
     private boolean withNotification = false;
+    private Set<Folder> permittedFolders = null;
     //private WorkflowReport workflowReport;
     
     public JobTemplatesPropagate() {
         //
     }
     
-    public JobTemplatesPropagate(JobTemplatesPropagateFilter filter) {
+    public JobTemplatesPropagate(JobTemplatesPropagateBaseFilter filter, Set<Folder> permittedFolders) {
         this.withAdmissionTime = filter.getOverwriteAdmissionTime() == Boolean.TRUE;
         this.withNotification = filter.getOverwriteNotification() == Boolean.TRUE;
+        this.permittedFolders = permittedFolders;
     }
-
-    public WorkflowReport template2Job(DBItemInventoryConfiguration dbWorkflow, Map<String, JobTemplate> jobTemplates, InventoryDBLayer dbLayer,
-            Date now, DBItemJocAuditLog dbAuditLog) throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
-        Workflow workflow = (Workflow) JocInventory.content2IJSObject(dbWorkflow.getContent(), ConfigurationType.WORKFLOW.intValue());
+    
+    public WorkflowReport template2Job(DBItemInventoryConfiguration dbWorkflow, Workflow workflow, Map<String, JobTemplate> jobTemplates,
+            InventoryDBLayer dbLayer, Date now, DBItemJocAuditLog dbAuditLog) throws JsonParseException, JsonMappingException, IOException,
+            SOSHibernateException {
         WorkflowReport report = template2Job(dbWorkflow.getPath(), workflow, jobTemplates);
         if (workflowIsChanged.test(report)) {
             validate(dbWorkflow, workflow, dbLayer);
@@ -105,6 +109,12 @@ public class JobTemplatesPropagate {
             JocAuditLog.storeAuditLogDetail(new AuditLogDetail(dbWorkflow.getPath(), dbWorkflow.getType()), dbLayer.getSession(), dbAuditLog);
         }
         return report;
+    }
+
+    public WorkflowReport template2Job(DBItemInventoryConfiguration dbWorkflow, Map<String, JobTemplate> jobTemplates, InventoryDBLayer dbLayer,
+            Date now, DBItemJocAuditLog dbAuditLog) throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
+        Workflow workflow = (Workflow) JocInventory.content2IJSObject(dbWorkflow.getContent(), ConfigurationType.WORKFLOW.intValue());
+        return template2Job(dbWorkflow, workflow, jobTemplates, dbLayer, now, dbAuditLog);
     }
     
     private WorkflowReport template2Job(String workflowPath, Workflow w, Map<String, JobTemplate> jobTemplates)
@@ -174,7 +184,7 @@ public class JobTemplatesPropagate {
         setExecutable(jReport, j, jt);
     }
     
-    private static boolean checkTemplateReference(Map<String, JobTemplate> jobTemplates, String jobName, Job job, JobReport jReport) {
+    private boolean checkTemplateReference(Map<String, JobTemplate> jobTemplates, String jobName, Job job, JobReport jReport) {
         JobTemplateRef jtRef = job.getJobTemplate();
         if (jtRef == null || jtRef.getName() == null || jtRef.getName().isEmpty()) {
             job.setJobTemplate(null);
@@ -200,10 +210,15 @@ public class JobTemplatesPropagate {
                     jobTemplate.getName())));
             return false;
         }
+        if (!JOCResourceImpl.canAdd(jobTemplate.getPath(), permittedFolders)) {
+            jReport.setState(getState(JobReportStateText.PERMISSION_DENIED, String.format("Job '%s' is created from the job template '%s'", jobName,
+                    jobTemplate.getPath())));
+        }
         if (!job.getExecutable().getTYPE().equals(jobTemplate.getExecutable().getTYPE())) {
             jReport.setJobTemplatePath(jobTemplate.getPath());
             jReport.setState(getState(JobReportStateText.CONFLICT, String.format("Job '%s' is a %s job and the job template '%s' specifies a %s job",
-                    jobName, EXECUTABLE_STRING.get(job.getExecutable().getTYPE()), jobTemplate.getName(), EXECUTABLE_STRING.get(jobTemplate.getExecutable().getTYPE()))));
+                    jobName, EXECUTABLE_STRING.get(job.getExecutable().getTYPE()), jobTemplate.getName(), EXECUTABLE_STRING.get(jobTemplate
+                            .getExecutable().getTYPE()))));
             return false;
         }
         return true;
