@@ -289,6 +289,9 @@ public class JocCluster {
         DBItemJocCluster item = null;
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         try {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][current=%s]process..", mode, currentMemberId));
+            }
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
             dbLayer.beginTransaction();
             dbLayer.updateInstanceHeartBeat(currentMemberId);
