@@ -37,7 +37,7 @@ public class NotifyAnalyzer {
     private DBItemMonitoringOrderStep orderStep;
 
     private Map<String, LastWorkflowNotificationDBItemEntity> toRecovery;
-    private Map<String, Set<JobWarning>> sendedWarnings;
+    private Map<String, Set<JobWarning>> sentWarnings;
 
     // TODO
     private boolean checkPeriodAge = false;
@@ -75,14 +75,14 @@ public class NotifyAnalyzer {
         case WARNING:
             List<DBItemNotification> wns = dbLayer.getNotifications(type, range, orderId, stepId);
             if (wns != null && wns.size() > 0) {
-                sendedWarnings = new HashMap<>();
+                sentWarnings = new HashMap<>();
                 for (DBItemNotification wn : wns) {
-                    Set<JobWarning> set = sendedWarnings.get(wn.getNotificationId());
+                    Set<JobWarning> set = sentWarnings.get(wn.getNotificationId());
                     if (set == null) {
                         set = new HashSet<>();
                     }
                     set.add(wn.getWarnAsEnum());
-                    sendedWarnings.put(wn.getNotificationId(), set);
+                    sentWarnings.put(wn.getNotificationId(), set);
                 }
             }
             break;
@@ -154,8 +154,8 @@ public class NotifyAnalyzer {
         return toRecovery;
     }
 
-    public Map<String, Set<JobWarning>> getSendedWarnings() {
-        return sendedWarnings;
+    public Map<String, Set<JobWarning>> getSentWarnings() {
+        return sentWarnings;
     }
 
     public DBItemMonitoringOrder getOrder() {

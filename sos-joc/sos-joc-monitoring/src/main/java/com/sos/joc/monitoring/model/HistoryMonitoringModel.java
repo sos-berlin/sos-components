@@ -27,6 +27,7 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSSerializer;
 import com.sos.commons.util.SOSString;
@@ -49,6 +50,7 @@ import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.deploy.DeployHistoryJobResourceEvent;
 import com.sos.joc.event.bean.history.HistoryEvent;
 import com.sos.joc.event.bean.history.HistoryOrderEvent;
+import com.sos.joc.event.bean.history.HistoryOrderTaskLogFirstStderr;
 import com.sos.joc.event.bean.history.HistoryTaskEvent;
 import com.sos.joc.event.bean.monitoring.MonitoringEvent;
 import com.sos.joc.event.bean.monitoring.NotificationConfigurationReleased;
@@ -103,12 +105,34 @@ public class HistoryMonitoringModel implements Serializable {
         EventBus.getInstance().register(this);
     }
 
-    @Subscribe({ HistoryOrderEvent.class, HistoryTaskEvent.class })
+    @Subscribe({ HistoryOrderEvent.class, HistoryTaskEvent.class, HistoryOrderTaskLogFirstStderr.class })
     public void handleHistoryEvents(HistoryEvent evt) {
         AJocClusterService.setLogger(serviceIdentifier);
         // LOGGER.info("[EV]" + SOSString.toString(evt));
         if (evt.getPayload() != null) {
             add2Payload((AHistoryBean) evt.getPayload());
+        }
+    }
+
+    @Subscribe({ NotificationConfigurationReleased.class, NotificationConfigurationRemoved.class })
+    public void handleMonitoringEvents(MonitoringEvent evt) {
+        if (configuration != null) {
+            AJocClusterService.setLogger(serviceIdentifier);
+            LOGGER.info(String.format("[%s][%s][configuration]%s", serviceIdentifier, NOTIFICATION_IDENTIFIER, evt.getClass().getSimpleName()));
+            setConfiguration();
+        }
+    }
+
+    @Subscribe({ DeployHistoryJobResourceEvent.class })
+    public void handleMonitoringEvents(DeployHistoryJobResourceEvent evt) {
+        if (configuration != null && configuration.exists() && evt.getName() != null) {
+            AJocClusterService.setLogger(serviceIdentifier);
+            List<String> names = configuration.getMailResources().entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
+            if (names.contains(evt.getName())) {
+                LOGGER.info(String.format("[%s][%s][configuration]%s jr=%s", serviceIdentifier, NOTIFICATION_IDENTIFIER, evt.getClass()
+                        .getSimpleName(), evt.getName()));
+                setConfiguration();
+            }
         }
     }
 
@@ -138,28 +162,6 @@ public class HistoryMonitoringModel implements Serializable {
                                 nowSeconds, eventDateSeconds, MAX_PAYLOAD_SECONDS, SOSString.toString(bean)));
                     }
                 }
-            }
-        }
-    }
-
-    @Subscribe({ NotificationConfigurationReleased.class, NotificationConfigurationRemoved.class })
-    public void handleMonitoringEvents(MonitoringEvent evt) {
-        if (configuration != null) {
-            AJocClusterService.setLogger(serviceIdentifier);
-            LOGGER.info(String.format("[%s][%s][configuration]%s", serviceIdentifier, NOTIFICATION_IDENTIFIER, evt.getClass().getSimpleName()));
-            setConfiguration();
-        }
-    }
-
-    @Subscribe({ DeployHistoryJobResourceEvent.class })
-    public void handleMonitoringEvents(DeployHistoryJobResourceEvent evt) {
-        if (configuration != null && configuration.exists() && evt.getName() != null) {
-            AJocClusterService.setLogger(serviceIdentifier);
-            List<String> names = configuration.getMailResources().entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
-            if (names.contains(evt.getName())) {
-                LOGGER.info(String.format("[%s][%s][configuration]%s jr=%s", serviceIdentifier, NOTIFICATION_IDENTIFIER, evt.getClass()
-                        .getSimpleName(), evt.getName()));
-                setConfiguration();
             }
         }
     }
@@ -226,9 +228,10 @@ public class HistoryMonitoringModel implements Serializable {
 
                     if (!closed.get()) {
                         ToNotify toNotifyPayloads = handlePayloads(isDebugEnabled);
-                        ToNotify toNotifyLongerThan = handleLongerThan(calculateEventId(toNotifyPayloads.getLastEventId(), lastDuration));
+                        ToNotify toNotifyExtraStepsWarnings = handleLongerThan(calculateEventId(toNotifyPayloads.getLastEventId(), lastDuration));
+                        toNotifyExtraStepsWarnings.getSteps().addAll(distinct(toNotifyPayloads.getWarningSteps()));
                         if (!closed.get()) {
-                            notifier.notify(configuration, toNotifyPayloads, toNotifyLongerThan);
+                            notifier.notify(configuration, toNotifyPayloads, toNotifyExtraStepsWarnings);
                         }
                     }
 
@@ -239,6 +242,10 @@ public class HistoryMonitoringModel implements Serializable {
             }
         }, 0 /* start delay */, SCHEDULE_DELAY /* delay */, TimeUnit.SECONDS);
 
+    }
+
+    private List<HistoryOrderStepResult> distinct(List<HistoryOrderStepResult> input) {
+        return input.stream().filter(SOSCollection.distinctByKey(e -> e.getStep().getHistoryId())).collect(Collectors.toList());
     }
 
     private ToNotify handlePayloads(boolean isDebugEnabled) {
@@ -311,6 +318,10 @@ public class HistoryMonitoringModel implements Serializable {
                     break;
                 case OrderProcessed:
                     toNotify.getSteps().add(orderStepProcessed(dbLayer, (HistoryOrderStepBean) b));
+                    break;
+                case OrderStderrWritten:
+
+                    toNotify.getWarningSteps().add(getOrderStepStderrWarning((HistoryOrderStepBean) b));
                     break;
                 default:
                     break;
@@ -595,6 +606,11 @@ public class HistoryMonitoringModel implements Serializable {
             }
         }
         return warn;
+    }
+
+    private HistoryOrderStepResult getOrderStepStderrWarning(HistoryOrderStepBean hosb) {
+        return new HistoryOrderStepResult(hosb, new HistoryOrderStepResultWarn(JobWarning.STDERR, "Job reports output to stderr: " + hosb
+                .getFirstChunkStdError()));
     }
 
     private HistoryOrderStepResult analyzeExecutionTimeOnProcessed(DBLayerMonitoring dbLayer, HistoryOrderStepBean hosb) {
@@ -981,18 +997,24 @@ public class HistoryMonitoringModel implements Serializable {
     protected class ToNotify {
 
         private final List<HistoryOrderStepResult> steps;
+        private final List<HistoryOrderStepResult> warningSteps;
         private final List<HistoryOrderBean> errorOrders;
         private final List<HistoryOrderBean> successOrders;
         private Long lastEventId;
 
         protected ToNotify() {
             steps = new ArrayList<>();
+            warningSteps = new ArrayList<>();
             errorOrders = new ArrayList<>();
             successOrders = new ArrayList<>();
         }
 
         protected List<HistoryOrderStepResult> getSteps() {
             return steps;
+        }
+
+        protected List<HistoryOrderStepResult> getWarningSteps() {
+            return warningSteps;
         }
 
         protected List<HistoryOrderBean> getErrorOrders() {

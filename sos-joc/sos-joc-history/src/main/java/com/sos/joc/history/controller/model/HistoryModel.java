@@ -54,6 +54,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.history.HistoryOrderLog;
 import com.sos.joc.event.bean.history.HistoryOrderStarted;
 import com.sos.joc.event.bean.history.HistoryOrderTaskLog;
+import com.sos.joc.event.bean.history.HistoryOrderTaskLogFirstStderr;
 import com.sos.joc.event.bean.history.HistoryOrderTaskStarted;
 import com.sos.joc.event.bean.history.HistoryOrderTaskTerminated;
 import com.sos.joc.event.bean.history.HistoryOrderTerminated;
@@ -488,6 +489,23 @@ public class HistoryModel {
         }
     }
 
+    private void postEventTaskLogFirstStderr(Long eventId, CachedOrder co, CachedOrderStep cos) {
+        if (co != null && cos != null && cos.getFirstChunkStdError() != null) {
+            HistoryOrderStepBean hosb = cos.convert(EventType.OrderStderrWritten, eventId, controllerConfiguration.getCurrent().getId(), co
+                    .getWorkflowPath());
+            EventBus.getInstance().post(new HistoryOrderTaskLogFirstStderr(controllerConfiguration.getCurrent().getId(), hosb));
+        }
+    }
+
+    private void postEventTaskLog(LogEntry entry, String content, boolean newLine) {
+        EventBus.getInstance().post(new HistoryOrderTaskLog(entry.getEventType().value(), entry.getHistoryOrderId(), entry.getHistoryOrderStepId(),
+                content, newLine));
+    }
+
+    private void postEventOrderLog(LogEntry entry, OrderLogEntry orderEntry) {
+        EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntry));
+    }
+
     private Duration showSummary(Long startEventId, Long firstEventId, Instant start, Counter counter) {
         String startEventIdAsTime = eventIdAsTime(startEventId);
         String endEventIdAsTime = eventIdAsTime(storedEventId);
@@ -914,9 +932,9 @@ public class HistoryModel {
             }
 
             if (le.isError() && SOSString.isEmpty(le.getErrorText())) {
-                if (cos != null && cos.getError() != null && !SOSString.isEmpty(cos.getStdErr())) {
+                if (cos != null && cos.getError() != null && !SOSString.isEmpty(cos.getFirstChunkStdError())) {
                     // le.setErrorText(cos.getStdErr());
-                    le.setErrorText(String.format("[%s][%s]%s", cos.getJobName(), cos.getWorkflowPosition(), cos.getStdErr()));
+                    le.setErrorText(String.format("[%s][%s]%s", cos.getJobName(), cos.getWorkflowPosition(), cos.getFirstChunkStdError()));
                 }
             }
             String orderErrorText = le.getErrorText();
@@ -1446,7 +1464,7 @@ public class HistoryModel {
                 }
             }
             if (le.isError() && SOSString.isEmpty(le.getErrorText())) {
-                le.setErrorText(cos.getStdErr());
+                le.setErrorText(cos.getFirstChunkStdError());
             }
             cos.setSeverity(HistorySeverity.map2DbSeverity(le.isError() ? OrderStateText.FAILED : OrderStateText.FINISHED));
 
@@ -1535,7 +1553,10 @@ public class HistoryModel {
         CachedOrderStep cos = getCachedOrderStepByOrder(dbLayer, co, null);
 
         if (EventType.OrderStderrWritten.equals(eventType)) {
-            cos.setStdError(entry.getChunck());
+            if (cos.getFirstChunkStdError() == null) {
+                cos.setFirstChunkStdError(entry.getChunck());
+            }
+            warnOnOrderStepStderr(dbLayer, entry.getEventId(), co, cos);
         }
         if (cos.getEndTime() == null) {
             LogEntry le = new LogEntry(LogEntry.LogLevel.INFO, eventType, JocClusterUtil.getEventIdAsDate(entry.getEventId()), entry
@@ -1549,6 +1570,26 @@ public class HistoryModel {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[%s][%s][skip][%s]order step is already ended. log already written...[%s]", identifier, entry.getType(),
                         entry.getOrderId(), SOSString.toString(cos)));
+            }
+        }
+    }
+
+    private void warnOnOrderStepStderr(DBLayerHistory dbLayer, Long eventId, CachedOrder co, CachedOrderStep cos) {
+        if (cos.getWarnOnStderr() == null) {
+            try {
+                if (cos.getFirstChunkStdError() != null) {
+                    String workflowName = JocClusterUtil.getBasenameFromPath(co.getWorkflowPath());
+                    CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, co.getWorkflowVersionId());
+                    CachedWorkflowJob job = cw.getJob(cos.getJobName());
+                    if (job != null && job.getWarnOnErrorWritten() != null && job.getWarnOnErrorWritten()) {
+                        postEventTaskLogFirstStderr(eventId, co, cos);
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.warn(String.format("[%s][%s][warnOnOrderStepStderr][workflow=%s][orderId=%s][job=%s %s]%s", identifier, controllerConfiguration
+                        .getCurrent().getId(), co.getWorkflowPath(), co.getOrderId(), cos.getJobName(), SOSString.toString(cos), e.toString()), e);
+            } finally {
+                cos.setWarnOnStderr(false);
             }
         }
     }
@@ -1796,7 +1837,7 @@ public class HistoryModel {
             }
             map.put(job.getName(), new CachedWorkflowJob(job.getJob().getCriticality(), job.getJob().getTitle(), job.getJob().getAgentName(), job
                     .getJob().getSubagentClusterId(), job.getJob().getWarnIfLonger(), job.getJob().getWarnIfShorter(), getWarningReturnCodes(job
-                            .getJob()), notification));
+                            .getJob()), job.getJob().getWarnOnErrWritten(), notification));
         }
         return map;
     }
@@ -2196,15 +2237,6 @@ public class HistoryModel {
             }
         }
         return file;
-    }
-
-    private void postEventTaskLog(LogEntry entry, String content, boolean newLine) {
-        EventBus.getInstance().post(new HistoryOrderTaskLog(entry.getEventType().value(), entry.getHistoryOrderId(), entry.getHistoryOrderStepId(),
-                content, newLine));
-    }
-
-    private void postEventOrderLog(LogEntry entry, OrderLogEntry orderEntry) {
-        EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntry));
     }
 
     private void write2MainOrderLog(LogEntry entry, Path dir, String content, boolean newLine, EventType eventType) throws Exception {
