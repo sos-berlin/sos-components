@@ -132,18 +132,8 @@ public class JobTemplatesPropagate {
             JobReport jReport = new JobReport();
             
             if (checkTemplateReference(jobTemplates, job.getKey(), job.getValue(), jReport)) {
-                jReport.setState(getState(JobReportStateText.CHANGED));
                 JobTemplate jt = jobTemplates.get(job.getValue().getJobTemplate().getName());
-                jReport.setJobTemplatePath(jt.getPath());
-                template2Job(jt, job.getValue(), jReport);
-                switch (jt.getExecutable().getTYPE()) {
-                case InternalExecutable:
-                    break;
-                case ScriptExecutable:
-                case ShellScriptExecutable:
-                    setNodeArguments(w.getInstructions(), job.getKey(), jReport, jt.getArguments());
-                    break;
-                }
+                template2Job(jReport, jt, job.getKey(), job.getValue(), w);
             }
             
             jobStates.add(jReport.getState().get_text());
@@ -160,7 +150,23 @@ public class JobTemplatesPropagate {
         return wReport;
     }
     
-    private void template2Job(JobTemplate jt, Job j, JobReport jReport) {
+    private void template2Job(JobReport jReport, JobTemplate jt, String jobName, Job job, Workflow w) {
+        Environment env = getArguments(jReport, jt, jobName, job, w);
+        
+        jReport.setState(getState(JobReportStateText.CHANGED));
+        jReport.setJobTemplatePath(jt.getPath());
+        template2Job(jt, job, jReport, env);
+        switch (jt.getExecutable().getTYPE()) {
+        case InternalExecutable:
+            break;
+        case ScriptExecutable:
+        case ShellScriptExecutable:
+            setNodeArguments(w.getInstructions(), jobName, jReport, jt.getArguments(), env);
+            break;
+        }
+    }
+    
+    private void template2Job(JobTemplate jt, Job j, JobReport jReport, Environment arguments) {
         if (withAdmissionTime) {
             j.setAdmissionTimeScheme(jt.getAdmissionTimeScheme());
             j.setSkipIfNoAdmissionForOrderDay(jt.getSkipIfNoAdmissionForOrderDay());
@@ -182,7 +188,7 @@ public class JobTemplatesPropagate {
         j.setWarnIfLonger(jt.getWarnIfLonger());
         j.setWarnIfShorter(jt.getWarnIfShorter());
         
-        setExecutable(jReport, j, jt);
+        setExecutable(jReport, j, jt, arguments);
     }
     
     private boolean checkTemplateReference(Map<String, JobTemplate> jobTemplates, String jobName, Job job, JobReport jReport) {
@@ -220,23 +226,34 @@ public class JobTemplatesPropagate {
             jReport.setState(getState(JobReportStateText.CONFLICT, String.format("Job '%s' is a %s job and the job template '%s' specifies a %s job",
                     jobName, EXECUTABLE_STRING.get(job.getExecutable().getTYPE()), jobTemplate.getName(), EXECUTABLE_STRING.get(jobTemplate
                             .getExecutable().getTYPE()))));
-            return false;
+            return true;
         }
         return true;
     }
     
-    private static void setExecutable(JobReport jReport, Job j, JobTemplate jt) {
+    private static void setExecutable(JobReport jReport, Job j, JobTemplate jt, Environment arguments) {
         switch (jt.getExecutable().getTYPE()) {
         case InternalExecutable:
             
-            ExecutableJava e = j.getExecutable().cast();
+            ExecutableJava e = new ExecutableJava();
+            e.setTYPE(ExecutableType.InternalExecutable);
+            if (ExecutableType.InternalExecutable.equals(j.getExecutable().getTYPE())) {
+                e = j.getExecutable().cast();
+            }
             ExecutableJava jtE = jt.getExecutable().cast();
             
             e.setClassName(jtE.getClassName());
             e.setJobArguments(jtE.getJobArguments());
             e.setReturnCodeMeaning(jtE.getReturnCodeMeaning());
             
+            if (arguments != null && arguments.getAdditionalProperties() != null) {
+                e.setArguments(arguments);
+            }
             e.setArguments(setArguments(jReport, e.getArguments(), jt.getArguments()));
+            
+            if (!ExecutableType.InternalExecutable.equals(j.getExecutable().getTYPE())) {
+                j.setExecutable(e);
+            }
             
             break;
         case ScriptExecutable:
@@ -246,8 +263,59 @@ public class JobTemplatesPropagate {
         }
     }
     
-    private static void setNodeArguments(JobReport jReport, NamedJob j, Parameters args) {
+    private static Environment getArguments(JobReport jReport, JobTemplate jt, String jobName, Job job, Workflow w) {
+        if (!JobReportStateText.CONFLICT.equals(jReport.getState().get_text())) {
+            return null;
+        }
+        Environment env = null;
+        switch (jt.getExecutable().getTYPE()) {
+        case InternalExecutable:
+            env = getNodeArguments(w.getInstructions(), jobName);
+            break;
+        case ScriptExecutable:
+        case ShellScriptExecutable:
+            env = getExecutableArguments(job);
+            break;
+        }
+        return env;
+    }
+    
+    private static Environment getExecutableArguments(Job j) {
+        Environment env = new Environment();
+        switch (j.getExecutable().getTYPE()) {
+        case InternalExecutable:
+            
+            ExecutableJava e = j.getExecutable().cast();
+            // copy NodeArgument
+            if (e.getArguments() != null && e.getArguments().getAdditionalProperties() != null) {
+                e.getArguments().getAdditionalProperties().forEach((k, v) -> env.setAdditionalProperty(k, v));
+            }
+            // delete NodeArgument
+            e.setArguments(null);
+            
+            break;
+        case ScriptExecutable:
+        case ShellScriptExecutable:
+            break;
+        }
+        return env;
+    }
+    
+    private static void setNodeArguments(JobReport jReport, NamedJob j, Parameters args, Environment defaultArgs) {
+        if (defaultArgs != null && defaultArgs.getAdditionalProperties() != null) {
+            j.setDefaultArguments(defaultArgs);
+        }
         j.setDefaultArguments(setArguments(jReport, j.getDefaultArguments(), args));
+    }
+    
+    private static Environment readNodeArguments(NamedJob j, Environment env) {
+        // copy NodeArgument
+        if (j.getDefaultArguments() != null && j.getDefaultArguments().getAdditionalProperties() != null) {
+            j.getDefaultArguments().getAdditionalProperties().forEach((k, v) -> env.setAdditionalProperty(k, v));
+        }
+        // delete NodeArgument
+        j.setDefaultArguments(null);
+        return env;
     }
     
     private static Environment setArguments(JobReport jReport, Environment env, Parameters args) {
@@ -263,9 +331,10 @@ public class JobTemplatesPropagate {
             args = new Parameters();
         }
         Set<String> paramKeys = args.getAdditionalProperties().keySet();
+        Set<String> envKeys = env.getAdditionalProperties().keySet();
         
         // delete unknown keys
-        Set<String> keysToDelete = env.getAdditionalProperties().keySet().stream().filter(key -> !paramKeys.contains(key)).collect(
+        Set<String> keysToDelete = envKeys.stream().filter(key -> !paramKeys.contains(key)).collect(
                 Collectors.toSet());
         
         if (!keysToDelete.isEmpty()) {
@@ -284,7 +353,7 @@ public class JobTemplatesPropagate {
         // add required new keys with default value
         Environment addEnv = new Environment();
         for (Map.Entry<String, Parameter> entry : args.getAdditionalProperties().entrySet()) {
-            if (entry.getValue().getRequired()) {
+            if (entry.getValue().getRequired() && !envKeys.contains(entry.getKey())) {
                 // TODO conflict required without default value
                 String _default = entry.getValue().getDefault() != null ? entry.getValue().getDefault().toString() : "";
                 if (_default.isEmpty()) {
@@ -311,7 +380,7 @@ public class JobTemplatesPropagate {
         return env;
     }
     
-    private static void setNodeArguments(List<Instruction> insts, String jobName, JobReport jReport, Parameters args) {
+    private static void setNodeArguments(List<Instruction> insts, String jobName, JobReport jReport, Parameters args, Environment defaultArgs) {
         if (insts != null) {
             for (Instruction inst : insts) {
                 switch (inst.getTYPE()) {
@@ -319,50 +388,116 @@ public class JobTemplatesPropagate {
                     ForkJoin f = inst.cast();
                     if (f.getBranches() != null) {
                         for (Branch b : f.getBranches()) {
-                            setNodeArguments(b.getWorkflow().getInstructions(), jobName, jReport, args);
+                            setNodeArguments(b.getWorkflow().getInstructions(), jobName, jReport, args, defaultArgs);
                         }
                     }
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
                     if (fl.getWorkflow() != null) {
-                        setNodeArguments(fl.getWorkflow().getInstructions(), jobName, jReport, args);
+                        setNodeArguments(fl.getWorkflow().getInstructions(), jobName, jReport, args, defaultArgs);
                     }
                     break;
                 case IF:
                     IfElse ie = inst.cast();
                     if (ie.getThen() != null) {
-                        setNodeArguments(ie.getThen().getInstructions(), jobName, jReport, args);
+                        setNodeArguments(ie.getThen().getInstructions(), jobName, jReport, args, defaultArgs);
                     }
                     if (ie.getElse() != null) {
-                        setNodeArguments(ie.getElse().getInstructions(), jobName, jReport, args);
+                        setNodeArguments(ie.getElse().getInstructions(), jobName, jReport, args, defaultArgs);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     if (tc.getTry() != null) {
-                        setNodeArguments(tc.getTry().getInstructions(), jobName, jReport, args);
+                        setNodeArguments(tc.getTry().getInstructions(), jobName, jReport, args, defaultArgs);
                     }
                     if (tc.getCatch() != null) {
-                        setNodeArguments(tc.getCatch().getInstructions(), jobName, jReport, args);
+                        setNodeArguments(tc.getCatch().getInstructions(), jobName, jReport, args, defaultArgs);
                     }
                     break;
                 case LOCK:
                     Lock l = inst.cast();
                     if (l.getLockedWorkflow() != null) {
-                        setNodeArguments(l.getLockedWorkflow().getInstructions(), jobName, jReport, args);
+                        setNodeArguments(l.getLockedWorkflow().getInstructions(), jobName, jReport, args, defaultArgs);
                     }
                     break;
                 case CYCLE:
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
-                        setNodeArguments(c.getCycleWorkflow().getInstructions(), jobName, jReport, args);
+                        setNodeArguments(c.getCycleWorkflow().getInstructions(), jobName, jReport, args, defaultArgs);
                     }
                     break;
                 case EXECUTE_NAMED:
                     NamedJob j = inst.cast();
                     if (j.getJobName().equals(jobName)) {
-                        setNodeArguments(jReport, j, args);
+                        setNodeArguments(jReport, j, args, defaultArgs);
+                    }
+                default:
+                    break;
+                }
+            }
+        }
+    }
+    
+    private static Environment getNodeArguments(List<Instruction> insts, String jobName) {
+        Environment args = new Environment();
+        readNodeArguments(insts, jobName, args);
+        return args;
+    }
+    
+    private static void readNodeArguments(List<Instruction> insts, String jobName, Environment args) {
+        if (insts != null) {
+            for (Instruction inst : insts) {
+                switch (inst.getTYPE()) {
+                case FORK:
+                    ForkJoin f = inst.cast();
+                    if (f.getBranches() != null) {
+                        for (Branch b : f.getBranches()) {
+                            readNodeArguments(b.getWorkflow().getInstructions(), jobName, args);
+                        }
+                    }
+                    break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    if (fl.getWorkflow() != null) {
+                        readNodeArguments(fl.getWorkflow().getInstructions(), jobName, args);
+                    }
+                    break;
+                case IF:
+                    IfElse ie = inst.cast();
+                    if (ie.getThen() != null) {
+                        readNodeArguments(ie.getThen().getInstructions(), jobName, args);
+                    }
+                    if (ie.getElse() != null) {
+                        readNodeArguments(ie.getElse().getInstructions(), jobName, args);
+                    }
+                    break;
+                case TRY:
+                    TryCatch tc = inst.cast();
+                    if (tc.getTry() != null) {
+                        readNodeArguments(tc.getTry().getInstructions(), jobName, args);
+                    }
+                    if (tc.getCatch() != null) {
+                        readNodeArguments(tc.getCatch().getInstructions(), jobName, args);
+                    }
+                    break;
+                case LOCK:
+                    Lock l = inst.cast();
+                    if (l.getLockedWorkflow() != null) {
+                        readNodeArguments(l.getLockedWorkflow().getInstructions(), jobName, args);
+                    }
+                    break;
+                case CYCLE:
+                    Cycle c = inst.cast();
+                    if (c.getCycleWorkflow() != null) {
+                        readNodeArguments(c.getCycleWorkflow().getInstructions(), jobName, args);
+                    }
+                    break;
+                case EXECUTE_NAMED:
+                    NamedJob j = inst.cast();
+                    if (j.getJobName().equals(jobName)) {
+                        readNodeArguments(j, args);
                     }
                 default:
                     break;
