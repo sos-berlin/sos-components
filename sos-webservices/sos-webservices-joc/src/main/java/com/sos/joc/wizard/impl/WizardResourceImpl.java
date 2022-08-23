@@ -243,7 +243,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                     }
                 }
 
-                job.setParams(params);
+                //job.setParams(params);
                 job.setArguments(params2);
             }
 

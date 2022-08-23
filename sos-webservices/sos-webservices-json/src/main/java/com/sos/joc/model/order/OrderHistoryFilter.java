@@ -18,7 +18,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "historyId"
+    "historyId",
+    "orderId"
 })
 public class OrderHistoryFilter {
 
@@ -26,7 +27,6 @@ public class OrderHistoryFilter {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -35,17 +35,23 @@ public class OrderHistoryFilter {
      * non negative long
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("historyId")
     private Long historyId;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderId")
+    private String orderId;
 
     /**
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -57,7 +63,6 @@ public class OrderHistoryFilter {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -69,7 +74,6 @@ public class OrderHistoryFilter {
      * non negative long
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("historyId")
@@ -81,7 +85,6 @@ public class OrderHistoryFilter {
      * non negative long
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("historyId")
@@ -89,14 +92,36 @@ public class OrderHistoryFilter {
         this.historyId = historyId;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderId")
+    public String getOrderId() {
+        return orderId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderId")
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("historyId", historyId).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("historyId", historyId).append("orderId", orderId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(historyId).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(orderId).append(historyId).toHashCode();
     }
 
     @Override
@@ -108,7 +133,7 @@ public class OrderHistoryFilter {
             return false;
         }
         OrderHistoryFilter rhs = ((OrderHistoryFilter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(historyId, rhs.historyId).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(orderId, rhs.orderId).append(historyId, rhs.historyId).isEquals();
     }
 
 }
