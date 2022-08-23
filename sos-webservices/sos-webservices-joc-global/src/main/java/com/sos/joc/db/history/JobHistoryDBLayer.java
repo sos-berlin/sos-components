@@ -147,6 +147,18 @@ public class JobHistoryDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public Long getHistoryId() throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            Query<Long> query = createQuery(new StringBuilder().append("select id from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(
+                    getOrdersWhere()).append(" order by startTime desc").toString());
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
     public List<DBItemHistoryOrder> getMainOrdersDeprecated() throws DBConnectionRefusedException, DBInvalidDataException {
         try {

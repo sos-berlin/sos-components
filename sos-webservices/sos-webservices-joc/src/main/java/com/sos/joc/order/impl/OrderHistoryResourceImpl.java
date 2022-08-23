@@ -1,6 +1,7 @@
 package com.sos.joc.order.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,7 +17,9 @@ import com.sos.joc.classes.history.HistoryMapper;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderState;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
+import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrderHistoryFilter;
 import com.sos.joc.model.order.OrderHistoryItemChildItem;
@@ -33,7 +36,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
         SOSHibernateSession session = null;
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validateFailFast(inBytes, OrderHistoryFilter.class);
+            JsonValidator.validate(inBytes, OrderHistoryFilter.class);
             OrderHistoryFilter in = Globals.objectMapper.readValue(inBytes, OrderHistoryFilter.class);
 
             JOCDefaultResponse response = initPermissions(in.getControllerId(), getControllerPermissions(in.getControllerId(), accessToken)
@@ -41,9 +44,25 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
             if (response != null) {
                 return response;
             }
-
+            
+            HistoryFilter dbFilter = null;
+            if (in.getHistoryId() == null) {
+                dbFilter = new HistoryFilter();
+                dbFilter.setControllerIds(Collections.singleton(in.getControllerId()));
+                dbFilter.setOrderId(in.getOrderId());
+            }
+            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-            JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session);
+            JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
+            
+            if (in.getHistoryId() == null) {
+                Long historyId = dbLayer.getHistoryId();
+                if (historyId == null) {
+                    throw new DBMissingDataException(String.format("Couldn't find order log for '%s'", in.getOrderId()));
+                } else {
+                    in.setHistoryId(historyId);
+                }
+            }
 
             OrderHistoryItemChildren answer = new OrderHistoryItemChildren();
             mapStates(answer, dbLayer.getOrderStates(in.getHistoryId()));
