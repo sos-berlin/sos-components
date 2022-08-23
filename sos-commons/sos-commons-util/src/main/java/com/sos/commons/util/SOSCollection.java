@@ -9,7 +9,7 @@ public class SOSCollection {
 
     /** usage :<br/>
      * ...stream().filter(SOSCollection.distinctByKey(MyObject::getId))....<br/>
-     * ...stream().filter(SOSCollection.distinctByKey(o->e.getChildObject().getId()))....<br/>
+     * ...stream().filter(SOSCollection.distinctByKey(o->o.getChildObject().getId()))....<br/>
      * 
      * @param <T>
      * @param function
