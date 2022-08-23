@@ -38,10 +38,13 @@ public class HistoryOrderStepBean extends AHistoryBean {
     private String errorText;
     private Long logId;
 
+    // currently only for warnings
+    private String firstChunkStdError;
+
+    private List<Integer> warnReturnCodes;
     private String warnIfLonger;
     private String warnIfShorter;
     private Long warnIfLongerAvgSeconds;
-    private List<Integer> warnReturnCodes;
 
     private String notification;
 
@@ -335,6 +338,14 @@ public class HistoryOrderStepBean extends AHistoryBean {
 
     public List<Integer> getWarnReturnCodes() {
         return warnReturnCodes;
+    }
+
+    public void setFirstChunkStdError(String val) {
+        firstChunkStdError = val;
+    }
+
+    public String getFirstChunkStdError() {
+        return firstChunkStdError;
     }
 
     public String getNotification() {

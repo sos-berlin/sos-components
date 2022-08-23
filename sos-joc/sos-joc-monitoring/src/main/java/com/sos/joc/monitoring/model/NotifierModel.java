@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSString;
 import com.sos.history.JobWarning;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
@@ -67,7 +68,7 @@ public class NotifierModel {
         }
     }
 
-    protected void notify(Configuration conf, ToNotify toNotifyPayloads, ToNotify toNotifyLongerThan) {
+    protected void notify(Configuration conf, ToNotify toNotifyPayloads, ToNotify toNotifyExtraStepsWarnings) {
         if (!conf.exists() || factory == null) {
             return;
         }
@@ -80,7 +81,7 @@ public class NotifierModel {
                 if (!closed.get()) {
                     notifySteps(conf, toNotifyPayloads.getSteps());
                     notifyOrders(conf, toNotifyPayloads.getErrorOrders(), toNotifyPayloads.getSuccessOrders());
-                    notifyStepsLongerThan(conf, toNotifyLongerThan.getSteps());
+                    notifyStepsWarnings(conf, toNotifyExtraStepsWarnings.getSteps());
                 }
             }
         };
@@ -95,7 +96,7 @@ public class NotifierModel {
         }
     }
 
-    private void notifyStepsLongerThan(Configuration conf, List<HistoryOrderStepResult> steps) {
+    private void notifyStepsWarnings(Configuration conf, List<HistoryOrderStepResult> steps) {
         for (HistoryOrderStepResult step : steps) {
             notifyStepWarning(conf, step);
         }
@@ -199,6 +200,7 @@ public class NotifierModel {
     private boolean notify(Configuration conf, NotifyAnalyzer analyzer, Notification notification, NotificationType type,
             Map<Long, DBItemMonitoringOrderStep> steps, HistoryOrderStepResultWarn warning) throws Exception {
 
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         DBItemMonitoringOrderStep os = analyzer.getOrderStep();
         Long recoveredId = null;
         JobWarning warn = JobWarning.NONE;
@@ -219,6 +221,10 @@ public class NotifierModel {
                 } else {
                     os = dbLayer.getMonitoringOrderStep(r.getStepId(), true);
                     if (os == null) {
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[notification id=%s][%s][skip][monitoringOrderStep not found]%s", notification
+                                    .getNotificationId(), ANotifier.getTypeAsString(type), r.getStepId()));
+                        }
                         return false;
                     }
                     steps.put((r.getStepId()), os);
@@ -226,11 +232,24 @@ public class NotifierModel {
             }
             break;
         case WARNING:
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[notification id=%s][%s][warning=%s]sentWarnings=%s", notification.getNotificationId(), ANotifier
+                        .getTypeAsString(type), SOSString.toString(warning), analyzer.getSentWarnings()));
+            }
+
             if (warning == null || warning.getReason() == null) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[notification id=%s][%s][skip]warning or warning reason is null", notification.getNotificationId(),
+                            ANotifier.getTypeAsString(type)));
+                }
                 return false;
             }
-            if (analyzer.getSendedWarnings() != null && analyzer.getSendedWarnings().containsKey(notification.getNotificationId())) {
-                if (analyzer.getSendedWarnings().get(notification.getNotificationId()).contains(warning.getReason())) {
+            if (analyzer.getSentWarnings() != null && analyzer.getSentWarnings().containsKey(notification.getNotificationId())) {
+                if (analyzer.getSentWarnings().get(notification.getNotificationId()).contains(warning.getReason())) {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[notification id=%s][%s %s][skip][already sent]%s", notification.getNotificationId(), ANotifier
+                                .getTypeAsString(type), warning.getReason(), analyzer.getSentWarnings()));
+                    }
                     return false;
                 }
             }

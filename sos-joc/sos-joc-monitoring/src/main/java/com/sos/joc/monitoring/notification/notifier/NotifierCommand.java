@@ -87,7 +87,7 @@ public class NotifierCommand extends ANotifier {
         getTableFields().entrySet().forEach(e -> {
             // if (!e.getKey().endsWith("_PARAMETERS")) {
             String val = e.getValue();
-            if (e.getKey().endsWith("ERROR_TEXT")) {// TITLE? ....
+            if (e.getKey().endsWith("ERROR_TEXT") || e.getKey().endsWith("WARN_TEXT")) {// TITLE? ....
                 val = escape(val);
             }
             map.put(PREFIX_ENV_VAR + "_" + e.getKey(), nl2sp(val));

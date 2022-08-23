@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum JobWarning {
 
-    NONE(0), LONGER_THAN(1), SHORTER_THAN(2), RETURN_CODE(3);
+    NONE(0), LONGER_THAN(1), SHORTER_THAN(2), RETURN_CODE(3), STDERR(4);
 
     private final Integer intValue;
     private final static Map<String, JobWarning> CONSTANTS = new HashMap<String, JobWarning>();
