@@ -31,9 +31,9 @@ import com.sos.joc.jobtemplates.impl.JobTemplatesResourceImpl;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseFolder;
-import com.sos.joc.model.jobtemplate.propagate.FolderPropagateFilter;
 import com.sos.joc.model.jobtemplate.propagate.JobReportStateText;
 import com.sos.joc.model.jobtemplate.propagate.Report;
+import com.sos.joc.model.jobtemplate.propagate.WorkflowPropagateFilter;
 import com.sos.joc.model.jobtemplate.propagate.WorkflowReport;
 import com.sos.schema.JsonValidator;
 
@@ -44,8 +44,8 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
     public JOCDefaultResponse update(final String accessToken, final byte[] inBytes) {
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validateFailFast(inBytes, FolderPropagateFilter.class);
-            FolderPropagateFilter in = Globals.objectMapper.readValue(inBytes, FolderPropagateFilter.class);
+            JsonValidator.validateFailFast(inBytes, WorkflowPropagateFilter.class);
+            WorkflowPropagateFilter in = Globals.objectMapper.readValue(inBytes, WorkflowPropagateFilter.class);
 
             in.setFolder(normalizeFolder(in.getFolder()));
             boolean permission = getJocPermissions(accessToken).getInventory().getManage();
@@ -62,14 +62,20 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
         }
     }
 
-    private Report update(FolderPropagateFilter in) throws Exception {
+    private Report update(WorkflowPropagateFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-
-            List<DBItemInventoryConfiguration> dbWorkflows = dbLayer.getUsedWorkflowsByJobTemplateNames(in.getFolder(), in
-                    .getRecursive() == Boolean.TRUE, null);
+            
+            List<DBItemInventoryConfiguration> dbWorkflows = null;
+            if (in.getWorkflowPaths() != null && !in.getWorkflowPaths().isEmpty()) {
+                List<String> workflowNames = in.getWorkflowPaths().stream().map(p -> JocInventory.pathToName(p)).distinct().collect(Collectors.toList());
+                dbWorkflows = dbLayer.getConfigurationByNames(workflowNames, ConfigurationType.WORKFLOW.intValue());
+            } else {
+                dbWorkflows = dbLayer.getUsedWorkflowsByJobTemplateNames(in.getFolder(), in.getRecursive() == Boolean.TRUE, null);
+            }
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
             JobTemplatesPropagate propagate = new JobTemplatesPropagate(in, permittedFolders);
@@ -103,23 +109,28 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
                     }
                     report.getWorkflows().add(propagate.template2Job(dbWorkflow, workflow, jobTemplates, dbLayer, now, dbAuditLog));
                 }
+            }
+            Globals.commit(session);
+            if (dbWorkflows != null && !dbWorkflows.isEmpty()) {
                 // post events
                 if (!report.getWorkflows().isEmpty()) {
-                    report.getWorkflows().stream().filter(JobTemplatesPropagate.workflowIsChanged).map(WorkflowReport::getPath).map(
-                            path -> getParent(path)).distinct().forEach(folder -> JocInventory.postEvent(folder));
+                    report.getWorkflows().stream().filter(JobTemplatesPropagate.workflowIsChanged).map(WorkflowReport::getPath).map(path -> getParent(
+                            path)).distinct().forEach(folder -> JocInventory.postEvent(folder));
                 }
             }
+            
             return report;
         } catch (Throwable e) {
+            Globals.rollback(session);
             throw e;
         } finally {
             Globals.disconnect(session);
         }
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final FolderPropagateFilter in, boolean permission) throws Exception {
+    private JOCDefaultResponse checkPermissions(final String accessToken, final WorkflowPropagateFilter in, boolean permission) throws Exception {
         JOCDefaultResponse response = initPermissions(null, permission);
-        if (response == null) {
+        if (response == null && in.getFolder() != null) {
             // for in.getRecursive() == TRUE: folder permissions are checked later
             if (JocInventory.ROOT_FOLDER.equals(in.getFolder())) {
                 if (in.getRecursive() != Boolean.TRUE && !folderPermissions.isPermittedForFolder(in.getFolder())) {
