@@ -125,13 +125,16 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
                             .filter(Objects::nonNull).collect(Collectors.toMap(JobTemplate::getName, Function.identity()));
                     report.getWorkflows().add(propagate.template2Job(dbWorkflow, jobTemplates, dbLayer, now, dbAuditLog));
                 }
-                // post events
-                if (!report.getWorkflows().isEmpty()) {
-                    report.getWorkflows().stream().filter(JobTemplatesPropagate.workflowIsChanged).map(WorkflowReport::getPath).map(
-                            path -> getParent(path)).distinct().forEach(folder -> JocInventory.postEvent(folder));
-                }
             }
             Globals.commit(session);
+            
+            if (!jobTemplateNamesPerWorkflowName.isEmpty()) {
+                // post events
+                if (!report.getWorkflows().isEmpty()) {
+                    report.getWorkflows().stream().filter(JobTemplatesPropagate.workflowIsChanged).map(WorkflowReport::getPath).map(path -> getParent(
+                            path)).distinct().forEach(folder -> JocInventory.postEvent(folder));
+                }
+            }
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(report));
         } catch (JocException e) {
