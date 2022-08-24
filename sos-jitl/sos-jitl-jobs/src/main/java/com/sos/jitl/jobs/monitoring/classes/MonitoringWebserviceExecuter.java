@@ -79,9 +79,9 @@ public class MonitoringWebserviceExecuter {
         return permanentStatus.getController();
     }
 
-    private Controllers getPermanentControllersStatus(String body, String accessToken, String controllerId) throws Exception {
+    private Controllers getVolatileControllersStatus(String body, String accessToken, String controllerId) throws Exception {
 
-        ApiResponse apiResponse = apiExecutor.post(accessToken, "/joc/api/controllers/p", body);
+        ApiResponse apiResponse = apiExecutor.post(accessToken, "/joc/api/controllers", body);
         String answer = null;
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
@@ -141,7 +141,7 @@ public class MonitoringWebserviceExecuter {
 
         JobSchedulerP permanentStatus = getPermanentControllerStatus(body, accessToken, controllerId);
         Controller volatileStatus = getVolatileControllerStatus(body, accessToken, controllerId);
-        Controllers controllers = getPermanentControllersStatus(body, accessToken, controllerId);
+        Controllers controllers = getVolatileControllersStatus(body, accessToken, controllerId);
 
         MonitoringControllerStatus monitoringControllerStatus = new MonitoringControllerStatus();
         monitoringControllerStatus.setVolatileStatus(volatileStatus);
@@ -153,13 +153,9 @@ public class MonitoringWebserviceExecuter {
                 if ((volatileStatus.getClusterNodeState() == null) || (volatileStatus.getClusterNodeState()
                         .get_text() == ClusterNodeStateText.active)) {
                     monitoringControllerStatus.setActive(controller);
-                } else {
-                    monitoringControllerStatus.setPassive(controller);
                 }
             } else {
-                if (volatileStatus.getClusterNodeState().get_text() == ClusterNodeStateText.active) {
-                    monitoringControllerStatus.setActive(controller);
-                } else {
+                if ((controller.getClusterNodeState() != null) && (controller.getClusterNodeState().get_text() == ClusterNodeStateText.inactive)) {
                     monitoringControllerStatus.setPassive(controller);
                 }
             }
