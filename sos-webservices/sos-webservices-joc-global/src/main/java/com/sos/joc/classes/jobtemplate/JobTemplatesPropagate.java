@@ -1,12 +1,14 @@
 package com.sos.joc.classes.jobtemplate;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -99,7 +101,13 @@ public class JobTemplatesPropagate {
     public WorkflowReport template2Job(DBItemInventoryConfiguration dbWorkflow, Workflow workflow, Map<String, JobTemplate> jobTemplates,
             InventoryDBLayer dbLayer, Date now, DBItemJocAuditLog dbAuditLog) throws JsonParseException, JsonMappingException, IOException,
             SOSHibernateException {
-        WorkflowReport report = template2Job(dbWorkflow.getPath(), workflow, jobTemplates);
+        return template2Job(dbWorkflow, workflow, jobTemplates, null, dbLayer, now, dbAuditLog);
+    }
+    
+    public WorkflowReport template2Job(DBItemInventoryConfiguration dbWorkflow, Workflow workflow, Map<String, JobTemplate> jobTemplates,
+            Set<String> jobNames, InventoryDBLayer dbLayer, Date now, DBItemJocAuditLog dbAuditLog) throws JsonParseException, JsonMappingException,
+            IOException, SOSHibernateException {
+        WorkflowReport report = template2Job(dbWorkflow.getPath(), workflow, jobTemplates, jobNames);
         if (workflowIsChanged.test(report)) {
             validate(dbWorkflow, workflow, dbLayer);
             dbWorkflow.setDeployed(false);
@@ -117,7 +125,7 @@ public class JobTemplatesPropagate {
         return template2Job(dbWorkflow, workflow, jobTemplates, dbLayer, now, dbAuditLog);
     }
     
-    private WorkflowReport template2Job(String workflowPath, Workflow w, Map<String, JobTemplate> jobTemplates)
+    private WorkflowReport template2Job(String workflowPath, Workflow w, Map<String, JobTemplate> jobTemplates, Set<String> jobNames)
             throws JsonParseException, JsonMappingException, IOException {
         WorkflowReport wReport = new WorkflowReport();
         wReport.setPath(workflowPath);
@@ -131,7 +139,7 @@ public class JobTemplatesPropagate {
         for (Map.Entry<String, Job> job : w.getJobs().getAdditionalProperties().entrySet()) {
             JobReport jReport = new JobReport();
             
-            if (checkTemplateReference(jobTemplates, job.getKey(), job.getValue(), jReport)) {
+            if (checkTemplateReference(jobTemplates, jobNames, job.getKey(), job.getValue(), jReport)) {
                 JobTemplate jt = jobTemplates.get(job.getValue().getJobTemplate().getName());
                 template2Job(jReport, jt, job.getKey(), job.getValue(), w);
             }
@@ -174,105 +182,101 @@ public class JobTemplatesPropagate {
         }
     }
     
+    private static <T> boolean isNotEqual(T o1, T o2) {
+        Optional<T> opt1 = o1 == null ? Optional.empty() : Optional.of(o1);
+        Optional<T> opt2 = o2 == null ? Optional.empty() : Optional.of(o2);
+        return !opt1.equals(opt2);
+    }
+    
     private void template2Job(JobTemplate jt, Job j, JobReport jReport, Environment arguments) {
-//        Actions actions = jReport.getActions();
-//        if (actions.getChanges() == null) {
-//            actions.setChanges(new ArrayList<String>());
-//        }
+        Actions actions = jReport.getActions();
+        if (actions.getChanges() == null) {
+            actions.setChanges(new ArrayList<String>());
+        }
         if (withAdmissionTime) {
-//            if ((j.getAdmissionTimeScheme() != null && !j.getAdmissionTimeScheme().equals(jt.getAdmissionTimeScheme())) || (j
-//                    .getAdmissionTimeScheme() == null && jt.getAdmissionTimeScheme() != null)) {
-//                actions.getChanges().add("admissionTimeScheme");
-//            }
+            if (isNotEqual(j.getAdmissionTimeScheme(), jt.getAdmissionTimeScheme())) {
+                actions.getChanges().add("admissionTimeScheme");
+            }
             j.setAdmissionTimeScheme(jt.getAdmissionTimeScheme());
             
-//            if ((j.getSkipIfNoAdmissionForOrderDay() != null && !j.getSkipIfNoAdmissionForOrderDay().equals(jt.getSkipIfNoAdmissionForOrderDay()))
-//                    || (j.getSkipIfNoAdmissionForOrderDay() == null && jt.getSkipIfNoAdmissionForOrderDay() != null)) {
+//            if (isNotEqual(j.getSkipIfNoAdmissionForOrderDay(), jt.getSkipIfNoAdmissionForOrderDay())) {
 //                actions.getChanges().add("skipIfNoAdmissionForOrderDay");
 //            }
-            j.setSkipIfNoAdmissionForOrderDay(jt.getSkipIfNoAdmissionForOrderDay());
+//            //never updated j.setSkipIfNoAdmissionForOrderDay(jt.getSkipIfNoAdmissionForOrderDay());
         }
         if (withNotification) {
-//            if ((j.getNotification() != null && !j.getNotification().equals(jt.getNotification()))
-//                    || (j.getNotification() == null && jt.getNotification() != null)) {
-//                actions.getChanges().add("notification");
-//            }
+            if (isNotEqual(j.getNotification(), jt.getNotification())) {
+                actions.getChanges().add("notification");
+            }
             j.setNotification(jt.getNotification());
         }
         
-//        if ((j.getCriticality() != null && !j.getCriticality().equals(jt.getCriticality()))
-//                || (j.getCriticality() == null && jt.getCriticality() != null)) {
-//            actions.getChanges().add("criticality");
-//        }
+        if (isNotEqual(j.getCriticality(), jt.getCriticality())) {
+            actions.getChanges().add("criticality");
+        }
         j.setCriticality(jt.getCriticality());
         //j.setDefaultArguments(jt.getDefaultArguments());
         
-//        if ((j.getDocumentationName() != null && !j.getDocumentationName().equals(jt.getDocumentationName()))
-//                || (j.getDocumentationName() == null && jt.getDocumentationName() != null)) {
-//            actions.getChanges().add("documentationName");
-//        }
+        if (isNotEqual(j.getDocumentationName(), jt.getDocumentationName())) {
+            actions.getChanges().add("documentationName");
+        }
         j.setDocumentationName(jt.getDocumentationName());
         
-//        if ((j.getFailOnErrWritten() != null && !j.getFailOnErrWritten().equals(jt.getFailOnErrWritten()))
-//                || (j.getFailOnErrWritten() == null && jt.getFailOnErrWritten() != null)) {
-//            actions.getChanges().add("failOnErrWritten");
-//        }
+        if (isNotEqual(j.getFailOnErrWritten(), jt.getFailOnErrWritten())) {
+            actions.getChanges().add("failOnErrWritten");
+        }
         j.setFailOnErrWritten(jt.getFailOnErrWritten());
         
-//        if ((j.getWarnOnErrWritten() != null && !j.getWarnOnErrWritten().equals(jt.getWarnOnErrWritten()))
-//                || (j.getWarnOnErrWritten() == null && jt.getWarnOnErrWritten() != null)) {
-//            actions.getChanges().add("warnOnErrWritten");
-//        }
+        if (isNotEqual(j.getWarnOnErrWritten(), jt.getWarnOnErrWritten())) {
+            actions.getChanges().add("warnOnErrWritten");
+        }
         j.setWarnOnErrWritten(jt.getWarnOnErrWritten());
         
-//        if ((j.getGraceTimeout() != null && !j.getGraceTimeout().equals(jt.getGraceTimeout()))
-//                || (j.getGraceTimeout() == null && jt.getGraceTimeout() != null)) {
-//            actions.getChanges().add("graceTimeout");
-//        }
+        if (isNotEqual(j.getGraceTimeout(), jt.getGraceTimeout())) {
+            actions.getChanges().add("graceTimeout");
+        }
         j.setGraceTimeout(jt.getGraceTimeout());
         
-//        if ((j.getJobResourceNames() != null && !j.getJobResourceNames().equals(jt.getJobResourceNames()))
-//                || (j.getJobResourceNames() == null && jt.getJobResourceNames() != null)) {
-//            actions.getChanges().add("jobResourceNames");
-//        }
+        if (isNotEqual(j.getJobResourceNames(), jt.getJobResourceNames())) {
+            actions.getChanges().add("jobResourceNames");
+        }
         j.setJobResourceNames(jt.getJobResourceNames());
         
         j.getJobTemplate().setHash(jt.getHash());
         
-//        if ((j.getParallelism() != null && !j.getParallelism().equals(jt.getParallelism()))
-//                || (j.getParallelism() == null && jt.getParallelism() != null)) {
-//            actions.getChanges().add("parallelism");
-//        }
+        if (isNotEqual(j.getParallelism(), jt.getParallelism())) {
+            actions.getChanges().add("parallelism");
+        }
         j.setParallelism(jt.getParallelism());
         
-//        if ((j.getTimeout() != null && !j.getTimeout().equals(jt.getTimeout()))
-//                || (j.getTimeout() == null && jt.getTimeout() != null)) {
-//            actions.getChanges().add("timeout");
-//        }
+        if (isNotEqual(j.getTimeout(), jt.getTimeout())) {
+            actions.getChanges().add("timeout");
+        }
         j.setTimeout(jt.getTimeout());
         
-//        if ((j.getTitle() != null && !j.getTitle().equals(jt.getTitle()))
-//                || (j.getTitle() == null && jt.getTitle() != null)) {
-//            actions.getChanges().add("title");
-//        }
+        if (isNotEqual(j.getTitle(), jt.getTitle())) {
+            actions.getChanges().add("title");
+        }
         j.setTitle(jt.getTitle());
         
-//        if ((j.getWarnIfLonger() != null && !j.getWarnIfLonger().equals(jt.getWarnIfLonger()))
-//                || (j.getWarnIfLonger() == null && jt.getWarnIfLonger() != null)) {
-//            actions.getChanges().add("warnIfLonger");
-//        }
+        if (isNotEqual(j.getWarnIfLonger(), jt.getWarnIfLonger())) {
+            actions.getChanges().add("warnIfLonger");
+        }
         j.setWarnIfLonger(jt.getWarnIfLonger());
         
-//        if ((j.getWarnIfShorter() != null && !j.getWarnIfShorter().equals(jt.getWarnIfShorter()))
-//                || (j.getWarnIfShorter() == null && jt.getWarnIfShorter() != null)) {
-//            actions.getChanges().add("warnIfShorter");
-//        }
+        if (isNotEqual(j.getWarnIfShorter(), jt.getWarnIfShorter())) {
+            actions.getChanges().add("warnIfShorter");
+        }
         j.setWarnIfShorter(jt.getWarnIfShorter());
         
         setExecutable(jReport, j, jt, arguments);
     }
     
-    private boolean checkTemplateReference(Map<String, JobTemplate> jobTemplates, String jobName, Job job, JobReport jReport) {
+    private boolean checkTemplateReference(Map<String, JobTemplate> jobTemplates, Set<String> jobNames, String jobName, Job job, JobReport jReport) {
+        if (jobNames != null && !jobNames.contains(jobName)) {
+            jReport.setState(getState(JobReportStateText.SKIPPED, String.format("Updating Job '%s' is not requested", jobName)));
+            return false;
+        }
         JobTemplateRef jtRef = job.getJobTemplate();
         if (jtRef == null || jtRef.getName() == null || jtRef.getName().isEmpty()) {
             job.setJobTemplate(null);
@@ -313,6 +317,11 @@ public class JobTemplatesPropagate {
     }
     
     private static void setExecutable(JobReport jReport, Job j, JobTemplate jt, Environment arguments) {
+        Actions actions = jReport.getActions();
+        if (actions.getChanges() == null) {
+            actions.setChanges(new ArrayList<String>());
+        }
+        
         switch (jt.getExecutable().getTYPE()) {
         case InternalExecutable:
             
@@ -323,6 +332,10 @@ public class JobTemplatesPropagate {
             }
             ExecutableJava jtE = jt.getExecutable().cast();
             
+            if (isNotEqual(e.getClassName(), jtE.getClassName()) || isNotEqual(e.getJobArguments(), jtE.getJobArguments()) || isNotEqual(e
+                    .getReturnCodeMeaning(), jtE.getReturnCodeMeaning())) {
+                actions.getChanges().add("executable");
+            }
             e.setClassName(jtE.getClassName());
             e.setJobArguments(jtE.getJobArguments());
             e.setReturnCodeMeaning(jtE.getReturnCodeMeaning());
@@ -339,6 +352,9 @@ public class JobTemplatesPropagate {
             break;
         case ScriptExecutable:
         case ShellScriptExecutable:
+            if (isNotEqual(j.getExecutable(), jt.getExecutable())) {
+                actions.getChanges().add("executable");
+            }
             j.setExecutable(jt.getExecutable());
             break;
         }
