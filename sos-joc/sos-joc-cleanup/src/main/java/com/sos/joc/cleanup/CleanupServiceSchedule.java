@@ -1,7 +1,5 @@
 package com.sos.joc.cleanup;
 
-import java.nio.file.Path;
-import java.sql.Connection;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -24,16 +22,15 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.Globals;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.Period;
 import com.sos.joc.cleanup.db.DBLayerCleanup;
 import com.sos.joc.cleanup.exception.CleanupComputeException;
 import com.sos.joc.cluster.JocCluster;
-import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
-import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocVariable;
 
 public class CleanupServiceSchedule {
@@ -41,15 +38,12 @@ public class CleanupServiceSchedule {
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupServiceSchedule.class);
 
     private static final String DELIMITER = "->";
-    private static final int FACTORY_MAX_POOL_SIZE = 10;// 5;
     /** seconds */
     private static final int MAX_AWAIT_TERMINATION_TIMEOUT_ON_PERIOD_REACHED = 5 * 60;
 
     private final CleanupService service;
     private final CleanupServiceTask task;
-    private final DBLayerCleanup dbLayer;
 
-    private JocClusterHibernateFactory factory;
     private ScheduledExecutorService threadPool = null;
     private ScheduledFuture<JocClusterAnswer> resultFuture = null;
     private DBItemJocVariable item = null;
@@ -61,13 +55,9 @@ public class CleanupServiceSchedule {
     public CleanupServiceSchedule(CleanupService service) {
         this.service = service;
         this.task = new CleanupServiceTask(this);
-        this.dbLayer = new DBLayerCleanup(service.getIdentifier());
     }
 
     public void start(StartupMode mode) throws Exception {
-        if (factory == null) {
-            createFactory(service.getConfig().getHibernateConfiguration());
-        }
         task.setStartMode(mode);
         try {
             LOGGER.info("[start]" + mode);
@@ -114,10 +104,12 @@ public class CleanupServiceSchedule {
         CleanupService.setServiceLogger();
 
         unclompleted = null;
+
+        DBLayerCleanup dbLayer = new DBLayerCleanup(service.getIdentifier());
         try {
-            dbLayer.setSession(getFactory().openStatelessSession(service.getIdentifier()));
+            dbLayer.setSession(Globals.createSosHibernateStatelessConnection(service.getIdentifier()));
             if (mode.equals(StartupMode.manual_restart) || mode.equals(StartupMode.settings_changed)) {
-                deleteJocVariable(mode);
+                deleteJocVariable(dbLayer, mode);
             } else {
                 item = dbLayer.getVariable(service.getIdentifier());
             }
@@ -140,9 +132,9 @@ public class CleanupServiceSchedule {
                 String[] arr = item.getTextValue().split(DELIMITER);
                 if (arr.length > 3) {
                     storedPeriod = parsePeriodFromDb(arr[0].trim());
-                    storedNextBegin = parseDateFromDb(mode, arr[1].trim());
-                    storedNextEnd = parseDateFromDb(mode, arr[2].trim());
-                    storedFirstStart = parseDateFromDb(mode, arr[3].trim());
+                    storedNextBegin = parseDateFromDb(dbLayer, mode, arr[1].trim());
+                    storedNextEnd = parseDateFromDb(dbLayer, mode, arr[2].trim());
+                    storedFirstStart = parseDateFromDb(dbLayer, mode, arr[3].trim());
 
                     LOGGER.info(String.format("[computeNextDelay][stored=%s][storedPeriod=%s]", item.getTextValue(), storedPeriod));
 
@@ -362,9 +354,9 @@ public class CleanupServiceSchedule {
                     end = nextEnd;
                 }
                 if (item == null) {
-                    insertJocVariable();
+                    insertJocVariable(dbLayer);
                 } else {
-                    updateJocVariable(item);
+                    updateJocVariable(dbLayer, item);
                 }
                 return now.until(start, ChronoUnit.NANOS);
             }
@@ -385,12 +377,12 @@ public class CleanupServiceSchedule {
         return service.getConfig().getPeriod();
     }
 
-    private ZonedDateTime parseDateFromDb(StartupMode mode, String date) {
+    private ZonedDateTime parseDateFromDb(DBLayerCleanup dbLayer, StartupMode mode, String date) {
         try {
             return ZonedDateTime.parse(date, DateTimeFormatter.ISO_ZONED_DATE_TIME);
         } catch (Throwable e) {
             try {
-                deleteJocVariable(mode);
+                deleteJocVariable(dbLayer, mode);
             } catch (Exception e1) {
                 LOGGER.error(String.format("[%s]%s", date, e.toString()), e);
             }
@@ -435,18 +427,17 @@ public class CleanupServiceSchedule {
         task.setStartMode(mode);
 
         closeTasks();
-        closeFactory();
     }
 
-    private void deleteJocVariable(StartupMode mode) throws Exception {
-        // if (item == null) {
-        // return;
-        // }
+    private void deleteJocVariable(DBLayerCleanup dbLayer, StartupMode mode) throws Exception {
         try {
-            dbLayer.beginTransaction();
-            dbLayer.deleteVariable(service.getIdentifier());
-            dbLayer.commit();
-            LOGGER.info("[deleted]because " + mode);
+            DBItemJocVariable jv = dbLayer.getVariable(service.getIdentifier());
+            if (jv != null) {
+                dbLayer.beginTransaction();
+                dbLayer.getSession().delete(jv);
+                dbLayer.commit();
+                LOGGER.info("[deleted]because " + mode);
+            }
             item = null;
         } catch (Exception e) {
             dbLayer.rollback();
@@ -454,11 +445,11 @@ public class CleanupServiceSchedule {
         }
     }
 
-    private DBItemJocVariable insertJocVariable() throws Exception {
-        return insertJocVariable(getInitialValue().toString());
+    private DBItemJocVariable insertJocVariable(DBLayerCleanup dbLayer) throws Exception {
+        return insertJocVariable(dbLayer, getInitialValue().toString());
     }
 
-    private DBItemJocVariable insertJocVariable(String value) throws Exception {
+    private DBItemJocVariable insertJocVariable(DBLayerCleanup dbLayer, String value) throws Exception {
         try {
             dbLayer.beginTransaction();
             DBItemJocVariable item = dbLayer.insertVariable(service.getIdentifier(), value);
@@ -471,7 +462,7 @@ public class CleanupServiceSchedule {
         }
     }
 
-    private DBItemJocVariable updateJocVariable(DBItemJocVariable item) throws Exception {
+    private DBItemJocVariable updateJocVariable(DBLayerCleanup dbLayer, DBItemJocVariable item) throws Exception {
         try {
             dbLayer.beginTransaction();
             item.setTextValue(getInitialValue().toString());
@@ -496,13 +487,14 @@ public class CleanupServiceSchedule {
             state.append("=").append(answer.getMessage());
         }
 
+        DBLayerCleanup dbLayer = new DBLayerCleanup(service.getIdentifier());
         try {
-            dbLayer.setSession(factory.openStatelessSession(service.getIdentifier()));
+            dbLayer.setSession(Globals.createSosHibernateStatelessConnection(service.getIdentifier()));
             String val = getInitialValue().append(DELIMITER).append(state).toString();
             if (item == null) {
                 item = dbLayer.getVariable(service.getIdentifier());
                 if (item == null) {
-                    item = insertJocVariable(val);
+                    item = insertJocVariable(dbLayer, val);
                     val = null;
                 }
             }
@@ -536,29 +528,6 @@ public class CleanupServiceSchedule {
     private StringBuilder getInitialValue() {
         return new StringBuilder(service.getConfig().getPeriod().getConfigured()).append(DELIMITER).append(start.toString()).append(DELIMITER).append(
                 end.toString()).append(DELIMITER).append(firstStart.toString());
-    }
-
-    public JocClusterHibernateFactory getFactory() {
-        return factory;
-    }
-
-    private void createFactory(Path configFile) throws Exception {
-        factory = new JocClusterHibernateFactory(configFile, 1, FACTORY_MAX_POOL_SIZE);
-        factory.setIdentifier(service.getIdentifier());
-        factory.setAutoCommit(false);
-        factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-        factory.addClassMapping(DBLayer.getJocClassMapping());
-
-        factory.build();
-    }
-
-    private void closeFactory() {
-        CleanupService.setServiceLogger();
-        if (factory != null) {
-            factory.close();
-            factory = null;
-        }
-        LOGGER.info(String.format("[%s]database factory closed", service.getIdentifier()));
     }
 
 }

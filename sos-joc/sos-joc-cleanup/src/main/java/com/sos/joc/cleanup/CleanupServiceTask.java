@@ -1,5 +1,7 @@
 package com.sos.joc.cleanup;
 
+import java.nio.file.Path;
+import java.sql.Connection;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,6 +37,7 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
 public class CleanupServiceTask implements Callable<JocClusterAnswer> {
@@ -56,6 +59,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
     private final String identifier;
     private final String logIdentifier;
 
+    private JocClusterHibernateFactory factory = null;
     private List<ICleanupTask> cleanupTasks = null;
     private StartupMode startMode = StartupMode.unknown;
     private int batchSize;
@@ -79,9 +83,15 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             List<IJocClusterService> services = cluster.getHandler().getServices();
             LOGGER.info(String.format("[%s][run]found %s running services", logIdentifier, services.size()));
 
+            try {
+                createFactory(cleanupSchedule.getService().getConfig().getHibernateConfiguration(), 5);
+            } catch (Exception e) {
+                LOGGER.error(String.format("[%s][createFactory]%s", logIdentifier, e.toString()), e);
+                return JocCluster.getErrorAnswer(e);
+            }
             batchSize = cleanupSchedule.getService().getConfig().getBatchSize();
             try {
-                if (batchSize > MAX_BATCH_SIZE_ORACLE && Dbms.ORACLE.equals(cleanupSchedule.getFactory().getDbms())) {
+                if (batchSize > MAX_BATCH_SIZE_ORACLE && Dbms.ORACLE.equals(factory.getDbms())) {
                     LOGGER.info(String.format("[%s][run][configured batch_size=%s][skip]use max batch_size=%s for oracle", logIdentifier, batchSize,
                             MAX_BATCH_SIZE_ORACLE));
 
@@ -118,7 +128,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                             if (orderDatetime.getDatetime() == null && orderLogsDatetime.getDatetime() == null) {
                                 disabled = true;
                             } else {
-                                task = new CleanupTaskHistory(cleanupSchedule.getFactory(), service, batchSize);
+                                task = new CleanupTaskHistory(factory, service, batchSize);
                                 datetimes.add(orderDatetime);
                                 datetimes.add(orderLogsDatetime);
 
@@ -129,7 +139,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                             if (datetime.getDatetime() == null) {
                                 disabled = true;
                             } else {
-                                task = new CleanupTaskDailyPlan(cleanupSchedule.getFactory(), service, batchSize);
+                                task = new CleanupTaskDailyPlan(factory, service, batchSize);
                                 datetimes.add(datetime);
                             }
                         } else if (service.getIdentifier().equals(ClusterServices.monitor.name())) {
@@ -140,7 +150,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                             if (monitoringDatetime.getDatetime() == null && notificationDatetime.getDatetime() == null) {
                                 disabled = true;
                             } else {
-                                task = new CleanupTaskMonitoring(cleanupSchedule.getFactory(), service, batchSize);
+                                task = new CleanupTaskMonitoring(factory, service, batchSize);
                                 datetimes.add(monitoringDatetime);
                                 datetimes.add(notificationDatetime);
                             }
@@ -165,7 +175,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             }
 
             // 2) manual tasks
-            List<ICleanupTask> manualTasks = getManualCleanupTasks(cleanupSchedule.getFactory(), batchSize);
+            List<ICleanupTask> manualTasks = getManualCleanupTasks(factory, batchSize);
             LOGGER.info(String.format("[%s][run]found %s manual tasks", logIdentifier, manualTasks.size()));
             for (ICleanupTask manualTask : manualTasks) {
                 LOGGER.info("  [manual]" + manualTask.getIdentifier());
@@ -348,6 +358,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         }
         JocClusterAnswer answer = getAnswer();
 
+        closeFactory();
         cleanupTasks = new ArrayList<>();
         schedule.getService().setLastActivityEnd(new Date().getTime());
         return answer;
@@ -378,6 +389,29 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
     private int getMaxAwaitTimeout() {
         return startMode.equals(StartupMode.automatic) ? MAX_AWAIT_TERMINATION_TIMEOUT_ON_START_MODE_AUTOMATIC : MAX_AWAIT_TERMINATION_TIMEOUT;
+    }
+
+    private void createFactory(Path configFile, int maxPoolSize) throws Exception {
+        if (factory != null) {
+            factory.close();
+        }
+
+        factory = new JocClusterHibernateFactory(configFile, 1, maxPoolSize);
+        factory.setIdentifier(logIdentifier);
+        factory.setAutoCommit(false);
+        factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+        factory.addClassMapping(DBLayer.getJocClassMapping());
+
+        factory.build();
+    }
+
+    private void closeFactory() {
+        CleanupService.setServiceLogger();
+        if (factory != null) {
+            factory.close();
+            factory = null;
+        }
+        LOGGER.info(String.format("[%s]database factory closed", logIdentifier));
     }
 
     public class TaskDateTime {

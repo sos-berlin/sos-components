@@ -37,29 +37,12 @@ public class DBLayerCleanup extends DBLayer {
         return item;
     }
 
-    public int deleteVariable(String name) throws SOSHibernateException {
-        String hql = String.format("delete from %s where name = :name", DBLayer.DBITEM_JOC_VARIABLES);
-        Query<DBItemJocVariable> query = getSession().createQuery(hql);
-        query.setParameter("name", name);
-        return getSession().executeUpdate(query);
-    }
-
     public DBItemJocVariable insertVariable(String name, String val) throws SOSHibernateException {
         DBItemJocVariable item = new DBItemJocVariable();
         item.setName(name);
         item.setTextValue(String.valueOf(val));
         getSession().save(item);
         return item;
-    }
-
-    public int updateVariable(String name, String value) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_JOC_VARIABLES).append(" ");
-        hql.append("set textValue=:textValue ");
-        hql.append("where name=:name");
-        Query<DBItemJocVariable> query = getSession().createQuery(hql.toString());
-        query.setParameter("textValue", value);
-        query.setParameter("name", name);
-        return getSession().executeUpdate(query);
     }
 
     // TODO duplicate method - see com.sos.js7.history.db.DBLayerHistory
