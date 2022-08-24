@@ -155,6 +155,7 @@ public class JobTemplatesPropagate {
         
         jReport.setState(getState(JobReportStateText.CHANGED));
         jReport.setJobTemplatePath(jt.getPath());
+        jReport.setActions(new Actions());
         template2Job(jt, job, jReport, env);
         switch (jt.getExecutable().getTYPE()) {
         case InternalExecutable:
@@ -164,28 +165,108 @@ public class JobTemplatesPropagate {
             setNodeArguments(w.getInstructions(), jobName, jReport, jt.getArguments(), env);
             break;
         }
+        Actions actions = jReport.getActions();
+        if (actions.getChanges() != null && actions.getChanges().isEmpty()) {
+            actions.setChanges(null);
+        }
+        if (actions.getChanges() == null && actions.getAddRequiredArguments() == null && actions.getDeleteArguments() == null) {
+            jReport.setActions(null);
+        }
     }
     
     private void template2Job(JobTemplate jt, Job j, JobReport jReport, Environment arguments) {
+//        Actions actions = jReport.getActions();
+//        if (actions.getChanges() == null) {
+//            actions.setChanges(new ArrayList<String>());
+//        }
         if (withAdmissionTime) {
+//            if ((j.getAdmissionTimeScheme() != null && !j.getAdmissionTimeScheme().equals(jt.getAdmissionTimeScheme())) || (j
+//                    .getAdmissionTimeScheme() == null && jt.getAdmissionTimeScheme() != null)) {
+//                actions.getChanges().add("admissionTimeScheme");
+//            }
             j.setAdmissionTimeScheme(jt.getAdmissionTimeScheme());
+            
+//            if ((j.getSkipIfNoAdmissionForOrderDay() != null && !j.getSkipIfNoAdmissionForOrderDay().equals(jt.getSkipIfNoAdmissionForOrderDay()))
+//                    || (j.getSkipIfNoAdmissionForOrderDay() == null && jt.getSkipIfNoAdmissionForOrderDay() != null)) {
+//                actions.getChanges().add("skipIfNoAdmissionForOrderDay");
+//            }
             j.setSkipIfNoAdmissionForOrderDay(jt.getSkipIfNoAdmissionForOrderDay());
         }
         if (withNotification) {
+//            if ((j.getNotification() != null && !j.getNotification().equals(jt.getNotification()))
+//                    || (j.getNotification() == null && jt.getNotification() != null)) {
+//                actions.getChanges().add("notification");
+//            }
             j.setNotification(jt.getNotification());
         }
+        
+//        if ((j.getCriticality() != null && !j.getCriticality().equals(jt.getCriticality()))
+//                || (j.getCriticality() == null && jt.getCriticality() != null)) {
+//            actions.getChanges().add("criticality");
+//        }
         j.setCriticality(jt.getCriticality());
         //j.setDefaultArguments(jt.getDefaultArguments());
+        
+//        if ((j.getDocumentationName() != null && !j.getDocumentationName().equals(jt.getDocumentationName()))
+//                || (j.getDocumentationName() == null && jt.getDocumentationName() != null)) {
+//            actions.getChanges().add("documentationName");
+//        }
         j.setDocumentationName(jt.getDocumentationName());
+        
+//        if ((j.getFailOnErrWritten() != null && !j.getFailOnErrWritten().equals(jt.getFailOnErrWritten()))
+//                || (j.getFailOnErrWritten() == null && jt.getFailOnErrWritten() != null)) {
+//            actions.getChanges().add("failOnErrWritten");
+//        }
         j.setFailOnErrWritten(jt.getFailOnErrWritten());
+        
+//        if ((j.getWarnOnErrWritten() != null && !j.getWarnOnErrWritten().equals(jt.getWarnOnErrWritten()))
+//                || (j.getWarnOnErrWritten() == null && jt.getWarnOnErrWritten() != null)) {
+//            actions.getChanges().add("warnOnErrWritten");
+//        }
         j.setWarnOnErrWritten(jt.getWarnOnErrWritten());
+        
+//        if ((j.getGraceTimeout() != null && !j.getGraceTimeout().equals(jt.getGraceTimeout()))
+//                || (j.getGraceTimeout() == null && jt.getGraceTimeout() != null)) {
+//            actions.getChanges().add("graceTimeout");
+//        }
         j.setGraceTimeout(jt.getGraceTimeout());
+        
+//        if ((j.getJobResourceNames() != null && !j.getJobResourceNames().equals(jt.getJobResourceNames()))
+//                || (j.getJobResourceNames() == null && jt.getJobResourceNames() != null)) {
+//            actions.getChanges().add("jobResourceNames");
+//        }
         j.setJobResourceNames(jt.getJobResourceNames());
+        
         j.getJobTemplate().setHash(jt.getHash());
+        
+//        if ((j.getParallelism() != null && !j.getParallelism().equals(jt.getParallelism()))
+//                || (j.getParallelism() == null && jt.getParallelism() != null)) {
+//            actions.getChanges().add("parallelism");
+//        }
         j.setParallelism(jt.getParallelism());
+        
+//        if ((j.getTimeout() != null && !j.getTimeout().equals(jt.getTimeout()))
+//                || (j.getTimeout() == null && jt.getTimeout() != null)) {
+//            actions.getChanges().add("timeout");
+//        }
         j.setTimeout(jt.getTimeout());
+        
+//        if ((j.getTitle() != null && !j.getTitle().equals(jt.getTitle()))
+//                || (j.getTitle() == null && jt.getTitle() != null)) {
+//            actions.getChanges().add("title");
+//        }
         j.setTitle(jt.getTitle());
+        
+//        if ((j.getWarnIfLonger() != null && !j.getWarnIfLonger().equals(jt.getWarnIfLonger()))
+//                || (j.getWarnIfLonger() == null && jt.getWarnIfLonger() != null)) {
+//            actions.getChanges().add("warnIfLonger");
+//        }
         j.setWarnIfLonger(jt.getWarnIfLonger());
+        
+//        if ((j.getWarnIfShorter() != null && !j.getWarnIfShorter().equals(jt.getWarnIfShorter()))
+//                || (j.getWarnIfShorter() == null && jt.getWarnIfShorter() != null)) {
+//            actions.getChanges().add("warnIfShorter");
+//        }
         j.setWarnIfShorter(jt.getWarnIfShorter());
         
         setExecutable(jReport, j, jt, arguments);
@@ -264,6 +345,9 @@ public class JobTemplatesPropagate {
     }
     
     private static Environment getArguments(JobReport jReport, JobTemplate jt, String jobName, Job job, Workflow w) {
+        if (jReport.getState() == null || jReport.getState().get_text() == null) {
+            return null;
+        }
         if (!JobReportStateText.CONFLICT.equals(jReport.getState().get_text())) {
             return null;
         }
@@ -319,11 +403,8 @@ public class JobTemplatesPropagate {
     }
     
     private static Environment setArguments(JobReport jReport, Environment env, Parameters args) {
-        Actions actions = new Actions();
-        actions.setChanges(null); // TODO fill the changes
+        Actions actions = jReport.getActions();
         
-        boolean withAction = false;
-
         if (env == null || env.getAdditionalProperties() == null) {
             env = new Environment(); 
         }
@@ -334,16 +415,14 @@ public class JobTemplatesPropagate {
         Set<String> envKeys = env.getAdditionalProperties().keySet();
         
         // delete unknown keys
-        Set<String> keysToDelete = envKeys.stream().filter(key -> !paramKeys.contains(key)).collect(
-                Collectors.toSet());
-        
+        Set<String> keysToDelete = envKeys.stream().filter(key -> !paramKeys.contains(key)).collect(Collectors.toSet());
+
         if (!keysToDelete.isEmpty()) {
             Environment deletedEnv = new Environment();
             for (String key : keysToDelete) {
                 deletedEnv.setAdditionalProperty(key, env.getAdditionalProperties().get(key));
             }
             actions.setDeleteArguments(deletedEnv);
-            withAction = true;
         }
         
         for (String key : keysToDelete) {
@@ -366,13 +445,7 @@ public class JobTemplatesPropagate {
         
         if (!addEnv.getAdditionalProperties().isEmpty()) {
             actions.setAddRequiredArguments(addEnv);
-            withAction = true;
         }
-        if (!withAction) {
-            actions = null;
-        }
-        jReport.setActions(actions);
-        
         if (env.getAdditionalProperties().isEmpty()) {
             env = null;
         }
