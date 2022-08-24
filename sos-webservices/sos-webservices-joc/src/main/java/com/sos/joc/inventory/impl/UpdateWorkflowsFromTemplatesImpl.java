@@ -14,6 +14,8 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.jobtemplate.JobTemplate;
+import com.sos.inventory.model.job.Job;
+import com.sos.inventory.model.job.JobTemplateRef;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -101,12 +103,19 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
                     Workflow workflow = (Workflow) JocInventory.content2IJSObject(dbWorkflow.getContent(), ConfigurationType.WORKFLOW.intValue());
                     if (workflow.getJobs() != null && workflow.getJobs().getAdditionalProperties() != null && !workflow.getJobs()
                             .getAdditionalProperties().isEmpty()) {
-                        // determine job templates
-                        List<DBItemInventoryReleasedConfiguration> jts = dbLayer.getReleasedJobTemplatesByNames(workflow.getJobs()
-                                .getAdditionalProperties().values().stream().filter(j -> j.getJobTemplate() != null).map(j -> j.getJobTemplate()
-                                        .getName()).filter(Objects::nonNull).filter(s -> !s.isEmpty()).collect(Collectors.toList()));
+                        // determine job template names from Workflow
+                        List<String> jobTemplateNamesAtWorkflow = workflow.getJobs().getAdditionalProperties().values().stream().map(
+                                Job::getJobTemplate).filter(Objects::nonNull).map(JobTemplateRef::getName).filter(Objects::nonNull).filter(s -> !s
+                                        .isEmpty()).collect(Collectors.toList());
+                        // read job template items from DB
+                        List<DBItemInventoryReleasedConfiguration> jts = dbLayer.getReleasedJobTemplatesByNames(jobTemplateNamesAtWorkflow);
+                        
                         jobTemplates = jts.stream().map(item -> JobTemplatesResourceImpl.getJobTemplate(item, false, jocError)).filter(
                                 Objects::nonNull).collect(Collectors.toMap(JobTemplate::getName, Function.identity()));
+                        
+                        for (String name : jobTemplateNamesAtWorkflow) {
+                            jobTemplates.putIfAbsent(name, null);
+                        }
                     }
                     report.getWorkflows().add(propagate.template2Job(dbWorkflow, workflow, jobTemplates, dbLayer, now, dbAuditLog));
                 }

@@ -12,6 +12,7 @@ public enum JobReportStateText {
     UPTODATE("UPTODATE"),
     CONFLICT("CONFLICT"),
     CHANGED("CHANGED"),
+    TEMPLATE_REFERENCE_DELETED("TEMPLATE_REFERENCE_DELETED"),
     PERMISSION_DENIED("PERMISSION_DENIED");
     private final String value;
     private final static Map<String, JobReportStateText> CONSTANTS = new HashMap<String, JobReportStateText>();
