@@ -22,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
+    "historyId",
     "states",
     "hasTasks",
     "hasOrders",
@@ -39,6 +40,15 @@ public class OrderHistoryItemChildren {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("historyId")
+    private Long historyId;
     @JsonProperty("states")
     private List<OrderHistoryStateItem> states = new ArrayList<OrderHistoryStateItem>();
     @JsonProperty("hasTasks")
@@ -70,6 +80,30 @@ public class OrderHistoryItemChildren {
     @JsonProperty("deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
         this.deliveryDate = deliveryDate;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("historyId")
+    public Long getHistoryId() {
+        return historyId;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("historyId")
+    public void setHistoryId(Long historyId) {
+        this.historyId = historyId;
     }
 
     @JsonProperty("states")
@@ -114,12 +148,12 @@ public class OrderHistoryItemChildren {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("states", states).append("hasTasks", hasTasks).append("hasOrders", hasOrders).append("children", children).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("historyId", historyId).append("states", states).append("hasTasks", hasTasks).append("hasOrders", hasOrders).append("children", children).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(hasTasks).append(children).append(states).append(hasOrders).toHashCode();
+        return new HashCodeBuilder().append(hasTasks).append(children).append(historyId).append(deliveryDate).append(states).append(hasOrders).toHashCode();
     }
 
     @Override
@@ -131,7 +165,7 @@ public class OrderHistoryItemChildren {
             return false;
         }
         OrderHistoryItemChildren rhs = ((OrderHistoryItemChildren) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(hasTasks, rhs.hasTasks).append(children, rhs.children).append(states, rhs.states).append(hasOrders, rhs.hasOrders).isEquals();
+        return new EqualsBuilder().append(hasTasks, rhs.hasTasks).append(children, rhs.children).append(historyId, rhs.historyId).append(deliveryDate, rhs.deliveryDate).append(states, rhs.states).append(hasOrders, rhs.hasOrders).isEquals();
     }
 
 }
