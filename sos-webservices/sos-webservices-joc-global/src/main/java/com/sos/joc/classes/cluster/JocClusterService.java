@@ -362,7 +362,7 @@ public class JocClusterService {
 
     private void createFactory(Path configFile) throws SOSHibernateConfigurationException, SOSHibernateFactoryBuildException {
         try {
-            factory = new JocClusterHibernateFactory(configFile, 1, 2);
+            factory = new JocClusterHibernateFactory(configFile, 1, 1);
             factory.setIdentifier(JocClusterConfiguration.IDENTIFIER);
             factory.setAutoCommit(false);
             factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
