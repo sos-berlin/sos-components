@@ -93,6 +93,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
                         WorkflowReport wr = new WorkflowReport();
                         wr.setPath(dbWorkflow.getPath());
                         wr.setState(JobTemplatesPropagate.getState(JobReportStateText.PERMISSION_DENIED));
+                        report.getWorkflows().add(wr);
                         continue;
                     }
 

@@ -375,6 +375,7 @@ public class Validator {
             break;
         }
         validateJobNotification(jobTemplate);
+        validateOnErrWritten(jobTemplate.getFailOnErrWritten(), jobTemplate.getWarnOnErrWritten());
     }
     
     private static List<String> validateWorkflowJobs(Workflow workflow, Set<String> releasedScripts) throws JsonProcessingException, IOException,
@@ -385,8 +386,8 @@ public class Validator {
         }
         for (Map.Entry<String, Job> entry : workflow.getJobs().getAdditionalProperties().entrySet()) {
             // TODO check JobResources references in Job
+            Job job = entry.getValue();
             try {
-                Job job = entry.getValue();
                 JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(job), URI.create(
                         "classpath:/raml/inventory/schemas/job/job-schema.json"));
                 if (job.getJobResourceNames() != null) {
@@ -396,16 +397,16 @@ public class Validator {
                 String msg = e.getMessage().replaceAll("(\\$\\.)", "$1jobs['" + entry.getKey() + "'].");
                 throw new SOSJsonSchemaException(msg);
             }
-            switch (entry.getValue().getExecutable().getTYPE()) {
+            switch (job.getExecutable().getTYPE()) {
             case InternalExecutable:
-                ExecutableJava ej = entry.getValue().getExecutable().cast();
+                ExecutableJava ej = job.getExecutable().cast();
                 if (ej.getArguments() != null) {
                     validateExpression("$.jobs['" + entry.getKey() + "'].executable.arguments", ej.getArguments().getAdditionalProperties());
                 }
                 break;
             case ScriptExecutable:
             case ShellScriptExecutable:
-                ExecutableScript es = entry.getValue().getExecutable().cast();
+                ExecutableScript es = job.getExecutable().cast();
                 if (es.getEnv() != null) {
                     validateExpression("$.jobs['" + entry.getKey() + "'].executable.env", es.getEnv().getAdditionalProperties());
                 }
@@ -434,7 +435,8 @@ public class Validator {
                 }
                 break;
             }
-            validateJobNotification(entry.getKey(), entry.getValue());
+            validateJobNotification(entry.getKey(), job);
+            validateOnErrWritten(job.getFailOnErrWritten(), job.getWarnOnErrWritten());
         }
         return jobResources;
     }
@@ -495,6 +497,12 @@ public class Validator {
 
         } catch (JsonProcessingException e) {
 
+        }
+    }
+    
+    private static void validateOnErrWritten(Boolean failOnErrWritten, Boolean warnOnErrWritten) throws JocConfigurationException {
+        if (failOnErrWritten == Boolean.TRUE && warnOnErrWritten == Boolean.TRUE) {
+            throw new JocConfigurationException("Only one of 'failOnErrWritten' or 'warnOnErrWritten' may be activated");
         }
     }
 
