@@ -89,14 +89,16 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
                 if (job == null) {
                     throw new JocBadRequestException(String.format("Workflow '%s' has no job '%s'.", config.getPath(), in.getJobName()));
                 }
-                List<String> jobTemplateNames = null;
+                String jobTemplateName = null;
                 if (job.getJobTemplate() != null && job.getJobTemplate().getName() != null) {
-                    jobTemplateNames = Collections.singletonList(job.getJobTemplate().getName());
+                    jobTemplateName = job.getJobTemplate().getName();
                 }
-                List<DBItemInventoryReleasedConfiguration> jts = dbLayer.getReleasedJobTemplatesByNames(jobTemplateNames);
+                List<DBItemInventoryReleasedConfiguration> jts = dbLayer.getReleasedJobTemplatesByNames(Collections.singletonList(jobTemplateName));
                 jobTemplates = jts.stream().map(item -> JobTemplatesResourceImpl.getJobTemplate(item, false, jocError)).filter(Objects::nonNull)
                         .collect(Collectors.toMap(JobTemplate::getName, Function.identity()));
-
+                if (jobTemplateName != null) {
+                    jobTemplates.putIfAbsent(jobTemplateName, null);
+                }
                 report = propagate.template2Job(config, workflow, jobTemplates, Collections.singleton(in.getJobName()), dbLayer, now, dbAuditLog);
             }
             

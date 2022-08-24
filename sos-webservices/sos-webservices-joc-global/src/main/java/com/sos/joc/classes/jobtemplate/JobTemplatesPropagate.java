@@ -2,6 +2,7 @@ package com.sos.joc.classes.jobtemplate;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -74,12 +75,14 @@ public class JobTemplatesPropagate {
             put(JobReportStateText.SKIPPED, 6);
             put(JobReportStateText.UPTODATE, 6);
             put(JobReportStateText.CHANGED, 5);
+            put(JobReportStateText.TEMPLATE_REFERENCE_DELETED, 5);
             put(JobReportStateText.CONFLICT, 2);
             put(JobReportStateText.PERMISSION_DENIED, 2);
         }
     });
     
-    public static Predicate<JobReport> jobIsChanged = jr -> JobReportStateText.CHANGED.equals(jr.getState().get_text());
+    private static List<JobReportStateText> changedStates = Arrays.asList(JobReportStateText.CHANGED, JobReportStateText.TEMPLATE_REFERENCE_DELETED);
+    public static Predicate<JobReport> jobIsChanged = jr -> changedStates.contains(jr.getState().get_text());
     public static Predicate<WorkflowReport> workflowIsChanged = wr -> wr.getJobs() != null && wr.getJobs().getAdditionalProperties() != null && !wr
             .getJobs().getAdditionalProperties().isEmpty() && wr.getJobs().getAdditionalProperties().values().stream().anyMatch(jobIsChanged);
 
@@ -141,7 +144,14 @@ public class JobTemplatesPropagate {
             
             if (checkTemplateReference(jobTemplates, jobNames, job.getKey(), job.getValue(), jReport)) {
                 JobTemplate jt = jobTemplates.get(job.getValue().getJobTemplate().getName());
-                template2Job(jReport, jt, job.getKey(), job.getValue(), w);
+                if (jt == null) {
+                    jReport.setJobTemplatePath(job.getValue().getJobTemplate().getName());
+                    jReport.setActions(new Actions());
+                    job.getValue().setJobTemplate(null);
+                    jReport.getActions().setChanges(Collections.singletonList("jobTemplate"));
+                } else {
+                    template2Job(jReport, jt, job.getKey(), job.getValue(), w);
+                }
             }
             
             jobStates.add(jReport.getState().get_text());
@@ -150,7 +160,7 @@ public class JobTemplatesPropagate {
         
         if (jobStates.contains(JobReportStateText.CONFLICT)) {
             wReport.setState(getState(JobReportStateText.CONFLICT));
-        } else if (jobStates.contains(JobReportStateText.CHANGED)) {
+        } else if (jobStates.contains(JobReportStateText.CHANGED) || jobStates.contains(JobReportStateText.TEMPLATE_REFERENCE_DELETED)) {
             wReport.setState(getState(JobReportStateText.CHANGED));
         } else if (jobStates.contains(JobReportStateText.UPTODATE)) {
             wReport.setState(getState(JobReportStateText.UPTODATE));
@@ -295,6 +305,11 @@ public class JobTemplatesPropagate {
             return false;
         }
         JobTemplate jobTemplate = jobTemplates.get(jtRef.getName());
+        if (jobTemplate == null) {
+            jReport.setState(getState(JobReportStateText.TEMPLATE_REFERENCE_DELETED, String.format(
+                    "Job '%s' has a job template reference '%s' but this job template doesn't exist", jobName, jtRef.getName())));
+            return true;
+        }
         if (jtRef.getHash() != null && jtRef.getHash().equals(jobTemplate.getHash())) {
             jReport.setJobTemplatePath(jobTemplate.getPath());
             jReport.setState(getState(JobReportStateText.UPTODATE, String.format(
