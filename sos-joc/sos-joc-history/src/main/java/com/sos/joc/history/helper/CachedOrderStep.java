@@ -2,7 +2,6 @@ package com.sos.joc.history.helper;
 
 import java.util.Date;
 
-import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
 import com.sos.joc.classes.history.HistoryMapper;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
@@ -27,7 +26,8 @@ public class CachedOrderStep {
     private Date endTime;
     private CachedOrderStepError error;
     private Boolean lastStdEndsWithNewLine;
-    private StringBuilder stdError;
+    private String firstChunkStdError;
+    private Boolean warnOnStderr;
     private long logSize;
 
     public CachedOrderStep(DBItemHistoryOrderStep item, String timezone) {
@@ -64,6 +64,7 @@ public class CachedOrderStep {
         b.setReturnCode(returnCode);
         b.setStartTime(startTime);
         b.setEndTime(endTime);
+        b.setFirstChunkStdError(firstChunkStdError);
         return b;
     }
 
@@ -155,6 +156,14 @@ public class CachedOrderStep {
         return lastStdEndsWithNewLine;
     }
 
+    public void setWarnOnStderr(Boolean val) {
+        warnOnStderr = val;
+    }
+
+    public Boolean getWarnOnStderr() {
+        return warnOnStderr;
+    }
+
     public void setLogSize(long val) {
         logSize = val;
     }
@@ -167,17 +176,12 @@ public class CachedOrderStep {
         return logSize;
     }
 
-    public void setStdError(String val) {
-        if (!SOSString.isEmpty(val)) {
-            if (stdError == null) {
-                stdError = new StringBuilder();
-            }
-            stdError.append(val);
-        }
+    public void setFirstChunkStdError(String val) {
+        firstChunkStdError = val == null ? null : val.trim();
     }
 
-    public String getStdErr() {
-        return stdError == null ? null : stdError.toString().trim();
+    public String getFirstChunkStdError() {
+        return firstChunkStdError;
     }
 
     public CachedOrderStepError getError() {

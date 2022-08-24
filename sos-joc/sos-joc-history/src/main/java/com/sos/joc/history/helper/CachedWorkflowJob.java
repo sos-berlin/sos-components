@@ -13,10 +13,11 @@ public class CachedWorkflowJob {
     private final String warnIfLonger;
     private final String warnIfShorter;
     private final List<Integer> warnReturnCodes;
+    private final Boolean warnOnErrWritten;
     private final String notification;
 
     public CachedWorkflowJob(JobCriticality criticality, String title, String agentName, String subagentClusterId, String warnIfLonger,
-            String warnIfShorter, List<Integer> warnReturnCodes, String notification) {
+            String warnIfShorter, List<Integer> warnReturnCodes, Boolean warnOnErrWritten, String notification) {
         this.criticality = criticality;
         this.title = title;
         this.agentName = agentName;
@@ -24,6 +25,7 @@ public class CachedWorkflowJob {
         this.warnIfLonger = warnIfLonger;
         this.warnIfShorter = warnIfShorter;
         this.warnReturnCodes = warnReturnCodes;
+        this.warnOnErrWritten = warnOnErrWritten;
         this.notification = notification;
     }
 
@@ -53,6 +55,10 @@ public class CachedWorkflowJob {
 
     public List<Integer> getWarnReturnCodes() {
         return warnReturnCodes;
+    }
+
+    public Boolean getWarnOnErrorWritten() {
+        return warnOnErrWritten;
     }
 
     public String getNotification() {

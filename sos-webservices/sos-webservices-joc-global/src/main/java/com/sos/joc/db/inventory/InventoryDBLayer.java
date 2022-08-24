@@ -1311,28 +1311,54 @@ public class InventoryDBLayer extends DBLayer {
         return result;
     }
     
-//    public List<DBItemInventoryConfiguration> getUsedWorkflowsByJobTemplateNames(Collection<String> jobTemplateNames) throws SOSHibernateException {
-//        if (jobTemplateNames == null || jobTemplateNames.isEmpty()) {
-//            return Collections.emptyList();
-//        }
-//        StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
-//        hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
-//        hql.append("on ic.id=sw.inventoryConfigurationId ");
-//        hql.append("where ic.type=:type ");
-//        hql.append("and ic.deployed=sw.deployed ");
-//        hql.append("and (");
-//        hql.append(jobTemplateNames.stream().map(jobTemplateName -> SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.jobs",
-//                "$.jobTemplates.\"" + jobTemplateName + "\"") + " is not null").collect(Collectors.joining(" or ")));
-//        hql.append(")");
-//
-//        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-//        query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
-//        List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
-//        if (result == null) {
-//            return Collections.emptyList();
-//        }
-//        return result;
-//    }
+    public List<DBItemInventoryConfiguration> getUsedWorkflowsByJobTemplateNames(String folder, boolean recursive,
+            Collection<String> jobTemplateNames) throws SOSHibernateException {
+        if (jobTemplateNames == null) {
+            jobTemplateNames = Collections.emptyList();
+        }
+        if (folder == null) {
+            folder = JocInventory.ROOT_FOLDER;
+        }
+        StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+        hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+        hql.append("on ic.id=sw.inventoryConfigurationId ");
+        hql.append("where ic.type=:type ");
+        hql.append("and ic.deployed=sw.deployed ");
+        if (recursive) {
+            if (!JocInventory.ROOT_FOLDER.equals(folder)) {
+                hql.append("and (folder=:folder or folder like :likeFolder) ");
+            }
+        } else {
+            hql.append("and folder=:folder ");
+        }
+        if (!jobTemplateNames.isEmpty()) {
+            String jtHql = jobTemplateNames.stream().map(jobTemplateName -> SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.jobs",
+                    "$.jobTemplates.\"" + jobTemplateName + "\"") + " is not null").collect(Collectors.joining(" or ")).trim();
+            if (!jtHql.isEmpty()) {
+                hql.append("and (").append(jtHql).append(")");
+            }
+        } else {
+            hql.append("and ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.jobs", "$.jobTemplates")).append(" is not null");
+        }
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+        if (recursive) {
+            if (!JocInventory.ROOT_FOLDER.equals(folder)) {
+                query.setParameter("folder", folder);
+                query.setParameter("likeFolder", folder + "/%");
+            }
+        } else {
+            query.setParameter("folder", folder);
+        }
+
+        List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return result;
+    }
     
 //    public String getUsedJobTemplateUsedByWorkflow(Long invId) throws SOSHibernateException {
 //        StringBuilder hql = new StringBuilder("select inventoryConfigurationId as invId, ");

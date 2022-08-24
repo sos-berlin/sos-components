@@ -97,6 +97,8 @@ public class JsonValidator {
             put ("JobTemplateFilter", "jobTemplate/jobTemplateFilter-schema.json");
             put ("JobTemplateStateFilter", "jobTemplate/jobTemplateStateFilter-schema.json");
             put ("JobTemplatesFilter", "jobTemplate/jobTemplatesFilter-schema.json");
+            put ("JobTemplatesPropagateFilter", "jobTemplate/propagate/jobTemplatesPropagateFilter-schema.json");
+            put ("WorkflowPropagateFilter", "jobTemplate/propagate/workflowPropagateFilter-schema.json");
             
             put("LockFilter", "lock/lockFilter-schema.json");
             put("LocksFilter", "lock/locksFilter-schema.json");

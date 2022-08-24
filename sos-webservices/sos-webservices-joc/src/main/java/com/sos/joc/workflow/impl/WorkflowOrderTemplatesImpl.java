@@ -23,7 +23,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.workflow.OrderParameterisations;
 import com.sos.joc.model.workflow.Schedules;
-import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.model.workflow.WorkflowPathFilter;
 import com.sos.joc.workflow.resource.IWorkflowOrderTemplates;
 import com.sos.schema.JsonValidator;
@@ -40,7 +39,7 @@ public class WorkflowOrderTemplatesImpl extends JOCResourceImpl implements IWork
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, WorkflowFilter.class);
+            JsonValidator.validateFailFast(filterBytes, WorkflowPathFilter.class);
             WorkflowPathFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowPathFilter.class);
             String controllerId = workflowFilter.getControllerId();
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getWorkflows()

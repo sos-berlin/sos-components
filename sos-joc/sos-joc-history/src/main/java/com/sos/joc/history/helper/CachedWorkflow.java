@@ -33,6 +33,6 @@ public class CachedWorkflow {
     }
 
     private CachedWorkflowJob defaultJob() {
-        return new CachedWorkflowJob(JobCriticality.NORMAL, null, null, null, null, null, null, null);
+        return new CachedWorkflowJob(JobCriticality.NORMAL, null, null, null, null, null, null, null, null);
     }
 }

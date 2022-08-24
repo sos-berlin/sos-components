@@ -7,12 +7,13 @@ import java.util.function.Predicate;
 
 public class SOSCollection {
 
-    /**
-     * usage : ...stream().filter(SOSCollection.distinctByKey(MyObject::getId))....
+    /** usage :<br/>
+     * ...stream().filter(SOSCollection.distinctByKey(MyObject::getId))....<br/>
+     * ...stream().filter(SOSCollection.distinctByKey(o->o.getChildObject().getId()))....<br/>
+     * 
      * @param <T>
      * @param function
-     * @return
-     */
+     * @return */
     public static <T> Predicate<T> distinctByKey(Function<T, Object> function) {
         Map<Object, Boolean> seen = new ConcurrentHashMap<>();
         return t -> seen.putIfAbsent(function.apply(t), Boolean.TRUE) == null;

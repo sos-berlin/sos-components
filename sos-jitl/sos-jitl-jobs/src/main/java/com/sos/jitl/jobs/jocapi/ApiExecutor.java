@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
+import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassDatabaseException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.httpclient.SOSRestApiClient;
@@ -213,7 +214,7 @@ public class ApiExecutor {
     }
 
     private void tryCreateClient(String jocUri) throws SOSMissingDataException, KeyStoreException, NoSuchAlgorithmException, CertificateException,
-            SOSSSLException, IOException {
+            SOSSSLException, IOException, SOSKeePassDatabaseException {
         if (client != null) {
             client.closeHttpClient();
         }
@@ -254,19 +255,11 @@ public class ApiExecutor {
             String pwd = "";
             if (csFile != null && !csFile.isEmpty()) {
                 SOSKeePassResolver resolver = new SOSKeePassResolver(csFile, csKeyFile, csPwd);
-                try {
-                    username = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME));
-                    pwd = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD));
-                } catch (Exception e) {
-                    logDebug(e.getMessage());
-                }
+                username = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME));
+                pwd = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD));
             } else {
-                try {
-                    username = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME);
-                    pwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD);
-                } catch (Exception e) {
-                    logDebug(e.getMessage());
-                }
+                username = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME);
+                pwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD);
             }
             if ((username == null || username.isEmpty()) && (pwd == null || pwd.isEmpty())) {
                 throw new SOSMissingDataException("no username and password configured in private.conf");
