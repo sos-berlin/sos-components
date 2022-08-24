@@ -65,6 +65,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
             }
 
             OrderHistoryItemChildren answer = new OrderHistoryItemChildren();
+            answer.setHistoryId(in.getHistoryId());
             mapStates(answer, dbLayer.getOrderStates(in.getHistoryId()));
             mapChildren(answer, dbLayer.getOrderSteps(in.getHistoryId()), dbLayer.getOrderForkChilds(in.getHistoryId()));
             answer.setDeliveryDate(new Date());
