@@ -9,6 +9,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.jobtemplate.JobTemplate;
+import com.sos.inventory.model.jobtemplate.Parameter;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -61,6 +62,11 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
                 JobTemplate jt = Globals.objectMapper.readValue(item.getContent(), JobTemplate.class);
                 jt.setPath(item.getPath());
                 jt.setName(item.getName());
+                jt.setHasRequiredArguments(false);
+                if (jt.getArguments() != null && jt.getArguments().getAdditionalProperties() != null) {
+                    jt.setHasRequiredArguments(jt.getArguments().getAdditionalProperties().values().stream().map(Parameter::getRequired).anyMatch(
+                            Boolean::booleanValue));
+                }
                 entity.setJobTemplate(jt);
 
             } else {

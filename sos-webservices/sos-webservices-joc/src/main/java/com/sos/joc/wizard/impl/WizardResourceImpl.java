@@ -155,6 +155,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
             NodeList paramsNodes = (NodeList) xpath.compile("//jobdoc:configuration/jobdoc:params[@id='job_parameter']/jobdoc:param").evaluate(doc, XPathConstants.NODESET);
 
             Job job = new Job();
+            job.setHasRequiredArguments(false);
             if (scriptElem != null) {
                 job.setJavaClass(scriptElem.getAttribute("java_class"));
             }
@@ -231,6 +232,9 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                         
                         param2.setRequired("true".equalsIgnoreCase(paramNode.getAttribute("required")));
                         param2.setDescription(description);
+                        if (param2.getRequired()) {
+                            job.setHasRequiredArguments(true);
+                        }
                         
                         params2.setAdditionalProperty(paramNode.getAttribute("name"), param2);
 
