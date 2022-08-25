@@ -13,6 +13,7 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
     private ConfigurationEntry periodBegin = new ConfigurationEntry("period_begin", "01:00", GlobalSettingsSectionValueType.TIME);
     private ConfigurationEntry periodEnd = new ConfigurationEntry("period_end", "04:00", GlobalSettingsSectionValueType.TIME);
     private ConfigurationEntry batchSize = new ConfigurationEntry("batch_size", "1000", GlobalSettingsSectionValueType.POSITIVEINTEGER);
+    private ConfigurationEntry maxPoolSize = new ConfigurationEntry("max_pool_size", "5", GlobalSettingsSectionValueType.POSITIVEINTEGER);
 
     private ConfigurationEntry orderHistoryAge = new ConfigurationEntry("order_history_age", "90d", GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry orderHistoryLogsAge = new ConfigurationEntry("order_history_logs_age", "90d", GlobalSettingsSectionValueType.DURATION);
@@ -36,6 +37,7 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
         periodBegin.setOrdering(++index);
         periodEnd.setOrdering(++index);
         batchSize.setOrdering(++index);
+        maxPoolSize.setOrdering(++index);
 
         // HISTORY
         orderHistoryAge.setOrdering(++index);
@@ -74,6 +76,10 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
 
     public ConfigurationEntry getBatchSize() {
         return batchSize;
+    }
+
+    public ConfigurationEntry getMaxPoolSize() {
+        return maxPoolSize;
     }
 
     public ConfigurationEntry getOrderHistoryAge() {

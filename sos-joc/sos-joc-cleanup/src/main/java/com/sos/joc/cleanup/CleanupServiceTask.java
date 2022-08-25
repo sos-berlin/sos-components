@@ -84,7 +84,8 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             LOGGER.info(String.format("[%s][run]found %s running services", logIdentifier, services.size()));
 
             try {
-                createFactory(cleanupSchedule.getService().getConfig().getHibernateConfiguration(), 5);
+                createFactory(cleanupSchedule.getService().getConfig().getHibernateConfiguration(), cleanupSchedule.getService().getConfig()
+                        .getMaxPoolSize());
             } catch (Exception e) {
                 LOGGER.error(String.format("[%s][createFactory]%s", logIdentifier, e.toString()), e);
                 return JocCluster.getErrorAnswer(e);

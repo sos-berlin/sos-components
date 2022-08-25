@@ -25,6 +25,7 @@ public class CleanupServiceConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupServiceConfiguration.class);
 
     public static final String PROPERTY_NAME_PERIOD = "period";
+    public static final int MIN_MAX_POOL_SIZE = 5;
 
     private ZoneId zoneId;
     private Period period;
@@ -39,6 +40,7 @@ public class CleanupServiceConfiguration {
     private Age failedLoginHistoryAge;
     private int deploymentHistoryVersions;
     private int batchSize;
+    private int maxPoolSize;
 
     private Path hibernateConfiguration;
 
@@ -76,7 +78,24 @@ public class CleanupServiceConfiguration {
                 this.batchSize = bz;
             }
         } catch (Throwable e) {
-            LOGGER.error(String.format("[batch_size=%s]%s", batchSize, e.toString()), e);
+            LOGGER.error(String.format("[%s configured=%s]%s", configuration.getBatchSize().getName(), configuration.getBatchSize().getValue(), e
+                    .toString()), e);
+        }
+
+        try {
+            int mpz = Integer.parseInt(configuration.getMaxPoolSize().getValue());
+            if (mpz > 0) {
+                this.maxPoolSize = mpz;
+            }
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[configured %s=%s]%s", configuration.getMaxPoolSize().getName(), configuration.getMaxPoolSize().getValue(), e
+                    .toString()), e);
+        }
+
+        if (maxPoolSize < MIN_MAX_POOL_SIZE) {
+            LOGGER.info(String.format("[configured %s=%s][skip]use MIN_MAX_POOL_SIZE=%s", configuration.getMaxPoolSize().getName(), configuration
+                    .getMaxPoolSize().getValue(), MIN_MAX_POOL_SIZE));
+            maxPoolSize = MIN_MAX_POOL_SIZE;
         }
     }
 
@@ -132,6 +151,10 @@ public class CleanupServiceConfiguration {
         return batchSize;
     }
 
+    public int getMaxPoolSize() {
+        return maxPoolSize;
+    }
+
     public void setHibernateConfiguration(Path val) {
         hibernateConfiguration = val;
     }
@@ -144,7 +167,9 @@ public class CleanupServiceConfiguration {
     public String toString() {
         StringBuilder sb = new StringBuilder("[");
         sb.append(getClass().getSimpleName());
-        sb.append(" zoneId=").append(zoneId);
+        sb.append(" batchSize=").append(batchSize);
+        sb.append(",maxPoolSize=").append(maxPoolSize);
+        sb.append(",zoneId=").append(zoneId);
         sb.append(",period=[");
         sb.append("configured=").append(period.getConfigured());
         sb.append(",begin=[");
