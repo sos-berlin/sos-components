@@ -26,7 +26,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "name",
-    "path"
+    "path",
+    "hasRequiredArguments"
 })
 public class JobTemplate
     extends com.sos.inventory.model.jobtemplate.JobTemplate
@@ -49,6 +50,8 @@ public class JobTemplate
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of an object.")
     private String path;
+    @JsonProperty("hasRequiredArguments")
+    private Boolean hasRequiredArguments = false;
 
     /**
      * No args constructor for use in serialization
@@ -78,14 +81,16 @@ public class JobTemplate
      * @param skipIfNoAdmissionForOrderDay
      * @param name
      * @param arguments
+     * @param hasRequiredArguments
      * @param documentationName
      * @param hash
      * @param warnOnErrWritten
      */
-    public JobTemplate(String name, String path, String version, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, Boolean warnOnErrWritten, Parameters arguments, Environment defaultArguments, List<String> jobResourceNames, String title, String description, String documentationName, JobCriticality criticality, String warnIfShorter, String warnIfLonger, JobNotification notification, String hash) {
+    public JobTemplate(String name, String path, Boolean hasRequiredArguments, String version, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, Boolean warnOnErrWritten, Parameters arguments, Environment defaultArguments, List<String> jobResourceNames, String title, String description, String documentationName, JobCriticality criticality, String warnIfShorter, String warnIfLonger, JobNotification notification, String hash) {
         super(version, executable, admissionTimeScheme, skipIfNoAdmissionForOrderDay, parallelism, timeout, graceTimeout, failOnErrWritten, warnOnErrWritten, arguments, defaultArguments, jobResourceNames, title, description, documentationName, criticality, warnIfShorter, warnIfLonger, notification, hash);
         this.name = name;
         this.path = path;
+        this.hasRequiredArguments = hasRequiredArguments;
     }
 
     /**
@@ -132,14 +137,24 @@ public class JobTemplate
         this.path = path;
     }
 
+    @JsonProperty("hasRequiredArguments")
+    public Boolean getHasRequiredArguments() {
+        return hasRequiredArguments;
+    }
+
+    @JsonProperty("hasRequiredArguments")
+    public void setHasRequiredArguments(Boolean hasRequiredArguments) {
+        this.hasRequiredArguments = hasRequiredArguments;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("name", name).append("path", path).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("name", name).append("path", path).append("hasRequiredArguments", hasRequiredArguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(name).append(path).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(name).append(path).append(hasRequiredArguments).toHashCode();
     }
 
     @Override
@@ -151,7 +166,7 @@ public class JobTemplate
             return false;
         }
         JobTemplate rhs = ((JobTemplate) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(name, rhs.name).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(name, rhs.name).append(path, rhs.path).append(hasRequiredArguments, rhs.hasRequiredArguments).isEquals();
     }
 
 }

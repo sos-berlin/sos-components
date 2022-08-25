@@ -28,6 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "assignReference",
     "title",
     "javaClass",
+    "hasRequiredArguments",
     "params",
     "arguments"
 })
@@ -85,6 +86,8 @@ public class Job {
      */
     @JsonProperty("javaClass")
     private String javaClass;
+    @JsonProperty("hasRequiredArguments")
+    private Boolean hasRequiredArguments = false;
     /**
      * deprecated: use 'arguments'
      * 
@@ -237,6 +240,16 @@ public class Job {
         this.javaClass = javaClass;
     }
 
+    @JsonProperty("hasRequiredArguments")
+    public Boolean getHasRequiredArguments() {
+        return hasRequiredArguments;
+    }
+
+    @JsonProperty("hasRequiredArguments")
+    public void setHasRequiredArguments(Boolean hasRequiredArguments) {
+        this.hasRequiredArguments = hasRequiredArguments;
+    }
+
     /**
      * deprecated: use 'arguments'
      * 
@@ -279,12 +292,12 @@ public class Job {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("docPath", docPath).append("docName", docName).append("assignReference", assignReference).append("title", title).append("javaClass", javaClass).append("params", params).append("arguments", arguments).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("docPath", docPath).append("docName", docName).append("assignReference", assignReference).append("title", title).append("javaClass", javaClass).append("hasRequiredArguments", hasRequiredArguments).append("params", params).append("arguments", arguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(assignReference).append(docName).append(javaClass).append(arguments).append(deliveryDate).append(title).append(params).append(docPath).toHashCode();
+        return new HashCodeBuilder().append(assignReference).append(docName).append(javaClass).append(arguments).append(hasRequiredArguments).append(deliveryDate).append(title).append(params).append(docPath).toHashCode();
     }
 
     @Override
@@ -296,7 +309,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(assignReference, rhs.assignReference).append(docName, rhs.docName).append(javaClass, rhs.javaClass).append(arguments, rhs.arguments).append(deliveryDate, rhs.deliveryDate).append(title, rhs.title).append(params, rhs.params).append(docPath, rhs.docPath).isEquals();
+        return new EqualsBuilder().append(assignReference, rhs.assignReference).append(docName, rhs.docName).append(javaClass, rhs.javaClass).append(arguments, rhs.arguments).append(hasRequiredArguments, rhs.hasRequiredArguments).append(deliveryDate, rhs.deliveryDate).append(title, rhs.title).append(params, rhs.params).append(docPath, rhs.docPath).isEquals();
     }
 
 }
