@@ -40,6 +40,7 @@ import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResul
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.ToNotify;
 import com.sos.joc.monitoring.notification.notifier.ANotifier;
 import com.sos.joc.monitoring.notification.notifier.NotifyResult;
+import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
 
 public class NotifierModel {
@@ -114,49 +115,68 @@ public class NotifierModel {
     private void notifyStep(Configuration conf, HistoryOrderStepResult r) {
         List<Notification> result;
         HistoryOrderStepBean hosb = r.getStep();
+        NotificationRange range = NotificationRange.WORKFLOW_JOB;
+
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[notifyStep][start][%s]%s", range, r.toString()));
+        }
 
         notifyStepWarning(conf, r);
 
         if (hosb.getError()) {
-            result = conf.findWorkflowMatches(conf.getOnError(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
+            result = conf.findWorkflowMatches(range, conf.getOnError(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            notify(conf, result, null, hosb, NotificationType.ERROR, null);
+            notify(range, conf, result, null, hosb, NotificationType.ERROR, null);
         } else {
             // RECOVERY
-            result = conf.findWorkflowMatches(conf.getOnError(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
+            result = conf.findWorkflowMatches(range, conf.getOnError(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            notify(conf, result, null, hosb, NotificationType.RECOVERED, null);
+            notify(range, conf, result, null, hosb, NotificationType.RECOVERED, null);
             // SUCCESS
-            result = conf.findWorkflowMatches(conf.getOnSuccess(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
+            result = conf.findWorkflowMatches(range, conf.getOnSuccess(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            notify(conf, result, null, hosb, NotificationType.SUCCESS, null);
-
+            notify(range, conf, result, null, hosb, NotificationType.SUCCESS, null);
+        }
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[notifyStep][end][%s]%s", range, r.toString()));
         }
     }
 
     private void notifyOrder(Configuration conf, HistoryOrderBean hob, NotificationType type) {
         List<Notification> result;
+        NotificationRange range = NotificationRange.WORKFLOW;
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[notifyOrder][start][%s][%s]%s", range, type, SOSString.toString(hob)));
+        }
         switch (type) {
         case ERROR:
-            result = conf.findWorkflowMatches(conf.getOnError(), hob.getControllerId(), hob.getWorkflowPath());
-            notify(conf, result, hob, null, NotificationType.ERROR, null);
+            result = conf.findWorkflowMatches(NotificationRange.WORKFLOW, conf.getOnError(), hob.getControllerId(), hob.getWorkflowPath());
+            notify(range, conf, result, hob, null, NotificationType.ERROR, null);
             break;
         case SUCCESS:
             // RECOVERY
-            result = conf.findWorkflowMatches(conf.getOnError(), hob.getControllerId(), hob.getWorkflowPath());
-            notify(conf, result, hob, null, NotificationType.RECOVERED, null);
+            result = conf.findWorkflowMatches(NotificationRange.WORKFLOW, conf.getOnError(), hob.getControllerId(), hob.getWorkflowPath());
+            notify(range, conf, result, hob, null, NotificationType.RECOVERED, null);
             // SUCCESS
-            result = conf.findWorkflowMatches(conf.getOnSuccess(), hob.getControllerId(), hob.getWorkflowPath());
-            notify(conf, result, hob, null, NotificationType.SUCCESS, null);
+            result = conf.findWorkflowMatches(NotificationRange.WORKFLOW, conf.getOnSuccess(), hob.getControllerId(), hob.getWorkflowPath());
+            notify(range, conf, result, hob, null, NotificationType.SUCCESS, null);
 
             break;
         default:
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[notifyOrder][skip][%s][%s]because NotificationType=%s", range, type, type));
+            }
             break;
+        }
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[notifyOrder][end][%s][%s]%s", range, type, SOSString.toString(hob)));
         }
     }
 
-    private boolean notify(Configuration conf, List<Notification> list, HistoryOrderBean hob, HistoryOrderStepBean hosb, NotificationType type,
-            List<HistoryOrderStepResultWarn> warnings) {
+    private boolean notify(NotificationRange range, Configuration conf, List<Notification> list, HistoryOrderBean hob, HistoryOrderStepBean hosb,
+            NotificationType type, List<HistoryOrderStepResultWarn> warnings) {
         if (list.size() == 0) {
             return false;
         }
@@ -164,24 +184,24 @@ public class NotifierModel {
         NotifyAnalyzer analyzer = new NotifyAnalyzer();
         try {
             dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
-            dbLayer.getSession().beginTransaction();
 
-            if (!analyzer.analyze(dbLayer, list, hob, hosb, type, warnings)) {
+            if (!analyzer.analyze(range, dbLayer, list, hob, hosb, type, warnings)) {
                 return false;
             }
 
+            dbLayer.getSession().beginTransaction();
             Map<Long, DBItemMonitoringOrderStep> steps = new HashMap<>();
             boolean notified = false;
             boolean isWarning = NotificationType.WARNING.equals(type) && warnings != null;
             for (Notification notification : list) {
                 if (isWarning) {
                     for (HistoryOrderStepResultWarn warning : warnings) {
-                        if (notify(conf, analyzer, notification, type, steps, warning)) {
+                        if (notify(range, conf, analyzer, notification, type, steps, warning)) {
                             notified = true;
                         }
                     }
                 } else {
-                    if (notify(conf, analyzer, notification, type, steps, null)) {
+                    if (notify(range, conf, analyzer, notification, type, steps, null)) {
                         notified = true;
                     }
                 }
@@ -197,7 +217,7 @@ public class NotifierModel {
         }
     }
 
-    private boolean notify(Configuration conf, NotifyAnalyzer analyzer, Notification notification, NotificationType type,
+    private boolean notify(NotificationRange range, Configuration conf, NotifyAnalyzer analyzer, Notification notification, NotificationType type,
             Map<Long, DBItemMonitoringOrderStep> steps, HistoryOrderStepResultWarn warning) throws Exception {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -222,8 +242,9 @@ public class NotifierModel {
                     os = dbLayer.getMonitoringOrderStep(r.getStepId(), true);
                     if (os == null) {
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[notification id=%s][%s][skip][monitoringOrderStep not found]%s", notification
-                                    .getNotificationId(), ANotifier.getTypeAsString(type), r.getStepId()));
+                            LOGGER.debug(String.format("%s[notification id=%s][%s][%s][skip][monitoringOrderStep not found]%s",
+                                    Configuration.LOG_INTENT, notification.getNotificationId(), range, ANotifier.getTypeAsString(type), r
+                                            .getStepId()));
                         }
                         return false;
                     }
@@ -232,26 +253,26 @@ public class NotifierModel {
             }
             break;
         case WARNING:
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[notification id=%s][%s][warning=%s]sentWarnings=%s", notification.getNotificationId(), ANotifier
-                        .getTypeAsString(type), SOSString.toString(warning), analyzer.getSentWarnings()));
-            }
-
             if (warning == null || warning.getReason() == null) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[notification id=%s][%s][skip]warning or warning reason is null", notification.getNotificationId(),
-                            ANotifier.getTypeAsString(type)));
+                    LOGGER.debug(String.format("%s[notification id=%s][%s][%s][skip]warning or warning reason is null", Configuration.LOG_INTENT,
+                            notification.getNotificationId(), range, ANotifier.getTypeAsString(type)));
                 }
                 return false;
             }
             if (analyzer.getSentWarnings() != null && analyzer.getSentWarnings().containsKey(notification.getNotificationId())) {
                 if (analyzer.getSentWarnings().get(notification.getNotificationId()).contains(warning.getReason())) {
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[notification id=%s][%s %s][skip][already sent]%s", notification.getNotificationId(), ANotifier
-                                .getTypeAsString(type), warning.getReason(), analyzer.getSentWarnings()));
+                        LOGGER.debug(String.format("%s[notification id=%s][%s][%s %s][skip][already sent]%s", Configuration.LOG_INTENT, notification
+                                .getNotificationId(), range, ANotifier.getTypeAsString(type), warning.getReason(), analyzer.getSentWarnings()));
                     }
                     return false;
                 }
+            }
+
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("%s[notification id=%s][%s][%s][warning=%s]sentWarnings=%s", Configuration.LOG_INTENT, notification
+                        .getNotificationId(), range, ANotifier.getTypeAsString(type), SOSString.toString(warning), analyzer.getSentWarnings()));
             }
 
             warn = warning.getReason();
@@ -262,19 +283,19 @@ public class NotifierModel {
         }
 
         if (notification.getMonitors().size() == 0) {
-            LOGGER.info(String.format("[notification id=%s][%s][store to database only]%s%s", notification.getNotificationId(), ANotifier
+            LOGGER.info(String.format("[notification id=%s][%s][%s][store to database only]%s%s", notification.getNotificationId(), range, ANotifier
                     .getTypeAsString(type), ANotifier.getInfo(analyzer), (warnText == null ? "" : warnText)));
         } else {
-            LOGGER.info(String.format("[notification id=%s][%s][send to %s monitors]%s", notification.getNotificationId(), ANotifier.getTypeAsString(
-                    type), notification.getMonitors().size(), notification.getMonitorsAsString()));
+            LOGGER.info(String.format("[notification id=%s][%s][%s][send to %s monitors]%s", notification.getNotificationId(), range, ANotifier
+                    .getTypeAsString(type), notification.getMonitors().size(), notification.getMonitorsAsString()));
         }
 
         DBItemNotification mn = null;
         try {
-            mn = dbLayer.saveNotification(notification, analyzer, type, recoveredId, warn, warnText);
+            mn = dbLayer.saveNotification(notification, analyzer, range, type, recoveredId, warn, warnText);
         } catch (Throwable e) {
-            LOGGER.error(String.format("[notification id=%s][%s]%s[failed]%s", notification.getNotificationId(), ANotifier.getTypeAsString(type),
-                    ANotifier.getInfo(analyzer), e.toString()), e);
+            LOGGER.error(String.format("[notification id=%s][%s][%s]%s[failed]%s", notification.getNotificationId(), range, ANotifier.getTypeAsString(
+                    type), ANotifier.getInfo(analyzer), e.toString()), e);
         }
         int i = 1;
         for (AMonitor m : notification.getMonitors()) {
@@ -284,8 +305,8 @@ public class NotifierModel {
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);// contains all informations about the type etc
                 if (mn == null) {
-                    LOGGER.info(String.format("[%s]%s[skip save notification monitor]due to save notification failed", i, ANotifier.getInfo(analyzer,
-                            m, type)));
+                    LOGGER.info(String.format("%s[%s][notification id=%s][%s]%s[skip save notification monitor]due to save notification failed",
+                            Configuration.LOG_INTENT, i, notification.getNotificationId(), range, ANotifier.getInfo(analyzer, m, type)));
                 } else {
                     dbLayer.saveNotificationMonitor(mn, m, e);
                 }
@@ -298,14 +319,14 @@ public class NotifierModel {
                         LOGGER.error(nr.getError().getMessage(), nr.getError().getException());
                     }
                     if (mn == null) {
-                        LOGGER.info(String.format("[%s]%s[skip save notification result]due to save notification failed", i, ANotifier.getInfo(
-                                analyzer, m, type)));
+                        LOGGER.info(String.format("%s[%s][notification id=%s][%s]%s[skip save notification result]due to save notification failed",
+                                Configuration.LOG_INTENT, i, notification.getNotificationId(), range, ANotifier.getInfo(analyzer, m, type)));
                     } else {
                         if (nr.getSkipCause() == null) {
                             dbLayer.saveNotificationMonitor(mn, m, nr);
                         } else {
-                            LOGGER.info(String.format("[%s][skip]%s%s%s", i, ANotifier.getMainInfo(m), nr.getSkipCause(), ANotifier.getInfo(
-                                    analyzer)));
+                            LOGGER.info(String.format("%s[%s][notification id=%s][%s][skip]%s%s%s", Configuration.LOG_INTENT, i, notification
+                                    .getNotificationId(), range, ANotifier.getMainInfo(m), nr.getSkipCause(), ANotifier.getInfo(analyzer)));
                         }
                     }
                 } catch (Throwable e) {
@@ -329,10 +350,11 @@ public class NotifierModel {
 
     private void notifyStepWarning(Configuration conf, HistoryOrderStepResult r) {
         if (conf.getOnWarning().size() > 0 && r.getWarnings().size() > 0) {
+            NotificationRange range = NotificationRange.WORKFLOW_JOB;
             HistoryOrderStepBean hosb = r.getStep();
-            List<Notification> result = conf.findWorkflowMatches(conf.getOnWarning(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb
-                    .getJobName(), hosb.getJobLabel(), hosb.getCriticality(), hosb.getReturnCode(), true);
-            notify(conf, result, null, hosb, NotificationType.WARNING, r.getWarnings());
+            List<Notification> result = conf.findWorkflowMatches(range, conf.getOnWarning(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb
+                    .getJobName(), hosb.getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
+            notify(range, conf, result, null, hosb, NotificationType.WARNING, r.getWarnings());
         }
     }
 

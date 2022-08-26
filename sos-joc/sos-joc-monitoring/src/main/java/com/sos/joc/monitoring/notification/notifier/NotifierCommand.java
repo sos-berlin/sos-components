@@ -16,6 +16,7 @@ import com.sos.joc.classes.JOCSOSShell;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
+import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.configuration.monitor.MonitorCommand;
 import com.sos.monitoring.notification.NotificationType;
@@ -58,7 +59,7 @@ public class NotifierCommand extends ANotifier {
             return result;
         }
 
-        LOGGER.info("    " + getInfo4execute(false, mo, mos, type, commandResult.getCommand()));
+        LOGGER.info(Configuration.LOG_INTENT_2 + getInfo4execute(false, mo, mos, type, commandResult.getCommand()));
         return result;
     }
 

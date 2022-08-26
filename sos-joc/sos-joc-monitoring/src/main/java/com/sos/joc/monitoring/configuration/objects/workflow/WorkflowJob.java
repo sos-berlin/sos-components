@@ -1,11 +1,16 @@
 package com.sos.joc.monitoring.configuration.objects.workflow;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.monitoring.configuration.AElement;
 
 public class WorkflowJob extends AElement {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowJob.class);
 
     public enum CriticalityType {
         ALL, NORMAL, CRITICAL
@@ -22,7 +27,6 @@ public class WorkflowJob extends AElement {
     private final CriticalityType criticality;
     private final int returnCodeFrom;
     private final int returnCodeTo;
-    private final boolean global;
 
     public WorkflowJob(Node node) throws Exception {
         super(node);
@@ -31,14 +35,24 @@ public class WorkflowJob extends AElement {
         criticality = getCriticality(getElement().getAttribute(ATTRIBUTE_NAME_CRITICALITY));
         returnCodeFrom = getReturnCode(ATTRIBUTE_NAME_RETURN_CODE_FROM);
         returnCodeTo = getReturnCode(ATTRIBUTE_NAME_RETURN_CODE_TO);
-        global = name.equals(AElement.ASTERISK) && label.equals(AElement.ASTERISK) && criticality.equals(CriticalityType.ALL) && returnCodeFrom == -1
-                && returnCodeTo == -1;
+    }
+
+    @Override
+    public int hashCode() {
+        HashCodeBuilder b = new HashCodeBuilder();
+        b.append(name);
+        b.append(label);
+        b.append(criticality.name());
+        b.append(returnCodeFrom);
+        b.append(returnCodeTo);
+        return b.toHashCode();
     }
 
     public static CriticalityType getCriticality(String val) {
         try {
             return CriticalityType.valueOf(val.toUpperCase());
         } catch (Throwable e) {
+            LOGGER.error(String.format("[config][parse criticality=%s]%s", val.toUpperCase(), e.toString()), e);
             return CriticalityType.ALL;
         }
     }
@@ -47,6 +61,7 @@ public class WorkflowJob extends AElement {
         try {
             return CriticalityType.valueOf(JobCriticality.fromValue(val).value());
         } catch (Throwable e) {
+            LOGGER.error(String.format("[config][parse criticality=%s]%s", val, e.toString()), e);
             return CriticalityType.ALL;
         }
     }
@@ -57,6 +72,7 @@ public class WorkflowJob extends AElement {
             try {
                 return Integer.parseInt(r);
             } catch (Throwable e) {
+                LOGGER.error(String.format("[config][parse return_code=%s]%s", r, e.toString()), e);
             }
         }
         return -1;
@@ -81,8 +97,5 @@ public class WorkflowJob extends AElement {
     public int getReturnCodeTo() {
         return returnCodeTo;
     }
-
-    public boolean isGlobal() {
-        return global;
-    }
+    
 }
