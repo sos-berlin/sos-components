@@ -2,20 +2,25 @@ package com.sos.joc.monitoring.configuration.objects.workflow;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.xml.SOSXML;
 import com.sos.joc.monitoring.configuration.AElement;
 
 public class Workflow extends AElement {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(Workflow.class);
+
     private static String ATTRIBUTE_NAME_PATH = "path";
-    
+
     private final String controllerId;
     private final String path;
-    private final boolean global;
 
     private List<WorkflowJob> jobs;
 
@@ -24,34 +29,25 @@ public class Workflow extends AElement {
         this.controllerId = controllerId;
 
         path = getAttributeValue(ATTRIBUTE_NAME_PATH, AElement.ASTERISK);
-        // controllerId = getAttributeValue(ATTRIBUTE_NAME_CONTROLLER_ID, AElement.ASTERISK);
-        global = path.equals(AElement.ASTERISK) && controllerId.equals(AElement.ASTERISK);
-        jobs = new ArrayList<>();
         process();
     }
 
     private void process() {
-        List<Element> children = SOSXML.getChildElemens(getElement());
-        boolean hasGlobalJob = false;
+        jobs = new ArrayList<>();
 
-        addJobs: if (children != null) {
+        List<Element> children = SOSXML.getChildElemens(getElement());
+        if (children != null) {
+            List<WorkflowJob> l = new ArrayList<>();
             for (Element child : children) {
                 try {
-                    WorkflowJob job = new WorkflowJob((Node) child);
-                    hasGlobalJob = job.isGlobal();
-                    if (hasGlobalJob) {
-                        break addJobs;
-                    }
-
-                    jobs.add(job);
+                    l.add(new WorkflowJob((Node) child));
                 } catch (Exception e) {
-
+                    LOGGER.error("[process]" + e.toString(), e);
                 }
             }
-        }
-
-        if (hasGlobalJob) {
-            jobs = new ArrayList<>();
+            if (l.size() > 0) {
+                jobs = l.stream().filter(SOSCollection.distinctByKey(e -> e.hashCode())).collect(Collectors.toList());
+            }
         }
     }
 
@@ -67,7 +63,4 @@ public class Workflow extends AElement {
         return jobs;
     }
 
-    public boolean isGlobal() {
-        return global && jobs.size() == 0;
-    }
 }

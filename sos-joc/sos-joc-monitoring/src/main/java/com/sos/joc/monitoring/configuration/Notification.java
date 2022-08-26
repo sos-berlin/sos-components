@@ -48,8 +48,6 @@ public class Notification extends AElement {
     private final List<String> jobResources;
     private final String notificationId;
 
-    private boolean global;
-
     public Notification(Document doc, Node node, int position) throws Exception {
         super(node);
         this.types = evaluateTypes();
@@ -101,10 +99,6 @@ public class Notification extends AElement {
                                 .toString()), e);
                     }
                 }
-
-                // if (monitors.size() == 0) {
-                // throw new SOSMissingChildElementsException("[" + getElementName() + "/" + child.getNodeName() + "]all monitors skipped");
-                // }
                 break;
             case ELEMENT_NAME_NOTIFICATION_OBJECTS:
                 handleWorkflows(doc, child);
@@ -114,15 +108,12 @@ public class Notification extends AElement {
     }
 
     private void handleWorkflows(Document doc, Element notificationObjects) throws Exception {
-        global = false;
         List<Element> elements = SOSXML.getChildElemens(notificationObjects, ELEMENT_NAME_WORKFLOWS_REF);
         if (elements == null) {
             throw new SOSMissingChildElementsException(getElementName() + "/" + notificationObjects.getNodeName());
         }
         List<String> refs = new ArrayList<>();
-        Workflow globalWorkflow = null;
-
-        addWorkflows: for (Element object : elements) {
+        for (Element object : elements) {
             String ref = object.getAttribute(AMonitor.ATTRIBUTE_NAME_REF);
             if (!SOSString.isEmpty(ref)) {
                 if (!refs.contains(ref)) {
@@ -132,23 +123,13 @@ public class Notification extends AElement {
                         List<Element> ws = SOSXML.getChildElemens(n, ELEMENT_NAME_WORKFLOW);
                         if (ws != null) {
                             for (Element ew : ws) {
-                                Workflow w = new Workflow(ew, controllerId);
-                                if (w.isGlobal()) {
-                                    globalWorkflow = w;
-                                    break addWorkflows;
-                                }
-                                workflows.add(w);
+                                workflows.add(new Workflow(ew, controllerId));
                             }
                         }
                     }
                     refs.add(ref);
                 }
             }
-        }
-        if (globalWorkflow != null) {
-            workflows.clear();
-            workflows.add(globalWorkflow);
-            global = true;
         }
     }
 
@@ -202,9 +183,5 @@ public class Notification extends AElement {
 
     protected List<String> getJobResources() {
         return jobResources;
-    }
-
-    public boolean isGlobal() {
-        return global;
     }
 }

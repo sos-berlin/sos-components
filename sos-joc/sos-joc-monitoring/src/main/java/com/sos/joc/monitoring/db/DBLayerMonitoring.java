@@ -327,11 +327,11 @@ public class DBLayerMonitoring extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public DBItemNotification saveNotification(Notification notification, NotifyAnalyzer analyzer, NotificationType type,
+    public DBItemNotification saveNotification(Notification notification, NotifyAnalyzer analyzer, NotificationRange range, NotificationType type,
             Long recoveredNotificationId, JobWarning warn, String warnText) throws SOSHibernateException {
         DBItemNotification item = new DBItemNotification();
         item.setType(type);
-        item.setRange(analyzer.getRange());
+        item.setRange(range);
         item.setNotificationId(notification.getNotificationId());
         item.setRecoveredId(recoveredNotificationId);
         item.setHasMonitors(notification.getMonitors().size() > 0);

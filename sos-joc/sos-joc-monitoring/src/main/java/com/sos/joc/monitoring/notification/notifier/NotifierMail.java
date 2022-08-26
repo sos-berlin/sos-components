@@ -109,7 +109,7 @@ public class NotifierMail extends ANotifier {
                 throw new Exception(String.format("[%s][missing host][known properties]%s", monitor.getInfo(), mr.getMaskedMailProperties()));
             }
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][known properties]%s", monitor.getInfo(), mr.getMaskedMailProperties()));
+                LOGGER.debug(String.format("%s[%s][known properties]%s", Configuration.LOG_INTENT, monitor.getInfo(), mr.getMaskedMailProperties()));
             }
         } catch (Throwable e) {
             mail = null;
@@ -256,13 +256,13 @@ public class NotifierMail extends ANotifier {
             try {
                 jn = Globals.objectMapper.readValue(mos.getJobNotification(), JobNotification.class);
             } catch (Throwable e) {
-                LOGGER.error(String.format("[%s][job=%s][error on read job notification][%s]%s", ANotifier.getTypeAsString(type), mos.getJobName(),
-                        mos.getJobNotification(), e.toString()), e);
+                LOGGER.error(String.format("%s[%s][job=%s][error on read job notification][%s]%s", Configuration.LOG_INTENT, ANotifier
+                        .getTypeAsString(type), mos.getJobName(), mos.getJobNotification(), e.toString()), e);
             }
             if (HistoryNotification.isJobMailNotificationEmpty(jn)) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][skip][job=%s][job notification][%s]missing settings", ANotifier.getTypeAsString(type), mos
-                            .getJobName(), mos.getJobNotification()));
+                    LOGGER.debug(String.format("%s[%s][skip][job=%s][job notification][%s]missing settings", Configuration.LOG_INTENT, ANotifier
+                            .getTypeAsString(type), mos.getJobName(), mos.getJobNotification()));
                 }
                 return null;
             } else if (jn.getMail() == null) {
@@ -270,8 +270,8 @@ public class NotifierMail extends ANotifier {
             }
 
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("[%s][job=%s][use job notification]%s", ANotifier.getTypeAsString(type), mos.getJobName(), mos
-                        .getJobNotification()));
+                LOGGER.debug(String.format("%s[%s][job=%s][use job notification]%s", Configuration.LOG_INTENT, ANotifier.getTypeAsString(type), mos
+                        .getJobName(), mos.getJobNotification()));
             }
 
             // check job notification
@@ -302,8 +302,8 @@ public class NotifierMail extends ANotifier {
                     mail.addBCC(bcc);
                 }
             } catch (Throwable e) {
-                LOGGER.error(String.format("[%s][job=%s][error on set mail recipients][%s]%s", ANotifier.getTypeAsString(type), mos.getJobName(), mos
-                        .getJobNotification(), e.toString()), e);
+                LOGGER.error(String.format("%s[%s][job=%s][error on set mail recipients][%s]%s", Configuration.LOG_INTENT, ANotifier.getTypeAsString(
+                        type), mos.getJobName(), mos.getJobNotification(), e.toString()), e);
             }
 
         }

@@ -16,6 +16,7 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.model.NotifyAnalyzer;
 import com.sos.monitoring.notification.NotificationRange;
@@ -114,9 +115,10 @@ public abstract class ANotifier {
     protected String getInfo4execute(boolean isExecute, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type,
             String addInfo) {
         StringBuilder sb = new StringBuilder();
+        sb.append(Configuration.LOG_INTENT);
         sb.append("[").append(nr).append("]");
+        sb.append("[").append(isExecute ? "execute" : "executed").append("]");
         sb.append("[").append(getClass().getSimpleName()).append(" ").append(getMonitorInfo(getMonitor())).append("]");
-        sb.append("[").append(isExecute ? "execute" : "successful").append("]");
         sb.append(getInfo(mo, mos, type));
         if (addInfo != null) {
             sb.append(addInfo);
@@ -126,9 +128,10 @@ public abstract class ANotifier {
 
     protected String getInfo4executeFailed(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type, String addInfo) {
         StringBuilder sb = new StringBuilder();
+        sb.append(Configuration.LOG_INTENT);
         sb.append("[").append(nr).append("]");
-        sb.append("[").append(getClass().getSimpleName()).append(" ").append(getMonitorInfo(getMonitor())).append("]");
         sb.append("[failed]");
+        sb.append("[").append(getClass().getSimpleName()).append(" ").append(getMonitorInfo(getMonitor())).append("]");
         sb.append(getInfo(mo, mos, type));
         if (addInfo != null) {
             sb.append(addInfo);

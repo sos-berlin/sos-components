@@ -1057,6 +1057,14 @@ public class HistoryMonitoringModel implements Serializable {
         public List<HistoryOrderStepResultWarn> getWarnings() {
             return warnings;
         }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("step=").append(SOSString.toString(step));
+            sb.append(",warnings=").append(warnings == null ? "null" : warnings.toString());
+            return sb.toString();
+        }
     }
 
     public class HistoryOrderStepResultWarn {
@@ -1075,6 +1083,14 @@ public class HistoryMonitoringModel implements Serializable {
 
         public String getText() {
             return text;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("reason=").append(SOSString.toString(reason));
+            sb.append(",test=").append(text);
+            return sb.toString();
         }
     }
 

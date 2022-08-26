@@ -32,6 +32,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.inventory.model.job.JobCriticality;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.classes.history.HistoryNotification;
 import com.sos.joc.classes.history.HistoryPosition;
@@ -489,10 +490,11 @@ public class HistoryModel {
         }
     }
 
-    private void postEventTaskLogFirstStderr(Long eventId, CachedOrder co, CachedOrderStep cos) {
+    private void postEventTaskLogFirstStderr(Long eventId, CachedOrder co, CachedOrderStep cos, CachedWorkflowJob job) {
         if (co != null && cos != null && cos.getFirstChunkStdError() != null) {
             HistoryOrderStepBean hosb = cos.convert(EventType.OrderStderrWritten, eventId, controllerConfiguration.getCurrent().getId(), co
                     .getWorkflowPath());
+            hosb.setCriticality(getJobCriticality(job));
             EventBus.getInstance().post(new HistoryOrderTaskLogFirstStderr(controllerConfiguration.getCurrent().getId(), hosb));
         }
     }
@@ -1523,10 +1525,15 @@ public class HistoryModel {
         hosb.setErrorReason(le.getErrorReason());
         hosb.setErrorState(le.getErrorState());
         hosb.setErrorText(le.getErrorText());
+        hosb.setCriticality(getJobCriticality(job));
         hosb.setWarnIfLonger(job.getWarnIfLonger());
         hosb.setWarnIfShorter(job.getWarnIfShorter());
         hosb.setWarnReturnCodes(job.getWarnReturnCodes());
         return hosb;
+    }
+
+    private int getJobCriticality(CachedWorkflowJob job) {
+        return job.getCriticality() == null ? JobCriticality.NORMAL.intValue() : job.getCriticality().intValue();
     }
 
     private Map<String, Value> handleNamedValues(FatEventOrderStepProcessed entry, CachedOrder co, CachedOrderStep cos) {
@@ -1582,7 +1589,7 @@ public class HistoryModel {
                     CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, co.getWorkflowVersionId());
                     CachedWorkflowJob job = cw.getJob(cos.getJobName());
                     if (job != null && job.getWarnOnErrorWritten() != null && job.getWarnOnErrorWritten()) {
-                        postEventTaskLogFirstStderr(eventId, co, cos);
+                        postEventTaskLogFirstStderr(eventId, co, cos, job);
                     }
                 }
             } catch (Exception e) {

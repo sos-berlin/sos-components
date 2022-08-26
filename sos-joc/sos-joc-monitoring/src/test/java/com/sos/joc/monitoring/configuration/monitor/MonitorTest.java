@@ -17,6 +17,7 @@ import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.configuration.monitor.mail.MonitorMail;
 import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
 import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob;
+import com.sos.monitoring.notification.NotificationRange;
 
 public class MonitorTest {
 
@@ -46,21 +47,23 @@ public class MonitorTest {
         c.process(new String(Files.readAllBytes(Paths.get("src/test/resources/Configurations.xml")), Charsets.UTF_8));
 
         LOGGER.info("---WORKFLOW MATCHES---:");
-        List<Notification> r = c.findWorkflowMatches(c.getOnError(), "js7.x", "/my_workflow");
+        List<Notification> r = c.findWorkflowMatches(NotificationRange.WORKFLOW, c.getOnError(), "js7.x", "/my_workflow");
         LOGGER.info("---               MATCHES---:" + r.size());
         for (Notification n : r) {
             LOGGER.info("                  " + SOSString.toString(n));
         }
 
         LOGGER.info("---JOB MATCHES 1---:");
-        r = c.findWorkflowMatches(c.getOnError(), "js7.x", "/my_workflow", "my_job_name", "my_job_label", JobCriticality.NORMAL.intValue(), 0);
+        r = c.findWorkflowMatches(NotificationRange.WORKFLOW_JOB, c.getOnError(), "js7.x", "/my_workflow", "my_job_name", "my_job_label",
+                JobCriticality.NORMAL.intValue(), 0);
         LOGGER.info("---               MATCHES---:" + r.size());
         for (Notification n : r) {
             LOGGER.info("                  " + SOSString.toString(n));
         }
 
         LOGGER.info("---JOB MATCHES 2---:");
-        r = c.findWorkflowMatches(c.getOnSuccess(), "js7.x", "/my_workflow", "my_job_name", "my_job_label", JobCriticality.CRITICAL.intValue(), 0);
+        r = c.findWorkflowMatches(NotificationRange.WORKFLOW_JOB, c.getOnSuccess(), "js7.x", "/my_workflow", "my_job_name", "my_job_label",
+                JobCriticality.CRITICAL.intValue(), 0);
         LOGGER.info("---               MATCHES---:" + r.size());
         for (Notification n : r) {
             LOGGER.info("                  " + SOSString.toString(n));
