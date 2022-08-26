@@ -89,7 +89,6 @@ public class JobTemplatesPropagate {
     private boolean withAdmissionTime = false;
     private boolean withNotification = false;
     private Set<Folder> permittedFolders = null;
-    //private WorkflowReport workflowReport;
     
     public JobTemplatesPropagate() {
         //
@@ -174,13 +173,17 @@ public class JobTemplatesPropagate {
         jReport.setState(getState(JobReportStateText.CHANGED));
         jReport.setJobTemplatePath(jt.getPath());
         jReport.setActions(new Actions());
-        template2Job(jt, job, jReport, env);
         switch (jt.getExecutable().getTYPE()) {
         case InternalExecutable:
+            if (env == null) {
+                setNodeArguments(w.getInstructions(), jobName, jReport, jt.getArguments(), null, false);
+            }
+            template2Job(jt, job, jReport, env);
             break;
         case ScriptExecutable:
         case ShellScriptExecutable:
-            setNodeArguments(w.getInstructions(), jobName, jReport, jt.getArguments(), env);
+            template2Job(jt, job, jReport, env);
+            setNodeArguments(w.getInstructions(), jobName, jReport, jt.getArguments(), env, true);
             break;
         }
         Actions actions = jReport.getActions();
@@ -416,14 +419,15 @@ public class JobTemplatesPropagate {
         return env;
     }
     
-    private static void setNodeArguments(JobReport jReport, NamedJob j, Parameters args, Environment defaultArgs) {
+    private static void setNodeArguments(JobReport jReport, NamedJob j, Parameters args, Environment defaultArgs, boolean withAddRequiredParams) {
         if (defaultArgs != null && defaultArgs.getAdditionalProperties() != null) {
             j.setDefaultArguments(defaultArgs);
         }
-        j.setDefaultArguments(setArguments(jReport, j.getDefaultArguments(), args));
+        j.setDefaultArguments(setArguments(jReport, j.getDefaultArguments(), args, withAddRequiredParams));
     }
     
     private static Environment readNodeArguments(NamedJob j, Environment env) {
+        
         // copy NodeArgument
         if (j.getDefaultArguments() != null && j.getDefaultArguments().getAdditionalProperties() != null) {
             j.getDefaultArguments().getAdditionalProperties().forEach((k, v) -> env.setAdditionalProperty(k, v));
@@ -434,6 +438,10 @@ public class JobTemplatesPropagate {
     }
     
     private static Environment setArguments(JobReport jReport, Environment env, Parameters args) {
+        return setArguments(jReport, env, args, true);
+    }
+    
+    private static Environment setArguments(JobReport jReport, Environment env, Parameters args, boolean withAddRequiredParams) {
         Actions actions = jReport.getActions();
         
         if (env == null || env.getAdditionalProperties() == null) {
@@ -449,11 +457,13 @@ public class JobTemplatesPropagate {
         Set<String> keysToDelete = envKeys.stream().filter(key -> !paramKeys.contains(key)).collect(Collectors.toSet());
 
         if (!keysToDelete.isEmpty()) {
-            Environment deletedEnv = new Environment();
+            if (actions.getDeleteArguments() == null) {
+                actions.setDeleteArguments(new Environment());
+            }
+            Environment deletedEnv = actions.getDeleteArguments();
             for (String key : keysToDelete) {
                 deletedEnv.setAdditionalProperty(key, env.getAdditionalProperties().get(key));
             }
-            actions.setDeleteArguments(deletedEnv);
         }
         
         for (String key : keysToDelete) {
@@ -461,30 +471,48 @@ public class JobTemplatesPropagate {
         }
         
         // add required new keys with default value
-        Environment addEnv = new Environment();
+        if (actions.getAddRequiredArguments() == null) {
+            actions.setAddRequiredArguments(new Environment());
+        }
+        Environment addEnv = actions.getAddRequiredArguments();
+        List<String> foundRequiredParams = new ArrayList<>();
         for (Map.Entry<String, Parameter> entry : args.getAdditionalProperties().entrySet()) {
-            if (entry.getValue().getRequired() && !envKeys.contains(entry.getKey())) {
-                // TODO conflict required without default value
-                String _default = entry.getValue().getDefault() != null ? entry.getValue().getDefault().toString() : "";
-                if (_default.isEmpty()) {
-                  //TODO store this keys for report
+            if (entry.getValue().getRequired()) {
+                if (withAddRequiredParams && !envKeys.contains(entry.getKey())) {
+
+                    // TODO conflict required without default value
+                    String _default = entry.getValue().getDefault() != null ? entry.getValue().getDefault().toString() : "";
+                    if (_default.isEmpty()) {
+                        // TODO store this keys for report
+                    }
+                    addEnv.setAdditionalProperty(entry.getKey(), JsonConverter.quoteString(_default));
+                    env.setAdditionalProperty(entry.getKey(), JsonConverter.quoteString(_default));
+                    
+                } else if (envKeys.contains(entry.getKey())) {
+                    foundRequiredParams.add(entry.getKey());
                 }
-                addEnv.setAdditionalProperty(entry.getKey(), JsonConverter.quoteString(_default));
-                env.setAdditionalProperty(entry.getKey(), JsonConverter.quoteString(_default));
             }
         }
         
-        if (!addEnv.getAdditionalProperties().isEmpty()) {
-            actions.setAddRequiredArguments(addEnv);
+        if (!foundRequiredParams.isEmpty()) {
+            for (String key : foundRequiredParams) {
+                args.getAdditionalProperties().remove(key);
+            }
         }
+
+        if (addEnv.getAdditionalProperties().isEmpty()) {
+            actions.setAddRequiredArguments(null);
+        }
+
         if (env.getAdditionalProperties().isEmpty()) {
             env = null;
         }
-        
+            
         return env;
     }
     
-    private static void setNodeArguments(List<Instruction> insts, String jobName, JobReport jReport, Parameters args, Environment defaultArgs) {
+    private static void setNodeArguments(List<Instruction> insts, String jobName, JobReport jReport, Parameters args, Environment defaultArgs,
+            boolean withAddRequiredParams) {
         if (insts != null) {
             for (Instruction inst : insts) {
                 switch (inst.getTYPE()) {
@@ -492,50 +520,50 @@ public class JobTemplatesPropagate {
                     ForkJoin f = inst.cast();
                     if (f.getBranches() != null) {
                         for (Branch b : f.getBranches()) {
-                            setNodeArguments(b.getWorkflow().getInstructions(), jobName, jReport, args, defaultArgs);
+                            setNodeArguments(b.getWorkflow().getInstructions(), jobName, jReport, args, defaultArgs, withAddRequiredParams);
                         }
                     }
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
                     if (fl.getWorkflow() != null) {
-                        setNodeArguments(fl.getWorkflow().getInstructions(), jobName, jReport, args, defaultArgs);
+                        setNodeArguments(fl.getWorkflow().getInstructions(), jobName, jReport, args, defaultArgs, withAddRequiredParams);
                     }
                     break;
                 case IF:
                     IfElse ie = inst.cast();
                     if (ie.getThen() != null) {
-                        setNodeArguments(ie.getThen().getInstructions(), jobName, jReport, args, defaultArgs);
+                        setNodeArguments(ie.getThen().getInstructions(), jobName, jReport, args, defaultArgs, withAddRequiredParams);
                     }
                     if (ie.getElse() != null) {
-                        setNodeArguments(ie.getElse().getInstructions(), jobName, jReport, args, defaultArgs);
+                        setNodeArguments(ie.getElse().getInstructions(), jobName, jReport, args, defaultArgs, withAddRequiredParams);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     if (tc.getTry() != null) {
-                        setNodeArguments(tc.getTry().getInstructions(), jobName, jReport, args, defaultArgs);
+                        setNodeArguments(tc.getTry().getInstructions(), jobName, jReport, args, defaultArgs, withAddRequiredParams);
                     }
                     if (tc.getCatch() != null) {
-                        setNodeArguments(tc.getCatch().getInstructions(), jobName, jReport, args, defaultArgs);
+                        setNodeArguments(tc.getCatch().getInstructions(), jobName, jReport, args, defaultArgs, withAddRequiredParams);
                     }
                     break;
                 case LOCK:
                     Lock l = inst.cast();
                     if (l.getLockedWorkflow() != null) {
-                        setNodeArguments(l.getLockedWorkflow().getInstructions(), jobName, jReport, args, defaultArgs);
+                        setNodeArguments(l.getLockedWorkflow().getInstructions(), jobName, jReport, args, defaultArgs, withAddRequiredParams);
                     }
                     break;
                 case CYCLE:
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
-                        setNodeArguments(c.getCycleWorkflow().getInstructions(), jobName, jReport, args, defaultArgs);
+                        setNodeArguments(c.getCycleWorkflow().getInstructions(), jobName, jReport, args, defaultArgs, withAddRequiredParams);
                     }
                     break;
                 case EXECUTE_NAMED:
                     NamedJob j = inst.cast();
                     if (j.getJobName().equals(jobName)) {
-                        setNodeArguments(jReport, j, args, defaultArgs);
+                        setNodeArguments(jReport, j, args, defaultArgs, withAddRequiredParams);
                     }
                 default:
                     break;
