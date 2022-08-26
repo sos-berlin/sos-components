@@ -488,7 +488,7 @@ public class JobTemplatesPropagate {
                     addEnv.setAdditionalProperty(entry.getKey(), JsonConverter.quoteString(_default));
                     env.setAdditionalProperty(entry.getKey(), JsonConverter.quoteString(_default));
                     
-                } else if (envKeys.contains(entry.getKey())) {
+                } else if (!withAddRequiredParams && envKeys.contains(entry.getKey())) {
                     foundRequiredParams.add(entry.getKey());
                 }
             }
@@ -496,7 +496,7 @@ public class JobTemplatesPropagate {
         
         if (!foundRequiredParams.isEmpty()) {
             for (String key : foundRequiredParams) {
-                args.getAdditionalProperties().remove(key);
+                args.getAdditionalProperties().get(key).setRequired(false);
             }
         }
 
