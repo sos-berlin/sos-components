@@ -1,6 +1,6 @@
 package com.sos.js7.converter.js1.common.runtime;
 
-import com.sos.js7.converter.js1.common.json.calendar.JS1Calendars;
+import com.sos.js7.converter.js1.common.json.calendars.JS1Calendars;
 
 public class CalendarsHelper {
 
