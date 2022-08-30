@@ -2,6 +2,7 @@ package com.sos.joc.classes.inventory;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.common.Variables;
@@ -249,13 +250,13 @@ public class JsonSerializer {
     }
     
     private static void emptyStringCollectionsToNull(Collection<String> coll) {
-        if (coll != null && coll.removeIf(i -> i.isEmpty()) && coll.isEmpty()) {
+        if (coll != null && coll.removeIf(Objects::isNull) && coll.removeIf(i -> i.isEmpty()) && coll.isEmpty()) {
             coll = null;
         }
     }
     
     private static void emptyCollectionsToNull(Collection<?> coll) {
-        if (coll != null  && coll.isEmpty()) {
+        if (coll != null && coll.removeIf(Objects::isNull) && coll.isEmpty()) {
             coll = null;
         }
     }

@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -132,7 +133,7 @@ public class JsonConverter {
                             if (signEs != null) {
                                 if (rc.getSuccess() != null) {
                                     signEs.getReturnCodeMeaning().setSuccess(Stream.of(rc.getSuccess(), rc.getWarning()).flatMap(List::stream)
-                                            .distinct().sorted().collect(Collectors.toList()));
+                                            .filter(Objects::nonNull).distinct().sorted().collect(Collectors.toList()));
                                 } else if (rc.getFailure() != null) {
                                     signEs.getReturnCodeMeaning().getFailure().removeAll(rc.getWarning());
                                 } else {
@@ -140,7 +141,7 @@ public class JsonConverter {
                                         signEs.setReturnCodeMeaning(new com.sos.sign.model.job.JobReturnCode());
                                     }
                                     signEs.getReturnCodeMeaning().setSuccess(Stream.of(Collections.singletonList(0), rc.getWarning()).flatMap(
-                                            List::stream).distinct().sorted().collect(Collectors.toList()));
+                                            List::stream).filter(Objects::nonNull).distinct().sorted().collect(Collectors.toList()));
                                 }
                             }
                         }
