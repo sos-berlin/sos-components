@@ -250,14 +250,21 @@ public class JsonSerializer {
     }
     
     private static void emptyStringCollectionsToNull(Collection<String> coll) {
-        if (coll != null && coll.removeIf(Objects::isNull) && coll.removeIf(i -> i.isEmpty()) && coll.isEmpty()) {
-            coll = null;
+        if (coll != null) {
+            coll.removeIf(Objects::isNull);
+            coll.removeIf(i -> i.isEmpty());
+            if (coll.isEmpty()) {
+                coll = null;
+            }
         }
     }
     
     private static void emptyCollectionsToNull(Collection<?> coll) {
-        if (coll != null && coll.removeIf(Objects::isNull) && coll.isEmpty()) {
-            coll = null;
+        if (coll != null) {
+            coll.removeIf(Objects::isNull);
+            if (coll.isEmpty()) {
+                coll = null;
+            }
         }
     }
     
