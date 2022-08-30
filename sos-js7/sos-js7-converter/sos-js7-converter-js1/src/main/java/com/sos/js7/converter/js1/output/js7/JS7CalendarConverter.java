@@ -17,7 +17,7 @@ import com.sos.inventory.model.calendar.WeekDays;
 import com.sos.inventory.model.calendar.WeeklyDay;
 import com.sos.inventory.model.calendar.WhenHolidayType;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig;
-import com.sos.js7.converter.js1.common.json.calendar.JS1Calendar;
+import com.sos.js7.converter.js1.common.json.calendars.JS1Calendar;
 
 public class JS7CalendarConverter {
 
@@ -35,13 +35,13 @@ public class JS7CalendarConverter {
         return cal;
     }
 
-    public static List<Period> convertPeriods(List<com.sos.js7.converter.js1.common.json.calendar.Period> js1) {
+    public static List<Period> convertPeriods(List<com.sos.js7.converter.js1.common.json.calendars.Period> js1) {
         if (js1 == null || js1.size() == 0) {
             return null;
         }
 
         List<Period> result = new ArrayList<>();
-        for (com.sos.js7.converter.js1.common.json.calendar.Period js1Child : js1) {
+        for (com.sos.js7.converter.js1.common.json.calendars.Period js1Child : js1) {
             result.add(convertPeriod(js1Child));
         }
         return result;
@@ -76,7 +76,7 @@ public class JS7CalendarConverter {
         return name;
     }
 
-    private static CalendarType convertType(com.sos.js7.converter.js1.common.json.calendar.CalendarType js1) {
+    private static CalendarType convertType(com.sos.js7.converter.js1.common.json.calendars.CalendarType js1) {
         switch (js1) {
         case NON_WORKING_DAYS:
             return CalendarType.NONWORKINGDAYSCALENDAR;
@@ -90,7 +90,7 @@ public class JS7CalendarConverter {
         }
     }
 
-    private static Frequencies convertFrequencies(com.sos.js7.converter.js1.common.json.calendar.Frequencies js1) {
+    private static Frequencies convertFrequencies(com.sos.js7.converter.js1.common.json.calendars.Frequencies js1) {
         if (js1 == null) {
             return null;
         }
@@ -105,12 +105,12 @@ public class JS7CalendarConverter {
         return f;
     }
 
-    private static List<Repetition> convertRepetitions(List<com.sos.js7.converter.js1.common.json.calendar.Repetition> js1) {
+    private static List<Repetition> convertRepetitions(List<com.sos.js7.converter.js1.common.json.calendars.Repetition> js1) {
         if (js1 == null || js1.size() == 0) {
             return null;
         }
         List<Repetition> result = new ArrayList<>();
-        for (com.sos.js7.converter.js1.common.json.calendar.Repetition js1Child : js1) {
+        for (com.sos.js7.converter.js1.common.json.calendars.Repetition js1Child : js1) {
             Repetition o = new Repetition();
             o.setFrom(js1Child.getFrom());
             o.setRepetition(convertRepetition(js1Child.getRepetition()));
@@ -121,7 +121,7 @@ public class JS7CalendarConverter {
         return result;
     }
 
-    private static RepetitionText convertRepetition(com.sos.js7.converter.js1.common.json.calendar.RepetitionText js1) {
+    private static RepetitionText convertRepetition(com.sos.js7.converter.js1.common.json.calendars.RepetitionText js1) {
         if (js1 != null) {
             switch (js1) {
             case DAILY:
@@ -137,13 +137,13 @@ public class JS7CalendarConverter {
         return null;
     }
 
-    private static List<Months> convertMonths(List<com.sos.js7.converter.js1.common.json.calendar.Months> js1) {
+    private static List<Months> convertMonths(List<com.sos.js7.converter.js1.common.json.calendars.Months> js1) {
         if (js1 == null || js1.size() == 0) {
             return null;
         }
 
         List<Months> result = new ArrayList<>();
-        for (com.sos.js7.converter.js1.common.json.calendar.Months js1Child : js1) {
+        for (com.sos.js7.converter.js1.common.json.calendars.Months js1Child : js1) {
             Months o = new Months();
             o.setFrom(js1Child.getFrom());
             o.setMonthdays(convertMonthDays(js1Child.getMonthdays()));
@@ -156,13 +156,13 @@ public class JS7CalendarConverter {
         return result;
     }
 
-    private static List<WeekDays> convertWeekdays(List<com.sos.js7.converter.js1.common.json.calendar.WeekDays> js1) {
+    private static List<WeekDays> convertWeekdays(List<com.sos.js7.converter.js1.common.json.calendars.WeekDays> js1) {
         if (js1 == null || js1.size() == 0) {
             return null;
         }
 
         List<WeekDays> result = new ArrayList<>();
-        for (com.sos.js7.converter.js1.common.json.calendar.WeekDays js1Child : js1) {
+        for (com.sos.js7.converter.js1.common.json.calendars.WeekDays js1Child : js1) {
             WeekDays o = new WeekDays();
             o.setDays(js1Child.getDays());
             o.setFrom(js1Child.getFrom());
@@ -172,13 +172,13 @@ public class JS7CalendarConverter {
         return result;
     }
 
-    private static List<MonthDays> convertMonthDays(List<com.sos.js7.converter.js1.common.json.calendar.MonthDays> js1) {
+    private static List<MonthDays> convertMonthDays(List<com.sos.js7.converter.js1.common.json.calendars.MonthDays> js1) {
         if (js1 == null || js1.size() == 0) {
             return null;
         }
 
         List<MonthDays> result = new ArrayList<>();
-        for (com.sos.js7.converter.js1.common.json.calendar.MonthDays js1Child : js1) {
+        for (com.sos.js7.converter.js1.common.json.calendars.MonthDays js1Child : js1) {
             MonthDays o = new MonthDays();
             o.setDays(js1Child.getDays());
             o.setFrom(js1Child.getFrom());
@@ -189,13 +189,13 @@ public class JS7CalendarConverter {
         return result;
     }
 
-    private static List<WeeklyDay> convertWeeklyDays(List<com.sos.js7.converter.js1.common.json.calendar.WeeklyDay> js1) {
+    private static List<WeeklyDay> convertWeeklyDays(List<com.sos.js7.converter.js1.common.json.calendars.WeeklyDay> js1) {
         if (js1 == null || js1.size() == 0) {
             return null;
         }
 
         List<WeeklyDay> result = new ArrayList<>();
-        for (com.sos.js7.converter.js1.common.json.calendar.WeeklyDay js1Child : js1) {
+        for (com.sos.js7.converter.js1.common.json.calendars.WeeklyDay js1Child : js1) {
             WeeklyDay o = new WeeklyDay();
             o.setDay(js1Child.getDay());
             o.setWeekOfMonth(js1Child.getWeekOfMonth());
@@ -204,13 +204,13 @@ public class JS7CalendarConverter {
         return result;
     }
 
-    private static List<Holidays> convertHolidays(List<com.sos.js7.converter.js1.common.json.calendar.Holidays> js1) {
+    private static List<Holidays> convertHolidays(List<com.sos.js7.converter.js1.common.json.calendars.Holidays> js1) {
         if (js1 == null || js1.size() == 0) {
             return null;
         }
 
         List<Holidays> result = new ArrayList<>();
-        for (com.sos.js7.converter.js1.common.json.calendar.Holidays js1Child : js1) {
+        for (com.sos.js7.converter.js1.common.json.calendars.Holidays js1Child : js1) {
             Holidays o = new Holidays();
             o.setDates(js1Child.getDates());
             o.setNationalCalendar(js1Child.getNationalCalendar());
@@ -220,7 +220,7 @@ public class JS7CalendarConverter {
     }
 
     // TODO JS7RunTimeConverter: use common function
-    private static Period convertPeriod(com.sos.js7.converter.js1.common.json.calendar.Period js1) {
+    private static Period convertPeriod(com.sos.js7.converter.js1.common.json.calendars.Period js1) {
         Period p = new Period();
         p.setBegin(js1.getBegin());
         p.setEnd(js1.getEnd());

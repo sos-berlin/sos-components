@@ -16,13 +16,13 @@ import com.sos.commons.xml.exception.SOSXMLXPathException;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
-import com.sos.js7.converter.js1.common.json.calendar.JS1Calendars;
+import com.sos.js7.converter.js1.common.json.calendars.JS1Calendars;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 import com.sos.js7.converter.js1.output.js7.JS7Converter;
 
 public class RunTime {
 
-    //private static final Logger LOGGER = LoggerFactory.getLogger(RunTime.class);
+    // private static final Logger LOGGER = LoggerFactory.getLogger(RunTime.class);
 
     private static final String ATTR_SINGLE_START = "single_start";
     private static final String ATTR_BEGIN = "begin";
