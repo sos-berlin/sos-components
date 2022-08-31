@@ -825,87 +825,104 @@ public class DailyPlanRunner extends TimerTask {
                     }
 
                     int plannedOrdersCount = 0;
-                    List<String> frequencyResolverDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString,
-                            nextDateAsString).getDates();
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s][%s][%s][%s][calendar=%s][FrequencyResolver]dates=%s", startupMode, method, controllerId,
-                                dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), String.join(",", frequencyResolverDates)));
-                    }
-                    if (frequencyResolverDates.size() > 0) {
-                        PeriodResolver periodResolver = new PeriodResolver(settings);
-                        for (Period p : assignedCalendar.getPeriods()) {
-                            Period _period = new Period();
-                            _period.setBegin(p.getBegin());
-                            _period.setEnd(p.getEnd());
-                            _period.setRepeat(p.getRepeat());
-                            _period.setSingleStart(p.getSingleStart());
-                            _period.setWhenHoliday(p.getWhenHoliday());
-                            periodResolver.addStartTimes(_period, dailyPlanDateAsString, assignedCalendar.getTimeZone());
+                    List<String> frequencyResolverDates = null;
+                    try {
+                        frequencyResolverDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString,
+                                nextDateAsString).getDates();
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][%s][%s][%s][%s][calendar=%s][FrequencyResolver]dates=%s", startupMode, method,
+                                    controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), String.join(",",
+                                            frequencyResolverDates)));
                         }
 
-                        for (String frequencyResolverDate : frequencyResolverDates) {
-                            if (isTraceEnabled) {
-                                LOGGER.trace(String.format("[%s][%s][%s][FrequencyResolver date=%s][%s][%s][calendar=%s]", startupMode, method,
-                                        controllerId, dailyPlanDate, frequencyResolverDate, schedule.getPath(), assignedCalendar.getCalendarName()));
+                        if (frequencyResolverDates.size() > 0) {
+                            PeriodResolver periodResolver = new PeriodResolver(settings);
+                            for (Period p : assignedCalendar.getPeriods()) {
+                                Period _period = new Period();
+                                _period.setBegin(p.getBegin());
+                                _period.setEnd(p.getEnd());
+                                _period.setRepeat(p.getRepeat());
+                                _period.setSingleStart(p.getSingleStart());
+                                _period.setWhenHoliday(p.getWhenHoliday());
+                                try {
+                                    periodResolver.addStartTimes(_period, dailyPlanDateAsString, assignedCalendar.getTimeZone());
+                                } catch (Throwable e) {
+                                    throw new Exception(String.format("[period %s]%s", _period.toString(), e.toString()), e);
+                                }
                             }
-                            if (nonWorkingDays != null && nonWorkingDays.get(frequencyResolverDate) != null) {
-                                if (isDebugEnabled) {
-                                    LOGGER.debug(String.format(
-                                            "[%s][%s][%s][%s][FrequencyResolver date=%s][%s][calendar=%s][skip]FrequencyResolver date is a non working day",
-                                            startupMode, method, controllerId, dailyPlanDate, frequencyResolverDate, schedule.getPath(),
-                                            assignedCalendar.getCalendarName()));
-                                }
-                            } else {
-                                Map<Long, Period> startTimes = periodResolver.getStartTimes(frequencyResolverDate, dailyPlanDateAsString,
-                                        assignedCalendar.getTimeZone());
 
-                                if (isDebugEnabled) {
-                                    LOGGER.debug(String.format(
-                                            "[%s][%s][%s][%s][FrequencyResolver date=%s][%s][calendar=%s][timeZone=%s][periodResolver]startTimes size=%s",
-                                            startupMode, method, controllerId, dailyPlanDate, frequencyResolverDate, schedule.getPath(),
-                                            assignedCalendar.getCalendarName(), assignedCalendar.getTimeZone(), startTimes.size()));
+                            for (String frequencyResolverDate : frequencyResolverDates) {
+                                if (isTraceEnabled) {
+                                    LOGGER.trace(String.format("[%s][%s][%s][FrequencyResolver date=%s][%s][%s][calendar=%s]", startupMode, method,
+                                            controllerId, dailyPlanDate, frequencyResolverDate, schedule.getPath(), assignedCalendar
+                                                    .getCalendarName()));
                                 }
+                                if (nonWorkingDays != null && nonWorkingDays.get(frequencyResolverDate) != null) {
+                                    if (isDebugEnabled) {
+                                        LOGGER.debug(String.format(
+                                                "[%s][%s][%s][%s][FrequencyResolver date=%s][%s][calendar=%s][skip]FrequencyResolver date is a non working day",
+                                                startupMode, method, controllerId, dailyPlanDate, frequencyResolverDate, schedule.getPath(),
+                                                assignedCalendar.getCalendarName()));
+                                    }
+                                } else {
+                                    Map<Long, Period> startTimes = periodResolver.getStartTimes(frequencyResolverDate, dailyPlanDateAsString,
+                                            assignedCalendar.getTimeZone());
 
-                                for (Entry<Long, Period> periodEntry : startTimes.entrySet()) {
-                                    Integer startMode;
-                                    if (periodEntry.getValue().getSingleStart() == null) {
-                                        startMode = 1;
-                                    } else {
-                                        startMode = 0;
+                                    if (isDebugEnabled) {
+                                        LOGGER.debug(String.format(
+                                                "[%s][%s][%s][%s][FrequencyResolver date=%s][%s][calendar=%s][timeZone=%s][periodResolver]startTimes size=%s",
+                                                startupMode, method, controllerId, dailyPlanDate, frequencyResolverDate, schedule.getPath(),
+                                                assignedCalendar.getCalendarName(), assignedCalendar.getTimeZone(), startTimes.size()));
                                     }
 
-                                    if (schedule.getOrderParameterisations() == null || schedule.getOrderParameterisations().size() == 0) {
-                                        OrderParameterisation orderParameterisation = new OrderParameterisation();
-                                        schedule.setOrderParameterisations(new ArrayList<OrderParameterisation>());
-                                        schedule.getOrderParameterisations().add(orderParameterisation);
-                                    }
+                                    for (Entry<Long, Period> periodEntry : startTimes.entrySet()) {
+                                        Integer startMode;
+                                        if (periodEntry.getValue().getSingleStart() == null) {
+                                            startMode = 1;
+                                        } else {
+                                            startMode = 0;
+                                        }
 
-                                    for (OrderParameterisation orderParameterisation : schedule.getOrderParameterisations()) {
-                                        for (DailyPlanScheduleWorkflow sw : dailyPlanSchedule.getWorkflows()) {
+                                        if (schedule.getOrderParameterisations() == null || schedule.getOrderParameterisations().size() == 0) {
+                                            OrderParameterisation orderParameterisation = new OrderParameterisation();
+                                            schedule.setOrderParameterisations(new ArrayList<OrderParameterisation>());
+                                            schedule.getOrderParameterisations().add(orderParameterisation);
+                                        }
 
-                                            FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, dailyPlanSchedule.getSchedule(), sw,
-                                                    orderParameterisation, periodEntry.getKey(), startMode);
+                                        for (OrderParameterisation orderParameterisation : schedule.getOrderParameterisations()) {
+                                            for (DailyPlanScheduleWorkflow sw : dailyPlanSchedule.getWorkflows()) {
 
-                                            if (!fromService) {
-                                                schedule.setSubmitOrderToControllerWhenPlanned(settings.isSubmit());
+                                                FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, dailyPlanSchedule.getSchedule(), sw,
+                                                        orderParameterisation, periodEntry.getKey(), startMode);
+
+                                                if (!fromService) {
+                                                    schedule.setSubmitOrderToControllerWhenPlanned(settings.isSubmit());
+                                                }
+
+                                                if (synchronizer.getSubmission() == null) {
+                                                    synchronizer.setSubmission(addDailyPlanSubmission(controllerId, date));
+                                                }
+
+                                                PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, dailyPlanSchedule, sw, calendar
+                                                        .getId());
+                                                plannedOrder.setPeriod(periodEntry.getValue());
+                                                plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
+                                                plannedOrder.setOrderName(DailyPlanHelper.getOrderName(schedule, orderParameterisation));
+                                                synchronizer.add(startupMode, plannedOrder, controllerId, dailyPlanDate);
+                                                plannedOrdersCount++;
                                             }
-
-                                            if (synchronizer.getSubmission() == null) {
-                                                synchronizer.setSubmission(addDailyPlanSubmission(controllerId, date));
-                                            }
-
-                                            PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, dailyPlanSchedule, sw, calendar
-                                                    .getId());
-                                            plannedOrder.setPeriod(periodEntry.getValue());
-                                            plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
-                                            plannedOrder.setOrderName(DailyPlanHelper.getOrderName(schedule, orderParameterisation));
-                                            synchronizer.add(startupMode, plannedOrder, controllerId, dailyPlanDate);
-                                            plannedOrdersCount++;
                                         }
                                     }
                                 }
                             }
                         }
+                    } catch (Throwable e) {
+                        if (frequencyResolverDates == null) {
+                            frequencyResolverDates = new ArrayList<>();
+                        }
+                        LOGGER.error(String.format("[%s][%s][%s][%s][schedule=%s][calendar=%s][FrequencyResolver dates=%s]%s", startupMode, method,
+                                controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), String.join(",",
+                                        frequencyResolverDates), e.toString()), e);
                     }
 
                     if (plannedOrdersCount == 0) {
