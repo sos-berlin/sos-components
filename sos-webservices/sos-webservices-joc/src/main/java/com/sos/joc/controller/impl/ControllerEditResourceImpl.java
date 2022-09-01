@@ -393,20 +393,18 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
 
                 proxy.api().updateItems(Flux.fromStream(agentWatchers.stream().map(a -> {
                     JAgentRef agentRef = knownAgents.get(AgentPath.of(a.getAgentId()));
-                    if (agentRef != null && (!agentRef.director().isPresent() || agentRef.directors().isEmpty())) {
-                        return Collections.singletonList(JUpdateItemOperation.addOrChangeSimple(createOldAgent(a)));
-                    } else {
-                        String subagentIdFromRequest = a.getAgentId();
-                        if (a.getSubagents() != null && !a.getSubagents().isEmpty()) {
-                            if (a.getSubagents().get(0).getSubagentId() != null && !a.getSubagents().get(0).getSubagentId().isEmpty()) {
-                                subagentIdFromRequest = a.getSubagents().get(0).getSubagentId();
-                            }
+
+                    String subagentIdFromRequest = a.getAgentId();
+                    if (a.getSubagents() != null && !a.getSubagents().isEmpty()) {
+                        if (a.getSubagents().get(0).getSubagentId() != null && !a.getSubagents().get(0).getSubagentId().isEmpty()) {
+                            subagentIdFromRequest = a.getSubagents().get(0).getSubagentId();
                         }
-                        SubagentId subagentId = agentRef != null && agentRef.director().isPresent() ? agentRef.director().get() : SubagentId.of(
-                                subagentIdFromRequest);
-                        return Arrays.asList(JUpdateItemOperation.addOrChangeSimple(createNewAgent(a, subagentId)), JUpdateItemOperation
-                                .addOrChangeSimple(createSubagentDirector(a, subagentId)));
                     }
+                    SubagentId subagentId = agentRef != null && agentRef.director().isPresent() ? agentRef.director().get() : SubagentId.of(
+                            subagentIdFromRequest);
+                    return Arrays.asList(JUpdateItemOperation.addOrChangeSimple(createAgent(a, subagentId)), JUpdateItemOperation
+                            .addOrChangeSimple(createSubagentDirector(a, subagentId)));
+                
                 }).flatMap(List::stream))).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), cId);
                     if (e.isRight()) {
@@ -453,11 +451,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         }
     }
     
-    private static JAgentRef createOldAgent(Agent a) {
-        return JAgentRef.of(AgentPath.of(a.getAgentId()), Uri.of(a.getUrl()));
-    }
-    
-    private static JAgentRef createNewAgent(Agent a, SubagentId subagentId) {
+    private static JAgentRef createAgent(Agent a, SubagentId subagentId) {
         return JAgentRef.of(AgentPath.of(a.getAgentId()), subagentId);
     }
     

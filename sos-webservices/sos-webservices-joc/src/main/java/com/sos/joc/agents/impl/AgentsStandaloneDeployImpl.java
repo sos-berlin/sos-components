@@ -93,16 +93,13 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
                 Map<AgentPath, JAgentRef> knownAgents = currentState.pathToAgentRef();
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     JAgentRef agentRef = knownAgents.get(AgentPath.of(dbAgent.getAgentId()));
-                    if (agentRef != null && !agentRef.director().isPresent()) {
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createOldAgent(dbAgent)));
-                    } else {
-                        SubagentId subagentId = agentRef != null && agentRef.director().isPresent() ? agentRef.director().get() : SubagentId.of(
-                                dbAgent.getAgentId());
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createNewAgent(dbAgent, subagentId)));
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createSubagentDirector(dbAgent, subagentId)));
-                    }
+
+                    SubagentId subagentId = agentRef != null && agentRef.director().isPresent() ? agentRef.director().get() : SubagentId.of(dbAgent
+                            .getAgentId());
+                    agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createAgent(dbAgent, subagentId)));
+                    agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createSubagentDirector(dbAgent, subagentId)));
                     updateAgentIds.add(dbAgent.getAgentId());
-                    
+
                     if (dbAgent.getIsWatcher()) {
                         clusterWatcherUrls.add(dbAgent.getUri());
                     }
@@ -161,11 +158,7 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
         }
     }
     
-    private static JAgentRef createOldAgent(DBItemInventoryAgentInstance a) {
-        return JAgentRef.of(AgentPath.of(a.getAgentId()), Uri.of(a.getUri()));
-    }
-    
-    private static JAgentRef createNewAgent(DBItemInventoryAgentInstance a, SubagentId subagentId) {
+    private static JAgentRef createAgent(DBItemInventoryAgentInstance a, SubagentId subagentId) {
         return JAgentRef.of(AgentPath.of(a.getAgentId()), subagentId);
     }
     

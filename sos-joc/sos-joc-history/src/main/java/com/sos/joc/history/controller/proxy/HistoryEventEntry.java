@@ -808,9 +808,9 @@ public class HistoryEventEntry {
             // subAgents = new HashMap<>();
             JAgentRef ar = getFromMap(eventAndState.state().pathToAgentRef().get(arp), id);
             if (ar != null) {
-                if (ar.uri().isPresent()) {// single agent
-                    uri = ar.uri().get().string();
-                } else {// agent cluster
+//                if (ar.uri().isPresent()) {// single agent
+//                    uri = ar.uri().get().string();
+//                } else {// agent cluster
                     Optional<SubagentId> director = ar.director();// ar.directors();
                     if (director.isPresent()) {
                         SubagentId directorId = director.get();
@@ -828,7 +828,7 @@ public class HistoryEventEntry {
                         // });
                         // }
                     }
-                }
+//                }
             }
             if (uri == null) {
                 uri = "unknown";
