@@ -1803,6 +1803,7 @@ public abstract class PublishUtils {
         try {
             ConfigurationObject configuration = new ConfigurationObject();
             // configuration.setId(item.getId());
+            configuration.setName(item.getName());
             configuration.setPath(item.getPath());
             configuration.setObjectType(item.getTypeAsEnum());
             configuration.setConfiguration(JocInventory.content2IJSObject(item.getContent(), item.getType()));
@@ -1817,6 +1818,7 @@ public abstract class PublishUtils {
         try {
             ConfigurationObject configuration = new ConfigurationObject();
             // configuration.setId(item.getId());
+            configuration.setName(item.getName());
             configuration.setPath(item.getPath());
             configuration.setObjectType(item.getTypeAsEnum());
             configuration.setConfiguration(JocInventory.content2IJSObject(item.getContent(), item.getType()));
