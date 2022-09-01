@@ -3,6 +3,7 @@ package com.sos.joc.deploy.helper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -33,12 +34,14 @@ import js7.data.agent.AgentPath;
 import js7.data.item.VersionId;
 import js7.data.lock.LockPath;
 import js7.data.order.OrderId;
+import js7.data.subagent.SubagentId;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUnsignedSimpleItem;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.lock.JLock;
 import js7.data_for_java.order.JFreshOrder;
+import js7.data_for_java.subagent.JSubagentItem;
 import js7.proxy.javaapi.JControllerApi;
 import reactor.core.publisher.Flux;
 
@@ -235,11 +238,13 @@ public class DeployTest {
     }
 
     private void addOrChangeAgent(JControllerApi api, String agentId, Uri agentUri) throws InterruptedException, ExecutionException {
-        Either<Problem, Void> answer = api.updateItems(Flux.fromIterable(Collections.singleton(JAgentRef.of(AgentPath.of(agentId), agentUri))).map(
-                JUpdateItemOperation::addOrChangeSimple)).get();
+        SubagentId subAgentId = SubagentId.of(agentId);
+        AgentPath agentPath = AgentPath.of(agentId);
+        Either<Problem, Void> answer = api.updateItems(Flux.fromIterable(Arrays.asList(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(agentPath,
+                subAgentId)), JUpdateItemOperation.addOrChangeSimple(JSubagentItem.of(subAgentId, agentPath, agentUri, false))))).get();
         LOGGER.info("[addOrChangeAgent][" + agentId + "]" + SOSString.toString(answer));
     }
-
+    
     private void addOrChangeSignedItem(JControllerApi api, String contentOriginal, String contentSigned, String signatureType, String versionId)
             throws InterruptedException, ExecutionException {
         Set<JUpdateItemOperation> operations = new HashSet<JUpdateItemOperation>();
