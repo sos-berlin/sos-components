@@ -304,7 +304,7 @@ public class DBItemDailyPlanOrder extends DBItem {
 
     @Transient
     public boolean isCyclic() {
-        return startMode != null && startMode.equals(new Integer(1));
+        return startMode != null && startMode.equals(Integer.valueOf(1));
     }
 
     @Transient

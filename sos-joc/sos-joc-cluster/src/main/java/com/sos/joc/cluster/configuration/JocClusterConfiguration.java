@@ -177,7 +177,7 @@ public class JocClusterConfiguration {
                 jars.add(jar.toUri().toURL());
             }
             currentCL = new URLClassLoader(jars.stream().toArray(URL[]::new));
-            Object o = currentCL.loadClass(CLASS_NAME_CLUSTER_MODE).newInstance();
+            Object o = currentCL.loadClass(CLASS_NAME_CLUSTER_MODE).getDeclaredConstructor().newInstance();
             for (Method m : o.getClass().getDeclaredMethods()) {
                 switch (m.getName()) {
                 case "getValidFrom":

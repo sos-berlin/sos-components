@@ -292,7 +292,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
 
     @SuppressWarnings({ "rawtypes" })
     private A createJobArguments(List<SOSJobArgumentException> exceptions, final JobStep<A> step) throws Exception {
-        A instance = getJobArgumensClass().newInstance();
+        A instance = getJobArgumensClass().getDeclaredConstructor().newInstance();
         if (jobContext == null && step == null) {
             return instance;
         }

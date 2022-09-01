@@ -1,6 +1,7 @@
 package com.sos.jitl.jobs.common;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -317,9 +318,10 @@ public class JobStep<A extends JobArguments> {
     }
 
     @SuppressWarnings("rawtypes")
-    public <T extends ASOSArguments> T getAppArguments(Class<T> clazz) throws InstantiationException, IllegalAccessException {
+    public <T extends ASOSArguments> T getAppArguments(Class<T> clazz) throws InstantiationException, IllegalAccessException,
+            IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
         setKnownArguments();
-        T instance = clazz.newInstance();
+        T instance = clazz.getDeclaredConstructor().newInstance();
         if (arguments.getAppArguments() == null) {
             return instance;
         }

@@ -870,7 +870,7 @@ public class JS7Converter {
                                 setBackDelays.add(lastDelay);
                             }
                             if (d.getDelay() != null) {
-                                int delaySeconds = new Long(SOSDate.getTimeAsSeconds(d.getDelay())).intValue();
+                                int delaySeconds = Long.valueOf(SOSDate.getTimeAsSeconds(d.getDelay())).intValue();
                                 setBackDelays.add(delaySeconds);
                                 lastSetbackCount = d.getSetbackCount();
                                 lastDelay = delaySeconds;
@@ -910,7 +910,7 @@ public class JS7Converter {
                                 errorDelays.add(lastDelay);
                             }
                             if (d.getDelay() != null && !d.getDelay().equalsIgnoreCase("stop")) {
-                                int delaySeconds = new Long(SOSDate.getTimeAsSeconds(d.getDelay())).intValue();
+                                int delaySeconds = Long.valueOf(SOSDate.getTimeAsSeconds(d.getDelay())).intValue();
                                 errorDelays.add(delaySeconds);
                                 lastErrorCount = d.getErrorCount();
                                 lastDelay = delaySeconds;
@@ -961,7 +961,7 @@ public class JS7Converter {
 
     private List<Instruction> getCyclicWorkflowInstructions(ACommonJob job, List<Instruction> in) {
         /** if (!CONFIG.getGenerateConfig().getCyclicOrders() && job.getRunTime().getStartMins().getValue() != null) { Periodic p = new Periodic();
-         * p.setPeriod(3_600L); p.setOffsets(jilJob.getRunTime().getStartMins().getValue().stream().map(e -> new Long(e * 60)).collect(Collectors.toList()));
+         * p.setPeriod(3_600L); p.setOffsets(jilJob.getRunTime().getStartMins().getValue().stream().map(e -> Long.valueOf(e * 60)).collect(Collectors.toList()));
          * 
          * DailyPeriod dp = new DailyPeriod(); dp.setSecondOfDay(0L); dp.setDuration(86_400L);
          * 

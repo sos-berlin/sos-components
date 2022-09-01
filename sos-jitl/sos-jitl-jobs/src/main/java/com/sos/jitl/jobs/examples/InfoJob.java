@@ -181,12 +181,12 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
             map.put("test", "my_test");
             map.put("test_null_value", null);
             map.put("test_boolean_value", true);
-            map.put("test_Boolean_value", new Boolean(false));
+            map.put("test_Boolean_value", Boolean.FALSE);
             map.put("test_int_value", 1);
-            map.put("test_Integer_value", new Integer(1));
-            map.put("test_long_value", new Integer(1).longValue());
-            map.put("test_Long_value", new Long(1));
-            map.put("test_Double_value", new Double(1));
+            map.put("test_Integer_value", Integer.valueOf(1));
+            map.put("test_long_value", Integer.valueOf(1).longValue());
+            map.put("test_Long_value", Long.valueOf(1));
+            map.put("test_Double_value", Double.valueOf(1));
             map.put("test_BigDecimal_value", new BigDecimal(1));
             map.put("test_Date_value", new Date());
             map.put("test_Instant_value", Instant.now());

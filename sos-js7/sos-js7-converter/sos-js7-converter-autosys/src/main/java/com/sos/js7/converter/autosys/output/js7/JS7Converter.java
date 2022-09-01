@@ -833,7 +833,7 @@ public class JS7Converter {
         if (!CONFIG.getGenerateConfig().getCyclicOrders() && jilJob.getRunTime().getStartMins().getValue() != null) {
             Periodic p = new Periodic();
             p.setPeriod(3_600L);
-            p.setOffsets(jilJob.getRunTime().getStartMins().getValue().stream().map(e -> new Long(e * 60)).collect(Collectors.toList()));
+            p.setOffsets(jilJob.getRunTime().getStartMins().getValue().stream().map(e -> Long.valueOf(e * 60)).collect(Collectors.toList()));
 
             DailyPeriod dp = new DailyPeriod();
             dp.setSecondOfDay(0L);

@@ -35,7 +35,7 @@ public class DBLayerOrderVariables extends DBLayer {
         List<Object[]> result = getSession().getResultList(query);
         if (result != null && result.size() > 0) {
             Object[] o = result.get(0);
-            return getOrderVariable(o[0].toString(), orderId, ((Integer) o[1]).equals(new Integer(1)));
+            return getOrderVariable(o[0].toString(), orderId, ((Integer) o[1]).equals(Integer.valueOf(1)));
         }
         return null;
     }

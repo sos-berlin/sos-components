@@ -141,7 +141,7 @@ public class GitRemoteCommandResult extends GitCommandResult {
                     } else if(remoteUpdateInfoMatcher.matches()) {
                         if(RepositoryUpdateType.BRANCH.value().equals(remoteUpdateInfoMatcher.group(1))) {
                             if (fetchedNewBranches.isEmpty()) {
-                                fetchedNewBranches = new HashMap();
+                                fetchedNewBranches = new HashMap<>();
                             }
                             if(!fetchedNewBranches.containsKey(currentRepo)) {
                                 Map<String,String> branch = new HashMap<String, String>();
@@ -152,7 +152,7 @@ public class GitRemoteCommandResult extends GitCommandResult {
                             }
                         } else if (RepositoryUpdateType.TAG.value().equals(remoteUpdateInfoMatcher.group(1))) {
                             if(fetchedNewTags.isEmpty()) {
-                                fetchedNewTags = new HashMap();
+                                fetchedNewTags = new HashMap<>();
                             }
                             if(!fetchedNewTags.containsKey(currentRepo)) {
                                 Map<String,String> tag = new HashMap<String, String>();

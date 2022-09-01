@@ -7,7 +7,7 @@ public class ObjectHelper {
     public static Object newInstance(String className, Map<String, String> map) throws Exception {
         Class<?> clazz = ObjectHelper.parseType(className);
         if (map == null || map.size() == 0) {
-            return clazz.newInstance();
+            return clazz.getDeclaredConstructor().newInstance();
         }
 
         Class<?>[] types = new Class<?>[map.size()];
@@ -59,27 +59,27 @@ public class ObjectHelper {
         case "int":
             return Integer.parseInt(value);
         case "Integer":
-            return Integer.getInteger(value);
+            return Integer.valueOf(value);
         case "boolean":
             return Boolean.parseBoolean(value);
         case "Boolean":
-            return Boolean.getBoolean(value);
+            return Boolean.valueOf(value);
         case "long":
             return Long.parseLong(value);
         case "Long":
-            return Long.getLong(value);
+            return Long.valueOf(value);
         case "float":
             return Float.parseFloat(value);
         case "double":
             return Double.parseDouble(value);
         case "Double":
-            return new Double(Double.parseDouble(value));
+            return Double.valueOf(value);
         case "Float":
-            return new Float(Float.parseFloat(value));
+            return Float.valueOf(value);
         case "short":
             return Short.parseShort(value);
         case "Short":
-            return new Short(Short.parseShort(value));
+            return Short.valueOf(value);
         default:
             return value;
         }

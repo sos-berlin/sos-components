@@ -43,8 +43,8 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 
 public class DBLayerDailyPlannedOrders {
 
-    public static final Integer START_MODE_SINGLE = new Integer(0);
-    public static final Integer START_MODE_CYCLIC = new Integer(1);
+    public static final Integer START_MODE_SINGLE = Integer.valueOf(0);
+    public static final Integer START_MODE_CYCLIC = Integer.valueOf(1);
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlannedOrders.class);
 
