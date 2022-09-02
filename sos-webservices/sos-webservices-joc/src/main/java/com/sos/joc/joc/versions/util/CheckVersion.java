@@ -44,11 +44,12 @@ public class CheckVersion {
     });
     
     public static CompatibilityLevel checkControllerVersionMatches2Joc (String controllerVersion, String jocVersion) {
-        List<Integer> controllerVersionSplitted = splitVersion(controllerVersion);
-        List<Integer> jocVersionSplitted = splitVersion(jocVersion);
-        String coreControllerVersion = controllerVersion.contains("-") ? controllerVersion.split("-")[0] : controllerVersion;
-        if(jocCompatibleControllerExemptions.get(jocVersion) != null && !jocCompatibleControllerExemptions.get(jocVersion).isEmpty()) {
-            if(jocCompatibleControllerExemptions.get(jocVersion).contains(coreControllerVersion)) {
+        String coreControllerVersion = extractCoreVersion(controllerVersion);
+        String coreJocVersion = extractCoreVersion(jocVersion);
+        List<Integer> controllerVersionSplitted = splitVersion(coreControllerVersion);
+        List<Integer> jocVersionSplitted = splitVersion(coreJocVersion);
+        if(jocCompatibleControllerExemptions.get(coreJocVersion) != null && !jocCompatibleControllerExemptions.get(coreJocVersion).isEmpty()) {
+            if(jocCompatibleControllerExemptions.get(coreJocVersion).contains(coreControllerVersion)) {
                 return CompatibilityLevel.PARTIALLY_COMPATIBLE;
             } else {
                 return CompatibilityLevel.NOT_COMPATIBLE;
@@ -66,11 +67,12 @@ public class CheckVersion {
     }
     
     public static CompatibilityLevel checkAgentVersionMatches2Controller(String agentVersion, String controllerVersion) {
-        List<Integer> agentVersionSplitted = splitVersion(agentVersion);
-        List<Integer> controllerVersionSplitted = splitVersion(controllerVersion);
-        String coreAgentVersion = agentVersion.contains("-") ? agentVersion.split("-")[0] : agentVersion;
-        if(controllerCompatibleAgentExemptions.get(controllerVersion) != null && !controllerCompatibleAgentExemptions.get(controllerVersion).isEmpty()) {
-            if(controllerCompatibleAgentExemptions.get(controllerVersion).contains(coreAgentVersion)) {
+        String coreAgentVersion = extractCoreVersion(agentVersion);
+        String coreControllerVersion = extractCoreVersion(controllerVersion);
+        List<Integer> agentVersionSplitted = splitVersion(coreAgentVersion);
+        List<Integer> controllerVersionSplitted = splitVersion(coreControllerVersion);
+        if(controllerCompatibleAgentExemptions.get(coreControllerVersion) != null && !controllerCompatibleAgentExemptions.get(coreControllerVersion).isEmpty()) {
+            if(controllerCompatibleAgentExemptions.get(coreControllerVersion).contains(coreAgentVersion)) {
                 return CompatibilityLevel.PARTIALLY_COMPATIBLE;
             } else {
                 return CompatibilityLevel.NOT_COMPATIBLE;
@@ -93,5 +95,9 @@ public class CheckVersion {
             splitted [2] = splitted[2].split(VERSION_SUFFIX_SPLITTER)[0];
         }
         return Arrays.asList(Integer.parseInt(splitted[0]), Integer.parseInt(splitted[1]), Integer.parseInt(splitted[2]));
+    }
+    
+    private static String extractCoreVersion (String version) {
+        return version.contains("-") ? version.split("-")[0] : version;
     }
 }
