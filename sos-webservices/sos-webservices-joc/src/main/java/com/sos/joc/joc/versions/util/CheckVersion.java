@@ -30,7 +30,7 @@ public class CheckVersion {
             // key : joc version
             // value : List of controller versions partially compatible with the given joc version
             put("2.4.1", Arrays.asList());
-            put("2.5.0", Arrays.asList());
+            put("2.5.0", Arrays.asList("2.4.1", "2.4.0"));
         }
     });
     private static final Map<String, List<String>> controllerCompatibleAgentExemptions = Collections.unmodifiableMap(new HashMap<String, List<String>>(){
@@ -39,15 +39,16 @@ public class CheckVersion {
             // key : controller version
             // value : List of agent versions partially compatible with the given controller version
             put("2.4.1", Arrays.asList());
-            put("2.5.0", Arrays.asList());
+            put("2.5.0", Arrays.asList("2.4.1", "2.4.0"));
         }
     });
     
     public static CompatibilityLevel checkControllerVersionMatches2Joc (String controllerVersion, String jocVersion) {
         List<Integer> controllerVersionSplitted = splitVersion(controllerVersion);
         List<Integer> jocVersionSplitted = splitVersion(jocVersion);
+        String coreControllerVersion = controllerVersion.contains("-") ? controllerVersion.split("-")[0] : controllerVersion;
         if(jocCompatibleControllerExemptions.get(jocVersion) != null && !jocCompatibleControllerExemptions.get(jocVersion).isEmpty()) {
-            if(jocCompatibleControllerExemptions.get(jocVersion).contains(controllerVersion)) {
+            if(jocCompatibleControllerExemptions.get(jocVersion).contains(coreControllerVersion)) {
                 return CompatibilityLevel.PARTIALLY_COMPATIBLE;
             } else {
                 return CompatibilityLevel.NOT_COMPATIBLE;
@@ -67,8 +68,9 @@ public class CheckVersion {
     public static CompatibilityLevel checkAgentVersionMatches2Controller(String agentVersion, String controllerVersion) {
         List<Integer> agentVersionSplitted = splitVersion(agentVersion);
         List<Integer> controllerVersionSplitted = splitVersion(controllerVersion);
+        String coreAgentVersion = agentVersion.contains("-") ? agentVersion.split("-")[0] : agentVersion;
         if(controllerCompatibleAgentExemptions.get(controllerVersion) != null && !controllerCompatibleAgentExemptions.get(controllerVersion).isEmpty()) {
-            if(controllerCompatibleAgentExemptions.get(controllerVersion).contains(agentVersion)) {
+            if(controllerCompatibleAgentExemptions.get(controllerVersion).contains(coreAgentVersion)) {
                 return CompatibilityLevel.PARTIALLY_COMPATIBLE;
             } else {
                 return CompatibilityLevel.NOT_COMPATIBLE;
