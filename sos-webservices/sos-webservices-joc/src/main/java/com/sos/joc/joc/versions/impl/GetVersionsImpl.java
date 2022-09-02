@@ -48,7 +48,8 @@ public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsReso
                     .filter(availableController -> getControllerPermissions(availableController, xAccessToken).getView())
                     .collect(Collectors.toSet());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            final String jocVersion = !Globals.curVersion.isEmpty() ? Globals.curVersion : "2.4.1-SNAPSHOT_hardcoded";
+            // only for debugging, as curVersion is not set in dev environment (grizzly)
+                final String jocVersion = !Globals.curVersion.isEmpty() ? Globals.curVersion : "2.4.1-SNAPSHOT_hardcoded";
             List<ControllerVersion> controllerVersions = new ArrayList<ControllerVersion>();
             List<AgentVersion> agentVersions = new ArrayList<AgentVersion>();
             InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
