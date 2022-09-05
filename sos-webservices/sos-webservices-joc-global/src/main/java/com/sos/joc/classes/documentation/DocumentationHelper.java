@@ -22,6 +22,7 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
@@ -43,6 +44,7 @@ public class DocumentationHelper {
             "json", "css", "markdown", "gif", "jpeg", "png", "icon");
     public static final List<String> SUPPORTED_IMAGETYPES = Arrays.asList("pdf", "gif", "jpeg", "png", "icon");
     public static final List<String> ASSIGN_TYPES = Arrays.asList("html", "xml", "pdf", "markdown");
+    private static final List<String> DEPRECATED_DOCS = Arrays.asList("MaintenaneWindowJob.xml");
 
     private static void saveOrUpdate(DocumentationDBLayer dbLayer, DBItemDocumentation doc) throws DBConnectionRefusedException,
             DBInvalidDataException, SOSHibernateException {
@@ -173,10 +175,23 @@ public class DocumentationHelper {
     }
 
     // used during JOC start-up to insert JOC-JITL-Docs
-    public static Set<String> readZipFileContent(InputStream inputStream, String folder, DocumentationDBLayer dbLayer)
+    public static void readZipFileContent(InputStream inputStream, String folder, DocumentationDBLayer dbLayer)
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
             JocConfigurationException, DBOpenSessionException {
-        return saveOrUpdate(readZipFileContent(inputStream, folder), dbLayer);
+        Set<DBItemDocumentation> docs = readZipFileContent(inputStream, folder);
+        if (docs != null) {
+            saveOrUpdate(docs, dbLayer);
+            List<DBItemDocumentation> deprecatedDbDocs = dbLayer.getDocumentations(DEPRECATED_DOCS.stream().map(s -> JitlDocumentation.FOLDER + "/"
+                    + s).collect(Collectors.toList()));
+            for (DBItemDocumentation dbDoc : deprecatedDbDocs) {
+                delete(dbDoc, dbLayer.getSession());
+            }
+            // List<DBItemDocumentation> dbDocs = dbLayer.getDocumentations(JitlDocumentation.FOLDER, false);
+            // dbDocs.removeAll(docs);
+            // for (DBItemDocumentation dbDoc : dbDocs) {
+            // delete(dbDoc, dbLayer.getSession());
+            // }
+        }
     }
 
     public static Set<String> readZipFileContent(InputStream inputStream, String folder, DocumentationDBLayer dbLayer, DBItemJocAuditLog dbAudit)
@@ -308,6 +323,16 @@ public class DocumentationHelper {
         } catch (CharacterCodingException e) {
             return false;
         }
+    }
+    
+    public static void delete(DBItemDocumentation dbDoc, SOSHibernateSession session) throws SOSHibernateException {
+        if (dbDoc.getImageId() != null) {
+            DBItemDocumentationImage dbImage = session.get(DBItemDocumentationImage.class, dbDoc.getImageId());
+            if (dbImage != null) {
+                session.delete(dbImage);
+            }
+        }
+        session.delete(dbDoc); 
     }
 
 }
