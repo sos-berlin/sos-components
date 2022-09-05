@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.AssignedCalendars;
@@ -523,9 +524,12 @@ public class Validator {
                 switch (inst.getTYPE()) {
                 case EXECUTE_NAMED:
                     NamedJob nj = inst.cast();
+                    testJavaNameRules("$." + instPosition, "jobName", nj.getJobName());
                     if (!jobNames.contains(nj.getJobName())) {
-                        throw new SOSJsonSchemaException("$." + instPosition + "jobName: job '" + nj.getJobName() + "' doesn't exist");
+                        throw new SOSJsonSchemaException("$." + instPosition + "jobName: job '" + nj.getJobName()
+                                + "' doesn't exist. Found jobs are: " + jobNames.toString());
                     }
+                    testJavaNameRules("$." + instPosition, "label", nj.getLabel());
                     if (labels.containsKey(nj.getLabel())) {
                         throw new SOSJsonSchemaException("$." + instPosition + "label: duplicate label '" + nj.getLabel() + "' with " + labels.get(nj
                                 .getLabel()));
@@ -859,6 +863,13 @@ public class Validator {
             if (e.isLeft()) {
                 throw new JocConfigurationException(e.getLeft().message());
             }
+        }
+    }
+    
+    private static void testJavaNameRules(String prefix, String key, String value) throws JocConfigurationException {
+        String errorMessage = SOSCheckJavaVariableName.check(value);
+        if (errorMessage != null) {
+            throw new JocConfigurationException(prefix + key + ": " + String.format(errorMessage, key, value));
         }
     }
 }
