@@ -15,8 +15,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.documentation.DocumentationHelper;
 import com.sos.joc.db.documentation.DBItemDocumentation;
-import com.sos.joc.db.documentation.DBItemDocumentationImage;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.documentation.impl.DocumentationResourceImpl;
@@ -61,13 +61,7 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
 
                 Set<String> folders = new HashSet<>();
                 for (DBItemDocumentation dbDoc : docs) {
-                    if (dbDoc.getImageId() != null) {
-                        DBItemDocumentationImage dbImage = connection.get(DBItemDocumentationImage.class, dbDoc.getImageId());
-                        if (dbImage != null) {
-                            connection.delete(dbImage);
-                        }
-                    }
-                    connection.delete(dbDoc);
+                    DocumentationHelper.delete(dbDoc, connection);
                     folders.add(dbDoc.getFolder());
                 }
 
