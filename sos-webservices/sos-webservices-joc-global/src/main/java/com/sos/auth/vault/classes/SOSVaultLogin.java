@@ -7,11 +7,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
@@ -35,7 +34,7 @@ public class SOSVaultLogin implements ISOSLogin {
 
     }
 
-    public void login(String account, String pwd, HttpServletRequest httpServletRequest) {
+    public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
         KeyStore trustStore = null;
 
         try {
@@ -45,20 +44,21 @@ public class SOSVaultLogin implements ISOSLogin {
             trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
                     webserviceCredentials.getTruststorePassword());
 
-            webserviceCredentials.setAccount(account);
+            webserviceCredentials.setAccount(currentAccount.getAccountname());
             SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
 
             SOSVaultAccountAccessToken sosVaultAccountAccessToken = null;
 
             boolean disabled;
 
-            disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), account);
+            disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
 
-            if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
+            if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
+                    .getAccountname())))) {
                 sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
             }
 
-            sosVaultSubject = new SOSVaultSubject(account, identityService);
+            sosVaultSubject = new SOSVaultSubject(currentAccount.getAccountname(), identityService);
 
             if (sosVaultAccountAccessToken.getAuth() == null) {
                 sosVaultSubject.setAuthenticated(false);
@@ -66,7 +66,7 @@ public class SOSVaultLogin implements ISOSLogin {
             } else {
                 sosVaultSubject.setAuthenticated(true);
                 sosVaultSubject.setAccessToken(sosVaultAccountAccessToken);
-                sosVaultSubject.setPermissionAndRoles(sosVaultAccountAccessToken.getAuth().getToken_policies(), account);
+                sosVaultSubject.setPermissionAndRoles(sosVaultAccountAccessToken.getAuth().getToken_policies(), currentAccount.getAccountname());
             }
 
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {

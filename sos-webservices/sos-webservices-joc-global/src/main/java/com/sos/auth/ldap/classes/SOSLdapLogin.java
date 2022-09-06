@@ -1,12 +1,12 @@
 package com.sos.auth.ldap.classes;
 
 import javax.naming.NamingException;
-import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthAccessToken;
+import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
@@ -27,26 +27,26 @@ public class SOSLdapLogin implements ISOSLogin {
 
     }
 
-    public void login(String account, String pwd, HttpServletRequest httpServletRequest) {
+    public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
 
         SOSLdapHandler sosLdapHandler = new SOSLdapHandler();
         try {
 
             SOSLdapWebserviceCredentials sosLdapWebserviceCredentials = new SOSLdapWebserviceCredentials();
             sosLdapWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
-            sosLdapWebserviceCredentials.setAccount(account);
+            sosLdapWebserviceCredentials.setAccount(currentAccount.getAccountname());
             sosLdapWebserviceCredentials.setValuesFromProfile(identityService);
 
             SOSAuthAccessToken sosAuthAccessToken = null;
 
             boolean disabled;
             if (identityService.getIdentyServiceType() == IdentityServiceTypes.LDAP_JOC) {
-                disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), account);
+                disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
             } else {
                 disabled = false;
             }
 
-            if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
+            if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount.getAccountname())))) {
                 sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials, identityService.getIdentyServiceType(), pwd);
             }
 
@@ -59,9 +59,9 @@ public class SOSLdapLogin implements ISOSLogin {
                 sosLdapSubject.setAuthenticated(true);
                 sosLdapSubject.setAccessToken(sosAuthAccessToken.getAccessToken());
                 if (IdentityServiceTypes.LDAP_JOC == identityService.getIdentyServiceType()) {
-                    sosLdapSubject.setPermissionAndRoles(null, account, identityService);
+                    sosLdapSubject.setPermissionAndRoles(null, currentAccount.getAccountname(), identityService);
                 } else {
-                    sosLdapSubject.setPermissionAndRoles(sosLdapHandler.getGroupRolesMapping(sosLdapWebserviceCredentials), account, identityService);
+                    sosLdapSubject.setPermissionAndRoles(sosLdapHandler.getGroupRolesMapping(sosLdapWebserviceCredentials), currentAccount.getAccountname(), identityService);
                 }
 
             }

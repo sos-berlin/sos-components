@@ -3,6 +3,7 @@ package com.sos.auth.interfaces;
 import java.io.Serializable;
 
 import com.sos.auth.keycloak.classes.SOSKeycloakAccountAccessToken;
+import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
 import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
 
 public interface ISOSSession {
@@ -27,6 +28,9 @@ public interface ISOSSession {
 
     public SOSKeycloakAccountAccessToken getSOSKeycloakAccountAccessToken();
 
+    public SOSOpenIdAccountAccessToken getSOSOpenIdAccountAccessToken();
+
     public void touch();
+
 
 }

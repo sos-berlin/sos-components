@@ -10,8 +10,10 @@ public class GlobalsTest {
     protected static SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer;
 
     protected static String getAccessToken() throws Exception {
-        sosServicePermissionIam = new SOSServicePermissionIam();
-        sosAuthCurrentAccountAnswer = (SOSAuthCurrentAccountAnswer) sosServicePermissionIam.login(null, "", "", USER, PASSWORD).getEntity();
+        SOSLoginParameters sosLoginParameters = new SOSLoginParameters();
+        sosLoginParameters.setAccount(USER);
+         sosServicePermissionIam = new SOSServicePermissionIam();
+        sosAuthCurrentAccountAnswer = (SOSAuthCurrentAccountAnswer) sosServicePermissionIam.login(sosLoginParameters, PASSWORD).getEntity();
         return sosAuthCurrentAccountAnswer.getAccessToken();
     }
 

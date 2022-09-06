@@ -1,4 +1,4 @@
-package com.sos.auth.vault;
+package com.sos.auth.openid;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -13,26 +13,28 @@ import org.slf4j.LoggerFactory;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSSession;
 import com.sos.auth.keycloak.classes.SOSKeycloakAccountAccessToken;
+import com.sos.auth.keycloak.classes.SOSKeycloakWebserviceCredentials;
 import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
+import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
-import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
+import com.sos.joc.exceptions.JocException;
 
-public class SOSVaultSession implements ISOSSession {
+public class SOSOpenIdSession implements ISOSSession {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSVaultSession.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSOpenIdSession.class);
 
-    private SOSVaultAccountAccessToken accessToken;
+    private SOSOpenIdAccountAccessToken accessToken;
     private Long startSession;
     private Long lastTouch;
     private Long initSessionTimeout;
-    private SOSVaultHandler sosVaultHandler;
+    private SOSOpenIdHandler sosOpenIdHandler;
 
     private Map<String, Object> attributes;
 
-    public SOSVaultSession(SOSIdentityService identityService) {
+    public SOSOpenIdSession(SOSIdentityService identityService) {
         super();
         initSession(identityService);
     }
@@ -45,9 +47,9 @@ public class SOSVaultSession implements ISOSSession {
     }
 
     private void initSession(SOSIdentityService identityService) {
-        if (sosVaultHandler == null) {
+        if (sosOpenIdHandler == null) {
             KeyStore trustStore = null;
-            SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
+            SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
             try {
                 webserviceCredentials.setValuesFromProfile(identityService);
 
@@ -55,7 +57,7 @@ public class SOSVaultSession implements ISOSSession {
                         webserviceCredentials.getTruststorePassword());
 
                 webserviceCredentials.setAccount("");
-                sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
+                sosOpenIdHandler = new SOSOpenIdHandler(null);
                 startSession = Instant.now().toEpochMilli();
 
             } catch (Exception e) {
@@ -100,7 +102,7 @@ public class SOSVaultSession implements ISOSSession {
 
     @Override
     public Serializable getAccessToken() {
-        return accessToken.getAuth().getClient_token();
+        return accessToken.getAccess_token();
 
     }
 
@@ -119,25 +121,26 @@ public class SOSVaultSession implements ISOSSession {
     }
 
     @Override
-    public SOSVaultAccountAccessToken getSOSVaultAccountAccessToken() {
+    public SOSOpenIdAccountAccessToken getSOSOpenIdAccountAccessToken() {
         return accessToken;
     }
 
-    public void setAccessToken(SOSVaultAccountAccessToken accessToken) {
+    public void setAccessToken(SOSOpenIdAccountAccessToken accessToken) {
         this.accessToken = accessToken;
     }
 
     @Override
     public boolean renew() {
         try {
-            if (sosVaultHandler.accountAccessTokenIsValid(accessToken)) {
-                sosVaultHandler.renewAccountAccess(accessToken);
+            if (sosOpenIdHandler.accountAccessTokenIsValid(accessToken)) {
+                this.setAccessToken(sosOpenIdHandler.renewAccountAccess(accessToken));
                 startSession = Instant.now().toEpochMilli();
                 return true;
             } else {
+                this.stop();
                 return false;
             }
-        } catch (SOSException | IOException e) {
+        } catch (JocException e) {
             LOGGER.error("", e);
             return false;
         }
@@ -149,12 +152,12 @@ public class SOSVaultSession implements ISOSSession {
     }
 
     @Override
-    public SOSKeycloakAccountAccessToken getSOSKeycloakAccountAccessToken() {
+    public SOSVaultAccountAccessToken getSOSVaultAccountAccessToken() {
         return null;
     }
 
     @Override
-    public SOSOpenIdAccountAccessToken getSOSOpenIdAccountAccessToken() {
+    public SOSKeycloakAccountAccessToken getSOSKeycloakAccountAccessToken() {
         return null;
     }
 }

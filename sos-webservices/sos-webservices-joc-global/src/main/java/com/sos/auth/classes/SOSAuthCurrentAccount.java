@@ -55,8 +55,7 @@ public class SOSAuthCurrentAccount {
     private boolean withAuthorization;
     private Set<String> roles;
     private Set<ISOSAuthSubject> currentSubjects;
-
-    private HttpServletRequest httpServletRequest;
+    private SOSLoginParameters sosLoginParameters;
 
     private Permissions sosPermissionJocCockpitControllers;
     private SOSAuthFolderPermissions sosAuthFolderPermissions;
@@ -281,21 +280,17 @@ public class SOSAuthCurrentAccount {
         return sosAuthFolderPermissions;
     }
 
-    public void setHttpServletRequest(HttpServletRequest httpServletRequest) {
-        this.httpServletRequest = httpServletRequest;
-    }
-
     public String getCallerHostName() {
-        if (httpServletRequest != null) {
-            return httpServletRequest.getRemoteHost();
+        if (sosLoginParameters.getRequest() != null) {
+            return sosLoginParameters.getRequest().getRemoteHost();
         } else {
             return "";
         }
     }
 
     public String getCallerIpAddress() {
-        if (httpServletRequest != null) {
-            String s = httpServletRequest.getRemoteAddr();
+        if (sosLoginParameters.getRequest() != null) {
+            String s = sosLoginParameters.getRequest().getRemoteAddr();
             if ("0:0:0:0:0:0:0:1".equals(s)) {
                 return "127.0.0.1";
             } else {
@@ -307,7 +302,7 @@ public class SOSAuthCurrentAccount {
     }
 
     public HttpServletRequest getHttpServletRequest() {
-        return httpServletRequest;
+        return sosLoginParameters.getRequest();
     }
 
     public String getAccessToken(String identityServiceName) {
@@ -320,6 +315,14 @@ public class SOSAuthCurrentAccount {
 
     public void setIdentityServices(SOSIdentityService identityServices) {
         this.identityServices = identityServices;
+    }
+
+    public SOSLoginParameters getSosLoginParameters() {
+        return sosLoginParameters;
+    }
+
+    public void setSosLoginParameters(SOSLoginParameters sosLoginParameters) {
+        this.sosLoginParameters = sosLoginParameters;
     }
 
 }

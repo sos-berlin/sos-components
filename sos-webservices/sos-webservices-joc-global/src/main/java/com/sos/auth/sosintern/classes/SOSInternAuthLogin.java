@@ -2,12 +2,11 @@ package com.sos.auth.sosintern.classes;
 
 import java.util.UUID;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthAccessToken;
+import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
@@ -27,19 +26,20 @@ public class SOSInternAuthLogin implements ISOSLogin {
 
     }
 
-    public void login(String account, String pwd, HttpServletRequest httpServletRequest) {
+    public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
         try {
             SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials = new SOSInternAuthWebserviceCredentials();
             sosInternAuthWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
-            sosInternAuthWebserviceCredentials.setAccount(account);
+            sosInternAuthWebserviceCredentials.setAccount(currentAccount.getAccountname());
             SOSInternAuthHandler sosInternAuthHandler = new SOSInternAuthHandler();
 
             SOSAuthAccessToken sosInternAuthAccessToken = null;
 
-            boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), account);
+            boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
             if (!disabled) {
                 if (identityService.isSingleFactor()) {
-                    if (identityService.isSingleFactorCert() && SOSAuthHelper.checkCertificate(httpServletRequest, account)) {
+                    if (identityService.isSingleFactorCert() && SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
+                            .getAccountname())) {
 
                         sosInternAuthAccessToken = new SOSAuthAccessToken();
                         sosInternAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
@@ -50,7 +50,8 @@ public class SOSInternAuthLogin implements ISOSLogin {
                         }
                     }
                 } else {
-                    if ((identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(httpServletRequest, account))) {
+                    if ((identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
+                            .getAccountname()))) {
                         sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
                     }
                 }
@@ -63,7 +64,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
             } else {
                 sosInternAuthSubject.setAuthenticated(true);
                 sosInternAuthSubject.setIsForcePasswordChange(sosInternAuthHandler.getForcePasswordChange());
-                sosInternAuthSubject.setPermissionAndRoles(account, identityService);
+                sosInternAuthSubject.setPermissionAndRoles(currentAccount.getAccountname(), identityService);
                 sosInternAuthSubject.setAccessToken(sosInternAuthAccessToken.getAccessToken());
             }
 

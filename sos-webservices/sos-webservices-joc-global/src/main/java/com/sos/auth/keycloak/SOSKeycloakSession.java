@@ -14,6 +14,7 @@ import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSSession;
 import com.sos.auth.keycloak.classes.SOSKeycloakAccountAccessToken;
 import com.sos.auth.keycloak.classes.SOSKeycloakWebserviceCredentials;
+import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
 import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
@@ -151,6 +152,11 @@ public class SOSKeycloakSession implements ISOSSession {
 
     @Override
     public SOSVaultAccountAccessToken getSOSVaultAccountAccessToken() {
+        return null;
+    }
+
+    @Override
+    public SOSOpenIdAccountAccessToken getSOSOpenIdAccountAccessToken() {
         return null;
     }
 }

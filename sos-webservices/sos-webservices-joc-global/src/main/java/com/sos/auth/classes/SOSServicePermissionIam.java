@@ -31,6 +31,7 @@ import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.keycloak.classes.SOSKeycloakLogin;
 import com.sos.auth.ldap.classes.SOSLdapLogin;
+import com.sos.auth.openid.classes.SOSOpenIdLogin;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.auth.vault.classes.SOSVaultLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -173,7 +174,8 @@ public class SOSServicePermissionIam {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
-            @HeaderParam("X-CLIENT-ID") String loginClientId, @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
+            @HeaderParam("X-IDENTIY-SERVICE") String identityService, @HeaderParam("X-ACCESS-TOKEN") String accessToken,
+            @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -197,7 +199,15 @@ public class SOSServicePermissionIam {
                     LOGGER.debug("No Client certificate read from HttpServletRequest.");
                 }
             }
-            return login(request, basicAuthorization, clientCertCN, account, pwd);
+            SOSLoginParameters sosLoginParameters = new SOSLoginParameters();
+            sosLoginParameters.setAccessToken(accessToken);
+            sosLoginParameters.setBasicAuthorization(basicAuthorization);
+            sosLoginParameters.setClientCertCN(clientCertCN);
+            sosLoginParameters.setIdentityService(identityService);
+            sosLoginParameters.setRequest(request);
+            sosLoginParameters.setAccount(account);
+
+            return login(sosLoginParameters, pwd);
         } catch (JocAuthenticationException e) {
             return JOCDefaultResponse.responseStatus401(e.getSosAuthCurrentAccountAnswer());
         } catch (UnsupportedEncodingException e) {
@@ -441,13 +451,18 @@ public class SOSServicePermissionIam {
                 sosLogin = new SOSInternAuthLogin();
                 LOGGER.debug("Login with idendity service sosintern");
                 break;
+            case OPENID_CONNECT:
+                sosLogin = new SOSOpenIdLogin();
+                LOGGER.debug("Login with idendity service openid_connect");
+                break;
             default:
                 sosLogin = new SOSInternAuthLogin();
                 LOGGER.debug("Login with idendity service sosintern");
             }
 
             sosLogin.setIdentityService(new SOSIdentityService(dbItemIdentityService));
-            sosLogin.login(currentAccount.getAccountname(), password, currentAccount.getHttpServletRequest());
+            sosLogin.login(currentAccount, password);
+            // sosLogin.login(currentAccount.getAccountname(), password, currentAccount.getHttpServletRequest());
 
             ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
 
@@ -581,25 +596,31 @@ public class SOSServicePermissionIam {
                     currentAccount.initFolders();
 
                     for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
-                        msg = createAccount(currentAccount, password, dbItemIamIdentityService);
-                        if (msg.isEmpty()) {
-                            SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
-                                    dbItemIamIdentityService));
-                            currentAccount.setRoles(securityConfiguration);
-                            if (currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
-                                setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
+                        if (!dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OPENID_CONNECT.value())) {
+                            msg = createAccount(currentAccount, password, dbItemIamIdentityService);
+                            if (msg.isEmpty()) {
+                                SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
+                                        dbItemIamIdentityService));
+                                currentAccount.setRoles(securityConfiguration);
+                                if (currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
+                                    setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
+                                }
+                                addFolder(currentAccount);
+                            } else {
+                                authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
+                                LOGGER.info("Login with required Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed."
+                                        + msg);
                             }
-                            addFolder(currentAccount);
-                        } else {
-                            authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
-                            LOGGER.info("Login with required Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed."
-                                    + msg);
                         }
                     }
 
                     if (currentAccount.getCurrentSubject() == null) {
                         filter.setRequired(false);
                         if (listOfIdentityServices.size() == 0) {
+                            if (currentAccount.getSosLoginParameters().getIdentityService() != null && currentAccount.getSosLoginParameters()
+                                    .getIdentityService().equals(IdentityServiceTypes.OPENID_CONNECT.value())) {
+                                filter.setIdentityServiceName(currentAccount.getSosLoginParameters().getIdentityService());
+                            }
                             listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
                             if (listOfIdentityServices.size() == 0) {
                                 LOGGER.info("No enabled Identity Service is configured.");
@@ -702,8 +723,7 @@ public class SOSServicePermissionIam {
         }
     }
 
-    protected JOCDefaultResponse login(HttpServletRequest request, String basicAuthorization, String clientCertCN, String user, String pwd)
-            throws Exception {
+    protected JOCDefaultResponse login(SOSLoginParameters sosLoginParameters, String pwd) throws Exception {
         Globals.setServletBaseUri(uriInfo);
 
         if (Globals.sosCockpitProperties == null) {
@@ -733,37 +753,39 @@ public class SOSServicePermissionIam {
             Globals.disconnect(sosHibernateSession);
         }
 
-        if (basicAuthorization == null || basicAuthorization.isEmpty()) {
-            if (user == null) {
-                user = clientCertCN;
+        if (sosLoginParameters.getBasicAuthorization() == null || sosLoginParameters.getBasicAuthorization().isEmpty()) {
+            if (sosLoginParameters.getAccount() == null) {
+                sosLoginParameters.setAccount(sosLoginParameters.getClientCertCN());
             }
             if (pwd == null) {
                 pwd = "";
             }
-            String s = user + ":" + pwd;
+
+            String s = sosLoginParameters.getAccount() + ":" + pwd;
             byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
             String authStringEnc = new String(authEncBytes);
-            basicAuthorization = "Basic " + authStringEnc;
+            sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
         }
 
         TimeZone.setDefault(TimeZone.getTimeZone(UTC));
 
-        SOSAuthCurrentAccount currentAccount = getUserFromHeaderOrQuery(basicAuthorization, clientCertCN, user);
-        String password = getPwdFromHeaderOrQuery(basicAuthorization, pwd);
+        SOSAuthCurrentAccount currentAccount = getUserFromHeaderOrQuery(sosLoginParameters.getBasicAuthorization(), sosLoginParameters
+                .getClientCertCN(), sosLoginParameters.getAccount());
+        String password = getPwdFromHeaderOrQuery(sosLoginParameters.getBasicAuthorization(), pwd);
 
         if (currentAccount == null || !currentAccount.withAuthorization()) {
             return JOCDefaultResponse.responseStatusJSError(AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
         }
 
-        currentAccount.setHttpServletRequest(request);
+        currentAccount.setSosLoginParameters(sosLoginParameters);
 
         SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = null;
 
         sosAuthCurrentUserAnswer = authenticate(currentAccount, password);
 
-        if (request != null) {
-            sosAuthCurrentUserAnswer.setCallerIpAddress(request.getRemoteAddr());
-            sosAuthCurrentUserAnswer.setCallerHostName(request.getRemoteHost());
+        if (sosLoginParameters.getRequest() != null) {
+            sosAuthCurrentUserAnswer.setCallerIpAddress(sosLoginParameters.getRequest().getRemoteAddr());
+            sosAuthCurrentUserAnswer.setCallerHostName(sosLoginParameters.getRequest().getRemoteHost());
         }
 
         LOGGER.debug(String.format("Method: %s, Account: %s", "login", currentAccount.getAccountname()));

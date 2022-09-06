@@ -7,11 +7,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.HashSet;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
@@ -35,7 +34,7 @@ public class SOSKeycloakLogin implements ISOSLogin {
 
     }
 
-    public void login(String account, String pwd, HttpServletRequest httpServletRequest) {
+    public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
         KeyStore trustStore = null;
 
         try {
@@ -45,20 +44,21 @@ public class SOSKeycloakLogin implements ISOSLogin {
             trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
                     webserviceCredentials.getTruststorePassword());
 
-            webserviceCredentials.setAccount(account);
+            webserviceCredentials.setAccount(currentAccount.getAccountname());
             SOSKeycloakHandler sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, trustStore);
 
             SOSKeycloakAccountAccessToken sosKeycloakAccountAccessToken = null;
 
             boolean disabled;
 
-            disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), account);
+            disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
 
-            if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
+            if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
+                    .getAccountname())))) {
                 sosKeycloakAccountAccessToken = sosKeycloakHandler.login(pwd);
             }
 
-            sosKeycloakSubject = new SOSKeycloakSubject(account, identityService);
+            sosKeycloakSubject = new SOSKeycloakSubject(currentAccount.getAccountname(), identityService);
 
             if (sosKeycloakAccountAccessToken.getAccess_token() == null || sosKeycloakAccountAccessToken.getAccess_token().isEmpty()) {
                 sosKeycloakSubject.setAuthenticated(false);
@@ -68,9 +68,9 @@ public class SOSKeycloakLogin implements ISOSLogin {
                 sosKeycloakSubject.setAccessToken(sosKeycloakAccountAccessToken);
 
                 if (IdentityServiceTypes.KEYCLOAK_JOC == identityService.getIdentyServiceType()) {
-                    sosKeycloakSubject.setPermissionAndRoles(null, account);
+                    sosKeycloakSubject.setPermissionAndRoles(null, currentAccount.getAccountname());
                 } else {
-                    sosKeycloakSubject.setPermissionAndRoles(sosKeycloakHandler.getTokenRoles(), account);
+                    sosKeycloakSubject.setPermissionAndRoles(sosKeycloakHandler.getTokenRoles(), currentAccount.getAccountname());
                 }
             }
 
