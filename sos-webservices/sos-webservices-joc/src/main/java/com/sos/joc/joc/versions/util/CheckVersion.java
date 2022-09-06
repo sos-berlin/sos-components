@@ -51,8 +51,6 @@ public class CheckVersion {
         if(jocCompatibleControllerExemptions.get(coreJocVersion) != null && !jocCompatibleControllerExemptions.get(coreJocVersion).isEmpty()) {
             if(jocCompatibleControllerExemptions.get(coreJocVersion).contains(coreControllerVersion)) {
                 return CompatibilityLevel.PARTIALLY_COMPATIBLE;
-            } else {
-                return CompatibilityLevel.NOT_COMPATIBLE;
             }
         }
         if(controllerVersionSplitted.get(0) != jocVersionSplitted.get(0)) {
@@ -74,8 +72,6 @@ public class CheckVersion {
         if(controllerCompatibleAgentExemptions.get(coreControllerVersion) != null && !controllerCompatibleAgentExemptions.get(coreControllerVersion).isEmpty()) {
             if(controllerCompatibleAgentExemptions.get(coreControllerVersion).contains(coreAgentVersion)) {
                 return CompatibilityLevel.PARTIALLY_COMPATIBLE;
-            } else {
-                return CompatibilityLevel.NOT_COMPATIBLE;
             }
         }
         if(agentVersionSplitted.get(0) != controllerVersionSplitted.get(0)) {
