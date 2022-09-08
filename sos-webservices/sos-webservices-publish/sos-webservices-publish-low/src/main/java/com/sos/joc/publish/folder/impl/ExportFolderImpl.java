@@ -10,8 +10,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.ws.rs.Path;
-import javax.ws.rs.core.StreamingOutput;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.StreamingOutput;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;

@@ -22,7 +22,7 @@ import com.sos.joc.publish.repository.git.commands.GitCommandUtils;
 import com.sos.joc.publish.repository.git.commands.resource.IGitCommandClone;
 import com.sos.schema.JsonValidator;
 
-@javax.ws.rs.Path("inventory/repository/git")
+@jakarta.ws.rs.Path("inventory/repository/git")
 public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandClone {
 
     private static final String API_CALL = "./inventory/repository/git/clone";

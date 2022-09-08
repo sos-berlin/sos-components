@@ -2,7 +2,7 @@ package com.sos.joc.joc.impl;
 
 import java.io.InputStream;
 
-import javax.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MediaType;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -12,7 +12,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.IAboutResource;
 import com.sos.joc.model.Version;
 
-@javax.ws.rs.Path("")
+@jakarta.ws.rs.Path("")
 public class AboutImpl extends JOCResourceImpl implements IAboutResource {
     
     @Override

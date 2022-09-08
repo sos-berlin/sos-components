@@ -9,8 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Path;
+import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -38,7 +37,7 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
     private static String API_CALL = "./authentication/certificate/create";
 
     @Override
-    public JOCDefaultResponse postCreateClientServerCert(HttpServletRequest request, String token, byte[] filter) {
+    public JOCDefaultResponse postCreateClientServerCert(String token, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, filter);

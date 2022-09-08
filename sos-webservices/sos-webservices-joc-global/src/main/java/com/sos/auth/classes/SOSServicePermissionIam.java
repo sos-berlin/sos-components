@@ -10,18 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -59,7 +47,19 @@ import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
-@Path("/authentication")
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.UriInfo;
+
+@Path("authentication")
 public class SOSServicePermissionIam {
 
     private static final String ACCESS_TOKEN = "access_token";
@@ -75,7 +75,7 @@ public class SOSServicePermissionIam {
     UriInfo uriInfo;
 
     @POST
-    @Path("/joc_cockpit_permissions")
+    @Path("joc_cockpit_permissions")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postJocCockpitPermissions(@HeaderParam(X_ACCESS_TOKEN) String accessToken) {
@@ -104,7 +104,7 @@ public class SOSServicePermissionIam {
     }
 
     @POST
-    @Path("/size")
+    @Path("size")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse getSize() {
@@ -123,7 +123,7 @@ public class SOSServicePermissionIam {
     }
 
     @POST
-    @Path("/userbyname")
+    @Path("userbyname")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse getAccessToken(String account) {
@@ -146,7 +146,7 @@ public class SOSServicePermissionIam {
     }
 
     @POST
-    @Path("/userbytoken")
+    @Path("userbytoken")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse userByToken(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader) {
@@ -170,7 +170,7 @@ public class SOSServicePermissionIam {
     }
 
     @POST
-    @Path("/login")
+    @Path("login")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
@@ -265,7 +265,7 @@ public class SOSServicePermissionIam {
     }
 
     @POST
-    @Path("/logout")
+    @Path("logout")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse logoutPost(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader) {
@@ -281,7 +281,7 @@ public class SOSServicePermissionIam {
     }
 
     @POST
-    @Path("/db_refresh")
+    @Path("db_refresh")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse dbRefresh() {
@@ -312,7 +312,7 @@ public class SOSServicePermissionIam {
     }
 
     @GET
-    @Path("/role")
+    @Path("role")
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse hasRole(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,
             @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery, @QueryParam("role") String role) {
@@ -345,7 +345,7 @@ public class SOSServicePermissionIam {
     }
 
     @GET
-    @Path("/permission")
+    @Path("permission")
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse isPermitted(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,
             @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery, @QueryParam("permission") String permission) throws SessionNotExistException {
@@ -388,7 +388,7 @@ public class SOSServicePermissionIam {
     }
 
     @POST
-    @Path("/permissions")
+    @Path("permissions")
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse getPermissions(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,
             @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery) throws SessionNotExistException {

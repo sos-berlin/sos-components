@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.naming.InvalidNameException;
-import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +34,8 @@ import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 public class SOSAuthHelper {
 

@@ -33,7 +33,7 @@ import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.joc.publish.util.ImportUtils;
 import com.sos.schema.JsonValidator;
 
-@javax.ws.rs.Path("inventory/repository")
+@jakarta.ws.rs.Path("inventory/repository")
 public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IRepositoryUpdateFrom{
 
     private static final String API_CALL = "./inventory/repository/update";

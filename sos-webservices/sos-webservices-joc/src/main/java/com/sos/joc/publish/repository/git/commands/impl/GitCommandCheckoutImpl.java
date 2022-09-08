@@ -24,7 +24,7 @@ import com.sos.joc.publish.repository.git.commands.GitCommandUtils;
 import com.sos.joc.publish.repository.git.commands.resource.IGitCommandCheckout;
 import com.sos.schema.JsonValidator;
 
-@javax.ws.rs.Path("inventory/repository/git")
+@jakarta.ws.rs.Path("inventory/repository/git")
 public class GitCommandCheckoutImpl extends JOCResourceImpl implements IGitCommandCheckout {
 
     private static final String API_CALL = "./inventory/repository/git/checkout";

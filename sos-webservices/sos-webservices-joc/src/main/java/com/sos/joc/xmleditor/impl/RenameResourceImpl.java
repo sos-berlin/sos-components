@@ -2,7 +2,7 @@ package com.sos.joc.xmleditor.impl;
 
 import java.util.Date;
 
-import javax.ws.rs.Path;
+import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;

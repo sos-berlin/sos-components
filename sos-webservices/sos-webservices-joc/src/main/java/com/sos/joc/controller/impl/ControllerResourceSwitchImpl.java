@@ -3,7 +3,7 @@ package com.sos.joc.controller.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import javax.ws.rs.Path;
+import jakarta.ws.rs.Path;
 
 import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSSessionHandler;

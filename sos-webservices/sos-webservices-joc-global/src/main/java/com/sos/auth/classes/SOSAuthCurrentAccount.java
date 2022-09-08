@@ -11,8 +11,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +40,8 @@ import com.sos.joc.model.security.configuration.permissions.joc.admin.Certificat
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers;
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Customization;
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Settings;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 public class SOSAuthCurrentAccount {
 

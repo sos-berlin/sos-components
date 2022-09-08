@@ -10,7 +10,6 @@ import java.util.Properties;
 import java.util.TimeZone;
 
 import javax.json.Json;
-import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +35,8 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.JocSecurityLevel;
+
+import jakarta.ws.rs.core.UriInfo;
 
 public class Globals {
 

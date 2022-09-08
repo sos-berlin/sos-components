@@ -28,7 +28,7 @@ import com.sos.joc.model.publish.git.GitCredentialsList;
 import com.sos.joc.publish.repository.git.credentials.resource.IGitCredentialsAdd;
 import com.sos.schema.JsonValidator;
 
-@javax.ws.rs.Path("inventory/repository/git")
+@jakarta.ws.rs.Path("inventory/repository/git")
 public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCredentialsAdd {
 
     private static final String API_CALL = "./inventory/repository/git/credentials/add";

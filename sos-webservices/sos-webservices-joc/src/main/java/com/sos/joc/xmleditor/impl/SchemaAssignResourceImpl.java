@@ -3,7 +3,7 @@ package com.sos.joc.xmleditor.impl;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-import javax.ws.rs.Path;
+import jakarta.ws.rs.Path;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;

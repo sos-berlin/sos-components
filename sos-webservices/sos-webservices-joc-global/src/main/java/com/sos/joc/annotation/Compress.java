@@ -2,7 +2,7 @@ package com.sos.joc.annotation;
 
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Retention;
-import javax.ws.rs.NameBinding;
+import jakarta.ws.rs.NameBinding;
 
 /**
  * @Compress annotation is the name binding annotation

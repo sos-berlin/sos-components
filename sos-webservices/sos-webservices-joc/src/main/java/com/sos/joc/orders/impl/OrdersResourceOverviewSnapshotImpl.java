@@ -12,7 +12,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.ws.rs.Path;
+import jakarta.ws.rs.Path;
 
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;

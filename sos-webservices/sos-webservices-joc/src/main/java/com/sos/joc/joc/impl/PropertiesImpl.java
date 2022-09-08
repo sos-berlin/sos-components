@@ -3,7 +3,7 @@ package com.sos.joc.joc.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import javax.ws.rs.Path;
+import jakarta.ws.rs.Path;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;

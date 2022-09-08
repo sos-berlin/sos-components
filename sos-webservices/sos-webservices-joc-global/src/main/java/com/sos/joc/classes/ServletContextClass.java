@@ -1,9 +1,10 @@
 package com.sos.joc.classes;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
 
 import com.sos.joc.Globals;
+
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
 
 public class ServletContextClass implements ServletContextListener {
 

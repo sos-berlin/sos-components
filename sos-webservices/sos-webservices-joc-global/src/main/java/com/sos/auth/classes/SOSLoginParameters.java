@@ -1,6 +1,6 @@
 package com.sos.auth.classes;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class SOSLoginParameters {
 

@@ -1,7 +1,5 @@
 package com.sos.joc2;
 
-import javax.servlet.ServletException;
-
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +12,8 @@ import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+
+import jakarta.servlet.ServletException;
 
 public class JocServletContainer extends ServletContainer {
 

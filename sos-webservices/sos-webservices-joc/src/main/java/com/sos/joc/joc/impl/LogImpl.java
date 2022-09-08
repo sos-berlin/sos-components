@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import javax.ws.rs.core.StreamingOutput;
+import jakarta.ws.rs.core.StreamingOutput;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -27,7 +27,7 @@ import com.sos.joc.model.JOClogs;
 
 import io.vavr.control.Either;
 
-@javax.ws.rs.Path("joc")
+@jakarta.ws.rs.Path("joc")
 public class LogImpl extends JOCResourceImpl implements ILogResource {
 
     private static final String API_CALL = "./log";

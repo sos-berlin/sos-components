@@ -2,7 +2,7 @@ package com.sos.joc.dailyplan.impl;
 
 import java.util.Date;
 
-import javax.ws.rs.Path;
+import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.common.Variables;

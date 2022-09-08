@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
 
-import javax.ws.rs.Path;
+import jakarta.ws.rs.Path;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;

@@ -2,17 +2,19 @@ package com.sos.js7.joc.poc.jetty.servlets;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Enumeration;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class ReadCertificateTestServlet extends HttpServlet {
 
@@ -51,14 +53,16 @@ public class ReadCertificateTestServlet extends HttpServlet {
         Enumeration<String> attributes = request.getAttributeNames();
         while(attributes.hasMoreElements()) {
             String attributeName = attributes.nextElement();
-            if("javax.servlet.request.X509Certificate".equals(attributeName)) {
-                this.clientCertificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
-            } else if("javax.servlet.request.cipher_suite".equals(attributeName)) {
-                cipherSuiteName = (String) request.getAttribute("javax.servlet.request.cipher_suite");
-            } else if("javax.servlet.request.key_size".equals(attributeName)) {
-                keySize = (Integer) request.getAttribute("javax.servlet.request.key_size");
-            } else if("javax.servlet.request.ssl_session_id".equals(attributeName)) {
-                this.sslSessionIdHex = (String) request.getAttribute("javax.servlet.request.ssl_session_id");
+            for (String prefix : Arrays.asList("javax.servlet.request.", "jakarta.servlet.request.")) {
+                if((prefix + "X509Certificate").equals(attributeName)) {
+                    this.clientCertificateChain = (X509Certificate[]) request.getAttribute(prefix + "X509Certificate");
+                } else if((prefix + "cipher_suite").equals(attributeName)) {
+                    cipherSuiteName = (String) request.getAttribute(prefix + "cipher_suite");
+                } else if((prefix + "key_size").equals(attributeName)) {
+                    keySize = (Integer) request.getAttribute(prefix + "key_size");
+                } else if((prefix + "ssl_session_id").equals(attributeName)) {
+                    this.sslSessionIdHex = (String) request.getAttribute(prefix + "ssl_session_id");
+                }
             }
         }
         response.setContentType("application/json");

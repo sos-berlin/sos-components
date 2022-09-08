@@ -30,7 +30,7 @@ import com.sos.joc.publish.repository.resource.IRepositoryRead;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.schema.JsonValidator;
 
-@javax.ws.rs.Path("inventory/repository")
+@jakarta.ws.rs.Path("inventory/repository")
 public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRead{
 
     private static final String API_CALL = "./inventory/repository/read";

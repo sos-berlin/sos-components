@@ -31,7 +31,7 @@ import com.sos.joc.publish.repository.resource.IRepositoryDelete;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.schema.JsonValidator;
 
-@javax.ws.rs.Path("inventory/repository")
+@jakarta.ws.rs.Path("inventory/repository")
 public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepositoryDelete {
 
     private static final String API_CALL = "./inventory/repository/delete";

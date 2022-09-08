@@ -3,7 +3,7 @@ package com.sos.joc.notification.impl;
 import java.util.Arrays;
 import java.util.Date;
 
-import javax.ws.rs.Path;
+import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

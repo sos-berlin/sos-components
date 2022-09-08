@@ -47,7 +47,7 @@ import com.sos.schema.JsonValidator;
 
 import js7.data_for_java.controller.JControllerState;
 
-@javax.ws.rs.Path(JocInventory.APPLICATION_PATH)
+@jakarta.ws.rs.Path(JocInventory.APPLICATION_PATH)
 public class DeployablesResourceImpl extends JOCResourceImpl implements IDeployablesResource {
 
     @Override

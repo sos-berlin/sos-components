@@ -22,7 +22,7 @@ import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.publish.git.GitCredentialsList;
 import com.sos.joc.publish.repository.git.credentials.resource.IGitCredentialsGet;
 
-@javax.ws.rs.Path("inventory/repository/git")
+@jakarta.ws.rs.Path("inventory/repository/git")
 public class GitCredentialsGetImpl extends JOCResourceImpl implements IGitCredentialsGet {
 
     private static final String API_CALL = "./inventory/repository/git/credentials";

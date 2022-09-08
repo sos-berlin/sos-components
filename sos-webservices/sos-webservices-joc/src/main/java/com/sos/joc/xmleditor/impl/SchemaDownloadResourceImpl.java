@@ -8,8 +8,8 @@ import java.nio.file.Files;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.StreamingOutput;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.StreamingOutput;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;

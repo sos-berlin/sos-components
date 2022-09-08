@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.SortedSet;
 
-import javax.ws.rs.Path;
+import jakarta.ws.rs.Path;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;

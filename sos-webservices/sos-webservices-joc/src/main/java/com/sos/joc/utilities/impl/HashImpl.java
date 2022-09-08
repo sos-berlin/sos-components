@@ -9,7 +9,7 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.utilities.resource.IHashResource;
 
-@javax.ws.rs.Path(WebservicePaths.UTILITIES)
+@jakarta.ws.rs.Path(WebservicePaths.UTILITIES)
 public class HashImpl extends JOCResourceImpl implements IHashResource {
 
     @Override

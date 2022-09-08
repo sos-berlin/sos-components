@@ -58,7 +58,7 @@
     <apache.commons.csv.version>1.9.0</apache.commons.csv.version>
     <apache.httpcomponents.httpclient.version>4.5.13</apache.httpcomponents.httpclient.version>
     <json.version>1.0.4</json.version>
-    <servlet.version>3.1.0</servlet.version>
+    <servlet.version>5.0.0</servlet.version>
 
     <hibernate.version>5.5.4.Final</hibernate.version>
     <hibernate.commons.annotation.version>5.1.2.Final</hibernate.commons.annotation.version>
@@ -72,11 +72,11 @@
     <ini4j.version>0.5.2</ini4j.version>
     <sos.ojdbc8.version>18.3.0.0</sos.ojdbc8.version>
     <javax.mail.version>1.4.7</javax.mail.version>
-    <jersey.glassfish.version>2.22.2</jersey.glassfish.version>
+    <jersey.glassfish.version>3.0.8</jersey.glassfish.version>
     <io.vavr.version>0.10.3</io.vavr.version>
     <commons.beanutils.version>1.8.3</commons.beanutils.version>
     <txtmark.version>0.13</txtmark.version>
-    <javax.ws.rs-api.version>2.0.1</javax.ws.rs-api.version>
+    <jakarta.ws.rs-api.version>3.0.0</jakarta.ws.rs-api.version>
     <commons.beanutils.version>1.9.4</commons.beanutils.version>
     <byte.buddy.version>1.8.12</byte.buddy.version>
     <bouncycastle.version>1.70</bouncycastle.version>
@@ -501,14 +501,14 @@
         <version>${json.version}</version>
       </dependency>
       <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>${servlet.version}</version>
-      </dependency>
+    	<groupId>jakarta.servlet</groupId>
+    	<artifactId>jakarta.servlet-api</artifactId>
+    	<version>${servlet.version}</version>
+	  </dependency>
       <dependency>
-        <groupId>javax.ws.rs</groupId>
-        <artifactId>javax.ws.rs-api</artifactId>
-        <version>${javax.ws.rs-api.version}</version>
+        <groupId>jakarta.ws.rs</groupId>
+    	<artifactId>jakarta.ws.rs-api</artifactId>
+        <version>${jakarta.ws.rs-api.version}</version>
       </dependency>
       <dependency>
         <groupId>javax.mail</groupId>
@@ -634,6 +634,11 @@
         <artifactId>jersey-server</artifactId>
         <version>${jersey.glassfish.version}</version>
       </dependency>
+      <dependency>
+    	<groupId>org.glassfish.jersey.inject</groupId>
+    	<artifactId>jersey-hk2</artifactId>
+    	<version>${jersey.glassfish.version}</version>
+	  </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.media</groupId>
         <artifactId>jersey-media-moxy</artifactId>

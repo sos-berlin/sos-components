@@ -40,7 +40,7 @@ import com.sos.joc.model.inventory.release.ResponseReleasableVersion;
 import com.sos.joc.model.inventory.release.ResponseReleasables;
 import com.sos.schema.JsonValidator;
 
-@javax.ws.rs.Path(JocInventory.APPLICATION_PATH)
+@jakarta.ws.rs.Path(JocInventory.APPLICATION_PATH)
 public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasablesResource {
 
     @Override

@@ -3,7 +3,7 @@ package com.sos.joc.inventory.impl;
 import java.util.Date;
 import java.util.Objects;
 
-import javax.ws.rs.Path;
+import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;

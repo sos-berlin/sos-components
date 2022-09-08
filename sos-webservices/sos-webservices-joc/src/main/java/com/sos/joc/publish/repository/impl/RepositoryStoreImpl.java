@@ -26,7 +26,7 @@ import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.joc.publish.repository.util.StoreItemsCategory;
 import com.sos.schema.JsonValidator;
 
-@javax.ws.rs.Path("inventory/repository")
+@jakarta.ws.rs.Path("inventory/repository")
 public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryStore {
 
     private static final String API_CALL = "./inventory/repository/store";

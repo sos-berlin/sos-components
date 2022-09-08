@@ -26,7 +26,7 @@ import com.sos.joc.model.publish.git.RemoveCredentialsFilter;
 import com.sos.joc.publish.repository.git.credentials.resource.IGitCredentialsRemove;
 import com.sos.schema.JsonValidator;
 
-@javax.ws.rs.Path("inventory/repository/git")
+@jakarta.ws.rs.Path("inventory/repository/git")
 public class GitCredentialsRemoveImpl extends JOCResourceImpl implements IGitCredentialsRemove {
 
     private static final String API_CALL = "./inventory/repository/git/credentials/remove";

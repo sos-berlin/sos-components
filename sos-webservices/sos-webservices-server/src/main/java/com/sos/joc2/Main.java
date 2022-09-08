@@ -7,12 +7,13 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.servlet.ServletRegistration;
-
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.servlet.WebappContext;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
+
+import jakarta.servlet.ServletRegistration;
 
  
 public class Main {
@@ -32,8 +33,9 @@ public class Main {
 
         // create and start a new instance of grizzly http server
         // exposing the Jersey application at BASE_URI
+        
         HttpServer httpServer = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc);
-        org.glassfish.grizzly.servlet.WebappContext context = new org.glassfish.grizzly.servlet.WebappContext("WebappContext", "");
+        WebappContext context = new WebappContext("WebappContext", "");
         ServletRegistration registration = context.addServlet("ServletContainer", new JocServletContainer());
         registration.addMapping("/*");
         context.deploy(httpServer);

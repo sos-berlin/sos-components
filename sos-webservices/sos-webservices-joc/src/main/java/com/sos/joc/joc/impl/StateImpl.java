@@ -17,7 +17,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.IStateResource;
 import com.sos.joc.model.common.Ok;
 
-@javax.ws.rs.Path("joc")
+@jakarta.ws.rs.Path("joc")
 public class StateImpl extends JOCResourceImpl implements IStateResource {
     
     private static String API_CALL = "./joc/is_active";
