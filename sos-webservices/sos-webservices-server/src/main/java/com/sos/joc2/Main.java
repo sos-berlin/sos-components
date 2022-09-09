@@ -26,18 +26,17 @@ public class Main {
      */
     public static HttpServer startServer() throws IOException {
         
-        Map<String, String> initParams = new HashMap<>();
+        Map<String, String> initParams = new HashMap<>(2);
         initParams.put(ServerProperties.PROVIDER_PACKAGES, "com.sos.joc, com.sos.webservices.order, com.sos.auth.classes");
         initParams.put(ServerProperties.PROVIDER_CLASSNAMES, "org.glassfish.jersey.media.multipart.MultiPartFeature");
 
         // create and start a new instance of grizzly http server
         // exposing the Jersey application at BASE_URI
         
-        HttpServer httpServer = GrizzlyWebContainerFactory.create(URI.create(BASE_URI), JocServletContainer.class, initParams);
-        return httpServer;
+        return GrizzlyWebContainerFactory.create(URI.create(BASE_URI), JocServletContainer.class, initParams);
     }
 
-    public  static void setLogger() {
+    public static void setLogger() {
         Logger l = Logger.getLogger("org.glassfish.grizzly.http.server.HttpHandler");
         l.setLevel(Level.FINE);
         l.setUseParentHandlers(false);
@@ -53,8 +52,7 @@ public class Main {
         final HttpServer server = startServer();
         //StaticHttpHandler staticHttpHandler = new StaticHttpHandler("src/main/resources");
         //server.getServerConfiguration().addHttpHandler(staticHttpHandler, "/");
-        System.out.println(String.format("Jersey app started with WADL available at "
-                + "%sapplication.wadl\nHit enter to stop it...", BASE_URI));
+        System.out.println("Hit enter to stop it...");
         System.in.read();
         server.shutdownNow();
     }
