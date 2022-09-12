@@ -41,7 +41,7 @@ public class SOSOpenIdLogin implements ISOSLogin {
                 sosOpenIdAccountAccessToken = sosOpenIdHandler.login(currentAccount);
             }
 
-            sosOpenIdSubject = new SOSOpenIdSubject(currentAccount.getAccountname(), identityService);
+            sosOpenIdSubject = new SOSOpenIdSubject(currentAccount, identityService);
 
             if (sosOpenIdAccountAccessToken.getAccess_token() == null || sosOpenIdAccountAccessToken.getAccess_token().isEmpty()) {
                 sosOpenIdSubject.setAuthenticated(false);
@@ -69,21 +69,7 @@ public class SOSOpenIdLogin implements ISOSLogin {
 
     public void simulateLogin(String account) {
 
-        try {
-            sosOpenIdSubject = new SOSOpenIdSubject(account, identityService);
-            sosOpenIdSubject.setAuthenticated(true);
-
-            if (IdentityServiceTypes.KEYCLOAK_JOC == identityService.getIdentyServiceType()) {
-                sosOpenIdSubject.setPermissionAndRoles(account);
-            }
-
-        } catch (SOSException e) {
-            LOGGER.error("", e);
-        } catch (JocException e) {
-            LOGGER.info("VAULT:" + e.getMessage());
-        } catch (Exception e) {
-            LOGGER.error("", e);
-        }
+       
     }
 
     public void logout() {

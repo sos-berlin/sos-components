@@ -8,11 +8,11 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSSession;
-import com.sos.auth.keycloak.SOSKeycloakSession;
 import com.sos.auth.openid.SOSOpenIdSession;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -31,12 +31,12 @@ public class SOSOpenIdSubject implements ISOSAuthSubject {
     private Set<String> setOfAccountPermissions;
     private Set<String> setOfRoles;
     private SOSIdentityService identityService;
-    private String account;
+    private SOSAuthCurrentAccount currentAccount;
 
-    public SOSOpenIdSubject(String account, SOSIdentityService identityService) {
+    public SOSOpenIdSubject(SOSAuthCurrentAccount currentAccount, SOSIdentityService identityService) {
         super();
         this.identityService = identityService;
-        this.account = account;
+        this.currentAccount = currentAccount;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class SOSOpenIdSubject implements ISOSAuthSubject {
 
     private SOSOpenIdSession getOpenIdSession() {
         if (session == null) {
-            session = new SOSOpenIdSession(identityService);
+            session = new SOSOpenIdSession(currentAccount,identityService);
         }
         return session;
     }
@@ -114,7 +114,7 @@ public class SOSOpenIdSubject implements ISOSAuthSubject {
     public Boolean isForcePasswordChange() {
         if (identityService.getIdentyServiceType() == IdentityServiceTypes.VAULT_JOC_ACTIVE) {
             try {
-                return SOSAuthHelper.getForcePasswordChange(account, identityService);
+                return SOSAuthHelper.getForcePasswordChange(currentAccount.getAccountname(), identityService);
             } catch (SOSHibernateException e) {
                 LOGGER.error("", e);
                 return false;

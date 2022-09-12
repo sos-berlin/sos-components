@@ -174,7 +174,7 @@ public class SOSServicePermissionIam {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
-            @HeaderParam("X-IDENTIY-SERVICE") String identityService, @HeaderParam("X-ACCESS-TOKEN") String accessToken,
+            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ACCESS-TOKEN") String accessToken,
             @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
@@ -397,8 +397,8 @@ public class SOSServicePermissionIam {
         try {
             String accessToken = this.getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
             SOSAuthCurrentAccount currentAccount = this.getCurrentAccount(accessToken);
-            SOSListOfPermissions sosListOfPermissions = new SOSListOfPermissions(currentAccount);
-            return JOCDefaultResponse.responseStatus200(sosListOfPermissions.getSosPermissionShiro());
+            SOSListOfPermissions sosListOfPermissions = new SOSListOfPermissions();
+            return JOCDefaultResponse.responseStatus200(sosListOfPermissions.getSosPermissions());
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
         } finally {
@@ -617,8 +617,8 @@ public class SOSServicePermissionIam {
                     if (currentAccount.getCurrentSubject() == null) {
                         filter.setRequired(false);
                         if (listOfIdentityServices.size() == 0) {
-                            if (currentAccount.getSosLoginParameters().getIdentityService() != null && currentAccount.getSosLoginParameters()
-                                    .getIdentityService().equals(IdentityServiceTypes.OPENID_CONNECT.value())) {
+                            if (currentAccount.getSosLoginParameters().getIdentityService() != null && !currentAccount.getSosLoginParameters()
+                                    .getIdentityService().equals("")) {
                                 filter.setIdentityServiceName(currentAccount.getSosLoginParameters().getIdentityService());
                             }
                             listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);

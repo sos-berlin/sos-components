@@ -1,6 +1,5 @@
 package com.sos.auth.openid;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.security.KeyStore;
 import java.time.Instant;
@@ -10,14 +9,13 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSSession;
 import com.sos.auth.keycloak.classes.SOSKeycloakAccountAccessToken;
-import com.sos.auth.keycloak.classes.SOSKeycloakWebserviceCredentials;
 import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
 import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
-import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.JocException;
@@ -34,9 +32,9 @@ public class SOSOpenIdSession implements ISOSSession {
 
     private Map<String, Object> attributes;
 
-    public SOSOpenIdSession(SOSIdentityService identityService) {
+    public SOSOpenIdSession(SOSAuthCurrentAccount currentAccount, SOSIdentityService identityService) {
         super();
-        initSession(identityService);
+        initSession(currentAccount, identityService);
     }
 
     private Map<String, Object> getAttributes() {
@@ -46,7 +44,7 @@ public class SOSOpenIdSession implements ISOSSession {
         return attributes;
     }
 
-    private void initSession(SOSIdentityService identityService) {
+    private void initSession(SOSAuthCurrentAccount currentAccount, SOSIdentityService identityService) {
         if (sosOpenIdHandler == null) {
             KeyStore trustStore = null;
             SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
@@ -56,8 +54,8 @@ public class SOSOpenIdSession implements ISOSSession {
                 trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
                         webserviceCredentials.getTruststorePassword());
 
-                webserviceCredentials.setAccount("");
-                sosOpenIdHandler = new SOSOpenIdHandler(null);
+                webserviceCredentials.setAccount(currentAccount.getAccountname());
+                sosOpenIdHandler = new SOSOpenIdHandler(currentAccount);
                 startSession = Instant.now().toEpochMilli();
 
             } catch (Exception e) {
