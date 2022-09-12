@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.security.permissions;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,18 +19,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "SOSPermissions"
+    "sosPermissions"
 })
 public class SOSPermissions {
 
-    /**
-     * SOSPermission
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("SOSPermissions")
-    private SOSPermission sOSPermissions;
+    @JsonProperty("sosPermissions")
+    private List<String> sosPermissions = new ArrayList<String>();
 
     /**
      * No args constructor for use in serialization
@@ -39,43 +35,31 @@ public class SOSPermissions {
 
     /**
      * 
-     * @param sOSPermissions
+     * @param sosPermissions
      */
-    public SOSPermissions(SOSPermission sOSPermissions) {
+    public SOSPermissions(List<String> sosPermissions) {
         super();
-        this.sOSPermissions = sOSPermissions;
+        this.sosPermissions = sosPermissions;
     }
 
-    /**
-     * SOSPermission
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("SOSPermissions")
-    public SOSPermission getSOSPermissions() {
-        return sOSPermissions;
+    @JsonProperty("sosPermissions")
+    public List<String> getSosPermissions() {
+        return sosPermissions;
     }
 
-    /**
-     * SOSPermission
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("SOSPermissions")
-    public void setSOSPermissions(SOSPermission sOSPermissions) {
-        this.sOSPermissions = sOSPermissions;
+    @JsonProperty("sosPermissions")
+    public void setSosPermissions(List<String> sosPermissions) {
+        this.sosPermissions = sosPermissions;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("sOSPermissions", sOSPermissions).toString();
+        return new ToStringBuilder(this).append("sosPermissions", sosPermissions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(sOSPermissions).toHashCode();
+        return new HashCodeBuilder().append(sosPermissions).toHashCode();
     }
 
     @Override
@@ -87,7 +71,7 @@ public class SOSPermissions {
             return false;
         }
         SOSPermissions rhs = ((SOSPermissions) other);
-        return new EqualsBuilder().append(sOSPermissions, rhs.sOSPermissions).isEquals();
+        return new EqualsBuilder().append(sosPermissions, rhs.sosPermissions).isEquals();
     }
 
 }

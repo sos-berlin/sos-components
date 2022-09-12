@@ -13,7 +13,6 @@ import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.commons.exception.SOSException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSOpenIdLogin implements ISOSLogin {
 
@@ -31,7 +30,11 @@ public class SOSOpenIdLogin implements ISOSLogin {
     public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
 
         try {
-            SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(currentAccount);
+            
+            SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
+            webserviceCredentials.setValuesFromProfile(identityService);
+
+            SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(currentAccount,webserviceCredentials);
             SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = null;
 
             boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
@@ -69,7 +72,6 @@ public class SOSOpenIdLogin implements ISOSLogin {
 
     public void simulateLogin(String account) {
 
-       
     }
 
     public void logout() {

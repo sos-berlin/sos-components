@@ -71,7 +71,6 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                             com.sos.joc.model.security.properties.Properties.class);
 
                     identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
-                    identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
                     identityProvider.setIamOidcdUrl(getProperty(properties.getOidc().getIamOidcdUrl(), ""));
                     identityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
                 }

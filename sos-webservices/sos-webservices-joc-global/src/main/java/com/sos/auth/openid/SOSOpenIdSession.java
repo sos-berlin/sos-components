@@ -46,16 +46,11 @@ public class SOSOpenIdSession implements ISOSSession {
 
     private void initSession(SOSAuthCurrentAccount currentAccount, SOSIdentityService identityService) {
         if (sosOpenIdHandler == null) {
-            KeyStore trustStore = null;
             SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
             try {
                 webserviceCredentials.setValuesFromProfile(identityService);
-
-                trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
-                        webserviceCredentials.getTruststorePassword());
-
                 webserviceCredentials.setAccount(currentAccount.getAccountname());
-                sosOpenIdHandler = new SOSOpenIdHandler(currentAccount);
+                sosOpenIdHandler = new SOSOpenIdHandler(currentAccount, webserviceCredentials);
                 startSession = Instant.now().toEpochMilli();
 
             } catch (Exception e) {
