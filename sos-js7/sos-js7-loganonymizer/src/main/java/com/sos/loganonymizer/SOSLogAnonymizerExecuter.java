@@ -1,4 +1,4 @@
-package com.sos.commons.util.loganonymizer;
+package com.sos.loganonymizer;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -28,9 +28,10 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.Tag;
 import org.yaml.snakeyaml.representer.Representer;
 
-import com.sos.commons.util.loganonymizer.classes.DefaultRulesTable;
-import com.sos.commons.util.loganonymizer.classes.Rule;
-import com.sos.commons.util.loganonymizer.classes.SOSRules;
+import com.sos.loganonymizer.classes.DefaultRulesTable;
+import com.sos.loganonymizer.classes.Rule;
+import com.sos.loganonymizer.classes.SOSRules;
+
 
 public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
 
@@ -300,7 +301,7 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         options.setProcessComments(true);
         options.setCanonical(false);
         Representer representer = new Representer();
-        representer.addClassTag(com.sos.commons.util.loganonymizer.classes.SOSRules.class, Tag.MAP);
+        representer.addClassTag(com.sos.loganonymizer.classes.SOSRules.class, Tag.MAP);
 
         final Yaml yaml = new Yaml(representer, options);
 

@@ -1,4 +1,4 @@
-package com.sos.commons.util.loganonymizer.classes;
+package com.sos.loganonymizer.classes;
 
 import java.util.ArrayList;
 import java.util.List;
