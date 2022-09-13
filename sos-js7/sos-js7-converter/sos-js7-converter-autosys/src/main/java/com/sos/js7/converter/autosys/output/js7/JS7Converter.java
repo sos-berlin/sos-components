@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.Workflow;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.AssignedCalendars;
@@ -44,6 +45,10 @@ import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.BranchWorkflow;
 import com.sos.inventory.model.workflow.Jobs;
+import com.sos.joc.model.agent.ClusterAgent;
+import com.sos.joc.model.agent.SubAgent;
+import com.sos.joc.model.agent.SubAgentId;
+import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
@@ -58,8 +63,13 @@ import com.sos.js7.converter.autosys.report.AutosysReport;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.JS7ConverterResult;
 import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
+import com.sos.js7.converter.commons.agent.JS7AgentConverter;
+import com.sos.js7.converter.commons.agent.JS7AgentHelper;
+import com.sos.js7.converter.commons.agent.JS7AgentConverter.JS7AgentConvertType;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig;
+import com.sos.js7.converter.commons.config.JS7ConverterConfig.Platform;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig.SubFolderConfig;
+import com.sos.js7.converter.commons.config.json.JS7Agent;
 import com.sos.js7.converter.commons.output.OutputWriter;
 import com.sos.js7.converter.commons.report.ConverterReport;
 import com.sos.js7.converter.commons.report.ConverterReportWriter;
@@ -80,6 +90,8 @@ public class JS7Converter {
 
     public static JS7ConverterConfig CONFIG = new JS7ConverterConfig();
 
+    private Map<String, JS7Agent> machine2js7Agent = new HashMap<>();
+
     public static void convert(AFileParser parser, Path input, Path outputDir, Path reportDir) throws IOException {
 
         String method = "convert";
@@ -91,24 +103,28 @@ public class JS7Converter {
         OutputWriter.prepareDirectory(outputDir);
         OutputWriter.prepareDirectory(reportDir);
 
-        // 1 - Parse Autosys files
+        // 1 - Config Report
+        ConverterReportWriter.writeConfigReport(reportDir.resolve("config_errors.csv"), reportDir.resolve("config_warnings.csv"), reportDir.resolve(
+                "config_analyzer.csv"));
+
+        // 2 - Parse Autosys files
         LOGGER.info(String.format("[%s][JIL][parse][start]...", method));
         DirectoryParserResult pr = DirectoryParser.parse(CONFIG.getParserConfig(), parser, input);
         LOGGER.info(String.format("[%s][JIL][parse][end]%s", method, SOSDate.getDuration(appStart, Instant.now())));
-        // 1.1 - Parser Reports
+        // 2.1 - Parser Reports
         ConverterReportWriter.writeParserReport(reportDir.resolve("parser_summary.csv"), reportDir.resolve("parser_errors.csv"), reportDir.resolve(
                 "parser_warnings.csv"), reportDir.resolve("parser_analyzer.csv"));
 
-        // 2 - Convert to JS7
+        // 3 - Convert to JS7
         Instant start = Instant.now();
         LOGGER.info(String.format("[%s][JS7][convert][start]...", method));
         JS7ConverterResult result = convert(pr);
         LOGGER.info(String.format("[%s][JS7][convert][end]%s", method, SOSDate.getDuration(start, Instant.now())));
-        // 2.1 - Converter Reports
+        // 3.1 - Converter Reports
         ConverterReportWriter.writeConverterReport(reportDir.resolve("converter_errors.csv"), reportDir.resolve("converter_warnings.csv"), reportDir
                 .resolve("converter_analyzer.csv"));
 
-        // 3 - Write JS7 files
+        // 4 - Write JS7 files
         start = Instant.now();
         LOGGER.info(String.format("[%s][JS7][write][start]...", method));
         if (CONFIG.getGenerateConfig().getWorkflows()) {
@@ -132,7 +148,7 @@ public class JS7Converter {
         OutputWriter.write(outputDir, result.getBoards());
         ConverterReport.INSTANCE.addSummaryRecord("Boards", result.getBoards().getItems().size());
 
-        // 3.1 - Summary Report
+        // 4.1 - Summary Report
         ConverterReportWriter.writeSummaryReport(reportDir.resolve("converter_summary.csv"));
 
         LOGGER.info(String.format("[%s][[JS7]write][end]%s", method, SOSDate.getDuration(start, Instant.now())));
@@ -144,6 +160,7 @@ public class JS7Converter {
     private static JS7ConverterResult convert(DirectoryParserResult pr) {
         String method = "convert";
 
+        JS7Converter c = new JS7Converter();
         JS7ConverterResult result = new JS7ConverterResult();
         result.getApplications().addAll(pr.getJobs().stream().map(e -> e.getFolder().getApplication().getValue()).filter(Objects::nonNull).distinct()
                 .collect(Collectors.toSet()));
@@ -163,7 +180,7 @@ public class JS7Converter {
                 standaloneJobs.addAll(value);
                 LOGGER.info(String.format("[%s][standalone][CMD jobs=%s][start]...", method, size));
                 for (ACommonJob j : value) {
-                    convertStandalone(result, (JobCMD) j);
+                    c.convertStandalone(result, (JobCMD) j);
                 }
                 LOGGER.info(String.format("[%s][standalone][CMD jobs=%s][end]", method, size));
                 break;
@@ -184,7 +201,7 @@ public class JS7Converter {
         if (size > 0) {
             LOGGER.info(String.format("[%s][workflow][BOX main jobs=%s][start]...", method, size));
             for (ACommonJob j : boxJobs) {
-                convertBoxWorkflow(result, (JobBOX) j);
+                c.convertBoxWorkflow(result, (JobBOX) j);
             }
             LOGGER.info(String.format("[%s][workflow][BOX main jobs=%s][end]", method, size));
         } else {
@@ -307,7 +324,7 @@ public class JS7Converter {
 
     }
 
-    private static void convertBoxWorkflow(JS7ConverterResult result, JobBOX jilJob) {
+    private void convertBoxWorkflow(JS7ConverterResult result, JobBOX jilJob) {
         if (jilJob.getJobs() == null) {
             return;
         }
@@ -592,12 +609,12 @@ public class JS7Converter {
         return result;
     }
 
-    private static void convertStandalone(JS7ConverterResult result, JobCMD jilJob) {
+    private void convertStandalone(JS7ConverterResult result, JobCMD jilJob) {
         convertStandaloneWorkflow(result, jilJob);
         convertSchedule(result, jilJob);
     }
 
-    private static void convertStandaloneWorkflow(JS7ConverterResult result, JobCMD jilJob) {
+    private void convertStandaloneWorkflow(JS7ConverterResult result, JobCMD jilJob) {
         // WORKFLOW
         Workflow w = new Workflow();
         w.setTitle(jilJob.getDescription().getValue());
@@ -616,22 +633,23 @@ public class JS7Converter {
         result.add(getWorkflowPath(jilJob, jobName), w);
     }
 
-    private static Job getJob(JS7ConverterResult result, JobCMD jilJob) {
+    private Job getJob(JS7ConverterResult result, JobCMD jilJob) {
         Job j = new Job();
         j.setTitle(jilJob.getDescription().getValue());
         j = setFromConfig(j);
-        j = setAgent(result, j, jilJob);
+
+        JS7Agent js7Agent = getAgent(result, j, jilJob);
+        j = JS7AgentHelper.setAgent(j, js7Agent);
         j = setExecutable(j, jilJob);
         j = setJobOptions(j, jilJob);
         return j;
     }
 
-    private static void convertSchedule(JS7ConverterResult result, ACommonJob jilJob) {
-        String calendarName = getCalendarName(result, jilJob);
+    private void convertSchedule(JS7ConverterResult result, ACommonJob jilJob) {
+        String calendarName = getCalendarName(result, CONFIG, jilJob);
         if (calendarName == null) {
-            calendarName = getWorkingCalendarName(CONFIG);
-        }
-        if (calendarName == null) {
+            ConverterReport.INSTANCE.addWarningRecord(null, jilJob.getInsertJob().getValue(), "[convertSchedule][job without " + jilJob.getRunTime()
+                    .getRunCalendar().getName() + "][missing callendar]scheduleConfig.forced- or defaultWorkingDayCalendarName is not configured");
             return;
         }
 
@@ -658,9 +676,9 @@ public class JS7Converter {
         } else if (jilJob.getRunTime().getStartMins().getValue() != null && jilJob.getRunTime().getStartMins().getValue().size() > 0) {
             Period p = new Period();
             if (CONFIG.getGenerateConfig().getCyclicOrders()) {
-                p.setBegin(JS7ConverterHelper.toTimePart(jilJob.getRunTime().getStartMins().getValue().get(0)));
+                p.setBegin(JS7ConverterHelper.toMins(jilJob.getRunTime().getStartMins().getValue().get(0)));
                 p.setEnd("24:00");
-                p.setRepeat(JS7ConverterHelper.getRepeat(jilJob.getRunTime().getStartMins().getValue()));
+                p.setRepeat(JS7ConverterHelper.toRepeat(jilJob.getRunTime().getStartMins().getValue()));
 
             } else {
                 p.setSingleStart("00:00:00");
@@ -679,17 +697,13 @@ public class JS7Converter {
         result.add(getSchedulePath(jilJob, jobName), s);
     }
 
-    private static String getCalendarName(JS7ConverterResult result, ACommonJob jilJob) {
+    private static String getCalendarName(JS7ConverterResult result, JS7ConverterConfig config, ACommonJob jilJob) {
         String name = null;
-        if (jilJob.getRunTime().getRunCalendar().getValue() != null) {
+        if (config.getScheduleConfig().getForcedWorkingDayCalendarName() != null) {
+            name = config.getScheduleConfig().getForcedWorkingDayCalendarName();
+        } else if (jilJob.getRunTime().getRunCalendar().getValue() != null) {
             name = normalizeName(result, jilJob, jilJob.getRunTime().getRunCalendar().getValue());
-        }
-        return name;
-    }
-
-    private static String getWorkingCalendarName(JS7ConverterConfig config) {
-        String name = null;
-        if (config.getScheduleConfig().getDefaultWorkingDayCalendarName() != null) {
+        } else if (config.getScheduleConfig().getDefaultWorkingDayCalendarName() != null) {
             name = config.getScheduleConfig().getDefaultWorkingDayCalendarName();
         }
         return name;
@@ -708,21 +722,222 @@ public class JS7Converter {
         return j;
     }
 
-    private static Job setAgent(JS7ConverterResult result, Job j, JobCMD jilJob) {
-        if (CONFIG.getAgentConfig().getForcedAgent() != null) {
-            j.setAgentName(CONFIG.getAgentConfig().getForcedAgent().getJS7AgentName());
-        } else {
-            // TODO agent cluster etc
-            String name = normalizeName(result, jilJob, jilJob.getMachine().getValue());
-            if (CONFIG.getAgentConfig().getMappings().containsKey(name)) {
-                name = CONFIG.getAgentConfig().getMappings().get(name).getJS7AgentName();
-            }
-            j.setAgentName(name);
+    private JS7Agent getAgent(JS7ConverterResult result, Job j, JobCMD jilJob) {
+        String machine = normalizeName(result, jilJob, jilJob.getMachine().getValue());
+        if (machine != null && machine2js7Agent.containsKey(machine)) {
+            return machine2js7Agent.get(machine);
         }
-        return j;
+
+        JS7Agent agent = null;
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        if (CONFIG.getAgentConfig().getForcedAgent() != null) {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[getAgent][%s]autosys.machine=%s", JS7AgentConvertType.CONFIG_FORCED.name(), machine));
+            }
+            agent = convertAgentFrom(JS7AgentConvertType.CONFIG_FORCED, CONFIG.getAgentConfig().getForcedAgent(), CONFIG.getAgentConfig()
+                    .getDefaultAgent(), machine);
+        } else if (machine != null && CONFIG.getAgentConfig().getMappings().containsKey(machine)) {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[getAgent][%s]autosys.machine=%s", JS7AgentConvertType.CONFIG_MAPPINGS.name(), machine));
+            }
+            agent = convertAgentFrom(JS7AgentConvertType.CONFIG_MAPPINGS, CONFIG.getAgentConfig().getMappings().get(machine), CONFIG.getAgentConfig()
+                    .getDefaultAgent(), machine);
+        } else {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[getAgent][%s][autosys.machine==%s]", JS7AgentConvertType.CONFIG_DEFAULT.name(), machine));
+            }
+            agent = convertAgentFrom(JS7AgentConvertType.CONFIG_DEFAULT, CONFIG.getAgentConfig().getDefaultAgent(), null, machine);
+        }
+        return agent;
     }
 
-    private static Job setExecutable(Job j, JobCMD jilJob) {
+    private JS7Agent convertAgentFrom(final JS7AgentConvertType type, final JS7Agent sourceConf, final JS7Agent defaultConf, String machine) {
+        List<SubAgent> subagents = new ArrayList<>();
+        JS7Agent source = new JS7Agent();
+        com.sos.joc.model.agent.Agent agent = null;
+        boolean isStandalone = false;
+
+        LOGGER.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX="+sourceConf);
+        
+        
+        if (sourceConf == null) {
+            // if (ah != null) {
+            agent = new com.sos.joc.model.agent.Agent();
+            // isStandalone = ah.js1AgentIsStandalone;
+            isStandalone = true;
+            // }
+        } else {
+            source = JS7AgentHelper.copy(sourceConf);
+            // AGENT
+            if (source.getStandaloneAgent() != null) {
+                isStandalone = true;
+                agent = source.getStandaloneAgent();
+            } else if (source.getAgentCluster() != null) {
+                isStandalone = false;
+                agent = source.getAgentCluster();
+                subagents = source.getAgentCluster().getSubagents();
+            }
+
+            if (source.getJS7AgentName() == null && agent != null) {
+                switch (type) {
+                case CONFIG_FORCED:
+                case CONFIG_MAPPINGS:
+                    source.setJS7AgentName(agent.getAgentName());
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        if (agent == null) {
+            if (defaultConf != null) {
+                agent = JS7AgentHelper.copy(defaultConf.getStandaloneAgent());
+                if (agent == null) {
+                    agent = JS7AgentHelper.copy(defaultConf.getAgentCluster());
+                    if (agent != null) {
+                        subagents = JS7AgentHelper.copySubagents(defaultConf.getAgentCluster().getSubagents());
+                        isStandalone = false;
+                    }
+                } else {
+                    isStandalone = true;
+                }
+            }
+            if (agent == null) {
+                agent = new com.sos.joc.model.agent.Agent();
+                // if (ah != null) {
+                // isStandalone = ah.js1AgentIsStandalone;
+                // } else {
+                isStandalone = true;
+                // }
+            }
+        }
+        // AGENT_NAME
+        if (source.getJS7AgentName() == null) {
+            if (machine == null) {
+                switch (type) {
+                case CONFIG_DEFAULT:
+                    if (agent != null && !SOSString.isEmpty(agent.getAgentName())) {
+                        source.setJS7AgentName(agent.getAgentName());
+                    } else {
+                        source.setJS7AgentName(JS7AgentConverter.DEFAULT_AGENT_NAME);
+                    }
+                    break;
+                default:
+                    if (defaultConf != null) {
+                        if (isStandalone && defaultConf.getStandaloneAgent() != null) {
+                            source.setJS7AgentName(defaultConf.getStandaloneAgent().getAgentName());
+                        } else if (!isStandalone && defaultConf.getAgentCluster() != null) {
+                            source.setJS7AgentName(defaultConf.getAgentCluster().getAgentName());
+                        }
+                    } else {
+                        source.setJS7AgentName(JS7AgentConverter.DEFAULT_AGENT_NAME);
+                    }
+                    break;
+                }
+            } else {
+                source.setJS7AgentName(machine);
+            }
+            agent.setAgentName(source.getJS7AgentName());
+        }
+        if (agent.getAgentName() != null) {
+            source.setJS7AgentName(agent.getAgentName());
+        }
+        if (agent.getAgentId() == null) {
+            agent.setAgentId(source.getJS7AgentName());
+        }
+        if (source.getJS7AgentName() == null) {
+            source.setJS7AgentName(agent.getAgentId());
+        }
+        // CONTROLLER_ID
+        if (CONFIG.getAgentConfig().getForcedControllerId() != null) {
+            agent.setControllerId(CONFIG.getAgentConfig().getForcedControllerId());
+        } else {
+            // if (ah != null && ah.processClass.getSpoolerId() != null) {
+            // agent.setControllerId(ah.processClass.getSpoolerId());
+            // }
+            if (agent.getControllerId() == null) {
+                if (defaultConf != null) {
+                    if (isStandalone && defaultConf.getStandaloneAgent() != null) {
+                        agent.setControllerId(defaultConf.getStandaloneAgent().getControllerId());
+                    } else if (!isStandalone && defaultConf.getAgentCluster() != null) {
+                        agent.setControllerId(defaultConf.getAgentCluster().getControllerId());
+                    }
+                }
+            }
+            if (agent.getControllerId() == null) {
+                agent.setControllerId(CONFIG.getAgentConfig().getDefaultControllerId());
+            }
+        }
+
+        if (source.getPlatform() == null) {
+            source.setPlatform(Platform.UNIX);
+        }
+
+        LOGGER.info("AAAAAAAAAAA="+isStandalone);
+        
+        if (isStandalone) {
+            if (agent.getUrl() == null) {
+                // if (ah != null) {
+                // agent.setUrl(getJS1StandaloneAgentURL(ah.processClass));
+                // } else {
+                if (defaultConf != null) {
+                    if (defaultConf.getStandaloneAgent() != null) {
+                        agent.setUrl(defaultConf.getStandaloneAgent().getUrl());
+                    }
+                } else {
+                    agent.setUrl(JS7AgentConverter.DEFAULT_AGENT_URL);
+                }
+                // }
+            }
+            source.setStandaloneAgent(agent);
+        } else {
+            if (subagents == null || subagents.size() == 0) {
+                subagents = new ArrayList<>();
+                // if (ah != null && ah.processClass.getRemoteSchedulers() != null) {
+                // subagents = JS1JS7AgentConverter.convert(ah.processClass.getRemoteSchedulers(), agent.getAgentId());
+                // }
+            }
+
+            // AgentCluster
+            ClusterAgent ca = new ClusterAgent();
+            ca.setControllerId(agent.getControllerId());
+            ca.setAgentId(agent.getAgentId());
+            ca.setAgentName(agent.getAgentName());
+            ca.setAgentNameAliases(agent.getAgentNameAliases());
+            ca.setTitle(agent.getTitle());
+            ca.setUrl(subagents.size() > 0 ? subagents.get(0).getUrl() : agent.getUrl());
+
+            ca.setSubagents(subagents);
+            source.setAgentCluster(ca);
+
+            // SubagentCluster
+            SubagentCluster subagentCluster = new SubagentCluster();
+            subagentCluster.setControllerId(ca.getControllerId());
+            subagentCluster.setAgentId(ca.getAgentId());
+            subagentCluster.setSubagentClusterId("active-" + subagentCluster.getAgentId());
+            subagentCluster.setDeployed(null);
+            subagentCluster.setOrdering(null);
+
+            List<SubAgentId> ids = new ArrayList<>();
+            int p = 0;
+            for (SubAgent subagent : subagents) {
+                SubAgentId id = new SubAgentId();
+                id.setSubagentId(subagent.getSubagentId());
+                id.setPriority(p);
+                ids.add(id);
+                p++;
+            }
+            subagentCluster.setSubagentIds(ids);
+
+            if (source.getSubagentClusterId() == null) {
+                source.setSubagentClusterId(subagentCluster.getSubagentClusterId());
+            }
+            source.setSubagentClusters(Collections.singletonList(subagentCluster));
+        }
+        return source;
+    }
+
+    private Job setExecutable(Job j, JobCMD jilJob) {
         ExecutableScript e = new ExecutableScript();
         // TODO unix/windows
         StringBuilder script = new StringBuilder("#!/bin/sh");
@@ -898,7 +1113,6 @@ public class JS7Converter {
     // TODO sub folder
     private static Path getWorkflowPath(ACommonJob job, String normalizedJobName) {
         Path p = Paths.get(job.getFolder().getApplication().getValue());
-
         Path subFolders = getSubFolders(job.getFolder().getApplication().getValue(), normalizedJobName);
         if (subFolders != null) {
             p = p.resolve(subFolders);
@@ -908,7 +1122,6 @@ public class JS7Converter {
 
     private static Path getSchedulePath(ACommonJob job, String normalizedName) {
         Path p = Paths.get(job.getFolder().getApplication().getValue());
-
         Path subFolders = getSubFolders(job.getFolder().getApplication().getValue(), normalizedName);
         if (subFolders != null) {
             p = p.resolve(subFolders);
@@ -925,7 +1138,7 @@ public class JS7Converter {
         SubFolderConfig c = CONFIG.getSubFolderConfig();
         if (c.getMappings().size() > 0 && c.getSeparator() != null && application != null) {
             Integer position = c.getMappings().get(application);
-            if (position != null) {
+            if (position != null && position > 0) {
                 String[] arr = normalizedName.split(c.getSeparator());
                 if (arr.length >= position) {
                     return Paths.get(arr[position]);
@@ -937,5 +1150,4 @@ public class JS7Converter {
         }
         return null;
     }
-
 }

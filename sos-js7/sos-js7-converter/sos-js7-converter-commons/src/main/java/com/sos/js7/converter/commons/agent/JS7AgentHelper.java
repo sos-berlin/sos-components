@@ -1,10 +1,12 @@
-package com.sos.js7.converter.commons;
+package com.sos.js7.converter.commons.agent;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sos.inventory.model.job.Job;
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.ClusterAgent;
+import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubAgentId;
 import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
@@ -66,7 +68,7 @@ public class JS7AgentHelper {
         a.setTitle(agent.getTitle());
         a.setUrl(agent.getUrl());
 
-        a.setSubagents(JS7ConverterHelper.copy(agent.getSubagents()));
+        a.setSubagents(copySubagents(agent.getSubagents()));
         return a;
     }
 
@@ -79,6 +81,21 @@ public class JS7AgentHelper {
             a.add(copy(c));
         }
         return a;
+    }
+
+    public static Job setAgent(Job job, JS7Agent js7Agent) {
+        if (job != null && js7Agent != null) {
+            job.setAgentName(js7Agent.getJS7AgentName());
+            job.setSubagentClusterId(js7Agent.getSubagentClusterId());
+        }
+        return job;
+    }
+
+    public static List<SubAgent> copySubagents(List<SubAgent> l) {
+        if (l == null) {
+            return null;
+        }
+        return new ArrayList<>(l);
     }
 
     private static SubagentCluster copy(SubagentCluster cluster) {
@@ -104,4 +121,5 @@ public class JS7AgentHelper {
         }
         return a;
     }
+
 }

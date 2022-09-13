@@ -1,0 +1,8 @@
+{
+	"platform": "UNIX",
+	"standaloneAgent": {
+		"agentName": "json_agent_standalone",
+		"controllerId": "json_agent_controller_id",
+		"url": "http ://json_agent_standalone:4445"
+	}
+}

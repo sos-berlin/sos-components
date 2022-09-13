@@ -201,7 +201,13 @@ public class DirectoryParser {
                 folder.addMonitor(null);
             } else {
                 r.addCountFiles();
-                folder.addFile(file.toPath());
+                Path p = file.toPath();
+                folder.addFile(p);
+
+                // e.g. calendars or jobstreams
+                if (fileName.endsWith(".json")) {
+                    r.addJsonFile(p);
+                }
             }
         }
 
@@ -245,6 +251,7 @@ public class DirectoryParser {
 
         private Folder root;
         private Path yadeConfiguration;
+        private List<Path> jsonFiles = new ArrayList<>();
 
         private int countFolders = 0;
         private int countOrders = 0;
@@ -265,6 +272,10 @@ public class DirectoryParser {
 
         public void setYadeConfiguration(Path f) {
             yadeConfiguration = f;
+        }
+
+        public void addJsonFile(Path file) {
+            jsonFiles.add(file);
         }
 
         protected void addCountFolders() {
@@ -321,6 +332,10 @@ public class DirectoryParser {
 
         public Path getYadeConfiguration() {
             return yadeConfiguration;
+        }
+
+        public List<Path> getJsonFiles() {
+            return jsonFiles;
         }
 
         public int getCountFolders() {

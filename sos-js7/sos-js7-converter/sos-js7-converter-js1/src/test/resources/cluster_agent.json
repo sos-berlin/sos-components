@@ -1,0 +1,16 @@
+{
+	"platform": "UNIX",
+	"subagentClusterId": "json_agent_cluster_subagentClusterId",
+	"agentCluster": {
+		"agentName": "json_agent_cluster_agent_name",
+		"controllerId": "json_agent_cluster_controller_id",
+		"url": "http ://json_agent_cluster:4445",
+		"subagents": [
+			{
+				"agentId": "json_agent_cluster_sb1_agentId",
+				"subagentId": "json_agent_cluster_sb1_subagentId",
+				"url": "http ://json_agent_cluster_sb1:4446"
+			}
+		]
+	}
+}
