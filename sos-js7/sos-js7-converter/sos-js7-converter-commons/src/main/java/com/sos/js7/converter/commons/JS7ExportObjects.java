@@ -155,19 +155,8 @@ public class JS7ExportObjects<T> {
         private final String name;
 
         private JS7ExportObjectPath(Path path) {
-            this.path = normalize(path);
+            this.path = JS7ConverterResult.normalize(path);
             this.name = JS7ExportObjects.this.getName(path);
-        }
-
-        private Path normalize(Path path) {
-            if (path == null) {
-                return null;
-            }
-            String s = path.toString().replace("\\", "/");
-            if (s.startsWith("/")) {
-                return Paths.get(s.substring(1));
-            }
-            return path;
         }
 
         public Path getPath() {
