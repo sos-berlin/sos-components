@@ -757,9 +757,6 @@ public class JS7Converter {
         com.sos.joc.model.agent.Agent agent = null;
         boolean isStandalone = false;
 
-        LOGGER.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX="+sourceConf);
-        
-        
         if (sourceConf == null) {
             // if (ah != null) {
             agent = new com.sos.joc.model.agent.Agent();
@@ -873,8 +870,6 @@ public class JS7Converter {
             source.setPlatform(Platform.UNIX);
         }
 
-        LOGGER.info("AAAAAAAAAAA="+isStandalone);
-        
         if (isStandalone) {
             if (agent.getUrl() == null) {
                 // if (ah != null) {
