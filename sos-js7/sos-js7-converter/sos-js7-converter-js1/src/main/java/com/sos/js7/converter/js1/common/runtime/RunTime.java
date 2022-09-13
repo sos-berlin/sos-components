@@ -16,7 +16,6 @@ import com.sos.commons.xml.exception.SOSXMLXPathException;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
-import com.sos.js7.converter.js1.common.json.calendars.JS1Calendars;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 import com.sos.js7.converter.js1.output.js7.JS7Converter;
 
@@ -176,7 +175,8 @@ public class RunTime {
         String c = SOSXML.getValue(xpath.selectNode(node, "./" + ELEMENT_CALENDARS));
         if (c != null) {
             try {
-                return new CalendarsHelper(c, JS7ConverterHelper.JSON_OM.readValue(c, JS1Calendars.class));
+                // return new CalendarsHelper(c, JS7ConverterHelper.JSON_OM.readValue(c, JS1Calendars.class));
+                return CalendarsHelper.convert(c);
             } catch (Throwable e) {
                 ParserReport.INSTANCE.addErrorRecord(path, "[runtime][covertCalendars]" + nodeText, e);
             }

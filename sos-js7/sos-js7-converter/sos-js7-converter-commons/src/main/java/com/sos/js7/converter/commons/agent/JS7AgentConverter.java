@@ -1,4 +1,4 @@
-package com.sos.js7.converter.js1.output.js7;
+package com.sos.js7.converter.commons.agent;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -8,20 +8,17 @@ import java.util.List;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.ClusterAgent;
-import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubagentCluster;
-import com.sos.joc.model.agent.SubagentClusters;
-import com.sos.joc.model.agent.SubagentDirectorType;
-import com.sos.js7.converter.commons.JS7AgentHelper;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
-import com.sos.js7.converter.js1.common.processclass.RemoteSchedulers;
-import com.sos.js7.converter.js1.common.processclass.RemoteSchedulers.RemoteScheduler;
 
 public class JS7AgentConverter {
 
     public enum JS7AgentConvertType {
         CONFIG_FORCED, CONFIG_MAPPINGS, CONFIG_DEFAULT, PROCESS_CLASS, JOB_CHAIN
     }
+
+    public static final String DEFAULT_AGENT_NAME = "default_agent";
+    public static final String DEFAULT_AGENT_URL = "http://localhost:4445";
 
     public static Agent convertStandaloneAgent(JS7Agent agent) {
         Agent a = JS7AgentHelper.copy(agent.getStandaloneAgent());
@@ -60,40 +57,6 @@ public class JS7AgentConverter {
         return a;
     }
 
-    public static List<SubAgent> convert(RemoteSchedulers rs, String agentId) {
-        if (rs == null || rs.getRemoteScheduler() == null) {
-            return null;
-        }
-
-        List<SubAgent> result = new ArrayList<>();
-        int i = 0;
-        for (RemoteScheduler r : rs.getRemoteScheduler()) {
-            i++;
-            SubAgent sa = new SubAgent();
-            sa.setAgentId(agentId);
-            sa.setSubagentId(getAgentIdFromURL(r.getRemoteScheduler(), i));
-            sa.setUrl(r.getRemoteScheduler());
-            if (i == 1) {
-                sa.setIsDirector(SubagentDirectorType.PRIMARY_DIRECTOR);
-                sa.setTitle("Primary Director " + agentId);
-            } else {
-                sa.setIsDirector(SubagentDirectorType.NO_DIRECTOR);
-                sa.setTitle(null);
-            }
-
-            sa.setDeployed(null);
-            sa.setDisabled(null);
-            sa.setOrdering(null);
-            sa.setSyncState(null);
-
-            sa.setIsClusterWatcher(null);
-            sa.setWithGenerateSubagentCluster(null);
-
-            result.add(sa);
-        }
-        return result;
-    }
-
     public static String getAgentIdFromURL(String url, int counter) {
         if (SOSString.isEmpty(url)) {
             return "agent_" + counter;
@@ -105,5 +68,4 @@ public class JS7AgentConverter {
             return "agent_" + counter;
         }
     }
-
 }

@@ -26,7 +26,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
-import com.sos.joc.model.agent.SubAgent;
 import com.sos.js7.converter.commons.report.ConverterReport;
 
 public class JS7ConverterHelper {
@@ -171,7 +170,12 @@ public class JS7ConverterHelper {
         }
     }
 
-    public static String getRepeat(List<Integer> startMinutes) {
+    //
+    public static String toMins(Integer mins) {
+        return "00:" + mins + ":00";
+    }
+
+    public static String toRepeat(List<Integer> startMinutes) {
         if (startMinutes == null || startMinutes.size() == 0) {
             return null;
         }
@@ -188,7 +192,7 @@ public class JS7ConverterHelper {
         return toTimePart(new BigDecimal(repeats.stream().mapToDouble(i -> i).average().orElse(0.00)).setScale(0, RoundingMode.HALF_UP).intValue());
     }
 
-    public static String toTimePart(Integer i) {
+    private static String toTimePart(Integer i) {
         return String.format("%02d", i);
     }
 
@@ -316,13 +320,6 @@ public class JS7ConverterHelper {
         }
         int i = p.lastIndexOf("/");
         return i > -1 ? p.substring(i + 1) : p;
-    }
-
-    public static List<SubAgent> copy(List<SubAgent> l) {
-        if (l == null) {
-            return null;
-        }
-        return new ArrayList<>(l);
     }
 
 }

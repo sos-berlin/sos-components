@@ -186,11 +186,10 @@ public class JS7ConverterConfig {
                         }
                     } catch (Throwable ee) {
                         String msg = getErrorMessage(key, val);
-                        LOGGER.error(msg);
+                        LOGGER.error(msg + "[error]" + ee.getMessage());
                         ConfigReport.INSTANCE.addErrorRecord(null, msg, ee);
                     }
                 });
-
             } catch (Throwable e) {
                 throw e;
             }
@@ -218,7 +217,6 @@ public class JS7ConverterConfig {
             value = SOSPath.readFile(jsonFile, StandardCharsets.UTF_8);
         }
         return JS7ConverterHelper.JSON_OM.readValue(value, JS7Agent.class);
-
     }
 
     private String getErrorMessage(String name, String value) {

@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,10 +68,12 @@ import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubAgentId;
 import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.joc.model.agent.transfer.Agent;
-import com.sos.js7.converter.commons.JS7AgentHelper;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.JS7ConverterResult;
 import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
+import com.sos.js7.converter.commons.agent.JS7AgentConverter;
+import com.sos.js7.converter.commons.agent.JS7AgentConverter.JS7AgentConvertType;
+import com.sos.js7.converter.commons.agent.JS7AgentHelper;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig.Platform;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
@@ -84,6 +87,7 @@ import com.sos.js7.converter.js1.common.Include;
 import com.sos.js7.converter.js1.common.Params;
 import com.sos.js7.converter.js1.common.job.ACommonJob;
 import com.sos.js7.converter.js1.common.job.ACommonJob.DelayAfterError;
+import com.sos.js7.converter.js1.common.job.ACommonJob.Type;
 import com.sos.js7.converter.js1.common.job.OrderJob;
 import com.sos.js7.converter.js1.common.job.OrderJob.DelayOrderAfterSetback;
 import com.sos.js7.converter.js1.common.job.StandaloneJob;
@@ -93,13 +97,17 @@ import com.sos.js7.converter.js1.common.jobchain.node.AJobChainNode;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNode;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeFileOrderSink;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeFileOrderSource;
+import com.sos.js7.converter.js1.common.jobstreams.JobStreamsHelper;
 import com.sos.js7.converter.js1.common.json.calendars.JS1Calendar;
 import com.sos.js7.converter.js1.common.json.calendars.JS1Calendars;
+import com.sos.js7.converter.js1.common.json.jobstreams.JobStream;
+import com.sos.js7.converter.js1.common.json.jobstreams.JobStreamJob;
+import com.sos.js7.converter.js1.common.json.jobstreams.JobStreamStarter;
 import com.sos.js7.converter.js1.common.processclass.ProcessClass;
+import com.sos.js7.converter.js1.common.runtime.CalendarsHelper;
 import com.sos.js7.converter.js1.common.runtime.RunTime;
 import com.sos.js7.converter.js1.input.DirectoryParser;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
-import com.sos.js7.converter.js1.output.js7.JS7AgentConverter.JS7AgentConvertType;
 import com.sos.js7.converter.js1.output.js7.JS7JobHelper.JavaJITLJobHelper;
 import com.sos.js7.converter.js1.output.js7.JS7JobHelper.ShellJobHelper;
 
@@ -146,8 +154,6 @@ public class JS7Converter {
     private static final String VAR_CURRENT_FILE_JS7 = "${file}";
     private static final String VAR_CURRENT_FILE_JS1 = "${scheduler_file_path}";
     private static final String ENV_VAR_JS1_PREFIX = "SCHEDULER_PARAM_";
-    private static final String DEFAULT_AGENT_NAME = "default_agent";
-    private static final String DEFAULT_AGENT_URL = "http://localhost:4445";
 
     private static final String YADE_MAIN_CONFIGURATION_JOBRESOURCE = "yade";
     private static final String YADE_JOB_SETTINGS_ARG = "yadeXml";
@@ -167,12 +173,13 @@ public class JS7Converter {
     private Map<String, List<RunTime>> js1Calendars = new HashMap<>();
     private Map<String, ScheduleHelper> js1Schedules = new HashMap<>();
     private List<ACommonJob> js1JobsWithMonitors = new ArrayList<>();
-    private List<ProcessClassFirstUsageHelper> js7Agents2js1ProcessClassResult = new ArrayList<>();
+    private Map<Path, JS7Agent> js1ProcessClass2js7Agent = new HashMap<>();
+    private List<ProcessClassFirstUsageHelper> js1ProcessClass2js7AgentResult = new ArrayList<>();
+    private Set<Path> js1JobStreamJobs = new HashSet<>();
 
     private Map<String, String> js7Calendars = new HashMap<>();
     private Map<String, AgentHelper> js7Agents = new HashMap<>();
     private Map<String, String> js7StandaloneAgents = new HashMap<>();
-    private Map<Path, JS7Agent> js7Agents2js1ProcessClass = new HashMap<>();
     private Map<Path, List<BoardHelper>> js7BoardHelpers = new HashMap<>();
     private Map<Path, String> sinkJobs = new HashMap<>();
     private Path defaultProcessClassPath = null;
@@ -271,6 +278,7 @@ public class JS7Converter {
         c.converterObjects = c.getConverterObjects(pr.getRoot());
         c.js1Agents = c.getJS1Agents();
 
+        c.convertJsonFiles(result);
         c.convertYade(result);
         c.convertStandalone(result);
         c.convertJobChains(result);
@@ -283,6 +291,93 @@ public class JS7Converter {
         c.analyzerReport();
 
         return result;
+    }
+
+    private void convertJsonFiles(JS7ConverterResult result) {
+        if (pr.getJsonFiles().size() > 0) {
+            ParserReport.INSTANCE.addAnalyzerRecord("JSON FILES", "START");
+            for (Path file : pr.getJsonFiles()) {
+                try {
+                    JobStreamsHelper h = JobStreamsHelper.convert(file);
+                    ParserReport.INSTANCE.addAnalyzerRecord(file, "JOBSTREAM", "");
+                    convertJobStreams(result, h);
+                } catch (Throwable e) {
+                    // calendar
+                    try {
+                        CalendarsHelper h = CalendarsHelper.convert(file);
+
+                        ParserReport.INSTANCE.addAnalyzerRecord(file, "CALENDAR", "");
+                    } catch (Throwable ee) {
+                        ParserReport.INSTANCE.addAnalyzerRecord(file, "NEITHER JOBSTREAM NOR CALENDAR", "");
+                    }
+                }
+            }
+            ParserReport.INSTANCE.addAnalyzerRecord("JSON FILES", "END");
+        }
+    }
+
+    private void convertJobStreams(JS7ConverterResult result, JobStreamsHelper h) {
+        try {
+            for (JobStream jobStream : h.getJobStreams()) {
+                convertJobStream(result, h.getFile(), jobStream);
+            }
+        } catch (Throwable e) {
+            ConverterReport.INSTANCE.addErrorRecord(h.getFile(), "convertJobStreams", e);
+        }
+    }
+
+    private void convertJobStream(JS7ConverterResult result, Path file, JobStream jobStream) {
+        try {
+            if (jobStream.getJobstreamStarters() == null || jobStream.getJobstreamStarters().size() == 0) {
+                ConverterReport.INSTANCE.addAnalyzerRecord(file, "convertJobStream=" + jobStream.getJobStream(), "[skip]missing JobStream Starter");
+                return;
+            }
+            if (jobStream.getJobs() == null || jobStream.getJobs().size() == 0) {
+                ConverterReport.INSTANCE.addAnalyzerRecord(file, "convertJobStream=" + jobStream.getJobStream(), "[skip]missing JobStream Jobs");
+                return;
+            }
+
+            boolean hasStarter = false;
+            for (JobStreamStarter starter : jobStream.getJobstreamStarters()) {
+                if (starter.getJobs() == null || starter.getJobs().size() == 0) {
+                    ConverterReport.INSTANCE.addAnalyzerRecord(file, "convertJobStream=" + jobStream.getJobStream() + ", starterName=" + starter
+                            .getStarterName(), "[skip]missing Starter Jobs");
+                    continue;
+                }
+            }
+
+            if (hasStarter) {
+                for (JobStreamJob jobStreamJob : jobStream.getJobs()) {
+                    Path path = JobStreamsHelper.getJobPath(pr.getRoot().getPath(), jobStreamJob);
+                    StandaloneJob js1Job = findStandaloneJobByPath(path);
+                    if (js1Job == null) {
+                        ConverterReport.INSTANCE.addAnalyzerRecord(file, "convertJobStream=" + jobStream.getJobStream(), "[" + path
+                                + "]StandaloneJob not found");
+                    } else {
+                        js1JobStreamJobs.add(path);
+
+                        Job job = getJob(result, js1Job, null);
+                    }
+                }
+            }
+
+        } catch (Throwable e) {
+            ConverterReport.INSTANCE.addErrorRecord(file, "convertJobStream=" + jobStream.getJobStream(), e);
+        }
+    }
+
+    private StandaloneJob findStandaloneJobByPath(Path path) {
+        StandaloneJob job = converterObjects.standalone.unique.entrySet().stream().map(e -> e.getValue()).filter(j -> j.getPath().equals(path))
+                .findAny().orElse(null);
+        if (job == null) {
+            for (Map.Entry<String, List<StandaloneJob>> e : converterObjects.standalone.duplicates.entrySet()) {
+                job = e.getValue().stream().filter(j -> j.getPath().equals(path)).findAny().orElse(null);
+                if (job != null) {
+                    return job;
+                }
+            }
+        }
+        return job;
     }
 
     private String getJS1StandaloneAgentURL(ProcessClass p) {
@@ -414,7 +509,7 @@ public class JS7Converter {
         ParserReport.INSTANCE.addSummaryRecord("TOTAL PROCESS CLASS files", pr.getCountProcessClasses());
         ParserReport.INSTANCE.addSummaryRecord("TOTAL SCHEDULE files", pr.getCountSchedules());
         ParserReport.INSTANCE.addSummaryRecord("TOTAL MONITOR files", pr.getCountMonitors());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL ANOTHER files", pr.getCountFiles());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL ANOTHER files", pr.getCountFiles() + ", JSON files=" + pr.getJsonFiles());
         ParserReport.INSTANCE.addSummaryRecord("YADE MAIN CONFIGURATION file", pr.getYadeConfiguration() == null ? "" : pr.getYadeConfiguration()
                 .toString());
     }
@@ -457,7 +552,11 @@ public class JS7Converter {
                         if (job.getScript() != null && job.getScript().getJavaClass() != null) {
                             className = job.getScript().getJavaClass();
                         }
-                        ParserReport.INSTANCE.addAnalyzerRecord(job.getPath(), job.getType().toString(), className);
+                        String add = "";
+                        if (Type.STANDALONE.equals(job.getType()) && js1JobStreamJobs.contains(job.getPath())) {
+                            add = " (JOBSTREAM)";
+                        }
+                        ParserReport.INSTANCE.addAnalyzerRecord(job.getPath(), job.getType().toString() + add, className);
                     }
                 });
                 ParserReport.INSTANCE.addAnalyzerRecord("JOBS BY LANGUAGE", "END");
@@ -474,7 +573,8 @@ public class JS7Converter {
                     List<RunTime> sorted = e.getValue().stream().sorted((e1, e2) -> e1.getCurrentPath().compareTo(e2.getCurrentPath())).collect(
                             Collectors.toList());
                     for (RunTime r : sorted) {
-                        ParserReport.INSTANCE.addAnalyzerRecord(r.getCurrentPath(), r.getCalendarsHelper().getText(), "");
+                        ParserReport.INSTANCE.addAnalyzerRecord(r.getCurrentPath(), r.getCalendarsHelper() == null ? "" : r.getCalendarsHelper()
+                                .getText(), "");
                     }
                 });
                 ParserReport.INSTANCE.addAnalyzerRecord("CALENDARS", "END");
@@ -500,10 +600,10 @@ public class JS7Converter {
 
         // CONVERTER REPORT --------------------------
         try {
-            if (js7Agents2js1ProcessClassResult.size() > 0) {
+            if (js1ProcessClass2js7AgentResult.size() > 0) {
                 ConverterReport.INSTANCE.addAnalyzerRecord("", "");
                 ConverterReport.INSTANCE.addAnalyzerRecord("JS1 PROCESS_CLASS TO JS7 Agent", "START");
-                List<ProcessClassFirstUsageHelper> sorted = js7Agents2js1ProcessClassResult.stream().sorted((e1, e2) -> e1.path.compareTo(e2.path))
+                List<ProcessClassFirstUsageHelper> sorted = js1ProcessClass2js7AgentResult.stream().sorted((e1, e2) -> e1.path.compareTo(e2.path))
                         .collect(Collectors.toList());
                 for (ProcessClassFirstUsageHelper p : sorted) {
                     ConverterReport.INSTANCE.addAnalyzerRecord(p.path, p.js7AgentName, p.message);
@@ -517,7 +617,7 @@ public class JS7Converter {
             if (js1Agents.size() > 0) {
                 Map<Path, AgentHelper> notUsed = new HashMap<>();
                 for (Map.Entry<Path, AgentHelper> e : js1Agents.entrySet()) {
-                    if (!js7Agents2js1ProcessClass.containsKey(e.getKey())) {
+                    if (!js1ProcessClass2js7Agent.containsKey(e.getKey())) {
                         notUsed.put(e.getKey(), e.getValue());
                     }
 
@@ -592,8 +692,9 @@ public class JS7Converter {
 
     private void convertStandalone(JS7ConverterResult result) {
         ConverterObject<StandaloneJob> o = converterObjects.standalone;
+        String workflowName;
         for (Map.Entry<String, StandaloneJob> entry : o.unique.entrySet()) {
-            convertStandaloneWorkflow(result, entry.getKey(), entry.getValue(), null, null);
+            workflowName = convertStandaloneWorkflow(result, entry.getKey(), entry.getValue(), null, null);
         }
 
         LOGGER.info("[convertStandalone]duplicates=" + o.duplicates.size());
@@ -604,8 +705,10 @@ public class JS7Converter {
                 for (StandaloneJob jn : entry.getValue()) {
                     String js7Name = entry.getKey() + DUPLICATE_PREFIX + counter;
                     LOGGER.info("[convertStandalone][duplicate][" + entry.getKey() + "][js7Name=" + js7Name + "][path]" + jn.getPath());
-                    convertStandaloneWorkflow(result, js7Name, jn, null, null);
-                    counter++;
+                    workflowName = convertStandaloneWorkflow(result, js7Name, jn, null, null);
+                    if (workflowName != null) {
+                        counter++;
+                    }
                 }
             }
         }
@@ -613,7 +716,14 @@ public class JS7Converter {
 
     private String convertStandaloneWorkflow(JS7ConverterResult result, String js7Name, ACommonJob js1Job, Path mainWorkflowPath,
             String mainWorkflowName) {
-        LOGGER.info("[convertStandaloneWorkflow]" + js1Job.getPath());
+
+        if (js1JobStreamJobs.contains(js1Job.getPath())) {
+            LOGGER.info("[convertStandaloneWorkflow][skip][JobStream job]" + js1Job.getPath());
+
+            return null;
+        } else {
+            LOGGER.info("[convertStandaloneWorkflow]" + js1Job.getPath());
+        }
 
         // WORKFLOW
         Workflow w = new Workflow();
@@ -997,7 +1107,7 @@ public class JS7Converter {
 
         JS7Agent js7Agent = getAgent(job.getProcessClass(), jobChainAgent, job, null);
 
-        setAgent(j, js7Agent);
+        j = JS7AgentHelper.setAgent(j, js7Agent);
         setJobJobResources(j, job, jh);
         setExecutable(j, job, jh, js7Agent);
         setJobOptions(j, job);
@@ -1146,7 +1256,7 @@ public class JS7Converter {
         }
     }
 
-    private JS7Agent convertFrom(final JS7AgentConvertType type, final JS7Agent sourceConf, final JS7Agent defaultConf, final AgentHelper ah) {
+    private JS7Agent convertAgentFrom(final JS7AgentConvertType type, final JS7Agent sourceConf, final JS7Agent defaultConf, final AgentHelper ah) {
         List<SubAgent> subagents = new ArrayList<>();
         JS7Agent source = new JS7Agent();
         com.sos.joc.model.agent.Agent agent = null;
@@ -1186,7 +1296,7 @@ public class JS7Converter {
                 if (agent == null) {
                     agent = JS7AgentHelper.copy(defaultConf.getAgentCluster());
                     if (agent != null) {
-                        subagents = JS7ConverterHelper.copy(defaultConf.getAgentCluster().getSubagents());
+                        subagents = JS7AgentHelper.copySubagents(defaultConf.getAgentCluster().getSubagents());
                         isStandalone = false;
                     }
                 } else {
@@ -1210,7 +1320,7 @@ public class JS7Converter {
                     if (agent != null && !SOSString.isEmpty(agent.getAgentName())) {
                         source.setJS7AgentName(agent.getAgentName());
                     } else {
-                        source.setJS7AgentName(DEFAULT_AGENT_NAME);
+                        source.setJS7AgentName(JS7AgentConverter.DEFAULT_AGENT_NAME);
                     }
                     break;
                 default:
@@ -1221,7 +1331,7 @@ public class JS7Converter {
                             source.setJS7AgentName(defaultConf.getAgentCluster().getAgentName());
                         }
                     } else {
-                        source.setJS7AgentName(DEFAULT_AGENT_NAME);
+                        source.setJS7AgentName(JS7AgentConverter.DEFAULT_AGENT_NAME);
                     }
                     break;
                 }
@@ -1277,7 +1387,7 @@ public class JS7Converter {
                             agent.setUrl(defaultConf.getStandaloneAgent().getUrl());
                         }
                     } else {
-                        agent.setUrl(DEFAULT_AGENT_URL);
+                        agent.setUrl(JS7AgentConverter.DEFAULT_AGENT_URL);
                     }
                 }
             }
@@ -1286,7 +1396,7 @@ public class JS7Converter {
             if (subagents == null || subagents.size() == 0) {
                 subagents = new ArrayList<>();
                 if (ah != null && ah.processClass.getRemoteSchedulers() != null) {
-                    subagents = JS7AgentConverter.convert(ah.processClass.getRemoteSchedulers(), agent.getAgentId());
+                    subagents = JS1JS7AgentConverter.convert(ah.processClass.getRemoteSchedulers(), agent.getAgentId());
                 }
             }
 
@@ -1331,8 +1441,8 @@ public class JS7Converter {
 
     private JS7Agent getAgent(ProcessClass js1ProcessClass, JS7Agent jobChainAgent, ACommonJob job, JobChain jobChain) {
         Path processClassPath = (js1ProcessClass != null && js1ProcessClass.getPath() != null) ? js1ProcessClass.getPath() : defaultProcessClassPath;
-        if (processClassPath != null && js7Agents2js1ProcessClass.containsKey(processClassPath)) {
-            return js7Agents2js1ProcessClass.get(processClassPath);
+        if (processClassPath != null && js1ProcessClass2js7Agent.containsKey(processClassPath)) {
+            return js1ProcessClass2js7Agent.get(processClassPath);
         }
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -1353,7 +1463,7 @@ public class JS7Converter {
                 LOGGER.debug(String.format("[getAgent][%s][js1AgentName=%s][js7AgentName=%s]", JS7AgentConvertType.CONFIG_FORCED.name(), js1AgentName,
                         js7AgentName));
             }
-            agent = convertFrom(JS7AgentConvertType.CONFIG_FORCED, CONFIG.getAgentConfig().getForcedAgent(), CONFIG.getAgentConfig()
+            agent = convertAgentFrom(JS7AgentConvertType.CONFIG_FORCED, CONFIG.getAgentConfig().getForcedAgent(), CONFIG.getAgentConfig()
                     .getDefaultAgent(), ah);
             if (agent != null && !SOSString.isEmpty(agent.getJS7AgentName())) {
                 defaultProcessClassPath = Paths.get(agent.getJS7AgentName());
@@ -1368,26 +1478,26 @@ public class JS7Converter {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[getAgent][%s]js1AgentName=%s", JS7AgentConvertType.CONFIG_MAPPINGS.name(), js1AgentName));
                 }
-                agent = convertFrom(JS7AgentConvertType.CONFIG_MAPPINGS, CONFIG.getAgentConfig().getMappings().get(js1AgentName), CONFIG
+                agent = convertAgentFrom(JS7AgentConvertType.CONFIG_MAPPINGS, CONFIG.getAgentConfig().getMappings().get(js1AgentName), CONFIG
                         .getAgentConfig().getDefaultAgent(), ah);
             } else if (js1ProcessClass != null && js1ProcessClass.isAgent()) {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[getAgent][%s][js1AgentName=%s][js7AgentName=%s]", JS7AgentConvertType.PROCESS_CLASS.name(),
                             js1AgentName, js7AgentName));
                 }
-                agent = convertFrom(JS7AgentConvertType.PROCESS_CLASS, null, CONFIG.getAgentConfig().getDefaultAgent(), ah);
+                agent = convertAgentFrom(JS7AgentConvertType.PROCESS_CLASS, null, CONFIG.getAgentConfig().getDefaultAgent(), ah);
             } else {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[getAgent][%s][js1AgentName=%s][js7AgentName=%s]", JS7AgentConvertType.CONFIG_DEFAULT.name(),
                             js1AgentName, js7AgentName));
                 }
-                agent = convertFrom(JS7AgentConvertType.CONFIG_DEFAULT, CONFIG.getAgentConfig().getDefaultAgent(), null, ah);
+                agent = convertAgentFrom(JS7AgentConvertType.CONFIG_DEFAULT, CONFIG.getAgentConfig().getDefaultAgent(), null, ah);
             }
         }
         if (agent != null) {
             if (processClassPath == null) {
                 if (defaultProcessClassPath == null) {
-                    defaultProcessClassPath = Paths.get(DEFAULT_AGENT_NAME);
+                    defaultProcessClassPath = Paths.get(JS7AgentConverter.DEFAULT_AGENT_NAME);
                 }
                 processClassPath = defaultProcessClassPath;
             }
@@ -1424,23 +1534,24 @@ public class JS7Converter {
             } else {
                 sb.append("[process_class]without process_class");
             }
-            js7Agents2js1ProcessClassResult.add(new ProcessClassFirstUsageHelper(processClassPath, agent.getJS7AgentName(), sb.toString()));
+            js1ProcessClass2js7AgentResult.add(new ProcessClassFirstUsageHelper(processClassPath, agent.getJS7AgentName(), sb.toString()));
 
             if (js7Agents.containsKey(agent.getJS7AgentName())) {
                 AgentHelper h = js7Agents.get(agent.getJS7AgentName());
                 if (h.processClass != null) {
-                    js7Agents2js1ProcessClassResult.add(new ProcessClassFirstUsageHelper(processClassPath, agent.getJS7AgentName(), "[already_used]"
+                    js1ProcessClass2js7AgentResult.add(new ProcessClassFirstUsageHelper(processClassPath, agent.getJS7AgentName(), "[already_used]"
                             + h.processClass.getPath()));
                 } else {
-                    js7Agents2js1ProcessClassResult.add(new ProcessClassFirstUsageHelper(processClassPath, agent.getJS7AgentName(), "[already_used]"
+                    js1ProcessClass2js7AgentResult.add(new ProcessClassFirstUsageHelper(processClassPath, agent.getJS7AgentName(), "[already_used]"
                             + sb));
                 }
             }
             js7Agents.put(agent.getJS7AgentName(), new AgentHelper(agent, js1ProcessClass));
-            js7Agents2js1ProcessClass.put(processClassPath, agent);
+            js1ProcessClass2js7Agent.put(processClassPath, agent);
         } else {
             if (js1ProcessClass != null) {
-                ConverterReport.INSTANCE.addWarningRecord(js1ProcessClass.getPath(), "Agent", "not used. Use a standalone " + DEFAULT_AGENT_NAME);
+                ConverterReport.INSTANCE.addWarningRecord(js1ProcessClass.getPath(), "Agent", "not used. Use a standalone "
+                        + JS7AgentConverter.DEFAULT_AGENT_NAME);
             }
         }
         return agent;
@@ -2270,61 +2381,64 @@ public class JS7Converter {
                 }
                 String js7Name = workflowName + NAME_CONCAT_CHARACTER + e.getValue().js7State;
                 String newWorkflowName = convertStandaloneWorkflow(result, js7Name, job, workflowPath, js7Name);
-                ConverterReport.INSTANCE.addAnalyzerRecord(null, newWorkflowName);
+                if (newWorkflowName != null) {
+                    ConverterReport.INSTANCE.addAnalyzerRecord(null, newWorkflowName);
 
-                if (jobChain.getOrders() != null) {
+                    if (jobChain.getOrders() != null) {
 
-                    List<JobChainOrder> orders = jobChain.getOrders().stream().filter(o -> o.getState() != null && o.getState().equals(e
-                            .getValue().js1State) && o.getRunTime() != null && !o.getRunTime().isEmpty()).collect(Collectors.toList());
+                        List<JobChainOrder> orders = jobChain.getOrders().stream().filter(o -> o.getState() != null && o.getState().equals(e
+                                .getValue().js1State) && o.getRunTime() != null && !o.getRunTime().isEmpty()).collect(Collectors.toList());
 
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][main workflow][%s][state=%s]order files", method, workflowPath, e.getKey(), orders.size()));
-                    }
-                    boolean useAdd = orders.size() > 1;
-                    boolean hasConfigProcess = jobChain.getConfig() != null && jobChain.getConfig().hasProcess();
-                    for (JobChainOrder o : orders) {
-                        String js7OrderName = getJS7ObjectName(o.getPath(), o.getName());
-                        String add = "";
-                        if (useAdd) {
-                            add = NAME_CONCAT_CHARACTER + js7OrderName;
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][main workflow][%s][state=%s]order files", method, workflowPath, e.getKey(), orders
+                                    .size()));
                         }
+                        boolean useAdd = orders.size() > 1;
+                        boolean hasConfigProcess = jobChain.getConfig() != null && jobChain.getConfig().hasProcess();
+                        for (JobChainOrder o : orders) {
+                            String js7OrderName = getJS7ObjectName(o.getPath(), o.getName());
+                            String add = "";
+                            if (useAdd) {
+                                add = NAME_CONCAT_CHARACTER + js7OrderName;
+                            }
 
-                        //
-                        List<OrderParameterisation> l = new ArrayList<>();
-                        boolean hasOrderParams = o.getParams() != null && o.getParams().hasParams();
-                        if (hasConfigProcess || hasOrderParams) {
-                            OrderParameterisation set = new OrderParameterisation();
-                            set.setOrderName(js7OrderName);
+                            //
+                            List<OrderParameterisation> l = new ArrayList<>();
+                            boolean hasOrderParams = o.getParams() != null && o.getParams().hasParams();
+                            if (hasConfigProcess || hasOrderParams) {
+                                OrderParameterisation set = new OrderParameterisation();
+                                set.setOrderName(js7OrderName);
 
-                            Variables vs = new Variables();
-                            if (hasConfigProcess) {
-                                Params processParams = jobChain.getConfig().getProcess().get(e.getValue().js1State);
-                                if (processParams != null && processParams.hasParams()) {
-                                    processParams.getParams().entrySet().forEach(p -> {
-                                        vs.setAdditionalProperty(p.getKey(), p.getValue());
+                                Variables vs = new Variables();
+                                if (hasConfigProcess) {
+                                    Params processParams = jobChain.getConfig().getProcess().get(e.getValue().js1State);
+                                    if (processParams != null && processParams.hasParams()) {
+                                        processParams.getParams().entrySet().forEach(p -> {
+                                            vs.setAdditionalProperty(p.getKey(), p.getValue());
+                                        });
+                                    }
+                                }
+                                if (hasOrderParams) {
+                                    o.getParams().getParams().entrySet().forEach(p -> {
+                                        vs.setAdditionalProperty(getParamNameFromJS1Order(notUsedStates, p.getKey()), p.getValue());
                                     });
                                 }
+                                set.setVariables(vs);
+                                l.add(set);
                             }
-                            if (hasOrderParams) {
-                                o.getParams().getParams().entrySet().forEach(p -> {
-                                    vs.setAdditionalProperty(getParamNameFromJS1Order(notUsedStates, p.getKey()), p.getValue());
-                                });
-                            }
-                            set.setVariables(vs);
-                            l.add(set);
-                        }
-                        //
-                        RunTimeHelper rth = convertRunTimeForSchedule("ORDER", o.getRunTime(), workflowPath, newWorkflowName, add);
-                        if (rth != null && rth.schedule != null) {
-                            Schedule s = rth.schedule;
-                            s.setTitle(o.getTitle());
+                            //
+                            RunTimeHelper rth = convertRunTimeForSchedule("ORDER", o.getRunTime(), workflowPath, newWorkflowName, add);
+                            if (rth != null && rth.schedule != null) {
+                                Schedule s = rth.schedule;
+                                s.setTitle(o.getTitle());
 
-                            if (l.size() > 0) {
-                                s.setOrderParameterisations(l);
+                                if (l.size() > 0) {
+                                    s.setOrderParameterisations(l);
+                                }
+                                result.add(rth.path, s);
+                            } else {
+                                addJS1ScheduleFromScheduleOrRunTime(o.getRunTime(), l, null, workflowPath, newWorkflowName, add);
                             }
-                            result.add(rth.path, s);
-                        } else {
-                            addJS1ScheduleFromScheduleOrRunTime(o.getRunTime(), l, null, workflowPath, newWorkflowName, add);
                         }
                     }
                 }
@@ -2760,7 +2874,7 @@ public class JS7Converter {
 
     private Job getFileOrderSinkJob(String jobName, JS7Agent jobChainAgent) {
         Job job = new Job();
-        setAgent(job, jobChainAgent);
+        job = JS7AgentHelper.setAgent(job, jobChainAgent);
         setFromConfig(job);
 
         ExecutableJava ex = new ExecutableJava();
@@ -2776,13 +2890,6 @@ public class JS7Converter {
         setMockLevel(ex);
         job.setExecutable(ex);
         return job;
-    }
-
-    private void setAgent(Job job, JS7Agent js7Agent) {
-        if (job != null && js7Agent != null) {
-            job.setAgentName(js7Agent.getJS7AgentName());
-            job.setSubagentClusterId(js7Agent.getSubagentClusterId());
-        }
     }
 
     private void createNoticeBoard(JS7ConverterResult result, Path workflowPath, String boardName, String boardTitle) {
