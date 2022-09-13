@@ -43,7 +43,7 @@ public class SOSOpenIdLogin implements ISOSLogin {
 
             if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
                     .getAccountname())))) {
-                sosOpenIdAccountAccessToken = sosOpenIdHandler.login(currentAccount);
+                sosOpenIdAccountAccessToken = sosOpenIdHandler.login();
             }
 
             sosOpenIdSubject = new SOSOpenIdSubject(currentAccount, identityService);

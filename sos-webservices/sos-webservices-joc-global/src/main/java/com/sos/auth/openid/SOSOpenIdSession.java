@@ -50,7 +50,10 @@ public class SOSOpenIdSession implements ISOSSession {
             try {
                 webserviceCredentials.setValuesFromProfile(identityService);
                 webserviceCredentials.setAccount(currentAccount.getAccountname());
-                sosOpenIdHandler = new SOSOpenIdHandler(currentAccount, webserviceCredentials);
+                webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
+
+                webserviceCredentials.setAccount(currentAccount.getAccountname());
+                sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
                 startSession = Instant.now().toEpochMilli();
 
             } catch (Exception e) {
