@@ -1,4 +1,4 @@
-package com.sos.commons.util.loganonymizer;
+package com.sos.loganonymizer;
 
 import java.io.IOException;
 

@@ -14,5 +14,6 @@
 
 	<modules>
 		<module>sos-js7-converter</module>
+		<module>sos-js7-loganonymizer</module>
 	</modules>
 </project>

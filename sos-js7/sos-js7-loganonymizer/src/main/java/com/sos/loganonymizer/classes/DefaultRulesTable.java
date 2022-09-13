@@ -1,4 +1,4 @@
-package com.sos.commons.util.loganonymizer.classes;
+package com.sos.loganonymizer.classes;
 
 public abstract class DefaultRulesTable {
 
