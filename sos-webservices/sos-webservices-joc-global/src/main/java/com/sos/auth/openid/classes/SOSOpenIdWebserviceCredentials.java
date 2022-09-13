@@ -22,13 +22,30 @@ public class SOSOpenIdWebserviceCredentials {
 
     private String account = "";
     private String accessToken = "";
-    private String serviceUrl;
+    private String authenticationUrl;
 
     private String clientSecret;
     private String clientId;
+    private String providerName;
+    private String tokenVerificationUrl;
+    private String logoutUrl;
+    private String profileInformationUrl;
+    private String sessionRenewalUrl;
+    private String certificateUrl;
+    private String publicKeyField;
+    private String certificateIssuer;
+    private String certificateExpirationDate;
+    private Boolean isJwtToken;
+    private String jwtEmailField;
+    private String jwtClientIdField;
+    private String jwtUrlField;
+    private String jwtAlgorithmField;
+    private String jwtPublicKeyField;
+    private String jwtExpiredField;  
+    
 
-    public String getServiceUrl() {
-        return serviceUrl;
+    public String getAuthenticationUrl() {
+        return authenticationUrl;
     }
 
     public SOSOpenIdWebserviceCredentials() {
@@ -89,8 +106,8 @@ public class SOSOpenIdWebserviceCredentials {
                 com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
                         com.sos.joc.model.security.properties.Properties.class);
 
-                if (serviceUrl == null || serviceUrl.isEmpty()) {
-                    serviceUrl = getProperty(properties.getOidc().getIamOidcdUrl(), "https://keycloak:8283");
+                if (authenticationUrl == null || authenticationUrl.isEmpty()) {
+                    authenticationUrl = getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), "");
                 }
 
                 if (clientSecret == null) {
@@ -101,6 +118,70 @@ public class SOSOpenIdWebserviceCredentials {
                     clientId = getProperty(properties.getOidc().getIamOidcClientId(), "");
                 }
 
+                if (providerName == null) {
+                    providerName = getProperty(properties.getOidc().getIamOidcName(), "");
+                }
+
+                if (tokenVerificationUrl == null) {
+                    tokenVerificationUrl = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (logoutUrl == null) {
+                    logoutUrl = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (profileInformationUrl == null) {
+                    profileInformationUrl = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (sessionRenewalUrl == null) {
+                    sessionRenewalUrl = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (certificateUrl == null) {
+                    certificateUrl = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (publicKeyField == null) {
+                    publicKeyField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (certificateIssuer == null) {
+                    certificateIssuer = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (certificateExpirationDate == null) {
+                    certificateExpirationDate = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (isJwtToken == null) {
+                    isJwtToken = true;//getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (jwtEmailField == null) {
+                    jwtEmailField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (jwtClientIdField == null) {
+                    jwtClientIdField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (jwtUrlField == null) {
+                    jwtUrlField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (jwtAlgorithmField == null) {
+                    jwtAlgorithmField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (jwtPublicKeyField == null) {
+                    jwtPublicKeyField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                }
+
+                if (jwtExpiredField == null) {
+                    jwtExpiredField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                } 
+                
             }
         } catch (SOSHibernateException | IOException e) {
             LOGGER.error("", e);
@@ -112,8 +193,13 @@ public class SOSOpenIdWebserviceCredentials {
 
     @Override
     public String toString() {
-        return "SOSOpenIdWebserviceCredentials [account=" + account + ", accessToken=" + accessToken + ", serviceUrl=" + serviceUrl
+        return "SOSOpenIdWebserviceCredentials [account=" + account + ", accessToken=" + accessToken + ", serviceUrl=" + authenticationUrl
                 + ", clientSecret=" + clientSecret + ", clientId=" + clientId + "]";
+    }
+
+    
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 
 }
