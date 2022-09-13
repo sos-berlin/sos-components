@@ -1,6 +1,7 @@
 package com.sos.js7.converter.commons;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -68,7 +69,19 @@ public class JS7ConverterResult {
 
     @SuppressWarnings("rawtypes")
     public JS7ExportObject getExportObjectWorkflowByPath(Path path) {
-        return workflows.getItems().stream().filter(o -> o.getOriginalPath().getPath().equals(path)).findAny().orElse(null);
+        Path p = normalize(path);
+        return workflows.getItems().stream().filter(o -> o.getOriginalPath().getPath().equals(p)).findAny().orElse(null);
+    }
+
+    public static Path normalize(Path path) {
+        if (path == null) {
+            return null;
+        }
+        String s = path.toString().replace("\\", "/");
+        if (s.startsWith("/")) {
+            return Paths.get(s.substring(1));
+        }
+        return path;
     }
 
     @SuppressWarnings("rawtypes")
