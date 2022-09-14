@@ -177,15 +177,16 @@ public class MailProcessor {
             if (!targetFolderName.isEmpty()) {
                 targetFolder = mailReader.openFolder(targetFolderName, mailReader.READ_WRITE);
             }
-            int maxObjectsToProcess = inFolder.getMessageCount();
+            int objectsInFolder = inFolder.getMessageCount();
             Message[] msgs = null;
             Message[] msgs2 = null;
-            int intBufferSize = args.getMaxMailsToProcess().getValue();
+            int maxMailsToProcess = args.getMaxMailsToProcess().getValue();
 
-            if (maxObjectsToProcess > intBufferSize && intBufferSize > 0) {
-                maxObjectsToProcess = intBufferSize;
+            if (objectsInFolder > maxMailsToProcess && maxMailsToProcess > 0) {
+                msgs = inFolder.getMessages(objectsInFolder - maxMailsToProcess + 1, objectsInFolder);
+            } else {
+                msgs = inFolder.getMessages();
             }
-            msgs = inFolder.getMessages(1, maxObjectsToProcess);
             Pattern subjectPattern = null;
             Pattern bodyPattern = null;
             // to compile the pattern only once before the loop and not in the loop with each round
