@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -374,7 +375,7 @@ public class SOSMimeMessage {
 		return list;
 	}
 
-	public void saveFile(File file, final byte[] input) throws IOException {
+	public String saveFile(File file, final byte[] input) throws IOException {
 		FileOutputStream fos = null;
 		BufferedOutputStream bos = null;
 		File saveFile = file;
@@ -402,6 +403,7 @@ public class SOSMimeMessage {
 				}
 			}
 		}
+		return file.getName();
 	}
 
 	/**
@@ -424,8 +426,8 @@ public class SOSMimeMessage {
             attachmentFileName = "attach";
         }
         attachmentFileName = targetFolderName + File.separator + attachmentFileName;
-        saveFile(new File(attachmentFileName), sosMailAttachment.getContent());
-        LOGGER.debug(".. saving attachment file [" + sosMailAttachment.getFilename() + "] successfully done.");
+        attachmentFileName = saveFile(new File(attachmentFileName), sosMailAttachment.getContent());
+        LOGGER.debug(".. saving attachment file [" + attachmentFileName + "] successfully done.");
     }
 
 	private String normalize(String f) {
@@ -434,7 +436,7 @@ public class SOSMimeMessage {
 		return f;
 	}
 
-	public void saveAttachments(SOSMimeMessage message, String attachmentFileNamePattern, final String targetFolderName,
+	public List<String> saveAttachments(SOSMimeMessage message, String attachmentFileNamePattern, final String targetFolderName,
 			boolean saveFilesWithoutFilename) throws SOSInvalidDataException, IOException, MessagingException {
 		String attachmentFileName = null;
 		if (attachmentFileNamePattern == null || attachmentFileNamePattern.isEmpty()) {
@@ -447,6 +449,7 @@ public class SOSMimeMessage {
 			throw new SOSInvalidDataException("File [" + targetFolderName + "] does not exists!!");
 		}
 		Iterator<SOSMailAttachment> it = sosMailAttachmentList.iterator();
+		List<String> successfulSaves = new ArrayList<>();
 
 		int count = 0;
 		for (; it.hasNext();) {
@@ -462,12 +465,14 @@ public class SOSMimeMessage {
 				attachmentFileName = attachmentFileName.replace("${subject}", message.getSubject());
 				attachmentFileName = normalize(attachmentFileName);
 				fileToSave = new File(targetFolderName, attachmentFileName);
-				saveFile(fileToSave, attachment.getContent());
+				attachmentFileName = saveFile(fileToSave, attachment.getContent());
 				count++;
-				LOGGER.debug(".. attachment file [" + attachment.getFilename() + "] successfully saved.");
+				successfulSaves.add(attachmentFileName);
+				LOGGER.debug(".. attachment file [" + attachmentFileName + "] successfully saved.");
 			}
 		}
 		LOGGER.debug(".. [" + count + "] attachment(s) saved to " + targetFolderName);
+		return successfulSaves;
 	}
 
 	public void dumpMessage(final File file, final boolean append) throws IOException, MessagingException {

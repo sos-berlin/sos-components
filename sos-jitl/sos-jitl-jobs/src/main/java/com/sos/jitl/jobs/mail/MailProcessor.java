@@ -281,7 +281,8 @@ public class MailProcessor {
     private void copyAttachmentsToFile(final SOSMimeMessage message) throws SOSInvalidDataException, IOException, MessagingException {
         String directory = args.getAttachmentDirectoryName().getValue();
         logDebug("saving attachments. subject=%s, date=%s, directory=%s: ", message.getSubject(), message.getSentDateAsString(), directory);
-        message.saveAttachments(message, args.getAttachmentFileNamePattern().getValue(), directory, args.getSaveBodyAsAttachment().getValue());
+        message.saveAttachments(message, args.getAttachmentFileNamePattern().getValue(), directory, args.getSaveBodyAsAttachment().getValue())
+                .forEach(s -> logDebug("attachment file [%s] successfully saved.", s));
     }
     
 //    private void logError(String format, Object... msg) {
