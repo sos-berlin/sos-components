@@ -22,6 +22,7 @@ public class SOSOpenIdWebserviceCredentials {
 
     private String account = "";
     private String accessToken = "";
+    private String idToken = "";
     private String authenticationUrl;
 
     private String clientSecret;
@@ -41,8 +42,7 @@ public class SOSOpenIdWebserviceCredentials {
     private String jwtUrlField;
     private String jwtAlgorithmField;
     private String jwtPublicKeyField;
-    private String jwtExpiredField;  
-    
+    private String jwtExpiredField;
 
     public String getAuthenticationUrl() {
         return authenticationUrl;
@@ -70,6 +70,80 @@ public class SOSOpenIdWebserviceCredentials {
 
     public String getClientId() {
         return clientId;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public String getProviderName() {
+        return providerName;
+    }
+
+    public String getTokenVerificationUrl() {
+       // tokenVerificationUrl = "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=<access_token>";
+        String s = tokenVerificationUrl.replaceAll("<access_token>", accessToken);
+        s = s.replaceAll("<id_token>", idToken);
+        return s;
+    }
+
+    public String getLogoutUrl() {
+       // logoutUrl = "https://accounts.google.com/o/oauth2/revoke?token=<access_token>";
+        String s = logoutUrl.replaceAll("<access_token>", accessToken);
+        s = s.replaceAll("<id_token>", idToken);
+        return s;
+    }
+
+    public String getProfileInformationUrl() {
+        return profileInformationUrl;
+    }
+
+    public String getSessionRenewalUrl() {
+        return sessionRenewalUrl;
+    }
+
+    public String getCertificateUrl() {
+        return certificateUrl;
+    }
+
+    public String getPublicKeyField() {
+        return publicKeyField;
+    }
+
+    public String getCertificateIssuer() {
+        return certificateIssuer;
+    }
+
+    public String getCertificateExpirationDate() {
+        return certificateExpirationDate;
+    }
+
+    public Boolean getIsJwtToken() {
+        return isJwtToken;
+    }
+
+    public String getJwtEmailField() {
+        return jwtEmailField;
+    }
+
+    public String getJwtClientIdField() {
+        return jwtClientIdField;
+    }
+
+    public String getJwtUrlField() {
+        return jwtUrlField;
+    }
+
+    public String getJwtAlgorithmField() {
+        return jwtAlgorithmField;
+    }
+
+    public String getJwtPublicKeyField() {
+        return jwtPublicKeyField;
+    }
+
+    public String getJwtExpiredField() {
+        return jwtExpiredField;
     }
 
     private String getProperty(String value, String defaultValue) {
@@ -155,7 +229,7 @@ public class SOSOpenIdWebserviceCredentials {
                 }
 
                 if (isJwtToken == null) {
-                    isJwtToken = true;//getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    isJwtToken = true;// getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
                 }
 
                 if (jwtEmailField == null) {
@@ -180,8 +254,8 @@ public class SOSOpenIdWebserviceCredentials {
 
                 if (jwtExpiredField == null) {
                     jwtExpiredField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
-                } 
-                
+                }
+
             }
         } catch (SOSHibernateException | IOException e) {
             LOGGER.error("", e);
@@ -197,9 +271,11 @@ public class SOSOpenIdWebserviceCredentials {
                 + ", clientSecret=" + clientSecret + ", clientId=" + clientId + "]";
     }
 
-    
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
+    public String getIdToken() {
+        return idToken;
     }
 
+    public void setIdToken(String idToken) {
+        this.idToken = idToken;
+    }
 }

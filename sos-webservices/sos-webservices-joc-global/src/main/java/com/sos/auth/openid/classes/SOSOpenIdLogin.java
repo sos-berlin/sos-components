@@ -35,6 +35,7 @@ public class SOSOpenIdLogin implements ISOSLogin {
             webserviceCredentials.setValuesFromProfile(identityService);
             webserviceCredentials.setAccount(currentAccount.getAccountname());
             webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
+            webserviceCredentials.setIdToken(currentAccount.getSosLoginParameters().getIdToken());
 
             SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
             SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = null;

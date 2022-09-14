@@ -8,7 +8,9 @@ public class SOSLoginParameters {
     private String basicAuthorization;
     private String clientCertCN;
     private String identityService;
+    private String refreshToken;
     private String accessToken;
+    private String idToken;
     private String account;
 
     public HttpServletRequest getRequest() {
@@ -57,6 +59,24 @@ public class SOSLoginParameters {
 
     public void setAccount(String account) {
         this.account = account;
+    }
+
+    public String getIdToken() {
+        return idToken;
+    }
+
+    public void setIdToken(String idToken) {
+        this.idToken = idToken;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        if (this.refreshToken != null || !this.refreshToken.isEmpty()) {
+            this.refreshToken = refreshToken;
+        }
     }
 
 }

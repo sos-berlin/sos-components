@@ -2,7 +2,10 @@ package com.sos.auth.openid;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.SocketException;
+import java.net.URI;
 import java.util.Base64;
+import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -14,26 +17,81 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthAccessTokenHandler;
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
 import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.commons.exception.SOSException;
+import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.joc.exceptions.JocError;
+import com.sos.joc.exceptions.JocException;
 
 public class SOSOpenIdHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSOpenIdHandler.class);
     private SOSOpenIdWebserviceCredentials webserviceCredentials;
+    private static final String CONTENT_TYPE = "Content-Type";
 
     public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials) {
         this.webserviceCredentials = webserviceCredentials;
     }
 
+    private String executeGet(URI requestUri) throws SocketException, SOSException {
+        SOSRestApiClient restApiClient = new SOSRestApiClient();
+        restApiClient.setConnectionTimeout(SOSAuthHelper.RESTAPI_CONNECTION_TIMEOUT);
+
+        String response = restApiClient.getRestService(requestUri);
+
+        if (response == null) {
+            response = "";
+        }
+        LOGGER.debug(response);
+
+        int httpReplyCode = restApiClient.statusCode();
+        restApiClient.closeHttpClient();
+        LOGGER.debug("httpReplyCode ===>" + httpReplyCode);
+        String contentType = restApiClient.getResponseHeader(CONTENT_TYPE);
+
+        JocError jocError = new JocError();
+        switch (httpReplyCode) {
+        case 200:
+            if (contentType.contains("application/json")) {
+                if (response.isEmpty()) {
+                    jocError.setMessage("Unexpected empty response");
+                    throw new JocException(jocError);
+                }
+                return response;
+            } else {
+                jocError.setMessage(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType, response));
+                throw new JocException(jocError);
+            }
+        case 201:
+        case 204:
+            return response;
+        case 400:
+        case 401:
+        case 403:
+        case 404:
+        case 405:
+        case 412:
+        case 429:
+        case 473:
+        case 500:
+        case 502:
+        case 503:
+            jocError.setMessage(httpReplyCode + ":" + response);
+            throw new JocException(jocError);
+
+        default:
+            jocError.setMessage(httpReplyCode + " " + restApiClient.getHttpResponse().getStatusLine().getReasonPhrase());
+            throw new JocException(jocError);
+        }
+    }
     public SOSOpenIdAccountAccessToken login() throws SOSException, JsonParseException, JsonMappingException, IOException {
 
         SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = new SOSOpenIdAccountAccessToken();
-        String accessToken =
-                "eyJhbGciOiJSUzI1NiIsImtpZCI6ImNhYWJmNjkwODE5MTYxNmE5MDhhMTM4OTIyMGE5NzViM2MwZmJjYTEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI2Mzg1MzAzNTA3OC02Y201dHY1MXBwMzRzdmoyYTZjZDk0MjFmamhsMTgxMy5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsImF1ZCI6IjYzODUzMDM1MDc4LTZjbTV0djUxcHAzNHN2ajJhNmNkOTQyMWZqaGwxODEzLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTEwMTQ3MTk2NTk0OTYxODI4NTYwIiwiZW1haWwiOiJzb3VyYWJoLmFncmF3YWwxOTAwQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJub25jZSI6IjMzZmQ5YjljNDdiOTU2ZGRkMjAxNDU0OTRkY2RmYTVjM2U5czlOMU4zIiwibmFtZSI6IlNvdXJhYmggYWdyYXdhbCIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS0vQUZkWnVjcHJXdmFyMTZyRTZGekNYMVgwSWlLQzk5N3U2WnVOdFlEdVI2Z0JrQT1zOTYtYyIsImdpdmVuX25hbWUiOiJTb3VyYWJoIiwiZmFtaWx5X25hbWUiOiJhZ3Jhd2FsIiwibG9jYWxlIjoiZW4tR0IiLCJpYXQiOjE2NjI3MTM4MjcsImV4cCI6MTY2MjcxNzQyNywianRpIjoiNDZhZGM5MzA4ZTk1ZjY2ZTVjNGQ3ZGViNGNlMDViNGFmMWVhNWYxMSJ9.Ig0QGHeuo5xpUDMTocAox2Xu3hQG3n1ADg9vn2tjMKP24DD7deoHZ8wmvI01Keo05kbQrT-XyqKY3YGQ-_ALsEkgY2tP0ZNDcTiaJrveuSAPgVmt7leOgyOXEEdh_nT-FYNrVhXyGFMmHKCYJB9raVMauyM2MON68TavCmHAcE8iAUX2RACYvSMHOgwCnKGc_lLQkZ23IWquWJCumz5jrUi2TL6ZL3TiFhUMyp96WxnyOmSm1ihzxQ1VRAd9CCa_9gbus7lRlaJNZxtkiOFEfFINKcqGQhzdvx2wrtItJk-FEAm86d5rP9MUcZo_d1hskzA5ABcTcW7DCn1KJDdGbA";
-
-        String[] accessTokenParts = accessToken.split("\\.");
+        webserviceCredentials.setIdToken("eyJhbGciOiJSUzI1NiIsImtpZCI6ImNhYWJmNjkwODE5MTYxNmE5MDhhMTM4OTIyMGE5NzViM2MwZmJjYTEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI2Mzg1MzAzNTA3OC02Y201dHY1MXBwMzRzdmoyYTZjZDk0MjFmamhsMTgxMy5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsImF1ZCI6IjYzODUzMDM1MDc4LTZjbTV0djUxcHAzNHN2ajJhNmNkOTQyMWZqaGwxODEzLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTA2MTk5MDAwNTEwNzAxOTA1NzYyIiwiZW1haWwiOiJ1d2Uucmlzc2VAc29zLWJlcmxpbi5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiYXRfaGFzaCI6IkVKLWVhOWhLYXpaZEtRV196ak83elEiLCJub25jZSI6IlpsOWxlVFJPV0Y5aFlYcDBWMmxsT0dFMVFXZFJMVVJ1YlhkSGRVMVJRVVJvUXpkaVNVTnBkWGhRYlRGSSIsIm5hbWUiOiJVd2UgUmlzc2UiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUl0YnZta3RHOVktNDRoTDR5Q0J1N3M1V2ZDZEl6NFZMLXRidVZkSE11MTU9czk2LWMiLCJnaXZlbl9uYW1lIjoiVXdlIiwiZmFtaWx5X25hbWUiOiJSaXNzZSIsImxvY2FsZSI6ImRlIiwiaWF0IjoxNjYzMTUyMzQ1LCJleHAiOjE2NjMxNTU5NDUsImp0aSI6IjUzYWZjMWNhZWE5ZjVlYmEwMTQ4NmE2NWFhOTczOTc5ZWRhOTMxOGEifQ.lbzh3LfnFT6I1jYKutnRKoavNCoYLadLkVEsh3T4NkyIlNONdLl1d-xPTNCdeeE9dQHD6YgbbrcQ7BQZhKf9JD4ipv5qrLSPg9FmmVMCjCfMLeshyxaSu2tgNIcIRFWan8YZ2P-geRIC_VZXA-coEmIGrV61sdylTygUD2QG-frh2E54zqR36ySWQ8dUl0YxqVOiEM4C9iZHGsaWL-45g15CpzZcrJmC6XYGfa2tu7xVNM7RdoUFwxa4eAGs04E77xGRnLHfDrEY_zNEHzoAALyLDmPUycTMK5ptnfocCyIh4p7tBQxIn4Dzx5DIXciFTeGTOiN0C2navGK66Mlw2g");
+        
+        String[] accessTokenParts = webserviceCredentials.getIdToken().split("\\.");
         Base64.Decoder decoder = Base64.getUrlDecoder();
 
         String header = new String(decoder.decode(accessTokenParts[0]));
@@ -60,15 +118,24 @@ public class SOSOpenIdHandler {
             iss = jsonPayload.getString("iss", ""); // url
             account = jsonPayload.getString("email", "");
 
+            
+            URI requestUri = URI.create(webserviceCredentials.getTokenVerificationUrl());
+            String tokenVerificationResponse = executeGet(requestUri);    
+            JsonReader jsonReaderTokenVerificationResponse = Json.createReader(new StringReader(tokenVerificationResponse));
+            JsonObject jsonTokenVerificationResponse = jsonReaderTokenVerificationResponse.readObject();
+            String accountFromUrl = jsonTokenVerificationResponse.getString("email", "");
+
+            
             sosOpenIdAccountAccessToken.setExpires_in(Integer.valueOf(expiration));
 
             boolean valid = true;
             valid = valid && webserviceCredentials.getClientId().equals(aud);
             valid = valid && webserviceCredentials.getAuthenticationUrl().equals(iss);
             valid = valid && webserviceCredentials.getAccount().equals(account);
+            valid = valid && webserviceCredentials.getAccount().equals(accountFromUrl);
             valid = valid && expiration > 0;
 
-            if (true || valid) {
+            if (valid) {
                 sosOpenIdAccountAccessToken.setAccess_token(webserviceCredentials.getAccessToken());
                 return sosOpenIdAccountAccessToken;
             } else {
@@ -91,8 +158,13 @@ public class SOSOpenIdHandler {
     }
 
     public SOSOpenIdAccountAccessToken renewAccountAccess(SOSOpenIdAccountAccessToken accessToken) {
-        // TODO Auto-generated method stub
         return accessToken;
+    }
+
+    public void logout(String accessToken) throws SocketException, SOSException {
+        URI requestUri = URI.create(webserviceCredentials.getLogoutUrl() + "?token=" + accessToken);
+        executeGet(requestUri);
+
     }
 
 }

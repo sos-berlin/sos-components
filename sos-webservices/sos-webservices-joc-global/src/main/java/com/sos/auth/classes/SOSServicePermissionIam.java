@@ -2,6 +2,7 @@ package com.sos.auth.classes;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.SocketException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,9 +20,13 @@ import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.keycloak.classes.SOSKeycloakLogin;
 import com.sos.auth.ldap.classes.SOSLdapLogin;
+import com.sos.auth.openid.SOSOpenIdHandler;
+import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
 import com.sos.auth.openid.classes.SOSOpenIdLogin;
+import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.auth.vault.classes.SOSVaultLogin;
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -175,7 +180,8 @@ public class SOSServicePermissionIam {
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
             @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ACCESS-TOKEN") String accessToken,
-            @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
+            @HeaderParam("X-`REFRESH-TOKEN") String refreshToken, @HeaderParam("X-ID-TOKEN") String idToken, @QueryParam("account") String account,
+            @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -201,6 +207,8 @@ public class SOSServicePermissionIam {
             }
             SOSLoginParameters sosLoginParameters = new SOSLoginParameters();
             sosLoginParameters.setAccessToken(accessToken);
+            sosLoginParameters.setRefreshToken(refreshToken);
+            sosLoginParameters.setIdToken(idToken);
             sosLoginParameters.setBasicAuthorization(basicAuthorization);
             sosLoginParameters.setClientCertCN(clientCertCN);
             sosLoginParameters.setIdentityService(identityService);
@@ -227,6 +235,23 @@ public class SOSServicePermissionIam {
         SOSAuthCurrentAccount currentAccount = null;
         if (Globals.jocWebserviceDataContainer != null && Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
             currentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
+        }
+
+        if (currentAccount.getIdentityServices().getIdentyServiceType() == IdentityServiceTypes.OPENID_CONNECT) {
+            SOSIdentityService identityService = new SOSIdentityService(currentAccount.getIdentityServices().getIdentityServiceName(), currentAccount
+                    .getIdentityServices().getIdentyServiceType());
+            SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
+            webserviceCredentials.setValuesFromProfile(identityService);
+            webserviceCredentials.setAccount(currentAccount.getAccountname());
+            webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
+
+            SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
+            try {
+                sosOpenIdHandler.logout(currentAccount.getSosLoginParameters().getAccessToken());
+            } catch (SocketException | SOSException e) {
+                LOGGER.error("", e);
+            }
+
         }
 
         String account = "";
@@ -288,17 +313,7 @@ public class SOSServicePermissionIam {
         MDC.put("context", ThreadCtx);
         try {
             if (Globals.sosHibernateFactory != null) {
-                // if (Globals.sosHibernateFactory.dbmsIsH2()) {
-                // SOSHibernateSession connection = null;
-                // try {
-                // connection = Globals.createSosHibernateStatelessConnection("closeH2");
-                // connection.createQuery("SHUTDOWN").executeUpdate();
-                // } catch (Exception e) {
-                // LOGGER.warn("shutdown H2 database: " + e.toString());
-                // } finally {
-                // Globals.disconnect(connection);
-                // }
-                // }
+
                 Globals.sosHibernateFactory.close();
                 Globals.sosHibernateFactory.build();
             }
