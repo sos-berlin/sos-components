@@ -8,10 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
-
-import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -30,6 +27,8 @@ import com.sos.joc.model.agent.SubAgentId;
 import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.joc.model.agent.SubagentClusters;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("agents")
 public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISubAgentClusterResource {
@@ -92,8 +91,7 @@ public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISub
             int position = 0;
             List<SubagentCluster> subagentClusters = new ArrayList<>();
             Comparator<DBItemInventorySubAgentCluster> comp = Comparator.comparingInt(DBItemInventorySubAgentCluster::getOrdering);
-            for (DBItemInventorySubAgentCluster key : dbSubagentClusters.keySet().stream().collect(Collectors.toCollection(() -> new TreeSet<>(
-                    comp)))) {
+            for (DBItemInventorySubAgentCluster key : dbSubagentClusters.keySet().stream().sorted(comp).collect(Collectors.toList())) {
                 SubagentCluster subagentCluster = new SubagentCluster();
                 subagentCluster.setControllerId(agentIdControllerIdMap.get(key.getAgentId()));
                 subagentCluster.setAgentId(key.getAgentId());

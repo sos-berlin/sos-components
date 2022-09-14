@@ -3,19 +3,17 @@ package com.sos.joc.agents.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.ISubAgentClusterOrdering;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.agent.OrderingAgents;
 import com.sos.joc.model.agent.OrderingSubagentClusters;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("agents")
 public class SubAgentClusterOrderingImpl extends JOCResourceImpl implements ISubAgentClusterOrdering {
