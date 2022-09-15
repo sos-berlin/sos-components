@@ -30,6 +30,8 @@ public class SOSOpenIdHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSOpenIdHandler.class);
     private SOSOpenIdWebserviceCredentials webserviceCredentials;
     private static final String CONTENT_TYPE = "Content-Type";
+    private JsonObject jsonHeader;
+    private JsonObject jsonPayload;
 
     public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials) {
         this.webserviceCredentials = webserviceCredentials;
@@ -109,21 +111,12 @@ public class SOSOpenIdHandler {
         }
 
         if (webserviceCredentials.getIsJwtToken()) {
-            String[] accessTokenParts = webserviceCredentials.getIdToken().split("\\.");
-            Base64.Decoder decoder = Base64.getUrlDecoder();
 
-            String header = new String(decoder.decode(accessTokenParts[0]));
-            String payload = new String(decoder.decode(accessTokenParts[1]));
-
-            JsonReader jsonReaderHeader = null;
-            JsonReader jsonReaderPayload = null;
+            if (jsonHeader == null) {
+                this.decodeIdToken();
+            }
 
             try {
-                jsonReaderHeader = Json.createReader(new StringReader(header));
-                jsonReaderPayload = Json.createReader(new StringReader(payload));
-                JsonObject jsonHeader = jsonReaderHeader.readObject();
-                JsonObject jsonPayload = jsonReaderPayload.readObject();
-
                 expiration = jsonPayload.getInt(webserviceCredentials.getJwtExpiredField(), 0);
                 alg = jsonHeader.getString(webserviceCredentials.getJwtAlgorithmField(), "");
                 account = jsonPayload.getString(webserviceCredentials.getJwtEmailField(), "");
@@ -135,9 +128,6 @@ public class SOSOpenIdHandler {
 
             } catch (Exception e) {
                 LOGGER.warn(String.format("Could not determine expiration"));
-            } finally {
-                jsonReaderHeader.close();
-                jsonReaderPayload.close();
             }
         }
 
@@ -174,6 +164,44 @@ public class SOSOpenIdHandler {
         URI requestUri = URI.create(webserviceCredentials.getLogoutUrl() + "?token=" + accessToken);
         executeGet(requestUri);
 
+    }
+
+    public String decodeIdToken() throws SocketException, SOSException {
+
+        if (webserviceCredentials.getIsJwtToken()) {
+            JsonReader jsonReaderHeader = null;
+            JsonReader jsonReaderPayload = null;
+
+            try {
+                String[] accessTokenParts = webserviceCredentials.getIdToken().split("\\.");
+                Base64.Decoder decoder = Base64.getUrlDecoder();
+
+                String header = new String(decoder.decode(accessTokenParts[0]));
+                String payload = new String(decoder.decode(accessTokenParts[1]));
+
+                jsonReaderHeader = Json.createReader(new StringReader(header));
+                jsonReaderPayload = Json.createReader(new StringReader(payload));
+                jsonHeader = jsonReaderHeader.readObject();
+                jsonPayload = jsonReaderPayload.readObject();
+                return jsonPayload.getString(webserviceCredentials.getJwtEmailField(), "");
+
+            } catch (Exception e) {
+                LOGGER.warn(String.format("Could not decode jwt id-token"));
+            } finally {
+                jsonReaderHeader.close();
+                jsonReaderPayload.close();
+            }
+        } else {
+            if ((webserviceCredentials.getTokenVerificationUrl() != null) && !webserviceCredentials.getTokenVerificationUrl().isEmpty()) {
+                URI requestUri = URI.create(webserviceCredentials.getTokenVerificationUrl());
+                String tokenVerificationResponse = executeGet(requestUri);
+                JsonReader jsonReaderTokenVerificationResponse = Json.createReader(new StringReader(tokenVerificationResponse));
+                JsonObject jsonTokenVerificationResponse = jsonReaderTokenVerificationResponse.readObject();
+                return jsonTokenVerificationResponse.getString(webserviceCredentials.getJwtEmailField(), "");
+            }
+        }
+
+        return "";
     }
 
 }

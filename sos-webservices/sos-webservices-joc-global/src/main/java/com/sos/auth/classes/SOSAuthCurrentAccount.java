@@ -325,4 +325,9 @@ public class SOSAuthCurrentAccount {
         this.sosLoginParameters = sosLoginParameters;
     }
 
+    
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
+    }
+
 }

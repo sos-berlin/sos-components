@@ -33,11 +33,14 @@ public class SOSOpenIdLogin implements ISOSLogin {
 
             SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
             webserviceCredentials.setValuesFromProfile(identityService);
-            webserviceCredentials.setAccount(currentAccount.getAccountname());
             webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
             webserviceCredentials.setIdToken(currentAccount.getSosLoginParameters().getIdToken());
 
             SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
+            String accountName = sosOpenIdHandler.decodeIdToken();
+            currentAccount.setAccountName(accountName);
+            webserviceCredentials.setAccount(accountName);
+            
             SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = null;
 
             boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
