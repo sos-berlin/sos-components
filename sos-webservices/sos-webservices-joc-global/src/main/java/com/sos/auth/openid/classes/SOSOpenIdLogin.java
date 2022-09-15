@@ -30,7 +30,7 @@ public class SOSOpenIdLogin implements ISOSLogin {
     public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
 
         try {
-            
+
             SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
             webserviceCredentials.setValuesFromProfile(identityService);
             webserviceCredentials.setAccount(currentAccount.getAccountname());
@@ -45,11 +45,12 @@ public class SOSOpenIdLogin implements ISOSLogin {
             if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
                     .getAccountname())))) {
                 sosOpenIdAccountAccessToken = sosOpenIdHandler.login();
+                sosOpenIdAccountAccessToken.setRefreshToken(currentAccount.getSosLoginParameters().getRefreshToken());
             }
 
             sosOpenIdSubject = new SOSOpenIdSubject(currentAccount, identityService);
 
-            if (sosOpenIdAccountAccessToken.getAccess_token() == null || sosOpenIdAccountAccessToken.getAccess_token().isEmpty()) {
+            if (sosOpenIdAccountAccessToken.getAccessToken() == null || sosOpenIdAccountAccessToken.getAccessToken().isEmpty()) {
                 sosOpenIdSubject.setAuthenticated(false);
                 setMsg("The access token is not valid");
             } else {

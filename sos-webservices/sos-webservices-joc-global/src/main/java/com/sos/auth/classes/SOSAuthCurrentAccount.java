@@ -50,7 +50,7 @@ public class SOSAuthCurrentAccount {
     private String accountName;
     private String id;
     private String accessToken;
-    private SOSIdentityService identityServices;
+    private SOSIdentityService identityService;
     private Map<String, String> identyServiceAccessToken;
     private boolean withAuthorization;
     private Set<String> roles;
@@ -309,12 +309,12 @@ public class SOSAuthCurrentAccount {
         return identyServiceAccessToken.get(identityServiceName);
     }
 
-    public SOSIdentityService getIdentityServices() {
-        return identityServices;
+    public SOSIdentityService getIdentityService() {
+        return identityService;
     }
 
-    public void setIdentityServices(SOSIdentityService identityServices) {
-        this.identityServices = identityServices;
+    public void setIdentityService(SOSIdentityService identityService) {
+        this.identityService = identityService;
     }
 
     public SOSLoginParameters getSosLoginParameters() {

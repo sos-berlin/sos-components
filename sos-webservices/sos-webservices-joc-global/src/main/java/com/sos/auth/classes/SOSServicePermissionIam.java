@@ -237,26 +237,27 @@ public class SOSServicePermissionIam {
             currentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
         }
 
-        if (currentAccount.getIdentityServices().getIdentyServiceType() == IdentityServiceTypes.OPENID_CONNECT) {
-            SOSIdentityService identityService = new SOSIdentityService(currentAccount.getIdentityServices().getIdentityServiceName(), currentAccount
-                    .getIdentityServices().getIdentyServiceType());
-            SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
-            webserviceCredentials.setValuesFromProfile(identityService);
-            webserviceCredentials.setAccount(currentAccount.getAccountname());
-            webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
-
-            SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
-            try {
-                sosOpenIdHandler.logout(currentAccount.getSosLoginParameters().getAccessToken());
-            } catch (SocketException | SOSException e) {
-                LOGGER.error("", e);
-            }
-
-        }
-
         String account = "";
         String comment = "";
         if (currentAccount != null) {
+            if (currentAccount.getIdentityService() != null && currentAccount.getIdentityService()
+                    .getIdentyServiceType() == IdentityServiceTypes.OPENID_CONNECT) {
+                SOSIdentityService identityService = new SOSIdentityService(currentAccount.getIdentityService().getIdentityServiceName(),
+                        currentAccount.getIdentityService().getIdentyServiceType());
+                SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
+                webserviceCredentials.setValuesFromProfile(identityService);
+                webserviceCredentials.setAccount(currentAccount.getAccountname());
+                webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
+
+                SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
+                try {
+                    sosOpenIdHandler.logout(currentAccount.getSosLoginParameters().getAccessToken());
+                } catch (SocketException | SOSException e) {
+                    LOGGER.error("", e);
+                }
+
+            }
+
             account = currentAccount.getAccountname();
 
             SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
@@ -482,7 +483,7 @@ public class SOSServicePermissionIam {
             ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
 
             currentAccount.setCurrentSubject(sosAuthSubject);
-            currentAccount.setIdentityServices(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
+            currentAccount.setIdentityService(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
                     identityServiceType));
 
             if (sosAuthSubject == null || !sosAuthSubject.isAuthenticated()) {
@@ -692,8 +693,8 @@ public class SOSServicePermissionIam {
             SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
             if (currentAccount.getCurrentSubject() == null || !currentAccount.getCurrentSubject().isAuthenticated()) {
                 sosAuthCurrentUserAnswer.setIsAuthenticated(false);
-                if (currentAccount.getIdentityServices() != null) {
-                    sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityServices().getIdentityServiceName());
+                if (currentAccount.getIdentityService() != null) {
+                    sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityService().getIdentityServiceName());
                 } else {
                     sosAuthCurrentUserAnswer.setIdentityService("");
                 }
@@ -713,8 +714,8 @@ public class SOSServicePermissionIam {
             sosAuthCurrentUserAnswer.setSessionTimeout(sosSessionHandler.getTimeout());
             sosAuthCurrentUserAnswer.setCallerHostName(currentAccount.getCallerHostName());
             sosAuthCurrentUserAnswer.setCallerIpAddress(currentAccount.getCallerIpAddress());
-            sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityServices().getIdentyServiceType() + ":" + currentAccount
-                    .getIdentityServices().getIdentityServiceName());
+            sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityService().getIdentyServiceType() + ":" + currentAccount
+                    .getIdentityService().getIdentityServiceName());
             sosAuthCurrentUserAnswer.setMessage(msg);
 
             LOGGER.debug("CallerIpAddress=" + currentAccount.getCallerIpAddress());

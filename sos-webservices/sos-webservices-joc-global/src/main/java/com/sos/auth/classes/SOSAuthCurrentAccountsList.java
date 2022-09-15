@@ -104,7 +104,7 @@ public class SOSAuthCurrentAccountsList {
                             sosAuthCurrentAccountAnswer.setAccessToken(NOT_VALID);
                         } else {
                             sosAuthCurrentAccountAnswer.setSessionTimeout(sessionTimeout);
-                            sosAuthCurrentAccountAnswer.setIdentityService(entry.getValue().getIdentityServices().getIdentyServiceType() + ":" + entry.getValue().getIdentityServices().getIdentityServiceName());
+                            sosAuthCurrentAccountAnswer.setIdentityService(entry.getValue().getIdentityService().getIdentyServiceType() + ":" + entry.getValue().getIdentityService().getIdentityServiceName());
                         }
                     }
                 }

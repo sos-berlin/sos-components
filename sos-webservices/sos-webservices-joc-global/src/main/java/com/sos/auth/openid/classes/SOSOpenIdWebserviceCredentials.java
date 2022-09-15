@@ -33,7 +33,6 @@ public class SOSOpenIdWebserviceCredentials {
     private String profileInformationUrl;
     private String sessionRenewalUrl;
     private String certificateUrl;
-    private String publicKeyField;
     private String certificateIssuer;
     private String certificateExpirationDate;
     private Boolean isJwtToken;
@@ -81,14 +80,14 @@ public class SOSOpenIdWebserviceCredentials {
     }
 
     public String getTokenVerificationUrl() {
-       // tokenVerificationUrl = "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=<access_token>";
+        // tokenVerificationUrl = "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=<access_token>";
         String s = tokenVerificationUrl.replaceAll("<access_token>", accessToken);
         s = s.replaceAll("<id_token>", idToken);
         return s;
     }
 
     public String getLogoutUrl() {
-       // logoutUrl = "https://accounts.google.com/o/oauth2/revoke?token=<access_token>";
+        // logoutUrl = "https://accounts.google.com/o/oauth2/revoke?token=<access_token>";
         String s = logoutUrl.replaceAll("<access_token>", accessToken);
         s = s.replaceAll("<id_token>", idToken);
         return s;
@@ -105,11 +104,7 @@ public class SOSOpenIdWebserviceCredentials {
     public String getCertificateUrl() {
         return certificateUrl;
     }
-
-    public String getPublicKeyField() {
-        return publicKeyField;
-    }
-
+ 
     public String getCertificateIssuer() {
         return certificateIssuer;
     }
@@ -197,63 +192,59 @@ public class SOSOpenIdWebserviceCredentials {
                 }
 
                 if (tokenVerificationUrl == null) {
-                    tokenVerificationUrl = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    tokenVerificationUrl = getProperty(properties.getOidc().getIamOidcTokenVerificationUrl(), "");
                 }
 
                 if (logoutUrl == null) {
-                    logoutUrl = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    logoutUrl = getProperty(properties.getOidc().getIamOidcLogoutUrl(), "");
                 }
 
                 if (profileInformationUrl == null) {
-                    profileInformationUrl = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    profileInformationUrl = getProperty(properties.getOidc().getIamOidcProfileInformationUrl(), "");
                 }
 
                 if (sessionRenewalUrl == null) {
-                    sessionRenewalUrl = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    sessionRenewalUrl = getProperty(properties.getOidc().getIamOidcSessionRenewalUrl(), "");
                 }
 
                 if (certificateUrl == null) {
-                    certificateUrl = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
-                }
-
-                if (publicKeyField == null) {
-                    publicKeyField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    certificateUrl = getProperty(properties.getOidc().getIamOidcCertificateUrl(), "");
                 }
 
                 if (certificateIssuer == null) {
-                    certificateIssuer = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    certificateIssuer = getProperty(properties.getOidc().getIamOidcCertificateIssuer(), "");
                 }
 
                 if (certificateExpirationDate == null) {
-                    certificateExpirationDate = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    certificateExpirationDate = getProperty(properties.getOidc().getIamOidcCertificateExpirationDate(), "");
                 }
 
                 if (isJwtToken == null) {
-                    isJwtToken = true;// getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    isJwtToken = true;// getProperty(properties.getOidc().g(), "");
                 }
 
                 if (jwtEmailField == null) {
-                    jwtEmailField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    jwtEmailField = getProperty(properties.getOidc().getIamOidcJwtEmailField(), "email");
                 }
 
                 if (jwtClientIdField == null) {
-                    jwtClientIdField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    jwtClientIdField = getProperty(properties.getOidc().getIamOidcJwtClientIdField(), "aud");
                 }
 
                 if (jwtUrlField == null) {
-                    jwtUrlField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    jwtUrlField = getProperty(properties.getOidc().getIamOidcJwtUrlField(), "iss");
                 }
 
                 if (jwtAlgorithmField == null) {
-                    jwtAlgorithmField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    jwtAlgorithmField = getProperty(properties.getOidc().getIamOidcJwtAlgorithmField(), "alg");
                 }
 
                 if (jwtPublicKeyField == null) {
-                    jwtPublicKeyField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    jwtPublicKeyField = getProperty(properties.getOidc().getIamOidcJwtPublicKeyField(), "");
                 }
 
                 if (jwtExpiredField == null) {
-                    jwtExpiredField = getProperty(properties.getOidc().getIamOidcdTokenVerificationUrl(), "");
+                    jwtExpiredField = getProperty(properties.getOidc().getIamOidcJwtExpiredField(), "exp");
                 }
 
             }

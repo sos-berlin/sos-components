@@ -21,11 +21,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "iamOidcClientId",
     "iamOidcName",
     "iamOidcClientSecret",
-    "iamOidcdTokenVerificationUrl",
+    "iamOidcTokenVerificationUrl",
     "iamOidcLogoutUrl",
-    "iamOidcdProfileInformationUrl",
-    "iamOidcdSessionRenewalUrl",
-    "iamOidcdCertificateUrl",
+    "iamOidcProfileInformationUrl",
+    "iamOidcSessionRenewalUrl",
+    "iamOidcCertificateUrl",
     "iamOidcPublicKeyField",
     "iamOidcCertificateIssuer",
     "iamOidcCertificateExpirationDate",
@@ -77,8 +77,8 @@ public class OidcProperties {
      * 
      * 
      */
-    @JsonProperty("iamOidcdTokenVerificationUrl")
-    private String iamOidcdTokenVerificationUrl;
+    @JsonProperty("iamOidcTokenVerificationUrl")
+    private String iamOidcTokenVerificationUrl;
     /**
      * string without < and >
      * <p>
@@ -93,24 +93,24 @@ public class OidcProperties {
      * 
      * 
      */
-    @JsonProperty("iamOidcdProfileInformationUrl")
-    private String iamOidcdProfileInformationUrl;
+    @JsonProperty("iamOidcProfileInformationUrl")
+    private String iamOidcProfileInformationUrl;
     /**
      * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("iamOidcdSessionRenewalUrl")
-    private String iamOidcdSessionRenewalUrl;
+    @JsonProperty("iamOidcSessionRenewalUrl")
+    private String iamOidcSessionRenewalUrl;
     /**
      * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("iamOidcdCertificateUrl")
-    private String iamOidcdCertificateUrl;
+    @JsonProperty("iamOidcCertificateUrl")
+    private String iamOidcCertificateUrl;
     /**
      * string without < and >
      * <p>
@@ -201,37 +201,37 @@ public class OidcProperties {
 
     /**
      * 
+     * @param iamOidcTokenVerificationUrl
+     * @param iamOidcSessionRenewalUrl
      * @param iamOidcClientId
      * @param iamOidcLogoutUrl
      * @param iamOidcJwtUrlField
      * @param iamOidcPublicKeyField
      * @param iamOidcJwtPublicKeyField
+     * @param iamOidcProfileInformationUrl
      * @param iamOidcCertificateIssuer
      * @param iamOidcCertificateExpirationDate
-     * @param iamOidcdProfileInformationUrl
      * @param iamOidcJwtClientIdField
      * @param iamOidcClientSecret
      * @param iamOidcJwtExpiredField
      * @param iamOidcAuthenticationUrl
      * @param iamOidcName
      * @param iamOidcJwtEmailField
-     * @param iamOidcdTokenVerificationUrl
-     * @param iamOidcdSessionRenewalUrl
      * @param iamOidcIsJwtToken
      * @param iamOidcJwtAlgorithmField
-     * @param iamOidcdCertificateUrl
+     * @param iamOidcCertificateUrl
      */
-    public OidcProperties(String iamOidcAuthenticationUrl, String iamOidcClientId, String iamOidcName, String iamOidcClientSecret, String iamOidcdTokenVerificationUrl, String iamOidcLogoutUrl, String iamOidcdProfileInformationUrl, String iamOidcdSessionRenewalUrl, String iamOidcdCertificateUrl, String iamOidcPublicKeyField, String iamOidcCertificateIssuer, String iamOidcCertificateExpirationDate, String iamOidcIsJwtToken, String iamOidcJwtEmailField, String iamOidcJwtClientIdField, String iamOidcJwtUrlField, String iamOidcJwtAlgorithmField, String iamOidcJwtPublicKeyField, String iamOidcJwtExpiredField) {
+    public OidcProperties(String iamOidcAuthenticationUrl, String iamOidcClientId, String iamOidcName, String iamOidcClientSecret, String iamOidcTokenVerificationUrl, String iamOidcLogoutUrl, String iamOidcProfileInformationUrl, String iamOidcSessionRenewalUrl, String iamOidcCertificateUrl, String iamOidcPublicKeyField, String iamOidcCertificateIssuer, String iamOidcCertificateExpirationDate, String iamOidcIsJwtToken, String iamOidcJwtEmailField, String iamOidcJwtClientIdField, String iamOidcJwtUrlField, String iamOidcJwtAlgorithmField, String iamOidcJwtPublicKeyField, String iamOidcJwtExpiredField) {
         super();
         this.iamOidcAuthenticationUrl = iamOidcAuthenticationUrl;
         this.iamOidcClientId = iamOidcClientId;
         this.iamOidcName = iamOidcName;
         this.iamOidcClientSecret = iamOidcClientSecret;
-        this.iamOidcdTokenVerificationUrl = iamOidcdTokenVerificationUrl;
+        this.iamOidcTokenVerificationUrl = iamOidcTokenVerificationUrl;
         this.iamOidcLogoutUrl = iamOidcLogoutUrl;
-        this.iamOidcdProfileInformationUrl = iamOidcdProfileInformationUrl;
-        this.iamOidcdSessionRenewalUrl = iamOidcdSessionRenewalUrl;
-        this.iamOidcdCertificateUrl = iamOidcdCertificateUrl;
+        this.iamOidcProfileInformationUrl = iamOidcProfileInformationUrl;
+        this.iamOidcSessionRenewalUrl = iamOidcSessionRenewalUrl;
+        this.iamOidcCertificateUrl = iamOidcCertificateUrl;
         this.iamOidcPublicKeyField = iamOidcPublicKeyField;
         this.iamOidcCertificateIssuer = iamOidcCertificateIssuer;
         this.iamOidcCertificateExpirationDate = iamOidcCertificateExpirationDate;
@@ -338,9 +338,9 @@ public class OidcProperties {
      * 
      * 
      */
-    @JsonProperty("iamOidcdTokenVerificationUrl")
-    public String getIamOidcdTokenVerificationUrl() {
-        return iamOidcdTokenVerificationUrl;
+    @JsonProperty("iamOidcTokenVerificationUrl")
+    public String getIamOidcTokenVerificationUrl() {
+        return iamOidcTokenVerificationUrl;
     }
 
     /**
@@ -349,9 +349,9 @@ public class OidcProperties {
      * 
      * 
      */
-    @JsonProperty("iamOidcdTokenVerificationUrl")
-    public void setIamOidcdTokenVerificationUrl(String iamOidcdTokenVerificationUrl) {
-        this.iamOidcdTokenVerificationUrl = iamOidcdTokenVerificationUrl;
+    @JsonProperty("iamOidcTokenVerificationUrl")
+    public void setIamOidcTokenVerificationUrl(String iamOidcTokenVerificationUrl) {
+        this.iamOidcTokenVerificationUrl = iamOidcTokenVerificationUrl;
     }
 
     /**
@@ -382,9 +382,9 @@ public class OidcProperties {
      * 
      * 
      */
-    @JsonProperty("iamOidcdProfileInformationUrl")
-    public String getIamOidcdProfileInformationUrl() {
-        return iamOidcdProfileInformationUrl;
+    @JsonProperty("iamOidcProfileInformationUrl")
+    public String getIamOidcProfileInformationUrl() {
+        return iamOidcProfileInformationUrl;
     }
 
     /**
@@ -393,9 +393,9 @@ public class OidcProperties {
      * 
      * 
      */
-    @JsonProperty("iamOidcdProfileInformationUrl")
-    public void setIamOidcdProfileInformationUrl(String iamOidcdProfileInformationUrl) {
-        this.iamOidcdProfileInformationUrl = iamOidcdProfileInformationUrl;
+    @JsonProperty("iamOidcProfileInformationUrl")
+    public void setIamOidcProfileInformationUrl(String iamOidcProfileInformationUrl) {
+        this.iamOidcProfileInformationUrl = iamOidcProfileInformationUrl;
     }
 
     /**
@@ -404,9 +404,9 @@ public class OidcProperties {
      * 
      * 
      */
-    @JsonProperty("iamOidcdSessionRenewalUrl")
-    public String getIamOidcdSessionRenewalUrl() {
-        return iamOidcdSessionRenewalUrl;
+    @JsonProperty("iamOidcSessionRenewalUrl")
+    public String getIamOidcSessionRenewalUrl() {
+        return iamOidcSessionRenewalUrl;
     }
 
     /**
@@ -415,9 +415,9 @@ public class OidcProperties {
      * 
      * 
      */
-    @JsonProperty("iamOidcdSessionRenewalUrl")
-    public void setIamOidcdSessionRenewalUrl(String iamOidcdSessionRenewalUrl) {
-        this.iamOidcdSessionRenewalUrl = iamOidcdSessionRenewalUrl;
+    @JsonProperty("iamOidcSessionRenewalUrl")
+    public void setIamOidcSessionRenewalUrl(String iamOidcSessionRenewalUrl) {
+        this.iamOidcSessionRenewalUrl = iamOidcSessionRenewalUrl;
     }
 
     /**
@@ -426,9 +426,9 @@ public class OidcProperties {
      * 
      * 
      */
-    @JsonProperty("iamOidcdCertificateUrl")
-    public String getIamOidcdCertificateUrl() {
-        return iamOidcdCertificateUrl;
+    @JsonProperty("iamOidcCertificateUrl")
+    public String getIamOidcCertificateUrl() {
+        return iamOidcCertificateUrl;
     }
 
     /**
@@ -437,9 +437,9 @@ public class OidcProperties {
      * 
      * 
      */
-    @JsonProperty("iamOidcdCertificateUrl")
-    public void setIamOidcdCertificateUrl(String iamOidcdCertificateUrl) {
-        this.iamOidcdCertificateUrl = iamOidcdCertificateUrl;
+    @JsonProperty("iamOidcCertificateUrl")
+    public void setIamOidcCertificateUrl(String iamOidcCertificateUrl) {
+        this.iamOidcCertificateUrl = iamOidcCertificateUrl;
     }
 
     /**
@@ -664,12 +664,12 @@ public class OidcProperties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcClientId", iamOidcClientId).append("iamOidcName", iamOidcName).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcdTokenVerificationUrl", iamOidcdTokenVerificationUrl).append("iamOidcLogoutUrl", iamOidcLogoutUrl).append("iamOidcdProfileInformationUrl", iamOidcdProfileInformationUrl).append("iamOidcdSessionRenewalUrl", iamOidcdSessionRenewalUrl).append("iamOidcdCertificateUrl", iamOidcdCertificateUrl).append("iamOidcPublicKeyField", iamOidcPublicKeyField).append("iamOidcCertificateIssuer", iamOidcCertificateIssuer).append("iamOidcCertificateExpirationDate", iamOidcCertificateExpirationDate).append("iamOidcIsJwtToken", iamOidcIsJwtToken).append("iamOidcJwtEmailField", iamOidcJwtEmailField).append("iamOidcJwtClientIdField", iamOidcJwtClientIdField).append("iamOidcJwtUrlField", iamOidcJwtUrlField).append("iamOidcJwtAlgorithmField", iamOidcJwtAlgorithmField).append("iamOidcJwtPublicKeyField", iamOidcJwtPublicKeyField).append("iamOidcJwtExpiredField", iamOidcJwtExpiredField).toString();
+        return new ToStringBuilder(this).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcClientId", iamOidcClientId).append("iamOidcName", iamOidcName).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcTokenVerificationUrl", iamOidcTokenVerificationUrl).append("iamOidcLogoutUrl", iamOidcLogoutUrl).append("iamOidcProfileInformationUrl", iamOidcProfileInformationUrl).append("iamOidcSessionRenewalUrl", iamOidcSessionRenewalUrl).append("iamOidcCertificateUrl", iamOidcCertificateUrl).append("iamOidcPublicKeyField", iamOidcPublicKeyField).append("iamOidcCertificateIssuer", iamOidcCertificateIssuer).append("iamOidcCertificateExpirationDate", iamOidcCertificateExpirationDate).append("iamOidcIsJwtToken", iamOidcIsJwtToken).append("iamOidcJwtEmailField", iamOidcJwtEmailField).append("iamOidcJwtClientIdField", iamOidcJwtClientIdField).append("iamOidcJwtUrlField", iamOidcJwtUrlField).append("iamOidcJwtAlgorithmField", iamOidcJwtAlgorithmField).append("iamOidcJwtPublicKeyField", iamOidcJwtPublicKeyField).append("iamOidcJwtExpiredField", iamOidcJwtExpiredField).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamOidcClientId).append(iamOidcLogoutUrl).append(iamOidcJwtUrlField).append(iamOidcPublicKeyField).append(iamOidcJwtPublicKeyField).append(iamOidcCertificateIssuer).append(iamOidcCertificateExpirationDate).append(iamOidcdProfileInformationUrl).append(iamOidcJwtClientIdField).append(iamOidcClientSecret).append(iamOidcJwtExpiredField).append(iamOidcAuthenticationUrl).append(iamOidcName).append(iamOidcJwtEmailField).append(iamOidcdTokenVerificationUrl).append(iamOidcdSessionRenewalUrl).append(iamOidcIsJwtToken).append(iamOidcJwtAlgorithmField).append(iamOidcdCertificateUrl).toHashCode();
+        return new HashCodeBuilder().append(iamOidcTokenVerificationUrl).append(iamOidcSessionRenewalUrl).append(iamOidcClientId).append(iamOidcLogoutUrl).append(iamOidcJwtUrlField).append(iamOidcPublicKeyField).append(iamOidcJwtPublicKeyField).append(iamOidcProfileInformationUrl).append(iamOidcCertificateIssuer).append(iamOidcCertificateExpirationDate).append(iamOidcJwtClientIdField).append(iamOidcClientSecret).append(iamOidcJwtExpiredField).append(iamOidcAuthenticationUrl).append(iamOidcName).append(iamOidcJwtEmailField).append(iamOidcIsJwtToken).append(iamOidcJwtAlgorithmField).append(iamOidcCertificateUrl).toHashCode();
     }
 
     @Override
@@ -681,7 +681,7 @@ public class OidcProperties {
             return false;
         }
         OidcProperties rhs = ((OidcProperties) other);
-        return new EqualsBuilder().append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcLogoutUrl, rhs.iamOidcLogoutUrl).append(iamOidcJwtUrlField, rhs.iamOidcJwtUrlField).append(iamOidcPublicKeyField, rhs.iamOidcPublicKeyField).append(iamOidcJwtPublicKeyField, rhs.iamOidcJwtPublicKeyField).append(iamOidcCertificateIssuer, rhs.iamOidcCertificateIssuer).append(iamOidcCertificateExpirationDate, rhs.iamOidcCertificateExpirationDate).append(iamOidcdProfileInformationUrl, rhs.iamOidcdProfileInformationUrl).append(iamOidcJwtClientIdField, rhs.iamOidcJwtClientIdField).append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(iamOidcJwtExpiredField, rhs.iamOidcJwtExpiredField).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).append(iamOidcJwtEmailField, rhs.iamOidcJwtEmailField).append(iamOidcdTokenVerificationUrl, rhs.iamOidcdTokenVerificationUrl).append(iamOidcdSessionRenewalUrl, rhs.iamOidcdSessionRenewalUrl).append(iamOidcIsJwtToken, rhs.iamOidcIsJwtToken).append(iamOidcJwtAlgorithmField, rhs.iamOidcJwtAlgorithmField).append(iamOidcdCertificateUrl, rhs.iamOidcdCertificateUrl).isEquals();
+        return new EqualsBuilder().append(iamOidcTokenVerificationUrl, rhs.iamOidcTokenVerificationUrl).append(iamOidcSessionRenewalUrl, rhs.iamOidcSessionRenewalUrl).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcLogoutUrl, rhs.iamOidcLogoutUrl).append(iamOidcJwtUrlField, rhs.iamOidcJwtUrlField).append(iamOidcPublicKeyField, rhs.iamOidcPublicKeyField).append(iamOidcJwtPublicKeyField, rhs.iamOidcJwtPublicKeyField).append(iamOidcProfileInformationUrl, rhs.iamOidcProfileInformationUrl).append(iamOidcCertificateIssuer, rhs.iamOidcCertificateIssuer).append(iamOidcCertificateExpirationDate, rhs.iamOidcCertificateExpirationDate).append(iamOidcJwtClientIdField, rhs.iamOidcJwtClientIdField).append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(iamOidcJwtExpiredField, rhs.iamOidcJwtExpiredField).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).append(iamOidcJwtEmailField, rhs.iamOidcJwtEmailField).append(iamOidcIsJwtToken, rhs.iamOidcIsJwtToken).append(iamOidcJwtAlgorithmField, rhs.iamOidcJwtAlgorithmField).append(iamOidcCertificateUrl, rhs.iamOidcCertificateUrl).isEquals();
     }
 
 }

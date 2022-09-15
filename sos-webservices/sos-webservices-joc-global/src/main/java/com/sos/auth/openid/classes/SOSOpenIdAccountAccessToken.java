@@ -2,50 +2,41 @@ package com.sos.auth.openid.classes;
 
 public class SOSOpenIdAccountAccessToken {
 
-    private String access_token;
-    private int expires_in;
-    private int refresh_expires_in;
-    private String refresh_token;
-    private String token_type;
+    private String accessToken;
+    private int expiresIn;
+    private int refreshExpiresIn;
+    private String refreshToken;
 
-    public String getAccess_token() {
-        return access_token;
+    public String getAccessToken() {
+        return accessToken;
     }
 
-    public void setAccess_token(String access_token) {
-        this.access_token = access_token;
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 
     public int getExpires_in() {
-        return expires_in;
+        return expiresIn;
     }
 
-    public void setExpires_in(int expires_in) {
-        this.expires_in = expires_in;
+    public void setExpiresIn(int expiresIn) {
+        this.expiresIn = expiresIn;
     }
 
-    public int getRefresh_expires_in() {
-        return refresh_expires_in;
+    public int getRefreshExpiresIn() {
+        return refreshExpiresIn;
     }
 
-    public void setRefresh_expires_in(int refresh_expires_in) {
-        this.refresh_expires_in = refresh_expires_in;
+    public void setRefreshExpiresIn(int refreshExpiresIn) {
+        this.refreshExpiresIn = refreshExpiresIn;
     }
 
-    public String getRefresh_token() {
-        return refresh_token;
+    public String getRefreshToken() {
+        return refreshToken;
     }
 
-    public void setRefresh_token(String refresh_token) {
-        this.refresh_token = refresh_token;
-    }
-
-    public String getToken_type() {
-        return token_type;
-    }
-
-    public void setToken_type(String token_type) {
-        this.token_type = token_type;
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
 }

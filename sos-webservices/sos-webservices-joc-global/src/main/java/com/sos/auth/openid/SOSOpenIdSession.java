@@ -98,7 +98,7 @@ public class SOSOpenIdSession implements ISOSSession {
 
     @Override
     public Serializable getAccessToken() {
-        return accessToken.getAccess_token();
+        return accessToken.getAccessToken();
 
     }
 

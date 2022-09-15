@@ -73,8 +73,8 @@ public class SOSAuthHelper {
     public static String getIdentityServiceAccessToken(String accessToken) {
         if (Globals.jocWebserviceDataContainer != null && Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
             SOSAuthCurrentAccount sosAuthCurrentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
-            if (sosAuthCurrentAccount != null && sosAuthCurrentAccount.getIdentityServices() != null) {
-                return sosAuthCurrentAccount.getAccessToken(sosAuthCurrentAccount.getIdentityServices().getIdentityServiceName());
+            if (sosAuthCurrentAccount != null && sosAuthCurrentAccount.getIdentityService() != null) {
+                return sosAuthCurrentAccount.getAccessToken(sosAuthCurrentAccount.getIdentityService().getIdentityServiceName());
             }
         }
         return null;

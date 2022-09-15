@@ -70,7 +70,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
                 SOSAuthCurrentAccount currentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
 
                 if (currentAccount.isAuthenticated()) {
-                    switch (currentAccount.getIdentityServices().getIdentyServiceType()) {
+                    switch (currentAccount.getIdentityService().getIdentyServiceType()) {
 
                     case OPENID_CONNECT:
                         if (currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken() != null) {
