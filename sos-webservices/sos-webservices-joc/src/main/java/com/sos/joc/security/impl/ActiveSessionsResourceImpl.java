@@ -59,8 +59,8 @@ public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActi
 					long sessionTimeout = sosAuthCurrentAccount.getCurrentSubject().getSession().getTimeout();
 					activeSession.setAccountName(sosAuthCurrentAccount.getAccountname());
 					activeSession.setTimeout(sessionTimeout);
-					activeSession.setIdentityService(sosAuthCurrentAccount.getIdentityService().getIdentyServiceType()
-							+ ":" + sosAuthCurrentAccount.getIdentityService().getIdentityServiceName());
+					activeSession.setIdentityService(sosAuthCurrentAccount.getIdentityServices().getIdentyServiceType()
+							+ ":" + sosAuthCurrentAccount.getIdentityServices().getIdentityServiceName());
 					activeSessions.getActiveSessions().add(activeSession);
 					activeSession.setId(sosAuthCurrentAccount.getId());
 					count += 1;

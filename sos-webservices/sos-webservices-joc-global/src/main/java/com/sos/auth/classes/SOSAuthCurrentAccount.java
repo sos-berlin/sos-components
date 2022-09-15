@@ -309,11 +309,11 @@ public class SOSAuthCurrentAccount {
         return identyServiceAccessToken.get(identityServiceName);
     }
 
-    public SOSIdentityService getIdentityService() {
+    public SOSIdentityService getIdentityServices() {
         return identityService;
     }
 
-    public void setIdentityService(SOSIdentityService identityService) {
+    public void setIdentityServices(SOSIdentityService identityService) {
         this.identityService = identityService;
     }
 

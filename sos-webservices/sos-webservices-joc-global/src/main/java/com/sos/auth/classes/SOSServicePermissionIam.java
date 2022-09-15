@@ -21,7 +21,6 @@ import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.keycloak.classes.SOSKeycloakLogin;
 import com.sos.auth.ldap.classes.SOSLdapLogin;
 import com.sos.auth.openid.SOSOpenIdHandler;
-import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
 import com.sos.auth.openid.classes.SOSOpenIdLogin;
 import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
@@ -240,10 +239,10 @@ public class SOSServicePermissionIam {
         String account = "";
         String comment = "";
         if (currentAccount != null) {
-            if (currentAccount.getIdentityService() != null && currentAccount.getIdentityService()
+            if (currentAccount.getIdentityServices() != null && currentAccount.getIdentityServices()
                     .getIdentyServiceType() == IdentityServiceTypes.OPENID_CONNECT) {
-                SOSIdentityService identityService = new SOSIdentityService(currentAccount.getIdentityService().getIdentityServiceName(),
-                        currentAccount.getIdentityService().getIdentyServiceType());
+                SOSIdentityService identityService = new SOSIdentityService(currentAccount.getIdentityServices().getIdentityServiceName(),
+                        currentAccount.getIdentityServices().getIdentyServiceType());
                 SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
                 webserviceCredentials.setValuesFromProfile(identityService);
                 webserviceCredentials.setAccount(currentAccount.getAccountname());
@@ -412,7 +411,7 @@ public class SOSServicePermissionIam {
         MDC.put("context", ThreadCtx);
         try {
             String accessToken = this.getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
-            SOSAuthCurrentAccount currentAccount = this.getCurrentAccount(accessToken);
+            this.getCurrentAccount(accessToken);
             SOSListOfPermissions sosListOfPermissions = new SOSListOfPermissions();
             return JOCDefaultResponse.responseStatus200(sosListOfPermissions.getSosPermissions());
         } catch (Exception e) {
@@ -483,7 +482,7 @@ public class SOSServicePermissionIam {
             ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
 
             currentAccount.setCurrentSubject(sosAuthSubject);
-            currentAccount.setIdentityService(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
+            currentAccount.setIdentityServices(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
                     identityServiceType));
 
             if (sosAuthSubject == null || !sosAuthSubject.isAuthenticated()) {
@@ -693,8 +692,8 @@ public class SOSServicePermissionIam {
             SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
             if (currentAccount.getCurrentSubject() == null || !currentAccount.getCurrentSubject().isAuthenticated()) {
                 sosAuthCurrentUserAnswer.setIsAuthenticated(false);
-                if (currentAccount.getIdentityService() != null) {
-                    sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityService().getIdentityServiceName());
+                if (currentAccount.getIdentityServices() != null) {
+                    sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityServices().getIdentityServiceName());
                 } else {
                     sosAuthCurrentUserAnswer.setIdentityService("");
                 }
@@ -714,8 +713,8 @@ public class SOSServicePermissionIam {
             sosAuthCurrentUserAnswer.setSessionTimeout(sosSessionHandler.getTimeout());
             sosAuthCurrentUserAnswer.setCallerHostName(currentAccount.getCallerHostName());
             sosAuthCurrentUserAnswer.setCallerIpAddress(currentAccount.getCallerIpAddress());
-            sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityService().getIdentyServiceType() + ":" + currentAccount
-                    .getIdentityService().getIdentityServiceName());
+            sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityServices().getIdentyServiceType() + ":" + currentAccount
+                    .getIdentityServices().getIdentityServiceName());
             sosAuthCurrentUserAnswer.setMessage(msg);
 
             LOGGER.debug("CallerIpAddress=" + currentAccount.getCallerIpAddress());
