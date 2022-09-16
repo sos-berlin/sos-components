@@ -40,7 +40,7 @@ public class SOSOpenIdLogin implements ISOSLogin {
             String accountName = sosOpenIdHandler.decodeIdToken();
             currentAccount.setAccountName(accountName);
             webserviceCredentials.setAccount(accountName);
-            
+
             SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = null;
 
             boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
@@ -48,7 +48,9 @@ public class SOSOpenIdLogin implements ISOSLogin {
             if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
                     .getAccountname())))) {
                 sosOpenIdAccountAccessToken = sosOpenIdHandler.login();
-                sosOpenIdAccountAccessToken.setRefreshToken(currentAccount.getSosLoginParameters().getRefreshToken());
+                if (sosOpenIdAccountAccessToken != null) {
+                    sosOpenIdAccountAccessToken.setRefreshToken(currentAccount.getSosLoginParameters().getRefreshToken());
+                }
             }
 
             sosOpenIdSubject = new SOSOpenIdSubject(currentAccount, identityService);
@@ -70,7 +72,7 @@ public class SOSOpenIdLogin implements ISOSLogin {
             LOGGER.error("", e);
         } catch (JocException e) {
             msg = e.toString();
-            LOGGER.info("KEYCLOAK:" + e.getMessage());
+            LOGGER.info("OIDC:" + e.getMessage());
         } catch (Exception e) {
             msg = e.toString();
             LOGGER.error("", e);

@@ -19,6 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "identityServiceName",
     "iamOidcClientId",
+    "iamOidcClientSecret",
     "iamOidcName",
     "iamOidcAuthenticationUrl"
 })
@@ -46,6 +47,14 @@ public class IdentityProvider {
      * 
      * 
      */
+    @JsonProperty("iamOidcClientSecret")
+    private String iamOidcClientSecret;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("iamOidcName")
     private String iamOidcName;
     /**
@@ -66,15 +75,17 @@ public class IdentityProvider {
 
     /**
      * 
+     * @param iamOidcClientSecret
      * @param identityServiceName
      * @param iamOidcClientId
      * @param iamOidcAuthenticationUrl
      * @param iamOidcName
      */
-    public IdentityProvider(String identityServiceName, String iamOidcClientId, String iamOidcName, String iamOidcAuthenticationUrl) {
+    public IdentityProvider(String identityServiceName, String iamOidcClientId, String iamOidcClientSecret, String iamOidcName, String iamOidcAuthenticationUrl) {
         super();
         this.identityServiceName = identityServiceName;
         this.iamOidcClientId = iamOidcClientId;
+        this.iamOidcClientSecret = iamOidcClientSecret;
         this.iamOidcName = iamOidcName;
         this.iamOidcAuthenticationUrl = iamOidcAuthenticationUrl;
     }
@@ -129,6 +140,28 @@ public class IdentityProvider {
      * 
      * 
      */
+    @JsonProperty("iamOidcClientSecret")
+    public String getIamOidcClientSecret() {
+        return iamOidcClientSecret;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamOidcClientSecret")
+    public void setIamOidcClientSecret(String iamOidcClientSecret) {
+        this.iamOidcClientSecret = iamOidcClientSecret;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("iamOidcName")
     public String getIamOidcName() {
         return iamOidcName;
@@ -169,12 +202,12 @@ public class IdentityProvider {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("iamOidcClientId", iamOidcClientId).append("iamOidcName", iamOidcName).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("iamOidcClientId", iamOidcClientId).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcName", iamOidcName).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(iamOidcClientId).append(iamOidcAuthenticationUrl).append(iamOidcName).toHashCode();
+        return new HashCodeBuilder().append(iamOidcClientSecret).append(identityServiceName).append(iamOidcClientId).append(iamOidcAuthenticationUrl).append(iamOidcName).toHashCode();
     }
 
     @Override
@@ -186,7 +219,7 @@ public class IdentityProvider {
             return false;
         }
         IdentityProvider rhs = ((IdentityProvider) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).isEquals();
+        return new EqualsBuilder().append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(identityServiceName, rhs.identityServiceName).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).isEquals();
     }
 
 }

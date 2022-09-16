@@ -73,6 +73,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                     identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
                     identityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
                     identityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
+                    identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
                 }
                 identityProviders.getIdentityServiceItems().add(identityProvider);
             }

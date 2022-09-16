@@ -15,7 +15,7 @@ public class SOSOpenIdAccountAccessToken {
         this.accessToken = accessToken;
     }
 
-    public int getExpires_in() {
+    public int getExpiresIn() {
         return expiresIn;
     }
 

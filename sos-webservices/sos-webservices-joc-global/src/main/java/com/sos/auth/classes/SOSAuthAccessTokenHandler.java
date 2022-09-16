@@ -76,7 +76,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
                         if (currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken() != null) {
                             LOGGER.debug(SOSString.toString(currentAccount.getCurrentSubject().getSession().getSOSOpenIdAccountAccessToken()));
 
-                            long r1 = currentAccount.getCurrentSubject().getSession().getSOSOpenIdAccountAccessToken().getExpires_in();
+                            long r1 = currentAccount.getCurrentSubject().getSession().getSOSOpenIdAccountAccessToken().getExpiresIn();
 
                             long leaseDuration = r1 * 1000;
 

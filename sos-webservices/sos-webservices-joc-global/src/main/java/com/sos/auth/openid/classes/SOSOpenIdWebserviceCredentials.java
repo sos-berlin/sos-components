@@ -41,7 +41,8 @@ public class SOSOpenIdWebserviceCredentials {
     private String jwtUrlField;
     private String jwtAlgorithmField;
     private String jwtPublicKeyField;
-    private String jwtExpiredField;
+    private String jwtExpirationField;
+    private String expiresInField;
 
     public String getAuthenticationUrl() {
         return authenticationUrl;
@@ -80,14 +81,16 @@ public class SOSOpenIdWebserviceCredentials {
     }
 
     public String getTokenVerificationUrl() {
-        // tokenVerificationUrl = "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=<access_token>";
         String s = tokenVerificationUrl.replaceAll("<access_token>", accessToken);
         s = s.replaceAll("<id_token>", idToken);
         return s;
     }
 
+    public String getOriginalTokenVerificationUrl() {
+        return tokenVerificationUrl;
+    }
+
     public String getLogoutUrl() {
-        // logoutUrl = "https://accounts.google.com/o/oauth2/revoke?token=<access_token>";
         String s = logoutUrl.replaceAll("<access_token>", accessToken);
         s = s.replaceAll("<id_token>", idToken);
         return s;
@@ -104,7 +107,7 @@ public class SOSOpenIdWebserviceCredentials {
     public String getCertificateUrl() {
         return certificateUrl;
     }
- 
+
     public String getCertificateIssuer() {
         return certificateIssuer;
     }
@@ -137,8 +140,12 @@ public class SOSOpenIdWebserviceCredentials {
         return jwtPublicKeyField;
     }
 
-    public String getJwtExpiredField() {
-        return jwtExpiredField;
+    public String getJwtExpirationField() {
+        return jwtExpirationField;
+    }
+
+    public String getExpiresInField() {
+        return expiresInField;
     }
 
     private String getProperty(String value, String defaultValue) {
@@ -243,8 +250,11 @@ public class SOSOpenIdWebserviceCredentials {
                     jwtPublicKeyField = getProperty(properties.getOidc().getIamOidcJwtPublicKeyField(), "");
                 }
 
-                if (jwtExpiredField == null) {
-                    jwtExpiredField = getProperty(properties.getOidc().getIamOidcJwtExpiredField(), "exp");
+                if (jwtExpirationField == null) {
+                    jwtExpirationField = getProperty(properties.getOidc().getIamOidcJwtExpirationField(), "exp");
+                }
+                if (expiresInField == null) {
+                    expiresInField = getProperty(properties.getOidc().getIamOidcExpiresInField(), "expires_in");
                 }
 
             }
