@@ -31,31 +31,33 @@ public class SOSOpenIdLogin implements ISOSLogin {
 
         try {
 
-            SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
-            webserviceCredentials.setValuesFromProfile(identityService);
-            webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
-            webserviceCredentials.setIdToken(currentAccount.getSosLoginParameters().getIdToken());
-
-            SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
-            String accountName = sosOpenIdHandler.decodeIdToken();
-            currentAccount.setAccountName(accountName);
-            webserviceCredentials.setAccount(accountName);
-
             SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = null;
+            if (currentAccount.getSosLoginParameters().getAccessToken() != null) {
 
-            boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
+                SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
+                webserviceCredentials.setValuesFromProfile(identityService);
+                webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
+                webserviceCredentials.setIdToken(currentAccount.getSosLoginParameters().getIdToken());
 
-            if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
-                    .getAccountname())))) {
-                sosOpenIdAccountAccessToken = sosOpenIdHandler.login();
-                if (sosOpenIdAccountAccessToken != null) {
-                    sosOpenIdAccountAccessToken.setRefreshToken(currentAccount.getSosLoginParameters().getRefreshToken());
+                SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
+                String accountName = sosOpenIdHandler.decodeIdToken();
+                currentAccount.setAccountName(accountName);
+                webserviceCredentials.setAccount(accountName);
+
+                boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
+
+                if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(),
+                        currentAccount.getAccountname())))) {
+                    sosOpenIdAccountAccessToken = sosOpenIdHandler.login();
+                    if (sosOpenIdAccountAccessToken != null) {
+                        sosOpenIdAccountAccessToken.setRefreshToken(currentAccount.getSosLoginParameters().getRefreshToken());
+                    }
                 }
+
             }
-
             sosOpenIdSubject = new SOSOpenIdSubject(currentAccount, identityService);
-
-            if (sosOpenIdAccountAccessToken.getAccessToken() == null || sosOpenIdAccountAccessToken.getAccessToken().isEmpty()) {
+            if (sosOpenIdAccountAccessToken == null || sosOpenIdAccountAccessToken.getAccessToken() == null || sosOpenIdAccountAccessToken
+                    .getAccessToken().isEmpty()) {
                 sosOpenIdSubject.setAuthenticated(false);
                 setMsg("The access token is not valid");
             } else {
