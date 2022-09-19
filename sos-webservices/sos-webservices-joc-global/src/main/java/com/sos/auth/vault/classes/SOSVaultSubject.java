@@ -46,10 +46,12 @@ public class SOSVaultSubject implements ISOSAuthSubject {
     @Override
     public Boolean isPermitted(String permission) {
         permission = permission + ":";
-        for (String accountPermission : setOfAccountPermissions) {
-            accountPermission = accountPermission + ":";
-            if (permission.startsWith(accountPermission)) {
-                return true;
+        if (setOfAccountPermissions != null) {
+            for (String accountPermission : setOfAccountPermissions) {
+                accountPermission = accountPermission + ":";
+                if (permission.startsWith(accountPermission)) {
+                    return true;
+                }
             }
         }
         return false;
