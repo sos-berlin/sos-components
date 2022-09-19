@@ -22,6 +22,7 @@ public class SOSOpenIdWebserviceCredentials {
 
     private String account = "";
     private String accessToken = "";
+    private String refreshToken = "";
     private String idToken = "";
     private String authenticationUrl;
 
@@ -72,6 +73,16 @@ public class SOSOpenIdWebserviceCredentials {
         return clientId;
     }
 
+    
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
     }
@@ -94,6 +105,10 @@ public class SOSOpenIdWebserviceCredentials {
         String s = logoutUrl.replaceAll("<access_token>", accessToken);
         s = s.replaceAll("<id_token>", idToken);
         return s;
+    }
+
+    public String getOriginalLogoutUrl() {
+        return logoutUrl;
     }
 
     public String getProfileInformationUrl() {

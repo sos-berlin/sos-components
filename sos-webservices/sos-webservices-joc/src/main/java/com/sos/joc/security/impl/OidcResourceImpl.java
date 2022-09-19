@@ -51,7 +51,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_PROVIDERS);
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-            filter.setIamIdentityServiceType(IdentityServiceTypes.OPENID_CONNECT);
+            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
             filter.setDisabled(false);
             List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
@@ -63,7 +63,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                 JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
                 jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
                 jocConfigurationFilter.setName(dbItemIamIdentityService.getIdentityServiceName());
-                jocConfigurationFilter.setObjectType(IdentityServiceTypes.OPENID_CONNECT.value());
+                jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC.value());
                 List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
                 if (listOfJocConfigurations.size() == 1) {
                     DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
@@ -74,6 +74,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                     identityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
                     identityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
                     identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
+                    identityProvider.setIamOidcLogoutUrl(getProperty(properties.getOidc().getIamOidcLogoutUrl(), ""));
                 }
                 identityProviders.getIdentityServiceItems().add(identityProvider);
             }

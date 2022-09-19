@@ -16,7 +16,7 @@ public enum IdentityServiceTypes {
     KEYCLOAK_JOC("KEYCLOAK-JOC"),
     LDAP("LDAP"),
     LDAP_JOC("LDAP-JOC"),
-    OPENID_CONNECT("OPENID-CONNECT"),
+    OIDC("OIDC"),
     JOC("JOC");
     private final String value;
     private final static Map<String, IdentityServiceTypes> CONSTANTS = new HashMap<String, IdentityServiceTypes>();
