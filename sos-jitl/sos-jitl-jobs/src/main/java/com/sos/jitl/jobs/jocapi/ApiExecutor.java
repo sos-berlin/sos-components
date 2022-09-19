@@ -229,46 +229,46 @@ public class ApiExecutor {
         }
 
         client = new SOSRestApiClient();
+        setBasicAuthorizationIfExists(config);
         logDebug("initiate REST api client");
         if (jocUri.toLowerCase().startsWith("https:")) {
             applySSLContextCredentials(client);
-        } else {
-            String csFile = null;
-            String csKeyFile = null;
-            String csPwd = null;
-            try {
-                csFile = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_FILE);
-            } catch (Exception e) {
-                logDebug(e.getMessage());
-            }
-            try {
-                csKeyFile = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_KEYFILE);
-            } catch (Exception e) {
-                logDebug(e.getMessage());
-            }
-            try {
-                csPwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD);
-            } catch (Exception e) {
-                logDebug(e.getMessage());
-            }
-            String username = "";
-            String pwd = "";
-            if (csFile != null && !csFile.isEmpty()) {
-                SOSKeePassResolver resolver = new SOSKeePassResolver(csFile, csKeyFile, csPwd);
-                username = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME));
-                pwd = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD));
-            } else {
-                username = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME);
-                pwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD);
-            }
-            if ((username == null || username.isEmpty()) && (pwd == null || pwd.isEmpty())) {
-                throw new SOSMissingDataException("no username and password configured in private.conf");
-            } else {
-                String basicAuth = Base64.getMimeEncoder().encodeToString((username + ":" + pwd).getBytes());
-                client.setBasicAuthorization(basicAuth);
-            }
         }
-
+    }
+    
+    private void setBasicAuthorizationIfExists(Config config) throws SOSKeePassDatabaseException, SOSMissingDataException {
+        String csFile = null;
+        String csKeyFile = null;
+        String csPwd = null;
+        try {
+            csFile = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_FILE);
+        } catch (Exception e) {
+            logDebug(e.getMessage());
+        }
+        try {
+            csKeyFile = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_KEYFILE);
+        } catch (Exception e) {
+            logDebug(e.getMessage());
+        }
+        try {
+            csPwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD);
+        } catch (Exception e) {
+            logDebug(e.getMessage());
+        }
+        String username = "";
+        String pwd = "";
+        if (csFile != null && !csFile.isEmpty()) {
+            SOSKeePassResolver resolver = new SOSKeePassResolver(csFile, csKeyFile, csPwd);
+            username = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME));
+            pwd = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD));
+        } else {
+            username = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME);
+            pwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD);
+        }
+        if (!username.isEmpty() && ! !pwd.isEmpty()) {
+            String basicAuth = Base64.getMimeEncoder().encodeToString((username + ":" + pwd).getBytes());
+            client.setBasicAuthorization(basicAuth);
+        }
     }
 
     private void closeClient() {
@@ -287,9 +287,7 @@ public class ApiExecutor {
         Path agentConfDir = Paths.get(agentConfDirPath);
         // set default com.typesafe.config.Config
         Config defaultConfig = ConfigFactory.load();
-        /*
-         * set initial properties - js7.config-directory
-         */
+        // set initial properties - js7.config-directory
         Properties props = new Properties();
         props.setProperty(PRIVATE_CONF_JS7_PARAM_CONFDIR, agentConfDir.toString());
         Path privatFolderPath = agentConfDir.resolve(PRIVATE_FOLDER_NAME);
@@ -348,7 +346,8 @@ public class ApiExecutor {
         }
     }
 
-    private void handleExitCode(SOSRestApiClient client) throws SOSAuthenticationFailedException, SOSConnectionRefusedException, SOSException {
+    private void handleExitCode(SOSRestApiClient client) throws SOSAuthenticationFailedException, SOSConnectionRefusedException,
+            SOSException {
         if (client.statusCode() >= 500) {
             throw new SOSConnectionRefusedException();
         }
