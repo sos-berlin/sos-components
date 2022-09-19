@@ -201,22 +201,7 @@ public class SOSOpenIdHandler {
         return accessToken;
     }
 
-    public void logout() throws SocketException, SOSException {
-        String originalLogoutUrl = webserviceCredentials.getOriginalLogoutUrl();
-        String logoutUrl = webserviceCredentials.getLogoutUrl();
-        URI requestUri = URI.create(webserviceCredentials.getLogoutUrl());
-
-        if (originalLogoutUrl.equals(logoutUrl)) {
-            Map<String, String> body = new HashMap<String, String>();
-            body.put("client_id", webserviceCredentials.getClientId());
-            body.put("client_secret", webserviceCredentials.getClientSecret());
-            body.put("refresh_token", webserviceCredentials.getRefreshToken());
-            getFormResponse(true, requestUri, body, webserviceCredentials.getAccessToken());
-        } else {
-            getFormResponse(false, requestUri, null, null);
-        }
-
-    }
+ 
 
     public String decodeIdToken() throws SocketException, SOSException {
 

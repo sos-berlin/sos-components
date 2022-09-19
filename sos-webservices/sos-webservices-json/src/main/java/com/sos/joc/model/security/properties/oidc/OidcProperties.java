@@ -22,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "iamOidcName",
     "iamOidcClientSecret",
     "iamOidcTokenVerificationUrl",
-    "iamOidcLogoutUrl",
     "iamOidcProfileInformationUrl",
     "iamOidcSessionRenewalUrl",
     "iamOidcCertificateUrl",
@@ -79,14 +78,6 @@ public class OidcProperties {
      */
     @JsonProperty("iamOidcTokenVerificationUrl")
     private String iamOidcTokenVerificationUrl;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("iamOidcLogoutUrl")
-    private String iamOidcLogoutUrl;
     /**
      * string without < and >
      * <p>
@@ -204,7 +195,6 @@ public class OidcProperties {
      * @param iamOidcTokenVerificationUrl
      * @param iamOidcSessionRenewalUrl
      * @param iamOidcClientId
-     * @param iamOidcLogoutUrl
      * @param iamOidcJwtUrlField
      * @param iamOidcJwtPublicKeyField
      * @param iamOidcProfileInformationUrl
@@ -221,14 +211,13 @@ public class OidcProperties {
      * @param iamOidcJwtAlgorithmField
      * @param iamOidcCertificateUrl
      */
-    public OidcProperties(String iamOidcAuthenticationUrl, String iamOidcClientId, String iamOidcName, String iamOidcClientSecret, String iamOidcTokenVerificationUrl, String iamOidcLogoutUrl, String iamOidcProfileInformationUrl, String iamOidcSessionRenewalUrl, String iamOidcCertificateUrl, String iamOidcCertificateIssuer, String iamOidcCertificateExpirationDate, String iamOidcExpiresInField, String iamOidcIsJwtToken, String iamOidcJwtEmailField, String iamOidcJwtClientIdField, String iamOidcJwtUrlField, String iamOidcJwtAlgorithmField, String iamOidcJwtPublicKeyField, String iamOidcJwtExpirationField) {
+    public OidcProperties(String iamOidcAuthenticationUrl, String iamOidcClientId, String iamOidcName, String iamOidcClientSecret, String iamOidcTokenVerificationUrl, String iamOidcProfileInformationUrl, String iamOidcSessionRenewalUrl, String iamOidcCertificateUrl, String iamOidcCertificateIssuer, String iamOidcCertificateExpirationDate, String iamOidcExpiresInField, String iamOidcIsJwtToken, String iamOidcJwtEmailField, String iamOidcJwtClientIdField, String iamOidcJwtUrlField, String iamOidcJwtAlgorithmField, String iamOidcJwtPublicKeyField, String iamOidcJwtExpirationField) {
         super();
         this.iamOidcAuthenticationUrl = iamOidcAuthenticationUrl;
         this.iamOidcClientId = iamOidcClientId;
         this.iamOidcName = iamOidcName;
         this.iamOidcClientSecret = iamOidcClientSecret;
         this.iamOidcTokenVerificationUrl = iamOidcTokenVerificationUrl;
-        this.iamOidcLogoutUrl = iamOidcLogoutUrl;
         this.iamOidcProfileInformationUrl = iamOidcProfileInformationUrl;
         this.iamOidcSessionRenewalUrl = iamOidcSessionRenewalUrl;
         this.iamOidcCertificateUrl = iamOidcCertificateUrl;
@@ -352,28 +341,6 @@ public class OidcProperties {
     @JsonProperty("iamOidcTokenVerificationUrl")
     public void setIamOidcTokenVerificationUrl(String iamOidcTokenVerificationUrl) {
         this.iamOidcTokenVerificationUrl = iamOidcTokenVerificationUrl;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("iamOidcLogoutUrl")
-    public String getIamOidcLogoutUrl() {
-        return iamOidcLogoutUrl;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("iamOidcLogoutUrl")
-    public void setIamOidcLogoutUrl(String iamOidcLogoutUrl) {
-        this.iamOidcLogoutUrl = iamOidcLogoutUrl;
     }
 
     /**
@@ -664,12 +631,12 @@ public class OidcProperties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcClientId", iamOidcClientId).append("iamOidcName", iamOidcName).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcTokenVerificationUrl", iamOidcTokenVerificationUrl).append("iamOidcLogoutUrl", iamOidcLogoutUrl).append("iamOidcProfileInformationUrl", iamOidcProfileInformationUrl).append("iamOidcSessionRenewalUrl", iamOidcSessionRenewalUrl).append("iamOidcCertificateUrl", iamOidcCertificateUrl).append("iamOidcCertificateIssuer", iamOidcCertificateIssuer).append("iamOidcCertificateExpirationDate", iamOidcCertificateExpirationDate).append("iamOidcExpiresInField", iamOidcExpiresInField).append("iamOidcIsJwtToken", iamOidcIsJwtToken).append("iamOidcJwtEmailField", iamOidcJwtEmailField).append("iamOidcJwtClientIdField", iamOidcJwtClientIdField).append("iamOidcJwtUrlField", iamOidcJwtUrlField).append("iamOidcJwtAlgorithmField", iamOidcJwtAlgorithmField).append("iamOidcJwtPublicKeyField", iamOidcJwtPublicKeyField).append("iamOidcJwtExpirationField", iamOidcJwtExpirationField).toString();
+        return new ToStringBuilder(this).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcClientId", iamOidcClientId).append("iamOidcName", iamOidcName).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcTokenVerificationUrl", iamOidcTokenVerificationUrl).append("iamOidcProfileInformationUrl", iamOidcProfileInformationUrl).append("iamOidcSessionRenewalUrl", iamOidcSessionRenewalUrl).append("iamOidcCertificateUrl", iamOidcCertificateUrl).append("iamOidcCertificateIssuer", iamOidcCertificateIssuer).append("iamOidcCertificateExpirationDate", iamOidcCertificateExpirationDate).append("iamOidcExpiresInField", iamOidcExpiresInField).append("iamOidcIsJwtToken", iamOidcIsJwtToken).append("iamOidcJwtEmailField", iamOidcJwtEmailField).append("iamOidcJwtClientIdField", iamOidcJwtClientIdField).append("iamOidcJwtUrlField", iamOidcJwtUrlField).append("iamOidcJwtAlgorithmField", iamOidcJwtAlgorithmField).append("iamOidcJwtPublicKeyField", iamOidcJwtPublicKeyField).append("iamOidcJwtExpirationField", iamOidcJwtExpirationField).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamOidcTokenVerificationUrl).append(iamOidcSessionRenewalUrl).append(iamOidcClientId).append(iamOidcLogoutUrl).append(iamOidcJwtUrlField).append(iamOidcJwtPublicKeyField).append(iamOidcProfileInformationUrl).append(iamOidcCertificateIssuer).append(iamOidcCertificateExpirationDate).append(iamOidcJwtClientIdField).append(iamOidcClientSecret).append(iamOidcJwtExpirationField).append(iamOidcAuthenticationUrl).append(iamOidcExpiresInField).append(iamOidcName).append(iamOidcJwtEmailField).append(iamOidcIsJwtToken).append(iamOidcJwtAlgorithmField).append(iamOidcCertificateUrl).toHashCode();
+        return new HashCodeBuilder().append(iamOidcTokenVerificationUrl).append(iamOidcSessionRenewalUrl).append(iamOidcClientId).append(iamOidcJwtUrlField).append(iamOidcJwtPublicKeyField).append(iamOidcProfileInformationUrl).append(iamOidcCertificateIssuer).append(iamOidcCertificateExpirationDate).append(iamOidcJwtClientIdField).append(iamOidcClientSecret).append(iamOidcJwtExpirationField).append(iamOidcAuthenticationUrl).append(iamOidcExpiresInField).append(iamOidcName).append(iamOidcJwtEmailField).append(iamOidcIsJwtToken).append(iamOidcJwtAlgorithmField).append(iamOidcCertificateUrl).toHashCode();
     }
 
     @Override
@@ -681,7 +648,7 @@ public class OidcProperties {
             return false;
         }
         OidcProperties rhs = ((OidcProperties) other);
-        return new EqualsBuilder().append(iamOidcTokenVerificationUrl, rhs.iamOidcTokenVerificationUrl).append(iamOidcSessionRenewalUrl, rhs.iamOidcSessionRenewalUrl).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcLogoutUrl, rhs.iamOidcLogoutUrl).append(iamOidcJwtUrlField, rhs.iamOidcJwtUrlField).append(iamOidcJwtPublicKeyField, rhs.iamOidcJwtPublicKeyField).append(iamOidcProfileInformationUrl, rhs.iamOidcProfileInformationUrl).append(iamOidcCertificateIssuer, rhs.iamOidcCertificateIssuer).append(iamOidcCertificateExpirationDate, rhs.iamOidcCertificateExpirationDate).append(iamOidcJwtClientIdField, rhs.iamOidcJwtClientIdField).append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(iamOidcJwtExpirationField, rhs.iamOidcJwtExpirationField).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcExpiresInField, rhs.iamOidcExpiresInField).append(iamOidcName, rhs.iamOidcName).append(iamOidcJwtEmailField, rhs.iamOidcJwtEmailField).append(iamOidcIsJwtToken, rhs.iamOidcIsJwtToken).append(iamOidcJwtAlgorithmField, rhs.iamOidcJwtAlgorithmField).append(iamOidcCertificateUrl, rhs.iamOidcCertificateUrl).isEquals();
+        return new EqualsBuilder().append(iamOidcTokenVerificationUrl, rhs.iamOidcTokenVerificationUrl).append(iamOidcSessionRenewalUrl, rhs.iamOidcSessionRenewalUrl).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcJwtUrlField, rhs.iamOidcJwtUrlField).append(iamOidcJwtPublicKeyField, rhs.iamOidcJwtPublicKeyField).append(iamOidcProfileInformationUrl, rhs.iamOidcProfileInformationUrl).append(iamOidcCertificateIssuer, rhs.iamOidcCertificateIssuer).append(iamOidcCertificateExpirationDate, rhs.iamOidcCertificateExpirationDate).append(iamOidcJwtClientIdField, rhs.iamOidcJwtClientIdField).append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(iamOidcJwtExpirationField, rhs.iamOidcJwtExpirationField).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcExpiresInField, rhs.iamOidcExpiresInField).append(iamOidcName, rhs.iamOidcName).append(iamOidcJwtEmailField, rhs.iamOidcJwtEmailField).append(iamOidcIsJwtToken, rhs.iamOidcIsJwtToken).append(iamOidcJwtAlgorithmField, rhs.iamOidcJwtAlgorithmField).append(iamOidcCertificateUrl, rhs.iamOidcCertificateUrl).isEquals();
     }
 
 }

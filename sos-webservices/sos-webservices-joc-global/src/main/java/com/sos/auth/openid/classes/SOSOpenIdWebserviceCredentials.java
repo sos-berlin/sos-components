@@ -30,7 +30,6 @@ public class SOSOpenIdWebserviceCredentials {
     private String clientId;
     private String providerName;
     private String tokenVerificationUrl;
-    private String logoutUrl;
     private String profileInformationUrl;
     private String sessionRenewalUrl;
     private String certificateUrl;
@@ -73,12 +72,10 @@ public class SOSOpenIdWebserviceCredentials {
         return clientId;
     }
 
-    
     public String getRefreshToken() {
         return refreshToken;
     }
 
-    
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
     }
@@ -99,16 +96,6 @@ public class SOSOpenIdWebserviceCredentials {
 
     public String getOriginalTokenVerificationUrl() {
         return tokenVerificationUrl;
-    }
-
-    public String getLogoutUrl() {
-        String s = logoutUrl.replaceAll("<access_token>", accessToken);
-        s = s.replaceAll("<id_token>", idToken);
-        return s;
-    }
-
-    public String getOriginalLogoutUrl() {
-        return logoutUrl;
     }
 
     public String getProfileInformationUrl() {
@@ -215,10 +202,6 @@ public class SOSOpenIdWebserviceCredentials {
 
                 if (tokenVerificationUrl == null) {
                     tokenVerificationUrl = getProperty(properties.getOidc().getIamOidcTokenVerificationUrl(), "");
-                }
-
-                if (logoutUrl == null) {
-                    logoutUrl = getProperty(properties.getOidc().getIamOidcLogoutUrl(), "");
                 }
 
                 if (profileInformationUrl == null) {

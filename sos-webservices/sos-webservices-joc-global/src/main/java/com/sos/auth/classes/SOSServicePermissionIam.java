@@ -239,24 +239,6 @@ public class SOSServicePermissionIam {
         String account = "";
         String comment = "";
         if (currentAccount != null) {
-         /*   if (currentAccount.getIdentityServices() != null && currentAccount.getIdentityServices()
-                    .getIdentyServiceType() == IdentityServiceTypes.OPENID_CONNECT) {
-                SOSIdentityService identityService = new SOSIdentityService(currentAccount.getIdentityServices().getIdentityServiceName(),
-                        currentAccount.getIdentityServices().getIdentyServiceType());
-                SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
-                webserviceCredentials.setValuesFromProfile(identityService);
-                webserviceCredentials.setAccount(currentAccount.getAccountname());
-                webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
-                webserviceCredentials.setRefreshToken(currentAccount.getSosLoginParameters().getRefreshToken());
-
-                SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
-                try {
-                    sosOpenIdHandler.logout();
-                } catch (SocketException | SOSException e) {
-                    LOGGER.error("", e);
-                }
-
-            }*/
 
             account = currentAccount.getAccountname();
 
