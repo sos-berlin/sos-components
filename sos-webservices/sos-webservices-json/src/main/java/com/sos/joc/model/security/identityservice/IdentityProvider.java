@@ -21,7 +21,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "iamOidcClientId",
     "iamOidcClientSecret",
     "iamOidcName",
-    "iamOidcAuthenticationUrl"
+    "iamOidcAuthenticationUrl",
+    "iamOidcLogoutUrl"
 })
 public class IdentityProvider {
 
@@ -65,6 +66,14 @@ public class IdentityProvider {
      */
     @JsonProperty("iamOidcAuthenticationUrl")
     private String iamOidcAuthenticationUrl;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamOidcLogoutUrl")
+    private String iamOidcLogoutUrl;
 
     /**
      * No args constructor for use in serialization
@@ -78,16 +87,18 @@ public class IdentityProvider {
      * @param iamOidcClientSecret
      * @param identityServiceName
      * @param iamOidcClientId
+     * @param iamOidcLogoutUrl
      * @param iamOidcAuthenticationUrl
      * @param iamOidcName
      */
-    public IdentityProvider(String identityServiceName, String iamOidcClientId, String iamOidcClientSecret, String iamOidcName, String iamOidcAuthenticationUrl) {
+    public IdentityProvider(String identityServiceName, String iamOidcClientId, String iamOidcClientSecret, String iamOidcName, String iamOidcAuthenticationUrl, String iamOidcLogoutUrl) {
         super();
         this.identityServiceName = identityServiceName;
         this.iamOidcClientId = iamOidcClientId;
         this.iamOidcClientSecret = iamOidcClientSecret;
         this.iamOidcName = iamOidcName;
         this.iamOidcAuthenticationUrl = iamOidcAuthenticationUrl;
+        this.iamOidcLogoutUrl = iamOidcLogoutUrl;
     }
 
     /**
@@ -200,14 +211,36 @@ public class IdentityProvider {
         this.iamOidcAuthenticationUrl = iamOidcAuthenticationUrl;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamOidcLogoutUrl")
+    public String getIamOidcLogoutUrl() {
+        return iamOidcLogoutUrl;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamOidcLogoutUrl")
+    public void setIamOidcLogoutUrl(String iamOidcLogoutUrl) {
+        this.iamOidcLogoutUrl = iamOidcLogoutUrl;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("iamOidcClientId", iamOidcClientId).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcName", iamOidcName).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("iamOidcClientId", iamOidcClientId).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcName", iamOidcName).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcLogoutUrl", iamOidcLogoutUrl).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamOidcClientSecret).append(identityServiceName).append(iamOidcClientId).append(iamOidcAuthenticationUrl).append(iamOidcName).toHashCode();
+        return new HashCodeBuilder().append(iamOidcClientSecret).append(identityServiceName).append(iamOidcClientId).append(iamOidcLogoutUrl).append(iamOidcAuthenticationUrl).append(iamOidcName).toHashCode();
     }
 
     @Override
@@ -219,7 +252,7 @@ public class IdentityProvider {
             return false;
         }
         IdentityProvider rhs = ((IdentityProvider) other);
-        return new EqualsBuilder().append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(identityServiceName, rhs.identityServiceName).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).isEquals();
+        return new EqualsBuilder().append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(identityServiceName, rhs.identityServiceName).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcLogoutUrl, rhs.iamOidcLogoutUrl).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).isEquals();
     }
 
 }

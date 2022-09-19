@@ -239,7 +239,7 @@ public class SOSServicePermissionIam {
         String account = "";
         String comment = "";
         if (currentAccount != null) {
-            if (currentAccount.getIdentityServices() != null && currentAccount.getIdentityServices()
+         /*   if (currentAccount.getIdentityServices() != null && currentAccount.getIdentityServices()
                     .getIdentyServiceType() == IdentityServiceTypes.OPENID_CONNECT) {
                 SOSIdentityService identityService = new SOSIdentityService(currentAccount.getIdentityServices().getIdentityServiceName(),
                         currentAccount.getIdentityServices().getIdentyServiceType());
@@ -247,15 +247,16 @@ public class SOSServicePermissionIam {
                 webserviceCredentials.setValuesFromProfile(identityService);
                 webserviceCredentials.setAccount(currentAccount.getAccountname());
                 webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
+                webserviceCredentials.setRefreshToken(currentAccount.getSosLoginParameters().getRefreshToken());
 
                 SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
                 try {
-                    sosOpenIdHandler.logout(currentAccount.getSosLoginParameters().getAccessToken());
+                    sosOpenIdHandler.logout();
                 } catch (SocketException | SOSException e) {
                     LOGGER.error("", e);
                 }
 
-            }
+            }*/
 
             account = currentAccount.getAccountname();
 
@@ -466,7 +467,7 @@ public class SOSServicePermissionIam {
                 sosLogin = new SOSInternAuthLogin();
                 LOGGER.debug("Login with idendity service sosintern");
                 break;
-            case OPENID_CONNECT:
+            case OIDC:
                 sosLogin = new SOSOpenIdLogin();
                 LOGGER.debug("Login with idendity service openid_connect");
                 break;
@@ -611,7 +612,7 @@ public class SOSServicePermissionIam {
                     currentAccount.initFolders();
 
                     for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
-                        if (!dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OPENID_CONNECT.value())) {
+                        if (!dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OIDC.value())) {
                             msg = createAccount(currentAccount, password, dbItemIamIdentityService);
                             if (msg.isEmpty()) {
                                 SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(

@@ -307,7 +307,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.VAULT_JOC_ACTIVE);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.KEYCLOAK);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.KEYCLOAK_JOC);
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.OPENID_CONNECT);
+            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.OIDC);
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_READ);
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);

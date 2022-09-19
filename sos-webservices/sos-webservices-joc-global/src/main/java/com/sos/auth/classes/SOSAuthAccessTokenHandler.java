@@ -72,7 +72,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
                 if (currentAccount.isAuthenticated()) {
                     switch (currentAccount.getIdentityServices().getIdentyServiceType()) {
 
-                    case OPENID_CONNECT:
+                    case OIDC:
                         if (currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken() != null) {
                             LOGGER.debug(SOSString.toString(currentAccount.getCurrentSubject().getSession().getSOSOpenIdAccountAccessToken()));
 
