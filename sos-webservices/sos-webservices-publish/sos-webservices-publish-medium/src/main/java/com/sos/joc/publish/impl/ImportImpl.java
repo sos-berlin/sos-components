@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -76,7 +77,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         } catch (Exception e) {}
         ImportFilter filter = new ImportFilter();
         filter.setAuditLog(auditLog);
-        filter.setTargetFolder(targetFolder);
+        filter.setTargetFolder(!"/".equals(targetFolder) ? targetFolder : null);
         filter.setOverwrite(overwrite);
         filter.setPrefix(prefix);
         filter.setSuffix(suffix);
@@ -138,40 +139,25 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             List<DBItemInventoryConfiguration> storedConfigurations = new ArrayList<DBItemInventoryConfiguration>();
             if (!configurations.isEmpty()) {
                 if (filter.getOverwrite()) {
+                    Stream<ConfigurationObject> cfgStream = configurations.stream();
                     if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
-                    	// filter according to folder permissions on target folder
-                    	filteredConfigurations = configurations.stream().peek(item -> item.setPath(filter.getTargetFolder() + item.getPath()))
-                    			.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
-                    	if (!filteredConfigurations.isEmpty()) {
-                            Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = filteredConfigurations.stream()
-                                    .collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
-                            for (ConfigurationType type : importOrder) {
-                                List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
-                                if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
-                                    for (ConfigurationObject configuration : configurationObjectsByType) {
-                                        storedConfigurations.add(dbLayer.saveOrUpdateInventoryConfiguration(
-                                                configuration, account, auditLogId, filter.getOverwrite(), agentNames));
-                                    }
+                        cfgStream = cfgStream.peek(item -> item.setPath(filter.getTargetFolder() + item.getPath()));
+                        // filter according to folder permissions on target folder
+                    }
+                    filteredConfigurations = cfgStream.filter(configuration 
+                            -> canAdd(configuration.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
+                    if (!filteredConfigurations.isEmpty()) {
+                        Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = filteredConfigurations.stream()
+                                .collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
+                        for (ConfigurationType type : importOrder) {
+                            List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
+                            if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
+                                for (ConfigurationObject configuration : configurationObjectsByType) {
+                                    storedConfigurations.add(dbLayer.saveOrUpdateInventoryConfiguration(
+                                            configuration, account, auditLogId, filter.getOverwrite(), agentNames));
                                 }
                             }
-                    	}
-                    } else {
-                		// filter according to folder permissions
-                    	filteredConfigurations = configurations.stream().filter(configuration 
-                    			-> canAdd(configuration.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
-                    	if (!filteredConfigurations.isEmpty()) {
-                            Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = filteredConfigurations.stream()
-                                    .collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
-                            for (ConfigurationType type : importOrder) {
-                                List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
-                                if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
-                                    for (ConfigurationObject configuration : configurationObjectsByType) {
-                                        storedConfigurations.add(dbLayer.saveOrUpdateInventoryConfiguration(
-                                                configuration, account, auditLogId, filter.getOverwrite(), agentNames));
-                                    }
-                                }
-                            }
-                    	}
+                        }
                     }
             	} else {
                     if ((filter.getSuffix() != null && !filter.getSuffix().isEmpty()) ||
