@@ -2,6 +2,7 @@ package com.sos.joc2;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
@@ -17,6 +18,17 @@ import org.glassfish.jersey.server.ServerProperties;
 public class Main {
     // Base URI the Grizzly HTTP server will listen on
     private static final String BASE_URI = "http://localhost:8090/rest/";
+    // init parameters
+    private static final Map<String, String> initParams = Collections.unmodifiableMap(new HashMap<String, String>(3) {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put(ServerProperties.PROVIDER_PACKAGES, "com.sos.joc, com.sos.webservices.order, com.sos.auth.classes");
+            put(ServerProperties.PROVIDER_CLASSNAMES, "org.glassfish.jersey.media.multipart.MultiPartFeature");
+            put(ServerProperties.WADL_FEATURE_DISABLE, "true");
+        }
+    });
     
 
     /**
@@ -26,10 +38,6 @@ public class Main {
      */
     public static HttpServer startServer() throws IOException {
         
-        Map<String, String> initParams = new HashMap<>(2);
-        initParams.put(ServerProperties.PROVIDER_PACKAGES, "com.sos.joc, com.sos.webservices.order, com.sos.auth.classes");
-        initParams.put(ServerProperties.PROVIDER_CLASSNAMES, "org.glassfish.jersey.media.multipart.MultiPartFeature");
-
         // create and start a new instance of grizzly http server
         // exposing the Jersey application at BASE_URI
         
