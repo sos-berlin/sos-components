@@ -3,8 +3,8 @@ package com.sos.auth.openid.classes;
 public class SOSOpenIdAccountAccessToken {
 
     private String accessToken;
-    private int expiresIn;
-    private int refreshExpiresIn;
+    private long expiresIn;
+    private long refreshExpiresIn;
     private String refreshToken;
 
     public String getAccessToken() {
@@ -15,15 +15,15 @@ public class SOSOpenIdAccountAccessToken {
         this.accessToken = accessToken;
     }
 
-    public int getExpiresIn() {
+    public long getExpiresIn() {
         return expiresIn;
     }
 
-    public void setExpiresIn(int expiresIn) {
+    public void setExpiresIn(long expiresIn) {
         this.expiresIn = expiresIn;
     }
 
-    public int getRefreshExpiresIn() {
+    public long getRefreshExpiresIn() {
         return refreshExpiresIn;
     }
 

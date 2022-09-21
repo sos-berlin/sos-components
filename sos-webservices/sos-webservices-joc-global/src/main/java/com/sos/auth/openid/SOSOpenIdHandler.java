@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.SocketException;
 import java.net.URI;
+import java.security.KeyStore;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,12 +26,22 @@ import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
 import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+
+import js7.base.time.Timezone;
 
 public class SOSOpenIdHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSOpenIdHandler.class);
+
+    private static final String EXPIRATION_FIELD = "exp";
+    private static final String EXPIRES_IN_FIELD = "expires_in";
+    private static final String ISS_FIELD = "iss";
+    private static final String AUD_FIELD = "aud";
+    private static final String ALG_FIELD = "alg";
+    private static final String EMAIL_FIELD = "email";
     private SOSOpenIdWebserviceCredentials webserviceCredentials;
     private static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
     private static final String CONTENT_TYPE = "Content-Type";
@@ -37,9 +49,12 @@ public class SOSOpenIdHandler {
     private static final String AUTHORIZATION = "Authorization";
     private JsonObject jsonHeader;
     private JsonObject jsonPayload;
+    private KeyStore truststore = null;
+    private URI tokenEndpoint;
 
-    public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials) {
+    public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials, KeyStore truststore) {
         this.webserviceCredentials = webserviceCredentials;
+        this.truststore = truststore;
     }
 
     private String getFormResponse(Boolean post, URI requestUri, Map<String, String> body, String xAccessToken) throws SOSException, SocketException {
@@ -48,6 +63,10 @@ public class SOSOpenIdHandler {
         restApiClient.addHeader(CONTENT_TYPE, APPLICATION_X_WWW_FORM_URLENCODED);
         if (!(xAccessToken == null || xAccessToken.isEmpty())) {
             restApiClient.addHeader(AUTHORIZATION, BEARER + " " + xAccessToken);
+        }
+
+        if (truststore != null) {
+            restApiClient.setSSLContext(null, null, truststore);
         }
 
         if (post && body != null) {
@@ -117,68 +136,62 @@ public class SOSOpenIdHandler {
     public SOSOpenIdAccountAccessToken login() throws SOSException, JsonParseException, JsonMappingException, IOException {
 
         SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = new SOSOpenIdAccountAccessToken();
-        // webserviceCredentials.setIdToken("eyJhbGciOiJSUzI1NiIsImtpZCI6ImNhYWJmNjkwODE5MTYxNmE5MDhhMTM4OTIyMGE5NzViM2MwZmJjYTEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI2Mzg1MzAzNTA3OC02Y201dHY1MXBwMzRzdmoyYTZjZDk0MjFmamhsMTgxMy5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsImF1ZCI6IjYzODUzMDM1MDc4LTZjbTV0djUxcHAzNHN2ajJhNmNkOTQyMWZqaGwxODEzLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTA2MTk5MDAwNTEwNzAxOTA1NzYyIiwiZW1haWwiOiJ1d2Uucmlzc2VAc29zLWJlcmxpbi5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiYXRfaGFzaCI6IkVKLWVhOWhLYXpaZEtRV196ak83elEiLCJub25jZSI6IlpsOWxlVFJPV0Y5aFlYcDBWMmxsT0dFMVFXZFJMVVJ1YlhkSGRVMVJRVVJvUXpkaVNVTnBkWGhRYlRGSSIsIm5hbWUiOiJVd2UgUmlzc2UiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUl0YnZta3RHOVktNDRoTDR5Q0J1N3M1V2ZDZEl6NFZMLXRidVZkSE11MTU9czk2LWMiLCJnaXZlbl9uYW1lIjoiVXdlIiwiZmFtaWx5X25hbWUiOiJSaXNzZSIsImxvY2FsZSI6ImRlIiwiaWF0IjoxNjYzMTUyMzQ1LCJleHAiOjE2NjMxNTU5NDUsImp0aSI6IjUzYWZjMWNhZWE5ZjVlYmEwMTQ4NmE2NWFhOTczOTc5ZWRhOTMxOGEifQ.lbzh3LfnFT6I1jYKutnRKoavNCoYLadLkVEsh3T4NkyIlNONdLl1d-xPTNCdeeE9dQHD6YgbbrcQ7BQZhKf9JD4ipv5qrLSPg9FmmVMCjCfMLeshyxaSu2tgNIcIRFWan8YZ2P-geRIC_VZXA-coEmIGrV61sdylTygUD2QG-frh2E54zqR36ySWQ8dUl0YxqVOiEM4C9iZHGsaWL-45g15CpzZcrJmC6XYGfa2tu7xVNM7RdoUFwxa4eAGs04E77xGRnLHfDrEY_zNEHzoAALyLDmPUycTMK5ptnfocCyIh4p7tBQxIn4Dzx5DIXciFTeGTOiN0C2navGK66Mlw2g");
 
         String accountFromUrl = "";
-        Integer expiresIn = 0;
+        Long expiresIn = 0L;
         String account = null;
         String alg = null;
         String aud = null;
         String iss = null;
-        String tokenVerificationUrl = webserviceCredentials.getTokenVerificationUrl();
 
-        if ((tokenVerificationUrl != null) && !tokenVerificationUrl.isEmpty()) {
-            URI requestUri = URI.create(tokenVerificationUrl);
-            String tokenVerificationResponse = "";
-            if (!tokenVerificationUrl.equals(webserviceCredentials.getOriginalTokenVerificationUrl())) {
-                tokenVerificationResponse = getFormResponse(false, requestUri, null, null);
-            } else {
+        URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + "/.well-known/openid-configuration");
+        String configurationResponse = "";
+        configurationResponse = getFormResponse(false, requestUri, null, webserviceCredentials.getAccessToken());
+        JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(configurationResponse));
+        JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
+        String userinfoEndpoint = jsonConfigurationResponse.getString("userinfo_endpoint", "");
+        tokenEndpoint = URI.create(jsonConfigurationResponse.getString("token_endpoint", ""));
 
-                Map<String, String> body = new HashMap<String, String>();
-                body.put("username", webserviceCredentials.getAccount());
-                body.put("client_id", webserviceCredentials.getClientId());
-                body.put("client_secret", webserviceCredentials.getClientSecret());
-                tokenVerificationResponse = getFormResponse(true, requestUri, body, webserviceCredentials.getAccessToken());
-            }
-            JsonReader jsonReaderTokenVerificationResponse = Json.createReader(new StringReader(tokenVerificationResponse));
-            JsonObject jsonTokenVerificationResponse = jsonReaderTokenVerificationResponse.readObject();
-            accountFromUrl = jsonTokenVerificationResponse.getString(webserviceCredentials.getJwtEmailField(), "");
-            expiresIn = Integer.valueOf(jsonTokenVerificationResponse.getString(webserviceCredentials.getExpiresInField(), "0"));
+        if ((userinfoEndpoint != null) && !userinfoEndpoint.isEmpty()) {
+            requestUri = URI.create(userinfoEndpoint);
+            String userInfoResponse = "";
 
+            Map<String, String> body = new HashMap<String, String>();
+            body.put("client_id", webserviceCredentials.getClientId());
+            body.put("client_secret", webserviceCredentials.getClientSecret());
+            userInfoResponse = getFormResponse(true, requestUri, body, webserviceCredentials.getAccessToken());
+
+            JsonReader jsonReaderUserInfoResponse = Json.createReader(new StringReader(userInfoResponse));
+            JsonObject jsonUserInfoResponse = jsonReaderUserInfoResponse.readObject();
+            accountFromUrl = jsonUserInfoResponse.getString(EMAIL_FIELD, "");
         }
 
-        if (webserviceCredentials.getIsJwtToken()) {
+        if (jsonHeader == null) {
+            this.decodeIdToken();
+        }
 
-            if (jsonHeader == null) {
-                this.decodeIdToken();
+        try {
+            if (expiresIn.equals(0L)) {
+                Long expiration = Long.valueOf(jsonPayload.getInt(EXPIRATION_FIELD, 0));
+                expiresIn = expiration- Instant.now().getEpochSecond();
             }
+            alg = jsonHeader.getString(ALG_FIELD, "");
+            aud = jsonPayload.getString(AUD_FIELD, ""); // clientid
+            iss = jsonPayload.getString(ISS_FIELD, ""); // url
+            account = jsonPayload.getString(EMAIL_FIELD, "");
 
-            try {
-                if (expiresIn.equals(0)) {
-                    Long expiration = Long.valueOf(jsonPayload.getInt(webserviceCredentials.getJwtExpirationField(), 0));
-                    Long e = expiration - Instant.now().toEpochMilli();
-                    expiresIn = e.intValue();
-                }
-                alg = jsonHeader.getString(webserviceCredentials.getJwtAlgorithmField(), "");
-                account = jsonPayload.getString(webserviceCredentials.getJwtEmailField(), "");
-                aud = jsonPayload.getString(webserviceCredentials.getJwtClientIdField(), ""); // clientid
-                iss = jsonPayload.getString(webserviceCredentials.getJwtUrlField(), ""); // url
-                account = jsonPayload.getString(webserviceCredentials.getJwtEmailField(), "");
+            sosOpenIdAccountAccessToken.setExpiresIn(expiresIn);
 
-                sosOpenIdAccountAccessToken.setExpiresIn(Integer.valueOf(expiresIn));
-
-            } catch (Exception e) {
-                LOGGER.warn(String.format("Could not determine expiration"));
-            }
+        } catch (Exception e) {
+            LOGGER.warn(String.format("Could not determine expiration"));
         }
 
         boolean valid = true;
-        if (webserviceCredentials.getIsJwtToken()) {
-            valid = valid && webserviceCredentials.getClientId().equals(aud);
-            valid = valid && webserviceCredentials.getAuthenticationUrl().equals(iss);
-            valid = valid && webserviceCredentials.getAccount().equals(account);
-        }
-        if (valid && (webserviceCredentials.getTokenVerificationUrl() != null) && !webserviceCredentials.getTokenVerificationUrl().isEmpty()) {
+        valid = valid && webserviceCredentials.getClientId().equals(aud);
+        valid = valid && webserviceCredentials.getAuthenticationUrl().equals(iss);
+        valid = valid && webserviceCredentials.getAccount().equals(account);
+
+        if (valid && (userinfoEndpoint != null) && !userinfoEndpoint.isEmpty()) {
             valid = valid && webserviceCredentials.getAccount().equals(accountFromUrl);
         }
 
@@ -197,57 +210,58 @@ public class SOSOpenIdHandler {
         return valid;
     }
 
-    public SOSOpenIdAccountAccessToken renewAccountAccess(SOSOpenIdAccountAccessToken accessToken) {
-        return accessToken;
-    }
+    public SOSOpenIdAccountAccessToken renewAccountAccess(SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken) {
+        if (sosOpenIdAccountAccessToken != null) {
 
- 
+            Map<String, String> body = new HashMap<String, String>();
+            body.put("client_id", webserviceCredentials.getClientId());
+            body.put("grant_type", "refresh_token");
+            body.put("client_secret", webserviceCredentials.getClientSecret());
+            body.put("refresh_token", sosOpenIdAccountAccessToken.getRefreshToken());
+
+            String response;
+            try {
+                response = getFormResponse(true, tokenEndpoint, body, webserviceCredentials.getAccessToken());
+
+                JsonReader jsonReaderTokenResponse = Json.createReader(new StringReader(response));
+                JsonObject jsonTokenResponse = jsonReaderTokenResponse.readObject();
+                String newAccessToken = jsonTokenResponse.getString("access_token", "");
+
+                LOGGER.debug("new access_token:" + newAccessToken);
+
+                sosOpenIdAccountAccessToken.setAccessToken(newAccessToken);
+
+                LOGGER.debug(SOSString.toString(sosOpenIdAccountAccessToken));
+            } catch (SocketException | SOSException e) {
+                LOGGER.error("", e);
+            }
+        }
+        return sosOpenIdAccountAccessToken;
+    }
 
     public String decodeIdToken() throws SocketException, SOSException {
 
-        if (webserviceCredentials.getIsJwtToken()) {
-            JsonReader jsonReaderHeader = null;
-            JsonReader jsonReaderPayload = null;
+        JsonReader jsonReaderHeader = null;
+        JsonReader jsonReaderPayload = null;
 
-            try {
-                String[] accessTokenParts = webserviceCredentials.getIdToken().split("\\.");
-                Base64.Decoder decoder = Base64.getUrlDecoder();
+        try {
+            String[] accessTokenParts = webserviceCredentials.getIdToken().split("\\.");
+            Base64.Decoder decoder = Base64.getUrlDecoder();
 
-                String header = new String(decoder.decode(accessTokenParts[0]));
-                String payload = new String(decoder.decode(accessTokenParts[1]));
+            String header = new String(decoder.decode(accessTokenParts[0]));
+            String payload = new String(decoder.decode(accessTokenParts[1]));
 
-                jsonReaderHeader = Json.createReader(new StringReader(header));
-                jsonReaderPayload = Json.createReader(new StringReader(payload));
-                jsonHeader = jsonReaderHeader.readObject();
-                jsonPayload = jsonReaderPayload.readObject();
-                return jsonPayload.getString(webserviceCredentials.getJwtEmailField(), "");
+            jsonReaderHeader = Json.createReader(new StringReader(header));
+            jsonReaderPayload = Json.createReader(new StringReader(payload));
+            jsonHeader = jsonReaderHeader.readObject();
+            jsonPayload = jsonReaderPayload.readObject();
+            return jsonPayload.getString(EMAIL_FIELD, "");
 
-            } catch (Exception e) {
-                LOGGER.warn(String.format("Could not decode jwt id-token"));
-            } finally {
-                jsonReaderHeader.close();
-                jsonReaderPayload.close();
-            }
-        } else {
-            String tokenVerificationUrl = webserviceCredentials.getTokenVerificationUrl();
-
-            if ((tokenVerificationUrl != null) && !tokenVerificationUrl.isEmpty()) {
-                URI requestUri = URI.create(tokenVerificationUrl);
-                String tokenVerificationResponse = "";
-                if (!tokenVerificationUrl.equals(webserviceCredentials.getOriginalTokenVerificationUrl())) {
-                    tokenVerificationResponse = getFormResponse(false, requestUri, null, null);
-                } else {
-                    Map<String, String> body = new HashMap<String, String>();
-                    body.put("username", webserviceCredentials.getAccount());
-                    body.put("client_id", webserviceCredentials.getClientId());
-                    body.put("client_secret", webserviceCredentials.getClientSecret());
-                    tokenVerificationResponse = getFormResponse(true, requestUri, body, webserviceCredentials.getAccessToken());
-                }
-                JsonReader jsonReaderTokenVerificationResponse = Json.createReader(new StringReader(tokenVerificationResponse));
-                JsonObject jsonTokenVerificationResponse = jsonReaderTokenVerificationResponse.readObject();
-                return jsonTokenVerificationResponse.getString(webserviceCredentials.getJwtEmailField(), "");
-            }
-
+        } catch (Exception e) {
+            LOGGER.warn(String.format("Could not decode jwt id-token"));
+        } finally {
+            jsonReaderHeader.close();
+            jsonReaderPayload.close();
         }
 
         return "";

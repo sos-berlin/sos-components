@@ -18,6 +18,8 @@ public class SOSAuthCurrentAccountAnswer {
     private boolean isAuthenticated;
     private boolean isForcePasswordChange;
     private String accessToken;
+    private String refreshToken;
+
     private String message;
     private Long sessionTimeout;
     private boolean enableTouch = true;
@@ -75,6 +77,15 @@ public class SOSAuthCurrentAccountAnswer {
     @XmlElement
     public void setHasRole(boolean hasRole) {
         this.hasRole = hasRole;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    @XmlElement
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
     public boolean getHasRole() {
@@ -171,15 +182,13 @@ public class SOSAuthCurrentAccountAnswer {
         return identityService;
     }
 
-    @XmlElement   
+    @XmlElement
     public boolean isForcePasswordChange() {
         return isForcePasswordChange;
     }
 
-    
     public void setIsForcePasswordChange(boolean isForcePasswordChange) {
         this.isForcePasswordChange = isForcePasswordChange;
     }
- 
 
 }

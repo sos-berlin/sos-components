@@ -44,8 +44,8 @@ public class SOSKeycloakHandler {
     private KeyStore truststore = null;
     private SOSKeycloakWebserviceCredentials webserviceCredentials;
 
-    public SOSKeycloakHandler(SOSKeycloakWebserviceCredentials webserviceCredentials, KeyStore trustStore) {
-        this.truststore = trustStore;
+    public SOSKeycloakHandler(SOSKeycloakWebserviceCredentials webserviceCredentials, KeyStore truststore) {
+        this.truststore = truststore;
         this.webserviceCredentials = webserviceCredentials;
     }
 

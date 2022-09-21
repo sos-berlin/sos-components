@@ -1,6 +1,8 @@
 package com.sos.auth.keycloak.classes;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -35,17 +37,23 @@ public class SOSKeycloakLogin implements ISOSLogin {
     }
 
     public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
-        KeyStore trustStore = null;
+        KeyStore truststore = null;
 
         try {
             SOSKeycloakWebserviceCredentials webserviceCredentials = new SOSKeycloakWebserviceCredentials();
             webserviceCredentials.setValuesFromProfile(identityService);
 
-            trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+            if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))){
+            truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                    webserviceCredentials.getTruststorePassword());
+            }else {
+                LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
+            }
+            truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
                     webserviceCredentials.getTruststorePassword());
 
             webserviceCredentials.setAccount(currentAccount.getAccountname());
-            SOSKeycloakHandler sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, trustStore);
+            SOSKeycloakHandler sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, truststore);
 
             SOSKeycloakAccountAccessToken sosKeycloakAccountAccessToken = null;
 

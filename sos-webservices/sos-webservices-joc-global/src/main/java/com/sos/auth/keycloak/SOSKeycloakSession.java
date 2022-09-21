@@ -47,16 +47,15 @@ public class SOSKeycloakSession implements ISOSSession {
 
     private void initSession(SOSIdentityService identityService) {
         if (sosKeycloakHandler == null) {
-            KeyStore trustStore = null;
             SOSKeycloakWebserviceCredentials webserviceCredentials = new SOSKeycloakWebserviceCredentials();
             try {
                 webserviceCredentials.setValuesFromProfile(identityService);
 
-                trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                KeyStore truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
                         webserviceCredentials.getTruststorePassword());
 
                 webserviceCredentials.setAccount("");
-                sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, trustStore);
+                sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, truststore);
                 startSession = Instant.now().toEpochMilli();
 
             } catch (Exception e) {

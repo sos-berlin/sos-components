@@ -1,6 +1,8 @@
 package com.sos.auth.openid;
 
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.time.Instant;
 import java.util.HashMap;
@@ -51,9 +53,13 @@ public class SOSOpenIdSession implements ISOSSession {
                 webserviceCredentials.setValuesFromProfile(identityService);
                 webserviceCredentials.setAccount(currentAccount.getAccountname());
                 webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
-
                 webserviceCredentials.setAccount(currentAccount.getAccountname());
-                sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
+                KeyStore truststore = null;
+                if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
+                    truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                            webserviceCredentials.getTruststorePassword());
+                }
+                sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials, truststore);
                 startSession = Instant.now().toEpochMilli();
 
             } catch (Exception e) {

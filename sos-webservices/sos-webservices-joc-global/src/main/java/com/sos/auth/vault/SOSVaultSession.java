@@ -46,16 +46,15 @@ public class SOSVaultSession implements ISOSSession {
 
     private void initSession(SOSIdentityService identityService) {
         if (sosVaultHandler == null) {
-            KeyStore trustStore = null;
             SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
             try {
                 webserviceCredentials.setValuesFromProfile(identityService);
 
-                trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                KeyStore truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
                         webserviceCredentials.getTruststorePassword());
 
                 webserviceCredentials.setAccount("");
-                sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
+                sosVaultHandler = new SOSVaultHandler(webserviceCredentials, truststore);
                 startSession = Instant.now().toEpochMilli();
 
             } catch (Exception e) {

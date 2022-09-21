@@ -74,7 +74,7 @@ public class SOSLoginParameters {
     }
 
     public void setRefreshToken(String refreshToken) {
-        if (refreshToken != null && this.refreshToken != null && this.refreshToken.isEmpty()) {
+        if (refreshToken != null && (this.refreshToken == null || this.refreshToken.isEmpty())) {
             this.refreshToken = refreshToken;
         }
     }

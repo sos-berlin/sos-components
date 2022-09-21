@@ -179,7 +179,7 @@ public class SOSServicePermissionIam {
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
             @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ACCESS-TOKEN") String accessToken,
-            @HeaderParam("X-`REFRESH-TOKEN") String refreshToken, @HeaderParam("X-ID-TOKEN") String idToken, @QueryParam("account") String account,
+            @HeaderParam("X-REFRESH-TOKEN") String refreshToken, @HeaderParam("X-ID-TOKEN") String idToken, @QueryParam("account") String account,
             @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
@@ -263,7 +263,14 @@ public class SOSServicePermissionIam {
         sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
         sosAuthCurrentAccountAnswer.setHasRole(false);
         sosAuthCurrentAccountAnswer.setIsPermitted(false);
-        sosAuthCurrentAccountAnswer.setAccessToken(EMPTY_STRING);
+        if (currentAccount != null && currentAccount.getIdentityServices() != null && currentAccount.getIdentityServices().getIdentyServiceType()
+                .equals(IdentityServiceTypes.OIDC)) {
+            sosAuthCurrentAccountAnswer.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
+            sosAuthCurrentAccountAnswer.setRefreshToken(currentAccount.getSosLoginParameters().getRefreshToken());
+        } else {
+            sosAuthCurrentAccountAnswer.setAccessToken(EMPTY_STRING);
+            sosAuthCurrentAccountAnswer.setRefreshToken(null);
+        }
         if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
             Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(accessToken);
         }

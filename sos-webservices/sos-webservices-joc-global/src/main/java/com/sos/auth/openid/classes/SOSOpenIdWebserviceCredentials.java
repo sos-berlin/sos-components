@@ -1,6 +1,7 @@
 package com.sos.auth.openid.classes;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
@@ -30,19 +32,13 @@ public class SOSOpenIdWebserviceCredentials {
     private String clientId;
     private String providerName;
     private String tokenVerificationUrl;
-    private String profileInformationUrl;
     private String sessionRenewalUrl;
     private String certificateUrl;
     private String certificateIssuer;
     private String certificateExpirationDate;
-    private Boolean isJwtToken;
-    private String jwtEmailField;
-    private String jwtClientIdField;
-    private String jwtUrlField;
-    private String jwtAlgorithmField;
-    private String jwtPublicKeyField;
-    private String jwtExpirationField;
-    private String expiresInField;
+    private String truststorePath = "";
+    private String truststorePassword = "";
+    private KeystoreType truststoreType = null;
 
     public String getAuthenticationUrl() {
         return authenticationUrl;
@@ -72,6 +68,18 @@ public class SOSOpenIdWebserviceCredentials {
         return clientId;
     }
 
+    public String getTruststorePath() {
+        return truststorePath;
+    }
+
+    public String getTruststorePassword() {
+        return truststorePassword;
+    }
+
+    public KeystoreType getTrustStoreType() {
+        return truststoreType;
+    }
+
     public String getRefreshToken() {
         return refreshToken;
     }
@@ -88,20 +96,6 @@ public class SOSOpenIdWebserviceCredentials {
         return providerName;
     }
 
-    public String getTokenVerificationUrl() {
-        String s = tokenVerificationUrl.replaceAll("<access_token>", accessToken);
-        s = s.replaceAll("<id_token>", idToken);
-        return s;
-    }
-
-    public String getOriginalTokenVerificationUrl() {
-        return tokenVerificationUrl;
-    }
-
-    public String getProfileInformationUrl() {
-        return profileInformationUrl;
-    }
-
     public String getSessionRenewalUrl() {
         return sessionRenewalUrl;
     }
@@ -116,38 +110,6 @@ public class SOSOpenIdWebserviceCredentials {
 
     public String getCertificateExpirationDate() {
         return certificateExpirationDate;
-    }
-
-    public Boolean getIsJwtToken() {
-        return isJwtToken;
-    }
-
-    public String getJwtEmailField() {
-        return jwtEmailField;
-    }
-
-    public String getJwtClientIdField() {
-        return jwtClientIdField;
-    }
-
-    public String getJwtUrlField() {
-        return jwtUrlField;
-    }
-
-    public String getJwtAlgorithmField() {
-        return jwtAlgorithmField;
-    }
-
-    public String getJwtPublicKeyField() {
-        return jwtPublicKeyField;
-    }
-
-    public String getJwtExpirationField() {
-        return jwtExpirationField;
-    }
-
-    public String getExpiresInField() {
-        return expiresInField;
     }
 
     private String getProperty(String value, String defaultValue) {
@@ -200,12 +162,47 @@ public class SOSOpenIdWebserviceCredentials {
                     providerName = getProperty(properties.getOidc().getIamOidcName(), "");
                 }
 
-                if (tokenVerificationUrl == null) {
-                    tokenVerificationUrl = getProperty(properties.getOidc().getIamOidcTokenVerificationUrl(), "");
+               
+
+                String truststorePathGui = getProperty(properties.getOidc().getIamOidcTruststorePath(), "");
+                String truststorePassGui = getProperty(properties.getOidc().getIamOidcTruststorePassword(), "");
+                String tTypeGui = getProperty(properties.getOidc().getIamOidcTruststoreType(), "");
+
+                String truststorePathDefault = getProperty(System.getProperty("javax.net.ssl.trustStore"), "");
+                String truststoreTypeDefault = getProperty(System.getProperty("javax.net.ssl.trustStoreType"), "");
+                String truststorePassDefault = getProperty(System.getProperty("javax.net.ssl.trustStorePassword"), "");
+
+                if (!(truststorePathGui + truststorePassGui + tTypeGui).isEmpty()) {
+
+                    if (truststorePath.isEmpty()) {
+                        truststorePath = getProperty(truststorePathGui, truststorePathDefault);
+                    }
+
+                    if (truststorePassword.isEmpty()) {
+                        truststorePassword = getProperty(truststorePassGui, truststorePassDefault);
+                    }
+
+                    if (truststoreType == null) {
+                        truststoreType = KeystoreType.valueOf(getProperty(tTypeGui, truststoreTypeDefault));
+                    }
+                } else {
+
+                    if (truststorePath.isEmpty()) {
+                        truststorePath = Globals.sosCockpitProperties.getProperty("truststore_path", truststorePathDefault);
+                    }
+
+                    if (truststorePassword.isEmpty()) {
+                        truststorePassword = Globals.sosCockpitProperties.getProperty("truststore_password", truststorePassDefault);
+                    }
+
+                    if (truststoreType == null) {
+                        truststoreType = KeystoreType.valueOf(Globals.sosCockpitProperties.getProperty("truststore_type", truststoreTypeDefault));
+                    }
                 }
 
-                if (profileInformationUrl == null) {
-                    profileInformationUrl = getProperty(properties.getOidc().getIamOidcProfileInformationUrl(), "");
+                if (truststorePath != null && !truststorePath.trim().isEmpty()) {
+                    Path p = Globals.sosCockpitProperties.resolvePath(truststorePath.trim());
+                    truststorePath = p.toString();
                 }
 
                 if (sessionRenewalUrl == null) {
@@ -222,37 +219,6 @@ public class SOSOpenIdWebserviceCredentials {
 
                 if (certificateExpirationDate == null) {
                     certificateExpirationDate = getProperty(properties.getOidc().getIamOidcCertificateExpirationDate(), "");
-                }
-
-                if (isJwtToken == null) {
-                    isJwtToken = true;// getProperty(properties.getOidc().g(), "");
-                }
-
-                if (jwtEmailField == null) {
-                    jwtEmailField = getProperty(properties.getOidc().getIamOidcJwtEmailField(), "email");
-                }
-
-                if (jwtClientIdField == null) {
-                    jwtClientIdField = getProperty(properties.getOidc().getIamOidcJwtClientIdField(), "aud");
-                }
-
-                if (jwtUrlField == null) {
-                    jwtUrlField = getProperty(properties.getOidc().getIamOidcJwtUrlField(), "iss");
-                }
-
-                if (jwtAlgorithmField == null) {
-                    jwtAlgorithmField = getProperty(properties.getOidc().getIamOidcJwtAlgorithmField(), "alg");
-                }
-
-                if (jwtPublicKeyField == null) {
-                    jwtPublicKeyField = getProperty(properties.getOidc().getIamOidcJwtPublicKeyField(), "");
-                }
-
-                if (jwtExpirationField == null) {
-                    jwtExpirationField = getProperty(properties.getOidc().getIamOidcJwtExpirationField(), "exp");
-                }
-                if (expiresInField == null) {
-                    expiresInField = getProperty(properties.getOidc().getIamOidcExpiresInField(), "expires_in");
                 }
 
             }

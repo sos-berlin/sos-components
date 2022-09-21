@@ -73,13 +73,11 @@ public class SOSAuthAccessTokenHandler extends Thread {
                     switch (currentAccount.getIdentityServices().getIdentyServiceType()) {
 
                     case OIDC:
-                        if (currentAccount.getCurrentSubject().getSession().getSOSKeycloakAccountAccessToken() != null) {
+                        if (currentAccount.getCurrentSubject().getSession().getSOSOpenIdAccountAccessToken() != null) {
                             LOGGER.debug(SOSString.toString(currentAccount.getCurrentSubject().getSession().getSOSOpenIdAccountAccessToken()));
 
                             long r1 = currentAccount.getCurrentSubject().getSession().getSOSOpenIdAccountAccessToken().getExpiresIn();
-
                             long leaseDuration = r1 * 1000;
-
                             long n = currentAccount.getCurrentSubject().getSession().getStartSession() + leaseDuration - TIME_GAP_SECONDS * 1000;
 
                             if (next == null || nextTime > n) {

@@ -1,6 +1,8 @@
 package com.sos.auth.vault.classes;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -35,17 +37,21 @@ public class SOSVaultLogin implements ISOSLogin {
     }
 
     public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
-        KeyStore trustStore = null;
+        KeyStore truststore = null;
 
         try {
             SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
             webserviceCredentials.setValuesFromProfile(identityService);
 
-            trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+            if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))){
+            truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
                     webserviceCredentials.getTruststorePassword());
+            }else {
+                LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
+            }
 
             webserviceCredentials.setAccount(currentAccount.getAccountname());
-            SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
+            SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, truststore);
 
             SOSVaultAccountAccessToken sosVaultAccountAccessToken = null;
 

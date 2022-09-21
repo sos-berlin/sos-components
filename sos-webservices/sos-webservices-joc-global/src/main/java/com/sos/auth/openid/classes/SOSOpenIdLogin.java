@@ -1,6 +1,9 @@
 package com.sos.auth.openid.classes;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyStore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +15,7 @@ import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.commons.exception.SOSException;
+import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.exceptions.JocException;
 
 public class SOSOpenIdLogin implements ISOSLogin {
@@ -30,7 +34,7 @@ public class SOSOpenIdLogin implements ISOSLogin {
     public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
 
         try {
-
+            KeyStore truststore = null;
             SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = null;
             if (currentAccount.getSosLoginParameters().getAccessToken() != null) {
 
@@ -38,8 +42,14 @@ public class SOSOpenIdLogin implements ISOSLogin {
                 webserviceCredentials.setValuesFromProfile(identityService);
                 webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
                 webserviceCredentials.setIdToken(currentAccount.getSosLoginParameters().getIdToken());
+                if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))){
+                truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                        webserviceCredentials.getTruststorePassword());
+                }else {
+                    LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
+                }
 
-                SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
+                SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials, truststore);
                 String accountName = sosOpenIdHandler.decodeIdToken();
                 currentAccount.setAccountName(accountName);
                 webserviceCredentials.setAccount(accountName);
