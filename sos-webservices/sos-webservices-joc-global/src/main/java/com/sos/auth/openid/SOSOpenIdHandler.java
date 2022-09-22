@@ -150,6 +150,13 @@ public class SOSOpenIdHandler {
         JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(configurationResponse));
         JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
         String userinfoEndpoint = jsonConfigurationResponse.getString("userinfo_endpoint", "");
+        String tokenVerificationEndpoint = "";
+        if (webserviceCredentials.getTokenVerificationUrl().isEmpty()) {
+            tokenVerificationEndpoint = jsonConfigurationResponse.getString("introspection_endpoint", "");
+        } else {
+            tokenVerificationEndpoint = webserviceCredentials.getTokenVerificationUrl();
+        }
+
         tokenEndpoint = URI.create(jsonConfigurationResponse.getString("token_endpoint", ""));
 
         if ((userinfoEndpoint != null) && !userinfoEndpoint.isEmpty()) {
@@ -166,6 +173,22 @@ public class SOSOpenIdHandler {
             accountFromUrl = jsonUserInfoResponse.getString(EMAIL_FIELD, "");
         }
 
+        boolean tokenIsActive = true;
+        if ((tokenVerificationEndpoint != null) && !tokenVerificationEndpoint.isEmpty()) {
+            requestUri = URI.create(tokenVerificationEndpoint);
+            String tokenVerificationResponse = "";
+
+            Map<String, String> body = new HashMap<String, String>();
+            body.put("client_id", webserviceCredentials.getClientId());
+            body.put("client_secret", webserviceCredentials.getClientSecret());
+            body.put("token", webserviceCredentials.getIdToken());
+            tokenVerificationResponse = getFormResponse(true, requestUri, body, webserviceCredentials.getAccessToken());
+
+            JsonReader jsonReaderTokenVerificationResponse = Json.createReader(new StringReader(tokenVerificationResponse));
+            JsonObject jsonTokenVerificationResponse = jsonReaderTokenVerificationResponse.readObject();
+            tokenIsActive = jsonTokenVerificationResponse.getBoolean("active", false);
+        }
+
         if (jsonHeader == null) {
             this.decodeIdToken();
         }
@@ -173,7 +196,7 @@ public class SOSOpenIdHandler {
         try {
             if (expiresIn.equals(0L)) {
                 Long expiration = Long.valueOf(jsonPayload.getInt(EXPIRATION_FIELD, 0));
-                expiresIn = expiration- Instant.now().getEpochSecond();
+                expiresIn = expiration - Instant.now().getEpochSecond();
             }
             alg = jsonHeader.getString(ALG_FIELD, "");
             aud = jsonPayload.getString(AUD_FIELD, ""); // clientid
@@ -187,6 +210,7 @@ public class SOSOpenIdHandler {
         }
 
         boolean valid = true;
+        valid = valid && tokenIsActive;
         valid = valid && webserviceCredentials.getClientId().equals(aud);
         valid = valid && webserviceCredentials.getAuthenticationUrl().equals(iss);
         valid = valid && webserviceCredentials.getAccount().equals(account);

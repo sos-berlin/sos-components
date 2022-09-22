@@ -55,7 +55,7 @@ public class SOSOpenIdSession implements ISOSSession {
                 webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
                 webserviceCredentials.setAccount(currentAccount.getAccountname());
                 KeyStore truststore = null;
-                if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
+                if (webserviceCredentials.getTruststorePath() != null && !webserviceCredentials.getTruststorePath().isEmpty() && Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
                     truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
                             webserviceCredentials.getTruststorePassword());
                 }

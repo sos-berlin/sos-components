@@ -42,13 +42,14 @@ public class SOSOpenIdLogin implements ISOSLogin {
                 webserviceCredentials.setValuesFromProfile(identityService);
                 webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
                 webserviceCredentials.setIdToken(currentAccount.getSosLoginParameters().getIdToken());
-                if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))){
-                truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
-                        webserviceCredentials.getTruststorePassword());
-                }else {
-                    LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
+                if (webserviceCredentials.getTruststorePath() != null & !webserviceCredentials.getTruststorePath().isEmpty()) {
+                    if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
+                        truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                                webserviceCredentials.getTruststorePassword());
+                    } else{
+                        LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
+                    }
                 }
-
                 SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials, truststore);
                 String accountName = sosOpenIdHandler.decodeIdToken();
                 currentAccount.setAccountName(accountName);

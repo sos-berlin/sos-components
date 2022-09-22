@@ -32,6 +32,7 @@ public class SOSOpenIdWebserviceCredentials {
     private String clientId;
     private String providerName;
     private String tokenVerificationUrl;
+
     private String sessionRenewalUrl;
     private String certificateUrl;
     private String certificateIssuer;
@@ -66,6 +67,10 @@ public class SOSOpenIdWebserviceCredentials {
 
     public String getClientId() {
         return clientId;
+    }
+    
+    public String getTokenVerificationUrl() {
+        return tokenVerificationUrl;
     }
 
     public String getTruststorePath() {
@@ -162,14 +167,12 @@ public class SOSOpenIdWebserviceCredentials {
                     providerName = getProperty(properties.getOidc().getIamOidcName(), "");
                 }
 
-               
-
                 String truststorePathGui = getProperty(properties.getOidc().getIamOidcTruststorePath(), "");
                 String truststorePassGui = getProperty(properties.getOidc().getIamOidcTruststorePassword(), "");
                 String tTypeGui = getProperty(properties.getOidc().getIamOidcTruststoreType(), "");
 
                 String truststorePathDefault = getProperty(System.getProperty("javax.net.ssl.trustStore"), "");
-                String truststoreTypeDefault = getProperty(System.getProperty("javax.net.ssl.trustStoreType"), "");
+                String truststoreTypeDefault = getProperty(System.getProperty("javax.net.ssl.trustStoreType"), "PKCS12");
                 String truststorePassDefault = getProperty(System.getProperty("javax.net.ssl.trustStorePassword"), "");
 
                 if (!(truststorePathGui + truststorePassGui + tTypeGui).isEmpty()) {
@@ -186,17 +189,18 @@ public class SOSOpenIdWebserviceCredentials {
                         truststoreType = KeystoreType.valueOf(getProperty(tTypeGui, truststoreTypeDefault));
                     }
                 } else {
+                    if (!truststorePath.equals("-")) {
+                        if (truststorePath.isEmpty()) {
+                            truststorePath = Globals.sosCockpitProperties.getProperty("truststore_path", truststorePathDefault);
+                        }
 
-                    if (truststorePath.isEmpty()) {
-                        truststorePath = Globals.sosCockpitProperties.getProperty("truststore_path", truststorePathDefault);
-                    }
+                        if (truststorePassword.isEmpty()) {
+                            truststorePassword = Globals.sosCockpitProperties.getProperty("truststore_password", truststorePassDefault);
+                        }
 
-                    if (truststorePassword.isEmpty()) {
-                        truststorePassword = Globals.sosCockpitProperties.getProperty("truststore_password", truststorePassDefault);
-                    }
-
-                    if (truststoreType == null) {
-                        truststoreType = KeystoreType.valueOf(Globals.sosCockpitProperties.getProperty("truststore_type", truststoreTypeDefault));
+                        if (truststoreType == null) {
+                            truststoreType = KeystoreType.valueOf(Globals.sosCockpitProperties.getProperty("truststore_type", truststoreTypeDefault));
+                        }
                     }
                 }
 
@@ -207,6 +211,10 @@ public class SOSOpenIdWebserviceCredentials {
 
                 if (sessionRenewalUrl == null) {
                     sessionRenewalUrl = getProperty(properties.getOidc().getIamOidcSessionRenewalUrl(), "");
+                }
+
+                if (tokenVerificationUrl == null) {
+                    tokenVerificationUrl = getProperty(properties.getOidc().getIamOidcTokenVerificationUrl(), "");
                 }
 
                 if (certificateUrl == null) {

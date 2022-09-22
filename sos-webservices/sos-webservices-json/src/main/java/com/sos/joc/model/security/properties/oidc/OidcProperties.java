@@ -22,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "iamOidcName",
     "iamOidcClientSecret",
     "iamOidcSessionRenewalUrl",
+    "iamOidcTokenVerificationUrl",
     "iamOidcCertificateUrl",
     "iamOidcCertificateIssuer",
     "iamOidcCertificateExpirationDate",
@@ -71,6 +72,14 @@ public class OidcProperties {
      */
     @JsonProperty("iamOidcSessionRenewalUrl")
     private String iamOidcSessionRenewalUrl;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamOidcTokenVerificationUrl")
+    private String iamOidcTokenVerificationUrl;
     /**
      * string without < and >
      * <p>
@@ -131,6 +140,7 @@ public class OidcProperties {
      * 
      * @param iamOidcClientSecret
      * @param iamOidcSessionRenewalUrl
+     * @param iamOidcTokenVerificationUrl
      * @param iamOidcClientId
      * @param iamOidcAuthenticationUrl
      * @param iamOidcName
@@ -141,13 +151,14 @@ public class OidcProperties {
      * @param iamOidcTruststoreType
      * @param iamOidcCertificateUrl
      */
-    public OidcProperties(String iamOidcAuthenticationUrl, String iamOidcClientId, String iamOidcName, String iamOidcClientSecret, String iamOidcSessionRenewalUrl, String iamOidcCertificateUrl, String iamOidcCertificateIssuer, String iamOidcCertificateExpirationDate, String iamOidcTruststorePath, String iamOidcTruststorePassword, String iamOidcTruststoreType) {
+    public OidcProperties(String iamOidcAuthenticationUrl, String iamOidcClientId, String iamOidcName, String iamOidcClientSecret, String iamOidcSessionRenewalUrl, String iamOidcTokenVerificationUrl, String iamOidcCertificateUrl, String iamOidcCertificateIssuer, String iamOidcCertificateExpirationDate, String iamOidcTruststorePath, String iamOidcTruststorePassword, String iamOidcTruststoreType) {
         super();
         this.iamOidcAuthenticationUrl = iamOidcAuthenticationUrl;
         this.iamOidcClientId = iamOidcClientId;
         this.iamOidcName = iamOidcName;
         this.iamOidcClientSecret = iamOidcClientSecret;
         this.iamOidcSessionRenewalUrl = iamOidcSessionRenewalUrl;
+        this.iamOidcTokenVerificationUrl = iamOidcTokenVerificationUrl;
         this.iamOidcCertificateUrl = iamOidcCertificateUrl;
         this.iamOidcCertificateIssuer = iamOidcCertificateIssuer;
         this.iamOidcCertificateExpirationDate = iamOidcCertificateExpirationDate;
@@ -264,6 +275,28 @@ public class OidcProperties {
     @JsonProperty("iamOidcSessionRenewalUrl")
     public void setIamOidcSessionRenewalUrl(String iamOidcSessionRenewalUrl) {
         this.iamOidcSessionRenewalUrl = iamOidcSessionRenewalUrl;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamOidcTokenVerificationUrl")
+    public String getIamOidcTokenVerificationUrl() {
+        return iamOidcTokenVerificationUrl;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamOidcTokenVerificationUrl")
+    public void setIamOidcTokenVerificationUrl(String iamOidcTokenVerificationUrl) {
+        this.iamOidcTokenVerificationUrl = iamOidcTokenVerificationUrl;
     }
 
     /**
@@ -400,12 +433,12 @@ public class OidcProperties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcClientId", iamOidcClientId).append("iamOidcName", iamOidcName).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcSessionRenewalUrl", iamOidcSessionRenewalUrl).append("iamOidcCertificateUrl", iamOidcCertificateUrl).append("iamOidcCertificateIssuer", iamOidcCertificateIssuer).append("iamOidcCertificateExpirationDate", iamOidcCertificateExpirationDate).append("iamOidcTruststorePath", iamOidcTruststorePath).append("iamOidcTruststorePassword", iamOidcTruststorePassword).append("iamOidcTruststoreType", iamOidcTruststoreType).toString();
+        return new ToStringBuilder(this).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcClientId", iamOidcClientId).append("iamOidcName", iamOidcName).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcSessionRenewalUrl", iamOidcSessionRenewalUrl).append("iamOidcTokenVerificationUrl", iamOidcTokenVerificationUrl).append("iamOidcCertificateUrl", iamOidcCertificateUrl).append("iamOidcCertificateIssuer", iamOidcCertificateIssuer).append("iamOidcCertificateExpirationDate", iamOidcCertificateExpirationDate).append("iamOidcTruststorePath", iamOidcTruststorePath).append("iamOidcTruststorePassword", iamOidcTruststorePassword).append("iamOidcTruststoreType", iamOidcTruststoreType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamOidcClientSecret).append(iamOidcSessionRenewalUrl).append(iamOidcClientId).append(iamOidcAuthenticationUrl).append(iamOidcName).append(iamOidcCertificateIssuer).append(iamOidcTruststorePath).append(iamOidcCertificateExpirationDate).append(iamOidcTruststorePassword).append(iamOidcTruststoreType).append(iamOidcCertificateUrl).toHashCode();
+        return new HashCodeBuilder().append(iamOidcSessionRenewalUrl).append(iamOidcTokenVerificationUrl).append(iamOidcClientId).append(iamOidcCertificateIssuer).append(iamOidcCertificateExpirationDate).append(iamOidcTruststorePassword).append(iamOidcClientSecret).append(iamOidcAuthenticationUrl).append(iamOidcName).append(iamOidcTruststorePath).append(iamOidcTruststoreType).append(iamOidcCertificateUrl).toHashCode();
     }
 
     @Override
@@ -417,7 +450,7 @@ public class OidcProperties {
             return false;
         }
         OidcProperties rhs = ((OidcProperties) other);
-        return new EqualsBuilder().append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(iamOidcSessionRenewalUrl, rhs.iamOidcSessionRenewalUrl).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).append(iamOidcCertificateIssuer, rhs.iamOidcCertificateIssuer).append(iamOidcTruststorePath, rhs.iamOidcTruststorePath).append(iamOidcCertificateExpirationDate, rhs.iamOidcCertificateExpirationDate).append(iamOidcTruststorePassword, rhs.iamOidcTruststorePassword).append(iamOidcTruststoreType, rhs.iamOidcTruststoreType).append(iamOidcCertificateUrl, rhs.iamOidcCertificateUrl).isEquals();
+        return new EqualsBuilder().append(iamOidcSessionRenewalUrl, rhs.iamOidcSessionRenewalUrl).append(iamOidcTokenVerificationUrl, rhs.iamOidcTokenVerificationUrl).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcCertificateIssuer, rhs.iamOidcCertificateIssuer).append(iamOidcCertificateExpirationDate, rhs.iamOidcCertificateExpirationDate).append(iamOidcTruststorePassword, rhs.iamOidcTruststorePassword).append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).append(iamOidcTruststorePath, rhs.iamOidcTruststorePath).append(iamOidcTruststoreType, rhs.iamOidcTruststoreType).append(iamOidcCertificateUrl, rhs.iamOidcCertificateUrl).isEquals();
     }
 
 }

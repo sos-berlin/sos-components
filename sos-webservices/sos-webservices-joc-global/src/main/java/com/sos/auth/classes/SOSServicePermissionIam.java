@@ -178,9 +178,9 @@ public class SOSServicePermissionIam {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
-            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ACCESS-TOKEN") String accessToken,
-            @HeaderParam("X-REFRESH-TOKEN") String refreshToken, @HeaderParam("X-ID-TOKEN") String idToken, @QueryParam("account") String account,
-            @QueryParam("pwd") String pwd) {
+            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-IDENTIY-SERVICE") String identiyService,
+            @HeaderParam("X-ACCESS-TOKEN") String accessToken, @HeaderParam("X-REFRESH-TOKEN") String refreshToken,
+            @HeaderParam("X-ID-TOKEN") String idToken, @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -210,7 +210,11 @@ public class SOSServicePermissionIam {
             sosLoginParameters.setIdToken(idToken);
             sosLoginParameters.setBasicAuthorization(basicAuthorization);
             sosLoginParameters.setClientCertCN(clientCertCN);
-            sosLoginParameters.setIdentityService(identityService);
+            if (identityService == null || identityService.isEmpty()) {
+                sosLoginParameters.setIdentityService(identiyService);
+            } else {
+                sosLoginParameters.setIdentityService(identityService);
+            }
             sosLoginParameters.setRequest(request);
             sosLoginParameters.setAccount(account);
 
@@ -467,7 +471,6 @@ public class SOSServicePermissionIam {
 
             sosLogin.setIdentityService(new SOSIdentityService(dbItemIdentityService));
             sosLogin.login(currentAccount, password);
-            // sosLogin.login(currentAccount.getAccountname(), password, currentAccount.getHttpServletRequest());
 
             ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
 
