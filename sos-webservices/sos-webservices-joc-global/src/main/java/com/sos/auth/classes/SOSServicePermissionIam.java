@@ -603,21 +603,25 @@ public class SOSServicePermissionIam {
 
                     currentAccount.initFolders();
 
-                    for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
-                        if (!dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OIDC.value())) {
-                            msg = createAccount(currentAccount, password, dbItemIamIdentityService);
-                            if (msg.isEmpty()) {
-                                SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
-                                        dbItemIamIdentityService));
-                                currentAccount.setRoles(securityConfiguration);
-                                if (currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
-                                    setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
+                    if (currentAccount.getSosLoginParameters().getIdentityService() == null || currentAccount.getSosLoginParameters()
+                            .getIdentityService().isEmpty()) {
+
+                        for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
+                            if (!dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OIDC.value())) {
+                                msg = createAccount(currentAccount, password, dbItemIamIdentityService);
+                                if (msg.isEmpty()) {
+                                    SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
+                                            dbItemIamIdentityService));
+                                    currentAccount.setRoles(securityConfiguration);
+                                    if (currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
+                                        setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
+                                    }
+                                    addFolder(currentAccount);
+                                } else {
+                                    authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
+                                    LOGGER.info("Login with required Identity Service " + dbItemIamIdentityService.getIdentityServiceName()
+                                            + " failed." + msg);
                                 }
-                                addFolder(currentAccount);
-                            } else {
-                                authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
-                                LOGGER.info("Login with required Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed."
-                                        + msg);
                             }
                         }
                     }
