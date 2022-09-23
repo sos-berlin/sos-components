@@ -16,15 +16,14 @@ public class SOSAuthCurrentAccountsList {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthCurrentAccountsList.class);
     private static final String VALID = "valid";
     private static final String NOT_VALID = "not-valid";
-    private Map<String, SOSAuthCurrentAccount> currentAccounts;
+    private ConcurrentHashMap<String, SOSAuthCurrentAccount> currentAccounts;
 
-    
-    public Map<String, SOSAuthCurrentAccount> getCurrentAccounts() {
+    public ConcurrentHashMap<String, SOSAuthCurrentAccount> getCurrentAccounts() {
         return currentAccounts;
     }
 
     public SOSAuthCurrentAccountsList() {
-        this.currentAccounts = new ConcurrentHashMap <String, SOSAuthCurrentAccount>();
+        this.currentAccounts = new ConcurrentHashMap<String, SOSAuthCurrentAccount>();
     }
 
     public void addAccount(SOSAuthCurrentAccount account) {
@@ -32,11 +31,17 @@ public class SOSAuthCurrentAccountsList {
     }
 
     public SOSAuthCurrentAccount getAccount(String accessToken) {
-        return this.currentAccounts.get(accessToken);
+        if (this.currentAccounts == null || accessToken == null) {
+            return null;
+        } else {
+            return this.currentAccounts.get(accessToken);
+        }
     }
 
     public void removeAccount(String accessToken) {
-        currentAccounts.remove(accessToken);
+        if (this.currentAccounts == null || accessToken == null) {
+            currentAccounts.remove(accessToken);
+        }
     }
 
     public Set<String> getAccessTokens() {
@@ -104,7 +109,8 @@ public class SOSAuthCurrentAccountsList {
                             sosAuthCurrentAccountAnswer.setAccessToken(NOT_VALID);
                         } else {
                             sosAuthCurrentAccountAnswer.setSessionTimeout(sessionTimeout);
-                            sosAuthCurrentAccountAnswer.setIdentityService(entry.getValue().getIdentityServices().getIdentyServiceType() + ":" + entry.getValue().getIdentityServices().getIdentityServiceName());
+                            sosAuthCurrentAccountAnswer.setIdentityService(entry.getValue().getIdentityServices().getIdentyServiceType() + ":" + entry
+                                    .getValue().getIdentityServices().getIdentityServiceName());
                         }
                     }
                 }
