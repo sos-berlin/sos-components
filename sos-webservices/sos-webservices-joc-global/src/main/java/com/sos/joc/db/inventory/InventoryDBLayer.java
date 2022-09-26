@@ -481,14 +481,15 @@ public class InventoryDBLayer extends DBLayer {
         hql.append(",dh.commitId as dhCommitId");
         hql.append(",dh.version as dhVersion");
         hql.append(",dh.operation as dhOperation");
+        hql.append(",dh.state as dhState");
         hql.append(",dh.deploymentDate as dhDeploymentDate");
         hql.append(",dh.path as dhPath");
         hql.append(",dh.controllerId as dhControllerId");
         hql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
         hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
         hql.append("on ic.id=dh.inventoryConfigurationId ");
-        hql.append("where ic.id in (").append(getNotDeletedConfigurationsHQL(types, folder, recursive, deletedFolders)).append(")");
-        hql.append("and (dh.state = :state or dh.id is null)");
+        hql.append("where ic.id in (").append(getNotDeletedConfigurationsHQL(types, folder, recursive, deletedFolders)).append(") ");
+        //hql.append("and (dh.state = :state or dh.id is null)");
 
         Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString(), InventoryDeployablesTreeFolderItem.class);
         if (types != null && !types.isEmpty()) {
@@ -500,7 +501,7 @@ public class InventoryDBLayer extends DBLayer {
                 query.setParameter("likeFolder", (folder + "/%").replaceAll("//+", "/"));
             }
         }
-        query.setParameter("state", DeploymentState.DEPLOYED.value());
+        //query.setParameter("state", DeploymentState.DEPLOYED.value());
 
         List<InventoryDeployablesTreeFolderItem> result = getSession().getResultList(query);
         if (result != null) {
