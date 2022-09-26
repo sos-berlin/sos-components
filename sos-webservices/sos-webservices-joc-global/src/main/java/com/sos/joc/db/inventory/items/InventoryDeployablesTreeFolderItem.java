@@ -3,6 +3,7 @@ package com.sos.joc.db.inventory.items;
 import java.util.Date;
 
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.model.publish.DeploymentState;
 
 public class InventoryDeployablesTreeFolderItem {
 
@@ -24,6 +25,7 @@ public class InventoryDeployablesTreeFolderItem {
     private String dhCommitId;
     private String dhVersion;
     private Integer dhOperation;
+    private Integer dhState;
     private Date dhDeploymentDate;
     private String dhPath;
     private String dhControllerId;
@@ -49,8 +51,8 @@ public class InventoryDeployablesTreeFolderItem {
             configuration.setCreated(icCreated);
             configuration.setModified(icModified);
         }
-        if (dhId != null) {
-            deployment = new InventoryDeploymentItem(dhId, dhCommitId, dhVersion, dhOperation, dhDeploymentDate, null, dhPath, dhControllerId);
+        if (dhId != null && DeploymentState.DEPLOYED.value().equals(dhState) ) {
+            deployment = new InventoryDeploymentItem(dhId, dhCommitId, dhVersion, dhOperation, dhDeploymentDate, dhPath, dhControllerId);
         }
         return this;
     }
