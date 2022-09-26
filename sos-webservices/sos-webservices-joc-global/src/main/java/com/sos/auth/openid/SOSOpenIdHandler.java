@@ -40,6 +40,8 @@ import com.sos.joc.exceptions.JocException;
 
 public class SOSOpenIdHandler {
 
+    private static final String WELL_KNOWN_OPENID_CONFIGURATION = "/.well-known/openid-configuration";
+
     private static final String INTROSPECTION_ENDPOINT = "introspection_endpoint";
 
     private static final String TOKEN_ENDPOINT = "token_endpoint";
@@ -146,7 +148,7 @@ public class SOSOpenIdHandler {
     }
 
     public void setTokenEndpoint() throws SocketException, SOSException {
-        URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + "/.well-known/openid-configuration");
+        URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + WELL_KNOWN_OPENID_CONFIGURATION);
         String configurationResponse = getFormResponse(false, requestUri, null, webserviceCredentials.getAccessToken());
         JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(configurationResponse));
         JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
@@ -165,7 +167,7 @@ public class SOSOpenIdHandler {
         String aud = null;
         String iss = null;
 
-        URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + "/.well-known/openid-configuration");
+        URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + WELL_KNOWN_OPENID_CONFIGURATION);
         String configurationResponse = "";
         configurationResponse = getFormResponse(false, requestUri, null, webserviceCredentials.getAccessToken());
         JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(configurationResponse));
