@@ -91,7 +91,7 @@
     <jna.version>5.11.0</jna.version>
     <yaml.version>1.31</yaml.version>
     <xml.bind.version>2.3.1</xml.bind.version>
-    
+    <jwt.version>4.0.0</jwt.version>
   </properties>
 
   <build>
@@ -738,6 +738,12 @@
         <artifactId>jna-platform</artifactId>
         <version>${jna.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.auth0</groupId>
+        <artifactId>java-jwt</artifactId>
+        <version>${jwt.version}</version>
+      </dependency>
+      
     </dependencies>
   </dependencyManagement>
   <repositories>
