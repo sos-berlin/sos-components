@@ -2,9 +2,16 @@ package com.sos.auth.openid;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.math.BigInteger;
 import java.net.SocketException;
 import java.net.URI;
+import java.security.KeyFactory;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPublicKeySpec;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -12,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
@@ -22,6 +30,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthAccessTokenHandler;
 import com.sos.auth.classes.SOSAuthHelper;
+import com.sos.auth.openid.classes.SOSJWTVerifier;
 import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
 import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.commons.exception.SOSException;
@@ -34,13 +43,19 @@ import js7.base.time.Timezone;
 
 public class SOSOpenIdHandler {
 
+    private static final String INTROSPECTION_ENDPOINT = "introspection_endpoint";
+
+    private static final String TOKEN_ENDPOINT = "token_endpoint";
+
+    private static final String JWKS_URI_ENDPOINT = "jwks_uri";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSOpenIdHandler.class);
 
     private static final String EXPIRATION_FIELD = "exp";
-    private static final String EXPIRES_IN_FIELD = "expires_in";
     private static final String ISS_FIELD = "iss";
     private static final String AUD_FIELD = "aud";
     private static final String ALG_FIELD = "alg";
+    private static final String KID_FIELD = "kid";
     private static final String EMAIL_FIELD = "email";
     private SOSOpenIdWebserviceCredentials webserviceCredentials;
     private static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
@@ -50,7 +65,7 @@ public class SOSOpenIdHandler {
     private JsonObject jsonHeader;
     private JsonObject jsonPayload;
     private KeyStore truststore = null;
-    private URI tokenEndpoint;
+    private URI tokenEndpointUri;
 
     public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials, KeyStore truststore) {
         this.webserviceCredentials = webserviceCredentials;
@@ -141,6 +156,7 @@ public class SOSOpenIdHandler {
         Long expiresIn = 0L;
         String account = null;
         String alg = null;
+        String kid = null;
         String aud = null;
         String iss = null;
 
@@ -152,12 +168,13 @@ public class SOSOpenIdHandler {
         String userinfoEndpoint = jsonConfigurationResponse.getString("userinfo_endpoint", "");
         String tokenVerificationEndpoint = "";
         if (webserviceCredentials.getTokenVerificationUrl().isEmpty()) {
-            tokenVerificationEndpoint = jsonConfigurationResponse.getString("introspection_endpoint", "");
+            tokenVerificationEndpoint = jsonConfigurationResponse.getString(INTROSPECTION_ENDPOINT, "");
         } else {
             tokenVerificationEndpoint = webserviceCredentials.getTokenVerificationUrl();
         }
 
-        tokenEndpoint = URI.create(jsonConfigurationResponse.getString("token_endpoint", ""));
+        tokenEndpointUri = URI.create(jsonConfigurationResponse.getString(TOKEN_ENDPOINT, ""));
+        String certEndpoit = jsonConfigurationResponse.getString(JWKS_URI_ENDPOINT, "");
 
         if ((userinfoEndpoint != null) && !userinfoEndpoint.isEmpty()) {
             requestUri = URI.create(userinfoEndpoint);
@@ -199,6 +216,7 @@ public class SOSOpenIdHandler {
                 expiresIn = expiration - Instant.now().getEpochSecond();
             }
             alg = jsonHeader.getString(ALG_FIELD, "");
+            kid = jsonHeader.getString(KID_FIELD, "");
             aud = jsonPayload.getString(AUD_FIELD, ""); // clientid
             iss = jsonPayload.getString(ISS_FIELD, ""); // url
             account = jsonPayload.getString(EMAIL_FIELD, "");
@@ -220,6 +238,13 @@ public class SOSOpenIdHandler {
         }
 
         valid = valid && expiresIn > 0;
+        try {
+            RSAPublicKey publicKey = this.getPublicKey(webserviceCredentials, certEndpoit, kid);
+            valid = valid && (SOSJWTVerifier.verify(webserviceCredentials, alg, publicKey).getHeader() != null);
+        } catch (CertificateException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            LOGGER.error("", e);
+            valid = false;
+        }
 
         if (valid) {
             sosOpenIdAccountAccessToken.setAccessToken(webserviceCredentials.getAccessToken());
@@ -234,6 +259,45 @@ public class SOSOpenIdHandler {
         return valid;
     }
 
+    public RSAPublicKey getPublicKey(SOSOpenIdWebserviceCredentials webserviceCredentials, String certEndpoit, String kid)
+            throws NoSuchAlgorithmException, InvalidKeySpecException, SocketException, SOSException {
+
+        URI certEndpointUri = URI.create(certEndpoit);
+
+        String response;
+        response = getFormResponse(false, certEndpointUri, null, null);
+
+        JsonReader jsonReaderCertResponse = Json.createReader(new StringReader(response));
+        JsonObject x = jsonReaderCertResponse.readObject();
+        JsonArray keys = x.getJsonArray("keys");
+
+        int len = keys.size();
+        String eValue = "";
+        String nValue = "";
+        String ktyValue = "";
+
+        for (int j = 0; j < len; j++) {
+            JsonObject json = keys.getJsonObject(j);
+            String k = json.getString("kid");
+            if (k.equals(kid)) {
+                eValue = json.getString("e");
+                nValue = json.getString("n");
+                ktyValue = json.getString("kty");
+            }
+        }
+
+        byte[] nBytes = Base64.getUrlDecoder().decode(nValue);
+        byte[] eBytes = Base64.getUrlDecoder().decode(eValue);
+
+        BigInteger n = new BigInteger(1, nBytes);
+        BigInteger e = new BigInteger(1, eBytes);
+
+        RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(n, e);
+        KeyFactory keyFactory = KeyFactory.getInstance(ktyValue); // ktyValue will be "RSA"
+        RSAPublicKey rsaPublicKey = (RSAPublicKey) keyFactory.generatePublic(publicKeySpec);
+        return rsaPublicKey;
+    }
+
     public SOSOpenIdAccountAccessToken renewAccountAccess(SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken) {
         if (sosOpenIdAccountAccessToken != null) {
 
@@ -245,7 +309,7 @@ public class SOSOpenIdHandler {
 
             String response;
             try {
-                response = getFormResponse(true, tokenEndpoint, body, webserviceCredentials.getAccessToken());
+                response = getFormResponse(true, tokenEndpointUri, body, webserviceCredentials.getAccessToken());
 
                 JsonReader jsonReaderTokenResponse = Json.createReader(new StringReader(response));
                 JsonObject jsonTokenResponse = jsonReaderTokenResponse.readObject();
