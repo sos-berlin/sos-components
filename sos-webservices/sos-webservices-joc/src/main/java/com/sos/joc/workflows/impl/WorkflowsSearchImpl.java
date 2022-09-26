@@ -19,7 +19,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.impl.SearchResourceImpl;
 import com.sos.joc.inventory.resource.ISearchResource;
-import com.sos.joc.model.inventory.search.RequestDeployedSearchFilter;
 import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 import com.sos.joc.model.inventory.search.ResponseSearch;
 import com.sos.joc.model.inventory.search.ResponseSearchItem;
@@ -65,7 +64,7 @@ public class WorkflowsSearchImpl extends JOCResourceImpl implements ISearchResou
                     }
                 }
             }
-
+            
             ResponseSearch answer = new ResponseSearch();
             answer.setResults(SearchResourceImpl.getSearchResult(in, folderPermissions));
             
