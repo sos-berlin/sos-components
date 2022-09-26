@@ -30,7 +30,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
             MDC.put("context", ThreadCtx);
             LOGGER.debug("Try to renew");
             if (nextAccount != null) {
-                LOGGER.info("Renew " + nextAccount.getAccountname());
+                LOGGER.debug("Renew " + nextAccount.getAccountname());
                 boolean valid = false;
                 try {
                     valid = nextAccount.getCurrentSubject().getSession().renew();
@@ -58,7 +58,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
             accessTokenTimer.purge();
         }
         accessTokenTimer = new Timer();
-        LOGGER.info("will renew " + nextAccount.getAccountname() + " in " + next / 1000 + "s");
+        LOGGER.debug("will renew " + nextAccount.getAccountname() + " in " + next / 1000 + "s");
         accessTokenTimer.schedule(new AccessTokenTimerTask(nextAccount), next);
     }
 
@@ -75,20 +75,20 @@ public class SOSAuthAccessTokenHandler extends Thread {
 
                     case OIDC:
                         if (currentAccount.getCurrentSubject().getSession().getSOSOpenIdAccountAccessToken() != null) {
-                            LOGGER.info(SOSString.toString(currentAccount.getCurrentSubject().getSession().getSOSOpenIdAccountAccessToken()));
+                            LOGGER.debug(SOSString.toString(currentAccount.getCurrentSubject().getSession().getSOSOpenIdAccountAccessToken()));
 
                             long r1 = currentAccount.getCurrentSubject().getSession().getSOSOpenIdAccountAccessToken().getExpiresIn();
                             long leaseDuration = r1 * 1000;
                             long n = currentAccount.getCurrentSubject().getSession().getStartSession() + leaseDuration - TIME_GAP_SECONDS * 1000;
 
-                            LOGGER.info("startSession:" + String.valueOf(currentAccount.getCurrentSubject().getSession().getStartSession()));
-                            LOGGER.info("leaseDuration: " + String.valueOf(leaseDuration));
-                            LOGGER.info("n: " + String.valueOf(n));
+                            LOGGER.debug("startSession:" + String.valueOf(currentAccount.getCurrentSubject().getSession().getStartSession()));
+                            LOGGER.debug("leaseDuration: " + String.valueOf(leaseDuration));
+                            LOGGER.debug("n: " + String.valueOf(n));
 
                             if (next == null || nextTime > n) {
                                 nextTime = n;
                                 next = leaseDuration - TIME_GAP_SECONDS * 1000;
-                                LOGGER.info("next:" + String.valueOf(next));
+                                LOGGER.debug("next:" + String.valueOf(next));
                                 nextAccount = currentAccount;
                             }
                         }

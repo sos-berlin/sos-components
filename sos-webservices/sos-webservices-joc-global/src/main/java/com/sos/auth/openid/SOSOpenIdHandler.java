@@ -13,7 +13,6 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,8 +37,6 @@ import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-
-import js7.base.time.Timezone;
 
 public class SOSOpenIdHandler {
 
@@ -307,7 +304,6 @@ public class SOSOpenIdHandler {
     }
 
     public SOSOpenIdAccountAccessToken renewAccountAccess(SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken) {
-        LOGGER.info("---> Renew access-token");
 
         if (sosOpenIdAccountAccessToken != null) {
             if (tokenEndpointUri == null) {
@@ -326,9 +322,7 @@ public class SOSOpenIdHandler {
 
             String response;
             try {
-                LOGGER.info("---> " + tokenEndpointUri.toString());
                 response = getFormResponse(true, tokenEndpointUri, body, webserviceCredentials.getAccessToken());
-                LOGGER.info("---> " + response);
 
                 JsonReader jsonReaderTokenResponse = Json.createReader(new StringReader(response));
                 JsonObject jsonTokenResponse = jsonReaderTokenResponse.readObject();
