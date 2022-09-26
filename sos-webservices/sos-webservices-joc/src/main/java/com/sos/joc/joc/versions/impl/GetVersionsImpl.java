@@ -1,18 +1,11 @@
 package com.sos.joc.joc.versions.impl;
 
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -32,6 +25,8 @@ import com.sos.joc.model.joc.ControllerVersion;
 import com.sos.joc.model.joc.VersionResponse;
 import com.sos.joc.model.joc.VersionsFilter;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("joc")
 public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsResource{

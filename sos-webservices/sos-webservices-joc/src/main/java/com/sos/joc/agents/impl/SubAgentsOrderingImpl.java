@@ -11,9 +11,7 @@ import com.sos.joc.agents.resource.ISubAgentsOrdering;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
-import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.agent.OrderingSubagentClusters;
 import com.sos.joc.model.agent.OrderingSubagents;
 import com.sos.schema.JsonValidator;
 

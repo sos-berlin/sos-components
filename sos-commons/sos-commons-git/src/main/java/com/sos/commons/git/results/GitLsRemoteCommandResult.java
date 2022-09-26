@@ -4,17 +4,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.git.enums.RepositoryLinkType;
-import com.sos.commons.git.enums.RepositoryUpdateType;
 import com.sos.commons.util.common.SOSCommandResult;
 
 public class GitLsRemoteCommandResult extends GitCommandResult {
