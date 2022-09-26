@@ -39,7 +39,7 @@ public class SOSAuthCurrentAccountsList {
     }
 
     public void removeAccount(String accessToken) {
-        if (this.currentAccounts == null || accessToken == null) {
+        if (this.currentAccounts != null && accessToken != null) {
             currentAccounts.remove(accessToken);
         }
     }

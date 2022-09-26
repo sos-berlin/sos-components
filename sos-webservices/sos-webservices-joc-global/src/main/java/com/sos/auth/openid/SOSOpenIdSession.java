@@ -139,11 +139,13 @@ public class SOSOpenIdSession implements ISOSSession {
                 startSession = Instant.now().toEpochMilli();
                 return true;
             } else {
+                LOGGER.info("not valid");
                 this.stop();
                 return false;
             }
         } catch (JocException e) {
             LOGGER.error("", e);
+            this.stop();
             return false;
         }
     }

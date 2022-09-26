@@ -148,6 +148,14 @@ public class SOSOpenIdHandler {
 
     }
 
+    public void setTokenEndpoint() throws SocketException, SOSException {
+        URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + "/.well-known/openid-configuration");
+        String configurationResponse = getFormResponse(false, requestUri, null, webserviceCredentials.getAccessToken());
+        JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(configurationResponse));
+        JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
+        tokenEndpointUri = URI.create(jsonConfigurationResponse.getString(TOKEN_ENDPOINT, ""));
+    }
+
     public SOSOpenIdAccountAccessToken login() throws SOSException, JsonParseException, JsonMappingException, IOException {
 
         SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = new SOSOpenIdAccountAccessToken();
@@ -299,7 +307,16 @@ public class SOSOpenIdHandler {
     }
 
     public SOSOpenIdAccountAccessToken renewAccountAccess(SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken) {
+        LOGGER.info("---> Renew access-token");
+
         if (sosOpenIdAccountAccessToken != null) {
+            if (tokenEndpointUri == null) {
+                try {
+                    this.setTokenEndpoint();
+                } catch (SocketException | SOSException e) {
+                    LOGGER.error("", e);
+                }
+            }
 
             Map<String, String> body = new HashMap<String, String>();
             body.put("client_id", webserviceCredentials.getClientId());
@@ -309,15 +326,22 @@ public class SOSOpenIdHandler {
 
             String response;
             try {
+                LOGGER.info("---> " + tokenEndpointUri.toString());
                 response = getFormResponse(true, tokenEndpointUri, body, webserviceCredentials.getAccessToken());
+                LOGGER.info("---> " + response);
 
                 JsonReader jsonReaderTokenResponse = Json.createReader(new StringReader(response));
                 JsonObject jsonTokenResponse = jsonReaderTokenResponse.readObject();
                 String newAccessToken = jsonTokenResponse.getString("access_token", "");
+                String newRefreshToken = jsonTokenResponse.getString("refresh_token", "");
 
                 LOGGER.debug("new access_token:" + newAccessToken);
 
                 sosOpenIdAccountAccessToken.setAccessToken(newAccessToken);
+                sosOpenIdAccountAccessToken.setExpiresIn(jsonTokenResponse.getInt("expires_in", 0));
+                if (newRefreshToken != null && !newRefreshToken.isEmpty()) {
+                    sosOpenIdAccountAccessToken.setRefreshToken(newRefreshToken);
+                }
 
                 LOGGER.debug(SOSString.toString(sosOpenIdAccountAccessToken));
             } catch (SocketException | SOSException e) {
