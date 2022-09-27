@@ -147,6 +147,20 @@ public class DocumentationHelper {
                         documentation.setImage(bytes);
                         documentation.setHasImage(true);
                     } else if (supportedSubType.isPresent()) {
+                        if ("xml".equals(supportedSubType.get())) {
+                            switch (fileExtension) {
+                            case "xsl":
+                            case "xslt":
+                                supportedSubType = Optional.of("xsl");
+                                break;
+                            case "xsd":
+                                supportedSubType = Optional.of("xsd");
+                                break;
+                            case "svg":
+                                supportedSubType = Optional.of("svg");
+                                break;
+                            }
+                        }
                         documentation.setType(supportedSubType.get());
                         documentation.setContent(new String(bytes, StandardCharsets.UTF_8));
                         documentation.setHasImage(false);

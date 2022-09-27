@@ -9,9 +9,6 @@ import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.MediaType;
-
 import com.github.rjeschke.txtmark.Configuration;
 import com.github.rjeschke.txtmark.Processor;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -27,7 +24,9 @@ import com.sos.joc.event.bean.documentation.DocumentationEvent;
 import com.sos.joc.event.bean.documentation.DocumentationFolderEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.SessionNotExistException;
+
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
 
 @Path("documentation")
 public class DocumentationResourceImpl extends JOCResourceImpl implements IDocumentationResource {
@@ -37,7 +36,6 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
 
     @Override
     public JOCDefaultResponse postDocumentation(String accessToken, String path) {
-        SOSHibernateSession connection = null;
         try {
             if (path == null) {
                 path = "";
@@ -49,6 +47,19 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
                 return jocDefaultResponse;
             }
             checkRequiredParameter("path", path);
+            return postDocumentation(path);
+            
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseHTMLStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseHTMLStatusJSError(e, getJocError());
+        }
+    }
+    
+    public static JOCDefaultResponse postDocumentation(String path) {
+        SOSHibernateSession connection = null;
+        try {
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
             DBItemDocumentation dbItem = dbLayer.getDocumentation("/" + path);
@@ -66,40 +77,32 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
                 if (type.isEmpty()) {
                     type = MediaType.APPLICATION_OCTET_STREAM;
                 }
-                jocDefaultResponse = JOCDefaultResponse.responseStatus200(dbItemImage.getImage(), getType(type));
+                return JOCDefaultResponse.responseStatus200(dbItemImage.getImage(), getType(type));
 
             } else if (dbItem.getContent() != null && !dbItem.getContent().isEmpty()) {
                 if ("markdown".equals(type)) {
-                    jocDefaultResponse = JOCDefaultResponse.responseStatus200(createHTMLfromMarkdown(dbItem), MediaType.TEXT_HTML);
+                    return JOCDefaultResponse.responseStatus200(createHTMLfromMarkdown(dbItem), MediaType.TEXT_HTML);
                 } else {
-                    jocDefaultResponse = JOCDefaultResponse.responseStatus200(dbItem.getContent(), getType(type));
+                    return JOCDefaultResponse.responseStatus200(dbItem.getContent(), getType(type));
                 }
 
             } else {
                 throw new DBMissingDataException(errMessage);
             }
-
-            try { //simulates a touch
-                jobschedulerUser.resetTimeOut();
-            } catch (SessionNotExistException e) {
-            }
-            return jocDefaultResponse;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseHTMLStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseHTMLStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(connection);
         }
     }
 
-    private String getType(String type) {
+    private static String getType(String type) {
         switch (type) {
         case "xml":
         case "xsl":
         case "xsd":
             type = MediaType.APPLICATION_XML;
+            break;
+        case "svg":
+            type = MediaType.APPLICATION_SVG_XML;
             break;
         case "pdf":
             type = "application/" + type;
@@ -133,7 +136,7 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
         return type;
     }
 
-    private String createHTMLfromMarkdown(DBItemDocumentation dbItem) {
+    private static String createHTMLfromMarkdown(DBItemDocumentation dbItem) {
         java.nio.file.Path path = Paths.get(dbItem.getFolder());
         String title = dbItem.getName().replaceFirst("\\.[^\\.]*$", ""); //filename without extension
         String cssFile = path.relativize(CSS).toString().replace('\\', '/');

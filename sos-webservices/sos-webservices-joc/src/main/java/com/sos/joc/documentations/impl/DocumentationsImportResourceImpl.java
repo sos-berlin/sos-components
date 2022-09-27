@@ -101,6 +101,9 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                     case "xsd":
                         supportedSubType = Optional.of("xsd");
                         break;
+                    case "svg":
+                        supportedSubType = Optional.of("svg");
+                        break;
                     }
                 }
                 DocumentationHelper.saveOrUpdate(DocumentationHelper.setDBItemDocumentation(IOUtils.toByteArray(stream), filter, supportedSubType

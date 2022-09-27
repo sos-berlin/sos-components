@@ -2,15 +2,12 @@ package com.sos.joc.documentations.impl;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -26,6 +23,8 @@ import com.sos.joc.model.docu.Documentation;
 import com.sos.joc.model.docu.Documentations;
 import com.sos.joc.model.docu.DocumentationsFilter;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("documentations")
 public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocumentationsResource {
