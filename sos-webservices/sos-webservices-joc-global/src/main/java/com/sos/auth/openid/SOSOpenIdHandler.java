@@ -71,6 +71,9 @@ public class SOSOpenIdHandler {
         this.truststore = truststore;
     }
 
+    public SOSOpenIdHandler() {
+    }
+
     private String getFormResponse(Boolean post, URI requestUri, Map<String, String> body, String xAccessToken) throws SOSException, SocketException {
         SOSRestApiClient restApiClient = new SOSRestApiClient();
         restApiClient.setConnectionTimeout(SOSAuthHelper.RESTAPI_CONNECTION_TIMEOUT);
@@ -214,7 +217,7 @@ public class SOSOpenIdHandler {
         }
 
         if (jsonHeader == null) {
-            this.decodeIdToken();
+            this.decodeIdToken(webserviceCredentials.getIdToken());
         }
 
         try {
@@ -347,13 +350,13 @@ public class SOSOpenIdHandler {
         return sosOpenIdAccountAccessToken;
     }
 
-    public String decodeIdToken() throws SocketException, SOSException {
+    public String decodeIdToken(String idToken) throws SocketException, SOSException {
 
         JsonReader jsonReaderHeader = null;
         JsonReader jsonReaderPayload = null;
 
         try {
-            String[] accessTokenParts = webserviceCredentials.getIdToken().split("\\.");
+            String[] accessTokenParts = idToken.split("\\.");
             Base64.Decoder decoder = Base64.getUrlDecoder();
 
             String header = new String(decoder.decode(accessTokenParts[0]));

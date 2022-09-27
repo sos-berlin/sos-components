@@ -2,7 +2,6 @@ package com.sos.auth.classes;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.SocketException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,10 +21,8 @@ import com.sos.auth.keycloak.classes.SOSKeycloakLogin;
 import com.sos.auth.ldap.classes.SOSLdapLogin;
 import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.auth.openid.classes.SOSOpenIdLogin;
-import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.auth.vault.classes.SOSVaultLogin;
-import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -767,7 +764,12 @@ public class SOSServicePermissionIam {
 
         if (sosLoginParameters.getBasicAuthorization() == null || sosLoginParameters.getBasicAuthorization().isEmpty()) {
             if (sosLoginParameters.getAccount() == null) {
-                sosLoginParameters.setAccount(sosLoginParameters.getClientCertCN());
+                if (sosLoginParameters.getIdToken() != null && !sosLoginParameters.getIdToken().isEmpty()) {
+                    SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler();
+                    sosLoginParameters.setAccount(sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken()));
+                } else {
+                    sosLoginParameters.setAccount(sosLoginParameters.getClientCertCN());
+                }
             }
             if (pwd == null) {
                 pwd = "";

@@ -51,7 +51,7 @@ public class SOSOpenIdLogin implements ISOSLogin {
                     }
                 }
                 SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials, truststore);
-                String accountName = sosOpenIdHandler.decodeIdToken();
+                String accountName = sosOpenIdHandler.decodeIdToken(webserviceCredentials.getIdToken());
                 currentAccount.setAccountName(accountName);
                 webserviceCredentials.setAccount(accountName);
 
