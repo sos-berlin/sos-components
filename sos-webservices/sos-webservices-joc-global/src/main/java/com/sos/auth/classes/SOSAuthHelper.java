@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -39,6 +40,8 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public class SOSAuthHelper {
 
+    public static final List<String> SUPPORTED_SUBTYPES = Arrays.asList("gif", "jpeg", "png", "icon", "svg");
+    
     public static final String INITIAL = "initial";
     public static final String NONE = "*none";
 

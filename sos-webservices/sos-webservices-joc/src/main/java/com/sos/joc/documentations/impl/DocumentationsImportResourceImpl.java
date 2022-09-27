@@ -2,6 +2,7 @@ package com.sos.joc.documentations.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.time.Instant;
 import java.util.Date;
@@ -43,7 +44,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
     @Override
     public JOCDefaultResponse postImportDocumentations(String xAccessToken, String accessToken, String folder, FormDataBodyPart body,
-            String timeSpent, String ticketLink, String comment) {
+            String timeSpent, String ticketLink, String comment)  {
         AuditParams auditLog = new AuditParams();
         auditLog.setComment(comment);
         auditLog.setTicketLink(ticketLink);
@@ -51,10 +52,10 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             auditLog.setTimeSpent(Integer.valueOf(timeSpent));
         } catch (Exception e) {
         }
-        return postImportDocumentations(getAccessToken(xAccessToken, accessToken), folder, body, auditLog);
+        return postImportDocumentations(getAccessToken(xAccessToken, accessToken), folder,null, body, auditLog);
     }
 
-    private JOCDefaultResponse postImportDocumentations(String xAccessToken, String folder, FormDataBodyPart body, AuditParams auditLog) {
+    private JOCDefaultResponse postImportDocumentations(String xAccessToken, String folder, String filename, FormDataBodyPart body, AuditParams auditLog) {
 
         SOSHibernateSession connection = null;
         try {
@@ -73,7 +74,13 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, null, CategoryType.DOCUMENTATIONS, connection);
-            postImportDocumentations(folder, body, new DocumentationDBLayer(connection), dbAudit);
+            if (filename == null) {
+                filename = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
+            }else {
+                filename = URLDecoder.decode(filename, "UTF-8");
+            }
+                    
+            postImportDocumentations(folder, filename, body, new DocumentationDBLayer(connection), dbAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -86,7 +93,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         }
     }
 
-    public static void postImportDocumentations(String folder, FormDataBodyPart body, DocumentationDBLayer dbLayer, DBItemJocAuditLog dbAudit)
+    public static void postImportDocumentations(String folder, String filename, FormDataBodyPart body, DocumentationDBLayer dbLayer, DBItemJocAuditLog dbAudit)
             throws DBConnectionRefusedException, DBInvalidDataException, JocUnsupportedFileTypeException, JocConfigurationException,
             DBOpenSessionException, SOSHibernateException, IOException {
 
@@ -96,7 +103,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             if (body == null) {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
             } else {
-                filter.setFile(URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8"));
+                filter.setFile(filename);
             }
 
             filter.setFolder(normalizeFolder(folder.replace('\\', '/')));
