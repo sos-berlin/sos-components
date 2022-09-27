@@ -127,7 +127,7 @@ public class JOCResourceImpl {
         return Globals.normalizePath(path);
     }
 
-    public String normalizeFolder(String path) {
+    public static String normalizeFolder(String path) {
         if (path == null) {
             return null;
         }

@@ -40,8 +40,8 @@ import com.sos.joc.model.docu.DocumentationImport;
 
 public class DocumentationHelper {
     
-    public static final List<String> SUPPORTED_SUBTYPES = Arrays.asList("html", "xml", "pdf", "xsl", "xsd", "javascript",
-            "json", "css", "markdown", "gif", "jpeg", "png", "icon");
+    public static final List<String> SUPPORTED_SUBTYPES = Arrays.asList("html", "xml", "pdf", "xsl", "xsd", "svg", "javascript", "json", "css",
+            "markdown", "gif", "jpeg", "png", "icon");
     public static final List<String> SUPPORTED_IMAGETYPES = Arrays.asList("pdf", "gif", "jpeg", "png", "icon");
     public static final List<String> ASSIGN_TYPES = Arrays.asList("html", "xml", "pdf", "markdown");
     private static final List<String> DEPRECATED_DOCS = Arrays.asList("MaintenaneWindowJob.xml");
@@ -85,7 +85,9 @@ public class DocumentationHelper {
 
     public static void saveOrUpdate(DBItemDocumentation doc, DocumentationDBLayer dbLayer, DBItemJocAuditLog dbAudit)
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, JocConfigurationException, DBOpenSessionException {
-        JocAuditLog.storeAuditLogDetail(new AuditLogDetail(doc.getPath(), ObjectType.DOCUMENTATION.intValue()), dbLayer.getSession(), dbAudit);
+        if (dbAudit != null) {
+            JocAuditLog.storeAuditLogDetail(new AuditLogDetail(doc.getPath(), ObjectType.DOCUMENTATION.intValue()), dbLayer.getSession(), dbAudit);
+        }
         saveOrUpdate(dbLayer, doc);
     }
 

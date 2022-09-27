@@ -1,5 +1,6 @@
 package com.sos.joc.documentations.impl;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.time.Instant;
@@ -8,12 +9,11 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import jakarta.ws.rs.Path;
-
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -22,6 +22,10 @@ import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.documentation.impl.DocumentationResourceImpl;
 import com.sos.joc.documentations.resource.IDocumentationsImportResource;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -29,6 +33,8 @@ import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.docu.DocumentationImport;
+
+import jakarta.ws.rs.Path;
 
 @Path("documentations")
 public class DocumentationsImportResourceImpl extends JOCResourceImpl implements IDocumentationsImportResource {
@@ -50,7 +56,6 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
     private JOCDefaultResponse postImportDocumentations(String xAccessToken, String folder, FormDataBodyPart body, AuditParams auditLog) {
 
-        InputStream stream = null;
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, null, xAccessToken);
@@ -58,21 +63,40 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
-            DocumentationImport filter = new DocumentationImport();
-            if (body == null) {
-                throw new JocMissingRequiredParameterException("undefined 'file'");
-            } else {
-                filter.setFile(URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8"));
-            }
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, null, CategoryType.DOCUMENTATIONS, connection);
-
+            
             if (folder == null || folder.isEmpty()) {
                 folder = "/";
             }
             if (!folderPermissions.isPermittedForFolder(folder)) {
                 throw new JocFolderPermissionsException(folder);
+            }
+            
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, null, CategoryType.DOCUMENTATIONS, connection);
+            postImportDocumentations(folder, body, new DocumentationDBLayer(connection), dbAudit);
+
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(connection);
+        }
+    }
+
+    public static void postImportDocumentations(String folder, FormDataBodyPart body, DocumentationDBLayer dbLayer, DBItemJocAuditLog dbAudit)
+            throws DBConnectionRefusedException, DBInvalidDataException, JocUnsupportedFileTypeException, JocConfigurationException,
+            DBOpenSessionException, SOSHibernateException, IOException {
+
+        InputStream stream = null;
+        try {
+            DocumentationImport filter = new DocumentationImport();
+            if (body == null) {
+                throw new JocMissingRequiredParameterException("undefined 'file'");
+            } else {
+                filter.setFile(URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8"));
             }
 
             filter.setFolder(normalizeFolder(folder.replace('\\', '/')));
@@ -84,7 +108,6 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             Optional<String> supportedSubType = DocumentationHelper.SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
             Optional<String> supportedImageType = DocumentationHelper.SUPPORTED_IMAGETYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
             Set<String> folders = new HashSet<>();
-            DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
 
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
                 folders = DocumentationHelper.readZipFileContent(stream, filter.getFolder(), dbLayer, dbAudit);
@@ -123,15 +146,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
             folders.add(filter.getFolder());
             folders.forEach(f -> DocumentationResourceImpl.postEvent(f));
-
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(connection);
             try {
                 if (stream != null) {
                     stream.close();
