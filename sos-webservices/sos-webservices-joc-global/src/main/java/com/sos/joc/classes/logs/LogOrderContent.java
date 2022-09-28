@@ -340,21 +340,23 @@ public class LogOrderContent {
         if (error != null) {
             info.add(error);
         }
-        if (item.getLock() != null) {
+        if (item.getLocks() != null) {
             List<String> lock = new ArrayList<String>();
-            lock.add("name=" + item.getLock().getLockName());
-            lock.add("limit=" + item.getLock().getLimit());
-            if (item.getLock().getCount() != null) {
-                lock.add("count=" + item.getLock().getCount());
-            }
-            if (item.getLock().getLockState() != null) {
-                if (!SOSString.isEmpty(item.getLock().getLockState().getOrderIds())) {
-                    lock.add("orderIds=" + item.getLock().getLockState().getOrderIds());
+            item.getLocks().forEach(l -> {
+                lock.add("name=" + l.getLockName());
+                lock.add("limit=" + l.getLimit());
+                if (l.getCount() != null) {
+                    lock.add("count=" + l.getCount());
                 }
-                if (!SOSString.isEmpty(item.getLock().getLockState().getQueuedOrderIds())) {
-                    lock.add("queuedOrderIds=" + item.getLock().getLockState().getQueuedOrderIds());
+                if (l.getLockState() != null) {
+                    if (!SOSString.isEmpty(l.getLockState().getOrderIds())) {
+                        lock.add("orderIds=" + l.getLockState().getOrderIds());
+                    }
+                    if (!SOSString.isEmpty(l.getLockState().getQueuedOrderIds())) {
+                        lock.add("queuedOrderIds=" + l.getLockState().getQueuedOrderIds());
+                    }
                 }
-            }
+            });
             info.add(lock.stream().collect(Collectors.joining(", ", "Lock (", ")")));
         }
 

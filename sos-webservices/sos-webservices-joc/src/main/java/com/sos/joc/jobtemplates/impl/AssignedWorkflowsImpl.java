@@ -97,7 +97,7 @@ public class AssignedWorkflowsImpl extends JOCResourceImpl implements IAssignedW
                     JobTemplateUsedBy jtUsedBy = new JobTemplateUsedBy();
                     jtUsedBy.setName(dbJobTemplate.getName());
                     jtUsedBy.setPath(dbJobTemplate.getPath());
-                    JobTemplate jt = (JobTemplate) JocInventory.content2IJSObject(dbJobTemplate.getContent(), ConfigurationType.JOBTEMPLATE.intValue());
+                    JobTemplate jt = (JobTemplate) JocInventory.content2IJSObject(dbJobTemplate.getContent(), ConfigurationType.JOBTEMPLATE);
                     jtUsedBy.setHash(jt.getHash());
                     
                     List<JobTemplateUsedByWorkflow> jtWorkflows = new ArrayList<>();

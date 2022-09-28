@@ -4,7 +4,7 @@
   "javaType": "com.sos.sign.model.instruction.Lock",
   "type": "object",
   "required": [
-  	"lockPath",
+  	"demands",
   	"lockedWorkflow"
   ],
   "extends" : {
@@ -13,18 +13,32 @@
   
   "description": "instruction with fixed property 'TYPE':'Lock'",
   "properties": {
-    "lockPath": {
-    	"alias": "lockId,lockName",
-    	"type": "string",
-  		"pattern": "^[^<>]*$",
-  		"maxLength": 255,
-  		"minLength": 1
-    },
     "lockedWorkflow": {
       "$ref": "instructions-schema.json"
     },
-    "count": {
-      "$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json"
+    "demands" : {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+      		"type": "object",
+      		"javaType": "com.sos.sign.model.instruction.LockDemand",
+      		"required": [
+      			"lockPath"	
+      		],
+      		"properties": {
+      			"lockPath": {
+      				"alias": "lockId,lockName",
+					"type": "string",
+    				"pattern": "^[^<>]*$",
+    				"maxLength": 255,
+    				"minLength": 1
+      			},
+      			"count": {
+        			"$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json"
+    			}
+    		},
+    		"additionalProperties": false
+        }	
     }
   },
   "additionalProperties": false

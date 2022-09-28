@@ -15,9 +15,9 @@ import js7.data.order.OrderEvent.OrderFailed;
 import js7.data.order.OrderEvent.OrderFinished$;
 import js7.data.order.OrderEvent.OrderForked;
 import js7.data.order.OrderEvent.OrderJoined;
-import js7.data.order.OrderEvent.OrderLockAcquired;
-import js7.data.order.OrderEvent.OrderLockQueued;
-import js7.data.order.OrderEvent.OrderLockReleased;
+import js7.data.order.OrderEvent.OrderLocksAcquired;
+import js7.data.order.OrderEvent.OrderLocksQueued;
+import js7.data.order.OrderEvent.OrderLocksReleased;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingStarted;
 import js7.data.order.OrderEvent.OrderResumed;
@@ -67,11 +67,11 @@ public enum HistoryEventType {
 
     OrderResumeMarked(OrderResumptionMarked.class.getSimpleName()),
 
-    OrderLockAcquired(OrderLockAcquired.class.getSimpleName()),
+    OrderLocksAcquired(OrderLocksAcquired.class.getSimpleName()),
 
-    OrderLockQueued(OrderLockQueued.class.getSimpleName()),
+    OrderLocksQueued(OrderLocksQueued.class.getSimpleName()),
 
-    OrderLockReleased(OrderLockReleased.class.getSimpleName()),
+    OrderLocksReleased(OrderLocksReleased.class.getSimpleName()),
 
     OrderFinished(OrderFinished$.class.getSimpleName()),
 

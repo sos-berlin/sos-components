@@ -206,7 +206,7 @@ public class WorkflowSearcherTest {
         // locks = ws.getLockInstructions(l -> l.getInstruction().getCount() != null && l.getInstruction().getCount() > 0);
         locks = ws.getLockInstructions(l -> {
             Lock lock = l.getInstruction();
-            return lock.getCount() != null && lock.getCount() > 0;
+            return lock.getDemands() != null && lock.getDemands().stream().map(d -> d.getCount()).anyMatch(c -> c > 0);
         });
         LOGGER.info(" ");
         LOGGER.info("[getLockInstructions(filter)][size] " + locks.size());

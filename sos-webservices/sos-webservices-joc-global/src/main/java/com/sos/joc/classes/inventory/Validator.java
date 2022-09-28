@@ -515,7 +515,7 @@ public class Validator {
             for (Instruction inst : instructions) {
                 String instPosition = position + "[" + index + "].";
                 try {
-                    JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(inst), URI.create(JocInventory.INSTRUCTION_SCHEMA_LOCATION
+                    JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(inst), URI.create(JocInventory.INSTRUCTION_SCHEMA_LOCATION
                             .get(inst.getTYPE())));
                 } catch (SOSJsonSchemaException e) {
                     String msg = e.getMessage().replaceFirst("(\\$\\.)", "$1" + instPosition);

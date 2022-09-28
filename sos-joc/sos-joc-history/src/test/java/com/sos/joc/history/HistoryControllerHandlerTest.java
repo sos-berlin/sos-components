@@ -45,9 +45,9 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderFailed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderFinished;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderForked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderJoined;
-import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLockAcquired;
-import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLockQueued;
-import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLockReleased;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksAcquired;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksQueued;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksReleased;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStarted;
@@ -64,9 +64,9 @@ import com.sos.joc.history.helper.HistoryUtil;
 
 import js7.data.event.Event;
 import js7.data.order.OrderEvent.OrderBroken;
-import js7.data.order.OrderEvent.OrderLockAcquired;
-import js7.data.order.OrderEvent.OrderLockQueued;
-import js7.data.order.OrderEvent.OrderLockReleased;
+import js7.data.order.OrderEvent.OrderLocksAcquired;
+import js7.data.order.OrderEvent.OrderLocksQueued;
+import js7.data.order.OrderEvent.OrderLocksReleased;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderId;
@@ -194,7 +194,7 @@ public class HistoryControllerHandlerTest {
             OutcomeInfo oi;
             List<FatForkedChild> childs;
             FatOutcome outcome;
-            OrderLock ol;
+            List<OrderLock> ol;
             switch (entry.getEventType()) {
             case ClusterCoupled:
                 HistoryClusterCoupled cc = entry.getClusterCoupled();
@@ -415,29 +415,29 @@ public class HistoryControllerHandlerTest {
                 event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
-            case OrderLockAcquired:
+            case OrderLocksAcquired:
                 order = entry.getCheckedOrder();
 
-                ol = order.getOrderLock((OrderLockAcquired) entry.getEvent());
-                event = new FatEventOrderLockAcquired(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
+                ol = order.getOrderLocks((OrderLocksAcquired) entry.getEvent());
+                event = new FatEventOrderLocksAcquired(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
                         .getPosition());
 
                 break;
 
-            case OrderLockQueued:
+            case OrderLocksQueued:
                 order = entry.getCheckedOrder();
 
-                ol = order.getOrderLock((OrderLockQueued) entry.getEvent());
-                event = new FatEventOrderLockQueued(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
+                ol = order.getOrderLocks((OrderLocksQueued) entry.getEvent());
+                event = new FatEventOrderLocksQueued(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
                         .getPosition());
 
                 break;
 
-            case OrderLockReleased:
+            case OrderLocksReleased:
                 order = entry.getCheckedOrder();
 
-                ol = order.getOrderLock((OrderLockReleased) entry.getEvent());
-                event = new FatEventOrderLockReleased(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
+                ol = order.getOrderLocks((OrderLocksReleased) entry.getEvent());
+                event = new FatEventOrderLocksReleased(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
                         .getPosition());
 
                 break;

@@ -265,15 +265,14 @@ public class JocInventory {
         releasables.add(ConfigurationType.FOLDER.intValue());
         return releasables;
     }
-
-    public static IConfigurationObject content2IJSObject(String content, Integer typeNum) throws JsonParseException, JsonMappingException,
-            IOException {
-        ConfigurationType type = getType(typeNum);
+    
+    public static IConfigurationObject content2IJSObject(String content, ConfigurationType type) throws JsonParseException, JsonMappingException,
+    IOException {
         if (SOSString.isEmpty(content) || ConfigurationType.FOLDER.equals(type)) {
             return null;
         }
         if (type.equals(ConfigurationType.WORKFLOW)) {
-            return NoticeToNoticesConverter.convertInventoryWorkflow(content);
+            return com.sos.joc.classes.inventory.WorkflowConverter.convertInventoryWorkflow(content);
         }
         if (type.equals(ConfigurationType.SCHEDULE)) {
             // JOC-1255 workflowName -> workflowNames
@@ -292,6 +291,11 @@ public class JocInventory {
         } else {
             return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
         }
+    }
+
+    public static IConfigurationObject content2IJSObject(String content, Integer typeNum) throws JsonParseException, JsonMappingException,
+            IOException {
+        return content2IJSObject(content, getType(typeNum));
     }
 
     public static void makeParentDirs(InventoryDBLayer dbLayer, Path parentFolder, Long auditLogId) throws SOSHibernateException {

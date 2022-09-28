@@ -39,9 +39,9 @@ public enum EventType {
     OrderBroken("OrderBroken"),
     OrderCancelled("OrderCancelled"),
     OrderFinished("OrderFinished"),
-    OrderLockAcquired("OrderLockAcquired"),
-    OrderLockQueued("OrderLockQueued"),
-    OrderLockReleased("OrderLockReleased");
+    OrderLocksAcquired("OrderLocksAcquired"),
+    OrderLocksQueued("OrderLocksQueued"),
+    OrderLocksReleased("OrderLocksReleased");
     private final String value;
     private final static Map<String, EventType> CONSTANTS = new HashMap<String, EventType>();
 

@@ -59,6 +59,7 @@ import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.LockToLockDemandsConverter;
 import com.sos.joc.classes.inventory.NoticeToNoticesConverter;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -527,7 +528,7 @@ public class WorkflowsHelper {
                     }
                     break;
                 case LOCK:
-                    Lock l = inst.cast();
+                    Lock l = LockToLockDemandsConverter.lockToInventoryLockDemands(inst.cast());
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions(), forkListVariables,
                             expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     break;

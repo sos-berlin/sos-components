@@ -55,7 +55,7 @@ import js7.data_for_java.value.JExpression;
 public class JsonConverter {
     
     private final static String instructionsToConvert = String.join("|", InstructionType.FORKLIST.value(), InstructionType.ADD_ORDER.value(),
-            InstructionType.POST_NOTICE.value(), InstructionType.EXPECT_NOTICE.value());
+            InstructionType.POST_NOTICE.value(), InstructionType.EXPECT_NOTICE.value(), InstructionType.LOCK.value());
     private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"")
             .asPredicate();
     private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"")
@@ -289,7 +289,8 @@ public class JsonConverter {
         return replaceTokens;
     }
 
-    private static void convertInstructions(Workflow w, List<Instruction> invInstructions, List<com.sos.sign.model.instruction.Instruction> signInstructions, AtomicInteger addOrderIndex) {
+    private static void convertInstructions(Workflow w, List<Instruction> invInstructions,
+            List<com.sos.sign.model.instruction.Instruction> signInstructions, AtomicInteger addOrderIndex) {
         if (invInstructions != null) {
             for (int i = 0; i < invInstructions.size(); i++) {
                 Instruction invInstruction = invInstructions.get(i);
@@ -309,7 +310,8 @@ public class JsonConverter {
                     for (int j = 0; j < fj.getBranches().size(); j++) {
                         Branch invBranch = fj.getBranches().get(j);
                         if (invBranch.getWorkflow() != null) {
-                            convertInstructions(w, invBranch.getWorkflow().getInstructions(), sfj.getBranches().get(j).getWorkflow().getInstructions(), addOrderIndex);
+                            convertInstructions(w, invBranch.getWorkflow().getInstructions(), sfj.getBranches().get(j).getWorkflow()
+                                    .getInstructions(), addOrderIndex);
                         }
                     }
                     break;
@@ -335,9 +337,10 @@ public class JsonConverter {
                     break;
                 case LOCK:
                     Lock lock = invInstruction.cast();
+                    com.sos.sign.model.instruction.Lock sLock = LockToLockDemandsConverter.lockToSignLockDemands(lock, signInstruction.cast());
                     if (lock.getLockedWorkflow() != null) {
-                        com.sos.sign.model.instruction.Lock sLock = signInstruction.cast();
-                        convertInstructions(w, lock.getLockedWorkflow().getInstructions(), sLock.getLockedWorkflow().getInstructions(), addOrderIndex);
+                        convertInstructions(w, lock.getLockedWorkflow().getInstructions(), sLock.getLockedWorkflow().getInstructions(),
+                                addOrderIndex);
                     }
                     break;
                 case ADD_ORDER:
@@ -347,7 +350,8 @@ public class JsonConverter {
                     Cycle cycle = invInstruction.cast();
                     if (cycle.getCycleWorkflow() != null) {
                         com.sos.sign.model.instruction.Cycle sCycle = signInstruction.cast();
-                        convertInstructions(w, cycle.getCycleWorkflow().getInstructions(), sCycle.getCycleWorkflow().getInstructions(), addOrderIndex);
+                        convertInstructions(w, cycle.getCycleWorkflow().getInstructions(), sCycle.getCycleWorkflow().getInstructions(),
+                                addOrderIndex);
                     }
                     break;
                 case POST_NOTICE:

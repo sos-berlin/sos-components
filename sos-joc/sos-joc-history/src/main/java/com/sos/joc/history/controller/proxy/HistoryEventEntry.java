@@ -34,9 +34,10 @@ import js7.data.lock.LockPath;
 import js7.data.node.NodeId;
 import js7.data.order.Order;
 import js7.data.order.OrderEvent;
-import js7.data.order.OrderEvent.OrderLockAcquired;
-import js7.data.order.OrderEvent.OrderLockQueued;
-import js7.data.order.OrderEvent.OrderLockReleased;
+import js7.data.order.OrderEvent.LockDemand;
+import js7.data.order.OrderEvent.OrderLocksAcquired;
+import js7.data.order.OrderEvent.OrderLocksQueued;
+import js7.data.order.OrderEvent.OrderLocksReleased;
 import js7.data.order.OrderId;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
@@ -283,17 +284,35 @@ public class HistoryEventEntry {
             return outcomeInfo;
         }
 
-        public OrderLock getOrderLock(OrderLockAcquired event) throws FatEventProblemException {
-            return getOrderLock(event.lockPath(), event.count(), false);
+        public List<OrderLock> getOrderLocks(OrderLocksAcquired event) throws FatEventProblemException {
+            // why FatEventProblemException is not a runtime exception
+            // return JavaConverters.asJava(event.demands()).stream().map(ld -> getOrderLock(ld.lockPath(), ld.count(), false)).collect(Collectors.toList());
+            List<OrderLock> result = new ArrayList<>();
+            for (LockDemand ld : JavaConverters.asJava(event.demands())) {
+                result.add(getOrderLock(ld.lockPath(), ld.count(), false));
+            }
+            return result;
         }
 
-        public OrderLock getOrderLock(OrderLockQueued event) throws FatEventProblemException {
-            return getOrderLock(event.lockPath(), event.count(), true);
+        public List<OrderLock> getOrderLocks(OrderLocksQueued event) throws FatEventProblemException {
+            // why FatEventProblemException is not a runtime exception
+            // return JavaConverters.asJava(event.demands()).stream().map(ld -> getOrderLock(ld.lockPath(), ld.count(), true)).collect(Collectors.toList());
+            List<OrderLock> result = new ArrayList<>();
+            for (LockDemand ld : JavaConverters.asJava(event.demands())) {
+                result.add(getOrderLock(ld.lockPath(), ld.count(), true));
+            }
+            return result;
         }
 
-        public OrderLock getOrderLock(OrderLockReleased event) throws FatEventProblemException {
+        public List<OrderLock> getOrderLocks(OrderLocksReleased event) throws FatEventProblemException {
             // count not available
-            return getOrderLock(event.lockPath(), null, false);
+            // why FatEventProblemException is not a runtime exception
+            // return JavaConverters.asJava(event.lockPaths()).stream().map(lp -> getOrderLock(lp, null, false)).collect(Collectors.toList());
+            List<OrderLock> result = new ArrayList<>();
+            for (LockPath lp : JavaConverters.asJava(event.lockPaths())) {
+                result.add(getOrderLock(lp, null, false));
+            }
+            return result;
         }
 
         private OrderLock getOrderLock(LockPath lockPath, Option<Object> count, boolean checkState) throws FatEventProblemException {

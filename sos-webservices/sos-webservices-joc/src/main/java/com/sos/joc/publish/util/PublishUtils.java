@@ -1792,7 +1792,7 @@ public abstract class PublishUtils {
             configurationObject.setPath(item.getPath());
             configurationObject.setName(item.getName());
             configurationObject.setObjectType(ConfigurationType.fromValue(item.getType()));
-            configurationObject.setConfiguration(JocInventory.content2IJSObject(item.getInvContent(), configurationObject.getObjectType().intValue()));
+            configurationObject.setConfiguration(JocInventory.content2IJSObject(item.getInvContent(), configurationObject.getObjectType()));
             return configurationObject;
         } catch (IOException e) {
             throw new JocException(e);

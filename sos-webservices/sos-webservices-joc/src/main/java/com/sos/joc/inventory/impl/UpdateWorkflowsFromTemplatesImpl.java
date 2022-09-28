@@ -100,7 +100,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
                     }
 
                     Map<String, JobTemplate> jobTemplates = Collections.emptyMap();
-                    Workflow workflow = (Workflow) JocInventory.content2IJSObject(dbWorkflow.getContent(), ConfigurationType.WORKFLOW.intValue());
+                    Workflow workflow = (Workflow) JocInventory.content2IJSObject(dbWorkflow.getContent(), ConfigurationType.WORKFLOW);
                     if (workflow.getJobs() != null && workflow.getJobs().getAdditionalProperties() != null && !workflow.getJobs()
                             .getAdditionalProperties().isEmpty()) {
                         // determine job template names from Workflow
