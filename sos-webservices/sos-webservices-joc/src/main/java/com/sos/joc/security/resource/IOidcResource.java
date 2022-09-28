@@ -2,9 +2,11 @@
 package com.sos.joc.security.resource;
 
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
@@ -31,4 +33,10 @@ public interface IOidcResource {
             @FormDataParam("timeSpent") String timeSpent,
             @FormDataParam("ticketLink") String ticketLink,
             @FormDataParam("comment") String comment);
+ 
+    @GET
+    @Path("/icon/{identityServiceName : .+}")
+    public JOCDefaultResponse getIcon(@PathParam("identityServiceName") String identityServiceName);
+ 
 }
+

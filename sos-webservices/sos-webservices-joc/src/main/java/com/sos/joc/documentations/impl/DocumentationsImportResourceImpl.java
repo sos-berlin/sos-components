@@ -44,7 +44,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
     @Override
     public JOCDefaultResponse postImportDocumentations(String xAccessToken, String accessToken, String folder, FormDataBodyPart body,
-            String timeSpent, String ticketLink, String comment)  {
+            String timeSpent, String ticketLink, String comment) {
         AuditParams auditLog = new AuditParams();
         auditLog.setComment(comment);
         auditLog.setTicketLink(ticketLink);
@@ -52,10 +52,11 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             auditLog.setTimeSpent(Integer.valueOf(timeSpent));
         } catch (Exception e) {
         }
-        return postImportDocumentations(getAccessToken(xAccessToken, accessToken), folder,null, body, auditLog);
+        return postImportDocumentations(getAccessToken(xAccessToken, accessToken), folder, null, body, auditLog);
     }
 
-    private JOCDefaultResponse postImportDocumentations(String xAccessToken, String folder, String filename, FormDataBodyPart body, AuditParams auditLog) {
+    private JOCDefaultResponse postImportDocumentations(String xAccessToken, String folder, String filename, FormDataBodyPart body,
+            AuditParams auditLog) {
 
         SOSHibernateSession connection = null;
         try {
@@ -64,22 +65,22 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             if (folder == null || folder.isEmpty()) {
                 folder = "/";
             }
             if (!folderPermissions.isPermittedForFolder(folder)) {
                 throw new JocFolderPermissionsException(folder);
             }
-            
+
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, null, CategoryType.DOCUMENTATIONS, connection);
             if (filename == null) {
-                filename = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
-            }else {
-                filename = URLDecoder.decode(filename, "UTF-8");
+                filename = body.getContentDisposition().getFileName();
             }
-                    
+
+            filename = URLDecoder.decode(filename, "UTF-8");
+
             postImportDocumentations(folder, filename, body, new DocumentationDBLayer(connection), dbAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -93,9 +94,9 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         }
     }
 
-    public static void postImportDocumentations(String folder, String filename, FormDataBodyPart body, DocumentationDBLayer dbLayer, DBItemJocAuditLog dbAudit)
-            throws DBConnectionRefusedException, DBInvalidDataException, JocUnsupportedFileTypeException, JocConfigurationException,
-            DBOpenSessionException, SOSHibernateException, IOException {
+    public static void postImportDocumentations(String folder, String filename, FormDataBodyPart body, DocumentationDBLayer dbLayer,
+            DBItemJocAuditLog dbAudit) throws DBConnectionRefusedException, DBInvalidDataException, JocUnsupportedFileTypeException,
+            JocConfigurationException, DBOpenSessionException, SOSHibernateException, IOException {
 
         InputStream stream = null;
         try {

@@ -24,6 +24,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
+import com.sos.joc.documentation.impl.DocumentationResourceImpl;
 import com.sos.joc.documentations.impl.DocumentationsImportResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -45,6 +46,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
     private static final String API_CALL_IDENTITY_PROVIDERS = "./iam/identityproviders";
     private static final String API_CALL_IMPORT_ICON = "./iam/import";
+    private static final String API_CALL_GET_ICON = "./iam/icon";
 
     private String getProperty(String value, String defaultValue) {
         if (value == null || value.isEmpty()) {
@@ -145,7 +147,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             } catch (Exception e) {
             }
 
-            String folder = "/sos/.oidc";
+            String folder = "/sos/.images";
             final String mediaSubType = file.getMediaType().getSubtype().replaceFirst("^x-", "");
             Optional<String> supportedSubType = SOSAuthHelper.SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
 
@@ -172,6 +174,26 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                 }
             } catch (Exception e) {
             }
+        }
+    }
+
+    @Override
+    public JOCDefaultResponse getIcon(String identityServiceName) {
+        try {
+            if (identityServiceName == null) {
+                identityServiceName = "";
+            }
+            String request = String.format("%s/-identityServiceName-/%s", API_CALL_GET_ICON, identityServiceName);
+            initLogging(request, null);
+            
+            checkRequiredParameter("identityServiceName", identityServiceName);
+            return DocumentationResourceImpl.postDocumentation("sos/.images/" + identityServiceName);
+
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseHTMLStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseHTMLStatusJSError(e, getJocError());
         }
     }
 
