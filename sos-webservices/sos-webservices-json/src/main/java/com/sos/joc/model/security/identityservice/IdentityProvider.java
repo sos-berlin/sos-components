@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "iamOidcClientSecret",
     "iamOidcName",
     "iamOidcAuthenticationUrl",
-    "iamOidcLogoutUrl"
+    "iamIconUrl"
 })
 public class IdentityProvider {
 
@@ -72,8 +72,8 @@ public class IdentityProvider {
      * 
      * 
      */
-    @JsonProperty("iamOidcLogoutUrl")
-    private String iamOidcLogoutUrl;
+    @JsonProperty("iamIconUrl")
+    private String iamIconUrl;
 
     /**
      * No args constructor for use in serialization
@@ -86,19 +86,19 @@ public class IdentityProvider {
      * 
      * @param iamOidcClientSecret
      * @param identityServiceName
+     * @param iamIconUrl
      * @param iamOidcClientId
-     * @param iamOidcLogoutUrl
      * @param iamOidcAuthenticationUrl
      * @param iamOidcName
      */
-    public IdentityProvider(String identityServiceName, String iamOidcClientId, String iamOidcClientSecret, String iamOidcName, String iamOidcAuthenticationUrl, String iamOidcLogoutUrl) {
+    public IdentityProvider(String identityServiceName, String iamOidcClientId, String iamOidcClientSecret, String iamOidcName, String iamOidcAuthenticationUrl, String iamIconUrl) {
         super();
         this.identityServiceName = identityServiceName;
         this.iamOidcClientId = iamOidcClientId;
         this.iamOidcClientSecret = iamOidcClientSecret;
         this.iamOidcName = iamOidcName;
         this.iamOidcAuthenticationUrl = iamOidcAuthenticationUrl;
-        this.iamOidcLogoutUrl = iamOidcLogoutUrl;
+        this.iamIconUrl = iamIconUrl;
     }
 
     /**
@@ -217,9 +217,9 @@ public class IdentityProvider {
      * 
      * 
      */
-    @JsonProperty("iamOidcLogoutUrl")
-    public String getIamOidcLogoutUrl() {
-        return iamOidcLogoutUrl;
+    @JsonProperty("iamIconUrl")
+    public String getIamIconUrl() {
+        return iamIconUrl;
     }
 
     /**
@@ -228,19 +228,19 @@ public class IdentityProvider {
      * 
      * 
      */
-    @JsonProperty("iamOidcLogoutUrl")
-    public void setIamOidcLogoutUrl(String iamOidcLogoutUrl) {
-        this.iamOidcLogoutUrl = iamOidcLogoutUrl;
+    @JsonProperty("iamIconUrl")
+    public void setIamIconUrl(String iamIconUrl) {
+        this.iamIconUrl = iamIconUrl;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("iamOidcClientId", iamOidcClientId).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcName", iamOidcName).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcLogoutUrl", iamOidcLogoutUrl).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("iamOidcClientId", iamOidcClientId).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcName", iamOidcName).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamIconUrl", iamIconUrl).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamOidcClientSecret).append(identityServiceName).append(iamOidcClientId).append(iamOidcLogoutUrl).append(iamOidcAuthenticationUrl).append(iamOidcName).toHashCode();
+        return new HashCodeBuilder().append(iamOidcClientSecret).append(identityServiceName).append(iamIconUrl).append(iamOidcClientId).append(iamOidcAuthenticationUrl).append(iamOidcName).toHashCode();
     }
 
     @Override
@@ -252,7 +252,7 @@ public class IdentityProvider {
             return false;
         }
         IdentityProvider rhs = ((IdentityProvider) other);
-        return new EqualsBuilder().append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(identityServiceName, rhs.identityServiceName).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcLogoutUrl, rhs.iamOidcLogoutUrl).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).isEquals();
+        return new EqualsBuilder().append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(identityServiceName, rhs.identityServiceName).append(iamIconUrl, rhs.iamIconUrl).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).isEquals();
     }
 
 }

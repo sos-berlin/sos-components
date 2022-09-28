@@ -14,11 +14,13 @@ import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.documentation.DocumentationHelper;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
@@ -26,6 +28,7 @@ import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.documentation.impl.DocumentationResourceImpl;
 import com.sos.joc.documentations.impl.DocumentationsImportResourceImpl;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
@@ -88,6 +91,14 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                             com.sos.joc.model.security.properties.Properties.class);
 
                     if (properties.getOidc() != null) {
+
+                        DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
+                        String iconPath = "/iam/icon/sos/.images/" + dbItemIamIdentityService.getIdentityServiceName();
+                        DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
+                        if (dbItemDocumentation != null) {
+                            identityProvider.setIamIconUrl(JOCJsonCommand.urlEncodedPath(iconPath));
+                        }
+
                         identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
                         identityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
                         identityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
@@ -185,7 +196,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             }
             String request = String.format("%s/-identityServiceName-/%s", API_CALL_GET_ICON, identityServiceName);
             initLogging(request, null);
-            
+
             checkRequiredParameter("identityServiceName", identityServiceName);
             return DocumentationResourceImpl.postDocumentation("sos/.images/" + identityServiceName);
 
