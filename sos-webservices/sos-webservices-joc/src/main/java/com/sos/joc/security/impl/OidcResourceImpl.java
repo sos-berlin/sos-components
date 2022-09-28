@@ -96,7 +96,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                         String iconPath = "/sos/.images/" + dbItemIamIdentityService.getIdentityServiceName();
                         DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
                         if (dbItemDocumentation != null) {
-                            identityProvider.setIamIconUrl("/iam/icon" + JOCJsonCommand.urlEncodedPath(iconPath));
+                            identityProvider.setIamIconUrl("/iam/icon" + JOCJsonCommand.urlEncodedPath(identityProvider.getIdentityServiceName()));
                         }
 
                         identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));

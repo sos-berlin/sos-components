@@ -179,9 +179,7 @@ public class SOSOpenIdHandler {
         String tokenVerificationEndpoint = "";
         if (webserviceCredentials.getTokenVerificationUrl().isEmpty()) {
             tokenVerificationEndpoint = jsonConfigurationResponse.getString(INTROSPECTION_ENDPOINT, "");
-        } else {
-            tokenVerificationEndpoint = webserviceCredentials.getTokenVerificationUrl();
-        }
+        }  
 
         tokenEndpointUri = URI.create(jsonConfigurationResponse.getString(TOKEN_ENDPOINT, ""));
         String certEndpoit = jsonConfigurationResponse.getString(JWKS_URI_ENDPOINT, "");
