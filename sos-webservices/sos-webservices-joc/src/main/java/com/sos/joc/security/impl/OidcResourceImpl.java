@@ -28,7 +28,6 @@ import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.documentation.impl.DocumentationResourceImpl;
 import com.sos.joc.documentations.impl.DocumentationsImportResourceImpl;
-import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
@@ -93,7 +92,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                     if (properties.getOidc() != null) {
 
                         DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
-                        String iconPath = "/sos/.images/" + dbItemIamIdentityService.getIdentityServiceName();
+                        String iconPath = DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + dbItemIamIdentityService.getIdentityServiceName();
                         DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
                         if (dbItemDocumentation != null) {
                             identityProvider.setIamIconUrl("/iam/icon" + JOCJsonCommand.urlEncodedPath(identityProvider.getIdentityServiceName()));
@@ -158,14 +157,13 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             } catch (Exception e) {
             }
 
-            String folder = "/sos/.images";
             final String mediaSubType = file.getMediaType().getSubtype().replaceFirst("^x-", "");
             Optional<String> supportedSubType = SOSAuthHelper.SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
 
             if (supportedSubType.isPresent()) {
                 DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, null, CategoryType.IDENTITY, sosHibernateSession);
-                DocumentationsImportResourceImpl.postImportDocumentations(folder, identityServiceName, file, new DocumentationDBLayer(
-                        sosHibernateSession), dbAudit);
+                DocumentationsImportResourceImpl.postImportDocumentations(DocumentationDBLayer.SOS_IMAGES_FOLDER, identityServiceName, file,
+                        new DocumentationDBLayer(sosHibernateSession), dbAudit);
             } else {
                 throw new JocUnsupportedFileTypeException("Unsupported image file type (" + mediaSubType + "), supported types are "
                         + DocumentationHelper.SUPPORTED_SUBTYPES.toString());
@@ -194,11 +192,11 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             if (identityServiceName == null) {
                 identityServiceName = "";
             }
-            String request = String.format("%s/-identityServiceName-/%s", API_CALL_GET_ICON, identityServiceName);
+            String request = String.format("%s/%s", API_CALL_GET_ICON, identityServiceName);
             initLogging(request, null);
 
             checkRequiredParameter("identityServiceName", identityServiceName);
-            return DocumentationResourceImpl.postDocumentation("sos/.images/" + identityServiceName);
+            return DocumentationResourceImpl.postDocumentation(DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + identityServiceName);
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
