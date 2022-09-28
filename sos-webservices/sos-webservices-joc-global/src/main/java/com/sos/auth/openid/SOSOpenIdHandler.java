@@ -177,9 +177,9 @@ public class SOSOpenIdHandler {
         JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
         String userinfoEndpoint = jsonConfigurationResponse.getString("userinfo_endpoint", "");
         String tokenVerificationEndpoint = "";
-        if (webserviceCredentials.getTokenVerificationUrl().isEmpty()) {
-            tokenVerificationEndpoint = jsonConfigurationResponse.getString(INTROSPECTION_ENDPOINT, "");
-        }  
+
+        tokenVerificationEndpoint = jsonConfigurationResponse.getString(INTROSPECTION_ENDPOINT, "");
+          
 
         tokenEndpointUri = URI.create(jsonConfigurationResponse.getString(TOKEN_ENDPOINT, ""));
         String certEndpoit = jsonConfigurationResponse.getString(JWKS_URI_ENDPOINT, "");

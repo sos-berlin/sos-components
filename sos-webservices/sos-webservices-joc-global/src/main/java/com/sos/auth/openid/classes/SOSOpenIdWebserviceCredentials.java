@@ -31,12 +31,8 @@ public class SOSOpenIdWebserviceCredentials {
     private String clientSecret;
     private String clientId;
     private String providerName;
-    private String tokenVerificationUrl;
-
-    private String sessionRenewalUrl;
-    private String certificateUrl;
-    private String certificateIssuer;
-    private String certificateExpirationDate;
+ 
+  
     private String truststorePath = "";
     private String truststorePassword = "";
     private KeystoreType truststoreType = null;
@@ -68,10 +64,6 @@ public class SOSOpenIdWebserviceCredentials {
     public String getClientId() {
         return clientId;
     }
-    
-    public String getTokenVerificationUrl() {
-        return tokenVerificationUrl;
-    }
 
     public String getTruststorePath() {
         return truststorePath;
@@ -101,21 +93,6 @@ public class SOSOpenIdWebserviceCredentials {
         return providerName;
     }
 
-    public String getSessionRenewalUrl() {
-        return sessionRenewalUrl;
-    }
-
-    public String getCertificateUrl() {
-        return certificateUrl;
-    }
-
-    public String getCertificateIssuer() {
-        return certificateIssuer;
-    }
-
-    public String getCertificateExpirationDate() {
-        return certificateExpirationDate;
-    }
 
     private String getProperty(String value, String defaultValue) {
         if (value == null || value.isEmpty()) {
@@ -209,25 +186,7 @@ public class SOSOpenIdWebserviceCredentials {
                     truststorePath = p.toString();
                 }
 
-                if (sessionRenewalUrl == null) {
-                    sessionRenewalUrl = getProperty(properties.getOidc().getIamOidcSessionRenewalUrl(), "");
-                }
-
-                if (tokenVerificationUrl == null) {
-                    tokenVerificationUrl = getProperty(properties.getOidc().getIamOidcTokenVerificationUrl(), "");
-                }
-
-                if (certificateUrl == null) {
-                    certificateUrl = getProperty(properties.getOidc().getIamOidcCertificateUrl(), "");
-                }
-
-                if (certificateIssuer == null) {
-                    certificateIssuer = getProperty(properties.getOidc().getIamOidcCertificateIssuer(), "");
-                }
-
-                if (certificateExpirationDate == null) {
-                    certificateExpirationDate = getProperty(properties.getOidc().getIamOidcCertificateExpirationDate(), "");
-                }
+                      
 
             }
         } catch (SOSHibernateException | IOException e) {
