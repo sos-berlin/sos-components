@@ -27,8 +27,10 @@
 						"instructions": [
 							{
 								"TYPE": "Lock",
-								"lockId": "lock_1",
-								"count": 1,
+								"demands": [{
+									"lockId": "lock_1",
+									"count": 1
+								}],
 								"lockedWorkflow": {
 									"instructions": [
 										{

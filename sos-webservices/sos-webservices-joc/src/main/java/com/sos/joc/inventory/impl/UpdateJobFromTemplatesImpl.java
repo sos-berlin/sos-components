@@ -81,7 +81,7 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
             report.setJobs(new JobReports());
 
             Map<String, JobTemplate> jobTemplates = Collections.emptyMap();
-            Workflow workflow = (Workflow) JocInventory.content2IJSObject(config.getContent(), ConfigurationType.WORKFLOW.intValue());
+            Workflow workflow = (Workflow) JocInventory.content2IJSObject(config.getContent(), ConfigurationType.WORKFLOW);
             if (workflow.getJobs() != null && workflow.getJobs().getAdditionalProperties() != null && !workflow.getJobs().getAdditionalProperties()
                     .isEmpty()) {
                 // determine job templates

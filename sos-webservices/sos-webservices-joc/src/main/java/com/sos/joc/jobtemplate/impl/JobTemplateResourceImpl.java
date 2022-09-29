@@ -108,7 +108,7 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
                 entity = AssignedWorkflowsImpl.getState(JobTemplateStateText.DELETED);
             } else {
                 com.sos.inventory.model.jobtemplate.JobTemplate jt = (com.sos.inventory.model.jobtemplate.JobTemplate) JocInventory.content2IJSObject(
-                        dbJobTemplate.getContent(), ConfigurationType.JOBTEMPLATE.intValue());
+                        dbJobTemplate.getContent(), ConfigurationType.JOBTEMPLATE);
                 if (jt.getHash() != null && jt.getHash().equals(jobTemplateFilter.getJobTemplate().getHash())) {
                     entity = AssignedWorkflowsImpl.getState(JobTemplateStateText.IN_SYNC);
                 } else {

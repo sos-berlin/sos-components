@@ -79,10 +79,10 @@ import js7.data.order.OrderEvent.OrderCancellationMarked;
 import js7.data.order.OrderEvent.OrderDeleted$;
 import js7.data.order.OrderEvent.OrderFailed;
 import js7.data.order.OrderEvent.OrderFailedInFork;
-import js7.data.order.OrderEvent.OrderLockAcquired;
 import js7.data.order.OrderEvent.OrderLockEvent;
-import js7.data.order.OrderEvent.OrderLockQueued;
-import js7.data.order.OrderEvent.OrderLockReleased;
+import js7.data.order.OrderEvent.OrderLocksAcquired;
+import js7.data.order.OrderEvent.OrderLocksQueued;
+import js7.data.order.OrderEvent.OrderLocksReleased;
 import js7.data.order.OrderEvent.OrderNoticeEvent;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingKilled$;
@@ -122,8 +122,8 @@ public class EventService {
             OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class, OrderSuspended$.class,
             OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, OrderPrompted.class,
             OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, VersionedItemAddedOrChanged.class,
-            UnsignedSimpleItemEvent.class, UnsignedItemEvent.class, ItemDeleted.class, ItemAttached.class, BoardEvent.class, OrderLockAcquired.class,
-            OrderLockQueued.class, OrderLockReleased.class, OrderNoticeEvent.class, SubagentItemStateEvent.class);
+            UnsignedSimpleItemEvent.class, UnsignedItemEvent.class, ItemDeleted.class, ItemAttached.class, BoardEvent.class, OrderLocksAcquired.class,
+            OrderLocksQueued.class, OrderLocksReleased.class, OrderNoticeEvent.class, SubagentItemStateEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);

@@ -62,8 +62,11 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
         try {
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-            DBItemDocumentation dbItem = dbLayer.getDocumentation("/" + path);
-            String errMessage = "Couldn't find a database entry (/" + path + ") as documentation resource";
+            if (!path.startsWith("/")) {
+                path = "/" + path;
+            }
+            DBItemDocumentation dbItem = dbLayer.getDocumentation(path);
+            String errMessage = "Couldn't find a database entry (" + path + ") as documentation resource";
 
             if (dbItem == null) {
                 throw new DBMissingDataException(errMessage);

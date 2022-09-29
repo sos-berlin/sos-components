@@ -22,6 +22,7 @@ import com.sos.inventory.model.instruction.ExpectNotice;
 import com.sos.inventory.model.instruction.ExpectNotices;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.LockDemand;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
@@ -483,13 +484,14 @@ public class WorkflowConverter {
             List<WorkflowInstruction<Lock>> locks = searcher.getLockInstructions();
             if (locks != null) {
                 for (WorkflowInstruction<Lock> lock : locks) {
-                    if (!SOSString.isEmpty(lock.getInstruction().getLockName())) {
-                        lockIds.add(lock.getInstruction().getLockName());
-
-                        Integer currentCount = lock.getInstruction().getCount() == null ? -1 : lock.getInstruction().getCount();
-                        Integer previousCount = this.locks.get(lock.getInstruction().getLockName());
-                        if (previousCount == null || currentCount > previousCount) {
-                            this.locks.put(lock.getInstruction().getLockName(), currentCount);
+                    if (lock.getInstruction().getDemands() != null) {
+                        for (LockDemand ld : lock.getInstruction().getDemands()) {
+                            lockIds.add(ld.getLockName());
+                            Integer currentCount = ld.getCount() == null ? -1 : ld.getCount();
+                            Integer previousCount = this.locks.get(ld.getLockName());
+                            if (previousCount == null || currentCount > previousCount) {
+                                this.locks.put(ld.getLockName(), currentCount);
+                            }
                         }
                     }
                 }

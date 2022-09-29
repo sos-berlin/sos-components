@@ -405,7 +405,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     private static void addHash(DBItemInventoryConfiguration conf) throws IOException {
         if (ConfigurationType.JOBTEMPLATE.intValue() == conf.getType()) {
             JobTemplate jt = JsonSerializer.emptyValuesToNull((JobTemplate) JocInventory.content2IJSObject(conf.getContent(),
-                    ConfigurationType.JOBTEMPLATE.intValue()));
+                    ConfigurationType.JOBTEMPLATE));
             jt.setHash(JocInventory.hash(jt));
             conf.setContent(Globals.objectMapper.writeValueAsString(jt));
         }

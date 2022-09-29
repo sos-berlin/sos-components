@@ -297,14 +297,20 @@ public class WorkflowSearcher {
         if (r.isEmpty() || lockIdRegex == null) {
             return r;
         }
-        return r.stream().filter(l -> l.getInstruction().getLockName().matches(lockIdRegex)).collect(Collectors.toList());
+        return r.stream().filter(l -> l.getInstruction().getDemands() != null && l.getInstruction().getDemands().stream().map(d -> d.getLockName())
+                .anyMatch(n -> n.matches(lockIdRegex))).collect(Collectors.toList());
     }
 
     /** filter e.g.:
      * 
-     * 1) l -> l.getInstruction().getLockId().equals("myLockId") && l -> l.getInstruction().getCount() != null && l.getInstruction().getCount() > 0
-     * 
-     * 2) l -> { Lock lock = l.getInstruction(); return lock.getCount() != null && lock.getCount() > 0; }
+     * 1) l -> {
+     *      Lock lock = l.getInstruction();
+     *      return lock.getDemands() != null && lock.getDemands().stream().map(d -> d.getLockName()).anyMatch(n -> n.matches("myLockId")));
+     *   }
+     * 2) l -> {
+     *      Lock lock = l.getInstruction();
+     *      return lock.getDemands() != null && lock.getDemands().stream().map(d -> d.getCount()).anyMatch(c -> c > 0);
+     *   }
      * 
      * 3) Predicate<WorkflowInstruction<Lock>> filter = MyLockFilterFunction(1); */
     public List<WorkflowInstruction<Lock>> getLockInstructions(Predicate<? super WorkflowInstruction<Lock>> filter) {

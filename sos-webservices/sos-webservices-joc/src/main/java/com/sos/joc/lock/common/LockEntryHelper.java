@@ -208,16 +208,16 @@ public class LockEntryHelper {
                     .withPositions();
             Instruction in = jd.asScala().instruction(jo.workflowPosition().position().asScala());
             if (in != null && in instanceof LockInstruction) {
-                LockInstruction lin = (LockInstruction) in;
-                if (lockId.equals(lin.lockPath().string())) {
-                    Optional<Object> c = OptionConverters.toJava(lin.count());
-                    if (c != null && c.isPresent()) {
-                        l.setType(WorkflowLockType.SHARED);
-                        l.setCount((Integer) c.get());
-                    } else {
-                        l.setType(WorkflowLockType.EXCLUSIVE);
-                    }
-                }
+                JavaConverters.asJava(((LockInstruction) in).demands()).stream().filter(ld -> lockId.equals(ld.lockPath().string())).findAny()
+                        .ifPresent(ld -> {
+                            Optional<Object> c = OptionConverters.toJava(ld.count());
+                            if (c != null && c.isPresent()) {
+                                l.setType(WorkflowLockType.SHARED);
+                                l.setCount((Integer) c.get());
+                            } else {
+                                l.setType(WorkflowLockType.EXCLUSIVE);
+                            }
+                        });
             }
         } catch (Throwable e) {
             LOGGER.error(String.format("[LockId=%s][%s]%s", lockId, jo.workflowId().path().string(), e.toString()), e);

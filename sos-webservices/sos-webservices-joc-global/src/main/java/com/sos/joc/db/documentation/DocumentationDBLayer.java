@@ -1,7 +1,6 @@
 package com.sos.joc.db.documentation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +28,7 @@ import com.sos.joc.model.tree.Tree;
 public class DocumentationDBLayer {
 
     private SOSHibernateSession session;
+    public static final String SOS_IMAGES_FOLDER = "/sos/.images";
 
     public DocumentationDBLayer(SOSHibernateSession connection) {
         session = connection;
@@ -299,7 +299,11 @@ public class DocumentationDBLayer {
             }
             List<String> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
-                return result.stream().map(s -> {
+                Stream<String> resultStream = result.stream();
+                if (!folderName.equals(SOS_IMAGES_FOLDER) && !folderName.startsWith(SOS_IMAGES_FOLDER + "/")) {
+                    resultStream = resultStream.filter(s -> !s.startsWith(SOS_IMAGES_FOLDER + "/") && !s.equals(SOS_IMAGES_FOLDER));
+                }
+                return resultStream.map(s -> {
                     Tree tree = new Tree();
                     tree.setPath(s);
                     return tree;
@@ -307,7 +311,7 @@ public class DocumentationDBLayer {
             } else if (folderName.equals(JocInventory.ROOT_FOLDER)) {
                 Tree tree = new Tree();
                 tree.setPath(JocInventory.ROOT_FOLDER);
-                return Arrays.asList(tree).stream().collect(Collectors.toSet());
+                return Collections.singleton(tree).stream().collect(Collectors.toSet());
             }
             return new HashSet<>();
         } catch (SOSHibernateInvalidSessionException ex) {

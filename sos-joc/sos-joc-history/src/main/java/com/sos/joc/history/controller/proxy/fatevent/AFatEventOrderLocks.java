@@ -1,20 +1,21 @@
 package com.sos.joc.history.controller.proxy.fatevent;
 
 import java.util.Date;
+import java.util.List;
 
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.WorkflowInfo.Position;
 
-public abstract class AFatEventOrderLock extends AFatEvent {
+public abstract class AFatEventOrderLocks extends AFatEvent {
 
     private final String orderId;
-    private final OrderLock orderLock;
+    private final List<OrderLock> orderLocks;
     private final String position;
 
-    public AFatEventOrderLock(Long eventId, Date eventDatetime, String orderId, OrderLock orderLock, Position position) {
+    public AFatEventOrderLocks(Long eventId, Date eventDatetime, String orderId, List<OrderLock> orderLocks, Position position) {
         super(eventId, eventDatetime);
         this.orderId = orderId;
-        this.orderLock = orderLock;
+        this.orderLocks = orderLocks;
         this.position = position == null ? null : position.asString();
     }
 
@@ -27,8 +28,8 @@ public abstract class AFatEventOrderLock extends AFatEvent {
         return orderId;
     }
 
-    public OrderLock getOrderLock() {
-        return orderLock;
+    public List<OrderLock> getOrderLocks() {
+        return orderLocks;
     }
 
     public String getPosition() {

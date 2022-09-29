@@ -65,7 +65,7 @@ import com.sos.joc.history.controller.exception.FatEventOrderNotFoundException;
 import com.sos.joc.history.controller.exception.FatEventOrderStepNotFoundException;
 import com.sos.joc.history.controller.proxy.HistoryEventType;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEvent;
-import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderLock;
+import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderLocks;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderProcessed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentCouplingFailed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentReady;
@@ -375,16 +375,16 @@ public class HistoryModel {
 
                         postEventOrderTerminated(hob);
                         break;
-                    case OrderLockAcquired:
-                        orderLock(dbLayer, (AFatEventOrderLock) entry, EventType.OrderLockAcquired);
+                    case OrderLocksAcquired:
+                        orderLock(dbLayer, (AFatEventOrderLocks) entry, EventType.OrderLocksAcquired);
                         counter.getOrder().addLockAcquired();
                         break;
-                    case OrderLockQueued:
-                        orderLock(dbLayer, (AFatEventOrderLock) entry, EventType.OrderLockQueued);
+                    case OrderLocksQueued:
+                        orderLock(dbLayer, (AFatEventOrderLocks) entry, EventType.OrderLocksQueued);
                         counter.getOrder().addLockQueued();
                         break;
-                    case OrderLockReleased:
-                        orderLock(dbLayer, (AFatEventOrderLock) entry, EventType.OrderLockReleased);
+                    case OrderLocksReleased:
+                        orderLock(dbLayer, (AFatEventOrderLocks) entry, EventType.OrderLocksReleased);
                         counter.getOrder().addLockReleased();
                         break;
                     case EventWithProblem:
@@ -1186,7 +1186,7 @@ public class HistoryModel {
         storeLog2File(le);
     }
 
-    private void orderLock(DBLayerHistory dbLayer, AFatEventOrderLock entry, EventType eventType) throws Exception {
+    private void orderLock(DBLayerHistory dbLayer, AFatEventOrderLocks entry, EventType eventType) throws Exception {
         checkControllerTimezone(dbLayer);
 
         CachedOrder co = getCachedOrderByCurrentOrderId(dbLayer, entry.getOrderId(), entry.getEventId());
@@ -2062,22 +2062,24 @@ public class HistoryModel {
             error.setErrorText(logEntry.getErrorText());
             entry.setError(error);
         }
-        if (logEntry.getOrderLock() != null) {
-            Lock lock = new Lock();
-            lock.setLockName(logEntry.getOrderLock().getLockId());
-            lock.setLimit(logEntry.getOrderLock().getLimit());
-            lock.setCount(logEntry.getOrderLock().getCount());
-            if (logEntry.getOrderLock().getState() != null) {
-                LockState lockState = new LockState();
-
-                List<String> l = logEntry.getOrderLock().getState().getOrderIds();
-                lockState.setOrderIds(l == null || l.size() == 0 ? null : String.join(",", l));
-
-                l = logEntry.getOrderLock().getState().getQueuedOrderIds();
-                lockState.setQueuedOrderIds(l == null || l.size() == 0 ? null : String.join(",", l));
-                lock.setLockState(lockState);
-            }
-            entry.setLock(lock);
+        if (logEntry.getOrderLocks() != null) {
+            entry.setLocks(logEntry.getOrderLocks().stream().map(ol -> {
+                Lock lock = new Lock();
+                lock.setLockName(ol.getLockId());
+                lock.setLimit(ol.getLimit());
+                lock.setCount(ol.getCount());
+                if (ol.getState() != null) {
+                    LockState lockState = new LockState();
+                    
+                    List<String> l = ol.getState().getOrderIds();
+                    lockState.setOrderIds(l == null || l.size() == 0 ? null : String.join(",", l));
+                    
+                    l = ol.getState().getQueuedOrderIds();
+                    lockState.setQueuedOrderIds(l == null || l.size() == 0 ? null : String.join(",", l));
+                    lock.setLockState(lockState);
+                }
+                return lock;
+            }).collect(Collectors.toList()));
         }
         return entry;
     }
