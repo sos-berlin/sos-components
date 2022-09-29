@@ -28,7 +28,6 @@ import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.documentation.impl.DocumentationResourceImpl;
 import com.sos.joc.documentations.impl.DocumentationsImportResourceImpl;
-import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
@@ -37,8 +36,10 @@ import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.identityservice.IdentityProvider;
 import com.sos.joc.model.security.identityservice.IdentityProviders;
+import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.security.resource.IOidcResource;
+import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 
@@ -48,6 +49,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(OidcResourceImpl.class);
 
     private static final String API_CALL_IDENTITY_PROVIDERS = "./iam/identityproviders";
+    private static final String API_CALL_IDENTITY_CLIENTS = "./iam/identitycliens";
     private static final String API_CALL_IMPORT_ICON = "./iam/import";
     private static final String API_CALL_GET_ICON = "./iam/icon";
 
@@ -96,13 +98,11 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                         String iconPath = "/sos/.images/" + dbItemIamIdentityService.getIdentityServiceName();
                         DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
                         if (dbItemDocumentation != null) {
-                            identityProvider.setIamIconUrl("/iam/icon" + JOCJsonCommand.urlEncodedPath(identityProvider.getIdentityServiceName()));
+                            identityProvider.setIamIconUrl("/iam/icon/" + JOCJsonCommand.urlEncodedPath(identityProvider.getIdentityServiceName()));
                         }
 
-                        identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
                         identityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
                         identityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
-                        identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
                     }
                 }
                 identityProviders.getIdentityServiceItems().add(identityProvider);
@@ -117,6 +117,63 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
+    }
+
+    @Override
+    public JOCDefaultResponse postIdentityclient(byte[] body) {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+
+            initLogging(API_CALL_IDENTITY_CLIENTS, body);
+            IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
+            JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
+
+            checkRequiredParameter("identityServiceName", identityServiceFilter.getIdentityServiceName());
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_CLIENTS);
+            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
+            filter.setDisabled(false);
+            filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
+            List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+
+            IdentityProvider identityProvider = new IdentityProvider();
+            if (listOfIdentityServices.size() > 0) {
+
+                identityProvider.setIdentityServiceName(listOfIdentityServices.get(0).getIdentityServiceName());
+
+                JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+                JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
+                jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
+                jocConfigurationFilter.setName(listOfIdentityServices.get(0).getIdentityServiceName());
+                jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC.value());
+                List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
+                if (listOfJocConfigurations.size() == 1) {
+                    DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
+                    com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
+                            com.sos.joc.model.security.properties.Properties.class);
+
+                    if (properties.getOidc() != null) {
+                        identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
+                        identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
+                    }
+                }
+            }
+
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProvider));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
+
+    @Override
+    public JOCDefaultResponse postIdentityclient2(byte[] body) {
+        return postIdentityclient(body);
     }
 
     @Override
@@ -194,7 +251,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             if (identityServiceName == null) {
                 identityServiceName = "";
             }
-            String request = String.format("%s/-identityServiceName-/%s", API_CALL_GET_ICON, identityServiceName);
+            String request = String.format("%s/%s", API_CALL_GET_ICON, identityServiceName);
             initLogging(request, null);
 
             checkRequiredParameter("identityServiceName", identityServiceName);

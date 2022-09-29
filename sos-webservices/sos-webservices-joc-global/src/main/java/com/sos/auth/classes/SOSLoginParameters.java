@@ -1,5 +1,7 @@
 package com.sos.auth.classes;
 
+import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 public class SOSLoginParameters {
@@ -12,6 +14,7 @@ public class SOSLoginParameters {
     private String accessToken;
     private String idToken;
     private String account;
+    private SOSOpenIdWebserviceCredentials webserviceCredentials;
 
     public HttpServletRequest getRequest() {
         return request;
@@ -77,6 +80,14 @@ public class SOSLoginParameters {
         if (refreshToken != null && (this.refreshToken == null || this.refreshToken.isEmpty())) {
             this.refreshToken = refreshToken;
         }
+    }
+
+    public SOSOpenIdWebserviceCredentials getWebserviceCredentials() {
+        return webserviceCredentials;
+    }
+
+    public void setWebserviceCredentials(SOSOpenIdWebserviceCredentials webserviceCredentials) {
+        this.webserviceCredentials = webserviceCredentials;
     }
 
 }

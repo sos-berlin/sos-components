@@ -23,6 +23,16 @@ public interface IOidcResource {
     public JOCDefaultResponse postIdentityproviders();
  
     @POST
+    @Path("identityclients")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postIdentityclient2(byte[] body);
+ 
+    @POST
+    @Path("identityclient")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postIdentityclient(byte[] body);
+ 
+    @POST
     @Path("import")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
@@ -35,7 +45,7 @@ public interface IOidcResource {
             @FormDataParam("comment") String comment);
  
     @GET
-    @Path("/icon/{identityServiceName : .+}")
+    @Path("icon/{identityServiceName : .+}")
     public JOCDefaultResponse getIcon(@PathParam("identityServiceName") String identityServiceName);
  
 }

@@ -2,7 +2,6 @@ package com.sos.auth.openid.classes;
 
 import java.io.UnsupportedEncodingException;
 import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
 
 import com.auth0.jwt.JWT;
@@ -11,7 +10,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.sos.commons.exception.SOSException;
-import com.sos.commons.sign.keys.key.KeyUtil;
 
 public class SOSJWTVerifier {
 

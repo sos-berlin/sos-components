@@ -34,23 +34,12 @@ public class SOSOpenIdLogin implements ISOSLogin {
     public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
 
         try {
-            KeyStore truststore = null;
             SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = null;
             if (currentAccount.getSosLoginParameters().getAccessToken() != null) {
 
-                SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
-                webserviceCredentials.setValuesFromProfile(identityService);
-                webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
-                webserviceCredentials.setIdToken(currentAccount.getSosLoginParameters().getIdToken());
-                if (webserviceCredentials.getTruststorePath() != null & !webserviceCredentials.getTruststorePath().isEmpty()) {
-                    if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
-                        truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
-                                webserviceCredentials.getTruststorePassword());
-                    } else{
-                        LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
-                    }
-                }
-                SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials, truststore);
+                SOSOpenIdWebserviceCredentials webserviceCredentials = currentAccount.getSosLoginParameters().getWebserviceCredentials();
+
+                SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
                 String accountName = sosOpenIdHandler.decodeIdToken(webserviceCredentials.getIdToken());
                 currentAccount.setAccountName(accountName);
                 webserviceCredentials.setAccount(accountName);

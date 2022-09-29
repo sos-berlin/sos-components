@@ -5,6 +5,8 @@ import java.io.StringReader;
 import java.math.BigInteger;
 import java.net.SocketException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
@@ -34,11 +36,18 @@ import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
 import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 
 public class SOSOpenIdHandler {
+
+    private static final String PREFERRED_USERNAME = "preferred_username";
+
+    private static final String EMAIL = "email";
+
+    private static final String CLAIMS_SUPPORTED = "claims_supported";
 
     private static final String WELL_KNOWN_OPENID_CONFIGURATION = "/.well-known/openid-configuration";
 
@@ -55,7 +64,6 @@ public class SOSOpenIdHandler {
     private static final String AUD_FIELD = "aud";
     private static final String ALG_FIELD = "alg";
     private static final String KID_FIELD = "kid";
-    private static final String EMAIL_FIELD = "email";
     private SOSOpenIdWebserviceCredentials webserviceCredentials;
     private static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
     private static final String CONTENT_TYPE = "Content-Type";
@@ -65,14 +73,22 @@ public class SOSOpenIdHandler {
     private JsonObject jsonPayload;
     private KeyStore truststore = null;
     private URI tokenEndpointUri;
+    private String accountIdentifier = null;
 
-    public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials, KeyStore truststore) {
+    public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials) {
         this.webserviceCredentials = webserviceCredentials;
-        this.truststore = truststore;
-    }
 
-    public SOSOpenIdHandler() {
-    }
+        if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
+            try {
+                this.truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                        webserviceCredentials.getTruststorePassword());
+            } catch (Exception e) {
+                LOGGER.error("", e);
+            }
+        } else {
+            LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
+        }
+     }
 
     private String getFormResponse(Boolean post, URI requestUri, Map<String, String> body, String xAccessToken) throws SOSException, SocketException {
         SOSRestApiClient restApiClient = new SOSRestApiClient();
@@ -150,9 +166,40 @@ public class SOSOpenIdHandler {
 
     }
 
+    public String getAccountIdentifier() throws SocketException, SOSException {
+        String result = "";
+        URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + WELL_KNOWN_OPENID_CONFIGURATION);
+        String configurationResponse = getFormResponse(false, requestUri, null, null);
+        JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(configurationResponse));
+        JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
+        JsonArray claimsSupported = jsonConfigurationResponse.getJsonArray(CLAIMS_SUPPORTED);
+        if (claimsSupported != null && claimsSupported.size() > 0) {
+            int len = claimsSupported.size();
+            for (int j = 0; j < len; j++) {
+                String supported = claimsSupported.getString(j);
+                if (supported.equals(PREFERRED_USERNAME)) {
+                    result = PREFERRED_USERNAME;
+                    break;
+                }
+            }
+            if (result == null) {
+                for (int j = 0; j < len; j++) {
+                    String supported = claimsSupported.getString(j);
+                    if (supported.equals(EMAIL)) {
+                        result = EMAIL;
+                        break;
+                    }
+                }
+            }
+        } else {
+            result = EMAIL;
+        }
+        return result;
+    }
+
     public void setTokenEndpoint() throws SocketException, SOSException {
         URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + WELL_KNOWN_OPENID_CONFIGURATION);
-        String configurationResponse = getFormResponse(false, requestUri, null, webserviceCredentials.getAccessToken());
+        String configurationResponse = getFormResponse(false, requestUri, null, null);
         JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(configurationResponse));
         JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
         tokenEndpointUri = URI.create(jsonConfigurationResponse.getString(TOKEN_ENDPOINT, ""));
@@ -162,7 +209,6 @@ public class SOSOpenIdHandler {
 
         SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = new SOSOpenIdAccountAccessToken();
 
-        String accountFromUrl = "";
         Long expiresIn = 0L;
         String account = null;
         String alg = null;
@@ -172,31 +218,15 @@ public class SOSOpenIdHandler {
 
         URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + WELL_KNOWN_OPENID_CONFIGURATION);
         String configurationResponse = "";
-        configurationResponse = getFormResponse(false, requestUri, null, webserviceCredentials.getAccessToken());
+        configurationResponse = getFormResponse(false, requestUri, null, null);
         JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(configurationResponse));
         JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
-        String userinfoEndpoint = jsonConfigurationResponse.getString("userinfo_endpoint", "");
         String tokenVerificationEndpoint = "";
 
         tokenVerificationEndpoint = jsonConfigurationResponse.getString(INTROSPECTION_ENDPOINT, "");
-          
 
         tokenEndpointUri = URI.create(jsonConfigurationResponse.getString(TOKEN_ENDPOINT, ""));
         String certEndpoit = jsonConfigurationResponse.getString(JWKS_URI_ENDPOINT, "");
-
-        if ((userinfoEndpoint != null) && !userinfoEndpoint.isEmpty()) {
-            requestUri = URI.create(userinfoEndpoint);
-            String userInfoResponse = "";
-
-            Map<String, String> body = new HashMap<String, String>();
-            body.put("client_id", webserviceCredentials.getClientId());
-            body.put("client_secret", webserviceCredentials.getClientSecret());
-            userInfoResponse = getFormResponse(true, requestUri, body, webserviceCredentials.getAccessToken());
-
-            JsonReader jsonReaderUserInfoResponse = Json.createReader(new StringReader(userInfoResponse));
-            JsonObject jsonUserInfoResponse = jsonReaderUserInfoResponse.readObject();
-            accountFromUrl = jsonUserInfoResponse.getString(EMAIL_FIELD, "");
-        }
 
         boolean tokenIsActive = true;
         if ((tokenVerificationEndpoint != null) && !tokenVerificationEndpoint.isEmpty()) {
@@ -207,7 +237,7 @@ public class SOSOpenIdHandler {
             body.put("client_id", webserviceCredentials.getClientId());
             body.put("client_secret", webserviceCredentials.getClientSecret());
             body.put("token", webserviceCredentials.getIdToken());
-            tokenVerificationResponse = getFormResponse(true, requestUri, body, webserviceCredentials.getAccessToken());
+            tokenVerificationResponse = getFormResponse(true, requestUri, body, null);
 
             JsonReader jsonReaderTokenVerificationResponse = Json.createReader(new StringReader(tokenVerificationResponse));
             JsonObject jsonTokenVerificationResponse = jsonReaderTokenVerificationResponse.readObject();
@@ -227,7 +257,7 @@ public class SOSOpenIdHandler {
             kid = jsonHeader.getString(KID_FIELD, "");
             aud = jsonPayload.getString(AUD_FIELD, ""); // clientid
             iss = jsonPayload.getString(ISS_FIELD, ""); // url
-            account = jsonPayload.getString(EMAIL_FIELD, "");
+            account = jsonPayload.getString(accountIdentifier, "");
 
             sosOpenIdAccountAccessToken.setExpiresIn(expiresIn);
 
@@ -240,10 +270,6 @@ public class SOSOpenIdHandler {
         valid = valid && webserviceCredentials.getClientId().equals(aud);
         valid = valid && webserviceCredentials.getAuthenticationUrl().equals(iss);
         valid = valid && webserviceCredentials.getAccount().equals(account);
-
-        if (valid && (userinfoEndpoint != null) && !userinfoEndpoint.isEmpty()) {
-            valid = valid && webserviceCredentials.getAccount().equals(accountFromUrl);
-        }
 
         valid = valid && expiresIn > 0;
         try {
@@ -325,7 +351,7 @@ public class SOSOpenIdHandler {
 
             String response;
             try {
-                response = getFormResponse(true, tokenEndpointUri, body, webserviceCredentials.getAccessToken());
+                response = getFormResponse(true, tokenEndpointUri, body, null);
 
                 JsonReader jsonReaderTokenResponse = Json.createReader(new StringReader(response));
                 JsonObject jsonTokenResponse = jsonReaderTokenResponse.readObject();
@@ -354,6 +380,11 @@ public class SOSOpenIdHandler {
         JsonReader jsonReaderPayload = null;
 
         try {
+
+            if (accountIdentifier == null) {
+                accountIdentifier = getAccountIdentifier();
+            }
+
             String[] accessTokenParts = idToken.split("\\.");
             Base64.Decoder decoder = Base64.getUrlDecoder();
 
@@ -364,7 +395,7 @@ public class SOSOpenIdHandler {
             jsonReaderPayload = Json.createReader(new StringReader(payload));
             jsonHeader = jsonReaderHeader.readObject();
             jsonPayload = jsonReaderPayload.readObject();
-            return jsonPayload.getString(EMAIL_FIELD, "");
+            return jsonPayload.getString(accountIdentifier, "");
 
         } catch (Exception e) {
             LOGGER.warn(String.format("Could not decode jwt id-token"));

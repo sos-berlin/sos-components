@@ -2,6 +2,9 @@ package com.sos.auth.classes;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyStore;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,9 +24,11 @@ import com.sos.auth.keycloak.classes.SOSKeycloakLogin;
 import com.sos.auth.ldap.classes.SOSLdapLogin;
 import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.auth.openid.classes.SOSOpenIdLogin;
+import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.auth.vault.classes.SOSVaultLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JocCockpitProperties;
@@ -765,8 +770,20 @@ public class SOSServicePermissionIam {
         if (sosLoginParameters.getBasicAuthorization() == null || sosLoginParameters.getBasicAuthorization().isEmpty()) {
             if (sosLoginParameters.getAccount() == null) {
                 if (sosLoginParameters.getIdToken() != null && !sosLoginParameters.getIdToken().isEmpty()) {
-                    SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler();
-                    sosLoginParameters.setAccount(sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken()));
+                    SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
+                    SOSIdentityService sosIdentityService = new SOSIdentityService(sosLoginParameters.getIdentityService(),
+                            IdentityServiceTypes.OIDC);
+                    webserviceCredentials.setValuesFromProfile(sosIdentityService);
+                    webserviceCredentials.setAccessToken(sosLoginParameters.getAccessToken());
+                    webserviceCredentials.setRefreshToken(sosLoginParameters.getRefreshToken());
+                    webserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
+                    if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
+                        SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
+                        sosLoginParameters.setAccount(sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken()));
+                        sosLoginParameters.setWebserviceCredentials(webserviceCredentials);
+                    } else {
+                        LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
+                    }
                 } else {
                     sosLoginParameters.setAccount(sosLoginParameters.getClientCertCN());
                 }
