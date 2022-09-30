@@ -3,6 +3,7 @@ package com.sos.joc.classes;
 
 import com.sos.auth.classes.SOSAuthAccessTokenHandler;
 import com.sos.auth.classes.SOSAuthCurrentAccountsList;
+import com.sos.auth.classes.SOSLocker;
  
 
 public final class JocWebserviceDataContainer {
@@ -10,6 +11,7 @@ public final class JocWebserviceDataContainer {
     
     private static SOSAuthAccessTokenHandler sosAuthAccessTokenHandler;
     private static SOSAuthCurrentAccountsList currentAccountsList;
+    private static SOSLocker sosLocker;
     
 
     private JocWebserviceDataContainer() {
@@ -27,6 +29,13 @@ public final class JocWebserviceDataContainer {
         return currentAccountsList;
     }
 
+    public  SOSLocker getSOSLocker() {
+        if (sosLocker == null) {
+            sosLocker = new SOSLocker();
+        }
+        return sosLocker;
+    }
+    
     public  void setCurrentAccountsList(SOSAuthCurrentAccountsList currentAccountsList) {
         JocWebserviceDataContainer.currentAccountsList = currentAccountsList;
     }
