@@ -78,17 +78,19 @@ public class SOSOpenIdHandler {
     public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials) {
         this.webserviceCredentials = webserviceCredentials;
 
-        if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
-            try {
-                this.truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
-                        webserviceCredentials.getTruststorePassword());
-            } catch (Exception e) {
-                LOGGER.error("", e);
+        if (webserviceCredentials != null && webserviceCredentials.getTruststorePath() != null) {
+            if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
+                try {
+                    this.truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials
+                            .getTrustStoreType(), webserviceCredentials.getTruststorePassword());
+                } catch (Exception e) {
+                    LOGGER.error("", e);
+                }
+            } else {
+                LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
             }
-        } else {
-            LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
         }
-     }
+    }
 
     private String getFormResponse(Boolean post, URI requestUri, Map<String, String> body, String xAccessToken) throws SOSException, SocketException {
         SOSRestApiClient restApiClient = new SOSRestApiClient();
@@ -400,8 +402,10 @@ public class SOSOpenIdHandler {
         } catch (Exception e) {
             LOGGER.warn(String.format("Could not decode jwt id-token"));
         } finally {
-            jsonReaderHeader.close();
-            jsonReaderPayload.close();
+            if (jsonReaderHeader != null) {
+                jsonReaderHeader.close();
+                jsonReaderPayload.close();
+            }
         }
 
         return "";

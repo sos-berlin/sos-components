@@ -780,10 +780,11 @@ public class SOSServicePermissionIam {
                     if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
                         SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
                         sosLoginParameters.setAccount(sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken()));
-                        sosLoginParameters.setWebserviceCredentials(webserviceCredentials);
                     } else {
                         LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
                     }
+                    sosLoginParameters.setWebserviceCredentials(webserviceCredentials);
+
                 } else {
                     sosLoginParameters.setAccount(sosLoginParameters.getClientCertCN());
                 }

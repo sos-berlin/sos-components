@@ -103,6 +103,8 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
                         identityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
                         identityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
+                        identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
+                        identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
                     }
                 }
                 identityProviders.getIdentityServiceItems().add(identityProvider);
@@ -171,10 +173,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
         }
     }
 
-    @Override
-    public JOCDefaultResponse postIdentityclient2(byte[] body) {
-        return postIdentityclient(body);
-    }
+ 
 
     @Override
     public JOCDefaultResponse postImportDocumentations(String xAccessToken, String identityServiceName, FormDataBodyPart file, String timeSpent,
