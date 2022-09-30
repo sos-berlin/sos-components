@@ -4,18 +4,19 @@ package com.sos.controller.model.workflow;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.fileordersource.FileOrderSource;
-import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -68,30 +69,31 @@ public class WorkflowDeps
      * @param hasExpectedNoticeBoards
      * @param instructions
      * @param hasPostNoticeBoards
+     * @param title
+     * @param orderPreparation
+     * @param path
+     * @param fileOrderSources
+     * @param expectedNoticeBoards
+     * @param state
+     * @param hasAddOrderDependencies
+     * @param documentationName
      * @param jobResourceNames
      * @param jobs
      * @param timeZone
-     * @param tYPE
-     * @param title
      * @param versionDate
      * @param version
      * @param addOrderToWorkflows
      * @param suspended
      * @param postNoticeBoards
-     * @param orderPreparation
-     * @param path
-     * @param fileOrderSources
+     * @param numOfStoppedInstructions
      * @param versionId
      * @param forkListVariables
-     * @param expectedNoticeBoards
      * @param isCurrentVersion
-     * @param state
-     * @param hasAddOrderDependencies
-     * @param documentationName
      * @param addOrderFromWorkflows
+     * @param numOfSkippedInstructions
      */
-    public WorkflowDeps(BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, List<Workflow> addOrderToWorkflows, List<Workflow> addOrderFromWorkflows, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasAddOrderDependencies, DeployType tYPE, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
-        super(path, isCurrentVersion, versionDate, state, suspended, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, hasAddOrderDependencies, tYPE, version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
+    public WorkflowDeps(BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, List<Workflow> addOrderToWorkflows, List<Workflow> addOrderFromWorkflows, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasAddOrderDependencies, Integer numOfStoppedInstructions, Integer numOfSkippedInstructions, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
+        super(path, isCurrentVersion, versionDate, state, suspended, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, hasAddOrderDependencies, numOfStoppedInstructions, numOfSkippedInstructions, version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
         this.expectedNoticeBoards = expectedNoticeBoards;
         this.postNoticeBoards = postNoticeBoards;
         this.addOrderToWorkflows = addOrderToWorkflows;

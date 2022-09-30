@@ -982,6 +982,8 @@ public class WorkflowsHelper {
     public static void setStateAndSuspended(JControllerState currentstate, Workflow workflow) {
         workflow.setState(SyncStateHelper.getState(SyncStateText.UNKNOWN));
         workflow.setSuspended(false);
+        workflow.setNumOfSkippedInstructions(0);
+        workflow.setNumOfStoppedInstructions(0);
         if (currentstate != null) {
             JWorkflowId wId = JWorkflowId.of(JocInventory.pathToName(workflow.getPath()), workflow.getVersionId());
             SyncStateHelper.setWorkflowWithStateAndSuspended(workflow, currentstate.repo().idToCheckedWorkflow(wId), currentstate);

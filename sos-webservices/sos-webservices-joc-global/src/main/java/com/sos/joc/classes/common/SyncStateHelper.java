@@ -27,6 +27,8 @@ import js7.data.workflow.WorkflowPathControl;
 import js7.data_for_java.common.JJsonable;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
+import js7.data_for_java.workflow.JWorkflowId;
+import scala.collection.JavaConverters;
 
 public class SyncStateHelper {
     
@@ -169,12 +171,19 @@ public class SyncStateHelper {
     
     public static void setWorkflowWithStateAndSuspended(Workflow workflow, Either<Problem, JWorkflow> either, JControllerState currentstate) {
         workflow.setSuspended(false);
+        workflow.setNumOfSkippedInstructions(0);
+        workflow.setNumOfStoppedInstructions(0);
+        
         SyncStateText stateText = SyncStateText.NOT_IN_SYNC;
         if (either != null && either.isRight()) {
             stateText = SyncStateText.IN_SYNC;
-            WorkflowPath wPath = either.get().id().path();
+            JWorkflowId wId = either.get().id();
+            WorkflowPath wPath = wId.path();
             Optional<WorkflowPathControl> controlState = WorkflowsHelper.getWorkflowPathControl(currentstate, wPath, false);
+            WorkflowsHelper.getWorkflowControl(currentstate, wId, false).map(c -> c.breakpoints()).ifPresent(c -> workflow.setNumOfStoppedInstructions(
+                    c.size()));
             if (controlState.isPresent()) {
+                workflow.setNumOfSkippedInstructions(JavaConverters.asJava(controlState.get().skip()).size());
                 if (currentstate.workflowPathControlToIgnorantAgent().getOrDefault(wPath, Collections.emptySet()).size() > 0) {
                     stateText = SyncStateText.OUTSTANDING;
                 } else if (controlState.get().suspended()) {

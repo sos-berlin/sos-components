@@ -2,6 +2,7 @@ package com.sos.joc.workflows.impl;
 
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
@@ -35,6 +36,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.Workflows;
 import com.sos.joc.model.workflow.WorkflowsFilter;
+import com.sos.joc.model.workflow.search.InstructionStateText;
 import com.sos.joc.workflows.resource.IWorkflowsResource;
 import com.sos.schema.JsonValidator;
 
@@ -95,6 +97,11 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         String controllerId = workflowsFilter.getControllerId();
         Set<String> workflowNamesWithAddOrders = dbLayer.getAddOrderWorkflows(controllerId);
         boolean withStatesFilter = withStatesFilter(workflowsFilter.getStates());
+        if (workflowsFilter.getInstructionStates() == null) {
+            workflowsFilter.setInstructionStates(Collections.emptyList());
+        }
+        boolean withSkippedInstructionStateFilter = workflowsFilter.getInstructionStates().contains(InstructionStateText.SKIPPED);
+        boolean withStoppedInstructionStateFilter = workflowsFilter.getInstructionStates().contains(InstructionStateText.STOPPED);
 
         Map<String, List<FileOrderSource>> fileOrderSources = (compact) ? null : WorkflowsHelper
                 .workflowToFileOrderSources(currentstate, controllerId, contents.parallelStream().filter(DeployedContent::isCurrentVersion).map(
@@ -113,6 +120,19 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 WorkflowsHelper.setStateAndSuspended(currentstate, workflow);
                 if (withStatesFilter && !workflowsFilter.getStates().contains(workflow.getState().get_text())) {
                     return null;
+                }
+                if (withSkippedInstructionStateFilter && withStoppedInstructionStateFilter) {
+                    if (workflow.getNumOfSkippedInstructions() + workflow.getNumOfStoppedInstructions() == 0) {
+                        return null;
+                    }
+                } else if (withSkippedInstructionStateFilter) {
+                    if (workflow.getNumOfSkippedInstructions() == 0) {
+                        return null;
+                    }
+                } else if (withStoppedInstructionStateFilter) {
+                    if (workflow.getNumOfStoppedInstructions() == 0) {
+                        return null;
+                    }
                 }
                 if (workflow.getIsCurrentVersion() && fileOrderSources != null) {
                     workflow.setFileOrderSources(fileOrderSources.get(JocInventory.pathToName(w.getPath())));
