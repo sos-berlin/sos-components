@@ -73,7 +73,7 @@ public class JsonValidator {
             put("UrlParameter", "controller/urlParam-schema.json");
             put("TestConnect", "controller/testParam-schema.json");
             put("RegisterParameters", "controller/registerParam-schema.json");
-            
+
             put("AgentCommand", "agent/agentCommand-schema.json");
             put("SubAgentCommand", "agent/subagentCommand-schema.json");
             put("SubAgentsCommand", "agent/subagentsCommand-schema.json");
@@ -94,13 +94,13 @@ public class JsonValidator {
             put("AgentImportFilter", "agent/transfer/agentImportFilter-schema.json");
             put("VersionsFilter", "joc/versionsFilter-schema.json");
 
-            put ("JobTemplateFilter", "jobTemplate/jobTemplateFilter-schema.json");
-            put ("JobTemplateStateFilter", "jobTemplate/jobTemplateStateFilter-schema.json");
-            put ("JobTemplatesFilter", "jobTemplate/jobTemplatesFilter-schema.json");
-            put ("JobTemplatesPropagateFilter", "jobTemplate/propagate/jobTemplatesPropagateFilter-schema.json");
-            put ("WorkflowPropagateFilter", "jobTemplate/propagate/workflowPropagateFilter-schema.json");
-            put ("JobPropagateFilter", "jobTemplate/propagate/jobPropagateFilter-schema.json");
-            
+            put("JobTemplateFilter", "jobTemplate/jobTemplateFilter-schema.json");
+            put("JobTemplateStateFilter", "jobTemplate/jobTemplateStateFilter-schema.json");
+            put("JobTemplatesFilter", "jobTemplate/jobTemplatesFilter-schema.json");
+            put("JobTemplatesPropagateFilter", "jobTemplate/propagate/jobTemplatesPropagateFilter-schema.json");
+            put("WorkflowPropagateFilter", "jobTemplate/propagate/workflowPropagateFilter-schema.json");
+            put("JobPropagateFilter", "jobTemplate/propagate/jobPropagateFilter-schema.json");
+
             put("LockFilter", "lock/lockFilter-schema.json");
             put("LocksFilter", "lock/locksFilter-schema.json");
 
@@ -116,7 +116,7 @@ public class JsonValidator {
             put("ModifyWorkflowLabels", "workflow/modifyWorkflowLabels-schema.json");
             put("ModifyWorkflowPositions", "workflow/modifyWorkflowPositions-schema.json");
             put("WorkflowSearchFilter", "workflow/search/workflowBaseSearchFilter-schema.json");
-            
+
             put("OrderFilter", "order/orderFilter-schema.json");
             put("OrdersFilter", "order/ordersFilter-schema.json");
             put("OrdersFilterV", "order/ordersFilterV-schema.json");
@@ -149,7 +149,7 @@ public class JsonValidator {
             put("Xml2JsonConfiguration", "xmleditor/xml2json/xml2json-configuration-schema.json");
 
             put("TreeFilter", "tree/treeFilter-schema.json");
-            
+
             put("com.sos.joc.model.favorite.FavoriteIdentifiers", "favorite/identifiers-schema.json");
             put("com.sos.joc.model.favorite.FavoriteSharedIdentifiers", "favorite/sharedIdentifiers-schema.json");
             put("com.sos.joc.model.favorite.OrderingFavorites", "favorite/orderingFavorite-schema.json");
@@ -243,7 +243,7 @@ public class JsonValidator {
 
             // auth
             put("SecurityConfiguration", "security/securityConfiguration/security-configuration-schema.json");
-            put("SecurityConfigurationRole", "security/securityConfiguration/role-schema.json");            
+            put("SecurityConfigurationRole", "security/securityConfiguration/role-schema.json");
             put("Roles", "security/securityConfiguration/roles-schema.json");
 
             // iam
@@ -251,7 +251,7 @@ public class JsonValidator {
             put("com.sos.joc.model.security.identityservice.IdentityServiceRename", "security/identityServices/identityServiceRename-schema.json");
             put("com.sos.joc.model.security.identityservice.IdentityServiceFilter", "security/identityServices/identityServiceFilter-schema.json");
             put("com.sos.joc.model.security.identityservice.IdentityServicesFilter", "security/identityServices/identityServicesFilter-schema.json");
-            
+
             put("com.sos.joc.model.security.folders.FolderFilter", "security/folders/folderFilter-schema.json");
             put("com.sos.joc.model.security.folders.FoldersFilter", "security/folders/foldersFilter-schema.json");
             put("com.sos.joc.model.security.folders.Folders", "security/folders/folders-schema.json");
@@ -278,7 +278,7 @@ public class JsonValidator {
             put("com.sos.joc.model.security.roles.RoleRename", "security/roles/roleRename-schema.json");
             put("com.sos.joc.model.security.roles.Role", "security/roles/role-schema.json");
             put("com.sos.joc.model.security.roles.RoleStore", "security/roles/roleStore-schema.json");
-            
+
             put("com.sos.joc.model.security.blocklist.BlockedAccountsDeleteFilter", "security/blocklist/blockedAccountsDeleteFilter-schema.json");
             put("com.sos.joc.model.security.blocklist.BlockedAccountsFilter", "security/blocklist/blockedAccountsFilter-schema.json");
             put("com.sos.joc.model.security.blocklist.BlockedAccount", "security/blocklist/blockedAccount-schema.json");
@@ -288,8 +288,10 @@ public class JsonValidator {
 
             put("com.sos.joc.model.security.history.LoginHistoryFilter", "security/history/loginHistoryFilter-schema.json");
 
+            put("com.sos.joc.model.security.locker.LockerFilter", "security/locker/lockerFilter-schema.json");
+            put("com.sos.joc.model.security.locker.Locker", "security/locker/locker-schema.json");
 
-         // Profiles
+            // Profiles
             put("com.sos.joc.model.profile.Profile", "profile/profile-schema.json");
             put("com.sos.joc.model.profile.ProfileFilter", "profile/profileFilter-schema.json");
             put("com.sos.joc.model.profile.ProfilesFilter", "profile/profilesFilter-schema.json");
@@ -298,7 +300,7 @@ public class JsonValidator {
             put("com.sos.joc.model.notification.ReadNotificationFilter", "notification/readNotificationFilter-schema.json");
             put("com.sos.joc.model.notification.DeleteNotificationFilter", "notification/deleteNotificationFilter-schema.json");
             put("com.sos.joc.model.notification.StoreNotificationFilter", "notification/storeNotificationFilter-schema.json");
-            
+
             // TODO complete the map
         }
     });
