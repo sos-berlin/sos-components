@@ -85,8 +85,10 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStdWritten;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventWithProblem;
+import com.sos.joc.history.controller.proxy.fatevent.FatExpectNotices;
 import com.sos.joc.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.joc.history.controller.proxy.fatevent.FatOutcome;
+import com.sos.joc.history.controller.proxy.fatevent.FatPostNotice;
 import com.sos.joc.history.controller.yade.YadeHandler;
 import com.sos.joc.history.db.DBLayerHistory;
 import com.sos.joc.history.helper.CachedAgent;
@@ -100,10 +102,12 @@ import com.sos.joc.history.helper.Counter;
 import com.sos.joc.history.helper.HistoryUtil;
 import com.sos.joc.history.helper.LogEntry;
 import com.sos.joc.history.helper.LogEntry.LogLevel;
+import com.sos.joc.model.history.order.ExpectNotices;
 import com.sos.joc.model.history.order.Lock;
 import com.sos.joc.model.history.order.LockState;
 import com.sos.joc.model.history.order.OrderLogEntry;
 import com.sos.joc.model.history.order.OrderLogEntryError;
+import com.sos.joc.model.history.order.PostNotice;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.yade.commons.Yade;
 
@@ -1203,7 +1207,7 @@ public class HistoryModel {
         CachedOrder co = getCachedOrderByCurrentOrderId(dbLayer, entry.getOrderId(), entry.getEventId());
 
         LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, eventType, entry.getEventDatetime(), null);
-        le.onOrder(co, entry.getPosition());
+        le.onOrderNotice(co, entry);
         storeLog2File(le);
     }
 
@@ -2101,6 +2105,23 @@ public class HistoryModel {
                 }
                 return lock;
             }).collect(Collectors.toList()));
+        }
+        if (logEntry.getOrderNotice() != null) {
+            if (logEntry.getOrderNotice() instanceof FatEventOrderNoticePosted) {
+                PostNotice n = new PostNotice();
+                FatPostNotice pn = ((FatEventOrderNoticePosted) logEntry.getOrderNotice()).getNotice();
+                if (pn != null) {
+                    n.setBoardName(pn.getBoard());
+                }
+                entry.setPostNotice(n);
+            } else if (logEntry.getOrderNotice() instanceof FatEventOrderNoticesRead) {
+                ExpectNotices n = new ExpectNotices();
+                FatExpectNotices en = ((FatEventOrderNoticesRead) logEntry.getOrderNotice()).getNotices();
+                if (en != null) {
+                    n.setExpression(en.getBoardPaths());
+                }
+                entry.setExpectNotices(n);
+            }
         }
         return entry;
     }

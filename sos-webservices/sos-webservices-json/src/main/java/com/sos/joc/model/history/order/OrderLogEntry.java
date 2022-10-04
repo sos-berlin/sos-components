@@ -35,7 +35,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "taskId",
     "returnCode",
     "error",
-    "locks"
+    "locks",
+    "expectNotices",
+    "postNotice"
 })
 public class OrderLogEntry {
 
@@ -99,6 +101,10 @@ public class OrderLogEntry {
     private OrderLogEntryError error;
     @JsonProperty("locks")
     private List<Lock> locks = new ArrayList<Lock>();
+    @JsonProperty("expectNotices")
+    private ExpectNotices expectNotices;
+    @JsonProperty("postNotice")
+    private PostNotice postNotice;
 
     /**
      * 
@@ -304,14 +310,34 @@ public class OrderLogEntry {
         this.locks = locks;
     }
 
+    @JsonProperty("expectNotices")
+    public ExpectNotices getExpectNotices() {
+        return expectNotices;
+    }
+
+    @JsonProperty("expectNotices")
+    public void setExpectNotices(ExpectNotices expectNotices) {
+        this.expectNotices = expectNotices;
+    }
+
+    @JsonProperty("postNotice")
+    public PostNotice getPostNotice() {
+        return postNotice;
+    }
+
+    @JsonProperty("postNotice")
+    public void setPostNotice(PostNotice postNotice) {
+        this.postNotice = postNotice;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentId", agentId).append("agentName", agentName).append("agentUrl", agentUrl).append("subagentClusterId", subagentClusterId).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).append("locks", locks).toString();
+        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentId", agentId).append("agentName", agentName).append("agentUrl", agentUrl).append("subagentClusterId", subagentClusterId).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).append("locks", locks).append("expectNotices", expectNotices).append("postNotice", postNotice).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(orderId).append(agentName).append(error).append(locks).append(agentDatetime).append(logEvent).append(returnCode).append(controllerDatetime).append(logLevel).append(position).append(agentUrl).append(subagentClusterId).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(expectNotices).append(agentId).append(orderId).append(agentName).append(error).append(postNotice).append(locks).append(agentDatetime).append(logEvent).append(returnCode).append(controllerDatetime).append(logLevel).append(position).append(agentUrl).append(subagentClusterId).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -323,7 +349,7 @@ public class OrderLogEntry {
             return false;
         }
         OrderLogEntry rhs = ((OrderLogEntry) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(orderId, rhs.orderId).append(agentName, rhs.agentName).append(error, rhs.error).append(locks, rhs.locks).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(subagentClusterId, rhs.subagentClusterId).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(expectNotices, rhs.expectNotices).append(agentId, rhs.agentId).append(orderId, rhs.orderId).append(agentName, rhs.agentName).append(error, rhs.error).append(postNotice, rhs.postNotice).append(locks, rhs.locks).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(subagentClusterId, rhs.subagentClusterId).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
 }
