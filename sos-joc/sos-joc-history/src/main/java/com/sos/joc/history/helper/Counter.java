@@ -162,11 +162,15 @@ public class Counter {
         @SuppressWarnings("unused")
         private int finished = 0;
         @SuppressWarnings("unused")
-        private int lockAcquired = 0;
+        private int locksAcquired = 0;
         @SuppressWarnings("unused")
-        private int lockQueued = 0;
+        private int locksQueued = 0;
         @SuppressWarnings("unused")
-        private int lockReleased = 0;
+        private int locksReleased = 0;
+        @SuppressWarnings("unused")
+        private int noticePosted = 0;
+        @SuppressWarnings("unused")
+        private int noticesRead = 0;
 
         public void addStarted() {
             started += 1;
@@ -216,16 +220,24 @@ public class Counter {
             finished += 1;
         }
 
-        public void addLockAcquired() {
-            lockAcquired += 1;
+        public void addLocksAcquired() {
+            locksAcquired += 1;
         }
 
-        public void addLockQueued() {
-            lockQueued += 1;
+        public void addLocksQueued() {
+            locksQueued += 1;
         }
 
-        public void addLockReleased() {
-            lockReleased += 1;
+        public void addLocksReleased() {
+            locksReleased += 1;
+        }
+
+        public void addNoticePosted() {
+            noticePosted += 1;
+        }
+
+        public void addNoticesRead() {
+            noticesRead += 1;
         }
     }
 

@@ -18,12 +18,15 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentVersionUpdatedEvent;
 import com.sos.joc.event.bean.agent.SubagentVersionUpdatedEvent;
 import com.sos.joc.history.controller.exception.FatEventProblemException;
+import com.sos.joc.history.controller.proxy.fatevent.FatExpectNotices;
+import com.sos.joc.history.controller.proxy.fatevent.FatPostNotice;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent.AgentCouplingFailed;
 import js7.data.agent.AgentRefStateEvent.AgentReady;
+import js7.data.board.Notice;
 import js7.data.cluster.ClusterEvent.ClusterCoupled;
 import js7.data.controller.ControllerEvent.ControllerReady;
 import js7.data.event.Event;
@@ -38,6 +41,7 @@ import js7.data.order.OrderEvent.LockDemand;
 import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
+import js7.data.order.OrderEvent.OrderNoticePosted;
 import js7.data.order.OrderId;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
@@ -48,6 +52,8 @@ import js7.data.order.Outcome.TimedOut;
 import js7.data.subagent.SubagentId;
 import js7.data.subagent.SubagentItemStateEvent.SubagentDedicated;
 import js7.data.value.Value;
+import js7.data.workflow.Instruction;
+import js7.data.workflow.instructions.ExpectNotices;
 import js7.data.workflow.instructions.executable.WorkflowJob.Name;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerState;
@@ -284,6 +290,35 @@ public class HistoryEventEntry {
             return outcomeInfo;
         }
 
+        public Instruction getCurrentPositionInstruction() throws Exception {
+            WorkflowInfo wi = getWorkflowInfo();
+            if (wi != null) {
+                JWorkflow w = wi.getWorkflow();
+                if (w != null) {
+                    return w.asScala().instruction(wi.getPosition().getUnderlying().asScala());
+                }
+            }
+            return null;
+        }
+
+        public FatPostNotice getPostNotice() {
+            if (event instanceof OrderNoticePosted) {
+                Notice n = ((OrderNoticePosted) event).notice();
+                if (n != null) {
+                    return new FatPostNotice(n);
+                }
+            }
+            return null;
+        }
+
+        public FatExpectNotices getExpectNotices() throws Exception {
+            Instruction i = getCurrentPositionInstruction();
+            if (i != null && i instanceof ExpectNotices) {
+                return new FatExpectNotices((ExpectNotices) i);
+            }
+            return null;
+        }
+
         public List<OrderLock> getOrderLocks(OrderLocksAcquired event) throws FatEventProblemException {
             // why FatEventProblemException is not a runtime exception
             // return JavaConverters.asJava(event.demands()).stream().map(ld -> getOrderLock(ld.lockPath(), ld.count(), false)).collect(Collectors.toList());
@@ -419,7 +454,7 @@ public class HistoryEventEntry {
                     Completed c = (Completed) outcome;
                     handleNamedValues(c);
                     isSucceeded = c.isSucceeded();
-                    isFailed = !isSucceeded; //c.isFailed();
+                    isFailed = !isSucceeded; // c.isFailed();
                     if (isFailed) {
                         type = OutcomeType.failed;
                         if (outcome instanceof Failed) {
@@ -491,7 +526,7 @@ public class HistoryEventEntry {
             private void handleDisrupted(Outcome outcome, Disrupted problem) {
                 returnCode = null; // TODO ?
                 isSucceeded = problem.isSucceeded();
-                isFailed = !isSucceeded; //problem.isFailed();
+                isFailed = !isSucceeded; // problem.isFailed();
                 type = OutcomeType.disrupted;
                 if (isFailed) {
                     try {
@@ -509,7 +544,7 @@ public class HistoryEventEntry {
             private void handleKilled(Outcome outcome, Killed problem) {
                 returnCode = null;
                 isSucceeded = problem.isSucceeded();
-                isFailed = !isSucceeded; //problem.isFailed();
+                isFailed = !isSucceeded; // problem.isFailed();
                 type = OutcomeType.killed;
 
                 if (isFailed) {
@@ -524,7 +559,7 @@ public class HistoryEventEntry {
             private void handleTimedOut(Outcome outcome, TimedOut problem) {
                 returnCode = null;
                 isSucceeded = problem.isSucceeded();
-                isFailed = !isSucceeded; //problem.isFailed();
+                isFailed = !isSucceeded; // problem.isFailed();
                 type = OutcomeType.timedout;
 
                 if (isFailed) {
@@ -585,7 +620,6 @@ public class HistoryEventEntry {
 
             private final WorkflowInfo workflowInfo;
             private final JOrder order;
-            private JWorkflow workflow;
             private AgentInfo agentInfo;
             private String jobName;
             private String jobLabel;
@@ -607,7 +641,7 @@ public class HistoryEventEntry {
 
             public String getJobName() throws Exception {
                 if (jobName == null) {
-                    Either<Problem, Name> pn = getWorkflow().checkedJobName(workflowInfo.getPosition().getUnderlying());
+                    Either<Problem, Name> pn = workflowInfo.getWorkflow().checkedJobName(workflowInfo.getPosition().getUnderlying());
                     jobName = getFromEither(pn).toString();
                 }
                 return jobName;
@@ -615,7 +649,7 @@ public class HistoryEventEntry {
 
             public String getJobLabel() throws Exception {
                 if (jobLabel == null) {
-                    JWorkflow workflow = getWorkflow();
+                    JWorkflow workflow = workflowInfo.getWorkflow();
                     try {
                         jobLabel = workflow.asScala().labeledInstruction(workflowInfo.getPosition().getUnderlying().asScala()).toOption().get()
                                 .maybeLabel().get().string();
@@ -624,19 +658,6 @@ public class HistoryEventEntry {
                     }
                 }
                 return jobLabel;
-            }
-
-            private JWorkflow getWorkflow() throws Exception {
-                if (workflow == null) {
-                    if (state == null) {
-                        throw new Exception(String.format("[%s][%s]missing JControllerState", eventId, orderId));
-                    }
-                    if (workflowInfo == null) {
-                        throw new Exception(String.format("[%s][%s]missing WorkflowInfo", eventId, orderId));
-                    }
-                    return getFromEither(state.repo().idToCheckedWorkflow(workflowInfo.getWorkflowId()));
-                }
-                return workflow;
             }
         }
 
@@ -647,6 +668,8 @@ public class HistoryEventEntry {
             private final String versionId;
             private final Position position;
 
+            private JWorkflow workflow;
+
             public WorkflowInfo(JOrder order) {
                 JWorkflowPosition wp = order.workflowPosition();
 
@@ -654,6 +677,19 @@ public class HistoryEventEntry {
                 path = workflowId.path().string();
                 versionId = workflowId.versionId().string();
                 position = new Position(wp.position());
+            }
+
+            public JWorkflow getWorkflow() throws Exception {
+                if (workflow == null) {
+                    if (state == null) {
+                        throw new Exception(String.format("[%s][%s]missing JControllerState", eventId, orderId));
+                    }
+                    if (workflowId == null) {
+                        throw new Exception(String.format("[%s][%s]missing workflowId", eventId, orderId));
+                    }
+                    workflow = getFromEither(state.repo().idToCheckedWorkflow(workflowId));
+                }
+                return workflow;
             }
 
             public JWorkflowId getWorkflowId() {
@@ -827,27 +863,27 @@ public class HistoryEventEntry {
             // subAgents = new HashMap<>();
             JAgentRef ar = getFromMap(eventAndState.state().pathToAgentRef().get(arp), id);
             if (ar != null) {
-//                if (ar.uri().isPresent()) {// single agent
-//                    uri = ar.uri().get().string();
-//                } else {// agent cluster
-                    Optional<SubagentId> director = ar.director();// ar.directors();
-                    if (director.isPresent()) {
-                        SubagentId directorId = director.get();
-                        Map<SubagentId, JSubagentItem> map = eventAndState.state().idToSubagentItem();
-                        JSubagentItem sar = map.get(directorId);
-                        if (sar != null) {
-                            uri = sar.uri().string();
-                        }
-                        // if (map != null) {
-                        // map.entrySet().stream().forEach(e -> {
-                        // // subAgents.put(e.getKey().string(), e.getValue().uri().string());
-                        // if (e.getKey().equals(directorId)) {
-                        // uri = e.getValue().uri().string();
-                        // }
-                        // });
-                        // }
+                // if (ar.uri().isPresent()) {// single agent
+                // uri = ar.uri().get().string();
+                // } else {// agent cluster
+                Optional<SubagentId> director = ar.director();// ar.directors();
+                if (director.isPresent()) {
+                    SubagentId directorId = director.get();
+                    Map<SubagentId, JSubagentItem> map = eventAndState.state().idToSubagentItem();
+                    JSubagentItem sar = map.get(directorId);
+                    if (sar != null) {
+                        uri = sar.uri().string();
                     }
-//                }
+                    // if (map != null) {
+                    // map.entrySet().stream().forEach(e -> {
+                    // // subAgents.put(e.getKey().string(), e.getValue().uri().string());
+                    // if (e.getKey().equals(directorId)) {
+                    // uri = e.getValue().uri().string();
+                    // }
+                    // });
+                    // }
+                }
+                // }
             }
             if (uri == null) {
                 uri = "unknown";

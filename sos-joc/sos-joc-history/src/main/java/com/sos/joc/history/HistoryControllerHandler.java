@@ -58,6 +58,8 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderJoined;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksAcquired;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksQueued;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksReleased;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticePosted;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStarted;
@@ -516,6 +518,18 @@ public class HistoryControllerHandler {
                 ol = order.getOrderLocks((OrderLocksReleased) entry.getEvent());
                 event = new FatEventOrderLocksReleased(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
                         .getPosition());
+                break;
+
+            case OrderNoticesRead:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderNoticesRead(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), order.getExpectNotices());
+                break;
+
+            case OrderNoticePosted:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderNoticePosted(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), order.getPostNotice());
                 break;
 
             default:

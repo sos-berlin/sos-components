@@ -48,6 +48,8 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderJoined;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksAcquired;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksQueued;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksReleased;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticePosted;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStarted;
@@ -90,7 +92,7 @@ public class HistoryControllerHandlerTest {
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 10; // seconds
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
-    private static final Long START_EVENT_ID = 0L;
+    private static final Long START_EVENT_ID = 1664871922195000L;
 
     private EventFluxStopper stopper;
     private AtomicBoolean closed;
@@ -442,6 +444,16 @@ public class HistoryControllerHandlerTest {
 
                 break;
 
+            case OrderNoticesRead:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderNoticesRead(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), order.getExpectNotices());
+                break;
+            case OrderNoticePosted:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderNoticePosted(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), order.getPostNotice());
+                break;
             default:
                 event = new FatEventWithProblem(entry, new Exception("unknown type=" + entry.getEventType()));
                 break;

@@ -27,6 +27,8 @@ import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderEvent.OrderSuspended$;
 import js7.data.order.OrderEvent.OrderSuspensionMarked;
+import js7.data.order.OrderEvent.OrderNoticePosted;
+import js7.data.order.OrderEvent.OrderNoticesRead$;
 import js7.data.subagent.SubagentItemStateEvent.SubagentDedicated;
 
 public enum HistoryEventType {
@@ -72,6 +74,11 @@ public enum HistoryEventType {
     OrderLocksQueued(OrderLocksQueued.class.getSimpleName()),
 
     OrderLocksReleased(OrderLocksReleased.class.getSimpleName()),
+
+    // expected notices
+    OrderNoticesRead(OrderNoticesRead$.class.getSimpleName()),
+
+    OrderNoticePosted(OrderNoticePosted.class.getSimpleName()),
 
     OrderFinished(OrderFinished$.class.getSimpleName()),
 
