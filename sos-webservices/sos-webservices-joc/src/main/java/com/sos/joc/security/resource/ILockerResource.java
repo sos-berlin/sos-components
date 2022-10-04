@@ -20,5 +20,15 @@ public interface ILockerResource {
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postLockerPut(byte[] body);
 
+    @POST
+    @Path("locker/renew")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postLockerRenew(byte[] body);
+
+    @POST
+    @Path("locker/remove")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postLockerRemove(byte[] body);
+
  
 }

@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
@@ -16,10 +17,12 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.sos.joc.Globals;
+
 public class SOSLocker {
 
     private static final String KEY = "APLSOSSECRET";
-    private Map<String, Map<String, Object>> locker;
+    private Map<String, SOSLockerContent> locker;
 
     private String encrypt(String keyStr, Object value) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
             UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException {
@@ -62,21 +65,27 @@ public class SOSLocker {
             UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException {
         String key = SOSAuthHelper.createAccessToken();
         if (locker == null) {
-            locker = new HashMap<String, Map<String, Object>>();
+            locker = new HashMap<String, SOSLockerContent>();
         }
         for (Entry<String, Object> entry : content.entrySet()) {
             content.put(entry.getKey(), encrypt(key, entry.getValue()));
         }
-        locker.put(key, content);
+        SOSLockerContent sosLockerContent = new SOSLockerContent();
+        sosLockerContent.setContent(content);
+        sosLockerContent.setCreated(Instant.now().toEpochMilli());
+        locker.put(key, sosLockerContent);
         return key;
     }
 
     public Map<String, Object> getContent(String key) throws InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException,
             NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
         if (locker == null) {
-            locker = new HashMap<String, Map<String, Object>>();
+            locker = new HashMap<String, SOSLockerContent>();
         }
-        Map<String, Object> content = locker.get(key);
+        Map<String, Object> content = null;
+        if (locker.get(key) != null) {
+            content = locker.get(key).getContent();
+        }
         if (content != null) {
             for (Entry<String, Object> entry : content.entrySet()) {
                 content.put(entry.getKey(), decrypt(key, entry.getValue()));
@@ -87,16 +96,46 @@ public class SOSLocker {
 
     public void removeContent(String key) {
         if (locker == null) {
-            locker = new HashMap<String, Map<String, Object>>();
+            locker = new HashMap<String, SOSLockerContent>();
         }
         locker.remove(key);
     }
 
+    public void renewContent(String key) {
+        if (locker == null) {
+            locker = new HashMap<String, SOSLockerContent>();
+        }
+        SOSLockerContent sosLockerContent = locker.get(key);
+        if (sosLockerContent != null) {
+            sosLockerContent.setCreated(Instant.now().toEpochMilli());
+            locker.put(key, sosLockerContent);
+        }
+    }
+
+    public Entry<String, SOSLockerContent> getEldestContent() {
+        Entry<String, SOSLockerContent> eldest = null;
+        Long created = Instant.now().toEpochMilli();
+        if (locker == null) {
+            locker = new HashMap<String, SOSLockerContent>();
+        }
+        for (Entry<String, SOSLockerContent> entry : locker.entrySet()) {
+            if (entry.getValue().getCreated() < created) {
+                eldest = entry;
+                created = entry.getValue().getCreated();
+            }
+        }
+        return eldest;
+    }
+
     public boolean isEmpty(String key) {
         if (locker == null) {
-            locker = new HashMap<String, Map<String, Object>>();
+            locker = new HashMap<String, SOSLockerContent>();
         }
-        Map<String, Object> content = locker.get(key);
+        Map<String, Object> content = null;
+        if (locker.get(key) != null) {
+            content = locker.get(key).getContent();
+        }
+
         return (content == null);
     }
 
