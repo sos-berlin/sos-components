@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ExpectNotice;
 import com.sos.inventory.model.instruction.ExpectNotices;
@@ -286,6 +287,11 @@ public class WorkflowSearcher {
     public List<WorkflowInstruction<ExpectNotices>> getExpectNoticesInstructions() {
         return getInstructionsStream(InstructionType.EXPECT_NOTICES).map(l -> (WorkflowInstruction<ExpectNotices>) l).collect(Collectors.toList());
     }
+    
+    @SuppressWarnings("unchecked")
+    public List<WorkflowInstruction<ConsumeNotices>> getConsumeNoticesInstructions() {
+        return getInstructionsStream(InstructionType.CONSUME_NOTICES).map(l -> (WorkflowInstruction<ConsumeNotices>) l).collect(Collectors.toList());
+    }
 
     @SuppressWarnings("unchecked")
     public List<WorkflowInstruction<AddOrder>> getAddOrderInstructions() {
@@ -493,6 +499,9 @@ public class WorkflowSearcher {
                 break;
             case EXPECT_NOTICES:
                 result.add(new WorkflowInstruction<ExpectNotices>(getPosition(parentPosition, index, null), in.cast()));
+                break;
+            case CONSUME_NOTICES:
+                result.add(new WorkflowInstruction<ConsumeNotices>(getPosition(parentPosition, index, null), in.cast()));
                 break;
             case ADD_ORDER:
                 result.add(new WorkflowInstruction<AddOrder>(getPosition(parentPosition, index, null), in.cast()));

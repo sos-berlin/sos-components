@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,6 +29,7 @@ import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ExpectNotice;
 import com.sos.inventory.model.instruction.ExpectNotices;
@@ -82,7 +84,7 @@ public class Validator {
     private final static Pattern scriptIncludeWithoutScriptPattern = Pattern.compile("^" + JsonConverter.scriptIncludeComments
             + JsonConverter.scriptInclude + "[ \t]*$", Pattern.MULTILINE);
     private final static String noticesInstructions = String.join("|", InstructionType.POST_NOTICES.value(), InstructionType.POST_NOTICE.value(),
-            InstructionType.EXPECT_NOTICE.value(), InstructionType.EXPECT_NOTICES.value());
+            InstructionType.EXPECT_NOTICE.value(), InstructionType.EXPECT_NOTICES.value(), InstructionType.CONSUME_NOTICES.value());
     private final static Predicate<String> hasNoticesInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + noticesInstructions + ")\"")
             .asPredicate();
 
@@ -199,6 +201,13 @@ public class Validator {
                     validateWorkflowRef(fileOrderSource.getWorkflowName(), dbLayer, "$.workflowName");
                     if (fileOrderSource.getDirectoryExpr() != null) {
                         validateExpression("$.directoryExpr: ", fileOrderSource.getDirectoryExpr());
+                    }
+                    if (fileOrderSource.getPattern() != null) {
+                        try {
+                            Pattern.compile(fileOrderSource.getPattern());
+                        } catch (PatternSyntaxException e) {
+                            throw new JocConfigurationException("$.pattern: " + e.getMessage());
+                        }
                     }
                 } else if (ConfigurationType.JOBTEMPLATE.equals(type)) {
                     JobTemplate jobTemplate = (JobTemplate) config;
@@ -625,6 +634,23 @@ public class Validator {
                         }
                     }
                     break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cns = inst.cast();
+                    String cnsNamesExpr = cns.getNoticeBoardNames();
+                    String cnsNamesExpr2 = cnsNamesExpr.replaceAll("'[^']*'", "true").replaceAll("\"[^\"]*\"", "true");
+                    Either<Problem, JExpression> cnsE = JExpression.parse(cnsNamesExpr2);
+                    if (cnsE.isLeft()) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: " + cnsE.getLeft().message().replace("true", "'...'"));
+                    }
+                    List<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToList(cnsNamesExpr);
+                    cnsNames.removeAll(boardNames);
+                    if (boardNames.isEmpty() || !cnsNames.isEmpty()) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + cnsNames
+                                .toString());
+                    }
+                    validateInstructions(cns.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobNames,
+                            orderPreparation, labels, boardNames, dbLayer);
+                    break;
                 case POST_NOTICE:
                     PostNotice pn = inst.cast();
                     String pnName = pn.getNoticeBoardName();
@@ -652,9 +678,9 @@ public class Validator {
                     ExpectNotices ens = inst.cast();
                     String ensNamesExpr = ens.getNoticeBoardNames();
                     String ensNamesExpr2 = ensNamesExpr.replaceAll("'[^']*'", "true").replaceAll("\"[^\"]*\"", "true");
-                    Either<Problem, JExpression> e = JExpression.parse(ensNamesExpr2);
-                    if (e.isLeft()) {
-                        throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: " + e.getLeft().message().replace("true", "'...'"));
+                    Either<Problem, JExpression> enE = JExpression.parse(ensNamesExpr2);
+                    if (enE.isLeft()) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: " + enE.getLeft().message().replace("true", "'...'"));
                     }
                     List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(ensNamesExpr);
                     ensNames.removeAll(boardNames);

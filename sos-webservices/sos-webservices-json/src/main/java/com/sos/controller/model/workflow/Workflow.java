@@ -4,11 +4,6 @@ package com.sos.controller.model.workflow;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -19,6 +14,9 @@ import com.sos.controller.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -38,6 +36,7 @@ import com.sos.inventory.model.workflow.Requirements;
     "forkListVariables",
     "hasExpectedNoticeBoards",
     "hasPostNoticeBoards",
+    "hasConsumeNoticeBoards",
     "hasAddOrderDependencies",
     "numOfStoppedInstructions",
     "numOfSkippedInstructions"
@@ -90,6 +89,8 @@ public class Workflow
     private Boolean hasExpectedNoticeBoards;
     @JsonProperty("hasPostNoticeBoards")
     private Boolean hasPostNoticeBoards;
+    @JsonProperty("hasConsumeNoticeBoards")
+    private Boolean hasConsumeNoticeBoards;
     @JsonProperty("hasAddOrderDependencies")
     private Boolean hasAddOrderDependencies;
     /**
@@ -129,6 +130,7 @@ public class Workflow
      * @param version
      * @param suspended
      * @param orderPreparation
+     * @param hasConsumeNoticeBoards
      * @param path
      * @param numOfStoppedInstructions
      * @param fileOrderSources
@@ -140,7 +142,7 @@ public class Workflow
      * @param documentationName
      * @param numOfSkippedInstructions
      */
-    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasAddOrderDependencies, Integer numOfStoppedInstructions, Integer numOfSkippedInstructions, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
+    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasConsumeNoticeBoards, Boolean hasAddOrderDependencies, Integer numOfStoppedInstructions, Integer numOfSkippedInstructions, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
         super(version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
         this.path = path;
         this.isCurrentVersion = isCurrentVersion;
@@ -151,6 +153,7 @@ public class Workflow
         this.forkListVariables = forkListVariables;
         this.hasExpectedNoticeBoards = hasExpectedNoticeBoards;
         this.hasPostNoticeBoards = hasPostNoticeBoards;
+        this.hasConsumeNoticeBoards = hasConsumeNoticeBoards;
         this.hasAddOrderDependencies = hasAddOrderDependencies;
         this.numOfStoppedInstructions = numOfStoppedInstructions;
         this.numOfSkippedInstructions = numOfSkippedInstructions;
@@ -290,6 +293,16 @@ public class Workflow
         this.hasPostNoticeBoards = hasPostNoticeBoards;
     }
 
+    @JsonProperty("hasConsumeNoticeBoards")
+    public Boolean getHasConsumeNoticeBoards() {
+        return hasConsumeNoticeBoards;
+    }
+
+    @JsonProperty("hasConsumeNoticeBoards")
+    public void setHasConsumeNoticeBoards(Boolean hasConsumeNoticeBoards) {
+        this.hasConsumeNoticeBoards = hasConsumeNoticeBoards;
+    }
+
     @JsonProperty("hasAddOrderDependencies")
     public Boolean getHasAddOrderDependencies() {
         return hasAddOrderDependencies;
@@ -346,12 +359,12 @@ public class Workflow
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("isCurrentVersion", isCurrentVersion).append("versionDate", versionDate).append("state", state).append("suspended", suspended).append("fileOrderSources", fileOrderSources).append("forkListVariables", forkListVariables).append("hasExpectedNoticeBoards", hasExpectedNoticeBoards).append("hasPostNoticeBoards", hasPostNoticeBoards).append("hasAddOrderDependencies", hasAddOrderDependencies).append("numOfStoppedInstructions", numOfStoppedInstructions).append("numOfSkippedInstructions", numOfSkippedInstructions).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("isCurrentVersion", isCurrentVersion).append("versionDate", versionDate).append("state", state).append("suspended", suspended).append("fileOrderSources", fileOrderSources).append("forkListVariables", forkListVariables).append("hasExpectedNoticeBoards", hasExpectedNoticeBoards).append("hasPostNoticeBoards", hasPostNoticeBoards).append("hasConsumeNoticeBoards", hasConsumeNoticeBoards).append("hasAddOrderDependencies", hasAddOrderDependencies).append("numOfStoppedInstructions", numOfStoppedInstructions).append("numOfSkippedInstructions", numOfSkippedInstructions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(hasExpectedNoticeBoards).append(hasPostNoticeBoards).append(versionDate).append(suspended).append(path).append(numOfStoppedInstructions).append(fileOrderSources).append(forkListVariables).append(isCurrentVersion).append(state).append(hasAddOrderDependencies).append(numOfSkippedInstructions).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(hasExpectedNoticeBoards).append(hasPostNoticeBoards).append(versionDate).append(suspended).append(hasConsumeNoticeBoards).append(path).append(numOfStoppedInstructions).append(fileOrderSources).append(forkListVariables).append(isCurrentVersion).append(state).append(hasAddOrderDependencies).append(numOfSkippedInstructions).toHashCode();
     }
 
     @Override
@@ -363,7 +376,7 @@ public class Workflow
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(hasExpectedNoticeBoards, rhs.hasExpectedNoticeBoards).append(hasPostNoticeBoards, rhs.hasPostNoticeBoards).append(versionDate, rhs.versionDate).append(suspended, rhs.suspended).append(path, rhs.path).append(numOfStoppedInstructions, rhs.numOfStoppedInstructions).append(fileOrderSources, rhs.fileOrderSources).append(forkListVariables, rhs.forkListVariables).append(isCurrentVersion, rhs.isCurrentVersion).append(state, rhs.state).append(hasAddOrderDependencies, rhs.hasAddOrderDependencies).append(numOfSkippedInstructions, rhs.numOfSkippedInstructions).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(hasExpectedNoticeBoards, rhs.hasExpectedNoticeBoards).append(hasPostNoticeBoards, rhs.hasPostNoticeBoards).append(versionDate, rhs.versionDate).append(suspended, rhs.suspended).append(hasConsumeNoticeBoards, rhs.hasConsumeNoticeBoards).append(path, rhs.path).append(numOfStoppedInstructions, rhs.numOfStoppedInstructions).append(fileOrderSources, rhs.fileOrderSources).append(forkListVariables, rhs.forkListVariables).append(isCurrentVersion, rhs.isCurrentVersion).append(state, rhs.state).append(hasAddOrderDependencies, rhs.hasAddOrderDependencies).append(numOfSkippedInstructions, rhs.numOfSkippedInstructions).isEquals();
     }
 
 }

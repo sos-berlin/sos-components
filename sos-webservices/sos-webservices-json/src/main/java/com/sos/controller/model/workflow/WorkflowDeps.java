@@ -4,11 +4,6 @@ package com.sos.controller.model.workflow;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,6 +12,9 @@ import com.sos.controller.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -27,6 +25,7 @@ import com.sos.inventory.model.workflow.Requirements;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "consumeNoticeBoards",
     "expectedNoticeBoards",
     "postNoticeBoards",
     "addOrderToWorkflows",
@@ -36,6 +35,14 @@ public class WorkflowDeps
     extends Workflow
 {
 
+    /**
+     * workflow with dependencies
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("consumeNoticeBoards")
+    private BoardWorkflows consumeNoticeBoards;
     /**
      * workflow with dependencies
      * <p>
@@ -71,12 +78,14 @@ public class WorkflowDeps
      * @param hasPostNoticeBoards
      * @param title
      * @param orderPreparation
+     * @param hasConsumeNoticeBoards
      * @param path
      * @param fileOrderSources
      * @param expectedNoticeBoards
      * @param state
      * @param hasAddOrderDependencies
      * @param documentationName
+     * @param consumeNoticeBoards
      * @param jobResourceNames
      * @param jobs
      * @param timeZone
@@ -92,12 +101,35 @@ public class WorkflowDeps
      * @param addOrderFromWorkflows
      * @param numOfSkippedInstructions
      */
-    public WorkflowDeps(BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, List<Workflow> addOrderToWorkflows, List<Workflow> addOrderFromWorkflows, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasAddOrderDependencies, Integer numOfStoppedInstructions, Integer numOfSkippedInstructions, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
-        super(path, isCurrentVersion, versionDate, state, suspended, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, hasAddOrderDependencies, numOfStoppedInstructions, numOfSkippedInstructions, version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
+    public WorkflowDeps(BoardWorkflows consumeNoticeBoards, BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, List<Workflow> addOrderToWorkflows, List<Workflow> addOrderFromWorkflows, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasConsumeNoticeBoards, Boolean hasAddOrderDependencies, Integer numOfStoppedInstructions, Integer numOfSkippedInstructions, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
+        super(path, isCurrentVersion, versionDate, state, suspended, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, hasConsumeNoticeBoards, hasAddOrderDependencies, numOfStoppedInstructions, numOfSkippedInstructions, version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
+        this.consumeNoticeBoards = consumeNoticeBoards;
         this.expectedNoticeBoards = expectedNoticeBoards;
         this.postNoticeBoards = postNoticeBoards;
         this.addOrderToWorkflows = addOrderToWorkflows;
         this.addOrderFromWorkflows = addOrderFromWorkflows;
+    }
+
+    /**
+     * workflow with dependencies
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("consumeNoticeBoards")
+    public BoardWorkflows getConsumeNoticeBoards() {
+        return consumeNoticeBoards;
+    }
+
+    /**
+     * workflow with dependencies
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("consumeNoticeBoards")
+    public void setConsumeNoticeBoards(BoardWorkflows consumeNoticeBoards) {
+        this.consumeNoticeBoards = consumeNoticeBoards;
     }
 
     /**
@@ -166,12 +198,12 @@ public class WorkflowDeps
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("expectedNoticeBoards", expectedNoticeBoards).append("postNoticeBoards", postNoticeBoards).append("addOrderToWorkflows", addOrderToWorkflows).append("addOrderFromWorkflows", addOrderFromWorkflows).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("consumeNoticeBoards", consumeNoticeBoards).append("expectedNoticeBoards", expectedNoticeBoards).append("postNoticeBoards", postNoticeBoards).append("addOrderToWorkflows", addOrderToWorkflows).append("addOrderFromWorkflows", addOrderFromWorkflows).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(expectedNoticeBoards).append(addOrderToWorkflows).append(addOrderFromWorkflows).append(postNoticeBoards).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(expectedNoticeBoards).append(consumeNoticeBoards).append(addOrderToWorkflows).append(addOrderFromWorkflows).append(postNoticeBoards).toHashCode();
     }
 
     @Override
@@ -183,7 +215,7 @@ public class WorkflowDeps
             return false;
         }
         WorkflowDeps rhs = ((WorkflowDeps) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(expectedNoticeBoards, rhs.expectedNoticeBoards).append(addOrderToWorkflows, rhs.addOrderToWorkflows).append(addOrderFromWorkflows, rhs.addOrderFromWorkflows).append(postNoticeBoards, rhs.postNoticeBoards).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(expectedNoticeBoards, rhs.expectedNoticeBoards).append(consumeNoticeBoards, rhs.consumeNoticeBoards).append(addOrderToWorkflows, rhs.addOrderToWorkflows).append(addOrderFromWorkflows, rhs.addOrderFromWorkflows).append(postNoticeBoards, rhs.postNoticeBoards).isEquals();
     }
 
 }

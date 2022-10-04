@@ -18,6 +18,7 @@ import javax.json.JsonObjectBuilder;
 
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.ExpectNotice;
 import com.sos.inventory.model.instruction.ExpectNotices;
 import com.sos.inventory.model.instruction.Instruction;
@@ -343,6 +344,7 @@ public class WorkflowConverter {
         private List<String> lockIds;
         private Set<String> postNotices;
         private Set<String> expectNotices;
+        private Set<String> consumeNotices;
         private Set<String> addOrders;
         private Map<String, Integer> locks;
 
@@ -359,6 +361,7 @@ public class WorkflowConverter {
             locks = new HashMap<String, Integer>();
             postNotices = new HashSet<String>();
             expectNotices = new HashSet<String>();
+            consumeNotices = new HashSet<String>();
             addOrders = new HashSet<String>();
 
             jobArgNames = new ArrayList<String>();
@@ -386,6 +389,7 @@ public class WorkflowConverter {
             jsonAddStringValues(builder, "lockIds", lockIds);
             jsonAddStringValues(builder, "postNotices", postNotices);
             jsonAddStringValues(builder, "expectNotices", expectNotices);
+            jsonAddStringValues(builder, "consumeNotices", consumeNotices);
             jsonAddStringValues(builder, "noticeBoardNames", getNoticeBoardNames());
             jsonAddStringValues(builder, "addOrders", addOrders);
             if (locks.size() > 0) {
@@ -433,8 +437,12 @@ public class WorkflowConverter {
             return expectNotices;
         }
 
+        public Set<String> getConsumNotices() {
+            return consumeNotices;
+        }
+
         public Set<String> getNoticeBoardNames() {
-            return Stream.of(postNotices, expectNotices).flatMap(Set::stream).collect(Collectors.toSet());
+            return Stream.of(postNotices, expectNotices, consumeNotices).flatMap(Set::stream).collect(Collectors.toSet());
         }
 
         public Set<String> getAddOrders() {
@@ -532,6 +540,15 @@ public class WorkflowConverter {
                     if (!SOSString.isEmpty(notice.getInstruction().getNoticeBoardNames())) {
                         List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(notice.getInstruction().getNoticeBoardNames());
                         ensNames.forEach(n -> expectNotices.add(n));
+                    }
+                }
+            }
+            List<WorkflowInstruction<ConsumeNotices>> cNoticess = searcher.getConsumeNoticesInstructions();
+            if (cNoticess != null) {
+                for (WorkflowInstruction<ConsumeNotices> notice : cNoticess) {
+                    if (!SOSString.isEmpty(notice.getInstruction().getNoticeBoardNames())) {
+                        List<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToList(notice.getInstruction().getNoticeBoardNames());
+                        cnsNames.forEach(n -> consumeNotices.add(n));
                     }
                 }
             }

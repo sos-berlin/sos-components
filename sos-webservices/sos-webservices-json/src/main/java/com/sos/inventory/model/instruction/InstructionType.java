@@ -22,6 +22,7 @@ public enum InstructionType {
     POST_NOTICES("PostNotices"),
     EXPECT_NOTICE("ExpectNotice"),
     EXPECT_NOTICES("ExpectNotices"),
+    CONSUME_NOTICES("ConsumeNotices"),
     IMPLICIT_END("ImplicitEnd"),
     ADD_ORDER("AddOrder"),
     CYCLE("Cycle");

@@ -51,6 +51,7 @@ import com.sos.inventory.model.common.ClassHelper;
 		@JsonSubTypes.Type(value = PostNotices.class, name = "PostNotices"),
         @JsonSubTypes.Type(value = ExpectNotice.class, name = "ExpectNotice"),
 		@JsonSubTypes.Type(value = ExpectNotices.class, name = "ExpectNotices"),
+		@JsonSubTypes.Type(value = ConsumeNotices.class, name = "ConsumeNotices"),
         @JsonSubTypes.Type(value = ImplicitEnd.class, name = "ImplicitEnd"),
         @JsonSubTypes.Type(value = AddOrder.class, name = "AddOrder"),
         @JsonSubTypes.Type(value = Cycle.class, name = "Cycle")})

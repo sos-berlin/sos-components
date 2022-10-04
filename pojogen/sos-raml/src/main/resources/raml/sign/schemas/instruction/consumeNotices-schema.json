@@ -1,0 +1,33 @@
+{
+  "title": "ConsumeNotices",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.ConsumeNotices",
+  "type": "object",
+  "required": [
+  	"boardPaths",
+  	"subworkflow"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'ConsumeNotices'",
+  "propertyOrder": [
+  	"TYPE",
+    "boardPaths",
+    "subworkflow"
+  ],
+  "properties": {
+    "boardPaths": {
+    	"alias": "noticeBoardNames",
+    	"type": "string",
+    	"pattern": "^[^<>]*$",
+  		"maxLength": 255,
+  		"minLength": 1
+    },
+    "subworkflow": {
+    	"$ref": "instructions-schema.json"	
+    }
+  },
+  "additionalProperties": false
+}
