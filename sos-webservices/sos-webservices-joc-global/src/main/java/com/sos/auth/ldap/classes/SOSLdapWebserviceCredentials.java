@@ -284,8 +284,13 @@ public class SOSLdapWebserviceCredentials {
     }
 
     
-    public String getSystemUser() {
+    public String getSystemUserDn() {
         return userDnTemplate.replaceAll("\\{0\\}", systemUser);
+     }
+
+
+    public String getSystemUser() {
+        return systemUser;
      }
 
     
