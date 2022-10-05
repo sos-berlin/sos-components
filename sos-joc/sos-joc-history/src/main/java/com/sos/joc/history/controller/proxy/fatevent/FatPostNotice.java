@@ -12,27 +12,27 @@ import js7.data.board.NoticeId;
 
 public class FatPostNotice {
 
-    private String id;
-    private String board;
+    private String noticeId;
+    private String boardPath;
     private Date endOfLife;
 
     public FatPostNotice(Notice notice) {
         if (notice != null) {
-            setId(notice.id());
-            setBoard(notice.boardPath());
+            setNoticeId(notice.id());
+            setBoardPath(notice.boardPath());
             setEndOfLife(notice.endOfLife());
         }
     }
 
-    private void setId(NoticeId nId) {
+    private void setNoticeId(NoticeId nId) {
         if (nId != null) {
-            id = nId.string();
+            noticeId = nId.string();
         }
     }
 
-    private void setBoard(BoardPath bp) {
+    private void setBoardPath(BoardPath bp) {
         if (bp != null) {
-            board = bp.string();
+            boardPath = bp.string();
         }
     }
 
@@ -42,12 +42,12 @@ public class FatPostNotice {
         }
     }
 
-    public String getId() {
-        return id;
+    public String getNoticeId() {
+        return noticeId;
     }
 
-    public String getBoard() {
-        return board;
+    public String getBoardPath() {
+        return boardPath;
     }
 
     public Date getEndOfLife() {

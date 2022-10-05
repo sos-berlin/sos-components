@@ -168,9 +168,11 @@ public class Counter {
         @SuppressWarnings("unused")
         private int locksReleased = 0;
         @SuppressWarnings("unused")
-        private int noticePosted = 0;
+        private int noticesExpected = 0;
         @SuppressWarnings("unused")
         private int noticesRead = 0;
+        @SuppressWarnings("unused")
+        private int noticePosted = 0;
 
         public void addStarted() {
             started += 1;
@@ -232,12 +234,16 @@ public class Counter {
             locksReleased += 1;
         }
 
-        public void addNoticePosted() {
-            noticePosted += 1;
+        public void addNoticesExpected() {
+            noticesExpected += 1;
         }
 
         public void addNoticesRead() {
             noticesRead += 1;
+        }
+
+        public void addNoticePosted() {
+            noticePosted += 1;
         }
     }
 

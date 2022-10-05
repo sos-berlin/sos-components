@@ -59,6 +59,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksAcquired;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksQueued;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksReleased;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticePosted;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
@@ -520,10 +521,19 @@ public class HistoryControllerHandler {
                         .getPosition());
                 break;
 
+            // if expected notice(s) exists
             case OrderNoticesRead:
                 order = entry.getCheckedOrder();
                 event = new FatEventOrderNoticesRead(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), order.readNotices());
+                break;
+
+            // if expected notice(s) not exist
+            case OrderNoticesExpected:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderNoticesExpected(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition(), order.getExpectNotices());
+
                 break;
 
             case OrderNoticePosted:
