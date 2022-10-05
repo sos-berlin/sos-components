@@ -23,16 +23,13 @@ public class SOSOpenIdWebserviceCredentials {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSOpenIdWebserviceCredentials.class);
 
     private String account = "";
-    private String accessToken = "";
-    private String refreshToken = "";
     private String idToken = "";
     private String authenticationUrl;
 
     private String clientSecret;
     private String clientId;
     private String providerName;
- 
-  
+
     private String truststorePath = "";
     private String truststorePassword = "";
     private KeystoreType truststoreType = null;
@@ -47,10 +44,6 @@ public class SOSOpenIdWebserviceCredentials {
 
     public void setAccount(String account) {
         this.account = account;
-    }
-
-    public String getAccessToken() {
-        return accessToken;
     }
 
     public String getAccount() {
@@ -77,22 +70,9 @@ public class SOSOpenIdWebserviceCredentials {
         return truststoreType;
     }
 
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
     public String getProviderName() {
         return providerName;
     }
-
 
     private String getProperty(String value, String defaultValue) {
         if (value == null || value.isEmpty()) {
@@ -186,8 +166,6 @@ public class SOSOpenIdWebserviceCredentials {
                     truststorePath = p.toString();
                 }
 
-                      
-
             }
         } catch (SOSHibernateException | IOException e) {
             LOGGER.error("", e);
@@ -199,8 +177,8 @@ public class SOSOpenIdWebserviceCredentials {
 
     @Override
     public String toString() {
-        return "SOSOpenIdWebserviceCredentials [account=" + account + ", accessToken=" + accessToken + ", serviceUrl=" + authenticationUrl
-                + ", clientSecret=" + clientSecret + ", clientId=" + clientId + "]";
+        return "SOSOpenIdWebserviceCredentials [account=" + account + ",  serviceUrl=" + authenticationUrl + ", clientSecret=" + clientSecret
+                + ", clientId=" + clientId + "]";
     }
 
     public String getIdToken() {

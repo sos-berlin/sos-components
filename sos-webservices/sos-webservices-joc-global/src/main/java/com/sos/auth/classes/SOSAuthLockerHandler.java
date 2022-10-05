@@ -15,7 +15,7 @@ public class SOSAuthLockerHandler  {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthLockerHandler.class);
     private static final String ThreadCtx = "authentication";
-    private static final Long lifetime = 1L;
+    private static final Long lifetime = 30L;
     private Timer lockerRemoveTimer;
 
     public class LockerRemoveTimerTask extends TimerTask {
@@ -48,7 +48,11 @@ public class SOSAuthLockerHandler  {
         }
         lockerRemoveTimer = new Timer();
         Long waitTask = eldestContent.getValue().getCreated() + lifetime * 60 * 1000 - Instant.now().toEpochMilli();
+        if (waitTask < 0) {
+            waitTask = 0L;
+        }
         LOGGER.debug("will remove " + eldestContent.getKey() + " in " + waitTask / 1000 + " seconds");
+        
         lockerRemoveTimer.schedule(new LockerRemoveTimerTask(eldestContent.getKey()), waitTask);
     }
 

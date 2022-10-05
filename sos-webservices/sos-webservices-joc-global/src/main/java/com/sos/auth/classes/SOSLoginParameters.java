@@ -10,8 +10,6 @@ public class SOSLoginParameters {
     private String basicAuthorization;
     private String clientCertCN;
     private String identityService;
-    private String refreshToken;
-    private String accessToken;
     private String idToken;
     private String account;
     private SOSOpenIdWebserviceCredentials webserviceCredentials;
@@ -48,14 +46,6 @@ public class SOSLoginParameters {
         this.identityService = identityService;
     }
 
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
     public String getAccount() {
         return account;
     }
@@ -70,16 +60,6 @@ public class SOSLoginParameters {
 
     public void setIdToken(String idToken) {
         this.idToken = idToken;
-    }
-
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        if (refreshToken != null && (this.refreshToken == null || this.refreshToken.isEmpty())) {
-            this.refreshToken = refreshToken;
-        }
     }
 
     public SOSOpenIdWebserviceCredentials getWebserviceCredentials() {

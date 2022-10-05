@@ -156,7 +156,6 @@ public class IamAccountDBLayer {
         return row;
     }
 
-    
     private String getBlockedWhere(IamAccountFilter filter) {
         String where = " ";
         String and = "";
@@ -179,8 +178,7 @@ public class IamAccountDBLayer {
         }
         return where;
     }
-    
-    
+
     private String getWhere(IamAccountFilter filter) {
         String where = " ";
         String and = "";
@@ -516,4 +514,12 @@ public class IamAccountDBLayer {
         return iamBlockedAccountsList == null ? Collections.emptyList() : iamBlockedAccountsList;
     }
 
+    public Long getIamCountAccountList(IamAccountFilter filter) throws SOSHibernateException {
+        Query query = sosHibernateSession.createQuery("select count(*) from " + DBItemIamAccount + " a " + getWhere(filter));
+
+        bindParameters(filter, query);
+        Long count = (Long) query.uniqueResult();
+
+        return count;
+    }
 }

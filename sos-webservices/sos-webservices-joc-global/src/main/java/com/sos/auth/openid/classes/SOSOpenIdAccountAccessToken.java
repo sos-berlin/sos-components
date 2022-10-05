@@ -5,7 +5,6 @@ public class SOSOpenIdAccountAccessToken {
     private String accessToken;
     private long expiresIn;
     private long refreshExpiresIn;
-    private String refreshToken;
 
     public String getAccessToken() {
         return accessToken;
@@ -31,12 +30,5 @@ public class SOSOpenIdAccountAccessToken {
         this.refreshExpiresIn = refreshExpiresIn;
     }
 
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
 
 }

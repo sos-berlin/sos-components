@@ -35,7 +35,7 @@ public class SOSOpenIdLogin implements ISOSLogin {
 
         try {
             SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = null;
-            if (currentAccount.getSosLoginParameters().getAccessToken() != null) {
+            if (currentAccount.getSosLoginParameters().getIdToken() != null) {
 
                 SOSOpenIdWebserviceCredentials webserviceCredentials = currentAccount.getSosLoginParameters().getWebserviceCredentials();
 
@@ -49,9 +49,6 @@ public class SOSOpenIdLogin implements ISOSLogin {
                 if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(),
                         currentAccount.getAccountname())))) {
                     sosOpenIdAccountAccessToken = sosOpenIdHandler.login();
-                    if (sosOpenIdAccountAccessToken != null) {
-                        sosOpenIdAccountAccessToken.setRefreshToken(currentAccount.getSosLoginParameters().getRefreshToken());
-                    }
                 }
 
             }

@@ -160,4 +160,11 @@ public class SOSLocker {
             }
         }
     }
+
+    public long getCount() {
+        if (locker == null) {
+            locker = new HashMap<String, SOSLockerContent>();
+        }
+        return locker.size();
+    }
 }

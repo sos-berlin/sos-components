@@ -1,9 +1,6 @@
 package com.sos.auth.openid;
 
 import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.KeyStore;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,9 +15,7 @@ import com.sos.auth.keycloak.classes.SOSKeycloakAccountAccessToken;
 import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
 import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
-import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
-import com.sos.joc.exceptions.JocException;
 
 public class SOSOpenIdSession implements ISOSSession {
 
@@ -52,7 +47,6 @@ public class SOSOpenIdSession implements ISOSSession {
             try {
                 webserviceCredentials.setValuesFromProfile(identityService);
                 webserviceCredentials.setAccount(currentAccount.getAccountname());
-                webserviceCredentials.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
                 webserviceCredentials.setAccount(currentAccount.getAccountname());
 
                 sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
@@ -129,21 +123,8 @@ public class SOSOpenIdSession implements ISOSSession {
 
     @Override
     public boolean renew() {
-        try {
-            if (sosOpenIdHandler.accountAccessTokenIsValid(accessToken)) {
-                this.setAccessToken(sosOpenIdHandler.renewAccountAccess(accessToken));
-                startSession = Instant.now().toEpochMilli();
-                return true;
-            } else {
-                LOGGER.info("not valid");
-                this.stop();
-                return false;
-            }
-        } catch (JocException e) {
-            LOGGER.error("", e);
-            this.stop();
-            return false;
-        }
+        return true;
+
     }
 
     @Override

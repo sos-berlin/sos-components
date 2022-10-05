@@ -178,9 +178,8 @@ public class SOSServicePermissionIam {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
-            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-IDENTIY-SERVICE") String identiyService,
-            @HeaderParam("X-ACCESS-TOKEN") String accessToken, @HeaderParam("X-REFRESH-TOKEN") String refreshToken,
-            @HeaderParam("X-ID-TOKEN") String idToken, @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
+            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,
+            @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -205,16 +204,10 @@ public class SOSServicePermissionIam {
                 }
             }
             SOSLoginParameters sosLoginParameters = new SOSLoginParameters();
-            sosLoginParameters.setAccessToken(accessToken);
-            sosLoginParameters.setRefreshToken(refreshToken);
             sosLoginParameters.setIdToken(idToken);
             sosLoginParameters.setBasicAuthorization(basicAuthorization);
             sosLoginParameters.setClientCertCN(clientCertCN);
-            if (identityService == null || identityService.isEmpty()) {
-                sosLoginParameters.setIdentityService(identiyService);
-            } else {
-                sosLoginParameters.setIdentityService(identityService);
-            }
+            sosLoginParameters.setIdentityService(identityService);
             sosLoginParameters.setRequest(request);
             sosLoginParameters.setAccount(account);
 
@@ -267,14 +260,8 @@ public class SOSServicePermissionIam {
         sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
         sosAuthCurrentAccountAnswer.setHasRole(false);
         sosAuthCurrentAccountAnswer.setIsPermitted(false);
-        if (currentAccount != null && currentAccount.getIdentityServices() != null && currentAccount.getIdentityServices().getIdentyServiceType()
-                .equals(IdentityServiceTypes.OIDC)) {
-            sosAuthCurrentAccountAnswer.setAccessToken(currentAccount.getSosLoginParameters().getAccessToken());
-            sosAuthCurrentAccountAnswer.setRefreshToken(currentAccount.getSosLoginParameters().getRefreshToken());
-        } else {
-            sosAuthCurrentAccountAnswer.setAccessToken(EMPTY_STRING);
-            sosAuthCurrentAccountAnswer.setRefreshToken(null);
-        }
+        sosAuthCurrentAccountAnswer.setAccessToken(EMPTY_STRING);
+
         if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
             Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(accessToken);
         }
@@ -772,8 +759,6 @@ public class SOSServicePermissionIam {
                     SOSIdentityService sosIdentityService = new SOSIdentityService(sosLoginParameters.getIdentityService(),
                             IdentityServiceTypes.OIDC);
                     webserviceCredentials.setValuesFromProfile(sosIdentityService);
-                    webserviceCredentials.setAccessToken(sosLoginParameters.getAccessToken());
-                    webserviceCredentials.setRefreshToken(sosLoginParameters.getRefreshToken());
                     webserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
                     if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
                         SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);

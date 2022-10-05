@@ -72,7 +72,6 @@ public class SOSOpenIdHandler {
     private JsonObject jsonHeader;
     private JsonObject jsonPayload;
     private KeyStore truststore = null;
-    private URI tokenEndpointUri;
     private String accountIdentifier = null;
 
     public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials) {
@@ -199,14 +198,6 @@ public class SOSOpenIdHandler {
         return result;
     }
 
-    public void setTokenEndpoint() throws SocketException, SOSException {
-        URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + WELL_KNOWN_OPENID_CONFIGURATION);
-        String configurationResponse = getFormResponse(false, requestUri, null, null);
-        JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(configurationResponse));
-        JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
-        tokenEndpointUri = URI.create(jsonConfigurationResponse.getString(TOKEN_ENDPOINT, ""));
-    }
-
     public SOSOpenIdAccountAccessToken login() throws SOSException, JsonParseException, JsonMappingException, IOException {
 
         SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = new SOSOpenIdAccountAccessToken();
@@ -225,9 +216,6 @@ public class SOSOpenIdHandler {
         JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
         String tokenVerificationEndpoint = "";
 
-        tokenVerificationEndpoint = jsonConfigurationResponse.getString(INTROSPECTION_ENDPOINT, "");
-
-        tokenEndpointUri = URI.create(jsonConfigurationResponse.getString(TOKEN_ENDPOINT, ""));
         String certEndpoit = jsonConfigurationResponse.getString(JWKS_URI_ENDPOINT, "");
 
         boolean tokenIsActive = true;
@@ -283,7 +271,7 @@ public class SOSOpenIdHandler {
         }
 
         if (valid) {
-            sosOpenIdAccountAccessToken.setAccessToken(webserviceCredentials.getAccessToken());
+            sosOpenIdAccountAccessToken.setAccessToken(SOSAuthHelper.createAccessToken());
             return sosOpenIdAccountAccessToken;
         } else {
             return null;
@@ -304,8 +292,8 @@ public class SOSOpenIdHandler {
         response = getFormResponse(false, certEndpointUri, null, null);
 
         JsonReader jsonReaderCertResponse = Json.createReader(new StringReader(response));
-        JsonObject x = jsonReaderCertResponse.readObject();
-        JsonArray keys = x.getJsonArray("keys");
+        JsonObject jsonKeys = jsonReaderCertResponse.readObject();
+        JsonArray keys = jsonKeys.getJsonArray("keys");
 
         int len = keys.size();
         String eValue = "";
@@ -332,48 +320,6 @@ public class SOSOpenIdHandler {
         KeyFactory keyFactory = KeyFactory.getInstance(ktyValue); // ktyValue will be "RSA"
         RSAPublicKey rsaPublicKey = (RSAPublicKey) keyFactory.generatePublic(publicKeySpec);
         return rsaPublicKey;
-    }
-
-    public SOSOpenIdAccountAccessToken renewAccountAccess(SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken) {
-
-        if (sosOpenIdAccountAccessToken != null) {
-            if (tokenEndpointUri == null) {
-                try {
-                    this.setTokenEndpoint();
-                } catch (SocketException | SOSException e) {
-                    LOGGER.error("", e);
-                }
-            }
-
-            Map<String, String> body = new HashMap<String, String>();
-            body.put("client_id", webserviceCredentials.getClientId());
-            body.put("grant_type", "refresh_token");
-            body.put("client_secret", webserviceCredentials.getClientSecret());
-            body.put("refresh_token", sosOpenIdAccountAccessToken.getRefreshToken());
-
-            String response;
-            try {
-                response = getFormResponse(true, tokenEndpointUri, body, null);
-
-                JsonReader jsonReaderTokenResponse = Json.createReader(new StringReader(response));
-                JsonObject jsonTokenResponse = jsonReaderTokenResponse.readObject();
-                String newAccessToken = jsonTokenResponse.getString("access_token", "");
-                String newRefreshToken = jsonTokenResponse.getString("refresh_token", "");
-
-                LOGGER.debug("new access_token:" + newAccessToken);
-
-                sosOpenIdAccountAccessToken.setAccessToken(newAccessToken);
-                sosOpenIdAccountAccessToken.setExpiresIn(jsonTokenResponse.getInt("expires_in", 0));
-                if (newRefreshToken != null && !newRefreshToken.isEmpty()) {
-                    sosOpenIdAccountAccessToken.setRefreshToken(newRefreshToken);
-                }
-
-                LOGGER.debug(SOSString.toString(sosOpenIdAccountAccessToken));
-            } catch (SocketException | SOSException e) {
-                LOGGER.error("", e);
-            }
-        }
-        return sosOpenIdAccountAccessToken;
     }
 
     public String decodeIdToken(String idToken) throws SocketException, SOSException {
