@@ -78,6 +78,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCancelled;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderForked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderJoined;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticePosted;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStarted;
@@ -85,6 +86,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStdWritten;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventWithProblem;
+import com.sos.joc.history.controller.proxy.fatevent.FatExpectNotice;
 import com.sos.joc.history.controller.proxy.fatevent.FatExpectNotices;
 import com.sos.joc.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.joc.history.controller.proxy.fatevent.FatOutcome;
@@ -394,13 +396,19 @@ public class HistoryModel {
                         orderLock(dbLayer, (AFatEventOrderLocks) entry, EventType.OrderLocksReleased);
                         counter.getOrder().addLocksReleased();
                         break;
-                    case OrderNoticePosted:
-                        orderLogNotice(dbLayer, (FatEventOrderNoticePosted) entry, EventType.OrderNoticePosted);
-                        counter.getOrder().addNoticePosted();
-                        break;
+                    // if expected notice(s) exists
                     case OrderNoticesRead:
                         orderLogNotice(dbLayer, (FatEventOrderNoticesRead) entry, EventType.OrderNoticesRead);
                         counter.getOrder().addNoticesRead();
+                        break;
+                    // if expected notice(s) not exist
+                    case OrderNoticesExpected:
+                        orderLogNotice(dbLayer, (FatEventOrderNoticesExpected) entry, EventType.OrderNoticesExpected);
+                        counter.getOrder().addNoticesExpected();
+                        break;
+                    case OrderNoticePosted:
+                        orderLogNotice(dbLayer, (FatEventOrderNoticePosted) entry, EventType.OrderNoticePosted);
+                        counter.getOrder().addNoticePosted();
                         break;
                     case EventWithProblem:
                         FatEventWithProblem ep = (FatEventWithProblem) entry;
@@ -2107,20 +2115,44 @@ public class HistoryModel {
             }).collect(Collectors.toList()));
         }
         if (logEntry.getOrderNotice() != null) {
-            if (logEntry.getOrderNotice() instanceof FatEventOrderNoticePosted) {
-                PostNotice n = new PostNotice();
-                FatPostNotice pn = ((FatEventOrderNoticePosted) logEntry.getOrderNotice()).getNotice();
-                if (pn != null) {
-                    n.setBoardName(pn.getBoard());
+            ExpectNotices en;
+            switch (logEntry.getEventType()) {
+            case OrderNoticesRead:
+                en = new ExpectNotices();
+                FatExpectNotices fen = ((FatEventOrderNoticesRead) logEntry.getOrderNotice()).getNotices();
+                en.setExists(fen == null ? "" : fen.getBoardPaths());
+                en.setNotExists(null);
+                entry.setExpectNotices(en);
+                break;
+            case OrderNoticesExpected:
+                en = new ExpectNotices();
+                List<FatExpectNotice> fenl = ((FatEventOrderNoticesExpected) logEntry.getOrderNotice()).getNotices();
+                en.setExists(null);
+                en.setNotExists(fenl.stream().map(e -> {
+                    com.sos.joc.model.history.order.ExpectNotice nen = new com.sos.joc.model.history.order.ExpectNotice();
+                    nen.setBoardName(e.getBoardPath());
+                    nen.setId(e.getNoticeId());
+                    return nen;
+                }).collect(Collectors.toList()));
+                entry.setExpectNotices(en);
+                break;
+            case OrderNoticePosted:
+                PostNotice pn = new PostNotice();
+                FatPostNotice fpn = ((FatEventOrderNoticePosted) logEntry.getOrderNotice()).getNotice();
+                if (fpn != null) {
+                    pn.setBoardName(fpn.getBoardPath());
+                    pn.setId(fpn.getNoticeId());
+                    try {
+                        pn.setEndOfLife(getDateAsString(fpn.getEndOfLife(), controllerTimezone));
+                    } catch (Exception e) {
+                        LOGGER.warn(String.format("[createOrderLogEntry][OrderNoticePosted][boardName=%s][%s]%s", pn.getBoardName(), fpn
+                                .getEndOfLife(), e.toString()), e);
+                    }
                 }
-                entry.setPostNotice(n);
-            } else if (logEntry.getOrderNotice() instanceof FatEventOrderNoticesRead) {
-                ExpectNotices n = new ExpectNotices();
-                FatExpectNotices en = ((FatEventOrderNoticesRead) logEntry.getOrderNotice()).getNotices();
-                if (en != null) {
-                    n.setExpression(en.getBoardPaths());
-                }
-                entry.setExpectNotices(n);
+                entry.setPostNotice(pn);
+                break;
+            default:
+                break;
             }
         }
         return entry;

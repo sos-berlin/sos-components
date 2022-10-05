@@ -36,6 +36,7 @@ import com.sos.joc.history.controller.proxy.fatevent.AFatEvent;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentCouplingFailed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentReady;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentShutDown;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentSubagentDedicated;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventClusterCoupled;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerShutDown;
@@ -49,6 +50,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksAcquired;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksQueued;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksReleased;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticePosted;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
@@ -92,7 +94,7 @@ public class HistoryControllerHandlerTest {
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 10; // seconds
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
-    private static final Long START_EVENT_ID = 1664871922195000L;
+    private static final Long START_EVENT_ID = 1664953270592006L;
 
     private EventFluxStopper stopper;
     private AtomicBoolean closed;
@@ -221,6 +223,13 @@ public class HistoryControllerHandlerTest {
 
                 event = new FatEventAgentReady(entry.getEventId(), entry.getEventDate());
                 event.set(ar.getId(), ar.getUri(), ar.getTimezone());
+                break;
+
+            case AgentSubagentDedicated:
+                //HistoryAgentSubagentDedicated ad = entry.getAgentSubagentDedicated();
+                // ad.postEvent();
+
+                event = new FatEventAgentSubagentDedicated(entry.getEventId(), entry.getEventDate());
                 break;
 
             case AgentCouplingFailed:
@@ -444,11 +453,21 @@ public class HistoryControllerHandlerTest {
 
                 break;
 
+            // if expected notice(s) exists
             case OrderNoticesRead:
                 order = entry.getCheckedOrder();
                 event = new FatEventOrderNoticesRead(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
-                        .getPosition(), order.getExpectNotices());
+                        .getPosition(), order.readNotices());
                 break;
+
+            // if expected notice(s) not exist
+            case OrderNoticesExpected:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderNoticesExpected(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), order.getExpectNotices());
+
+                break;
+
             case OrderNoticePosted:
                 order = entry.getCheckedOrder();
                 event = new FatEventOrderNoticePosted(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()

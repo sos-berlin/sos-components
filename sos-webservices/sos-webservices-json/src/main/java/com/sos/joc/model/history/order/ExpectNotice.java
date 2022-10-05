@@ -11,10 +11,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "boardName",
-    "id",
-    "endOfLife"
+    "id"
 })
-public class PostNotice {
+public class ExpectNotice {
 
     /**
      * 
@@ -30,13 +29,6 @@ public class PostNotice {
      */
     @JsonProperty("id")
     private String id;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("endOfLife")
-    private String endOfLife;
 
     /**
      * 
@@ -78,34 +70,14 @@ public class PostNotice {
         this.id = id;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("endOfLife")
-    public String getEndOfLife() {
-        return endOfLife;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("endOfLife")
-    public void setEndOfLife(String endOfLife) {
-        this.endOfLife = endOfLife;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("boardName", boardName).append("id", id).append("endOfLife", endOfLife).toString();
+        return new ToStringBuilder(this).append("boardName", boardName).append("id", id).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(id).append(boardName).append(endOfLife).toHashCode();
+        return new HashCodeBuilder().append(boardName).append(id).toHashCode();
     }
 
     @Override
@@ -113,11 +85,11 @@ public class PostNotice {
         if (other == this) {
             return true;
         }
-        if ((other instanceof PostNotice) == false) {
+        if ((other instanceof ExpectNotice) == false) {
             return false;
         }
-        PostNotice rhs = ((PostNotice) other);
-        return new EqualsBuilder().append(id, rhs.id).append(boardName, rhs.boardName).append(endOfLife, rhs.endOfLife).isEquals();
+        ExpectNotice rhs = ((ExpectNotice) other);
+        return new EqualsBuilder().append(boardName, rhs.boardName).append(id, rhs.id).isEquals();
     }
 
 }

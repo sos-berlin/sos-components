@@ -18,6 +18,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentVersionUpdatedEvent;
 import com.sos.joc.event.bean.agent.SubagentVersionUpdatedEvent;
 import com.sos.joc.history.controller.exception.FatEventProblemException;
+import com.sos.joc.history.controller.proxy.fatevent.FatExpectNotice;
 import com.sos.joc.history.controller.proxy.fatevent.FatExpectNotices;
 import com.sos.joc.history.controller.proxy.fatevent.FatPostNotice;
 
@@ -62,6 +63,7 @@ import js7.data_for_java.lock.JLockState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrder.Forked;
 import js7.data_for_java.order.JOrderEvent;
+import js7.data_for_java.order.JOrderEvent.JExpectedNotice;
 import js7.data_for_java.order.JOrderEvent.JOrderForked;
 import js7.data_for_java.subagent.JSubagentItem;
 import js7.data_for_java.workflow.JWorkflow;
@@ -301,20 +303,35 @@ public class HistoryEventEntry {
             return null;
         }
 
+        // if expected notice(s) exists
+        public FatExpectNotices readNotices() throws Exception {
+            Instruction i = getCurrentPositionInstruction();
+            if (i != null && i instanceof ExpectNotices) {
+                return new FatExpectNotices((ExpectNotices) i);
+            }
+            return null;
+        }
+
+        // if expected notice(s) not exist
+        public List<FatExpectNotice> getExpectNotices() throws Exception {
+            // if (event instanceof OrderNoticesExpected) {
+            // OrderNoticesExpected e = (OrderNoticesExpected) event;
+            List<FatExpectNotice> r = new ArrayList<>();
+            List<JExpectedNotice> l = state.orderToStillExpectedNotices(order.id());
+            if (l != null && l.size() > 0) {
+                for (JExpectedNotice en : l) {
+                    r.add(new FatExpectNotice(en.noticeId().string(), en.boardPath().string()));
+                }
+            }
+            return r;
+        }
+
         public FatPostNotice getPostNotice() {
             if (event instanceof OrderNoticePosted) {
                 Notice n = ((OrderNoticePosted) event).notice();
                 if (n != null) {
                     return new FatPostNotice(n);
                 }
-            }
-            return null;
-        }
-
-        public FatExpectNotices getExpectNotices() throws Exception {
-            Instruction i = getCurrentPositionInstruction();
-            if (i != null && i instanceof ExpectNotices) {
-                return new FatExpectNotices((ExpectNotices) i);
             }
             return null;
         }
