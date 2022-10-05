@@ -174,7 +174,7 @@
           <version>2.21.0</version>
 		  <!--
 		  <configuration>
-          	<classpathDependencyExcludes>org.apache.logging.log4j:log4j-slf4j2-impl</classpathDependencyExcludes>
+          	<classpathDependencyExcludes>org.apache.logging.log4j:log4j-slf4j-impl</classpathDependencyExcludes>
           </configuration>
 		  -->
         </plugin>
