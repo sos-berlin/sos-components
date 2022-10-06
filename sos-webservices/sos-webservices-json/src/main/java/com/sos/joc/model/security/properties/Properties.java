@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.security.properties;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -86,8 +81,6 @@ public class Properties {
      */
     @JsonProperty("ldap")
     private LdapProperties ldap;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -259,24 +252,14 @@ public class Properties {
         this.ldap = ldap;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("initialPassword", initialPassword).append("minPasswordLength", minPasswordLength).append("sessionTimeout", sessionTimeout).append("vault", vault).append("keycloak", keycloak).append("oidc", oidc).append("ldap", ldap).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("initialPassword", initialPassword).append("minPasswordLength", minPasswordLength).append("sessionTimeout", sessionTimeout).append("vault", vault).append("keycloak", keycloak).append("oidc", oidc).append("ldap", ldap).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(keycloak).append(initialPassword).append(ldap).append(minPasswordLength).append(sessionTimeout).append(additionalProperties).append(oidc).append(vault).toHashCode();
+        return new HashCodeBuilder().append(keycloak).append(initialPassword).append(ldap).append(minPasswordLength).append(sessionTimeout).append(oidc).append(vault).toHashCode();
     }
 
     @Override
@@ -288,7 +271,7 @@ public class Properties {
             return false;
         }
         Properties rhs = ((Properties) other);
-        return new EqualsBuilder().append(keycloak, rhs.keycloak).append(initialPassword, rhs.initialPassword).append(ldap, rhs.ldap).append(minPasswordLength, rhs.minPasswordLength).append(sessionTimeout, rhs.sessionTimeout).append(additionalProperties, rhs.additionalProperties).append(oidc, rhs.oidc).append(vault, rhs.vault).isEquals();
+        return new EqualsBuilder().append(keycloak, rhs.keycloak).append(initialPassword, rhs.initialPassword).append(ldap, rhs.ldap).append(minPasswordLength, rhs.minPasswordLength).append(sessionTimeout, rhs.sessionTimeout).append(oidc, rhs.oidc).append(vault, rhs.vault).isEquals();
     }
 
 }

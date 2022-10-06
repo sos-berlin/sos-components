@@ -2,11 +2,6 @@
 package com.sos.joc.model.security.history;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -58,8 +53,6 @@ public class LoginHistoryItem {
      */
     @JsonProperty("details")
     private LoginHistoryDetails details;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -159,24 +152,14 @@ public class LoginHistoryItem {
         this.details = details;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("accountName", accountName).append("loginDate", loginDate).append("loginSuccess", loginSuccess).append("details", details).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("accountName", accountName).append("loginDate", loginDate).append("loginSuccess", loginSuccess).append("details", details).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(loginDate).append(loginSuccess).append(details).append(additionalProperties).append(accountName).toHashCode();
+        return new HashCodeBuilder().append(loginDate).append(loginSuccess).append(details).append(accountName).toHashCode();
     }
 
     @Override
@@ -188,7 +171,7 @@ public class LoginHistoryItem {
             return false;
         }
         LoginHistoryItem rhs = ((LoginHistoryItem) other);
-        return new EqualsBuilder().append(loginDate, rhs.loginDate).append(loginSuccess, rhs.loginSuccess).append(details, rhs.details).append(additionalProperties, rhs.additionalProperties).append(accountName, rhs.accountName).isEquals();
+        return new EqualsBuilder().append(loginDate, rhs.loginDate).append(loginSuccess, rhs.loginSuccess).append(details, rhs.details).append(accountName, rhs.accountName).isEquals();
     }
 
 }

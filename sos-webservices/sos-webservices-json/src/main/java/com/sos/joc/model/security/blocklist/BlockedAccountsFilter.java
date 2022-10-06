@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.security.blocklist;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -72,8 +67,6 @@ public class BlockedAccountsFilter {
     @JsonProperty("limit")
     @JsonPropertyDescription("restricts the number of responsed records; -1=unlimited")
     private Integer limit = 10000;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -205,24 +198,14 @@ public class BlockedAccountsFilter {
         this.limit = limit;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("accountName", accountName).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("accountName", accountName).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(accountName).append(dateTo).append(limit).append(timeZone).append(additionalProperties).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(dateTo).append(limit).append(timeZone).append(dateFrom).append(accountName).toHashCode();
     }
 
     @Override
@@ -234,7 +217,7 @@ public class BlockedAccountsFilter {
             return false;
         }
         BlockedAccountsFilter rhs = ((BlockedAccountsFilter) other);
-        return new EqualsBuilder().append(accountName, rhs.accountName).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(timeZone, rhs.timeZone).append(additionalProperties, rhs.additionalProperties).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(accountName, rhs.accountName).isEquals();
     }
 
 }

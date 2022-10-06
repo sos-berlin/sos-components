@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.sign;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -43,8 +38,6 @@ public class SignedObject {
      */
     @JsonProperty("signature")
     private Signature signature;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -108,24 +101,14 @@ public class SignedObject {
         this.signature = signature;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("string", string).append("signature", signature).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("string", string).append("signature", signature).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(additionalProperties).append(string).append(signature).toHashCode();
+        return new HashCodeBuilder().append(string).append(signature).toHashCode();
     }
 
     @Override
@@ -137,7 +120,7 @@ public class SignedObject {
             return false;
         }
         SignedObject rhs = ((SignedObject) other);
-        return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).append(string, rhs.string).append(signature, rhs.signature).isEquals();
+        return new EqualsBuilder().append(string, rhs.string).append(signature, rhs.signature).isEquals();
     }
 
 }

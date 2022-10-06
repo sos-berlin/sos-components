@@ -1,11 +1,6 @@
 
 package com.sos.joc.model.sign;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -42,8 +37,6 @@ public class Signature {
      */
     @JsonProperty("signatureString")
     private String signatureString;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -105,24 +98,14 @@ public class Signature {
         this.signatureString = signatureString;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("signatureType", signatureType).append("signatureString", signatureString).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("signatureType", signatureType).append("signatureString", signatureString).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(signatureType).append(signatureString).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(signatureType).append(signatureString).toHashCode();
     }
 
     @Override
@@ -134,7 +117,7 @@ public class Signature {
             return false;
         }
         Signature rhs = ((Signature) other);
-        return new EqualsBuilder().append(signatureType, rhs.signatureType).append(signatureString, rhs.signatureString).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(signatureType, rhs.signatureType).append(signatureString, rhs.signatureString).isEquals();
     }
 
 }
