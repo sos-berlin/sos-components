@@ -2120,15 +2120,15 @@ public class HistoryModel {
             case OrderNoticesRead:
                 en = new ExpectNotices();
                 FatExpectNotices fen = ((FatEventOrderNoticesRead) logEntry.getOrderNotice()).getNotices();
-                en.setExists(fen == null ? "" : fen.getBoardPaths());
-                en.setNotExists(null);
+                en.setConsumed(fen == null ? "" : fen.getBoardPaths());
+                en.setWaitingFor(null);
                 entry.setExpectNotices(en);
                 break;
             case OrderNoticesExpected:
                 en = new ExpectNotices();
                 List<FatExpectNotice> fenl = ((FatEventOrderNoticesExpected) logEntry.getOrderNotice()).getNotices();
-                en.setExists(null);
-                en.setNotExists(fenl.stream().map(e -> {
+                en.setConsumed(null);
+                en.setWaitingFor(fenl.stream().map(e -> {
                     com.sos.joc.model.history.order.ExpectNotice nen = new com.sos.joc.model.history.order.ExpectNotice();
                     nen.setBoardName(e.getBoardPath());
                     nen.setId(e.getNoticeId());

@@ -94,7 +94,7 @@ public class HistoryControllerHandlerTest {
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 10; // seconds
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
-    private static final Long START_EVENT_ID = 1664953270592006L;
+    private static final Long START_EVENT_ID = 1664985831579000L;
 
     private EventFluxStopper stopper;
     private AtomicBoolean closed;
@@ -226,7 +226,7 @@ public class HistoryControllerHandlerTest {
                 break;
 
             case AgentSubagentDedicated:
-                //HistoryAgentSubagentDedicated ad = entry.getAgentSubagentDedicated();
+                // HistoryAgentSubagentDedicated ad = entry.getAgentSubagentDedicated();
                 // ad.postEvent();
 
                 event = new FatEventAgentSubagentDedicated(entry.getEventId(), entry.getEventDate());
