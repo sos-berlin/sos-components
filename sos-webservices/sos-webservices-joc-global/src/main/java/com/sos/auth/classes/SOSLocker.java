@@ -139,6 +139,29 @@ public class SOSLocker {
         return (content == null);
     }
 
+    public long getCount() {
+        if (locker == null) {
+            locker = new HashMap<String, SOSLockerContent>();
+        }
+        return locker.size();
+    }
+
+    public boolean getMaximumSizeReached(Map<String, Object> content) {
+        if (content == null) {
+            return false;
+        }
+
+        Long size = 0L;
+
+        for (Entry<String, Object> entry : content.entrySet()) {
+            size = size + entry.getValue().toString().length();
+        }
+        if (size > 256 * 1024L) {
+            return true;
+        }
+        return false;
+    }
+
     public static void main(String[] args) throws Exception {
         SOSLocker sosLocker = new SOSLocker();
         Map<String, Object> content = new HashMap<String, Object>();
@@ -161,10 +184,4 @@ public class SOSLocker {
         }
     }
 
-    public long getCount() {
-        if (locker == null) {
-            locker = new HashMap<String, SOSLockerContent>();
-        }
-        return locker.size();
-    }
 }

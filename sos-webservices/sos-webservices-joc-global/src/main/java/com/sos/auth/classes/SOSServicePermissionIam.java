@@ -689,7 +689,7 @@ public class SOSServicePermissionIam {
             SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
 
             sosAuthCurrentUserAnswer.setIsAuthenticated(currentAccount.getCurrentSubject().isAuthenticated());
-            sosAuthCurrentUserAnswer.setIsForcePasswordChange(currentAccount.getCurrentSubject().isForcePasswordChange());
+            sosAuthCurrentUserAnswer.setForcePasswordChange(currentAccount.getCurrentSubject().isForcePasswordChange());
             sosAuthCurrentUserAnswer.setAccessToken(currentAccount.getAccessToken());
             sosAuthCurrentUserAnswer.setAccount(currentAccount.getAccountname());
             sosAuthCurrentUserAnswer.setRole(String.join(", ", currentAccount.getRoles()));

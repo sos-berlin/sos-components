@@ -3,7 +3,6 @@ package com.sos.joc.security.classes;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.security.IamAccountDBLayer;
@@ -13,9 +12,6 @@ import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.db.security.IamRoleDBLayer;
 import com.sos.joc.db.security.IamRoleFilter;
 import com.sos.joc.exceptions.JocObjectNotExistException;
-import com.sos.joc.model.security.folders.FolderFilter;
-import com.sos.joc.model.security.folders.FolderItem;
-import com.sos.schema.JsonValidator;
 
 public class SecurityHelper {
 
@@ -61,4 +57,5 @@ public class SecurityHelper {
         return 0L;
     }
 
+  
 }
