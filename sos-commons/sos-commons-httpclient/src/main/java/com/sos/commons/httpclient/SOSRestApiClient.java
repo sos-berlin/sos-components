@@ -73,6 +73,7 @@ import com.sos.commons.httpclient.exception.SOSSSLException;
 
 public class SOSRestApiClient {
 
+    private static final String KEYSTORE_TYPE_DEFAULT = "PKCS12";
     private String accept = "application/json";
     private String basicAuthorization = null;
     private Map<String, String> headers = new HashMap<String, String>();
@@ -89,10 +90,12 @@ public class SOSRestApiClient {
     private boolean autoCloseHttpClient = true;
     private String keystorePath = null;
     private String keystorePass = null;
+    private String keyStoreAlias = null;
     private String keystoreType = null; // e.g. "JKS" or "PKCS12"
     private String keyPass = null;
     private KeyStore clientCertificate = null;
     private char[] clientCertificatePass = null;
+    private String clientCertificateAlias = null;
     private KeyStore truststore = null;
     private SSLContext sslContext = null;
 
@@ -223,9 +226,21 @@ public class SOSRestApiClient {
             kStoreType = System.getProperty("javax.net.ssl.keyStoreType");
         }
         if (kStoreType == null) {
-            kStoreType = "JKS"; // TODO Security.getProperty()
+            kStoreType = KEYSTORE_TYPE_DEFAULT; // TODO Security.getProperty()
         }
         return kStoreType;
+    }
+    
+    public void setKeyStoreAlias(String keyStoreAlias) {
+        this.keyStoreAlias = keyStoreAlias;
+    }
+
+    private String getKeyStoreAlias() {
+        String kAlias = keyStoreAlias;
+        if (kAlias == null) {
+            kAlias = System.getProperty("javax.net.ssl.keyStoreAlias");
+        }
+        return kAlias;
     }
 
     public void setKeyPass(String keyPass) {
@@ -324,7 +339,15 @@ public class SOSRestApiClient {
             try {
                 SSLContextBuilder sslContextBuilder = SSLContexts.custom();
                 if (clientCertificate != null) {
-                    sslContextBuilder.loadKeyMaterial(clientCertificate, clientCertificatePass);
+                    if (clientCertificateAlias != null && !clientCertificateAlias.isEmpty()) {
+                        if (clientCertificate.containsAlias(clientCertificateAlias)) {
+                            sslContextBuilder.loadKeyMaterial(clientCertificate, clientCertificatePass, (aliases, socket) -> clientCertificateAlias);
+                        } else {
+                            sslContextBuilder.loadKeyMaterial(clientCertificate, clientCertificatePass);
+                        }
+                    } else {
+                        sslContextBuilder.loadKeyMaterial(clientCertificate, clientCertificatePass);
+                    }
                 }
                 if (truststore != null) {
                     sslContextBuilder.loadTrustMaterial(truststore, null);
@@ -335,10 +358,14 @@ public class SOSRestApiClient {
             }
         }
     }
-
+    
     public void setSSLContext(KeyStore clientCertificate, char[] clientCertificatePass, KeyStore truststore) throws SOSSSLException {
+        setSSLContext(clientCertificate, clientCertificatePass, null, truststore);
+    }
+
+    public void setSSLContext(KeyStore clientCertificate, char[] clientCertificatePass, String clientCertificateAlias, KeyStore truststore) throws SOSSSLException {
         if (clientCertificate != null) {
-            setClientCertificate(clientCertificate, clientCertificatePass);
+            setClientCertificate(clientCertificate, clientCertificatePass, clientCertificateAlias);
         }
         setTruststore(truststore);
         setSSLContext();
@@ -929,17 +956,20 @@ public class SOSRestApiClient {
         clientCertificatePass = getKeyPass();
     }
 
-    public void setClientCertificate(KeyStore clientCertificate, char[] clientCertificatePass) {
+    public void setClientCertificate(KeyStore clientCertificate, char[] clientCertificatePass, String clientCertificateAlias) {
         this.clientCertificate = clientCertificate;
         this.clientCertificatePass = clientCertificatePass;
+        this.clientCertificateAlias = clientCertificateAlias;
     }
 
-    public void setClientCertificate(String keystorePath, String keyPass, String keystoreType, String keystorePass) throws SOSMissingDataException,
-            KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+    public void setClientCertificate(String keystorePath, String keyPass, String keystoreAlias, String keystoreType, String keystorePass)
+            throws SOSMissingDataException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
         setKeystorePath(keystorePath);
         setKeyPass(keyPass);
         setKeystoreType(keystoreType);
         setKeystorePass(keystorePass);
+        setKeyStoreAlias(keystoreAlias);
+        clientCertificateAlias = getKeyStoreAlias();
         clientCertificate = readKeyStore();
         clientCertificatePass = getKeyPass();
     }

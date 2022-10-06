@@ -32,6 +32,7 @@ public class SSLContext {
     private volatile Path keystorePath;
     private volatile String keystoreType;
     private volatile String keystorePass;
+    private volatile String keystoreAlias;
     private volatile String keyPass;
     private volatile long keystoreModTime = 0;
     private volatile Path truststorePath;
@@ -98,7 +99,16 @@ public class SSLContext {
                 sslContextBuilder.setTrustManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm",
                         TrustManagerFactory.getDefaultAlgorithm()));
                 if (keystore != null) {
-                    sslContextBuilder.loadKeyMaterial(keystore, keyPassChars);
+                    if (keystoreAlias != null && !keystoreAlias.isEmpty()) {
+                        if (keystore.containsAlias(keystoreAlias)) {
+                            sslContextBuilder.loadKeyMaterial(keystore, keyPassChars, (aliases, socket) -> keystoreAlias);
+                        } else {
+                            LOGGER.warn("Keystore '" + keystorePath + "' doesn't contain the alias '" + keystoreAlias + "'.");
+                            sslContextBuilder.loadKeyMaterial(keystore, keyPassChars);
+                        }
+                    } else {
+                        sslContextBuilder.loadKeyMaterial(keystore, keyPassChars);
+                    }
                 }
                 if (truststore != null) {
                     sslContextBuilder.loadTrustMaterial(truststore, null);
@@ -127,7 +137,9 @@ public class SSLContext {
             String kPath = sosJocProperties.getProperty("keystore_path", System.getProperty("javax.net.ssl.keyStore"));
             String kType = sosJocProperties.getProperty("keystore_type", System.getProperty("javax.net.ssl.keyStoreType"));
             String kPass = sosJocProperties.getProperty("keystore_password", System.getProperty("javax.net.ssl.keyStorePassword"));
+            String kAlias = sosJocProperties.getProperty("keystore_alias", System.getProperty("javax.net.ssl.keyStoreAlias"));
             String kMPass = sosJocProperties.getProperty("key_password", System.getProperty("javax.net.ssl.keyPassword"));
+            
             if (kPath != null && !kPath.trim().isEmpty()) {
                 Path p = sosJocProperties.resolvePath(kPath.trim());
                 if (p != null) {
@@ -136,7 +148,7 @@ public class SSLContext {
                         LOGGER.error(String.format("keystore path (%1$s) is set but couldn't find the file (%2$s).", kPath, p.toString()));
                     } else {
                         try {
-                            if (reloadKeyStore(p, kType, kPass, kMPass)) {
+                            if (reloadKeyStore(p, kType, kPass, kAlias, kMPass)) {
                                 keyStoreRef = KeyStoreRef.apply(p, SecretString(kPass), SecretString(kMPass));
                                 keystore = readKeyStore();
                                 keyPassChars = getKeyPass();
@@ -219,17 +231,18 @@ public class SSLContext {
         return httpsConfig;
     }
 
-    private boolean reloadKeyStore(Path path, String type, String pass, String mPass) throws IOException {
-        return reloadKeyStore(path, type, pass, mPass, Files.getLastModifiedTime(path).toMillis());
+    private boolean reloadKeyStore(Path path, String type, String pass, String alias, String mPass) throws IOException {
+        return reloadKeyStore(path, type, pass, alias, mPass, Files.getLastModifiedTime(path).toMillis());
     }
 
-    private boolean reloadKeyStore(Path path, String type, String pass, String mPass, long modTime) {
+    private boolean reloadKeyStore(Path path, String type, String pass, String alias, String mPass, long modTime) {
         String kPath = keystorePath == null ? null : keystorePath.toString();
-        if (!new EqualsBuilder().append(kPath, path.toString()).append(keystoreType, type).append(keystorePass, pass).append(keyPass, mPass).append(
-                keystoreModTime, modTime).isEquals()) {
+        if (!new EqualsBuilder().append(kPath, path.toString()).append(keystoreType, type).append(keystorePass, pass).append(keystoreAlias, alias)
+                .append(keyPass, mPass).append(keystoreModTime, modTime).isEquals()) {
             keystorePath = path;
             keystoreType = type;
             keystorePass = pass;
+            keystoreAlias = alias;
             keyPass = mPass;
             keystoreModTime = modTime;
             return true;
@@ -258,6 +271,7 @@ public class SSLContext {
         keystorePath = null;
         keystoreType = null;
         keystorePass = null;
+        keystoreAlias = null;
         keyPass = null;
         keystoreModTime = 0;
         keystore = null;
@@ -293,7 +307,7 @@ public class SSLContext {
         }
         return keystoreType;
     }
-
+    
     private char[] getKeyPass() {
         if (keyPass != null) {
             return keyPass.toCharArray();

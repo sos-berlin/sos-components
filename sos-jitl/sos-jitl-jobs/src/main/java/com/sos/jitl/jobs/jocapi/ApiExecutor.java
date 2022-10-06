@@ -56,6 +56,7 @@ public class ApiExecutor {
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH = "js7.web.https.keystore.file";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD = "js7.web.https.keystore.key-password";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD = "js7.web.https.keystore.store-password";
+    private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS = "js7.web.https.keystore.alias";
     private static final String PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY = "js7.web.https.truststores";
     private static final String PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH = "file";
     private static final String PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD = "store-password";
@@ -68,7 +69,8 @@ public class ApiExecutor {
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME = "js7.api-server.username";
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD = "js7.api-server.password";
     private static final List<String> DO_NOT_LOG_KEY = Arrays.asList(new String[] { "js7.api-server.password", "js7.api-server.cs-password",
-            "js7.web.https.keystore.store-password", "js7.web.https.keystore.key-password", "js7.web.https.truststores" });
+            "js7.web.https.keystore.store-password", "js7.web.https.keystore.key-password", "s7.web.https.keystore.alias",
+            "js7.web.https.truststores" });
     private static final String DO_NOT_LOG_VAL = "store-password";
 
     private final String truststoreFileName;
@@ -209,7 +211,8 @@ public class ApiExecutor {
         logDebug("read Keystore from: " + config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
         KeyStore keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
         if (keystore != null && truststore != null) {
-            client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), truststore);
+            // TODO consider alias JOC-1379
+            client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), credentials.getKeyStoreAlias(), truststore);
         }
     }
 
@@ -307,13 +310,14 @@ public class ApiExecutor {
         String keystorePath = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH);
         String keyPasswd = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD);
         String storePasswd = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD);
-        return new KeyStoreCredentials(keystorePath, storePasswd, keyPasswd);
+        String alias = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS);
+        return new KeyStoreCredentials(keystorePath, storePasswd, keyPasswd, alias);
     }
 
     private static List<KeyStoreCredentials> readTruststoreCredentials(Config config) {
         List<KeyStoreCredentials> credentials = config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).stream().map(item -> {
             return new KeyStoreCredentials(item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH), item.getString(
-                    PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD), null);
+                    PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD));
         }).filter(Objects::nonNull).collect(Collectors.toList());
         if (credentials != null) {
             return credentials;

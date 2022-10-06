@@ -62,6 +62,7 @@ public class ExecuteRollOut {
     private static final String SRC_KEYSTORE_TYPE = "--source-keystore-type";
     private static final String SRC_KEYSTORE_PASS = "--source-keystore-pass";
     private static final String SRC_KEYSTORE_ENTRY_PASS = "--source-keystore-entry-pass";
+    private static final String SRC_KEYSTORE_ENTRY_ALIAS = "--source-keystore-entry-alias";
     private static final String SRC_TRUSTSTORE = "--source-truststore";
     private static final String SRC_TRUSTSTORE_TYPE = "--source-truststore-type";
     private static final String SRC_TRUSTSTORE_PASS = "--source-truststore-pass";
@@ -85,6 +86,7 @@ public class ExecuteRollOut {
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH = "js7.web.https.keystore.file";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD = "js7.web.https.keystore.key-password";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD = "js7.web.https.keystore.store-password";
+    private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS = "js7.web.https.keystore.alias";
     private static final String PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY = "js7.web.https.truststores";
     private static final String PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH = "file";
     private static final String PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD = "store-password";
@@ -106,6 +108,7 @@ public class ExecuteRollOut {
     private static String srcKeystoreType = "PKCS12";
     private static String srcKeystorePasswd;
     private static String srcKeystoreEntryPasswd;
+    private static String srcKeystoreEntryAlias;
     private static String srcTruststore;
     private static String srcTruststoreType = "PKCS12";
     private static String srcTruststorePasswd;
@@ -150,6 +153,8 @@ public class ExecuteRollOut {
                     srcKeystorePasswd = split[1];
                 } else if (args[i].startsWith(SRC_KEYSTORE_ENTRY_PASS + "=")) {
                     srcKeystoreEntryPasswd = split[1];
+                } else if (args[i].startsWith(SRC_KEYSTORE_ENTRY_ALIAS + "=")) {
+                    srcKeystoreEntryAlias = split[1];
                 } else if (args[i].startsWith(SRC_TRUSTSTORE + "=")) {
                     srcTruststore = split[1];
                 } else if (args[i].startsWith(SRC_TRUSTSTORE_TYPE + "=")) {
@@ -335,13 +340,14 @@ public class ExecuteRollOut {
         String keystorePath = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH);
         String keyPasswd = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD);
         String storePasswd = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD);
-        return new KeyStoreCredentials(keystorePath, storePasswd, keyPasswd);
+        String alias = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS);
+        return new KeyStoreCredentials(keystorePath, storePasswd, keyPasswd, alias);
     }
 
     private static List<KeyStoreCredentials> readTruststoreCredentials(Config config) {
         List<KeyStoreCredentials> credentials = config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).stream().map(item -> {
             return new KeyStoreCredentials(item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH),
-                    item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD), null);
+                    item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD));
         }).filter(Objects::nonNull).collect(Collectors.toList());
         if (credentials != null) {
             return credentials;
@@ -388,7 +394,7 @@ public class ExecuteRollOut {
             System.out.println("read Keystore from: " + resolved.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
             KeyStore keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
             if (keystore != null && truststore != null) {
-                client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), truststore);
+                client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), credentials.getKeyStoreAlias(), truststore);
             }
         } else {
             KeyStore srcKeyStore = null;
@@ -442,9 +448,9 @@ public class ExecuteRollOut {
             }
             if (srcKeyStore != null && srcTrustStore != null) {
                 if (srcKeystoreEntryPasswd != null) {
-                    client.setSSLContext(srcKeyStore, srcKeystoreEntryPasswd.toCharArray(), srcTrustStore);
+                    client.setSSLContext(srcKeyStore, srcKeystoreEntryPasswd.toCharArray(), srcKeystoreEntryAlias, srcTrustStore);
                 } else {
-                    client.setSSLContext(srcKeyStore, "".toCharArray(), srcTrustStore);
+                    client.setSSLContext(srcKeyStore, "".toCharArray(), srcKeystoreEntryAlias, srcTrustStore);
                 }
             }
         }
@@ -490,6 +496,7 @@ public class ExecuteRollOut {
         System.out.printf("  %-29s | %s%n", SRC_KEYSTORE_TYPE + "=", "Type of the keystore to connect to JS7 JOC over https. (PKCS12[default] and JKS are supported only)");
         System.out.printf("  %-29s | %s%n", SRC_KEYSTORE_PASS + "=", "Password for the keystore holding the keys to connect to JS7 JOC over https.");
         System.out.printf("  %-29s | %s%n", SRC_KEYSTORE_ENTRY_PASS + "=", "Password for the private key entry of the keystore holding the keys to connect to JS7 JOC over https.");
+        System.out.printf("  %-29s | %s%n", SRC_KEYSTORE_ENTRY_ALIAS + "=", "Alias of the private key entry of the keystore holding the keys to connect to JS7 JOC over https.");
         System.out.printf("  %-29s | %s%n", SRC_TRUSTSTORE + "=", "Path to the Truststore holding the trusted certificates to connect to JS7 JOC over https.");
         System.out.printf("  %-29s | %s%n", SRC_TRUSTSTORE_TYPE + "=", "Type of the truststore to connect to JS7 JOC over https. (PKCS12[default] and JKS are supported only)");
         System.out.printf("  %-29s | %s%n", SRC_TRUSTSTORE_PASS + "=", "Password for the truststore holding the keys to connect to JS7 JOC over https.");
