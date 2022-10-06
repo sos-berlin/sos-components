@@ -616,8 +616,8 @@ public class SOSServicePermissionIam {
                     if (currentAccount.getCurrentSubject() == null) {
                         filter.setRequired(false);
                         if (listOfIdentityServices.size() == 0) {
-                            if (currentAccount.getSosLoginParameters().getIdentityService() != null && !currentAccount.getSosLoginParameters()
-                                    .getIdentityService().equals("")) {
+                            if (currentAccount.getSosLoginParameters().isOIDCLogin()) {
+                                filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
                                 filter.setIdentityServiceName(currentAccount.getSosLoginParameters().getIdentityService());
                             }
                             listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
