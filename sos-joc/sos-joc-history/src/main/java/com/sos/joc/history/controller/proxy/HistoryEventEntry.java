@@ -43,7 +43,6 @@ import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
 import js7.data.order.OrderEvent.OrderNoticePosted;
-import js7.data.order.OrderEvent.OrderNoticesExpected;
 import js7.data.order.OrderId;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
@@ -315,9 +314,9 @@ public class HistoryEventEntry {
 
         // if expected notice(s) not exist
         public List<FatExpectNotice> getExpectNotices() throws Exception {
-            OrderNoticesExpected ev = (OrderNoticesExpected) event;
-            List<JExpectedNotice> l = JavaConverters.asJava(ev.expected()).stream().map(e -> new JExpectedNotice(e)).collect(Collectors.toList());
-            // List<JExpectedNotice> l = state.orderToStillExpectedNotices(order.id());
+            // OrderNoticesExpected ev = (OrderNoticesExpected) event;
+            // List<JExpectedNotice> l = JavaConverters.asJava(ev.expected()).stream().map(e -> new JExpectedNotice(e)).collect(Collectors.toList());
+            List<JExpectedNotice> l = state.orderToStillExpectedNotices(order.id());
 
             List<FatExpectNotice> r = new ArrayList<>();
             if (l != null && l.size() > 0) {
