@@ -13,7 +13,8 @@ public enum AdmissionTimePeriodType {
     MONTHLY_WEEKDAY_PERIOD("MonthlyWeekdayPeriod"),
     MONTHLY_LAST_WEEKDAY_PERIOD("MonthlyLastWeekdayPeriod"),
     WEEKDAY_PERIOD("WeekdayPeriod"),
-    DAILY_PERIOD("DailyPeriod");
+    DAILY_PERIOD("DailyPeriod"),
+    SPECIFIC_DATE_PERIOD("SpecificDatePeriod");
     private final String value;
     private final static Map<String, AdmissionTimePeriodType> CONSTANTS = new HashMap<String, AdmissionTimePeriodType>();
 
