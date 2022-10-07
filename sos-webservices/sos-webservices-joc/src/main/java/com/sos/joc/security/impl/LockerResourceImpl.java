@@ -11,6 +11,7 @@ import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.security.locker.Locker;
@@ -71,21 +72,23 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
             JsonValidator.validateFailFast(body, Locker.class);
             SOSLocker sosLocker = Globals.jocWebserviceDataContainer.getSOSLocker();
             if (SecurityHelper.getCountAccounts() * 3 < sosLocker.getCount()) {
-                throw new JocObjectNotExistException("No more lockers availabe. Maximum reached");
+                throw new JocException(new JocError("No more lockers availabe. Maximum reached"));
 
             }
 
             String key = sosLocker.addContent(locker.getContent().getAdditionalProperties());
+            if (Globals.jocWebserviceDataContainer.getSOSLocker().getMaximumSizeReached(locker.getContent().getAdditionalProperties())) {
+                Globals.jocWebserviceDataContainer.getSOSLocker().removeContent(key);
+                throw new JocException(new JocError("Size for content is to big"));
+            }
             locker.setKey(key);
             locker.setContent(null);
             refreshTimer();
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(locker));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return JOCDefaultResponse.responseStatus434JSError(e);
         }
+
     }
 
     @Override

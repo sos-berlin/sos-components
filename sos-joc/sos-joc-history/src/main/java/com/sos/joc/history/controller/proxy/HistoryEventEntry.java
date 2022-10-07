@@ -24,6 +24,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatPostNotice;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.base.time.Timestamp;
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent.AgentCouplingFailed;
 import js7.data.agent.AgentRefStateEvent.AgentReady;
@@ -43,7 +44,6 @@ import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
 import js7.data.order.OrderEvent.OrderNoticePosted;
-import js7.data.order.OrderEvent.OrderNoticesExpected;
 import js7.data.order.OrderId;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
@@ -105,6 +105,24 @@ public class HistoryEventEntry {
         eventDate = Date.from(Instant.ofEpochMilli(stampedEvent.timestampMillis()));
 
         eventType = HistoryEventType.fromValue(event.getClass().getSimpleName());
+    }
+
+    public static Date getDate(Timestamp t) {
+        if (t == null) {
+            return null;
+        }
+        return Date.from(Instant.ofEpochMilli(t.toEpochMilli()));
+    }
+
+    public static Date getDate(Option<Timestamp> ot) {
+        if (ot == null) {
+            return null;
+        }
+        Optional<Timestamp> t = OptionConverters.toJava(ot);
+        if (t.isPresent()) {
+            return getDate(t.get());
+        }
+        return null;
     }
 
     public Long getEventId() {
@@ -315,9 +333,9 @@ public class HistoryEventEntry {
 
         // if expected notice(s) not exist
         public List<FatExpectNotice> getExpectNotices() throws Exception {
-            OrderNoticesExpected ev = (OrderNoticesExpected) event;
-            List<JExpectedNotice> l = JavaConverters.asJava(ev.expected()).stream().map(e -> new JExpectedNotice(e)).collect(Collectors.toList());
-            // List<JExpectedNotice> l = state.orderToStillExpectedNotices(order.id());
+            // OrderNoticesExpected ev = (OrderNoticesExpected) event;
+            // List<JExpectedNotice> l = JavaConverters.asJava(ev.expected()).stream().map(e -> new JExpectedNotice(e)).collect(Collectors.toList());
+            List<JExpectedNotice> l = state.orderToStillExpectedNotices(order.id());
 
             List<FatExpectNotice> r = new ArrayList<>();
             if (l != null && l.size() > 0) {

@@ -616,8 +616,8 @@ public class SOSServicePermissionIam {
                     if (currentAccount.getCurrentSubject() == null) {
                         filter.setRequired(false);
                         if (listOfIdentityServices.size() == 0) {
-                            if (currentAccount.getSosLoginParameters().getIdentityService() != null && !currentAccount.getSosLoginParameters()
-                                    .getIdentityService().equals("")) {
+                            if (currentAccount.getSosLoginParameters().isOIDCLogin()) {
+                                filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
                                 filter.setIdentityServiceName(currentAccount.getSosLoginParameters().getIdentityService());
                             }
                             listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
@@ -689,7 +689,7 @@ public class SOSServicePermissionIam {
             SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
 
             sosAuthCurrentUserAnswer.setIsAuthenticated(currentAccount.getCurrentSubject().isAuthenticated());
-            sosAuthCurrentUserAnswer.setIsForcePasswordChange(currentAccount.getCurrentSubject().isForcePasswordChange());
+            sosAuthCurrentUserAnswer.setForcePasswordChange(currentAccount.getCurrentSubject().isForcePasswordChange());
             sosAuthCurrentUserAnswer.setAccessToken(currentAccount.getAccessToken());
             sosAuthCurrentUserAnswer.setAccount(currentAccount.getAccountname());
             sosAuthCurrentUserAnswer.setRole(String.join(", ", currentAccount.getRoles()));

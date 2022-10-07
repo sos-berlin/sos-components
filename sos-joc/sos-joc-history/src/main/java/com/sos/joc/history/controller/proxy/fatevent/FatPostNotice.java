@@ -1,9 +1,9 @@
 package com.sos.joc.history.controller.proxy.fatevent;
 
-import java.time.Instant;
 import java.util.Date;
 
 import com.sos.commons.util.SOSString;
+import com.sos.joc.history.controller.proxy.HistoryEventEntry;
 
 import js7.base.time.Timestamp;
 import js7.data.board.BoardPath;
@@ -37,9 +37,7 @@ public class FatPostNotice {
     }
 
     private void setEndOfLife(Timestamp t) {
-        if (t != null) {
-            endOfLife = Date.from(Instant.ofEpochMilli(t.toEpochMilli()));
-        }
+        endOfLife = HistoryEventEntry.getDate(t);
     }
 
     public String getNoticeId() {

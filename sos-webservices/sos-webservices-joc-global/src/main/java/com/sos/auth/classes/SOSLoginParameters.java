@@ -70,4 +70,8 @@ public class SOSLoginParameters {
         this.webserviceCredentials = webserviceCredentials;
     }
 
+    public boolean isOIDCLogin() {
+        return (getIdentityService() != null && !getIdentityService().equals("") && getIdToken() != null && !getIdToken().isEmpty());
+    }
+
 }

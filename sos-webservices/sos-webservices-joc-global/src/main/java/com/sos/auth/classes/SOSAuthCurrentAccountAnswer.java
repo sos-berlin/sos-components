@@ -1,39 +1,58 @@
 package com.sos.auth.classes;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@XmlRootElement(name = "sosauth_current_user")
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = false)
 public class SOSAuthCurrentAccountAnswer {
 
     private String account;
+    @JsonProperty("role")
     private String role;
+
+    @JsonProperty("permission")
     private String permission;
+
+    @JsonProperty("isPermittet")
     private boolean isPermittet;
+
+    @JsonProperty("hasRole")
     private boolean hasRole;
+
+    @JsonProperty("isAuthenticated")
     private boolean isAuthenticated;
-    private boolean isForcePasswordChange;
+
+    @JsonProperty("forcePasswordChange")
+    private boolean forcePasswordChange;
+
+    @JsonProperty("accessToken")
     private String accessToken;
 
+    @JsonProperty("message")
     private String message;
-    private Long sessionTimeout;
-    private boolean enableTouch = true;
-    private String callerIpAddress;
-    private String callerHostName;
-    private String identityService;
 
-    public SOSAuthCurrentAccountAnswer() {
-    }
+    @JsonProperty("sessionTimeout")
+    private Long sessionTimeout;
+
+    @JsonProperty("enableTouch")
+    private boolean enableTouch = true;
+
+    @JsonProperty("callerIpAddress")
+    private String callerIpAddress;
+
+    @JsonProperty("callerHostName")
+    private String callerHostName;
+
+    @JsonProperty("identityService")
+    private String identityService;
 
     public SOSAuthCurrentAccountAnswer(String account) {
         this.account = account;
     }
 
-    @XmlAttribute
+    public SOSAuthCurrentAccountAnswer() {
+    }
+
     public void setRole(String role) {
         this.role = role;
     }
@@ -42,7 +61,6 @@ public class SOSAuthCurrentAccountAnswer {
         return this.role;
     }
 
-    @XmlAttribute
     public void setPermission(String permission) {
         this.permission = permission;
     }
@@ -51,7 +69,6 @@ public class SOSAuthCurrentAccountAnswer {
         return this.permission;
     }
 
-    @XmlAttribute
     public void setAccount(String account) {
         this.account = account;
     }
@@ -60,7 +77,6 @@ public class SOSAuthCurrentAccountAnswer {
         return this.account;
     }
 
-    @XmlElement
     public void setIsPermitted(boolean isPermitted) {
         this.isPermittet = isPermitted;
     }
@@ -73,7 +89,6 @@ public class SOSAuthCurrentAccountAnswer {
         return getIsPermitted();
     }
 
-    @XmlElement
     public void setHasRole(boolean hasRole) {
         this.hasRole = hasRole;
     }
@@ -86,7 +101,6 @@ public class SOSAuthCurrentAccountAnswer {
         return getHasRole();
     }
 
-    @XmlElement
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
     }
@@ -99,7 +113,6 @@ public class SOSAuthCurrentAccountAnswer {
         return getAccessToken();
     }
 
-    @XmlElement
     public void setIsAuthenticated(boolean isAuthenticated) {
         this.isAuthenticated = isAuthenticated;
     }
@@ -116,12 +129,10 @@ public class SOSAuthCurrentAccountAnswer {
         return message;
     }
 
-    @XmlAttribute
     public void setMessage(String message) {
         this.message = message;
     }
 
-    @XmlAttribute
     public void setSessionTimeout(Long sessionTimeout) {
         this.sessionTimeout = sessionTimeout;
     }
@@ -130,7 +141,6 @@ public class SOSAuthCurrentAccountAnswer {
         return this.sessionTimeout;
     }
 
-    @XmlAttribute
     public void setEnableTouch(boolean enableTouch) {
         this.enableTouch = enableTouch;
     }
@@ -139,17 +149,10 @@ public class SOSAuthCurrentAccountAnswer {
         return this.enableTouch;
     }
 
-    @Override
-    public String toString() {
-        return String.format("Account: %s Role: %s hasRole: %s Permission: %s isPermitted: %s -- AccessToken=%s", this.account, this.role,
-                this.hasRole, this.permission, this.isPermittet, this.accessToken);
-    }
-
     public String getCallerIpAddress() {
         return callerIpAddress;
     }
 
-    @XmlElement
     public void setCallerIpAddress(String callerIpAddress) {
         this.callerIpAddress = callerIpAddress;
     }
@@ -158,12 +161,10 @@ public class SOSAuthCurrentAccountAnswer {
         return callerHostName;
     }
 
-    @XmlElement
     public void setCallerHostName(String callerHostName) {
         this.callerHostName = callerHostName;
     }
 
-    @XmlAttribute
     public void setIdentityService(String identityService) {
         this.identityService = identityService;
     }
@@ -172,13 +173,22 @@ public class SOSAuthCurrentAccountAnswer {
         return identityService;
     }
 
-    @XmlElement
-    public boolean isForcePasswordChange() {
-        return isForcePasswordChange;
+    public void setForcePasswordChange(boolean forcePasswordChange) {
+        this.forcePasswordChange = forcePasswordChange;
     }
 
-    public void setIsForcePasswordChange(boolean isForcePasswordChange) {
-        this.isForcePasswordChange = isForcePasswordChange;
+    public boolean getForcePasswordChange() {
+        return forcePasswordChange;
+    }
+
+    public boolean isForcePasswordChange() {
+        return getForcePasswordChange();
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Account: %s Role: %s hasRole: %s Permission: %s isPermitted: %s -- AccessToken=%s", this.account, this.role,
+                this.hasRole, this.permission, this.isPermittet, this.accessToken);
     }
 
 }

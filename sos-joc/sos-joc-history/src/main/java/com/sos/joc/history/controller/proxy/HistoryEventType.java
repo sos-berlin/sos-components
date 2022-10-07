@@ -11,6 +11,7 @@ import js7.data.controller.ControllerEvent.ControllerReady;
 import js7.data.controller.ControllerEvent.ControllerShutDown;
 import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderCancelled$;
+import js7.data.order.OrderEvent.OrderCaught;
 import js7.data.order.OrderEvent.OrderFailed;
 import js7.data.order.OrderEvent.OrderFinished$;
 import js7.data.order.OrderEvent.OrderForked;
@@ -22,6 +23,7 @@ import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingStarted;
 import js7.data.order.OrderEvent.OrderResumed;
 import js7.data.order.OrderEvent.OrderResumptionMarked;
+import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStarted$;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
@@ -75,14 +77,16 @@ public enum HistoryEventType {
     OrderLocksQueued(OrderLocksQueued.class.getSimpleName()),
 
     OrderLocksReleased(OrderLocksReleased.class.getSimpleName()),
-
     // expected notices - if exists
     OrderNoticesRead(OrderNoticesRead$.class.getSimpleName()),
-
-    // expected notices - if not exist
+    // expected notices - if waiting for
     OrderNoticesExpected(OrderNoticesExpected.class.getSimpleName()),
 
     OrderNoticePosted(OrderNoticePosted.class.getSimpleName()),
+    // catch
+    OrderCaught(OrderCaught.class.getSimpleName()),
+
+    OrderRetrying(OrderRetrying.class.getSimpleName()),
 
     OrderFinished(OrderFinished$.class.getSimpleName()),
 
