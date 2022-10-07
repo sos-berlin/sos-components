@@ -139,7 +139,8 @@ public class ProxyTest {
     @Test
     public void testBadHostname() {
         Path keyStoreFile = Paths.get("src/test/resources/https-keystore.p12");
-        KeyStoreRef keyStoreRef = KeyStoreRef.apply(keyStoreFile, SecretString.apply("jobscheduler"), SecretString.apply("jobscheduler"));
+        KeyStoreRef keyStoreRef = KeyStoreRef.apply(keyStoreFile, scala.Option.empty(), SecretString.apply("jobscheduler"), SecretString.apply(
+                "jobscheduler"));
         Path trustStoreFile = Paths.get("src/test/resources/https-truststore.p12");
         TrustStoreRef trustStoreRef = TrustStoreRef.apply(trustStoreFile, SecretString.apply("jobscheduler"));
         String uri = "https://centosdev_secondary:5343";
