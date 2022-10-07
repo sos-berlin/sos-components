@@ -158,7 +158,7 @@ public class SOSAuthHelper {
             }
             if (initialPassword == null) {
                 initialPassword = INITIAL;
-                LOGGER.debug("Missing initial password settings. Using default value=" + INITIAL);
+                System.out.println("Missing initial password settings. Using default value=" + INITIAL);
             } else {
                 if (initialPassword.length() < minPasswordLength) {
                     JocError error = new JocError();
@@ -179,7 +179,7 @@ public class SOSAuthHelper {
     public static boolean checkCertificate(HttpServletRequest request, String account) {
 
         boolean success = false;
-        LOGGER.debug("==> check certificate for " + account);
+        System.out.println("==> check certificate for " + account);
 
         if (request != null) {
             String clientCertCN = null;
@@ -188,7 +188,7 @@ public class SOSAuthHelper {
                 clientCertCN = clientCertHandler.getClientCN();
                 Date now = new Date();
                 if (clientCertHandler.getClientCertificate() == null) {
-                    LOGGER.debug("Certificate is null");
+                    System.out.println("Certificate is null");
                 } else {
                     if (clientCertHandler.getClientCertificate().getNotAfter() == null) {
                         LOGGER.warn("Certificate not_after is null");
@@ -196,12 +196,12 @@ public class SOSAuthHelper {
                     if (clientCertHandler.getClientCertificate().getNotBefore() == null) {
                         LOGGER.warn("Certificate not_before is null");
                     }
-                    LOGGER.debug("Now:" + now.getTime());
+                    System.out.println("Now:" + now.getTime());
                     if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotAfter() != null)) {
-                        LOGGER.debug("NotAfter:" + clientCertHandler.getClientCertificate().getNotAfter().getTime());
+                        System.out.println("NotAfter:" + clientCertHandler.getClientCertificate().getNotAfter().getTime());
                     }
                     if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotBefore() != null)) {
-                        LOGGER.debug("NotBefore:" + clientCertHandler.getClientCertificate().getNotBefore().getTime());
+                        System.out.println("NotBefore:" + clientCertHandler.getClientCertificate().getNotBefore().getTime());
                     }
                 }
 
@@ -210,9 +210,9 @@ public class SOSAuthHelper {
                         account = "";
                     }
                     success = (account.isEmpty() || clientCertCN.equals(account));
-                    LOGGER.debug("success " + success);
+                    System.out.println("success " + success);
                 } else {
-                    LOGGER.debug("clientCertCN could not read");
+                    System.out.println("clientCertCN could not read");
                 }
                 if (success) {
                     account = clientCertCN;
