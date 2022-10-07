@@ -525,5 +525,22 @@ public class MappingTest {
         LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(versionsFilter));
     }
     
-    
+    @Test
+    public void test35CloneAlias() throws JsonMappingException, JsonProcessingException {
+        boolean validated = false;
+        try {
+            JsonValidator.validate("{\"folder\":\"/Github-Test\",\"remoteUri\":\"https://github.com/ztak0120/JS7-GITHUB.git\",\"category\":\"ROLLOUT\"}".getBytes(), CloneFilter.class);
+            validated = true;
+        }catch (Exception e) {
+            validated = false;
+        }
+        assertTrue(validated);
+        try {
+            JsonValidator.validate("{\"folder\":\"/Github-Test\",\"remoteUrl\":\"https://github.com/ztak0120/JS7-GITHUB.git\",\"category\":\"ROLLOUT\"}".getBytes(), CloneFilter.class);
+            validated = true;
+        }catch (Exception e) {
+            validated = false;
+        }
+        assertTrue(validated);
+    }
 }
