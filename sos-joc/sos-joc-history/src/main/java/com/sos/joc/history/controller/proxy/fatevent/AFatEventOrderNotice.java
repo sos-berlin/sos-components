@@ -5,29 +5,10 @@ import java.util.Date;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.WorkflowInfo.Position;
 
 // without outcome
-public abstract class AFatEventOrderNotice extends AFatEvent {
-
-    private final String orderId;
-    private final String position;
+public abstract class AFatEventOrderNotice extends AFatEventOrderBase {
 
     public AFatEventOrderNotice(Long eventId, Date eventDatetime, String orderId, Position position) {
-        super(eventId, eventDatetime);
-        this.orderId = orderId;
-        this.position = position == null ? null : position.asString();
-    }
-
-    @Override
-    public void set(Object... objects) {
-        // TODO Auto-generated method stub
-
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public String getPosition() {
-        return position;
+        super(eventId, eventDatetime, orderId, position);
     }
 
 }

@@ -9,8 +9,8 @@ import com.sos.joc.history.controller.proxy.HistoryEventType;
 
 public final class FatEventOrderLocksAcquired extends AFatEventOrderLocks {
 
-    public FatEventOrderLocksAcquired(Long eventId, Date eventDatetime, String orderId, List<OrderLock> orderLocks, Position position) {
-        super(eventId, eventDatetime, orderId, orderLocks, position);
+    public FatEventOrderLocksAcquired(Long eventId, Date eventDatetime, String orderId, Position position, List<OrderLock> orderLocks) {
+        super(eventId, eventDatetime, orderId, position, orderLocks);
     }
 
     @Override

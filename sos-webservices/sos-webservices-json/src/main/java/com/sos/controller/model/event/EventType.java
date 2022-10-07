@@ -32,6 +32,7 @@ public enum EventType {
     OrderDetached("OrderDetached"),
     OrderFailed("OrderFailed"),
     OrderCatched("OrderCatched"),
+    OrderCaught("OrderCaught"),
     OrderAwoke("OrderAwoke"),
     OrderFailedinFork("OrderFailedinFork"),
     OrderSuspended("OrderSuspended"),

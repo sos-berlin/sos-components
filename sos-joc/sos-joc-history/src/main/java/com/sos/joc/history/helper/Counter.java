@@ -173,6 +173,10 @@ public class Counter {
         private int noticesRead = 0;
         @SuppressWarnings("unused")
         private int noticePosted = 0;
+        @SuppressWarnings("unused")
+        private int caught = 0;
+        @SuppressWarnings("unused")
+        private int retrying = 0;
 
         public void addStarted() {
             started += 1;
@@ -244,6 +248,14 @@ public class Counter {
 
         public void addNoticePosted() {
             noticePosted += 1;
+        }
+
+        public void addCaught() {
+            caught += 1;
+        }
+
+        public void addRetrying() {
+            retrying += 1;
         }
     }
 

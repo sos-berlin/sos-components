@@ -8,8 +8,10 @@ import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
+import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderBase;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderLocks;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderNotice;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
 import com.sos.joc.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.joc.history.controller.proxy.fatevent.FatOutcome;
 
@@ -44,6 +46,7 @@ public class LogEntry {
     private Integer returnCode;
     private List<OrderLock> orderLocks;
     private AFatEventOrderNotice orderNotice;
+    private Date delayedUntil;
 
     public LogEntry(LogLevel level, EventType type, Date controllerDate, Date agentDate) {
         logLevel = level;
@@ -54,6 +57,17 @@ public class LogEntry {
 
     public void onOrder(CachedOrder order, String position) {
         onOrder(order, position, null);
+    }
+
+    public void onOrderBase(CachedOrder order, String position, AFatEventOrderBase entry) {
+        onOrder(order, position, null);
+        switch (entry.getType()) {
+        case OrderRetrying:
+            delayedUntil = ((FatEventOrderRetrying) entry).getDelayedUntil();
+            break;
+        default:
+            break;
+        }
     }
 
     public void onOrder(CachedOrder order, String workflowPosition, List<FatForkedChild> childs) {
@@ -286,5 +300,9 @@ public class LogEntry {
 
     public AFatEventOrderNotice getOrderNotice() {
         return orderNotice;
+    }
+
+    public Date getDelayedUntil() {
+        return delayedUntil;
     }
 }

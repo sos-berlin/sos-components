@@ -42,6 +42,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerShutDown;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderBroken;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCancelled;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderFailed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderFinished;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderForked;
@@ -54,6 +55,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpecte
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStarted;
@@ -71,6 +73,7 @@ import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
+import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderId;
@@ -94,7 +97,7 @@ public class HistoryControllerHandlerTest {
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 10; // seconds
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
-    private static final Long START_EVENT_ID = 1664985831579000L;
+    private static final Long START_EVENT_ID = 1665048095163006L;
 
     private EventFluxStopper stopper;
     private AtomicBoolean closed;
@@ -430,8 +433,8 @@ public class HistoryControllerHandlerTest {
                 order = entry.getCheckedOrder();
 
                 ol = order.getOrderLocks((OrderLocksAcquired) entry.getEvent());
-                event = new FatEventOrderLocksAcquired(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
-                        .getPosition());
+                event = new FatEventOrderLocksAcquired(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), ol);
 
                 break;
 
@@ -439,8 +442,8 @@ public class HistoryControllerHandlerTest {
                 order = entry.getCheckedOrder();
 
                 ol = order.getOrderLocks((OrderLocksQueued) entry.getEvent());
-                event = new FatEventOrderLocksQueued(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
-                        .getPosition());
+                event = new FatEventOrderLocksQueued(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), ol);
 
                 break;
 
@@ -448,8 +451,8 @@ public class HistoryControllerHandlerTest {
                 order = entry.getCheckedOrder();
 
                 ol = order.getOrderLocks((OrderLocksReleased) entry.getEvent());
-                event = new FatEventOrderLocksReleased(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
-                        .getPosition());
+                event = new FatEventOrderLocksReleased(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), ol);
 
                 break;
 
@@ -473,6 +476,19 @@ public class HistoryControllerHandlerTest {
                 event = new FatEventOrderNoticePosted(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition(), order.getPostNotice());
                 break;
+
+            case OrderCaught:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderCaught(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo().getPosition());
+                break;
+
+            case OrderRetrying:
+                order = entry.getCheckedOrder();
+                OrderRetrying or = (OrderRetrying) entry.getEvent();
+                event = new FatEventOrderRetrying(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo().getPosition(),
+                        HistoryEventEntry.getDate(or.delayedUntil()));
+                break;
+
             default:
                 event = new FatEventWithProblem(entry, new Exception("unknown type=" + entry.getEventType()));
                 break;

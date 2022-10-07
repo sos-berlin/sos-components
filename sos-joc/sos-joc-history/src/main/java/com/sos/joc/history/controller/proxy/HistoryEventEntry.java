@@ -24,6 +24,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatPostNotice;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.base.time.Timestamp;
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent.AgentCouplingFailed;
 import js7.data.agent.AgentRefStateEvent.AgentReady;
@@ -104,6 +105,24 @@ public class HistoryEventEntry {
         eventDate = Date.from(Instant.ofEpochMilli(stampedEvent.timestampMillis()));
 
         eventType = HistoryEventType.fromValue(event.getClass().getSimpleName());
+    }
+
+    public static Date getDate(Timestamp t) {
+        if (t == null) {
+            return null;
+        }
+        return Date.from(Instant.ofEpochMilli(t.toEpochMilli()));
+    }
+
+    public static Date getDate(Option<Timestamp> ot) {
+        if (ot == null) {
+            return null;
+        }
+        Optional<Timestamp> t = OptionConverters.toJava(ot);
+        if (t.isPresent()) {
+            return getDate(t.get());
+        }
+        return null;
     }
 
     public Long getEventId() {

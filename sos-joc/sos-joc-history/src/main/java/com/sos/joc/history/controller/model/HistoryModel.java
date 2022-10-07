@@ -65,6 +65,7 @@ import com.sos.joc.history.controller.exception.FatEventOrderNotFoundException;
 import com.sos.joc.history.controller.exception.FatEventOrderStepNotFoundException;
 import com.sos.joc.history.controller.proxy.HistoryEventType;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEvent;
+import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderBase;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderLocks;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderNotice;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderProcessed;
@@ -75,12 +76,14 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventClusterCoupled;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerShutDown;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCancelled;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderForked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderJoined;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticePosted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStarted;
@@ -110,6 +113,7 @@ import com.sos.joc.model.history.order.LockState;
 import com.sos.joc.model.history.order.OrderLogEntry;
 import com.sos.joc.model.history.order.OrderLogEntryError;
 import com.sos.joc.model.history.order.PostNotice;
+import com.sos.joc.model.history.order.Retrying;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.yade.commons.Yade;
 
@@ -409,6 +413,14 @@ public class HistoryModel {
                     case OrderNoticePosted:
                         orderLogNotice(dbLayer, (FatEventOrderNoticePosted) entry, EventType.OrderNoticePosted);
                         counter.getOrder().addNoticePosted();
+                        break;
+                    case OrderCaught:
+                        orderLog(dbLayer, (FatEventOrderCaught) entry, EventType.OrderCaught);
+                        counter.getOrder().addCaught();
+                        break;
+                    case OrderRetrying:
+                        orderLog(dbLayer, (FatEventOrderRetrying) entry, EventType.OrderRetrying);
+                        counter.getOrder().addRetrying();
                         break;
                     case EventWithProblem:
                         FatEventWithProblem ep = (FatEventWithProblem) entry;
@@ -1206,6 +1218,16 @@ public class HistoryModel {
 
         LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, eventType, entry.getEventDatetime(), null);
         le.onOrder(co, entry.getPosition());
+        storeLog2File(le);
+    }
+
+    private void orderLog(DBLayerHistory dbLayer, AFatEventOrderBase entry, EventType eventType) throws Exception {
+        checkControllerTimezone(dbLayer);
+
+        CachedOrder co = getCachedOrderByCurrentOrderId(dbLayer, entry.getOrderId(), entry.getEventId());
+
+        LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, eventType, entry.getEventDatetime(), null);
+        le.onOrderBase(co, entry.getPosition(), entry);
         storeLog2File(le);
     }
 
@@ -2144,7 +2166,7 @@ public class HistoryModel {
                     pn.setId(fpn.getNoticeId());
                     try {
                         pn.setEndOfLife(getDateAsString(fpn.getEndOfLife(), controllerTimezone));
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         LOGGER.warn(String.format("[createOrderLogEntry][OrderNoticePosted][boardName=%s][%s]%s", pn.getBoardName(), fpn
                                 .getEndOfLife(), e.toString()), e);
                     }
@@ -2153,6 +2175,15 @@ public class HistoryModel {
                 break;
             default:
                 break;
+            }
+        }
+        if (logEntry.getDelayedUntil() != null) {
+            Retrying r = new Retrying();
+            try {
+                r.setDelayedUntil(getDateAsString(logEntry.getDelayedUntil(), controllerTimezone));
+                entry.setRetrying(r);
+            } catch (Throwable e) {
+                LOGGER.warn(String.format("[createOrderLogEntry][OrderRetrying][delayedUntil=%s]%s", logEntry.getDelayedUntil(), e.toString()), e);
             }
         }
         return entry;
