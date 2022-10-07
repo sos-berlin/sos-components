@@ -149,8 +149,17 @@ public class SSLContext {
                     } else {
                         try {
                             if (reloadKeyStore(p, kType, kPass, kAlias, kMPass)) {
-                                keyStoreRef = KeyStoreRef.apply(p, SecretString(kPass), SecretString(kMPass));
                                 keystore = readKeyStore();
+                                
+                                scala.Option<String> optAlias = scala.Option.empty();
+                                if (keystoreAlias != null && !keystoreAlias.isEmpty()) {
+                                    if (keystore.containsAlias(keystoreAlias)) {
+                                        optAlias = scala.Option.apply(keystoreAlias);
+                                    } else {
+                                        LOGGER.warn("Keystore '" + keystorePath + "' doesn't contain the alias '" + keystoreAlias + "'.");
+                                    }
+                                }
+                                keyStoreRef = KeyStoreRef.apply(p, optAlias, SecretString(kPass), SecretString(kMPass));
                                 keyPassChars = getKeyPass();
                             }
                         } catch (Exception e) {
