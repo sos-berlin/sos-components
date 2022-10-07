@@ -37,7 +37,11 @@ public class JocServletContainer extends ServletContainer {
         SOSShell.printSystemInfos();
         SOSShell.printJVMInfos();
         Globals.readUnmodifiables();
-        Globals.setProperties();
+        try {
+            Globals.setProperties();
+        } catch (Exception e) {
+            LOGGER.error(e.toString());
+        }
         JOCJsonCommand.urlMapper = MapUrls.getUrlMapperByUser();
         AgentHelper.testMode = true;
         //JocClusterService.getInstance().start();

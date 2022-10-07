@@ -20,6 +20,8 @@ import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.exceptions.JocConfigurationException;
+
 import js7.base.generic.SecretString;
 import js7.base.io.https.KeyStoreRef;
 import js7.base.io.https.TrustStoreRef;
@@ -103,8 +105,7 @@ public class SSLContext {
                         if (keystore.containsAlias(keystoreAlias)) {
                             sslContextBuilder.loadKeyMaterial(keystore, keyPassChars, (aliases, socket) -> keystoreAlias);
                         } else {
-                            LOGGER.warn("Keystore '" + keystorePath + "' doesn't contain the alias '" + keystoreAlias + "'.");
-                            sslContextBuilder.loadKeyMaterial(keystore, keyPassChars);
+                            throw new JocConfigurationException("Keystore '" + keystorePath + "' doesn't contain the alias '" + keystoreAlias + "'.");
                         }
                     } else {
                         sslContextBuilder.loadKeyMaterial(keystore, keyPassChars);
@@ -156,7 +157,8 @@ public class SSLContext {
                                     if (keystore.containsAlias(keystoreAlias)) {
                                         optAlias = scala.Option.apply(keystoreAlias);
                                     } else {
-                                        LOGGER.warn("Keystore '" + keystorePath + "' doesn't contain the alias '" + keystoreAlias + "'.");
+                                        throw new JocConfigurationException("Keystore '" + keystorePath + "' doesn't contain the alias '"
+                                                + keystoreAlias + "'.");
                                     }
                                 }
                                 keyStoreRef = KeyStoreRef.apply(p, optAlias, SecretString(kPass), SecretString(kMPass));

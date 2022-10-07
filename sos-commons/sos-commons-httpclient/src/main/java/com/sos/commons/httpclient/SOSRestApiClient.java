@@ -340,11 +340,7 @@ public class SOSRestApiClient {
                 SSLContextBuilder sslContextBuilder = SSLContexts.custom();
                 if (clientCertificate != null) {
                     if (clientCertificateAlias != null && !clientCertificateAlias.isEmpty()) {
-                        if (clientCertificate.containsAlias(clientCertificateAlias)) {
-                            sslContextBuilder.loadKeyMaterial(clientCertificate, clientCertificatePass, (aliases, socket) -> clientCertificateAlias);
-                        } else {
-                            sslContextBuilder.loadKeyMaterial(clientCertificate, clientCertificatePass);
-                        }
+                        sslContextBuilder.loadKeyMaterial(clientCertificate, clientCertificatePass, (aliases, socket) -> clientCertificateAlias);
                     } else {
                         sslContextBuilder.loadKeyMaterial(clientCertificate, clientCertificatePass);
                     }

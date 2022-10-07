@@ -59,7 +59,11 @@ public class JocServletContainer extends ServletContainer {
         DailyPlanCalendar.getInstance();
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         CompletableFuture.runAsync(() -> JitlDocumentation.saveOrUpdate());
-        Globals.setProperties();
+        try {
+            Globals.setProperties();
+        } catch (Exception e1) {
+            LOGGER.error(e1.toString());
+        }
         WorkflowPaths.init();
         AgentStoreUtils.getInstance();
         CompletableFuture.runAsync(() -> {
@@ -112,8 +116,6 @@ public class JocServletContainer extends ServletContainer {
 
     private Set<Path> getDeployedFolders() throws IOException {
         final Path deployParentDir = Paths.get(System.getProperty("java.io.tmpdir").toString());
-        // final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}(\\.\\d{1,3}){3}-\\d{1,5}-joc.war-_joc-.+\\.dir$").asPredicate();
-        // ...with version 9.4.41.v20210516
         final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}([._]\\d{1,3}){3}-\\d{1,5}-joc([._]war)?-.+-any-\\d+$").asPredicate();
         return Files.list(deployParentDir).filter(p -> pattern.test(p.getFileName().toString())).collect(Collectors.toSet());
     }
@@ -164,19 +166,22 @@ public class JocServletContainer extends ServletContainer {
     private void cleanupOldLogFiles(int retainDays) {
         // TODO retainDays???
         try {
-            Path logDir = Paths.get(System.getProperty("jetty.base"), "logs");
-            LOGGER.info("cleanup log files: " + logDir.toString());
-            Predicate<Path> jettyLogFilter = p -> Pattern.compile("jetty\\.log\\.[0-9]+").asPredicate().test(p.getFileName().toString());
-            if (Files.exists(logDir)) {
-                Files.list(logDir).filter(jettyLogFilter).forEach(p -> {
-                    try {
-                        Files.deleteIfExists(p);
-                    } catch (IOException e) {
-                        LOGGER.warn("cleanup log files: " + e.toString());
-                    }
-                });
-            } else {
-                LOGGER.warn("Couldn't find the cleanup log files: " + logDir.toString());
+            String jettyBase = System.getProperty("jetty.base");
+            if (jettyBase != null) {
+                Path logDir = Paths.get(System.getProperty("jetty.base"), "logs");
+                LOGGER.info("cleanup log files: " + logDir.toString());
+                Predicate<Path> jettyLogFilter = p -> Pattern.compile("jetty\\.log\\.[0-9]+").asPredicate().test(p.getFileName().toString());
+                if (Files.exists(logDir)) {
+                    Files.list(logDir).filter(jettyLogFilter).forEach(p -> {
+                        try {
+                            Files.deleteIfExists(p);
+                        } catch (IOException e) {
+                            LOGGER.warn("cleanup log files: " + e.toString());
+                        }
+                    });
+                } else {
+                    LOGGER.warn("Couldn't find the cleanup log files: " + logDir.toString());
+                }
             }
         } catch (Exception e) {
             LOGGER.warn("cleanup log files: " + e.toString());
