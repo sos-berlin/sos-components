@@ -6,14 +6,18 @@ import java.util.List;
 
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
+import com.sos.joc.model.history.order.Caught;
+import com.sos.joc.model.history.order.CaughtCause;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderBase;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderLocks;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderNotice;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
 import com.sos.joc.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.joc.history.controller.proxy.fatevent.FatOutcome;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught.FatEventOrderCaughtCause;
 
 public class LogEntry {
 
@@ -47,6 +51,7 @@ public class LogEntry {
     private List<OrderLock> orderLocks;
     private AFatEventOrderNotice orderNotice;
     private Date delayedUntil;
+    private Caught caught;
 
     public LogEntry(LogLevel level, EventType type, Date controllerDate, Date agentDate) {
         logLevel = level;
@@ -65,8 +70,26 @@ public class LogEntry {
         case OrderRetrying:
             delayedUntil = ((FatEventOrderRetrying) entry).getDelayedUntil();
             break;
+        case OrderCaught:
+            caught = new Caught();
+            caught.setCause(getCaughtCause(((FatEventOrderCaught) entry).getCause()));
+            break;
         default:
             break;
+        }
+    }
+
+    private CaughtCause getCaughtCause(FatEventOrderCaughtCause cause) {
+        if (cause == null) {
+            return CaughtCause.Unknown;
+        }
+        switch (cause) {
+        case Retry:
+            return CaughtCause.Retry;
+        case TryInstruction:
+            return CaughtCause.TryInstruction;
+        default:
+            return CaughtCause.Unknown;
         }
     }
 
@@ -304,5 +327,9 @@ public class LogEntry {
 
     public Date getDelayedUntil() {
         return delayedUntil;
+    }
+
+    public Caught getCaught() {
+        return caught;
     }
 }

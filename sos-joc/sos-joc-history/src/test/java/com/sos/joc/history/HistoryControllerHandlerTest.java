@@ -97,7 +97,7 @@ public class HistoryControllerHandlerTest {
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 10; // seconds
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
-    private static final Long START_EVENT_ID = 1665048095163006L;
+    private static final Long START_EVENT_ID = 0L;
 
     private EventFluxStopper stopper;
     private AtomicBoolean closed;
@@ -479,7 +479,8 @@ public class HistoryControllerHandlerTest {
 
             case OrderCaught:
                 order = entry.getCheckedOrder();
-                event = new FatEventOrderCaught(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo().getPosition());
+                event = new FatEventOrderCaught(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo().getPosition(),
+                        order.getCurrentPositionInstruction());
                 break;
 
             case OrderRetrying:
@@ -488,7 +489,6 @@ public class HistoryControllerHandlerTest {
                 event = new FatEventOrderRetrying(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo().getPosition(),
                         HistoryEventEntry.getDate(or.delayedUntil()));
                 break;
-
             default:
                 event = new FatEventWithProblem(entry, new Exception("unknown type=" + entry.getEventType()));
                 break;

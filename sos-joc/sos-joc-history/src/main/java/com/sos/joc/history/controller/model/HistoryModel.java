@@ -2135,8 +2135,7 @@ public class HistoryModel {
                 }
                 return lock;
             }).collect(Collectors.toList()));
-        }
-        if (logEntry.getOrderNotice() != null) {
+        } else if (logEntry.getOrderNotice() != null) {
             ExpectNotices en;
             switch (logEntry.getEventType()) {
             case OrderNoticesRead:
@@ -2176,8 +2175,7 @@ public class HistoryModel {
             default:
                 break;
             }
-        }
-        if (logEntry.getDelayedUntil() != null) {
+        } else if (logEntry.getDelayedUntil() != null) {
             Retrying r = new Retrying();
             try {
                 r.setDelayedUntil(getDateAsString(logEntry.getDelayedUntil(), controllerTimezone));
@@ -2185,6 +2183,8 @@ public class HistoryModel {
             } catch (Throwable e) {
                 LOGGER.warn(String.format("[createOrderLogEntry][OrderRetrying][delayedUntil=%s]%s", logEntry.getDelayedUntil(), e.toString()), e);
             }
+        } else if (logEntry.getCaught() != null) {
+            entry.setCaught(logEntry.getCaught());
         }
         return entry;
     }

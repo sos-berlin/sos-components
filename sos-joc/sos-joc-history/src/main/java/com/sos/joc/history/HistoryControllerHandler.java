@@ -547,7 +547,8 @@ public class HistoryControllerHandler {
 
             case OrderCaught:
                 order = entry.getCheckedOrder();
-                event = new FatEventOrderCaught(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo().getPosition());
+                event = new FatEventOrderCaught(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo().getPosition(),
+                        order.getCurrentPositionInstruction());
                 break;
 
             case OrderRetrying:
