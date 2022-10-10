@@ -42,12 +42,10 @@ public class SpecificDatePeriod
 
     /**
      * 
-     * @param duration
      * @param secondsSinceLocalEpoch
-     * @param tYPE
      */
-    public SpecificDatePeriod(Long secondsSinceLocalEpoch, AdmissionTimePeriodType tYPE, Long duration) {
-        super(tYPE, duration);
+    public SpecificDatePeriod(Long secondsSinceLocalEpoch) {
+        super();
         this.secondsSinceLocalEpoch = secondsSinceLocalEpoch;
     }
 
