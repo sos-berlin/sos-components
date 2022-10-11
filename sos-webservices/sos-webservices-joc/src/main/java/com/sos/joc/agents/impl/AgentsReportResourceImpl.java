@@ -9,7 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -23,16 +24,21 @@ import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.db.history.items.JobsPerAgent;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentReport;
 import com.sos.joc.model.agent.AgentReportFilter;
 import com.sos.joc.model.agent.AgentReports;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path("agents")
 public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgentsReportResource {
 
     private static final String API_CALL = "./agents/report";
+    private static final Logger LOGGER = LoggerFactory.getLogger(AgentsReportResourceImpl.class);
 
     @Override
     public JOCDefaultResponse post(String accessToken, byte[] filterBytes) {
@@ -47,11 +53,15 @@ public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgents
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                        availableController, accessToken).getAgents().getView()).collect(Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
-                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet();
+                if (Proxies.getControllerDbInstances().isEmpty()) {
+                    permitted = getControllerDefaultPermissions(accessToken).getAgents().getView();
+                } else {
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                            availableController, accessToken).getAgents().getView()).collect(Collectors.toSet());
+                    permitted = !allowedControllers.isEmpty();
+                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                        allowedControllers = Collections.emptySet();
+                    }
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
@@ -64,13 +74,27 @@ public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgents
                 return jocDefaultResponse;
             }
             
+            AgentReports agentReports = new AgentReports();
+            if (Proxies.getControllerDbInstances().isEmpty()) {
+                agentReports.setAgents(Collections.emptyList());
+                agentReports.setTotalNumOfJobs(0L);
+                agentReports.setTotalNumOfSuccessfulTasks(0L);
+                agentReports.setDeliveryDate(Date.from(Instant.now()));
+                JocError jocError = getJocError();
+                if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                    LOGGER.info(jocError.printMetaInfo());
+                    jocError.clearMetaInfo();
+                }
+                LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
+                return JOCDefaultResponse.responseStatus200(agentReports);
+            }
+            
             boolean withAgentFilter = (agentParameter.getAgentIds() != null && !agentParameter.getAgentIds().isEmpty()) || (agentParameter
                     .getUrls() != null && !agentParameter.getUrls().isEmpty());
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIdsAndUrls(allowedControllers, agentParameter
                     .getAgentIds(), agentParameter.getUrls(), false, true);
-            AgentReports agentReports = new AgentReports();
             if (dbAgents != null) {
                 
                 HistoryFilter dbFilter = new HistoryFilter();

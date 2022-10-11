@@ -67,12 +67,16 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                        availableController -> getControllerPermissions(availableController, accessToken).getView()).collect(
-                                Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
-                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet(); 
+                if (Proxies.getControllerDbInstances().isEmpty()) {
+                    permitted = getControllerDefaultPermissions(accessToken).getView();
+                } else {
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                            availableController, accessToken).getView()).collect(Collectors.toSet());
+                    permitted = !allowedControllers.isEmpty();
+
+                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                        allowedControllers = Collections.emptySet();
+                    }
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
@@ -107,26 +111,28 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
     }
     
     private static Map<Boolean, List<Agent>> getAgents(Set<String> controllerIds, SOSHibernateSession connection) {
-        InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
-        List<String> clusterAgentIds = agentDBLayer.getClusterAgentIds(controllerIds, true);
-        List<DBItemInventoryAgentInstance> agents = agentDBLayer.getAgentsByControllerIds(controllerIds);
-        if (agents != null) {
-            Map<String, Set<String>> allAliases = agentDBLayer.getAgentNamesByAgentIds(controllerIds);
-            return agents.stream().map(a -> {
-                Agent agent = new Agent();
-                agent.setAgentId(a.getAgentId());
-                agent.setAgentName(a.getAgentName());
-                agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
-                agent.setHidden(a.getHidden());
-                agent.setDisabled(a.getDisabled());
-                agent.setIsClusterWatcher(a.getIsWatcher());
-//                if (clusterAgentIds.contains(a.getAgentId())) {
-//                    agent.setUrl(null);
-//                } else {
-                    agent.setUrl(a.getUri());
-//                }
-                return agent;
-            }).collect(Collectors.groupingBy(a -> clusterAgentIds.contains(a.getAgentId()))); //.collect(Collectors.groupingBy(a -> a.getUrl() == null));
+        if (!controllerIds.isEmpty()) {
+            InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
+            List<String> clusterAgentIds = agentDBLayer.getClusterAgentIds(controllerIds, true);
+            List<DBItemInventoryAgentInstance> agents = agentDBLayer.getAgentsByControllerIds(controllerIds);
+            if (agents != null) {
+                Map<String, Set<String>> allAliases = agentDBLayer.getAgentNamesByAgentIds(controllerIds);
+                return agents.stream().map(a -> {
+                    Agent agent = new Agent();
+                    agent.setAgentId(a.getAgentId());
+                    agent.setAgentName(a.getAgentName());
+                    agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
+                    agent.setHidden(a.getHidden());
+                    agent.setDisabled(a.getDisabled());
+                    agent.setIsClusterWatcher(a.getIsWatcher());
+//                  if (clusterAgentIds.contains(a.getAgentId())) {
+//                      agent.setUrl(null);
+//                  } else {
+                        agent.setUrl(a.getUri());
+//                  }
+                        return agent;
+                }).collect(Collectors.groupingBy(a -> clusterAgentIds.contains(a.getAgentId()))); //.collect(Collectors.groupingBy(a -> a.getUrl() == null));
+            }
         }
         return Collections.emptyMap();
     }
@@ -147,7 +153,7 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
         InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(connection);
         List<DBItemInventoryJSInstance> schedulerInstances = instanceLayer.getInventoryInstancesByControllerIds(allowedControllers);
         List<ControllerAnswer> masters = new ArrayList<ControllerAnswer>();
-        if (schedulerInstances != null) {
+        if (schedulerInstances != null && !schedulerInstances.isEmpty()) {
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             List<ControllerCallable> tasks = new ArrayList<ControllerCallable>();
             for (DBItemInventoryJSInstance schedulerInstance : schedulerInstances) {

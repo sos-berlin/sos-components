@@ -31,8 +31,8 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
 
         try {
             initLogging(API_CALL_LEVELS, null, accessToken);
-            com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers controllerPermissions = getJocPermissions(accessToken).getAdministration()
-                    .getControllers();
+            com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers controllerPermissions = getJocPermissions(accessToken)
+                    .getAdministration().getControllers();
             // TODO admin permissions to take over security level
             boolean adminPermission = controllerPermissions.getManage();
             boolean showPermission = controllerPermissions.getView();

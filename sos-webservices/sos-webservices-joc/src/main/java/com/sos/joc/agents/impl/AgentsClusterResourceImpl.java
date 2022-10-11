@@ -11,7 +11,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -23,6 +24,8 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.ClusterAgents;
@@ -30,12 +33,14 @@ import com.sos.joc.model.agent.ReadAgents;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
 import js7.data_for_java.controller.JControllerState;
 
 @Path("agents")
 public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgentsClusterResource {
 
     private static final String API_CALL = "./agents/inventory/cluster";
+    private static final Logger LOGGER = LoggerFactory.getLogger(AgentsClusterResourceImpl.class);
 
     @Override
     public JOCDefaultResponse postCluster(String accessToken, byte[] filterBytes) {
@@ -51,12 +56,17 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                        availableController, accessToken).getAgents().getView() || getJocPermissions(accessToken).getAdministration().getControllers()
-                                .getView()).collect(Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
-                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet();
+                if (Proxies.getControllerDbInstances().isEmpty()) {
+                    permitted = getControllerDefaultPermissions(accessToken).getAgents().getView() || getControllerDefaultPermissions(accessToken)
+                            .getView();
+                } else {
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                            availableController, accessToken).getAgents().getView() || getJocPermissions(accessToken).getAdministration()
+                                    .getControllers().getView()).collect(Collectors.toSet());
+                    permitted = !allowedControllers.isEmpty();
+                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                        allowedControllers = Collections.emptySet();
+                    }
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
@@ -69,6 +79,19 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                 return jocDefaultResponse;
             }
             
+            ClusterAgents agents = new ClusterAgents();
+            if (Proxies.getControllerDbInstances().isEmpty()) {
+                agents.setAgents(Collections.emptyList());
+                agents.setDeliveryDate(Date.from(Instant.now()));
+                JocError jocError = getJocError();
+                if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                    LOGGER.info(jocError.printMetaInfo());
+                    jocError.clearMetaInfo();
+                }
+                LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
+                return JOCDefaultResponse.responseStatus200(agents);
+            }
+            
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             dbLayer.setWithAgentOrdering(true);
@@ -77,7 +100,6 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
             
             Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(allowedControllers, false,
                     false);
-            ClusterAgents agents = new ClusterAgents();
             if (dbAgents != null) {
                 Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).filter(Objects::nonNull).collect(
                         Collectors.toSet());

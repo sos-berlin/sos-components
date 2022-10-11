@@ -87,6 +87,14 @@ public class SOSAuthCurrentAccount {
             return sosPermissionJocCockpitControllers.getControllerDefaults();
         }
     }
+    
+    public ControllerPermissions getControllerDefaultPermissions() {
+        if (sosPermissionJocCockpitControllers == null) {
+            sosPermissionJocCockpitControllers = initPermissions();
+        }
+
+        return sosPermissionJocCockpitControllers.getControllerDefaults();
+    }
 
     public JocPermissions getJocPermissions() {
         if (sosPermissionJocCockpitControllers == null) {

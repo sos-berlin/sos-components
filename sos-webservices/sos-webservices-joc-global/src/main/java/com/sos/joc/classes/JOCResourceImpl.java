@@ -69,6 +69,11 @@ public class JOCResourceImpl {
         masterId = getMasterId(masterId);
         return jobschedulerUser.getSOSAuthCurrentAccount().getControllerPermissions(masterId);
     }
+    
+    protected ControllerPermissions getControllerDefaultPermissions(String accessToken) throws JocException {
+        initGetPermissions(accessToken);
+        return jobschedulerUser.getSOSAuthCurrentAccount().getControllerDefaultPermissions();
+    }
 
     protected JocPermissions getJocPermissions(String accessToken) throws JocException {
         initGetPermissions(accessToken);

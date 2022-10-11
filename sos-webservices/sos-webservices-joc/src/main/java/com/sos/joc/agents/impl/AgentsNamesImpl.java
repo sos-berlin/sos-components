@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -22,17 +23,22 @@ import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentNames;
 import com.sos.joc.model.agent.SelectionIdsPerAgentName;
 import com.sos.joc.model.controller.ControllerId;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path("agents")
 public class AgentsNamesImpl extends JOCResourceImpl implements IAgentsNames {
 
     private static final String API_CALL = "./agents/names";
+    private static final Logger LOGGER = LoggerFactory.getLogger(AgentsNamesImpl.class);
 
     @Override
     public JOCDefaultResponse postNames(String accessToken, byte[] filterBytes) {
@@ -47,11 +53,15 @@ public class AgentsNamesImpl extends JOCResourceImpl implements IAgentsNames {
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                        availableController, accessToken).getView()).collect(Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
-                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet();
+                if (Proxies.getControllerDbInstances().isEmpty()) {
+                    permitted = getControllerDefaultPermissions(accessToken).getView();
+                } else {
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                            availableController, accessToken).getView()).collect(Collectors.toSet());
+                    permitted = !allowedControllers.isEmpty();
+                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                        allowedControllers = Collections.emptySet();
+                    }
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
@@ -63,7 +73,25 @@ public class AgentsNamesImpl extends JOCResourceImpl implements IAgentsNames {
                 return jocDefaultResponse;
             }
             
+            AgentNames agentNames = new AgentNames();
             boolean withClusterLicense = AgentHelper.hasClusterLicense();
+            
+            if (Proxies.getControllerDbInstances().isEmpty()) {
+                agentNames.setAgentNames(Collections.emptySet());
+                if (withClusterLicense) {
+                    agentNames.setClusterAgentNames(Collections.emptySet());
+                    agentNames.setSubagentClusterIds(new SelectionIdsPerAgentName());
+                }
+                agentNames.setDeliveryDate(Date.from(Instant.now()));
+                JocError jocError = getJocError();
+                if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                    LOGGER.info(jocError.printMetaInfo());
+                    jocError.clearMetaInfo();
+                }
+                LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(agentNames));
+            }
+            
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             InventorySubagentClustersDBLayer dbLayerCluster = new InventorySubagentClustersDBLayer(connection);
@@ -97,7 +125,6 @@ public class AgentsNamesImpl extends JOCResourceImpl implements IAgentsNames {
                 }
             }
             
-            AgentNames agentNames = new AgentNames();
             agentNames.setAgentNames(standaloneAgentNames.stream().sorted(comparator).collect(Collectors.toCollection(LinkedHashSet::new)));
             if (withClusterLicense) {
                 agentNames.setClusterAgentNames(clusterAgentNames.stream().sorted(comparator).collect(Collectors.toCollection(LinkedHashSet::new)));

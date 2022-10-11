@@ -1,5 +1,6 @@
 package com.sos.joc.dailyplan.impl;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -8,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +25,8 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.resource.IDailyPlanHistoryResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
 import com.sos.joc.db.dailyplan.DailyPlanHistoryDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.history.MainRequest;
@@ -39,6 +40,8 @@ import com.sos.joc.model.dailyplan.history.items.DateItem;
 import com.sos.joc.model.dailyplan.history.items.OrderItem;
 import com.sos.joc.model.dailyplan.history.items.SubmissionItem;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanHistoryResource {
@@ -61,11 +64,15 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                        availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
-                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet();
+                if (Proxies.getControllerDbInstances().isEmpty()) {
+                    permitted = getControllerDefaultPermissions(accessToken).getOrders().getView();
+                } else {
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                            availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
+                    permitted = !allowedControllers.isEmpty();
+                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                        allowedControllers = Collections.emptySet();
+                    }
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
@@ -76,6 +83,19 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             if (response != null) {
                 return response;
             }
+            
+            MainResponse answer = new MainResponse();
+            if (Proxies.getControllerDbInstances().isEmpty()) {
+                answer.setDates(Collections.emptyList());
+                answer.setDeliveryDate(Date.from(Instant.now()));
+                JocError jocError = getJocError();
+                if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                    LOGGER.info(jocError.printMetaInfo());
+                    jocError.clearMetaInfo();
+                }
+                LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+            }
 
             Date dateFrom = toUTCDate(in.getDateFrom());
             Date dateTo = toUTCDate(in.getDateTo());
@@ -83,44 +103,48 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_MAIN);
             DailyPlanHistoryDBLayer dbLayer = new DailyPlanHistoryDBLayer(session);
-            List<Object[]> result = dbLayer.getDates(allowedControllers, dateFrom, dateTo, in.getSubmitted(), getLimit(in.getLimit()));
+            List<Object[]> result = null;
+            if (!Proxies.getControllerDbInstances().isEmpty()) {
+                result = dbLayer.getDates(allowedControllers, dateFrom, dateTo, in.getSubmitted(), getLimit(in.getLimit()));
+            }
+            
+            if (result != null) {
+                for (int i = 0; i < result.size(); i++) {
+                    Object[] o = (Object[]) result.get(i);
+                    Date date = (Date) o[0];
 
-            for (int i = 0; i < result.size(); i++) {
-                Object[] o = (Object[]) result.get(i);
-                Date date = (Date) o[0];
+                    ControllerItem ci = new ControllerItem();
+                    ci.setControllerId((String) o[1]);
+                    ci.setCountTotal((Long) o[2]);
+                    if (in.getSubmitted() == null) {// submitted/not submitted
+                        ci.setCountSubmitted(dbLayer.getCountSubmitted(ci.getControllerId(), date, null));
+                    } else if (in.getSubmitted()) {// only submitted
+                        ci.setCountSubmitted(ci.getCountTotal());
+                    } else {// only not submitted
+                        ci.setCountSubmitted(0L);
+                    }
 
-                ControllerItem ci = new ControllerItem();
-                ci.setControllerId((String) o[1]);
-                ci.setCountTotal((Long) o[2]);
-                if (in.getSubmitted() == null) {// submitted/not submitted
-                    ci.setCountSubmitted(dbLayer.getCountSubmitted(ci.getControllerId(), date, null));
-                } else if (in.getSubmitted()) {// only submitted
-                    ci.setCountSubmitted(ci.getCountTotal());
-                } else {// only not submitted
-                    ci.setCountSubmitted(0L);
+                    DateItem di = null;
+                    if (map.containsKey(date)) {
+                        di = map.get(date);
+                        di.setCountTotal(di.getCountTotal() + ci.getCountTotal());
+                        di.setCountSubmitted(di.getCountSubmitted() + ci.getCountSubmitted());
+                        di.getControllers().add(ci);
+                        di.getControllers().sort((e1, e2) -> e1.getControllerId().compareTo(e2.getControllerId()));
+                    } else {
+                        di = new DateItem();
+                        di.setDate(date);
+                        di.setCountTotal(ci.getCountTotal());
+                        di.setCountSubmitted(ci.getCountSubmitted());
+                        di.setControllers(new ArrayList<>());
+                        di.getControllers().add(ci);
+                    }
+                    map.put(date, di);
                 }
-
-                DateItem di = null;
-                if (map.containsKey(date)) {
-                    di = map.get(date);
-                    di.setCountTotal(di.getCountTotal() + ci.getCountTotal());
-                    di.setCountSubmitted(di.getCountSubmitted() + ci.getCountSubmitted());
-                    di.getControllers().add(ci);
-                    di.getControllers().sort((e1, e2) -> e1.getControllerId().compareTo(e2.getControllerId()));
-                } else {
-                    di = new DateItem();
-                    di.setDate(date);
-                    di.setCountTotal(ci.getCountTotal());
-                    di.setCountSubmitted(ci.getCountSubmitted());
-                    di.setControllers(new ArrayList<>());
-                    di.getControllers().add(ci);
-                }
-                map.put(date, di);
             }
             session.close();
             session = null;
 
-            MainResponse answer = new MainResponse();
             answer.setDeliveryDate(new Date());
             // sorting by the client
             answer.setDates(map.values().stream().collect(Collectors.toList()));

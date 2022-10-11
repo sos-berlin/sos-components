@@ -11,8 +11,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import org.hibernate.ScrollableResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +30,8 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.job.JobPath;
@@ -41,6 +41,8 @@ import com.sos.joc.model.job.TaskHistoryItem;
 import com.sos.joc.model.job.TaskIdOfOrder;
 import com.sos.joc.tasks.resource.ITasksResourceHistory;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.TASKS)
 public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksResourceHistory {
@@ -60,11 +62,15 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                        availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
-                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet();
+                if (Proxies.getControllerDbInstances().isEmpty()) {
+                    permitted = getControllerDefaultPermissions(accessToken).getOrders().getView();
+                } else {
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                            availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
+                    permitted = !allowedControllers.isEmpty();
+                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                        allowedControllers = Collections.emptySet();
+                    }
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
@@ -76,7 +82,21 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 return response;
             }
 
-            List<TaskHistoryItem> history = new ArrayList<TaskHistoryItem>();
+            List<TaskHistoryItem> history = new ArrayList<>();
+            TaskHistory answer = new TaskHistory();
+            
+            if (Proxies.getControllerDbInstances().isEmpty()) {
+                answer.setDeliveryDate(Date.from(Instant.now()));
+                answer.setHistory(history);
+                JocError jocError = getJocError();
+                if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                    LOGGER.info(jocError.printMetaInfo());
+                    jocError.clearMetaInfo();
+                }
+                LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+            }
+            
             boolean withFolderFilter = in.getFolders() != null && !in.getFolders().isEmpty();
             boolean hasPermission = true;
             boolean getTaskFromHistoryIdAndNode = false;
@@ -197,7 +217,6 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 }
             }
 
-            TaskHistory answer = new TaskHistory();
             answer.setDeliveryDate(Date.from(Instant.now()));
             answer.setHistory(history);
 

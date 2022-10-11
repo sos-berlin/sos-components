@@ -6,7 +6,8 @@ import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -16,6 +17,8 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobs.resource.IJobsResourceOverviewSummary;
 import com.sos.joc.model.common.Folder;
@@ -25,10 +28,13 @@ import com.sos.joc.model.job.JobsHistoricSummary;
 import com.sos.joc.model.job.JobsOverView;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path("jobs")
 public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements IJobsResourceOverviewSummary {
 
     private static final String API_CALL = "./jobs/overview/summary";
+    private static final Logger LOGGER = LoggerFactory.getLogger(JobsResourceOverviewSummaryImpl.class);
 
     @Override
     public JOCDefaultResponse postJobsOverviewSummary(String accessToken, byte[] filterBytes) {
@@ -43,12 +49,15 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                        availableController -> getControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
-                                Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
-                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet(); 
+                if (Proxies.getControllerDbInstances().isEmpty()) {
+                    permitted = getControllerDefaultPermissions(accessToken).getOrders().getView();
+                } else {
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                            availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
+                    permitted = !allowedControllers.isEmpty();
+                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                        allowedControllers = Collections.emptySet();
+                    }
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
@@ -61,6 +70,20 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             }
             
             JobsHistoricSummary jobsHistoricSummary = new JobsHistoricSummary();
+            JobsOverView entity = new JobsOverView();
+            if (Proxies.getControllerDbInstances().isEmpty()) {
+                entity.setSurveyDate(Date.from(Instant.now()));
+                entity.setJobs(jobsHistoricSummary);
+                jobsHistoricSummary.setFailed(0L);
+                jobsHistoricSummary.setSuccessful(0L);
+                JocError jocError = getJocError();
+                if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                    LOGGER.info(jocError.printMetaInfo());
+                    jocError.clearMetaInfo();
+                }
+                LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
+                return JOCDefaultResponse.responseStatus200(entity);
+            }
             
             HistoryFilter historyFilter = new HistoryFilter();
             historyFilter.setControllerIds(allowedControllers);
@@ -73,7 +96,6 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             }
             
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            JobsOverView entity = new JobsOverView();
             entity.setSurveyDate(Date.from(Instant.now()));
             entity.setJobs(jobsHistoricSummary);
             

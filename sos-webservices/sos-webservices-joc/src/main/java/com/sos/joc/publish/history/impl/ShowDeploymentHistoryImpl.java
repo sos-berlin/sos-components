@@ -10,11 +10,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -35,11 +30,12 @@ import com.sos.joc.publish.history.DepHistoryItemsCount;
 import com.sos.joc.publish.history.resource.IShowDeploymentHistory;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path("inventory/deployment")
 public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowDeploymentHistory {
 
     private static final String API_CALL = "./inventory/deployment/history";
-    private static final Logger LOGGER = LoggerFactory.getLogger(ShowDeploymentHistoryImpl.class);
 
     @Override
     public JOCDefaultResponse postShowDeploymentHistory(String xAccessToken, byte[] showDepHistoryFilter) throws Exception {
@@ -59,12 +55,15 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                        availableController -> getControllerPermissions(availableController, xAccessToken).getDeployments().getView()).collect(
-                                Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
-                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet(); 
+                if (Proxies.getControllerDbInstances().isEmpty()) {
+                    permitted = getControllerDefaultPermissions(xAccessToken).getDeployments().getView();
+                } else {
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                            availableController, xAccessToken).getDeployments().getView()).collect(Collectors.toSet());
+                    permitted = !allowedControllers.isEmpty();
+                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                        allowedControllers = Collections.emptySet();
+                    }
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
@@ -73,6 +72,10 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
+            }
+            
+            if (Proxies.getControllerDbInstances().isEmpty()) {
+                return JOCDefaultResponse.responseStatus200(getDepHistoryFromDBItems(Collections.emptyList()));
             }
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);

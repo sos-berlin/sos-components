@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.ISubAgentClusterResource;
@@ -20,7 +23,9 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.ReadSubagentClusters;
 import com.sos.joc.model.agent.SubAgentId;
@@ -34,6 +39,7 @@ import jakarta.ws.rs.Path;
 public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISubAgentClusterResource {
 
     private static final String API_CALL = "./agents/cluster";
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubAgentClusterResourceImpl.class);
 
     @Override
     public JOCDefaultResponse post(String accessToken, byte[] filterBytes) {
@@ -51,12 +57,17 @@ public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISub
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                        availableController, accessToken).getAgents().getView() || getJocPermissions(accessToken).getAdministration().getControllers()
-                                .getView()).collect(Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
-                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet();
+                if (Proxies.getControllerDbInstances().isEmpty()) {
+                    permitted = getControllerDefaultPermissions(accessToken).getAgents().getView() || getJocPermissions(accessToken)
+                            .getAdministration().getControllers().getView();
+                } else {
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                            availableController, accessToken).getAgents().getView() || getJocPermissions(accessToken).getAdministration()
+                                    .getControllers().getView()).collect(Collectors.toSet());
+                    permitted = !allowedControllers.isEmpty();
+                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                        allowedControllers = Collections.emptySet();
+                    }
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
@@ -68,6 +79,20 @@ public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISub
             
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
+            }
+            
+            SubagentClusters entity = new SubagentClusters();
+            entity.setAuditLog(null);
+            if (Proxies.getControllerDbInstances().isEmpty()) {
+                entity.setSubagentClusters(Collections.emptyList());
+                entity.setDeliveryDate(Date.from(Instant.now()));
+                JocError jocError = getJocError();
+                if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                    LOGGER.info(jocError.printMetaInfo());
+                    jocError.clearMetaInfo();
+                }
+                LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
+                return JOCDefaultResponse.responseStatus200(entity);
             }
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -85,9 +110,6 @@ public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISub
             Map<String, Set<String>> subagentSelectionsOnController = AgentHelper.getSubagentSelections(agentIdControllerIdMap.values(), AgentHelper
                     .getCurrentStates(agentIdControllerIdMap.values()));
 
-            SubagentClusters entity = new SubagentClusters();
-            entity.setAuditLog(null);
-            
             int position = 0;
             List<SubagentCluster> subagentClusters = new ArrayList<>();
             Comparator<DBItemInventorySubAgentCluster> comp = Comparator.comparingInt(DBItemInventorySubAgentCluster::getOrdering);

@@ -7,7 +7,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -17,6 +18,8 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
@@ -26,10 +29,13 @@ import com.sos.joc.model.order.OrdersOverView;
 import com.sos.joc.orders.resource.IOrdersResourceOverviewSummary;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path("orders")
 public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implements IOrdersResourceOverviewSummary {
 
     private static final String API_CALL = "./orders/overview/summary";
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceOverviewSummaryImpl.class);
 
     @Override
     public JOCDefaultResponse postOrdersOverviewSummary(String accessToken, byte[] filterBytes) {
@@ -44,10 +50,13 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                        availableController -> getControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
-                                Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
+                if (Proxies.getControllerDbInstances().isEmpty()) {
+                    permitted = getControllerDefaultPermissions(accessToken).getOrders().getView();
+                } else {
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                            availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
+                    permitted = !allowedControllers.isEmpty();
+                }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
                 permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
@@ -56,6 +65,22 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
+            }
+            
+            OrdersHistoricSummary ordersHistoricSummary = new OrdersHistoricSummary();
+            OrdersOverView entity = new OrdersOverView();
+            if (Proxies.getControllerDbInstances().isEmpty()) {
+                entity.setSurveyDate(Date.from(Instant.now()));
+                entity.setOrders(ordersHistoricSummary);
+                ordersHistoricSummary.setFailed(0L);
+                ordersHistoricSummary.setSuccessful(0L);
+                JocError jocError = getJocError();
+                if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                    LOGGER.info(jocError.printMetaInfo());
+                    jocError.clearMetaInfo();
+                }
+                LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
+                return JOCDefaultResponse.responseStatus200(entity);
             }
             
             Map<String, Set<Folder>> permittedFoldersMap = null;
@@ -84,8 +109,6 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
                         ordersFilter.getTimeZone()));
             }
             
-            OrdersHistoricSummary ordersHistoricSummary = new OrdersHistoricSummary();
-            OrdersOverView entity = new OrdersOverView();
             entity.setSurveyDate(Date.from(Instant.now()));
             entity.setOrders(ordersHistoricSummary);
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);

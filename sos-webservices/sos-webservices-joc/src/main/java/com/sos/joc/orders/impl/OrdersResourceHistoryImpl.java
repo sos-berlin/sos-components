@@ -11,8 +11,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import org.hibernate.ScrollableResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +30,8 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderHistory;
@@ -40,6 +40,8 @@ import com.sos.joc.model.order.OrderPath;
 import com.sos.joc.model.order.OrdersFilter;
 import com.sos.joc.orders.resource.IOrdersResourceHistory;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.ORDERS)
 public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrdersResourceHistory {
@@ -59,11 +61,15 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                        availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
-                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet();
+                if (Proxies.getControllerDbInstances().isEmpty()) {
+                    permitted = getControllerDefaultPermissions(accessToken).getOrders().getView();
+                } else {
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                            availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
+                    permitted = !allowedControllers.isEmpty();
+                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                        allowedControllers = Collections.emptySet();
+                    }
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
@@ -74,8 +80,22 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             if (response != null) {
                 return response;
             }
-
-            List<OrderHistoryItem> history = new ArrayList<OrderHistoryItem>();
+            
+            List<OrderHistoryItem> history = new ArrayList<>();
+                        
+            OrderHistory answer = new OrderHistory();
+            if (Proxies.getControllerDbInstances().isEmpty()) {
+                answer.setDeliveryDate(new Date());
+                answer.setHistory(history);
+                JocError jocError = getJocError();
+                if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                    LOGGER.info(jocError.printMetaInfo());
+                    jocError.clearMetaInfo();
+                }
+                LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+            }
+            
             boolean withFolderFilter = in.getFolders() != null && !in.getFolders().isEmpty();
             boolean hasPermission = true;
             Set<Folder> permittedFolders = addPermittedFolder(in.getFolders());
@@ -170,7 +190,6 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 }
             }
 
-            OrderHistory answer = new OrderHistory();
             answer.setDeliveryDate(new Date());
             answer.setHistory(history);
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));

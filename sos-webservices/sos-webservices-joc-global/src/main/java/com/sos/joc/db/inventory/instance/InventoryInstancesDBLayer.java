@@ -30,6 +30,10 @@ public class InventoryInstancesDBLayer {
         this.session = conn;
         this.level = Globals.getJocSecurityLevel();
     }
+    
+    public static String noRegisteredControllers() {
+        return "Couldn't find any registered Controllers with security level '" + Globals.getJocSecurityLevel().value() + "'";
+    }
 
     public DBItemInventoryJSInstance getInventoryInstance(Long id) throws DBConnectionRefusedException, DBInvalidDataException {
         try {

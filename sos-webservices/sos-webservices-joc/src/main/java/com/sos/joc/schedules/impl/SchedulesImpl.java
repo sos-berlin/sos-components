@@ -3,14 +3,11 @@ package com.sos.joc.schedules.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +18,6 @@ import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.WebservicePaths;
-import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.DailyPlanRunner;
 import com.sos.joc.dailyplan.common.DailyPlanSchedule;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
@@ -34,6 +30,8 @@ import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.ScheduleSelector;
 import com.sos.webservices.order.initiator.model.SchedulesList;
 import com.sos.webservices.order.initiator.model.SchedulesSelector;
+
+import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.SCHEDULES)
 public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesResource {
@@ -60,22 +58,7 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             }
 
             String controllerId = in.getControllerId();
-            Set<String> allowedControllers = Collections.emptySet();
-            boolean permitted = false;
-            if (controllerId == null || controllerId.isEmpty()) {
-                controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                        availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
-                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet();
-                }
-            } else {
-                allowedControllers = Collections.singleton(controllerId);
-                permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
-            }
-
-            JOCDefaultResponse response = initPermissions(controllerId, permitted);
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getView());
             if (response != null) {
                 return response;
             }
