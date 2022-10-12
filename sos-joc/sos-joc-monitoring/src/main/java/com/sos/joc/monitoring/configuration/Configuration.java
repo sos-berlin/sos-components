@@ -53,11 +53,18 @@ public class Configuration {
     }
 
     public static void setJocReverseProxyUri(String val) {
-        JOC_REVERSE_PROXY_URI = val;
+        JOC_REVERSE_PROXY_URI = normalizeUri(val);
     }
 
     public static String getJocReverseProxyUri() {
         return JOC_REVERSE_PROXY_URI;
+    }
+
+    private static String normalizeUri(String val) {
+        if (SOSString.isEmpty(val)) {
+            return val;
+        }
+        return val.endsWith("/") ? val.substring(0, val.length() - 1) : val;
     }
 
     private static String getJocBaseUri() {
