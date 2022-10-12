@@ -9,6 +9,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -63,6 +64,7 @@ import com.sos.joc.event.bean.history.HistoryOrderUpdated;
 import com.sos.joc.history.controller.configuration.HistoryConfiguration;
 import com.sos.joc.history.controller.exception.FatEventOrderNotFoundException;
 import com.sos.joc.history.controller.exception.FatEventOrderStepNotFoundException;
+import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
 import com.sos.joc.history.controller.proxy.HistoryEventType;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEvent;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderBase;
@@ -147,6 +149,18 @@ public class HistoryModel {
     private Map<String, CachedAgent> cachedAgents;
     private Map<String, CachedWorkflow> cachedWorkflows;
     private CachedAgentCouplingFailed cachedAgentsCouplingFailed;
+    
+    private static final Map<EventType, String> messages = Collections.unmodifiableMap(new HashMap<EventType, String>() {
+
+        private static final long serialVersionUID = 1L;
+        
+        {
+            put(EventType.OrderLocksQueued, "starting to acquire resource locks {{%s}}");
+            put(EventType.OrderLocksAcquired, "acquired resource locks {{%s}}");
+            put(EventType.OrderLocksReleased, "releasing resource locks {{%s}}");
+        }
+        
+    });
 
     private static enum CacheType {
         order, orderStep
@@ -2118,6 +2132,8 @@ public class HistoryModel {
             entry.setError(error);
         }
         if (logEntry.getOrderLocks() != null) {
+            entry.setMsg(String.format(messages.get(logEntry.getEventType()), logEntry.getOrderLocks().stream().map(OrderLock::getLockId).collect(
+                    Collectors.joining(", "))));
             entry.setLocks(logEntry.getOrderLocks().stream().map(ol -> {
                 Lock lock = new Lock();
                 lock.setLockName(ol.getLockId());
