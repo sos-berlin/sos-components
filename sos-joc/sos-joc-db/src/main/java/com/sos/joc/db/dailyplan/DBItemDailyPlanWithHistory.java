@@ -9,7 +9,7 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 public class DBItemDailyPlanWithHistory {
 
     private final int toleranceUnit = Calendar.SECOND;
-    private static final int DAILY_PLAN_LATE_TOLERANCE = 60;
+    public static final int DAILY_PLAN_LATE_TOLERANCE = 60;
 
     private Long plannedOrderId;
     private Long submissionHistoryId;

@@ -48,7 +48,6 @@ public class DBLayerDailyPlannedOrders {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlannedOrders.class);
 
-    private static final int DAILY_PLAN_LATE_TOLERANCE = 60;
     private static final String WHERE_PARAM_CURRENT_TIME = "currentTime";
     /** rerun interval in seconds */
     private static final long RERUN_INTERVAL = 1;
@@ -346,7 +345,7 @@ public class DBLayerDailyPlannedOrders {
                         // TODO o.state ???=
                         where.append("(");
                         where.append("o.state <> ").append(DailyPlanOrderStateText.PLANNED.intValue()).append(" ");
-                        where.append("and  o.startTime - p.plannedStart >= ").append(DAILY_PLAN_LATE_TOLERANCE);
+                        where.append("and ").append(getLateToleranceStatement());
                         where.append(") ");
                         where.append("or ");
                         where.append("(o.state is null and p.plannedStart < :").append(WHERE_PARAM_CURRENT_TIME).append(") ");
@@ -359,7 +358,7 @@ public class DBLayerDailyPlannedOrders {
                 if (useHistoryOrderState) {
                     where.append("and o.state=").append(state.intValue()).append(" ");
                     if (isLate) {
-                        where.append("and (o.startTime - p.plannedStart >= ").append(DAILY_PLAN_LATE_TOLERANCE).append(") ");
+                        where.append("and (").append(getLateToleranceStatement()).append(") ");
                     }
                 }
                 break;
@@ -372,7 +371,7 @@ public class DBLayerDailyPlannedOrders {
                         where.append("and (");
                         where.append("(");
                         where.append("o.state <> ").append(DailyPlanOrderStateText.FINISHED.intValue()).append(" ");
-                        where.append("and  o.startTime - p.plannedStart >= ").append(DAILY_PLAN_LATE_TOLERANCE);
+                        where.append("and ").append(getLateToleranceStatement());
                         where.append(") ");
                         where.append("or ");
                         where.append("(o.state is null and p.plannedStart < :").append(WHERE_PARAM_CURRENT_TIME).append(") ");
@@ -391,7 +390,7 @@ public class DBLayerDailyPlannedOrders {
                 where.append(and).append("(");
                 where.append("(");
                 where.append("o.state <> ").append(DailyPlanOrderStateText.PLANNED.intValue()).append(" ");
-                where.append("and  o.startTime - p.plannedStart >= ").append(DAILY_PLAN_LATE_TOLERANCE);
+                where.append("and ").append(getLateToleranceStatement());
                 where.append(") ");
                 where.append("or ");
                 where.append("(o.state is null and p.plannedStart < :").append(WHERE_PARAM_CURRENT_TIME).append(") ");
@@ -475,6 +474,14 @@ public class DBLayerDailyPlannedOrders {
             return "where " + where.toString();
         }
         return where.toString();
+    }
+
+    private String getLateToleranceStatement() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(SOSHibernateSecondsDiff.getFunction("p.plannedStart", "o.startTime"));
+        sb.append(" >= ");
+        sb.append(DBItemDailyPlanWithHistory.DAILY_PLAN_LATE_TOLERANCE);
+        return sb.toString();
     }
 
     private <T> Query<T> bindParameters(FilterDailyPlannedOrders filter, Query<T> query) {
