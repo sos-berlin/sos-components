@@ -1301,7 +1301,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("where ic.type=:type ");
         hql.append("and ic.deployed=sw.deployed ");
         hql.append("and ");
-        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.jobs", "$.jobTemplates.\"" + jobTemplateName + "\"")).append(" is not null");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.jobTemplates.\"" + jobTemplateName + "\"")).append(" is not null");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
@@ -1333,14 +1333,14 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("and folder=:folder ");
         }
         if (!jobTemplateNames.isEmpty()) {
-            String jtHql = jobTemplateNames.stream().map(jobTemplateName -> SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.jobs",
+            String jtHql = jobTemplateNames.stream().map(jobTemplateName -> SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs",
                     "$.jobTemplates.\"" + jobTemplateName + "\"") + " is not null").collect(Collectors.joining(" or ")).trim();
             if (!jtHql.isEmpty()) {
                 hql.append("and (").append(jtHql).append(")");
             }
         } else {
             hql.append("and ");
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.jobs", "$.jobTemplates")).append(" is not null");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.jobTemplates")).append(" is not null");
         }
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
