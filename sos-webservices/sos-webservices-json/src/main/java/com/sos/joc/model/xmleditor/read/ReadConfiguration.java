@@ -18,22 +18,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "objectType",
     "id",
     "forceRelease"
 })
 public class ReadConfiguration {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * xmleditor object type
      * <p>
@@ -43,34 +33,16 @@ public class ReadConfiguration {
      */
     @JsonProperty("objectType")
     private ObjectType objectType;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
     @JsonProperty("forceRelease")
     private Boolean forceRelease;
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     /**
      * xmleditor object type
@@ -96,13 +68,25 @@ public class ReadConfiguration {
         this.objectType = objectType;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -118,12 +102,12 @@ public class ReadConfiguration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("id", id).append("forceRelease", forceRelease).toString();
+        return new ToStringBuilder(this).append("objectType", objectType).append("id", id).append("forceRelease", forceRelease).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(forceRelease).append(id).append(controllerId).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(forceRelease).append(id).append(objectType).toHashCode();
     }
 
     @Override
@@ -135,7 +119,7 @@ public class ReadConfiguration {
             return false;
         }
         ReadConfiguration rhs = ((ReadConfiguration) other);
-        return new EqualsBuilder().append(forceRelease, rhs.forceRelease).append(id, rhs.id).append(controllerId, rhs.controllerId).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(forceRelease, rhs.forceRelease).append(id, rhs.id).append(objectType, rhs.objectType).isEquals();
     }
 
 }

@@ -37,9 +37,9 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
             JsonValidator.validateFailFast(filterBytes, DeleteConfiguration.class);
             DeleteConfiguration in = Globals.objectMapper.readValue(filterBytes, DeleteConfiguration.class);
 
-            checkRequiredParameters(in);
+//            checkRequiredParameters(in);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.MANAGE);
+            JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
                 switch (in.getObjectType()) {
                 case YADE:
@@ -49,7 +49,7 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
                     response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleMultipleConfigurations(in)));
                     break;
                 default:
-                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in)));
+                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in, getAccount(), 0L)));
                     break;
                 }
             }
@@ -62,21 +62,20 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
         }
     }
 
-    private void checkRequiredParameters(final DeleteConfiguration in) throws Exception {
-        checkRequiredParameter("controllerId", in.getControllerId());
-        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-    }
+//    private static void checkRequiredParameters(final DeleteConfiguration in) throws Exception {
+//        made by schema JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+//    }
 
-    private ReadStandardConfigurationAnswer handleStandardConfiguration(DeleteConfiguration in) throws Exception {
-        DBItemXmlEditorConfiguration item = updateStandardItem(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
-                .getObjectType()), in.getRelease() == null ? false : in.getRelease().booleanValue());
+    public static ReadStandardConfigurationAnswer handleStandardConfiguration(DeleteConfiguration in, String account, Long auditLogId) throws Exception {
+        DBItemXmlEditorConfiguration item = updateStandardItem(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
+                .getObjectType()), in.getRelease() == null ? false : in.getRelease().booleanValue(), account, auditLogId);
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(in.getObjectType());
-        handler.readCurrent(item, in.getControllerId(), true);
+        handler.readCurrent(item, true);
         return handler.getAnswer();
     }
 
-    private DeleteOtherDraftAnswer handleMultipleConfigurations(DeleteConfiguration in) throws Exception {
+    private static DeleteOtherDraftAnswer handleMultipleConfigurations(DeleteConfiguration in) throws Exception {
         boolean deleted = deleteMultiple(in.getObjectType(), in.getId());
         DeleteOtherDraftAnswer answer = new DeleteOtherDraftAnswer();
         if (deleted) {
@@ -87,14 +86,14 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
         return answer;
     }
 
-    private boolean deleteMultiple(ObjectType type, Integer id) throws Exception {
+    private static boolean deleteMultiple(ObjectType type, Long id) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             XmlEditorDbLayer dbLayer = new XmlEditorDbLayer(session);
 
             session.beginTransaction();
-            int deleted = dbLayer.deleteMultiple(type, id.longValue());
+            int deleted = dbLayer.deleteMultiple(type, id);
             session.commit();
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("[id=%s]deleted=%s", id, deleted));
@@ -108,7 +107,8 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
         }
     }
 
-    private DBItemXmlEditorConfiguration updateStandardItem(String controllerId, String objectType, String name, boolean release) throws Exception {
+    private static DBItemXmlEditorConfiguration updateStandardItem(String objectType, String name, boolean release, String account, Long auditLogId)
+            throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -118,7 +118,7 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
             DBItemXmlEditorConfiguration item = dbLayer.getObject(objectType, name);
             if (item == null) {
                 if (isTraceEnabled) {
-                    LOGGER.trace(String.format("[%s][%s][%s]not found", controllerId, objectType, name));
+                    LOGGER.trace(String.format("[%s][%s]not found", objectType, name));
                 }
             } else {
                 if (release) {
@@ -129,12 +129,13 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
                     item.setConfigurationDraft(null);
                     item.setConfigurationDraftJson(null);
                 }
-                item.setAccount(getAccount());
+                item.setAuditLogId(auditLogId);
+                item.setAccount(account);
                 item.setModified(new Date());
                 session.update(item);
 
                 if (isTraceEnabled) {
-                    LOGGER.trace(String.format("[%s][%s][%s]%s", controllerId, objectType, name, SOSString.toString(item, Arrays.asList(
+                    LOGGER.trace(String.format("[%s][%s]%s", objectType, name, SOSString.toString(item, Arrays.asList(
                             "configuration"))));
                 }
             }

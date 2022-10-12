@@ -24,15 +24,12 @@ import com.sos.schema.JsonValidator;
 public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements ISchemaDownloadResource {
 
     @Override
-    public JOCDefaultResponse process(final String xAccessToken, String accessToken, String controllerId, String objectType, String show,
+    public JOCDefaultResponse process(final String xAccessToken, String accessToken, String objectType, String show,
             String schemaIdentifier) {
         try {
             accessToken = getAccessToken(xAccessToken, accessToken);
 
             JsonObjectBuilder builder = Json.createObjectBuilder();
-            if (controllerId != null) {
-                builder.add("controllerId", controllerId);
-            }
             if (objectType != null) {
                 builder.add("objectType", objectType);
             }
@@ -49,7 +46,7 @@ public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements I
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.VIEW);
+            JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.VIEW);
             if (response == null) {
                 return download(in);
             }
@@ -63,8 +60,7 @@ public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements I
     }
 
     private void checkRequiredParameters(final SchemaDownloadConfiguration in) throws Exception {
-        checkRequiredParameter("controllerId", in.getControllerId());
-        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+        //JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (!in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
         }

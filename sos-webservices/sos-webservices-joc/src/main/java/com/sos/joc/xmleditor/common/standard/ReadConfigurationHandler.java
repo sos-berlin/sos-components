@@ -20,7 +20,7 @@ public class ReadConfigurationHandler {
         answer = new ReadStandardConfigurationAnswer();
     }
 
-    public void readCurrent(DBItemXmlEditorConfiguration item, String controllerId, boolean forceRelease) throws Exception {
+    public void readCurrent(DBItemXmlEditorConfiguration item, boolean forceRelease) throws Exception {
         answer.setSchema(JocXmlEditor.getFileContent(JocXmlEditor.getStandardAbsoluteSchemaLocation(type)));
         answer.setSchemaIdentifier(JocXmlEditor.getStandardSchemaIdentifier(type));
         answer.setReleased(false);

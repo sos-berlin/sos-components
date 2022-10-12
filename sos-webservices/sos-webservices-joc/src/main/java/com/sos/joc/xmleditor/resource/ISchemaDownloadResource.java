@@ -16,7 +16,6 @@ public interface ISchemaDownloadResource {
     @GET
     @Path(PATH)
     public JOCDefaultResponse process(@HeaderParam("X-Access-Token") final String xAccessToken, @QueryParam("accessToken") String accessToken,
-            @QueryParam("controllerId") String controllerId, @QueryParam("objectType") String objectType, @QueryParam("show") String show,
-            @QueryParam("schemaIdentifier") String schemaIdentifier);
+            @QueryParam("objectType") String objectType, @QueryParam("show") String show, @QueryParam("schemaIdentifier") String schemaIdentifier);
 
 }

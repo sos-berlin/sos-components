@@ -46,9 +46,9 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
             JsonValidator.validateFailFast(filterBytes, ReadConfiguration.class);
             ReadConfiguration in = Globals.objectMapper.readValue(filterBytes, ReadConfiguration.class);
 
-            checkRequiredParameters(in);
+//            checkRequiredParameters(in);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.VIEW);
+            JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.VIEW);
             if (response == null) {
                 JocXmlEditor.setRealPath();
                 switch (in.getObjectType()) {
@@ -70,16 +70,15 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         }
     }
 
-    private void checkRequiredParameters(final ReadConfiguration in) throws Exception {
-        checkRequiredParameter("controllerId", in.getControllerId());
-        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-    }
+//    private void checkRequiredParameters(final ReadConfiguration in) throws Exception {
+//        made by schema JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+//    }
 
-    private ReadStandardConfigurationAnswer handleStandardConfiguration(ReadConfiguration in) throws Exception {
+    public static ReadStandardConfigurationAnswer handleStandardConfiguration(ReadConfiguration in) throws Exception {
         DBItemXmlEditorConfiguration item = getItem(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType()));
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(in.getObjectType());
-        handler.readCurrent(item, in.getControllerId(), (in.getForceRelease() != null && in.getForceRelease()));
+        handler.readCurrent(item, (in.getForceRelease() != null && in.getForceRelease()));
         ReadStandardConfigurationAnswer answer = handler.getAnswer();
         if (answer.getConfiguration() != null) {
             answer.setValidation(getValidation(JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType()), answer.getConfiguration()));
@@ -87,7 +86,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         return answer;
     }
 
-    private ReadOtherConfigurationAnswer handleConfigurations(ReadConfiguration in) throws Exception {
+    private static ReadOtherConfigurationAnswer handleConfigurations(ReadConfiguration in) throws Exception {
 
         ReadOtherConfigurationAnswer answer = new ReadOtherConfigurationAnswer();
 
@@ -99,7 +98,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
                 for (int i = 0; i < items.size(); i++) {
                     Map<String, Object> item = items.get(i);
                     AnswerConfiguration configuration = new AnswerConfiguration();
-                    configuration.setId(Integer.parseInt(item.get("0").toString()));
+                    configuration.setId(Long.parseLong(item.get("0").toString()));
                     configuration.setName(item.get("1").toString());
                     configuration.setSchemaIdentifier(item.get("2").toString());// fileName or http(s) location
 
@@ -131,10 +130,10 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
             DBItemXmlEditorConfiguration item = getItem(in.getId());
             answer.setConfiguration(new AnswerConfiguration());
             if (item == null) {
-                throw new JocException(new JocError(JocXmlEditor.CODE_NO_CONFIGURATION_EXIST, String.format("[%s][%s][%s]no configuration found", in
-                        .getControllerId(), in.getObjectType().name(), in.getId())));
+                throw new JocException(new JocError(JocXmlEditor.CODE_NO_CONFIGURATION_EXIST, String.format("[%s][%s]no configuration found", in
+                        .getObjectType().name(), in.getId())));
             }
-            answer.getConfiguration().setId(item.getId().intValue());
+            answer.getConfiguration().setId(item.getId());
             answer.getConfiguration().setName(item.getName());
             answer.getConfiguration().setSchema(JocXmlEditor.readSchema(in.getObjectType(), item.getSchemaLocation()));
             answer.getConfiguration().setSchemaIdentifier(JocXmlEditor.getHttpOrFileSchemaIdentifier(item.getSchemaLocation()));
@@ -161,7 +160,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         return answer;
     }
 
-    private ValidateConfigurationAnswer getValidation(java.nio.file.Path schema, String content) throws Exception {
+    private static ValidateConfigurationAnswer getValidation(java.nio.file.Path schema, String content) throws Exception {
         ValidateConfigurationAnswer validation = null;
         try {
             SOSXMLXSDValidator.validate(schema, content);
@@ -172,14 +171,14 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         return validation;
     }
 
-    private DBItemXmlEditorConfiguration getItem(Integer id) throws Exception {
+    private static DBItemXmlEditorConfiguration getItem(Long id) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             XmlEditorDbLayer dbLayer = new XmlEditorDbLayer(session);
 
             session.beginTransaction();
-            DBItemXmlEditorConfiguration item = dbLayer.getObject(id.longValue());
+            DBItemXmlEditorConfiguration item = dbLayer.getObject(id);
             session.commit();
 
             if (isTraceEnabled) {
@@ -195,7 +194,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         }
     }
 
-    private DBItemXmlEditorConfiguration getItem(String objectType, String name) throws Exception {
+    public static DBItemXmlEditorConfiguration getItem(String objectType, String name) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -205,7 +204,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
             DBItemXmlEditorConfiguration item = dbLayer.getObject(objectType, name);
             session.commit();
             if (isTraceEnabled) {
-                LOGGER.trace(String.format("[%s][%s]%s", objectType, name, SOSString.toString(item, Arrays.asList("configuration"))));
+                LOGGER.trace(String.format("[%s][%s]%s", objectType, name, SOSString.toString(item, Collections.singletonList("configuration"))));
             }
             return item;
         } catch (Throwable e) {
@@ -216,7 +215,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         }
     }
 
-    private List<Map<String, Object>> getConfigurationProperties(ReadConfiguration in, String properties, String orderBy) throws Exception {
+    private static List<Map<String, Object>> getConfigurationProperties(ReadConfiguration in, String properties, String orderBy) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);

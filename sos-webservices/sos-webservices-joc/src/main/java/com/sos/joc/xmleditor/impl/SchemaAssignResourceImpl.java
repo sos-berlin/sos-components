@@ -29,7 +29,7 @@ public class SchemaAssignResourceImpl extends ACommonResourceImpl implements ISc
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.MANAGE);
+            JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
                 response = JOCDefaultResponse.responseStatus200(getSuccess(in));
             }
@@ -43,8 +43,7 @@ public class SchemaAssignResourceImpl extends ACommonResourceImpl implements ISc
     }
 
     private void checkRequiredParameters(final SchemaAssignConfiguration in) throws Exception {
-        checkRequiredParameter("controllerId", in.getControllerId());
-        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+        //JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getUri() == null) {
             if (in.getFileName() == null || in.getFileContent() == null) {
                 throw new JocMissingRequiredParameterException("uri param is null. missing fileName or fileContent parameters.");

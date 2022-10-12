@@ -4,6 +4,7 @@ package com.sos.joc.model.xmleditor.store;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,25 +19,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "objectType",
     "configuration",
     "configurationJson",
     "id",
     "name",
-    "schemaIdentifier"
+    "schemaIdentifier",
+    "auditLog"
 })
 public class StoreConfiguration {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * xmleditor object type
      * <p>
@@ -47,8 +39,6 @@ public class StoreConfiguration {
     @JsonProperty("objectType")
     private ObjectType objectType;
     /**
-     * disallow <script and <svg/on
-     * <p>
      * 
      * (Required)
      * 
@@ -63,8 +53,14 @@ public class StoreConfiguration {
      */
     @JsonProperty("configurationJson")
     private String configurationJson;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
     /**
      * string without < and >
      * <p>
@@ -81,30 +77,14 @@ public class StoreConfiguration {
      */
     @JsonProperty("schemaIdentifier")
     private String schemaIdentifier;
-
     /**
-     * controllerId
+     * auditParams
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     /**
      * xmleditor object type
@@ -131,8 +111,6 @@ public class StoreConfiguration {
     }
 
     /**
-     * disallow <script and <svg/on
-     * <p>
      * 
      * (Required)
      * 
@@ -143,8 +121,6 @@ public class StoreConfiguration {
     }
 
     /**
-     * disallow <script and <svg/on
-     * <p>
      * 
      * (Required)
      * 
@@ -176,13 +152,25 @@ public class StoreConfiguration {
         this.configurationJson = configurationJson;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -230,14 +218,36 @@ public class StoreConfiguration {
         this.schemaIdentifier = schemaIdentifier;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("configuration", configuration).append("configurationJson", configurationJson).append("id", id).append("name", name).append("schemaIdentifier", schemaIdentifier).toString();
+        return new ToStringBuilder(this).append("objectType", objectType).append("configuration", configuration).append("configurationJson", configurationJson).append("id", id).append("name", name).append("schemaIdentifier", schemaIdentifier).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(configuration).append(name).append(configurationJson).append(id).append(schemaIdentifier).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(configuration).append(name).append(configurationJson).append(id).append(schemaIdentifier).append(objectType).toHashCode();
     }
 
     @Override
@@ -249,7 +259,7 @@ public class StoreConfiguration {
             return false;
         }
         StoreConfiguration rhs = ((StoreConfiguration) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(configuration, rhs.configuration).append(name, rhs.name).append(configurationJson, rhs.configurationJson).append(id, rhs.id).append(schemaIdentifier, rhs.schemaIdentifier).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(configuration, rhs.configuration).append(name, rhs.name).append(configurationJson, rhs.configurationJson).append(id, rhs.id).append(schemaIdentifier, rhs.schemaIdentifier).append(objectType, rhs.objectType).isEquals();
     }
 
 }

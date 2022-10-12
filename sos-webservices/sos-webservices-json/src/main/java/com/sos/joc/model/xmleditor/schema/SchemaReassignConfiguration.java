@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "objectType",
     "configuration",
     "uri",
@@ -27,15 +26,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class SchemaReassignConfiguration {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * xmleditor object type
      * <p>
@@ -46,9 +36,8 @@ public class SchemaReassignConfiguration {
     @JsonProperty("objectType")
     private ObjectType objectType;
     /**
-     * disallow <script and <svg/on
-     * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("configuration")
@@ -79,30 +68,6 @@ public class SchemaReassignConfiguration {
     private String fileContent;
 
     /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-
-    /**
      * xmleditor object type
      * <p>
      * 
@@ -127,9 +92,8 @@ public class SchemaReassignConfiguration {
     }
 
     /**
-     * disallow <script and <svg/on
-     * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("configuration")
@@ -138,9 +102,8 @@ public class SchemaReassignConfiguration {
     }
 
     /**
-     * disallow <script and <svg/on
-     * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("configuration")
@@ -216,12 +179,12 @@ public class SchemaReassignConfiguration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("configuration", configuration).append("uri", uri).append("fileName", fileName).append("fileContent", fileContent).toString();
+        return new ToStringBuilder(this).append("objectType", objectType).append("configuration", configuration).append("uri", uri).append("fileName", fileName).append("fileContent", fileContent).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(fileName).append(controllerId).append(configuration).append(uri).append(fileContent).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(fileName).append(configuration).append(uri).append(fileContent).append(objectType).toHashCode();
     }
 
     @Override
@@ -233,7 +196,7 @@ public class SchemaReassignConfiguration {
             return false;
         }
         SchemaReassignConfiguration rhs = ((SchemaReassignConfiguration) other);
-        return new EqualsBuilder().append(fileName, rhs.fileName).append(controllerId, rhs.controllerId).append(configuration, rhs.configuration).append(uri, rhs.uri).append(fileContent, rhs.fileContent).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(fileName, rhs.fileName).append(configuration, rhs.configuration).append(uri, rhs.uri).append(fileContent, rhs.fileContent).append(objectType, rhs.objectType).isEquals();
     }
 
 }

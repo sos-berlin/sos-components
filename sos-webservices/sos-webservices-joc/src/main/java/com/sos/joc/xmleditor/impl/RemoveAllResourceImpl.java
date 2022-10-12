@@ -1,9 +1,8 @@
 package com.sos.joc.xmleditor.impl;
 
 import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
-
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +21,8 @@ import com.sos.joc.model.xmleditor.remove.all.RemoveAll;
 import com.sos.joc.xmleditor.resource.IRemoveAllResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class RemoveAllResourceImpl extends ACommonResourceImpl implements IRemoveAllResource {
 
@@ -35,9 +36,12 @@ public class RemoveAllResourceImpl extends ACommonResourceImpl implements IRemov
             JsonValidator.validateFailFast(filterBytes, DeleteAll.class);
             RemoveAll in = Globals.objectMapper.readValue(filterBytes, RemoveAll.class);
 
-            checkRequiredParameters(in);
-
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectTypes().get(0), Role.MANAGE);
+//            checkRequiredParameters(in);
+            
+            List<ObjectType> permittedObjectTypes = in.getObjectTypes().stream().filter(o -> getPermission(accessToken, o, Role.MANAGE)).distinct()
+                    .collect(Collectors.toList());
+            JOCDefaultResponse response = initPermissions(null, permittedObjectTypes.size() > 0);
+            in.setObjectTypes(permittedObjectTypes);
             if (response == null) {
                 ObjectType type = in.getObjectTypes().get(0);
                 switch (type) {
@@ -48,7 +52,7 @@ public class RemoveAllResourceImpl extends ACommonResourceImpl implements IRemov
                     break;
                 default:
                     throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
-                            "[%s][%s]unsupported object type(s) for remove all", in.getControllerId(), in.getObjectTypes().stream().map(
+                            "[%s]unsupported object type(s) for remove all", in.getObjectTypes().stream().map(
                                     ObjectType::value).collect(Collectors.joining(",")))));
                 }
             }
@@ -61,10 +65,9 @@ public class RemoveAllResourceImpl extends ACommonResourceImpl implements IRemov
         }
     }
 
-    private void checkRequiredParameters(final RemoveAll in) throws Exception {
-        checkRequiredParameter("controllerId", in.getControllerId());
-        JocXmlEditor.checkRequiredParameter("objectTypes", in.getObjectTypes());
-    }
+//    private void checkRequiredParameters(final RemoveAll in) throws Exception {
+//        JocXmlEditor.checkRequiredParameter("objectTypes", in.getObjectTypes());
+//    }
 
     private DeleteAllAnswer getSuccess() throws Exception {
         DeleteAllAnswer answer = new DeleteAllAnswer();

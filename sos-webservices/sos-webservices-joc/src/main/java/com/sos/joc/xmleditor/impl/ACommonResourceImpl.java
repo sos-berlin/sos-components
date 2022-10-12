@@ -1,12 +1,7 @@
 package com.sos.joc.xmleditor.impl;
 
-import java.io.IOException;
-
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 
 public class ACommonResourceImpl extends JOCResourceImpl {
@@ -15,7 +10,7 @@ public class ACommonResourceImpl extends JOCResourceImpl {
         VIEW, MANAGE
     }
 
-    public JOCDefaultResponse initPermissions(String controllerId, String accessToken, ObjectType type, Role role) throws JsonParseException, JsonMappingException, JocException, IOException {
+    public boolean getPermission(String accessToken, ObjectType type, Role role) {
         boolean permissions = false;
         switch (type) {
         case YADE:
@@ -49,6 +44,10 @@ public class ACommonResourceImpl extends JOCResourceImpl {
             }
             break;
         }
-        return initPermissions(controllerId, permissions);
+        return permissions;
+    }
+
+    public JOCDefaultResponse initPermissions(String accessToken, ObjectType type, Role role) {
+        return initPermissions(null, getPermission(accessToken, type, role));
     }
 }

@@ -40,7 +40,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.MANAGE);
+            JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
                 // step 1 - check for vulnerabilities and validate
                 response = check(in, false);
@@ -119,7 +119,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
 
     private ApplyConfigurationAnswer getSuccess(ApplyConfiguration in, DBItemXmlEditorConfiguration item, String json) throws Exception {
         ApplyConfigurationAnswer answer = new ApplyConfigurationAnswer();
-        answer.setId(item.getId().intValue());
+        answer.setId(item.getId());
         answer.setName(item.getName());
         switch (in.getObjectType()) {
         case YADE:
@@ -169,8 +169,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
     }
 
     private void checkRequiredParameters(final ApplyConfiguration in) throws Exception {
-        checkRequiredParameter("controllerId", in.getControllerId());
-        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+        //made by schema JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         switch (in.getObjectType()) {
         case YADE:
         case OTHER:
@@ -187,7 +186,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
     private DBItemXmlEditorConfiguration getObject(XmlEditorDbLayer dbLayer, ApplyConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = null;
         if (in.getId() != null && in.getId() > 0) {
-            item = dbLayer.getObject(in.getId().longValue());
+            item = dbLayer.getObject(in.getId());
         }
         return item;
     }

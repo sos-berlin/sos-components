@@ -300,6 +300,7 @@ public class JsonValidator {
             put("com.sos.joc.model.notification.ReadNotificationFilter", "notification/readNotificationFilter-schema.json");
             put("com.sos.joc.model.notification.DeleteNotificationFilter", "notification/deleteNotificationFilter-schema.json");
             put("com.sos.joc.model.notification.StoreNotificationFilter", "notification/storeNotificationFilter-schema.json");
+            put("com.sos.joc.model.notification.ReleaseNotificationFilter", "notification/releaseNotificationFilter-schema.json");
 
             // TODO complete the map
         }

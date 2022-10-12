@@ -35,8 +35,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class ApplyConfigurationAnswer {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
     @JsonProperty("name")
     private String name;
     @JsonProperty("schemaIdentifier")
@@ -77,13 +83,25 @@ public class ApplyConfigurationAnswer {
     @JsonProperty("hasReleases")
     private Boolean hasReleases;
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

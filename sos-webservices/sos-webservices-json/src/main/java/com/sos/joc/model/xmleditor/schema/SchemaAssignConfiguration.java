@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "objectType",
     "uri",
     "fileName",
@@ -26,15 +25,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class SchemaAssignConfiguration {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * xmleditor object type
      * <p>
@@ -68,30 +58,6 @@ public class SchemaAssignConfiguration {
      */
     @JsonProperty("fileContent")
     private String fileContent;
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     /**
      * xmleditor object type
@@ -185,12 +151,12 @@ public class SchemaAssignConfiguration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("uri", uri).append("fileName", fileName).append("fileContent", fileContent).toString();
+        return new ToStringBuilder(this).append("objectType", objectType).append("uri", uri).append("fileName", fileName).append("fileContent", fileContent).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(fileName).append(controllerId).append(uri).append(fileContent).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(fileName).append(uri).append(fileContent).append(objectType).toHashCode();
     }
 
     @Override
@@ -202,7 +168,7 @@ public class SchemaAssignConfiguration {
             return false;
         }
         SchemaAssignConfiguration rhs = ((SchemaAssignConfiguration) other);
-        return new EqualsBuilder().append(fileName, rhs.fileName).append(controllerId, rhs.controllerId).append(uri, rhs.uri).append(fileContent, rhs.fileContent).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(fileName, rhs.fileName).append(uri, rhs.uri).append(fileContent, rhs.fileContent).append(objectType, rhs.objectType).isEquals();
     }
 
 }

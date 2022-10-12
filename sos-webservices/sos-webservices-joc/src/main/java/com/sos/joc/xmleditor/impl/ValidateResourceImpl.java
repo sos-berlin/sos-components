@@ -35,7 +35,7 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.VIEW);
+            JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.VIEW);
             if (response == null) {
                 java.nio.file.Path schema = null;
                 switch (in.getObjectType()) {
@@ -56,7 +56,7 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
                 }
 
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s]validated", in.getControllerId(), in.getObjectType().name(), schema));
+                    LOGGER.debug(String.format("[%s][%s]validated", in.getObjectType().name(), schema));
                 }
                 response = JOCDefaultResponse.responseStatus200(getSuccess());
             }
@@ -70,12 +70,11 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
     }
 
     private void checkRequiredParameters(final ValidateConfiguration in) throws Exception {
-        checkRequiredParameter("controllerId", in.getControllerId());
-        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-        if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
-            checkRequiredParameter("configuration", in.getConfiguration());
-        } else {
+        //JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+        if (!in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
+//        } else {
+//            checkRequiredParameter("configuration", in.getConfiguration());
         }
     }
 

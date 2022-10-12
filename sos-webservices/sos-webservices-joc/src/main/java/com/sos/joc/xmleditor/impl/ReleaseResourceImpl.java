@@ -42,7 +42,7 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.MANAGE);
+            JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response != null) {
                 return response;
             }
@@ -56,7 +56,7 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
             }
 
             // step 2 - update db
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in)));
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in, getAccount(), 0L)));
 
         } catch (JocException e) {
             Globals.rollback(session);
@@ -70,20 +70,21 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
         }
     }
 
-    private ReadStandardConfigurationAnswer handleStandardConfiguration(ReleaseConfiguration in) throws Exception {
-        DBItemXmlEditorConfiguration item = createOrUpdate(in);
+    public static ReadStandardConfigurationAnswer handleStandardConfiguration(ReleaseConfiguration in, String account, Long auditLogId)
+            throws Exception {
+        DBItemXmlEditorConfiguration item = createOrUpdate(in, account, auditLogId);
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(in.getObjectType());
-        handler.readCurrent(item, in.getControllerId(), true);
+        handler.readCurrent(item, true);
         postEvent(in);
         return handler.getAnswer();
     }
 
-    private void postEvent(ReleaseConfiguration in) {
-        EventBus.getInstance().post(new NotificationConfigurationReleased(in.getControllerId()));
+    private static void postEvent(ReleaseConfiguration in) {
+        EventBus.getInstance().post(new NotificationConfigurationReleased());
     }
 
-    private DBItemXmlEditorConfiguration createOrUpdate(ReleaseConfiguration in) throws Exception {
+    private static DBItemXmlEditorConfiguration createOrUpdate(ReleaseConfiguration in, String account, Long auditLogId) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -103,8 +104,8 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
                 item.setConfigurationReleased(in.getConfiguration());
                 item.setConfigurationReleasedJson(Utils.serialize(in.getConfigurationJson()));
                 item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), null));
-                item.setAuditLogId(Long.valueOf(0));// TODO
-                item.setAccount(getAccount());
+                item.setAuditLogId(auditLogId);
+                item.setAccount(account);
                 item.setCreated(new Date());
                 item.setModified(item.getCreated());
                 item.setReleased(item.getCreated());
@@ -114,14 +115,14 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
                 item.setConfigurationDraftJson(null);
                 item.setConfigurationReleased(in.getConfiguration());
                 item.setConfigurationReleasedJson(Utils.serialize(in.getConfigurationJson()));
-                item.setAuditLogId(Long.valueOf(0));// TODO
-                item.setAccount(getAccount());
+                item.setAuditLogId(auditLogId);
+                item.setAccount(account);
                 item.setModified(new Date());
                 item.setReleased(item.getModified());
                 session.update(item);
             }
 
-            session.commit();
+            Globals.commit(session);
             return item;
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -134,13 +135,12 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
     private void checkRequiredParameters(final ReleaseConfiguration in) throws Exception {
         if (in.getObjectType() != null && in.getObjectType().equals(ObjectType.OTHER)) {
             throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
-                    "[%s][%s]unsupported object type for release", in.getControllerId(), in.getObjectType().name())));
+                    "[%s]unsupported object type for release", in.getObjectType().name())));
         }
 
-        checkRequiredParameter("controllerId", in.getControllerId());
-        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-        checkRequiredParameter("configuration", in.getConfiguration());
-        checkRequiredParameter("configurationJson", in.getConfigurationJson());
+//        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+//        checkRequiredParameter("configuration", in.getConfiguration());
+        //checkRequiredParameter("configurationJson", in.getConfigurationJson());
     }
 
 }

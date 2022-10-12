@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "objectType",
     "configuration",
     "id",
@@ -27,15 +26,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class ApplyConfiguration {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * xmleditor object type
      * <p>
@@ -49,13 +39,18 @@ public class ApplyConfiguration {
      * disallow <script and <svg/on
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("configuration")
     private String configuration;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
     /**
      * string without < and >
      * <p>
@@ -72,30 +67,6 @@ public class ApplyConfiguration {
      */
     @JsonProperty("schemaIdentifier")
     private String schemaIdentifier;
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     /**
      * xmleditor object type
@@ -125,7 +96,6 @@ public class ApplyConfiguration {
      * disallow <script and <svg/on
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("configuration")
@@ -137,7 +107,6 @@ public class ApplyConfiguration {
      * disallow <script and <svg/on
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("configuration")
@@ -145,13 +114,25 @@ public class ApplyConfiguration {
         this.configuration = configuration;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -201,12 +182,12 @@ public class ApplyConfiguration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("configuration", configuration).append("id", id).append("name", name).append("schemaIdentifier", schemaIdentifier).toString();
+        return new ToStringBuilder(this).append("objectType", objectType).append("configuration", configuration).append("id", id).append("name", name).append("schemaIdentifier", schemaIdentifier).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(configuration).append(name).append(id).append(schemaIdentifier).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(name).append(id).append(schemaIdentifier).append(configuration).append(objectType).toHashCode();
     }
 
     @Override
@@ -218,7 +199,7 @@ public class ApplyConfiguration {
             return false;
         }
         ApplyConfiguration rhs = ((ApplyConfiguration) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(configuration, rhs.configuration).append(name, rhs.name).append(id, rhs.id).append(schemaIdentifier, rhs.schemaIdentifier).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).append(id, rhs.id).append(schemaIdentifier, rhs.schemaIdentifier).append(configuration, rhs.configuration).append(objectType, rhs.objectType).isEquals();
     }
 
 }

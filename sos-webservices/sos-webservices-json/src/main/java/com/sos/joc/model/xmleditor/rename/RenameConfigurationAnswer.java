@@ -24,8 +24,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class RenameConfigurationAnswer {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
     /**
      * timestamp
      * <p>
@@ -36,13 +42,25 @@ public class RenameConfigurationAnswer {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date modified;
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

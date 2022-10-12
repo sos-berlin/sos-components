@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
+    "name",
     "modified",
     "state",
     "released",
@@ -28,8 +29,22 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class StoreConfigurationAnswer {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    private String name;
     /**
      * timestamp
      * <p>
@@ -52,14 +67,48 @@ public class StoreConfigurationAnswer {
     @JsonProperty("hasReleases")
     private Boolean hasReleases;
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -128,12 +177,12 @@ public class StoreConfigurationAnswer {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("modified", modified).append("state", state).append("released", released).append("hasReleases", hasReleases).toString();
+        return new ToStringBuilder(this).append("id", id).append("name", name).append("modified", modified).append("state", state).append("released", released).append("hasReleases", hasReleases).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(modified).append(id).append(state).append(released).append(hasReleases).toHashCode();
+        return new HashCodeBuilder().append(name).append(modified).append(id).append(state).append(released).append(hasReleases).toHashCode();
     }
 
     @Override
@@ -145,7 +194,7 @@ public class StoreConfigurationAnswer {
             return false;
         }
         StoreConfigurationAnswer rhs = ((StoreConfigurationAnswer) other);
-        return new EqualsBuilder().append(modified, rhs.modified).append(id, rhs.id).append(state, rhs.state).append(released, rhs.released).append(hasReleases, rhs.hasReleases).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).append(modified, rhs.modified).append(id, rhs.id).append(state, rhs.state).append(released, rhs.released).append(hasReleases, rhs.hasReleases).isEquals();
     }
 
 }

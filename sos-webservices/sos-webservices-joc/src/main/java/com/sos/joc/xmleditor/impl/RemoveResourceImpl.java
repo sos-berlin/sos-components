@@ -40,9 +40,9 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
             JsonValidator.validateFailFast(filterBytes, DeleteConfiguration.class);
             RemoveConfiguration in = Globals.objectMapper.readValue(filterBytes, RemoveConfiguration.class);
 
-            checkRequiredParameters(in);
+//            checkRequiredParameters(in);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.MANAGE);
+            JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
                 switch (in.getObjectType()) {
                 case YADE:
@@ -65,23 +65,22 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
         }
     }
 
-    private void checkRequiredParameters(final RemoveConfiguration in) throws Exception {
-        checkRequiredParameter("controllerId", in.getControllerId());
-        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-    }
+//    private void checkRequiredParameters(final RemoveConfiguration in) throws Exception {
+//        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+//    }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(RemoveConfiguration in) throws Exception {
         DBItemXmlEditorConfiguration item = updateStandardItem(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType()), in
                 .getRelease() == null ? false : in.getRelease().booleanValue());
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(in.getObjectType());
-        handler.readCurrent(item, in.getControllerId(), true);
+        handler.readCurrent(item, true);
         postEvent(in);
         return handler.getAnswer();
     }
 
     private void postEvent(RemoveConfiguration in) {
-        EventBus.getInstance().post(new NotificationConfigurationRemoved(in.getControllerId()));
+        EventBus.getInstance().post(new NotificationConfigurationRemoved());
     }
 
     private RemoveOtherAnswer handleMultipleConfigurations(RemoveConfiguration in) throws Exception {
@@ -95,14 +94,14 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
         return answer;
     }
 
-    private boolean removeMultiple(ObjectType type, Integer id) throws Exception {
+    private boolean removeMultiple(ObjectType type, Long id) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             XmlEditorDbLayer dbLayer = new XmlEditorDbLayer(session);
 
             session.beginTransaction();
-            int deleted = dbLayer.deleteMultiple(type, id.longValue());
+            int deleted = dbLayer.deleteMultiple(type, id);
             session.commit();
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("[id=%s]deleted=%s", id, deleted));

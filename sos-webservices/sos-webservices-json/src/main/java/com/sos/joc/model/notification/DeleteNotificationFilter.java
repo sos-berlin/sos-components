@@ -18,23 +18,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "release",
     "auditLog"
 })
 public class DeleteNotificationFilter {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     @JsonProperty("release")
-    private Boolean release;
+    private Boolean release = false;
     /**
      * auditParams
      * <p>
@@ -43,30 +33,6 @@ public class DeleteNotificationFilter {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     @JsonProperty("release")
     public Boolean getRelease() {
@@ -102,12 +68,12 @@ public class DeleteNotificationFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("release", release).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("release", release).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(auditLog).append(release).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(release).toHashCode();
     }
 
     @Override
@@ -119,7 +85,7 @@ public class DeleteNotificationFilter {
             return false;
         }
         DeleteNotificationFilter rhs = ((DeleteNotificationFilter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(release, rhs.release).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(release, rhs.release).isEquals();
     }
 
 }

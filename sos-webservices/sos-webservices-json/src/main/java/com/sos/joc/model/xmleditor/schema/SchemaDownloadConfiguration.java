@@ -18,22 +18,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "objectType",
     "show",
     "schemaIdentifier"
 })
 public class SchemaDownloadConfiguration {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * xmleditor object type
      * <p>
@@ -53,30 +43,6 @@ public class SchemaDownloadConfiguration {
      */
     @JsonProperty("schemaIdentifier")
     private String schemaIdentifier;
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     /**
      * xmleditor object type
@@ -136,12 +102,12 @@ public class SchemaDownloadConfiguration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("show", show).append("schemaIdentifier", schemaIdentifier).toString();
+        return new ToStringBuilder(this).append("objectType", objectType).append("show", show).append("schemaIdentifier", schemaIdentifier).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(show).append(schemaIdentifier).append(controllerId).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(show).append(schemaIdentifier).append(objectType).toHashCode();
     }
 
     @Override
@@ -153,7 +119,7 @@ public class SchemaDownloadConfiguration {
             return false;
         }
         SchemaDownloadConfiguration rhs = ((SchemaDownloadConfiguration) other);
-        return new EqualsBuilder().append(show, rhs.show).append(schemaIdentifier, rhs.schemaIdentifier).append(controllerId, rhs.controllerId).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(show, rhs.show).append(schemaIdentifier, rhs.schemaIdentifier).append(objectType, rhs.objectType).isEquals();
     }
 
 }

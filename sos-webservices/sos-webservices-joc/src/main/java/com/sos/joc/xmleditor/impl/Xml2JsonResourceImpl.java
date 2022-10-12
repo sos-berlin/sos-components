@@ -25,7 +25,7 @@ public class Xml2JsonResourceImpl extends ACommonResourceImpl implements IXml2Js
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.VIEW);
+            JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.VIEW);
             if (response != null) {
                 return response;
             }
@@ -54,9 +54,8 @@ public class Xml2JsonResourceImpl extends ACommonResourceImpl implements IXml2Js
     }
 
     private void checkRequiredParameters(final Xml2JsonConfiguration in) throws Exception {
-        checkRequiredParameter("controllerId", in.getControllerId());
-        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-        checkRequiredParameter("configuration", in.getConfiguration());
+        //JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+        //checkRequiredParameter("configuration", in.getConfiguration());
         if (!in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
         }

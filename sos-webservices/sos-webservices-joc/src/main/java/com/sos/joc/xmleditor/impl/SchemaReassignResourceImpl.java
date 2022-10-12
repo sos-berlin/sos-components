@@ -30,7 +30,7 @@ public class SchemaReassignResourceImpl extends ACommonResourceImpl implements I
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.MANAGE);
+            JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
                 response = JOCDefaultResponse.responseStatus200(getSuccess(in));
             }
@@ -44,9 +44,8 @@ public class SchemaReassignResourceImpl extends ACommonResourceImpl implements I
     }
 
     private void checkRequiredParameters(final SchemaReassignConfiguration in) throws Exception {
-        checkRequiredParameter("controllerId", in.getControllerId());
-        checkRequiredParameter("configuration", in.getConfiguration());
-        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+//        checkRequiredParameter("configuration", in.getConfiguration());
+//        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getUri() == null) {
             if (in.getFileName() == null || in.getFileContent() == null) {
                 throw new JocMissingRequiredParameterException("uri param is null. missing fileName or fileContent parameters.");

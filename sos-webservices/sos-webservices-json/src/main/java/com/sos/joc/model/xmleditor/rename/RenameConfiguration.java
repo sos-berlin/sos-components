@@ -4,6 +4,7 @@ package com.sos.joc.model.xmleditor.rename;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,23 +19,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "objectType",
     "id",
     "name",
-    "schemaIdentifier"
+    "schemaIdentifier",
+    "auditLog"
 })
 public class RenameConfiguration {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * xmleditor object type
      * <p>
@@ -44,12 +36,20 @@ public class RenameConfiguration {
      */
     @JsonProperty("objectType")
     private ObjectType objectType;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
     /**
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("name")
@@ -58,34 +58,19 @@ public class RenameConfiguration {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("schemaIdentifier")
     private String schemaIdentifier;
-
     /**
-     * controllerId
+     * auditParams
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     /**
      * xmleditor object type
@@ -111,13 +96,27 @@ public class RenameConfiguration {
         this.objectType = objectType;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("id")
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("id")
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -125,6 +124,7 @@ public class RenameConfiguration {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("name")
@@ -136,6 +136,7 @@ public class RenameConfiguration {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("name")
@@ -147,6 +148,7 @@ public class RenameConfiguration {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("schemaIdentifier")
@@ -158,6 +160,7 @@ public class RenameConfiguration {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("schemaIdentifier")
@@ -165,14 +168,36 @@ public class RenameConfiguration {
         this.schemaIdentifier = schemaIdentifier;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("id", id).append("name", name).append("schemaIdentifier", schemaIdentifier).toString();
+        return new ToStringBuilder(this).append("objectType", objectType).append("id", id).append("name", name).append("schemaIdentifier", schemaIdentifier).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(id).append(schemaIdentifier).append(controllerId).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(name).append(id).append(schemaIdentifier).append(auditLog).append(objectType).toHashCode();
     }
 
     @Override
@@ -184,7 +209,7 @@ public class RenameConfiguration {
             return false;
         }
         RenameConfiguration rhs = ((RenameConfiguration) other);
-        return new EqualsBuilder().append(name, rhs.name).append(id, rhs.id).append(schemaIdentifier, rhs.schemaIdentifier).append(controllerId, rhs.controllerId).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).append(id, rhs.id).append(schemaIdentifier, rhs.schemaIdentifier).append(auditLog, rhs.auditLog).append(objectType, rhs.objectType).isEquals();
     }
 
 }

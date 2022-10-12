@@ -4,6 +4,7 @@ package com.sos.joc.model.xmleditor.remove;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,22 +19,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "objectType",
     "id",
-    "release"
+    "release",
+    "auditLog"
 })
 public class RemoveConfiguration {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * xmleditor object type
      * <p>
@@ -43,34 +35,24 @@ public class RemoveConfiguration {
      */
     @JsonProperty("objectType")
     private ObjectType objectType;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
     @JsonProperty("release")
     private Boolean release;
-
     /**
-     * controllerId
+     * auditParams
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     /**
      * xmleditor object type
@@ -96,13 +78,25 @@ public class RemoveConfiguration {
         this.objectType = objectType;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("id")
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -116,14 +110,36 @@ public class RemoveConfiguration {
         this.release = release;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("id", id).append("release", release).toString();
+        return new ToStringBuilder(this).append("objectType", objectType).append("id", id).append("release", release).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(id).append(controllerId).append(release).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(id).append(auditLog).append(release).append(objectType).toHashCode();
     }
 
     @Override
@@ -135,7 +151,7 @@ public class RemoveConfiguration {
             return false;
         }
         RemoveConfiguration rhs = ((RemoveConfiguration) other);
-        return new EqualsBuilder().append(id, rhs.id).append(controllerId, rhs.controllerId).append(release, rhs.release).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(id, rhs.id).append(auditLog, rhs.auditLog).append(release, rhs.release).append(objectType, rhs.objectType).isEquals();
     }
 
 }

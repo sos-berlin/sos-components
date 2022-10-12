@@ -6,6 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -20,20 +21,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
-    "objectTypes"
+    "objectTypes",
+    "auditLog"
 })
 public class RemoveAll {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * 
      * (Required)
@@ -41,30 +33,14 @@ public class RemoveAll {
      */
     @JsonProperty("objectTypes")
     private List<ObjectType> objectTypes = new ArrayList<ObjectType>();
-
     /**
-     * controllerId
+     * auditParams
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     /**
      * 
@@ -86,14 +62,36 @@ public class RemoveAll {
         this.objectTypes = objectTypes;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectTypes", objectTypes).toString();
+        return new ToStringBuilder(this).append("objectTypes", objectTypes).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(objectTypes).toHashCode();
+        return new HashCodeBuilder().append(objectTypes).append(auditLog).toHashCode();
     }
 
     @Override
@@ -105,7 +103,7 @@ public class RemoveAll {
             return false;
         }
         RemoveAll rhs = ((RemoveAll) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(objectTypes, rhs.objectTypes).isEquals();
+        return new EqualsBuilder().append(objectTypes, rhs.objectTypes).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

@@ -18,22 +18,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "objectType",
     "configuration",
     "schemaIdentifier"
 })
 public class ValidateConfiguration {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * xmleditor object type
      * <p>
@@ -59,30 +49,6 @@ public class ValidateConfiguration {
      */
     @JsonProperty("schemaIdentifier")
     private String schemaIdentifier;
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     /**
      * xmleditor object type
@@ -154,12 +120,12 @@ public class ValidateConfiguration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("configuration", configuration).append("schemaIdentifier", schemaIdentifier).toString();
+        return new ToStringBuilder(this).append("objectType", objectType).append("configuration", configuration).append("schemaIdentifier", schemaIdentifier).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schemaIdentifier).append(controllerId).append(configuration).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(schemaIdentifier).append(configuration).append(objectType).toHashCode();
     }
 
     @Override
@@ -171,7 +137,7 @@ public class ValidateConfiguration {
             return false;
         }
         ValidateConfiguration rhs = ((ValidateConfiguration) other);
-        return new EqualsBuilder().append(schemaIdentifier, rhs.schemaIdentifier).append(controllerId, rhs.controllerId).append(configuration, rhs.configuration).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(schemaIdentifier, rhs.schemaIdentifier).append(configuration, rhs.configuration).append(objectType, rhs.objectType).isEquals();
     }
 
 }

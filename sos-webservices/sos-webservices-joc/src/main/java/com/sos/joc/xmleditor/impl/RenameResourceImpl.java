@@ -31,18 +31,18 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
 
             if (in.getObjectType() != null && in.getObjectType().equals(ObjectType.NOTIFICATION)) {
                 throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
-                        "[%s][%s]unsupported object type for rename", in.getControllerId(), in.getObjectType().name())));
+                        "[%s]unsupported object type for rename", in.getObjectType().name())));
             }
-            checkRequiredParameters(in);
+            //checkRequiredParameters(in);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.MANAGE);
+            JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 session.beginTransaction();
                 XmlEditorDbLayer dbLayer = new XmlEditorDbLayer(session);
 
                 String name = in.getName().replaceAll("<br>", "");
-                DBItemXmlEditorConfiguration item = getObject(dbLayer, in, name);
+                DBItemXmlEditorConfiguration item = getObject(dbLayer, in);
 
                 if (item == null) {
                     item = create(session, in, name);
@@ -67,10 +67,10 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
         }
     }
 
-    private DBItemXmlEditorConfiguration getObject(XmlEditorDbLayer dbLayer, RenameConfiguration in, String name) throws Exception {
+    private DBItemXmlEditorConfiguration getObject(XmlEditorDbLayer dbLayer, RenameConfiguration in) throws Exception {
         DBItemXmlEditorConfiguration item = null;
         if (in.getId() != null && in.getId() > 0) {
-            item = dbLayer.getObject(in.getId().longValue());
+            item = dbLayer.getObject(in.getId());
         }
         return item;
     }
@@ -101,17 +101,16 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
         return item;
     }
 
-    private void checkRequiredParameters(final RenameConfiguration in) throws Exception {
-        checkRequiredParameter("controllerId", in.getControllerId());
-        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-        checkRequiredParameter("id", in.getId());
-        checkRequiredParameter("name", in.getName());
-        checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
-    }
+//    private void checkRequiredParameters(final RenameConfiguration in) throws Exception {
+//        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+//        checkRequiredParameter("id", in.getId());
+//        checkRequiredParameter("name", in.getName());
+//        checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
+//    }
 
     private RenameConfigurationAnswer getSuccess(Long id, Date modified) {
         RenameConfigurationAnswer answer = new RenameConfigurationAnswer();
-        answer.setId(id.intValue());
+        answer.setId(id);
         answer.setModified(modified);
         return answer;
     }

@@ -17,77 +17,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
-    "name",
     "forceRelease"
 })
 public class ReadNotificationFilter {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("name")
-    private String name;
     @JsonProperty("forceRelease")
-    private Boolean forceRelease;
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("name")
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("name")
-    public void setName(String name) {
-        this.name = name;
-    }
+    private Boolean forceRelease = false;
 
     @JsonProperty("forceRelease")
     public Boolean getForceRelease() {
@@ -101,12 +36,12 @@ public class ReadNotificationFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("name", name).append("forceRelease", forceRelease).toString();
+        return new ToStringBuilder(this).append("forceRelease", forceRelease).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(forceRelease).append(controllerId).toHashCode();
+        return new HashCodeBuilder().append(forceRelease).toHashCode();
     }
 
     @Override
@@ -118,7 +53,7 @@ public class ReadNotificationFilter {
             return false;
         }
         ReadNotificationFilter rhs = ((ReadNotificationFilter) other);
-        return new EqualsBuilder().append(name, rhs.name).append(forceRelease, rhs.forceRelease).append(controllerId, rhs.controllerId).isEquals();
+        return new EqualsBuilder().append(forceRelease, rhs.forceRelease).isEquals();
     }
 
 }
