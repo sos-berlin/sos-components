@@ -27,6 +27,14 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
         this.factory = factory;
     }
 
+    /** <br/>
+     * ReturnType.SCALAR - use if the query returns a single value (string, numeric etc)<br/>
+     * ReturnType.JSON - use if the query returns a json (array, object etc)
+     * 
+     * @param returnType
+     * @param property
+     * @param path
+     * @return */
     public static String getFunction(final ReturnType returnType, final String property, final String path) {
         return new StringBuilder(NAME).append("('").append(returnType.name()).append("',").append(property).append(",'").append(path).append("')")
                 .toString();

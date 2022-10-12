@@ -447,7 +447,7 @@ public class DeployedConfigurationDBLayer {
             hql.append("and dc.controllerId=:controllerId ");
             hql.append("and sw.deployed=1 ");
             hql.append("and ");
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.expectNotices")).append(" is not null");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.expectNotices")).append(" is not null");
 
             Query<String> query = session.createQuery(hql.toString());
             query.setParameter("type", DeployType.WORKFLOW.intValue());
@@ -494,14 +494,14 @@ public class DeployedConfigurationDBLayer {
     public Set<String> getAddOrderWorkflows(String controllerId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select ");
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.addOrders")).append(" as addOrders from ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.addOrders")).append(" as addOrders from ");
             hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
             hql.append("on dc.inventoryConfigurationId=sw.inventoryConfigurationId ");
             hql.append("where dc.type=:type ");
             hql.append("and dc.controllerId=:controllerId ");
             hql.append("and sw.deployed=1 ");
             hql.append("and ");
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.addOrders")).append(" is not null");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.addOrders")).append(" is not null");
 
             Query<String> query = session.createQuery(hql.toString());
             query.setParameter("type", DeployType.WORKFLOW.intValue());
