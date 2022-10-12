@@ -2118,6 +2118,7 @@ public class HistoryModel {
         entry.setLogEvent(logEntry.getEventType());
         entry.setPosition(SOSString.isEmpty(logEntry.getPosition()) ? null : logEntry.getPosition());
         entry.setReturnCode(logEntry.getReturnCode() == null ? null : logEntry.getReturnCode().longValue());// TODO change to Integer
+        entry.setLocks(null);
         if (logEntry.isError()) {
             OrderLogEntryError error = new OrderLogEntryError();
             error.setErrorState(logEntry.getErrorState());
