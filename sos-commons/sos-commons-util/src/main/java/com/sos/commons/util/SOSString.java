@@ -8,6 +8,7 @@ import java.security.MessageDigest;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,6 +19,10 @@ public class SOSString {
 
     public static boolean isEmpty(String string) {
         return string == null || string.isEmpty();
+    }
+
+    public static boolean equals(String a, String b) {
+        return Objects.equals(a, b);
     }
 
     public static String mapToString(Map<String, ?> o, boolean newLine) {

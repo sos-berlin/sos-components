@@ -33,6 +33,7 @@ import com.sos.commons.util.SOSSerializer;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
 import com.sos.history.JobWarning;
+import com.sos.joc.Globals;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
@@ -911,6 +912,7 @@ public class HistoryMonitoringModel implements Serializable {
             if (configuration == null) {
                 configuration = new Configuration(jocConfiguration.getUri());
             }
+            Configuration.setJocReverseProxyUri(Globals.getConfigurationGlobalsJoc().getJocReverseProxyUrl().getValue());
             configuration.process(configXml);
             if (configuration.exists()) {
                 List<String> names = handleMailResources(dbLayer, configuration);

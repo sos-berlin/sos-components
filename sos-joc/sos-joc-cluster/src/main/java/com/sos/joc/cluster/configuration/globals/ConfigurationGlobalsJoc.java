@@ -71,6 +71,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     private ConfigurationEntry logMaxSize = new ConfigurationEntry("log_maximum_size", "1000", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
+    private ConfigurationEntry jocReverseProxyUrl = new ConfigurationEntry("joc_reverse_proxy_url", null, GlobalSettingsSectionValueType.STRING);
+
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
 
@@ -111,6 +113,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         logMaxDisplaySize.setOrdering(++index);
         logApplicableSize.setOrdering(++index);
         logMaxSize.setOrdering(++index);
+
+        jocReverseProxyUrl.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -234,5 +238,9 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         } else {
             return Long.valueOf(c.getDefault()) * 1024 * 1024;
         }
+    }
+
+    public ConfigurationEntry getJocReverseProxyUrl() {
+        return jocReverseProxyUrl;
     }
 }

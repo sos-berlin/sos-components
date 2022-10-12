@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -20,9 +21,11 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.cluster.common.ClusterServices;
+import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel;
 
 public class MonitorService extends AJocClusterService {
@@ -89,7 +92,22 @@ public class MonitorService extends AJocClusterService {
 
     @Override
     public void update(StartupMode mode, AConfigurationSection configuration) {
+        if (!closed.get()) {
+            if (history != null && configuration != null) {
+                if (configuration instanceof ConfigurationGlobalsJoc) {
+                    AJocClusterService.setLogger(IDENTIFIER);
 
+                    ConfigurationGlobalsJoc joc = (ConfigurationGlobalsJoc) configuration;
+                    String oldValue = Configuration.getJocReverseProxyUri();
+                    String newValue = joc.getJocReverseProxyUrl().getValue();
+                    if (!SOSString.equals(oldValue, newValue)) {
+                        Configuration.setJocReverseProxyUri(newValue);
+                        LOGGER.info(String.format("[%s][%s][%s][old=%s][new=%s]", IDENTIFIER, StartupMode.settings_changed.name(), joc
+                                .getJocReverseProxyUrl().getName(), oldValue, newValue));
+                    }
+                }
+            }
+        }
     }
 
     private void close(StartupMode mode) {

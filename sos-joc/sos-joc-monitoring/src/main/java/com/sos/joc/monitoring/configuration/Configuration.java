@@ -32,6 +32,7 @@ public class Configuration {
     private static final String LOG_FIND_END = LOG_INTENT + "[find][end]";
 
     private static String JOC_URI;
+    private static String JOC_REVERSE_PROXY_URI;
 
     private List<Notification> onError;
     private List<Notification> onWarning;
@@ -49,6 +50,14 @@ public class Configuration {
             JOC_URI = getJocBaseUri();
         }
         return JOC_URI;
+    }
+
+    public static void setJocReverseProxyUri(String val) {
+        JOC_REVERSE_PROXY_URI = val;
+    }
+
+    public static String getJocReverseProxyUri() {
+        return JOC_REVERSE_PROXY_URI;
     }
 
     private static String getJocBaseUri() {

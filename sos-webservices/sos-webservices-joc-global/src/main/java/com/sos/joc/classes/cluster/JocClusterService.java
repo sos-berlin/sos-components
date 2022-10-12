@@ -277,6 +277,7 @@ public class JocClusterService {
                             AConfigurationSection joc = Globals.configurationGlobals.getConfigurationSection(DefaultSections.joc);
                             if (joc != null) {
                                 cluster.getHandler().updateService(ClusterServices.history.name(), StartupMode.settings_changed, joc);
+                                cluster.getHandler().updateService(ClusterServices.monitor.name(), StartupMode.settings_changed, joc);
                             }
                         }
                     }
