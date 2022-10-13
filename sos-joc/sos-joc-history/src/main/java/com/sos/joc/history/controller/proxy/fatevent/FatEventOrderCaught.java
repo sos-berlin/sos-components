@@ -7,23 +7,20 @@ import com.sos.joc.history.controller.proxy.HistoryEventType;
 
 import js7.data.workflow.Instruction;
 import js7.data.workflow.instructions.Retry;
-import js7.data.workflow.instructions.TryInstruction;
 
 // without outcome
 public final class FatEventOrderCaught extends AFatEventOrderBase {
 
     public enum FatEventOrderCaughtCause {
-        Unknown, TryInstruction, Retry
+        TryInstruction, Retry
     }
 
-    private FatEventOrderCaughtCause cause = FatEventOrderCaughtCause.Unknown;
+    private FatEventOrderCaughtCause cause = FatEventOrderCaughtCause.TryInstruction;
 
     public FatEventOrderCaught(Long eventId, Date eventDatetime, String orderId, Position position, Instruction instruction) {
         super(eventId, eventDatetime, orderId, position);
         if (instruction != null) {
-            if (instruction instanceof TryInstruction) {
-                cause = FatEventOrderCaughtCause.TryInstruction;
-            } else if (instruction instanceof Retry) {
+            if (instruction instanceof Retry) {
                 cause = FatEventOrderCaughtCause.Retry;
             }
         }
