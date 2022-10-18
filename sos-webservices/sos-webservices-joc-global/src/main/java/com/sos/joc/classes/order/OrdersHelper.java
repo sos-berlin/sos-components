@@ -145,7 +145,7 @@ public class OrdersHelper {
                     put(Order.Processed$.class, OrderStateText.INPROGRESS);
                     put(Order.Processing.class, OrderStateText.RUNNING);
                     put(Order.Finished$.class, OrderStateText.FINISHED);
-                    put(Order.ProcessingKilled$.class, OrderStateText.CANCELLED);
+                    put(Order.ProcessingKilled$.class, OrderStateText.FAILED);
                     put(Order.Cancelled$.class, OrderStateText.CANCELLED);
                     put(Order.Prompting.class, OrderStateText.PROMPTING);
                 }
@@ -175,7 +175,7 @@ public class OrdersHelper {
             put("Suspended", OrderStateText.SUSPENDED);
             put("Finished", OrderStateText.FINISHED);
             put("Cancelled", OrderStateText.CANCELLED);
-            put("ProcessingKilled", OrderStateText.CANCELLED);
+            put("ProcessingKilled", OrderStateText.FAILED);
             put("Blocked", OrderStateText.BLOCKED);
             put("Prompting", OrderStateText.PROMPTING);
         }
