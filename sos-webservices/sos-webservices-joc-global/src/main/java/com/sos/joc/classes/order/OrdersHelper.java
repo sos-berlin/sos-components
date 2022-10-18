@@ -121,7 +121,7 @@ public class OrdersHelper {
     private static AtomicInteger no = new AtomicInteger(0);
     public static final int mainOrderIdLength = 25;
     public static final String mainOrderIdControllerPattern = "replaceAll(\"$js7EpochMilli\", '^.*([0-9]{9})$', '$1')";
-    public static final Pattern orderIdPattern = Pattern.compile("#(\\d{4}-\\d{2}-\\d{2})#\\D(\\d{9})\\d{2}-.*");
+    public static final Pattern orderIdPattern = Pattern.compile("#(\\d{4}-\\d{2}-\\d{2})#\\D(\\d)(\\d{8})\\d{2}-.*");
     public static final String cyclicOrderIdRegex = "#\\d{4}-\\d{2}-\\d{2}#C[0-9]+-.*";
 
     public static final Map<Class<? extends Order.State>, OrderStateText> groupByStateClasses = Collections.unmodifiableMap(
@@ -1046,7 +1046,12 @@ public class OrdersHelper {
         try {
             Matcher m = orderIdPattern.matcher(orderId);
             if (m.find()) {
-                return ((Instant.parse(m.group(1) + "T00:00:00Z").toEpochMilli() / 1000000000L) * 1000000000L) + Long.valueOf(m.group(2));
+                long first5 = Instant.parse(m.group(1) + "T00:00:00Z").toEpochMilli() / 100000000L;
+                long first4 = first5 / 10L;
+                if (first5 - (first4 * 10) > Long.valueOf(m.group(2))) {
+                    first4++;
+                }
+                return (first4 * 1000000000L) + Long.valueOf(m.group(2) + m.group(3));
             }
         } catch (Exception e) {
         }
