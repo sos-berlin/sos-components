@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.ini4j.InvalidFileFormatException;
-
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
 import com.sos.joc.exceptions.JocException;
@@ -31,7 +29,7 @@ public class SOSPermissionMerger {
         }
     }
 
-    public SecurityConfiguration addIdentityService(SOSIdentityService sosIdentityService) throws InvalidFileFormatException, JocException,
+    public SecurityConfiguration addIdentityService(SOSIdentityService sosIdentityService) throws JocException,
             SOSHibernateException, IOException {
         if (identityServices == null) {
             identityServices = new ArrayList<SOSIdentityService>();
