@@ -493,7 +493,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 }
             }
 
-            ControllerApi.of(controllerId).resumeOrder(jOrders.iterator().next().id(), positionOpt, historyOperations).thenAccept(either -> {
+            ControllerApi.of(controllerId).resumeOrder(jOrders.iterator().next().id(), positionOpt, historyOperations, true).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
                     OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
@@ -502,7 +502,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             });
         } else {
             for (JOrder jOrder : jOrders) {
-                ControllerApi.of(controllerId).resumeOrder(jOrder.id(), positionOpt, historyOperations).thenAccept(either -> {
+                ControllerApi.of(controllerId).resumeOrder(jOrder.id(), positionOpt, historyOperations, true).thenAccept(either -> {
                     ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                     if (either.isRight()) {
                         OrdersHelper.storeAuditLogDetailsFromJOrder(jOrder, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
@@ -667,7 +667,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             });
 
         case RESUME:
-            return ControllerApi.of(controllerId).resumeOrders(oIds);
+            return ControllerApi.of(controllerId).resumeOrders(oIds, true);
 
         case SUSPEND:
             if (modifyOrders.getKill() == Boolean.TRUE) {
