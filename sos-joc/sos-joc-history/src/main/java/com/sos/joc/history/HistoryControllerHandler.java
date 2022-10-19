@@ -60,6 +60,8 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksAcquired;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksQueued;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksReleased;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticePosted;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumed;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumptionStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
@@ -84,6 +86,7 @@ import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
+import js7.data.order.OrderEvent.OrderNoticesConsumed;
 import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
@@ -522,6 +525,20 @@ public class HistoryControllerHandler {
                 ol = order.getOrderLocks((OrderLocksReleased) entry.getEvent());
                 event = new FatEventOrderLocksReleased(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition(), ol);
+                break;
+
+            case OrderNoticesConsumed:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderNoticesConsumed(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), ((OrderNoticesConsumed) entry.getEvent()).failed());
+
+                break;
+
+            case OrderNoticesConsumptionStarted:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderNoticesConsumptionStarted(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order
+                        .getWorkflowInfo().getPosition(), order.getConsumingNotices());
+
                 break;
 
             // if expected notice(s) exists

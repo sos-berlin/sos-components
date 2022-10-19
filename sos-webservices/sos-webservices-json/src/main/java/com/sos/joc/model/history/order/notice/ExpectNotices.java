@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.history.order;
+package com.sos.joc.model.history.order.notice;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +10,13 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+
+/**
+ * ExpectNotices
+ * <p>
+ * 
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "consumed",
@@ -20,7 +27,7 @@ public class ExpectNotices {
     @JsonProperty("consumed")
     private String consumed;
     @JsonProperty("waitingFor")
-    private List<ExpectNotice> waitingFor = new ArrayList<ExpectNotice>();
+    private List<BaseNotice> waitingFor = new ArrayList<BaseNotice>();
 
     @JsonProperty("consumed")
     public String getConsumed() {
@@ -33,12 +40,12 @@ public class ExpectNotices {
     }
 
     @JsonProperty("waitingFor")
-    public List<ExpectNotice> getWaitingFor() {
+    public List<BaseNotice> getWaitingFor() {
         return waitingFor;
     }
 
     @JsonProperty("waitingFor")
-    public void setWaitingFor(List<ExpectNotice> waitingFor) {
+    public void setWaitingFor(List<BaseNotice> waitingFor) {
         this.waitingFor = waitingFor;
     }
 

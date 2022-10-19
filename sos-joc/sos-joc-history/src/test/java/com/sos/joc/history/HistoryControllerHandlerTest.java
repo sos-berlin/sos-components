@@ -51,6 +51,8 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksAcquired;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksQueued;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksReleased;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticePosted;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumed;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumptionStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
@@ -73,6 +75,7 @@ import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
+import js7.data.order.OrderEvent.OrderNoticesConsumed;
 import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
@@ -95,7 +98,7 @@ public class HistoryControllerHandlerTest {
 
     private static final String CONTROLLER_URI_PRIMARY = "http://localhost:5444";
     private static final String CONTROLLER_ID = "js7.x";
-    private static final int MAX_EXECUTION_TIME = 10; // seconds
+    private static final int MAX_EXECUTION_TIME = 20; // seconds
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
     private static final Long START_EVENT_ID = 0L;
 
@@ -453,6 +456,20 @@ public class HistoryControllerHandlerTest {
                 ol = order.getOrderLocks((OrderLocksReleased) entry.getEvent());
                 event = new FatEventOrderLocksReleased(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition(), ol);
+
+                break;
+
+            case OrderNoticesConsumed:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderNoticesConsumed(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), ((OrderNoticesConsumed) entry.getEvent()).failed());
+
+                break;
+
+            case OrderNoticesConsumptionStarted:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderNoticesConsumptionStarted(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order
+                        .getWorkflowInfo().getPosition(), order.getConsumingNotices());
 
                 break;
 

@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.history.order;
+package com.sos.joc.model.history.order.caught;
 
 import java.util.HashMap;
 import java.util.Map;

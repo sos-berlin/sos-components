@@ -43,6 +43,8 @@ public enum EventType {
     OrderLocksAcquired("OrderLocksAcquired"),
     OrderLocksQueued("OrderLocksQueued"),
     OrderLocksReleased("OrderLocksReleased"),
+    OrderNoticesConsumed("OrderNoticesConsumed"),
+    OrderNoticesConsumptionStarted("OrderNoticesConsumptionStarted"),
     OrderNoticesRead("OrderNoticesRead"),
     OrderNoticesExpected("OrderNoticesExpected"),
     OrderNoticePosted("OrderNoticePosted");

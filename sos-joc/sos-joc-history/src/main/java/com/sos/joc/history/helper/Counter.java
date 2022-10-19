@@ -168,6 +168,10 @@ public class Counter {
         @SuppressWarnings("unused")
         private int locksReleased = 0;
         @SuppressWarnings("unused")
+        private int noticesConsumed = 0;
+        @SuppressWarnings("unused")
+        private int noticesConsumptionStarted = 0;
+        @SuppressWarnings("unused")
         private int noticesExpected = 0;
         @SuppressWarnings("unused")
         private int noticesRead = 0;
@@ -236,6 +240,14 @@ public class Counter {
 
         public void addLocksReleased() {
             locksReleased += 1;
+        }
+
+        public void addNoticesConsumed() {
+            noticesConsumed += 1;
+        }
+
+        public void addNoticesConsumptionStarted() {
+            noticesConsumptionStarted += 1;
         }
 
         public void addNoticesExpected() {

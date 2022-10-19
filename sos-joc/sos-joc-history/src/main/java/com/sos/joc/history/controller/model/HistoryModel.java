@@ -82,6 +82,8 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderForked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderJoined;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticePosted;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumed;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumptionStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
@@ -109,13 +111,15 @@ import com.sos.joc.history.helper.Counter;
 import com.sos.joc.history.helper.HistoryUtil;
 import com.sos.joc.history.helper.LogEntry;
 import com.sos.joc.history.helper.LogEntry.LogLevel;
-import com.sos.joc.model.history.order.ExpectNotices;
 import com.sos.joc.model.history.order.Lock;
 import com.sos.joc.model.history.order.LockState;
 import com.sos.joc.model.history.order.OrderLogEntry;
 import com.sos.joc.model.history.order.OrderLogEntryError;
-import com.sos.joc.model.history.order.PostNotice;
-import com.sos.joc.model.history.order.Retrying;
+import com.sos.joc.model.history.order.notice.BaseNotice;
+import com.sos.joc.model.history.order.notice.ConsumeNotices;
+import com.sos.joc.model.history.order.notice.ExpectNotices;
+import com.sos.joc.model.history.order.notice.PostNotice;
+import com.sos.joc.model.history.order.retry.Retrying;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.yade.commons.Yade;
 
@@ -149,17 +153,17 @@ public class HistoryModel {
     private Map<String, CachedAgent> cachedAgents;
     private Map<String, CachedWorkflow> cachedWorkflows;
     private CachedAgentCouplingFailed cachedAgentsCouplingFailed;
-    
+
     private static final Map<EventType, String> messages = Collections.unmodifiableMap(new HashMap<EventType, String>() {
 
         private static final long serialVersionUID = 1L;
-        
+
         {
             put(EventType.OrderLocksQueued, "starting to acquire resource locks {{%s}}");
             put(EventType.OrderLocksAcquired, "acquired resource locks {{%s}}");
             put(EventType.OrderLocksReleased, "releasing resource locks {{%s}}");
         }
-        
+
     });
 
     private static enum CacheType {
@@ -413,6 +417,14 @@ public class HistoryModel {
                     case OrderLocksReleased:
                         orderLock(dbLayer, (AFatEventOrderLocks) entry, EventType.OrderLocksReleased);
                         counter.getOrder().addLocksReleased();
+                        break;
+                    case OrderNoticesConsumed:
+                        orderLogNotice(dbLayer, (FatEventOrderNoticesConsumed) entry, EventType.OrderNoticesConsumed);
+                        counter.getOrder().addNoticesConsumed();
+                        break;
+                    case OrderNoticesConsumptionStarted:
+                        orderLogNotice(dbLayer, (FatEventOrderNoticesConsumptionStarted) entry, EventType.OrderNoticesConsumptionStarted);
+                        counter.getOrder().addNoticesConsumptionStarted();
                         break;
                     // if expected notice(s) exists
                     case OrderNoticesRead:
@@ -2154,7 +2166,27 @@ public class HistoryModel {
             }).collect(Collectors.toList()));
         } else if (logEntry.getOrderNotice() != null) {
             ExpectNotices en;
+            List<FatExpectNotice> fenl;
+            ConsumeNotices cn;
             switch (logEntry.getEventType()) {
+            case OrderNoticesConsumed:
+                cn = new ConsumeNotices();
+                cn.setConsuming(null);
+                cn.setConsumed(!((FatEventOrderNoticesConsumed) logEntry.getOrderNotice()).isFailed());
+                entry.setConsumeNotices(cn);
+                break;
+            case OrderNoticesConsumptionStarted:
+                cn = new ConsumeNotices();
+                fenl = ((FatEventOrderNoticesConsumptionStarted) logEntry.getOrderNotice()).getNotices();
+                cn.setConsumed(null);
+                cn.setConsuming(fenl.stream().map(e -> {
+                    BaseNotice nen = new BaseNotice();
+                    nen.setBoardName(e.getBoardPath());
+                    nen.setId(e.getNoticeId());
+                    return nen;
+                }).collect(Collectors.toList()));
+                entry.setConsumeNotices(cn);
+                break;
             case OrderNoticesRead:
                 en = new ExpectNotices();
                 FatExpectNotices fen = ((FatEventOrderNoticesRead) logEntry.getOrderNotice()).getNotices();
@@ -2164,10 +2196,10 @@ public class HistoryModel {
                 break;
             case OrderNoticesExpected:
                 en = new ExpectNotices();
-                List<FatExpectNotice> fenl = ((FatEventOrderNoticesExpected) logEntry.getOrderNotice()).getNotices();
+                fenl = ((FatEventOrderNoticesExpected) logEntry.getOrderNotice()).getNotices();
                 en.setConsumed(null);
                 en.setWaitingFor(fenl.stream().map(e -> {
-                    com.sos.joc.model.history.order.ExpectNotice nen = new com.sos.joc.model.history.order.ExpectNotice();
+                    BaseNotice nen = new BaseNotice();
                     nen.setBoardName(e.getBoardPath());
                     nen.setId(e.getNoticeId());
                     return nen;

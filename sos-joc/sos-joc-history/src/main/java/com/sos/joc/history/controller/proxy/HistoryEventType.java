@@ -29,6 +29,8 @@ import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderEvent.OrderSuspended$;
 import js7.data.order.OrderEvent.OrderSuspensionMarked;
+import js7.data.order.OrderEvent.OrderNoticesConsumed;
+import js7.data.order.OrderEvent.OrderNoticesConsumptionStarted;
 import js7.data.order.OrderEvent.OrderNoticesExpected;
 import js7.data.order.OrderEvent.OrderNoticePosted;
 import js7.data.order.OrderEvent.OrderNoticesRead$;
@@ -77,12 +79,18 @@ public enum HistoryEventType {
     OrderLocksQueued(OrderLocksQueued.class.getSimpleName()),
 
     OrderLocksReleased(OrderLocksReleased.class.getSimpleName()),
+
+    OrderNoticesConsumed(OrderNoticesConsumed.class.getSimpleName()),
+
+    OrderNoticesConsumptionStarted(OrderNoticesConsumptionStarted.class.getSimpleName()),
+
     // expected notices - if exists
     OrderNoticesRead(OrderNoticesRead$.class.getSimpleName()),
     // expected notices - if waiting for
     OrderNoticesExpected(OrderNoticesExpected.class.getSimpleName()),
 
     OrderNoticePosted(OrderNoticePosted.class.getSimpleName()),
+
     // catch
     OrderCaught(OrderCaught.class.getSimpleName()),
 
