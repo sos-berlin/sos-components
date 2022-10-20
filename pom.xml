@@ -72,10 +72,8 @@
     <javax.mail.version>1.4.7</javax.mail.version>
     <jersey.glassfish.version>3.0.8</jersey.glassfish.version>
     <io.vavr.version>0.10.3</io.vavr.version>
-    <commons.beanutils.version>1.9.4</commons.beanutils.version>
     <txtmark.version>0.13</txtmark.version>
     <jakarta.ws.rs-api.version>3.0.0</jakarta.ws.rs-api.version>
-    <!-- commons.beanutils.version>1.9.4</commons.beanutils.version -->
     <byte.buddy.version>1.8.12</byte.buddy.version>
     <bouncycastle.version>1.70</bouncycastle.version>
     <dom4j.version>2.1.3</dom4j.version>
@@ -687,11 +685,6 @@
         <groupId>org.glassfish.jersey.media</groupId>
         <artifactId>jersey-media-multipart</artifactId>
         <version>${jersey.glassfish.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>commons-beanutils</groupId>
-        <artifactId>commons-beanutils</artifactId>
-        <version>${commons.beanutils.version}</version>
       </dependency>
       <dependency>
         <groupId>com.github.rjeschke</groupId>
