@@ -72,7 +72,7 @@
     <javax.mail.version>1.4.7</javax.mail.version>
     <jersey.glassfish.version>3.0.8</jersey.glassfish.version>
     <io.vavr.version>0.10.3</io.vavr.version>
-    <commons.beanutils.version>1.8.3</commons.beanutils.version>
+    <commons.beanutils.version>1.9.4</commons.beanutils.version>
     <txtmark.version>0.13</txtmark.version>
     <jakarta.ws.rs-api.version>3.0.0</jakarta.ws.rs-api.version>
     <!-- commons.beanutils.version>1.9.4</commons.beanutils.version -->
