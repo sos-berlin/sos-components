@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import jakarta.ws.rs.Path;
 
@@ -34,7 +35,6 @@ import com.sos.joc.workflow.resource.IWorkflowBoardsResource;
 import com.sos.joc.workflows.impl.WorkflowsResourceImpl;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.collection.Stream;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.position.JPosition;
 
@@ -116,8 +116,8 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                 f.setControllerId(controllerId);
                 f.setCompact(true);
                 final Set<Folder> folders = folderPermissions.getListOfFolders();
-                Set<String> expectedAndConsumeNoticeBoards = Stream.concat(workflow.getExpectedNoticeBoards().getAdditionalProperties().keySet(),
-                        workflow.getConsumeNoticeBoards().getAdditionalProperties().keySet()).collect(Collectors.toSet());
+                Set<String> expectedAndConsumeNoticeBoards = Stream.concat(workflow.getExpectedNoticeBoards().getAdditionalProperties().keySet().stream(),
+                        workflow.getConsumeNoticeBoards().getAdditionalProperties().keySet().stream()).collect(Collectors.toSet());
                 Set<String> postNoticeBoards = workflow.getConsumeNoticeBoards().getAdditionalProperties().keySet().stream().collect(Collectors.toSet());
                 workflow.getPostNoticeBoards().getAdditionalProperties().clear();
                 workflow.getExpectedNoticeBoards().getAdditionalProperties().clear();
