@@ -523,7 +523,6 @@ public class WorkflowsHelper {
                     String cnsNamesExpr = cns.getNoticeBoardNames();
                     List<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToList(cnsNamesExpr);
                     cnsNames.forEach(nb -> consumeNoticeBoards.add(nb));
-                    // TODO what is the position name of a consumeNotices instruction
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "consumeNotices"), cns.getSubworkflow().getInstructions(), forkListVariables,
                             expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     break;
