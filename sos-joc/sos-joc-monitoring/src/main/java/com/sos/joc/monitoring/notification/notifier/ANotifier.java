@@ -2,9 +2,18 @@ package com.sos.joc.monitoring.notification.notifier;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
@@ -24,6 +33,11 @@ import com.sos.monitoring.notification.NotificationStatus;
 import com.sos.monitoring.notification.NotificationType;
 
 public abstract class ANotifier {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ANotifier.class);
+
+    protected static ObjectMapper JSON_OM = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
+            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
     protected static final String PREFIX_ENV_VAR = "JS7";
     protected static final String PREFIX_COMMON_VAR = "MON";
@@ -259,6 +273,7 @@ public abstract class ANotifier {
             } catch (Throwable e) {
                 putTableField(tablePrefix + "_STATE", state);
             }
+            putTableFieldVariables(tablePrefix, "START");
             break;
         case PREFIX_TABLE_ORDER_STEPS:
             String criticality = tableFields.get(tablePrefix + "_JOB_CRITICALITY");
@@ -267,6 +282,8 @@ public abstract class ANotifier {
             } catch (Throwable e) {
                 putTableField(tablePrefix + "_JOB_CRITICALITY", criticality);
             }
+            putTableFieldVariables(tablePrefix, "START");
+            putTableFieldVariables(tablePrefix, "END");
             break;
         case PREFIX_TABLE_NOTIFICATIONS:
             String type = tableFields.get(tablePrefix + "_TYPE");
@@ -332,6 +349,33 @@ public abstract class ANotifier {
 
     private void putTableField(String fieldName, String value) {
         tableFields.put(fieldName, value == null ? "" : value);
+    }
+
+    private void putTableFieldVariables(String tablePrefix, String variablesRange) {
+        String vars = tableFields.get(tablePrefix + "_" + variablesRange + "_VARIABLES");
+        if (!SOSString.isEmpty(vars)) {
+            try {
+                JsonNode root = ANotifier.JSON_OM.readTree(vars);
+                if (root != null) {
+                    String varNamePrefix = tablePrefix + "_" + variablesRange + "_VARIABLE_";
+                    Iterator<Entry<String, JsonNode>> nodes = root.fields();
+                    while (nodes.hasNext()) {
+                        Map.Entry<String, JsonNode> entry = (Map.Entry<String, JsonNode>) nodes.next();
+                        tableFields.put(varNamePrefix + entry.getKey().toUpperCase(), getValue(entry));
+                    }
+                }
+            } catch (Throwable e) {
+                LOGGER.warn(String.format("[%s_%s_VARIABLES=%s]%s", tablePrefix, variablesRange, vars, e.toString()), e);
+            }
+        }
+    }
+
+    private String getValue(Entry<String, JsonNode> entry) {
+        try {
+            return entry.getValue().asText();
+        } catch (Throwable e) {
+            return "";
+        }
     }
 
     protected JocHref getJocHref() {
