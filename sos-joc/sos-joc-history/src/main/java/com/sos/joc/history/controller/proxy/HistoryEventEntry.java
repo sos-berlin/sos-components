@@ -349,7 +349,7 @@ public class HistoryEventEntry {
 
         public List<FatExpectNotice> getConsumingNotices() throws Exception {
             OrderNoticesConsumptionStarted ev = (OrderNoticesConsumptionStarted) event;
-            List<JExpectedNotice> l = JavaConverters.asJava(ev.consuming()).stream().map(e -> new JExpectedNotice(e)).collect(Collectors.toList());
+            List<JExpectedNotice> l = JavaConverters.asJava(ev.consumptions()).stream().map(e -> new JExpectedNotice(e)).collect(Collectors.toList());
             List<FatExpectNotice> r = new ArrayList<>();
             if (l != null && l.size() > 0) {
                 for (JExpectedNotice en : l) {
