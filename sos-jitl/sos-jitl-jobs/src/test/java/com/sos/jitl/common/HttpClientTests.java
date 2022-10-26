@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.List;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -141,11 +142,34 @@ public class HttpClientTests {
     public void readPrivateConf() throws SOSMissingDataException {
         Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
         System.setProperty("js7.config-directory", privateConfPath.toString());
+        System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
         ApiExecutor ex = new ApiExecutor(null, null, null);
-        Config config = ex.readConfig();
+        ex.readConfig();
+        Config config = ex.getConfig();
+        List<String> urls = config.getConfig("js7.api-server").getStringList("url");
+        for (String uri : urls) {
+                URI jocUri;
+                try {
+                    jocUri = URI.create(uri);
+                    System.out.println(jocUri);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+        }
         assertNotNull(config);
     }
-
+    
+    @Ignore
+    @Test
+    public void testApiExecutorLogin() throws SOSMissingDataException {
+        Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
+        System.setProperty("js7.config-directory", privateConfPath.toString());
+        System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
+        ApiExecutor ex = new ApiExecutor(null, null, null);
+        ex.login();
+        
+    }
+    
     @Ignore
     @Test
     public void readAgentConfigFolder() {
