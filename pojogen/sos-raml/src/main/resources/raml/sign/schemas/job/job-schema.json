@@ -23,6 +23,13 @@
   		"maxLength": 255,
   		"minLength": 1
 	},
+	"subagentSelectionIdExpr": {
+		"alias": "subagentClusterIdExpr",
+		"type": "string",
+  		"pattern": "^[^<>]*$",
+  		"maxLength": 255,
+  		"minLength": 1
+	},
 	"executable": {
 	  "javaType": "com.sos.sign.model.job.Executable",
 	  "oneOf": [

@@ -33,6 +33,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -72,6 +74,7 @@ import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -106,10 +109,18 @@ import com.sos.joc.publish.mapper.UpdateableFileOrderSourceAgentName;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.sign.model.board.Board;
 import com.sos.sign.model.fileordersource.FileOrderSource;
+import com.sos.sign.model.instruction.ConsumeNotices;
+import com.sos.sign.model.instruction.Cycle;
+import com.sos.sign.model.instruction.ForkJoin;
+import com.sos.sign.model.instruction.ForkList;
+import com.sos.sign.model.instruction.IfElse;
+import com.sos.sign.model.instruction.Instruction;
+import com.sos.sign.model.instruction.TryCatch;
 import com.sos.sign.model.job.Job;
 import com.sos.sign.model.jobclass.JobClass;
 import com.sos.sign.model.jobresource.JobResource;
 import com.sos.sign.model.lock.Lock;
+import com.sos.sign.model.workflow.Branch;
 import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
@@ -133,6 +144,7 @@ import reactor.core.publisher.Flux;
 public abstract class PublishUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PublishUtils.class);
+    private static final Predicate<String> hasAgentPathAttribute = Pattern.compile("\"agentPath\"\\s*:\\s*\"[^\"]+\"").asPredicate();
 
     public static String getExtensionFromFilename(String filename) {
         String extension = filename;
@@ -895,29 +907,102 @@ public abstract class PublishUtils {
         return getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item.getPath(), item.readUpdateableContent(), item.getType(), controllerId);
     }
     
-    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId, String path, IDeployObject deployObject, Integer type,
+    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(
+            Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId, String path, IDeployObject deployObject, Integer type,
             String controllerId) {
         Set<UpdateableWorkflowJobAgentName> update = new HashSet<UpdateableWorkflowJobAgentName>();
         if (ConfigurationType.WORKFLOW.intValue() == type) {
-            Workflow workflow = (Workflow) deployObject;
-            if (workflow.getJobs() != null) {
-                workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
-                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                    String agentNameOrAlias = job.getAgentPath();
-                    Optional<Map<String, Set<String>>> opt = agentsWithAliasesByControllerId.entrySet().stream()
-                        .filter(item -> controllerId.equals(item.getKey()))
-                        .map(item -> item.getValue()).findFirst();
-                    if (opt.isPresent()) {
-                        Optional<String> agentId = opt.get().entrySet().stream().filter(item -> item.getValue().contains(agentNameOrAlias))
-                                .filter(Objects::nonNull).map(item -> item.getKey()).findFirst();
+            Map<String, Set<String>> agentIdAliasesMap = agentsWithAliasesByControllerId.get(controllerId);
+            if (agentIdAliasesMap != null) {
+                Workflow workflow = (Workflow) deployObject;
+                if (workflow.getJobs() != null) {
+                    workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
+                        Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                        String agentNameOrAlias = job.getAgentPath();
+
+                        Optional<String> agentId = agentIdAliasesMap.entrySet().stream().filter(item -> item.getValue().contains(agentNameOrAlias)).filter(
+                                Objects::nonNull).map(item -> item.getKey()).findFirst();
                         if (agentId.isPresent()) {
                             update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentPath(), agentId.get(), controllerId));
                         }
+                    });
+                }
+                try {
+                    String instructionJson = Globals.objectMapper.writeValueAsString(workflow.getInstructions());
+                    if (hasAgentPathAttribute.test(instructionJson)) {
+                        getForkListAgentNames(workflow.getInstructions(), path, controllerId, agentIdAliasesMap, update);
                     }
-                });
+                } catch (JsonProcessingException e) {
+                    throw new JocBadRequestException(e);
+                }
             }
         }
         return update;
+    }
+    
+    private static void getForkListAgentNames(List<Instruction> insts, String path, String controllerId, Map<String, Set<String>> agentIdAliasesMap,
+            Set<UpdateableWorkflowJobAgentName> jobAgentNames) {
+        if (insts != null) {
+            for (int i = 0; i < insts.size(); i++) {
+                Instruction inst = insts.get(i);
+                switch (inst.getTYPE()) {
+                case FORK:
+                    ForkJoin f = inst.cast();
+                    for (Branch b : f.getBranches()) {
+                        if (b.getWorkflow() != null) {
+                            getForkListAgentNames(b.getWorkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                        }
+                    }
+                    break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    if (fl.getAgentPath() != null) {
+                        agentIdAliasesMap.entrySet().stream().filter(item -> item.getValue().contains(fl.getAgentPath())).filter(Objects::nonNull)
+                                .map(item -> item.getKey()).findFirst().map(agentId -> new UpdateableWorkflowJobAgentName(path, null, fl
+                                        .getAgentPath(), agentId, controllerId)).ifPresent(u -> jobAgentNames.add(u));
+                    }
+                    if (fl.getWorkflow() != null) {
+                        getForkListAgentNames(fl.getWorkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                    }
+                    break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cns = inst.cast();
+                    if (cns.getSubworkflow() != null) {
+                        getForkListAgentNames(cns.getSubworkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                    }
+                    break;
+                case IF:
+                    IfElse ie = inst.cast();
+                    if (ie.getThen() != null) {
+                        getForkListAgentNames(ie.getThen().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                    }
+                    if (ie.getElse() != null) {
+                        getForkListAgentNames(ie.getElse().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                    }
+                    break;
+                case TRY:
+                    TryCatch tc = inst.cast();
+                    if (tc.getCatch() != null) {
+                        getForkListAgentNames(tc.getCatch().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                    }
+                    break;
+                case LOCK:
+                    com.sos.sign.model.instruction.Lock l = inst.cast();
+                    if (l.getLockedWorkflow() != null) {
+                        getForkListAgentNames(l.getLockedWorkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                    }
+                    break;
+                case CYCLE:
+                    Cycle c = inst.cast();
+                    if (c.getCycleWorkflow() != null) {
+                        getForkListAgentNames(c.getCycleWorkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
     }
 
     public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemDeploymentHistory item, String controllerId,
@@ -1456,28 +1541,98 @@ public abstract class PublishUtils {
 
     public static void replaceAgentNameWithAgentId(Workflow workflow, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId)
             throws JsonParseException, JsonMappingException, IOException {
-        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream()
+        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> controllerId.equals(item.getControllerId()))
                 .filter(item -> JocInventory.pathToName(item.getWorkflowPath()).equals(JocInventory.pathToName(workflow.getPath()))).collect(Collectors.toSet());
         if (!filteredUpdateables.isEmpty()) {
             if (workflow.getJobs() != null) {
                 workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
                     Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
                     job.setAgentPath(checkAgentIdPresent(filteredUpdateables.stream()
-                            .filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item.getControllerId()))
+                            .filter(item -> jobname.equals(item.getJobName()))
                             .map(UpdateableWorkflowJobAgentName::getAgentId).findAny(), controllerId));
                 });
+            }
+        }
+        
+        // agentName -> agentId mapping for instructions has no jobname
+        Map<String, String> agentNameToIdMap = filteredUpdateables.stream().filter(item -> item.getJobName() == null).collect(Collectors.toMap(
+                UpdateableWorkflowJobAgentName::getAgentName, UpdateableWorkflowJobAgentName::getAgentId, (k, v) -> v));
+        replaceAgentNameWithAgentIdInInstructions(workflow.getInstructions(), controllerId, agentNameToIdMap);
+    }
+    
+    private static void replaceAgentNameWithAgentIdInInstructions(List<Instruction> insts, String controllerId, Map<String, String> agentNameToIdMap) {
+        if (insts != null && !agentNameToIdMap.isEmpty()) {
+            for (int i = 0; i < insts.size(); i++) {
+                Instruction inst = insts.get(i);
+                switch (inst.getTYPE()) {
+                case FORK:
+                    ForkJoin f = inst.cast();
+                    for (Branch b : f.getBranches()) {
+                        if (b.getWorkflow() != null) {
+                            replaceAgentNameWithAgentIdInInstructions(b.getWorkflow().getInstructions(), controllerId, agentNameToIdMap);
+                        }
+                    }
+                    break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    if (fl.getAgentPath() != null) {
+                        String agentId = agentNameToIdMap.get(fl.getAgentPath());
+                        if (agentId == null) {
+                            throw new JocObjectNotExistException("the agent name in ForkList instruction is not known for the controller " + controllerId); 
+                        } else {
+                            fl.setAgentPath(agentId);
+                        }
+                    }
+                    if (fl.getWorkflow() != null) {
+                        replaceAgentNameWithAgentIdInInstructions(fl.getWorkflow().getInstructions(), controllerId, agentNameToIdMap);
+                    }
+                    break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cns = inst.cast();
+                    if (cns.getSubworkflow() != null) {
+                        replaceAgentNameWithAgentIdInInstructions(cns.getSubworkflow().getInstructions(), controllerId, agentNameToIdMap);
+                    }
+                    break;
+                case IF:
+                    IfElse ie = inst.cast();
+                    if (ie.getThen() != null) {
+                        replaceAgentNameWithAgentIdInInstructions(ie.getThen().getInstructions(), controllerId, agentNameToIdMap);
+                    }
+                    if (ie.getElse() != null) {
+                        replaceAgentNameWithAgentIdInInstructions(ie.getElse().getInstructions(), controllerId, agentNameToIdMap);
+                    }
+                    break;
+                case TRY:
+                    TryCatch tc = inst.cast();
+                    if (tc.getCatch() != null) {
+                        replaceAgentNameWithAgentIdInInstructions(tc.getCatch().getInstructions(), controllerId, agentNameToIdMap);
+                    }
+                    break;
+                case LOCK:
+                    com.sos.sign.model.instruction.Lock l = inst.cast();
+                    if (l.getLockedWorkflow() != null) {
+                        replaceAgentNameWithAgentIdInInstructions(l.getLockedWorkflow().getInstructions(), controllerId, agentNameToIdMap);
+                    }
+                    break;
+                case CYCLE:
+                    Cycle c = inst.cast();
+                    if (c.getCycleWorkflow() != null) {
+                        replaceAgentNameWithAgentIdInInstructions(c.getCycleWorkflow().getInstructions(), controllerId, agentNameToIdMap);
+                    }
+                    break;
+                default:
+                    break;
+                }
             }
         }
     }
 
     public static void replaceAgentNameWithAgentId(FileOrderSource fileOrderSource, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
             String controllerId) throws JsonParseException, JsonMappingException, IOException {
-        Set<UpdateableFileOrderSourceAgentName> filteredUpdateables = updateableFOSAgentNames.stream().filter(item -> JocInventory.pathToName(item.getFileOrderSourceId())
-                .equals(JocInventory.pathToName(fileOrderSource.getPath()))).collect(Collectors.toSet());
-        if (!filteredUpdateables.isEmpty()) {
-            fileOrderSource.setAgentPath(checkAgentIdPresent(filteredUpdateables.stream().filter(item -> controllerId.equals(item.getControllerId()))
-                    .map(UpdateableFileOrderSourceAgentName::getAgentId).findAny(), controllerId));
-        }
+        Optional<String> filteredUpdateables = updateableFOSAgentNames.stream().filter(item -> controllerId.equals(item.getControllerId())).filter(
+                item -> JocInventory.pathToName(item.getFileOrderSourceId()).equals(JocInventory.pathToName(fileOrderSource.getPath()))).map(
+                        UpdateableFileOrderSourceAgentName::getAgentId).findAny();
+        fileOrderSource.setAgentPath(checkAgentIdPresent(filteredUpdateables, controllerId));
     }
     
     private static String checkAgentIdPresent(Optional<String> opt, String controllerId) {

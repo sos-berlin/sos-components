@@ -24,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "agentPath",
     "subagentSelectionId",
+    "subagentSelectionIdExpr",
     "executable",
     "admissionTimeScheme",
     "skipIfNoAdmissionForOrderDay",
@@ -54,6 +55,11 @@ public class Job {
         "subagentClusterId"
     })
     private String subagentSelectionId;
+    @JsonProperty("subagentSelectionIdExpr")
+    @JsonAlias({
+        "subagentClusterIdExpr"
+    })
+    private String subagentSelectionIdExpr;
     /**
      * 
      * (Required)
@@ -145,16 +151,18 @@ public class Job {
      * @param timeout
      * @param admissionTimeScheme
      * @param agentPath
+     * @param subagentSelectionIdExpr
      * @param returnCodeMeaning
      * @param defaultArguments
      * @param jobResourcePaths
      * @param jobClass
      * @param skipIfNoAdmissionForOrderDay
      */
-    public Job(String agentPath, String subagentSelectionId, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourcePaths) {
+    public Job(String agentPath, String subagentSelectionId, String subagentSelectionIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourcePaths) {
         super();
         this.agentPath = agentPath;
         this.subagentSelectionId = subagentSelectionId;
+        this.subagentSelectionIdExpr = subagentSelectionIdExpr;
         this.executable = executable;
         this.admissionTimeScheme = admissionTimeScheme;
         this.skipIfNoAdmissionForOrderDay = skipIfNoAdmissionForOrderDay;
@@ -196,6 +204,16 @@ public class Job {
     @JsonProperty("subagentSelectionId")
     public void setSubagentSelectionId(String subagentSelectionId) {
         this.subagentSelectionId = subagentSelectionId;
+    }
+
+    @JsonProperty("subagentSelectionIdExpr")
+    public String getSubagentSelectionIdExpr() {
+        return subagentSelectionIdExpr;
+    }
+
+    @JsonProperty("subagentSelectionIdExpr")
+    public void setSubagentSelectionIdExpr(String subagentSelectionIdExpr) {
+        this.subagentSelectionIdExpr = subagentSelectionIdExpr;
     }
 
     /**
@@ -388,12 +406,12 @@ public class Job {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentSelectionId", subagentSelectionId).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionForOrderDay", skipIfNoAdmissionForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
+        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentSelectionId", subagentSelectionId).append("subagentSelectionIdExpr", subagentSelectionIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionForOrderDay", skipIfNoAdmissionForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(subagentSelectionId).append(sigkillDelay).append(parallelism).append(failOnErrWritten).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(returnCodeMeaning).append(defaultArguments).append(jobResourcePaths).append(jobClass).append(skipIfNoAdmissionForOrderDay).toHashCode();
+        return new HashCodeBuilder().append(subagentSelectionId).append(sigkillDelay).append(parallelism).append(failOnErrWritten).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(subagentSelectionIdExpr).append(returnCodeMeaning).append(defaultArguments).append(jobResourcePaths).append(jobClass).append(skipIfNoAdmissionForOrderDay).toHashCode();
     }
 
     @Override
@@ -405,7 +423,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(subagentSelectionId, rhs.subagentSelectionId).append(sigkillDelay, rhs.sigkillDelay).append(parallelism, rhs.parallelism).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(jobClass, rhs.jobClass).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).isEquals();
+        return new EqualsBuilder().append(subagentSelectionId, rhs.subagentSelectionId).append(sigkillDelay, rhs.sigkillDelay).append(parallelism, rhs.parallelism).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(subagentSelectionIdExpr, rhs.subagentSelectionIdExpr).append(returnCodeMeaning, rhs.returnCodeMeaning).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(jobClass, rhs.jobClass).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).isEquals();
     }
 
 }

@@ -22,7 +22,14 @@
     "childToId": {
     	"type": "string"
     },
-    "workflow": {
+    "agentPath": {
+		"alias": "agentId,agentName",
+    	"type": "string",
+  		"pattern": "^[^<>]*$",
+  		"maxLength": 255,
+  		"minLength": 1
+	},
+	"workflow": {
     	"$ref": "branchWorkflow-schema.json"
     },
     "joinIfFailed": {

@@ -24,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "agentName",
     "subagentClusterId",
+    "subagentClusterIdExpr",
     "executable",
     "admissionTimeScheme",
     "skipIfNoAdmissionForOrderDay",
@@ -63,6 +64,11 @@ public class Job implements IConfigurationObject
         "subagentSelectionId"
     })
     private String subagentClusterId;
+    @JsonProperty("subagentClusterIdExpr")
+    @JsonAlias({
+        "subagentSelectionIdExpr"
+    })
+    private String subagentClusterIdExpr;
     /**
      * 
      * (Required)
@@ -209,6 +215,7 @@ public class Job implements IConfigurationObject
      * @param jobResourceNames
      * @param criticality
      * @param agentName
+     * @param subagentClusterIdExpr
      * @param failOnErrWritten
      * @param title
      * @param executable
@@ -225,10 +232,11 @@ public class Job implements IConfigurationObject
      * @param documentationName
      * @param warnOnErrWritten
      */
-    public Job(String agentName, String subagentClusterId, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, Boolean warnOnErrWritten, String jobClassName, JobTemplateRef jobTemplate, Environment defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobCriticality criticality, String warnIfShorter, String warnIfLonger, JobNotification notification) {
+    public Job(String agentName, String subagentClusterId, String subagentClusterIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, Boolean warnOnErrWritten, String jobClassName, JobTemplateRef jobTemplate, Environment defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobCriticality criticality, String warnIfShorter, String warnIfLonger, JobNotification notification) {
         super();
         this.agentName = agentName;
         this.subagentClusterId = subagentClusterId;
+        this.subagentClusterIdExpr = subagentClusterIdExpr;
         this.executable = executable;
         this.admissionTimeScheme = admissionTimeScheme;
         this.skipIfNoAdmissionForOrderDay = skipIfNoAdmissionForOrderDay;
@@ -278,6 +286,16 @@ public class Job implements IConfigurationObject
     @JsonProperty("subagentClusterId")
     public void setSubagentClusterId(String subagentClusterId) {
         this.subagentClusterId = subagentClusterId;
+    }
+
+    @JsonProperty("subagentClusterIdExpr")
+    public String getSubagentClusterIdExpr() {
+        return subagentClusterIdExpr;
+    }
+
+    @JsonProperty("subagentClusterIdExpr")
+    public void setSubagentClusterIdExpr(String subagentClusterIdExpr) {
+        this.subagentClusterIdExpr = subagentClusterIdExpr;
     }
 
     /**
@@ -634,12 +652,12 @@ public class Job implements IConfigurationObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentName", agentName).append("subagentClusterId", subagentClusterId).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionForOrderDay", skipIfNoAdmissionForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("warnOnErrWritten", warnOnErrWritten).append("jobClassName", jobClassName).append("jobTemplate", jobTemplate).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("documentationName", documentationName).append("criticality", criticality).append("warnIfShorter", warnIfShorter).append("warnIfLonger", warnIfLonger).append("notification", notification).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("subagentClusterId", subagentClusterId).append("subagentClusterIdExpr", subagentClusterIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionForOrderDay", skipIfNoAdmissionForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("warnOnErrWritten", warnOnErrWritten).append("jobClassName", jobClassName).append("jobTemplate", jobTemplate).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("documentationName", documentationName).append("criticality", criticality).append("warnIfShorter", warnIfShorter).append("warnIfLonger", warnIfLonger).append("notification", notification).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(warnIfLonger).append(jobTemplate).append(parallelism).append(jobResourceNames).append(criticality).append(agentName).append(failOnErrWritten).append(title).append(executable).append(timeout).append(warnIfShorter).append(admissionTimeScheme).append(returnCodeMeaning).append(notification).append(graceTimeout).append(defaultArguments).append(jobClassName).append(skipIfNoAdmissionForOrderDay).append(subagentClusterId).append(documentationName).append(warnOnErrWritten).toHashCode();
+        return new HashCodeBuilder().append(warnIfLonger).append(jobTemplate).append(parallelism).append(jobResourceNames).append(criticality).append(agentName).append(subagentClusterIdExpr).append(failOnErrWritten).append(title).append(executable).append(timeout).append(warnIfShorter).append(admissionTimeScheme).append(returnCodeMeaning).append(notification).append(graceTimeout).append(defaultArguments).append(jobClassName).append(skipIfNoAdmissionForOrderDay).append(subagentClusterId).append(documentationName).append(warnOnErrWritten).toHashCode();
     }
 
     @Override
@@ -651,7 +669,7 @@ public class Job implements IConfigurationObject
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(jobTemplate, rhs.jobTemplate).append(parallelism, rhs.parallelism).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(failOnErrWritten, rhs.failOnErrWritten).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(admissionTimeScheme, rhs.admissionTimeScheme).append(returnCodeMeaning, rhs.returnCodeMeaning).append(notification, rhs.notification).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobClassName, rhs.jobClassName).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).append(subagentClusterId, rhs.subagentClusterId).append(documentationName, rhs.documentationName).append(warnOnErrWritten, rhs.warnOnErrWritten).isEquals();
+        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(jobTemplate, rhs.jobTemplate).append(parallelism, rhs.parallelism).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(subagentClusterIdExpr, rhs.subagentClusterIdExpr).append(failOnErrWritten, rhs.failOnErrWritten).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(admissionTimeScheme, rhs.admissionTimeScheme).append(returnCodeMeaning, rhs.returnCodeMeaning).append(notification, rhs.notification).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobClassName, rhs.jobClassName).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).append(subagentClusterId, rhs.subagentClusterId).append(documentationName, rhs.documentationName).append(warnOnErrWritten, rhs.warnOnErrWritten).isEquals();
     }
 
 }

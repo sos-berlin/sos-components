@@ -29,6 +29,7 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.job.JobReturnCode;
 import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Branch;
@@ -105,7 +106,7 @@ public class JsonConverter {
             if (hasScriptIncludes.test(json)) {
                 includeScripts(workflowName, signWorkflow.getJobs(), releasedScripts);
             }
-            considerReturnCodeWarnings(invWorkflow.getJobs(), signWorkflow.getJobs());
+            considerReturnCodeWarningsAndSubagentClusterId(invWorkflow.getJobs(), signWorkflow.getJobs());
         }
         
         if (LOGGER.isDebugEnabled()) {
@@ -116,9 +117,13 @@ public class JsonConverter {
     }
     
     // not private because of unit test
-    protected static void considerReturnCodeWarnings(Jobs invJobs, com.sos.sign.model.workflow.Jobs signJobs) {
+    protected static void considerReturnCodeWarningsAndSubagentClusterId(Jobs invJobs, com.sos.sign.model.workflow.Jobs signJobs) {
         if (signJobs.getAdditionalProperties() != null && invJobs.getAdditionalProperties() != null) {
             invJobs.getAdditionalProperties().forEach((jobName, invJob) -> {
+                
+                com.sos.sign.model.job.Job signJob = signJobs.getAdditionalProperties().get(jobName);
+                considerSubagentClusterId(invJob, signJob);
+                
                 switch (invJob.getExecutable().getTYPE()) {
                 case InternalExecutable:
                     break;
@@ -127,7 +132,6 @@ public class JsonConverter {
                     com.sos.inventory.model.job.ExecutableScript invEs = invJob.getExecutable().cast();
                     JobReturnCode rc = invEs.getReturnCodeMeaning();
                     if (rc != null && rc.getWarning() != null && !rc.getWarning().isEmpty()) {
-                        com.sos.sign.model.job.Job signJob = signJobs.getAdditionalProperties().get(jobName);
                         if (signJob != null) {
                             ExecutableScript signEs = signJob.getExecutable().cast();
                             if (signEs != null) {
@@ -150,6 +154,15 @@ public class JsonConverter {
                 }
             });
         }
+    }
+    
+    private static void considerSubagentClusterId(Job invJob, com.sos.sign.model.job.Job signJob) {
+        if (signJob != null && signJob.getSubagentSelectionIdExpr() == null || signJob.getSubagentSelectionIdExpr().isEmpty()) {
+            if (invJob.getSubagentClusterId() != null && !invJob.getSubagentClusterId().isEmpty()) {
+                signJob.setSubagentSelectionIdExpr(quoteString(invJob.getSubagentClusterId()));
+            }
+        }
+        signJob.setSubagentSelectionId(null);
     }
     
     private static void includeScripts(String workflowName, com.sos.sign.model.workflow.Jobs signJobs, Map<String, String> releasedScripts) {
@@ -368,9 +381,15 @@ public class JsonConverter {
     }
 
     private static void convertForkList(ForkList fl, com.sos.sign.model.instruction.ForkList sfl) {
-        sfl.setChildren("$" + fl.getChildren());
-        sfl.setChildToArguments("(x) => $x");
-        sfl.setChildToId("(x, i) => ($i + 1) ++ \".\" ++ $x." + fl.getChildToId());
+        if (fl.getAgentName() != null && ! fl.getAgentName().isEmpty()) {
+            sfl.setChildren("subagentIds("+ quoteString(fl.getChildren()) + ")");
+            sfl.setChildToArguments("(x) => { subagentId: $x }"); //TODO key "subagentId" not fix, e.g. fl.getChildren()
+            sfl.setChildToId("(x, i) => ($i + 1) ++ \".\" ++ $x");
+        } else {
+            sfl.setChildren("$" + fl.getChildren());
+            sfl.setChildToArguments("(x) => $x");
+            sfl.setChildToId("(x, i) => ($i + 1) ++ \".\" ++ $x." + fl.getChildToId());
+        }
         //sfl.setChildToId("(x) => $x." + fl.getChildToId());
     }
     

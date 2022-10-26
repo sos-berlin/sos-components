@@ -28,7 +28,7 @@ public class ConverterTest {
                 com.sos.sign.model.workflow.Workflow signWorkflow = Globals.objectMapper.readValue(jsons.get(i),
                         com.sos.sign.model.workflow.Workflow.class);
                 Workflow invWorkflow = Globals.objectMapper.readValue(jsons.get(i), Workflow.class);
-                JsonConverter.considerReturnCodeWarnings(invWorkflow.getJobs(), signWorkflow.getJobs());
+                JsonConverter.considerReturnCodeWarningsAndSubagentClusterId(invWorkflow.getJobs(), signWorkflow.getJobs());
                 // System.out.println(Globals.prettyPrintObjectMapper.writeValueAsString(signWorkflow));
                 ExecutableScript es = signWorkflow.getJobs().getAdditionalProperties().get("job1").getExecutable().cast();
                 assertTrue(es.getReturnCodeMeaning().equals(results.get(i)));

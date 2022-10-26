@@ -1,13 +1,15 @@
 
 package com.sos.inventory.model.instruction;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.workflow.BranchWorkflow;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -20,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "children",
     "childToId",
+    "agentName",
     "workflow",
     "joinIfFailed"
 })
@@ -41,6 +44,12 @@ public class ForkList
      */
     @JsonProperty("childToId")
     private String childToId;
+    @JsonProperty("agentName")
+    @JsonAlias({
+        "agentId",
+        "agentPath"
+    })
+    private String agentName;
     /**
      * workflow in forks
      * <p>
@@ -65,12 +74,14 @@ public class ForkList
      * @param childToId
      * @param workflow
      * @param children
+     * @param agentName
      * @param joinIfFailed
      */
-    public ForkList(String children, String childToId, BranchWorkflow workflow, Boolean joinIfFailed) {
+    public ForkList(String children, String childToId, String agentName, BranchWorkflow workflow, Boolean joinIfFailed) {
         super();
         this.children = children;
         this.childToId = childToId;
+        this.agentName = agentName;
         this.workflow = workflow;
         this.joinIfFailed = joinIfFailed;
     }
@@ -115,6 +126,16 @@ public class ForkList
         this.childToId = childToId;
     }
 
+    @JsonProperty("agentName")
+    public String getAgentName() {
+        return agentName;
+    }
+
+    @JsonProperty("agentName")
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
+    }
+
     /**
      * workflow in forks
      * <p>
@@ -151,12 +172,12 @@ public class ForkList
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("children", children).append("childToId", childToId).append("workflow", workflow).append("joinIfFailed", joinIfFailed).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("children", children).append("childToId", childToId).append("agentName", agentName).append("workflow", workflow).append("joinIfFailed", joinIfFailed).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(childToId).append(workflow).append(children).append(joinIfFailed).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(childToId).append(agentName).append(workflow).append(children).append(joinIfFailed).toHashCode();
     }
 
     @Override
@@ -168,7 +189,7 @@ public class ForkList
             return false;
         }
         ForkList rhs = ((ForkList) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(childToId, rhs.childToId).append(workflow, rhs.workflow).append(children, rhs.children).append(joinIfFailed, rhs.joinIfFailed).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(childToId, rhs.childToId).append(agentName, rhs.agentName).append(workflow, rhs.workflow).append(children, rhs.children).append(joinIfFailed, rhs.joinIfFailed).isEquals();
     }
 
 }

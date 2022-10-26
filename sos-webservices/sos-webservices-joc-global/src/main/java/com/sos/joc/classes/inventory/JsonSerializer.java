@@ -474,6 +474,7 @@ public class JsonSerializer {
                 case FORKLIST:
                     ForkList fl = inst.cast();
                     fl.setJoinIfFailed(defaultToNull(fl.getJoinIfFailed(), Boolean.FALSE));
+                    fl.setAgentName(defaultToNull(fl.getAgentName(), ""));
                     if (fl.getWorkflow() != null) {
                         cleanInventoryInstructions(fl.getWorkflow().getInstructions());
                     }
@@ -559,6 +560,7 @@ public class JsonSerializer {
                     break;
                 case FORKLIST:
                     com.sos.sign.model.instruction.ForkList fl = inst.cast();
+                    fl.setAgentPath(defaultToNull(fl.getAgentPath(), ""));
                     fl.setJoinIfFailed(defaultToNull(fl.getJoinIfFailed(), Boolean.FALSE));
                     if (fl.getWorkflow() != null) {
                         cleanSignedInstructions(fl.getWorkflow().getInstructions());
