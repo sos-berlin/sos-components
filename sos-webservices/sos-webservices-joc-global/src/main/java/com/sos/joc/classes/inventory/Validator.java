@@ -60,6 +60,7 @@ import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.common.HistoryConstants;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -523,9 +524,15 @@ public class Validator {
             int index = 0;
             for (Instruction inst : instructions) {
                 String instPosition = position + "[" + index + "].";
+                boolean licensedForkList = inst.getTYPE().equals(InstructionType.FORKLIST) && !AgentHelper.hasClusterLicense();
                 try {
-                    JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(inst), URI.create(JocInventory.INSTRUCTION_SCHEMA_LOCATION
-                            .get(inst.getTYPE())));
+                    if (licensedForkList) {
+                        JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(inst), URI.create(
+                                JocInventory.FORKLIST_SCHEMA_WITHOUT_LICENSE));
+                    } else {
+                        JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(inst), URI.create(JocInventory.INSTRUCTION_SCHEMA_LOCATION.get(
+                                inst.getTYPE())));
+                    }
                 } catch (SOSJsonSchemaException e) {
                     String msg = e.getMessage().replaceFirst("(\\$\\.)", "$1" + instPosition);
                     throw new SOSJsonSchemaException(msg);
@@ -584,6 +591,10 @@ public class Validator {
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
+                    if (licensedForkList && fl.getAgentName() != null) {
+                        testJavaNameRules("$." + instPosition, "subagentIdVariable", fl.getSubagentIdVariable());
+                        validateExpression(fl.getSubagentClusterIdExpr());
+                    }
                     if (fl.getWorkflow() != null) {
                         validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "forklist.instructions", jobNames, orderPreparation,
                                 labels, boardNames, dbLayer);

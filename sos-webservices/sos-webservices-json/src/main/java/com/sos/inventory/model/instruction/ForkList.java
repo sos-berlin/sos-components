@@ -1,15 +1,14 @@
 
 package com.sos.inventory.model.instruction;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.workflow.BranchWorkflow;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -23,6 +22,9 @@ import com.sos.inventory.model.workflow.BranchWorkflow;
     "children",
     "childToId",
     "agentName",
+    "subagentClusterId",
+    "subagentClusterIdExpr",
+    "subagentIdVariable",
     "workflow",
     "joinIfFailed"
 })
@@ -30,18 +32,8 @@ public class ForkList
     extends Instruction
 {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("children")
     private String children;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("childToId")
     private String childToId;
     @JsonProperty("agentName")
@@ -50,11 +42,22 @@ public class ForkList
         "agentPath"
     })
     private String agentName;
+    @JsonProperty("subagentClusterId")
+    @JsonAlias({
+        "subagentSelectionId"
+    })
+    private String subagentClusterId;
+    @JsonProperty("subagentClusterIdExpr")
+    @JsonAlias({
+        "subagentSelectionIdExpr"
+    })
+    private String subagentClusterIdExpr;
+    @JsonProperty("subagentIdVariable")
+    private String subagentIdVariable = "js7ForkListSubagentId";
     /**
      * workflow in forks
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("workflow")
@@ -74,53 +77,39 @@ public class ForkList
      * @param childToId
      * @param workflow
      * @param children
+     * @param subagentIdVariable
      * @param agentName
+     * @param subagentClusterIdExpr
+     * @param subagentClusterId
      * @param joinIfFailed
      */
-    public ForkList(String children, String childToId, String agentName, BranchWorkflow workflow, Boolean joinIfFailed) {
+    public ForkList(String children, String childToId, String agentName, String subagentClusterId, String subagentClusterIdExpr, String subagentIdVariable, BranchWorkflow workflow, Boolean joinIfFailed) {
         super();
         this.children = children;
         this.childToId = childToId;
         this.agentName = agentName;
+        this.subagentClusterId = subagentClusterId;
+        this.subagentClusterIdExpr = subagentClusterIdExpr;
+        this.subagentIdVariable = subagentIdVariable;
         this.workflow = workflow;
         this.joinIfFailed = joinIfFailed;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("children")
     public String getChildren() {
         return children;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("children")
     public void setChildren(String children) {
         this.children = children;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("childToId")
     public String getChildToId() {
         return childToId;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("childToId")
     public void setChildToId(String childToId) {
         this.childToId = childToId;
@@ -136,11 +125,40 @@ public class ForkList
         this.agentName = agentName;
     }
 
+    @JsonProperty("subagentClusterId")
+    public String getSubagentClusterId() {
+        return subagentClusterId;
+    }
+
+    @JsonProperty("subagentClusterId")
+    public void setSubagentClusterId(String subagentClusterId) {
+        this.subagentClusterId = subagentClusterId;
+    }
+
+    @JsonProperty("subagentClusterIdExpr")
+    public String getSubagentClusterIdExpr() {
+        return subagentClusterIdExpr;
+    }
+
+    @JsonProperty("subagentClusterIdExpr")
+    public void setSubagentClusterIdExpr(String subagentClusterIdExpr) {
+        this.subagentClusterIdExpr = subagentClusterIdExpr;
+    }
+
+    @JsonProperty("subagentIdVariable")
+    public String getSubagentIdVariable() {
+        return subagentIdVariable;
+    }
+
+    @JsonProperty("subagentIdVariable")
+    public void setSubagentIdVariable(String subagentIdVariable) {
+        this.subagentIdVariable = subagentIdVariable;
+    }
+
     /**
      * workflow in forks
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("workflow")
@@ -152,7 +170,6 @@ public class ForkList
      * workflow in forks
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("workflow")
@@ -172,12 +189,12 @@ public class ForkList
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("children", children).append("childToId", childToId).append("agentName", agentName).append("workflow", workflow).append("joinIfFailed", joinIfFailed).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("children", children).append("childToId", childToId).append("agentName", agentName).append("subagentClusterId", subagentClusterId).append("subagentClusterIdExpr", subagentClusterIdExpr).append("subagentIdVariable", subagentIdVariable).append("workflow", workflow).append("joinIfFailed", joinIfFailed).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(childToId).append(agentName).append(workflow).append(children).append(joinIfFailed).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(childToId).append(workflow).append(children).append(subagentIdVariable).append(agentName).append(subagentClusterIdExpr).append(subagentClusterId).append(joinIfFailed).toHashCode();
     }
 
     @Override
@@ -189,7 +206,7 @@ public class ForkList
             return false;
         }
         ForkList rhs = ((ForkList) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(childToId, rhs.childToId).append(agentName, rhs.agentName).append(workflow, rhs.workflow).append(children, rhs.children).append(joinIfFailed, rhs.joinIfFailed).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(childToId, rhs.childToId).append(workflow, rhs.workflow).append(children, rhs.children).append(subagentIdVariable, rhs.subagentIdVariable).append(agentName, rhs.agentName).append(subagentClusterIdExpr, rhs.subagentClusterIdExpr).append(subagentClusterId, rhs.subagentClusterId).append(joinIfFailed, rhs.joinIfFailed).isEquals();
     }
 
 }

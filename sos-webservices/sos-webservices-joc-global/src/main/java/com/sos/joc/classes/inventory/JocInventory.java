@@ -136,6 +136,8 @@ public class JocInventory {
                     put(InstructionType.CYCLE, "classpath:/raml/inventory/schemas/instruction/cycle-schema.json");
                 }
             });
+    
+    public static final String FORKLIST_SCHEMA_WITHOUT_LICENSE = "classpath:/raml/inventory/schemas/instruction/forkListWithoutLicense-schema.json";
 
     public static final Map<ConfigurationType, Class<?>> CLASS_MAPPING = Collections.unmodifiableMap(new HashMap<ConfigurationType, Class<?>>() {
 

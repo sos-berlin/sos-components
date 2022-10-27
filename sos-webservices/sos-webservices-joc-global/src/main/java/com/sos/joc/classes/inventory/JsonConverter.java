@@ -389,9 +389,13 @@ public class JsonConverter {
     }
 
     private static void convertForkList(ForkList fl, com.sos.sign.model.instruction.ForkList sfl) {
-        if (fl.getAgentName() != null && ! fl.getAgentName().isEmpty()) {
-            sfl.setChildren("subagentIds("+ quoteString(fl.getChildren()) + ")");
-            sfl.setChildToArguments("(x) => { subagentId: $x }"); //TODO key "subagentId" not fix, e.g. fl.getChildren()
+        if (fl.getAgentName() != null) {
+            if (fl.getSubagentClusterIdExpr() != null) {
+                sfl.setChildren("subagentIds("+ quoteString(fl.getSubagentClusterIdExpr()) + ")");
+            } else {
+                sfl.setChildren("subagentIds("+ quoteString(fl.getSubagentClusterId()) + ")");
+            }
+            sfl.setChildToArguments("(x) => { " + fl.getSubagentIdVariable() + ": $x }");
             sfl.setChildToId("(x, i) => ($i + 1) ++ \".\" ++ $x");
         } else {
             sfl.setChildren("$" + fl.getChildren());

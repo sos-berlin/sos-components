@@ -265,6 +265,7 @@
 							<excludes>
 								<exclude>**/workflowJobs-schema.json</exclude>
 								<exclude>**/instructions-schema.json</exclude>
+								<exclude>**/forkListWithoutLicense-schema.json</exclude>
 							</excludes>
 						</configuration>
 						<goals>
