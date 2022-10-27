@@ -40,6 +40,7 @@ import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.model.common.IDeployObject;
@@ -389,18 +390,19 @@ public class JsonConverter {
     }
 
     private static void convertForkList(ForkList fl, com.sos.sign.model.instruction.ForkList sfl) {
-        if (fl.getAgentName() != null) {
-            if (fl.getSubagentClusterIdExpr() != null) {
-                sfl.setChildren("subagentIds("+ quoteString(fl.getSubagentClusterIdExpr()) + ")");
-            } else {
-                sfl.setChildren("subagentIds("+ quoteString(fl.getSubagentClusterId()) + ")");
-            }
-            sfl.setChildToArguments("(x) => { " + fl.getSubagentIdVariable() + ": $x }");
-            sfl.setChildToId("(x, i) => ($i + 1) ++ \".\" ++ $x");
-        } else {
+        if (fl.getChildren() != null) {
             sfl.setChildren("$" + fl.getChildren());
             sfl.setChildToArguments("(x) => $x");
             sfl.setChildToId("(x, i) => ($i + 1) ++ \".\" ++ $x." + fl.getChildToId());
+        } else if (fl.getSubagentClusterIdExpr() != null || fl.getSubagentClusterId() != null) {
+            AgentHelper.throwJocMissingLicenseException();
+            if (fl.getSubagentClusterIdExpr() != null) {
+                sfl.setChildren("subagentIds(" + quoteString(fl.getSubagentClusterIdExpr()) + ")");
+            } else {
+                sfl.setChildren("subagentIds(" + quoteString(fl.getSubagentClusterId()) + ")");
+            }
+            sfl.setChildToArguments("(x) => { " + fl.getSubagentIdVariable() + ": $x }");
+            sfl.setChildToId("(x, i) => ($i + 1) ++ \".\" ++ $x");
         }
         //sfl.setChildToId("(x) => $x." + fl.getChildToId());
     }
