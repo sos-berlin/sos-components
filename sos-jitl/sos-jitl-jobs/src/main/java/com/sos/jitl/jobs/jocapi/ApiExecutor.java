@@ -117,6 +117,7 @@ public class ApiExecutor {
         String latestErrorDescription = "";
         String latestAdditionalErrorMessage = "";
         String latestResponse = "";
+        Integer statusCode = 0;
         for (String uri : jocUris) {
             try {
                 logDebug(String.format("processing Url - %1$s", uri));
@@ -126,7 +127,8 @@ public class ApiExecutor {
                 logDebug("send login to: " + loginUri.toString());
                 String response = client.postRestService(loginUri, null);
                 latestResponse = response;
-                logDebug("HTTP status code: " + client.statusCode());
+                statusCode = client.statusCode();
+                logDebug("HTTP status code: " + statusCode);
                 try {
                     handleExitCode(client);
                     if(client.statusCode() == 401) {
@@ -153,9 +155,9 @@ public class ApiExecutor {
                             jsonReader.close();
                         }
                         throw new Exception("login failed.");
-                    } else if (client.statusCode() == 200){
+                    } else if (statusCode == 200){
                         logDebug(String.format("Connection to URI %1$s established.", loginUri.toString()));
-                        return new ApiResponse(client.statusCode(), response, client.getResponseHeader(ACCESS_TOKEN_HEADER), null);
+                        return new ApiResponse(statusCode, response, client.getResponseHeader(ACCESS_TOKEN_HEADER), null);
                     }
                 } catch (SOSConnectionRefusedException e) {
                     logDebug(String.format("connection to URI %1$s failed, trying next Uri.", loginUri.toString()));
@@ -173,10 +175,10 @@ public class ApiExecutor {
         logDebug("No connection attempt was successful. Check agents private.conf.");
         if (!latestError.isEmpty() || !latestErrorDescription.isEmpty()) {
             if(!latestAdditionalErrorMessage.isEmpty()) {
-                return new ApiResponse(client.statusCode(), latestResponse, null, 
+                return new ApiResponse(statusCode, latestResponse, null, 
                         new Exception(String.format("%1$s: %2$s - %3$s", latestError, latestErrorDescription, latestAdditionalErrorMessage)));
             } else {
-                return new ApiResponse(client.statusCode(), latestResponse, null, 
+                return new ApiResponse(statusCode, latestResponse, null, 
                         new Exception(String.format("%1$s: %2$s", latestError, latestErrorDescription)));
             }
         } else {
