@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "subagentSelectionIdExpr",
     "executable",
     "admissionTimeScheme",
-    "skipIfNoAdmissionForOrderDay",
+    "skipIfNoAdmissionStartForOrderDay",
     "returnCodeMeaning",
     "parallelism",
     "timeout",
@@ -75,8 +75,11 @@ public class Job {
      */
     @JsonProperty("admissionTimeScheme")
     private AdmissionTimeScheme admissionTimeScheme;
-    @JsonProperty("skipIfNoAdmissionForOrderDay")
-    private Boolean skipIfNoAdmissionForOrderDay = false;
+    @JsonProperty("skipIfNoAdmissionStartForOrderDay")
+    @JsonAlias({
+        "skipIfNoAdmissionForOrderDay"
+    })
+    private Boolean skipIfNoAdmissionStartForOrderDay = false;
     /**
      * job return code meaning
      * <p>
@@ -156,16 +159,16 @@ public class Job {
      * @param defaultArguments
      * @param jobResourcePaths
      * @param jobClass
-     * @param skipIfNoAdmissionForOrderDay
+     * @param skipIfNoAdmissionStartForOrderDay
      */
-    public Job(String agentPath, String subagentSelectionId, String subagentSelectionIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourcePaths) {
+    public Job(String agentPath, String subagentSelectionId, String subagentSelectionIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionStartForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourcePaths) {
         super();
         this.agentPath = agentPath;
         this.subagentSelectionId = subagentSelectionId;
         this.subagentSelectionIdExpr = subagentSelectionIdExpr;
         this.executable = executable;
         this.admissionTimeScheme = admissionTimeScheme;
-        this.skipIfNoAdmissionForOrderDay = skipIfNoAdmissionForOrderDay;
+        this.skipIfNoAdmissionStartForOrderDay = skipIfNoAdmissionStartForOrderDay;
         this.returnCodeMeaning = returnCodeMeaning;
         this.parallelism = parallelism;
         this.timeout = timeout;
@@ -258,14 +261,14 @@ public class Job {
         this.admissionTimeScheme = admissionTimeScheme;
     }
 
-    @JsonProperty("skipIfNoAdmissionForOrderDay")
-    public Boolean getSkipIfNoAdmissionForOrderDay() {
-        return skipIfNoAdmissionForOrderDay;
+    @JsonProperty("skipIfNoAdmissionStartForOrderDay")
+    public Boolean getSkipIfNoAdmissionStartForOrderDay() {
+        return skipIfNoAdmissionStartForOrderDay;
     }
 
-    @JsonProperty("skipIfNoAdmissionForOrderDay")
-    public void setSkipIfNoAdmissionForOrderDay(Boolean skipIfNoAdmissionForOrderDay) {
-        this.skipIfNoAdmissionForOrderDay = skipIfNoAdmissionForOrderDay;
+    @JsonProperty("skipIfNoAdmissionStartForOrderDay")
+    public void setSkipIfNoAdmissionStartForOrderDay(Boolean skipIfNoAdmissionStartForOrderDay) {
+        this.skipIfNoAdmissionStartForOrderDay = skipIfNoAdmissionStartForOrderDay;
     }
 
     /**
@@ -406,12 +409,12 @@ public class Job {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentSelectionId", subagentSelectionId).append("subagentSelectionIdExpr", subagentSelectionIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionForOrderDay", skipIfNoAdmissionForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
+        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentSelectionId", subagentSelectionId).append("subagentSelectionIdExpr", subagentSelectionIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionStartForOrderDay", skipIfNoAdmissionStartForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(subagentSelectionId).append(sigkillDelay).append(parallelism).append(failOnErrWritten).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(subagentSelectionIdExpr).append(returnCodeMeaning).append(defaultArguments).append(jobResourcePaths).append(jobClass).append(skipIfNoAdmissionForOrderDay).toHashCode();
+        return new HashCodeBuilder().append(subagentSelectionId).append(sigkillDelay).append(parallelism).append(failOnErrWritten).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(subagentSelectionIdExpr).append(returnCodeMeaning).append(defaultArguments).append(jobResourcePaths).append(jobClass).append(skipIfNoAdmissionStartForOrderDay).toHashCode();
     }
 
     @Override
@@ -423,7 +426,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(subagentSelectionId, rhs.subagentSelectionId).append(sigkillDelay, rhs.sigkillDelay).append(parallelism, rhs.parallelism).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(subagentSelectionIdExpr, rhs.subagentSelectionIdExpr).append(returnCodeMeaning, rhs.returnCodeMeaning).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(jobClass, rhs.jobClass).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).isEquals();
+        return new EqualsBuilder().append(subagentSelectionId, rhs.subagentSelectionId).append(sigkillDelay, rhs.sigkillDelay).append(parallelism, rhs.parallelism).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(subagentSelectionIdExpr, rhs.subagentSelectionIdExpr).append(returnCodeMeaning, rhs.returnCodeMeaning).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(jobClass, rhs.jobClass).append(skipIfNoAdmissionStartForOrderDay, rhs.skipIfNoAdmissionStartForOrderDay).isEquals();
     }
 
 }

@@ -40,7 +40,8 @@
 	"admissionTimeScheme" : {
 		"$ref": "../../../inventory/schemas/job/admissionTimeScheme-schema.json" 
 	},
-	"skipIfNoAdmissionForOrderDay": {
+	"skipIfNoAdmissionStartForOrderDay": {
+		"alias": "skipIfNoAdmissionForOrderDay",
 		"type": "boolean",
 		"default": false
 	},

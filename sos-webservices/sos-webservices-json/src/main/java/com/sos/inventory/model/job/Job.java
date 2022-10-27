@@ -85,6 +85,9 @@ public class Job implements IConfigurationObject
     @JsonProperty("admissionTimeScheme")
     private AdmissionTimeScheme admissionTimeScheme;
     @JsonProperty("skipIfNoAdmissionForOrderDay")
+    @JsonAlias({
+        "skipIfNoAdmissionStartForOrderDay"
+    })
     private Boolean skipIfNoAdmissionForOrderDay = false;
     /**
      * job return code meaning
