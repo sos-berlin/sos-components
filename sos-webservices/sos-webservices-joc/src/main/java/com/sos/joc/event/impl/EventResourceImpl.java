@@ -61,7 +61,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             entity.setControllerId(controllerId);
             entity.setEventSnapshots(Collections.emptyList());
 
-            entity = processAfter(EventServiceFactory.getEvents(controllerId, eventId, accessToken, session), folderPermissions.getListOfFolders(),
+            entity = processAfter(EventServiceFactory.getEvents(controllerId, eventId, session), folderPermissions.getListOfFolders(),
                     accessToken);
 
         } catch (ControllerConnectionRefusedException e) {

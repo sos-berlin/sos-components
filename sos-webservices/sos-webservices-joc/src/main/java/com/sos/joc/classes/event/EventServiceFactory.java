@@ -106,8 +106,8 @@ public class EventServiceFactory {
         EventServiceFactory.isClosed.set(true);
     }
     
-    public static Event getEvents(String controllerId, Long eventId, String accessToken, ISOSSession session) throws SessionNotExistException {
-        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, session);
+    public static Event getEvents(String controllerId, Long eventId, ISOSSession session) throws SessionNotExistException {
+        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, session);
     }
     
     public EventService getEventService(String controllerId) {
@@ -135,7 +135,7 @@ public class EventServiceFactory {
         return new EventCondition(lock.newCondition());
     }
     
-    private Event _getEvents(String controllerId, Long eventId, String accessToken, ISOSSession session) throws SessionNotExistException {
+    private Event _getEvents(String controllerId, Long eventId, ISOSSession session) throws SessionNotExistException {
         Event events = new Event();
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default

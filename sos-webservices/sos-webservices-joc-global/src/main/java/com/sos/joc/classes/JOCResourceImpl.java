@@ -44,11 +44,13 @@ public class JOCResourceImpl {
     protected SOSAuthFolderPermissions folderPermissions;
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
     private String accessToken;
+    private String orig_accessToken;
     private JocAuditLog jocAuditLog;
 
     private JocError jocError = new JocError();
 
     private void initGetPermissions(String accessToken) throws JocException {
+        orig_accessToken = accessToken;
         if (jobschedulerUser == null) {
             this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
             jobschedulerUser = new JobSchedulerUser(accessToken);
@@ -81,7 +83,7 @@ public class JOCResourceImpl {
     }
 
     public String getAccessToken() {
-        return accessToken;
+        return orig_accessToken;
     }
 
     public String getAccessToken(String accessToken, String oldAccessToken) {
@@ -116,16 +118,6 @@ public class JOCResourceImpl {
     public Date getDateFromTimestamp(Long timeStamp) {
         Instant fromEpochMilli = Instant.ofEpochMilli(timeStamp / 1000);
         return Date.from(fromEpochMilli);
-    }
-
-    public JOCDefaultResponse init(String request, Object body, String accessToken, String controllerId, boolean permission) throws JocException,
-            JsonParseException, JsonMappingException, IOException {
-        this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
-        if (jobschedulerUser == null) {
-            jobschedulerUser = new JobSchedulerUser(accessToken);
-        }
-        initLogging(request, body);
-        return initPermissions(controllerId, permission);
     }
 
     public String normalizePath(String path) {
@@ -266,6 +258,7 @@ public class JOCResourceImpl {
 
     public void initLogging(String request, byte[] body, String accessToken) throws JocException, JsonParseException, JsonMappingException,
             IOException {
+        orig_accessToken = accessToken;
         this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);
@@ -286,27 +279,6 @@ public class JOCResourceImpl {
             jobschedulerUser = new JobSchedulerUser(this.accessToken);
         }
 
-    }
-
-    private void initLogging(String request, Object body) {
-        String user;
-        try {
-            user = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
-        } catch (Exception e) {
-            user = "-";
-        }
-        if (request == null || request.isEmpty()) {
-            request = "-";
-        }
-        String bodyStr = getJsonString(body);
-        if (bodyStr != null) {
-            if (bodyStr.length() > 4096) {
-                bodyStr = bodyStr.substring(0, 4093) + "...";
-            }
-        }
-        jocAuditLog = new JocAuditLog(user, request, bodyStr);
-        LOGGER.debug("REQUEST: " + request + ", PARAMS: " + bodyStr);
-        jocError.addMetaInfoOnTop("\nREQUEST: " + request, "PARAMS: " + bodyStr, "USER: " + user);
     }
 
     public void initLogging(String request, byte[] body) {
