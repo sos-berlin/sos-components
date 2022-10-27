@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.Cycle;
+import com.sos.inventory.model.instruction.Finish;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
@@ -56,7 +57,7 @@ import js7.data_for_java.value.JExpression;
 public class JsonConverter {
     
     private final static String instructionsToConvert = String.join("|", InstructionType.FORKLIST.value(), InstructionType.ADD_ORDER.value(),
-            InstructionType.POST_NOTICE.value(), InstructionType.EXPECT_NOTICE.value(), InstructionType.LOCK.value());
+            InstructionType.POST_NOTICE.value(), InstructionType.EXPECT_NOTICE.value(), InstructionType.LOCK.value(), InstructionType.FINISH.value());
     private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"")
             .asPredicate();
     private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"")
@@ -372,6 +373,13 @@ public class JsonConverter {
                     break;
                 case EXPECT_NOTICE:
                     signInstructions.set(i, NoticeToNoticesConverter.expectNoticeToSignExpectNotices(signInstruction.cast()));
+                    break;
+                case FINISH:
+                    Finish finish = invInstruction.cast();
+                    if (finish.getUnsuccessful()) {
+                        com.sos.sign.model.instruction.Finish sFinish = signInstruction.cast();
+                        sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Failed"));
+                    }
                     break;
                 default:
                     break;
