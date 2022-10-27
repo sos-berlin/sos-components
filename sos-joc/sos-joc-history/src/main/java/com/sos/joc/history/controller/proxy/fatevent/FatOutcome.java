@@ -50,7 +50,7 @@ public class FatOutcome {
     }
 
     public String getNamedValuesAsJsonString() throws JsonProcessingException {
-        return HistoryUtil.map2Json(namedValues);
+        return HistoryUtil.toJsonString(namedValues);
     }
 
     public String getErrorCode() {

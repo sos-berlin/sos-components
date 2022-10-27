@@ -361,7 +361,17 @@ public abstract class ANotifier {
                     Iterator<Entry<String, JsonNode>> nodes = root.fields();
                     while (nodes.hasNext()) {
                         Map.Entry<String, JsonNode> entry = (Map.Entry<String, JsonNode>) nodes.next();
-                        tableFields.put(varNamePrefix + entry.getKey().toUpperCase(), getValue(entry));
+
+                        if (entry.getValue().isObject()) {// ListValue
+                            Iterator<Entry<String, JsonNode>> entryNodes = entry.getValue().fields();
+                            while (entryNodes.hasNext()) {
+                                Map.Entry<String, JsonNode> entryChild = (Map.Entry<String, JsonNode>) entryNodes.next();
+                                tableFields.put(varNamePrefix + entry.getKey().toUpperCase() + "_" + entryChild.getKey().toUpperCase(), getValue(
+                                        entryChild));
+                            }
+                        } else {
+                            tableFields.put(varNamePrefix + entry.getKey().toUpperCase(), getValue(entry));
+                        }
                     }
                 }
             } catch (Throwable e) {

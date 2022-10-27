@@ -3,9 +3,7 @@ package com.sos.joc.history.controller.proxy.fatevent;
 import java.util.Date;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.WorkflowInfo.Position;
-import com.sos.joc.history.helper.HistoryUtil;
 
 import js7.data.value.Value;
 
@@ -53,7 +51,7 @@ public abstract class AFatEventOrder extends AFatEvent {
         return position;
     }
 
-    public String getArgumentsAsJsonString() throws JsonProcessingException {
-        return HistoryUtil.map2Json(arguments);
+    public Map<String, Value> getArguments() {
+        return arguments;
     }
 }

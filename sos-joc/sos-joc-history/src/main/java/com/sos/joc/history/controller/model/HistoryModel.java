@@ -107,6 +107,7 @@ import com.sos.joc.history.helper.CachedOrder;
 import com.sos.joc.history.helper.CachedOrderStep;
 import com.sos.joc.history.helper.CachedWorkflow;
 import com.sos.joc.history.helper.CachedWorkflowJob;
+import com.sos.joc.history.helper.CachedWorkflowParameter;
 import com.sos.joc.history.helper.Counter;
 import com.sos.joc.history.helper.HistoryUtil;
 import com.sos.joc.history.helper.LogEntry;
@@ -887,7 +888,7 @@ public class HistoryModel {
             item.setStartTime(entry.getEventDatetime());
             item.setStartWorkflowPosition(item.getWorkflowPosition());
             item.setStartEventId(entry.getEventId());
-            item.setStartVariables(entry.getArgumentsAsJsonString());
+            item.setStartVariables(HistoryUtil.toJsonString(entry.getArguments(), cw.getOrderPreparation()));
 
             item.setCurrentHistoryOrderStepId(Long.valueOf(0));
 
@@ -1332,7 +1333,7 @@ public class HistoryModel {
             item.setStartTime(entry.getEventDatetime());
             item.setStartWorkflowPosition(SOSString.isEmpty(entry.getPosition()) ? "0" : entry.getPosition());
             item.setStartEventId(entry.getEventId());
-            item.setStartVariables(entry.getArgumentsAsJsonString()); // TODO or forkOrder arguments ???
+            item.setStartVariables(HistoryUtil.toJsonString(entry.getArguments())); // TODO or forkOrder arguments ???
 
             item.setCurrentHistoryOrderStepId(Long.valueOf(0));
 
@@ -1457,7 +1458,7 @@ public class HistoryModel {
             item.setStartCause(OrderStepStartCause.order.name());// TODO
             item.setStartTime(agentStartTime);
             item.setStartEventId(entry.getEventId());
-            item.setStartVariables(entry.getArgumentsAsJsonString());// TODO check
+            item.setStartVariables(HistoryUtil.toJsonString(entry.getArguments()));
 
             item.setEndTime(null);
             item.setEndEventId(null);
@@ -1552,7 +1553,7 @@ public class HistoryModel {
             cos.setSeverity(HistorySeverity.map2DbSeverity(le.isError() ? OrderStateText.FAILED : OrderStateText.FINISHED));
 
             Map<String, Value> namedValues = handleNamedValues(entry, co, cos);
-            String endVariables = HistoryUtil.map2Json(namedValues);
+            String endVariables = HistoryUtil.toJsonString(namedValues);
             dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), entry.getEventId(), endVariables, le.getReturnCode(), cos.getSeverity(), le
                     .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), le.getErrorText(), new Date());
             le.onOrderStep(cos);
@@ -1876,6 +1877,7 @@ public class HistoryModel {
             clearWorkflowCache(workflowName);
             String path = null;
             String title = null;
+            List<CachedWorkflowParameter> orderPreparation = null;
             Map<String, CachedWorkflowJob> jobs = null;
             try {
                 Object[] result = dbLayer.getDeployedWorkflow(controllerConfiguration.getCurrent().getId(), workflowName, workflowVersionId);
@@ -1887,6 +1889,7 @@ public class HistoryModel {
                 if (w != null) {
                     jobs = getWorkflowJobs(w, workflowName);
                     title = w.getTitle();
+                    orderPreparation = getWorkflowOrderPreparation(w);
                 }
             } catch (Throwable e) {
                 LOGGER.warn(String.format("[workflowName=%s,workflowVersionId=%s][can't evaluate path]%s", workflowName, workflowVersionId, e
@@ -1895,10 +1898,25 @@ public class HistoryModel {
             if (path == null) {
                 path = "/" + workflowName;
             }
-            cw = new CachedWorkflow(path, title, jobs);
+            cw = new CachedWorkflow(path, title, orderPreparation, jobs);
             addCachedWorkflow(getCachedWorkflowKey(workflowName, workflowVersionId), cw);
         }
         return cw;
+    }
+
+    private List<CachedWorkflowParameter> getWorkflowOrderPreparation(Workflow w) {
+        if (w.getOrderPreparation() == null || w.getOrderPreparation().getParameters() == null || w.getOrderPreparation().getParameters()
+                .getAdditionalProperties() == null || w.getOrderPreparation().getParameters().getAdditionalProperties().size() == 0) {
+            return null;
+        }
+        List<CachedWorkflowParameter> r = new ArrayList<>();
+        w.getOrderPreparation().getParameters().getAdditionalProperties().forEach((name, param) -> {
+            CachedWorkflowParameter cwp = new CachedWorkflowParameter(name, param);
+            if (cwp.getValue() != null) {
+                r.add(cwp);
+            }
+        });
+        return r;
     }
 
     private Workflow getWorkflow(String workflowName, String workflowVersionId, String content) {
