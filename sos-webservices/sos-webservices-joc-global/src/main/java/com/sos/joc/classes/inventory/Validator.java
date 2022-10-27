@@ -408,6 +408,7 @@ public class Validator {
                 String msg = e.getMessage().replaceAll("(\\$\\.)", "$1jobs['" + entry.getKey() + "'].");
                 throw new SOSJsonSchemaException(msg);
             }
+            validateExpression("$.jobs['" + entry.getKey() + "'].subagentClusterIdExpr: ", entry.getValue().getSubagentClusterIdExpr());
             switch (job.getExecutable().getTYPE()) {
             case InternalExecutable:
                 ExecutableJava ej = job.getExecutable().cast();
@@ -593,7 +594,7 @@ public class Validator {
                     ForkList fl = inst.cast();
                     if (licensedForkList && fl.getAgentName() != null) {
                         testJavaNameRules("$." + instPosition, "subagentIdVariable", fl.getSubagentIdVariable());
-                        validateExpression(fl.getSubagentClusterIdExpr());
+                        validateExpression("$." + instPosition + "subagentClusterIdExpr: ", fl.getSubagentClusterIdExpr());
                     }
                     if (fl.getWorkflow() != null) {
                         validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "forklist.instructions", jobNames, orderPreparation,
@@ -602,12 +603,7 @@ public class Validator {
                     break;
                 case IF:
                     IfElse ifElse = inst.cast();
-                    try {
-                        // PredicateParser.parse(ifElse.getPredicate());
-                        validateExpression(ifElse.getPredicate());
-                    } catch (Exception e) {
-                        throw new SOSJsonSchemaException("$." + instPosition + "predicate:" + e.getMessage());
-                    }
+                    validateExpression("$." + instPosition + "predicate: ", ifElse.getPredicate());
                     if (ifElse.getThen() != null) {
                         validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobNames, orderPreparation,
                                 labels, boardNames, dbLayer);
@@ -631,7 +627,7 @@ public class Validator {
                     break;
                 case PROMPT:
                     Prompt prompt = inst.cast();
-                    validateExpression(prompt.getQuestion());
+                    validateExpression("$." + instPosition + "question:", prompt.getQuestion());
                     break;
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();

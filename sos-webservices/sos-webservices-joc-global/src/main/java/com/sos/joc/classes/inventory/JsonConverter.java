@@ -159,12 +159,14 @@ public class JsonConverter {
     }
     
     private static void considerSubagentClusterId(Job invJob, com.sos.sign.model.job.Job signJob) {
-        if (signJob != null && signJob.getSubagentSelectionIdExpr() == null || signJob.getSubagentSelectionIdExpr().isEmpty()) {
-            if (invJob.getSubagentClusterId() != null && !invJob.getSubagentClusterId().isEmpty()) {
-                signJob.setSubagentSelectionIdExpr(quoteString(invJob.getSubagentClusterId()));
+        if (signJob != null) {
+            if (signJob.getSubagentSelectionIdExpr() == null || signJob.getSubagentSelectionIdExpr().isEmpty()) {
+                if (invJob.getSubagentClusterId() != null && !invJob.getSubagentClusterId().isEmpty()) {
+                    signJob.setSubagentSelectionIdExpr(quoteString(invJob.getSubagentClusterId()));
+                }
             }
+            signJob.setSubagentSelectionId(null);
         }
-        signJob.setSubagentSelectionId(null);
     }
     
     private static void includeScripts(String workflowName, com.sos.sign.model.workflow.Jobs signJobs, Map<String, String> releasedScripts) {
