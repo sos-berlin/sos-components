@@ -197,7 +197,7 @@ public class JsonSerializer {
                     job.setReturnCodeMeaning(null);
                     job.setSigkillDelay(defaultToNull(job.getSigkillDelay(), 15));
                     job.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(job.getAdmissionTimeScheme()));
-                    job.setSkipIfNoAdmissionForOrderDay(defaultToNull(job.getSkipIfNoAdmissionForOrderDay(), Boolean.FALSE));
+                    job.setSkipIfNoAdmissionStartForOrderDay(defaultToNull(job.getSkipIfNoAdmissionStartForOrderDay(), Boolean.FALSE));
                 });
             }
         }
