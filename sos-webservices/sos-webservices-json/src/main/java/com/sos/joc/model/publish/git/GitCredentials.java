@@ -218,7 +218,7 @@ public class GitCredentials {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("gitAccount", gitAccount).append("username", username).append("email", email).append("keyfilePath", keyfilePath).append("password", password).append("personalAccessToken", personalAccessToken).append("gitServer", gitServer).toString();
+        return new ToStringBuilder(this).append("gitAccount", gitAccount).append("username", username).append("email", email).append("keyfilePath", keyfilePath).append("password", "***").append("personalAccessToken", "***").append("gitServer", gitServer).toString();
     }
 
     @Override
