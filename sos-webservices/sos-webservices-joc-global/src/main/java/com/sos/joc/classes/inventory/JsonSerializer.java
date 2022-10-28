@@ -198,6 +198,9 @@ public class JsonSerializer {
                     job.setSigkillDelay(defaultToNull(job.getSigkillDelay(), 15));
                     job.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(job.getAdmissionTimeScheme()));
                     job.setSkipIfNoAdmissionStartForOrderDay(defaultToNull(job.getSkipIfNoAdmissionStartForOrderDay(), Boolean.FALSE));
+                    if (job.getSubagentSelectionIdExpr() != null && !job.getSubagentSelectionIdExpr().isEmpty()) {
+                        job.setSubagentSelectionId(null); 
+                    }
                 });
             }
         }
@@ -220,6 +223,9 @@ public class JsonSerializer {
                     job.setGraceTimeout(defaultToNull(job.getGraceTimeout(), 15));
                     job.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(job.getAdmissionTimeScheme()));
                     job.setSkipIfNoAdmissionForOrderDay(defaultToNull(job.getSkipIfNoAdmissionForOrderDay(), Boolean.FALSE));
+                    if (job.getSubagentClusterIdExpr() != null && !job.getSubagentClusterIdExpr().isEmpty()) {
+                        job.setSubagentClusterId(null); 
+                    }
                 });
             }
         }
