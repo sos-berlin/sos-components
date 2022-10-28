@@ -877,16 +877,20 @@ public class Validator {
     }
 
     private static void validateExpression(String prefix, String key, String value) throws JocConfigurationException {
-        Either<Problem, JExpression> e = JExpression.parse(value);
-        if (e.isLeft()) {
-            throw new JocConfigurationException(prefix + "[" + key + "]:" + e.getLeft().message());
+        if (value != null) {
+            Either<Problem, JExpression> e = JExpression.parse(value);
+            if (e.isLeft()) {
+                throw new JocConfigurationException(prefix + "[" + key + "]:" + e.getLeft().message());
+            }
         }
     }
 
     private static void validateExpression(String prefix, String value) throws JocConfigurationException {
-        Either<Problem, JExpression> e = JExpression.parse(value);
-        if (e.isLeft()) {
-            throw new JocConfigurationException(prefix + e.getLeft().message());
+        if (value != null) {
+            Either<Problem, JExpression> e = JExpression.parse(value);
+            if (e.isLeft()) {
+                throw new JocConfigurationException(prefix + e.getLeft().message());
+            }
         }
     }
 
