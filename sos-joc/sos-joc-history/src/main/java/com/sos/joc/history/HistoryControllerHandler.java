@@ -64,6 +64,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsume
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumptionStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOutcomeAdded;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
@@ -87,6 +88,7 @@ import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
 import js7.data.order.OrderEvent.OrderNoticesConsumed;
+import js7.data.order.OrderEvent.OrderOutcomeAdded;
 import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
@@ -424,6 +426,21 @@ public class HistoryControllerHandler {
                             .getErrorCode(), oi.getErrorMessage());
                 }
                 event = new FatEventOrderStepProcessed(entry.getEventId(), entry.getEventDate());
+                event.set(order.getOrderId(), outcome, order.getWorkflowInfo().getPosition());
+                break;
+
+            case OrderOutcomeAdded:
+                order = entry.getCheckedOrder();
+
+                OrderOutcomeAdded osf = (OrderOutcomeAdded) entry.getEvent();
+                oi = order.getOutcomeInfo(osf.outcome());
+                outcome = null;
+                if (oi != null) {
+                    outcome = new FatOutcome(oi.getType(), oi.getReturnCode(), oi.isSucceeded(), oi.isFailed(), oi.getNamedValues(), oi
+                            .getErrorCode(), oi.getErrorMessage());
+                }
+
+                event = new FatEventOrderOutcomeAdded(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), outcome, order.getWorkflowInfo().getPosition());
                 break;
 

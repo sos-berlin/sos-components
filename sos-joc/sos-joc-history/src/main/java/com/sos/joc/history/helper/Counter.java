@@ -148,6 +148,8 @@ public class Counter {
         @SuppressWarnings("unused")
         private int joined = 0;
         @SuppressWarnings("unused")
+        private int outcomeAdded = 0;
+        @SuppressWarnings("unused")
         private int failed = 0;
         @SuppressWarnings("unused")
         private int suspended = 0;
@@ -200,6 +202,10 @@ public class Counter {
 
         public void addJoined() {
             joined += 1;
+        }
+
+        public void addOutcomeAdded() {
+            outcomeAdded += 1;
         }
 
         public void addFailed() {

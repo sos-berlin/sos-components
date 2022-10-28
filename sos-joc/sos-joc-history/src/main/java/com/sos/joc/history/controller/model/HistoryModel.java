@@ -371,6 +371,12 @@ public class HistoryModel {
 
                         postEventOrderTaskTerminated(dbLayer, (FatEventOrderStepProcessed) entry, hosb);
                         break;
+                    case OrderOutcomeAdded:
+                        hob = orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderOutcomeAdded, endedOrderSteps);
+                        counter.getOrder().addOutcomeAdded();
+
+                        postEventOrderUpdated(hob);
+                        break;
                     case OrderFailed:
                         hob = orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFailed, endedOrderSteps);
                         counter.getOrder().addFailed();
@@ -980,7 +986,7 @@ public class HistoryModel {
             checkControllerTimezone(dbLayer);
 
             CachedOrderStep cos = getCurrentOrderStep(dbLayer, co, endedOrderSteps);
-            LogEntry le = createOrderLogEntry(eventId, outcome, cos, eventType);
+            LogEntry le = createOrderLogEntry(eventId, outcome, co, cos, eventType);
             co.setState(le.getState());
 
             Date endTime = null;
@@ -995,20 +1001,7 @@ public class HistoryModel {
                 endEventId = eventId;
             }
 
-            if (le.isError() && SOSString.isEmpty(le.getErrorText())) {
-                if (cos != null && cos.getError() != null && !SOSString.isEmpty(cos.getFirstChunkStdError())) {
-                    // le.setErrorText(cos.getStdErr());
-                    le.setErrorText(String.format("[%s][%s]%s", cos.getJobName(), cos.getWorkflowPosition(), cos.getFirstChunkStdError()));
-                }
-            }
             String orderErrorText = le.getErrorText();
-            if (cos == null) {
-                // orderErrorText = SOSString.isEmpty(le.getErrorText()) ? null : le.getErrorText();
-            } else {
-                // orderErrorText = SOSString.isEmpty(le.getErrorText()) ? null : String.format("[%s][%s]%s", cos.getJobName(), cos
-                // .getWorkflowPosition(), le.getErrorText());
-            }
-
             String stateErrorText = null;
             switch (eventType) {
             case OrderJoined:
@@ -1025,6 +1018,7 @@ public class HistoryModel {
             case OrderResumeMarked:
                 co.setHasStates(true);
                 break;
+            case OrderOutcomeAdded:
             case OrderFailed:
                 co.setHasStates(true);
                 stateErrorText = orderErrorText;
@@ -1133,14 +1127,15 @@ public class HistoryModel {
         return step;
     }
 
-    private LogEntry createOrderLogEntry(Long eventId, FatOutcome outcome, CachedOrderStep cos, EventType eventType) {
+    private LogEntry createOrderLogEntry(Long eventId, FatOutcome outcome, CachedOrder co, CachedOrderStep cos, EventType eventType) {
         LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, eventType, JocClusterUtil.getEventIdAsDate(eventId), null);
         boolean stepHasError = (cos != null && cos.getError() != null);
         if (outcome != null) {
             le.setReturnCode(outcome.getReturnCode());
             if (outcome.isFailed()) {
                 boolean setError = true;
-                if (eventType.equals(EventType.OrderJoined)) {// TODO check this ..
+                switch (eventType) {
+                case OrderJoined:// TODO check this ..
                     if (stepHasError) {
                         if (le.getReturnCode() != null && le.getReturnCode().equals(0)) {
                             le.setReturnCode(cos.getReturnCode());
@@ -1148,12 +1143,14 @@ public class HistoryModel {
                     } else {
                         setError = false;
                     }
-                } else {
+                    break;
+                default:
                     if (le.getReturnCode() == null || le.getReturnCode().equals(0)) {
                         if (cos != null) {
                             le.setReturnCode(cos.getReturnCode());
                         }
                     }
+                    break;
                 }
                 if (setError) {
                     le.setError(OrderStateText.FAILED.value(), outcome);
@@ -1164,8 +1161,25 @@ public class HistoryModel {
             le.setReturnCode(cos.getReturnCode());
             le.setError(OrderStateText.FAILED.value(), cos);
         }
+        if (le.isError() && SOSString.isEmpty(le.getErrorText())) {
+            if (co != null && co.getFailedError() != null) {
+                le.setErrorText(co.getFailedError().getText());
+                le.setReturnCode(co.getFailedError().getReturnCode());
+            } else if (cos != null && cos.getError() != null && !SOSString.isEmpty(cos.getFirstChunkStdError())) {
+                le.setErrorText(String.format("[%s][%s]%s", cos.getJobName(), cos.getWorkflowPosition(), cos.getFirstChunkStdError()));
+            }
+        }
 
         switch (eventType) {
+        case OrderOutcomeAdded:
+            if (co != null && outcome != null && outcome.isFailed() && outcome.getReturnCode() != null) {
+                le.setState(OrderStateText.FAILED.intValue());
+                le.setLogLevel(LogLevel.ERROR);
+
+                co.setFailedError(le.getErrorState(), le.getErrorReason(), le.getErrorCode(), le.getErrorText(), outcome.getReturnCode());
+                // addCachedOrderStep(cos.getOrderId(), cos);
+            }
+            break;
         case OrderFailed:
         case OrderFailedinFork:
             le.setState(OrderStateText.FAILED.intValue());
@@ -1731,11 +1745,11 @@ public class HistoryModel {
         return co;
     }
 
-    private void addCachedOrderStep(String orderId, CachedOrderStep co) {
+    private void addCachedOrderStep(String orderId, CachedOrderStep cos) {
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][addCachedOrderStep][%s]%s", identifier, orderId, SOSString.toString(co)));
+            LOGGER.debug(String.format("[%s][addCachedOrderStep][%s]%s", identifier, orderId, SOSString.toString(cos)));
         }
-        cachedOrderSteps.put(orderId, co);
+        cachedOrderSteps.put(orderId, cos);
     }
 
     private CachedOrderStep getCachedOrderStep(String orderId) {

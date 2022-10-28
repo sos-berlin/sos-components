@@ -20,6 +20,7 @@ public class CachedOrder {
     private final Date startTime;
     private final Date endTime;
 
+    private CachedError failedError;
     private Integer state;
     private boolean hasStates;
     private Long currentHistoryOrderStepId;
@@ -37,6 +38,10 @@ public class CachedOrder {
         currentHistoryOrderStepId = item.getCurrentHistoryOrderStepId();
         startTime = item.getStartTime();
         endTime = item.getEndTime();
+
+        if (item.getError()) {
+            setFailedError(item.getErrorState(), item.getErrorReason(), item.getErrorCode(), item.getErrorText(), item.getErrorReturnCode());
+        }
     }
 
     public HistoryOrderBean convert(EventType eventType, Long eventId, String controllerId) {
@@ -123,6 +128,15 @@ public class CachedOrder {
 
     public Date getEndTime() {
         return endTime;
+    }
+
+    public CachedError getFailedError() {
+        return failedError;
+    }
+
+    public void setFailedError(String errorState, String errorReason, String errorCode, String errorText, Integer returnCode) {
+        failedError = new CachedError(errorState, errorReason, errorCode, errorText);
+        failedError.setReturnCode(returnCode);
     }
 
 }

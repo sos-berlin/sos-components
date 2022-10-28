@@ -13,12 +13,13 @@ import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderCancelled$;
 import js7.data.order.OrderEvent.OrderCaught;
 import js7.data.order.OrderEvent.OrderFailed;
-import js7.data.order.OrderEvent.OrderFinished$;
+import js7.data.order.OrderEvent.OrderFinished;
 import js7.data.order.OrderEvent.OrderForked;
 import js7.data.order.OrderEvent.OrderJoined;
 import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
+import js7.data.order.OrderEvent.OrderOutcomeAdded;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingStarted;
 import js7.data.order.OrderEvent.OrderResumed;
@@ -62,6 +63,8 @@ public enum HistoryEventType {
 
     OrderCancelled(OrderCancelled$.class.getSimpleName()),
 
+    OrderOutcomeAdded(OrderOutcomeAdded.class.getSimpleName()),
+
     OrderFailed(OrderFailed.class.getSimpleName()),
 
     OrderBroken(OrderBroken.class.getSimpleName()),
@@ -96,7 +99,7 @@ public enum HistoryEventType {
 
     OrderRetrying(OrderRetrying.class.getSimpleName()),
 
-    OrderFinished(OrderFinished$.class.getSimpleName()),
+    OrderFinished(OrderFinished.class.getSimpleName()),
 
     OrderStepStarted(OrderProcessingStarted.class.getSimpleName()),
 
