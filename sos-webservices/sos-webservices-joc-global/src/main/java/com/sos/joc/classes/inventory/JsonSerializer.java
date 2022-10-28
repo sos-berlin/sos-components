@@ -9,6 +9,7 @@ import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.Fail;
+import com.sos.inventory.model.instruction.Finish;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
@@ -473,6 +474,11 @@ public class JsonSerializer {
                     }
                     f.setUncatchable(defaultToNull(f.getUncatchable(), Boolean.FALSE));
                     break;
+                case FINISH:
+                    Finish fi = inst.cast();
+                    fi.setMessage(quoteString(fi.getMessage()));
+                    fi.setUnsuccessful(defaultToNull(fi.getUnsuccessful(), Boolean.FALSE));
+                    break;
                 case EXECUTE_NAMED:
                     NamedJob nj = inst.cast();
                     nj.setDefaultArguments(emptyEnvToNullAndQuoteStrings(nj.getDefaultArguments()));
@@ -481,6 +487,9 @@ public class JsonSerializer {
                     ForkList fl = inst.cast();
                     fl.setJoinIfFailed(defaultToNull(fl.getJoinIfFailed(), Boolean.FALSE));
                     fl.setAgentName(defaultToNull(fl.getAgentName(), ""));
+                    if (fl.getSubagentClusterIdExpr() != null && !fl.getSubagentClusterIdExpr().isEmpty()) {
+                        fl.setSubagentClusterId(null);
+                    }
                     if (fl.getWorkflow() != null) {
                         cleanInventoryInstructions(fl.getWorkflow().getInstructions());
                     }
@@ -550,6 +559,10 @@ public class JsonSerializer {
                         f.getNamedValues().setAdditionalProperty("returnCode", 1);
                     }
                     f.setUncatchable(defaultToNull(f.getUncatchable(), Boolean.FALSE));
+                    break;
+                case FINISH:
+                    com.sos.sign.model.instruction.Finish fi = inst.cast();
+                    fi.setMessage(quoteString(fi.getMessage()));
                     break;
                 case EXECUTE_NAMED:
                     com.sos.sign.model.instruction.NamedJob nj = inst.cast();

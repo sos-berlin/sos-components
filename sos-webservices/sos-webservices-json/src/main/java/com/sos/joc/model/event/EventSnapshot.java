@@ -208,7 +208,7 @@ public class EventSnapshot {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("eventId", eventId).append("eventType", eventType).append("objectType", objectType).append("workflow", workflow).append("accessToken", accessToken).append("message", message).toString();
+        return new ToStringBuilder(this).append("path", path).append("eventId", eventId).append("eventType", eventType).append("objectType", objectType).append("workflow", workflow).append("accessToken", "***").append("message", message).toString();
     }
 
     @Override
