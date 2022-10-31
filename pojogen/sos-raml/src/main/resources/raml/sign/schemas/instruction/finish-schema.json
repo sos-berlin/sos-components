@@ -15,11 +15,16 @@
     "outcome": {
       "javaType": "com.sos.sign.model.common.Outcome",
   	  "type": "object",
+  	  "required": [
+  	  	"TYPE"	
+  	  ],
   	  "properties": {
   	  	"TYPE": {
-  	  		"type": "string",
-  	  		"default": "Failed"
-  	  	}
+  	  		"type": "string"
+  	  	},
+  		"namedValues": {
+  			"$ref": "../../../inventory/schemas/common/variables-schema.json"
+  		}
   	  },
   	  "additionalProperties": false
     }
