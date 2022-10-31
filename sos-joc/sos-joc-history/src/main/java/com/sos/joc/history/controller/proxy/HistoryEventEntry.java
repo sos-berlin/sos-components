@@ -312,6 +312,20 @@ public class HistoryEventEntry {
             return outcomeInfo;
         }
 
+        public OutcomeInfo getOutcomeInfoFinished(Option<Completed> completed) throws Exception {
+            if (completed == null) {
+                return getOutcomeInfo(OutcomeType.succeeded, null);
+            }
+            Optional<Completed> op = OptionConverters.toJava(completed);
+            if (!op.isPresent()) {
+                return getOutcomeInfo(OutcomeType.succeeded, null);
+            }
+            if (outcomeInfo == null) {
+                outcomeInfo = new OutcomeInfo(op.get());
+            }
+            return outcomeInfo;
+        }
+
         public Instruction getCurrentPositionInstruction() throws Exception {
             WorkflowInfo wi = getWorkflowInfo();
             if (wi != null) {
@@ -531,6 +545,11 @@ public class HistoryEventEntry {
                 this.type = type;
                 setError(problem);
                 switch (type) {
+                case succeeded:
+                    if (!isSucceeded && !isFailed) {
+                        isSucceeded = true;
+                    }
+                    break;
                 case failed:
                 case broken:
                     returnCode = null;// TODO ?

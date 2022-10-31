@@ -84,6 +84,7 @@ import js7.base.problem.ProblemCode;
 import js7.base.problem.ProblemException;
 import js7.data.event.Event;
 import js7.data.order.OrderEvent.OrderBroken;
+import js7.data.order.OrderEvent.OrderFinished;
 import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
@@ -504,8 +505,15 @@ public class HistoryControllerHandler {
             case OrderFinished:
                 order = entry.getCheckedOrder();
 
+                oi = order.getOutcomeInfoFinished(((OrderFinished) entry.getEvent()).outcome());
+                outcome = null;
+                if (oi != null) {
+                    outcome = new FatOutcome(oi.getType(), oi.getReturnCode(), oi.isSucceeded(), oi.isFailed(), oi.getNamedValues(), oi
+                            .getErrorCode(), oi.getErrorMessage());
+                }
+
                 event = new FatEventOrderFinished(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
+                event.set(order.getOrderId(), outcome, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderCancelled:
