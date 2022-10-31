@@ -111,12 +111,14 @@ public class LogEntry {
         orderNotice = entry;
     }
 
-    public void setError(String state, CachedOrderStep cos) {
+    public void setError(String state, CachedOrder co) {
         error = true;
         errorState = state == null ? null : state.toLowerCase();
-        errorReason = cos.getError().getReason();
-        errorCode = cos.getError().getCode();
-        errorText = cos.getError().getText();
+        if (co.getLastStepError() != null) {
+            errorReason = co.getLastStepError().getReason();
+            errorCode = co.getLastStepError().getCode();
+            errorText = co.getLastStepError().getText();
+        }
     }
 
     public void setError(String state, FatOutcome outcome) {
@@ -127,17 +129,28 @@ public class LogEntry {
         errorText = outcome.getErrorMessage();
     }
 
-    public void onOrderJoined(CachedOrder order, String workflowPosition, List<String> childs, FatOutcome outcome) {
-        orderId = order.getOrderId();
-        historyOrderMainParentId = order.getMainParentId();
-        historyOrderId = order.getId();
+    public void onOrderJoined(CachedOrder co, FatOutcome outcome, String workflowPosition, List<String> childs) {
+        orderId = co.getOrderId();
+        historyOrderMainParentId = co.getMainParentId();
+        historyOrderId = co.getId();
         position = workflowPosition;
         info = String.join(", ", childs);
+
         if (outcome != null) {
             returnCode = outcome.getReturnCode();
             if (outcome.isFailed()) {
                 setError(OrderStateText.FAILED.value(), outcome);
+                co.setLastStepError(this);
             }
+        }
+    }
+
+    public void setError(CachedOrder co, FatOutcome outcome) {
+        if (outcome.getReturnCode() == null && SOSString.isEmpty(outcome.getErrorMessage()) && co.getLastStepError() != null) {
+            setError(OrderStateText.FAILED.value(), co);
+            setReturnCode(co.getLastStepError().getReturnCode());
+        } else {
+            setError(OrderStateText.FAILED.value(), outcome);
         }
     }
 
@@ -175,7 +188,6 @@ public class LogEntry {
                 sb.append(" returnCode=").append(returnCode);
             }
             if (error) {
-                orderStep.setError(errorState, errorReason, errorCode, errorText);
                 List<String> errorInfo = new ArrayList<String>();
                 if (errorState != null) {
                     errorInfo.add("errorState=" + errorState);
@@ -311,6 +323,10 @@ public class LogEntry {
 
     public void setReturnCode(Integer val) {
         returnCode = val;
+    }
+
+    public boolean isNullOrDefaultReturnCode() {
+        return returnCode == null || returnCode.equals(0);
     }
 
     public Integer getReturnCode() {

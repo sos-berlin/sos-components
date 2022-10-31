@@ -1,12 +1,12 @@
 package com.sos.joc.history.helper;
 
+import java.util.Date;
+
 import com.sos.controller.model.event.EventType;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.model.order.OrderStateText;
-
-import java.util.Date;
 
 public class CachedOrder {
 
@@ -20,7 +20,7 @@ public class CachedOrder {
     private final Date startTime;
     private final Date endTime;
 
-    private CachedError failedError;
+    private CachedError lastStepError;
     private Integer state;
     private boolean hasStates;
     private Long currentHistoryOrderStepId;
@@ -40,7 +40,7 @@ public class CachedOrder {
         endTime = item.getEndTime();
 
         if (item.getError()) {
-            setFailedError(item.getErrorState(), item.getErrorReason(), item.getErrorCode(), item.getErrorText(), item.getErrorReturnCode());
+            setLastStepError(item.getErrorState(), item.getErrorReason(), item.getErrorCode(), item.getErrorText(), item.getErrorReturnCode());
         }
     }
 
@@ -130,13 +130,35 @@ public class CachedOrder {
         return endTime;
     }
 
-    public CachedError getFailedError() {
-        return failedError;
+    public CachedError getLastStepError() {
+        return lastStepError;
     }
 
-    public void setFailedError(String errorState, String errorReason, String errorCode, String errorText, Integer returnCode) {
-        failedError = new CachedError(errorState, errorReason, errorCode, errorText);
-        failedError.setReturnCode(returnCode);
+    public boolean hasLastStepErrorReturnCode() {
+        return lastStepError != null && lastStepError.getReturnCode() != null;
+    }
+
+    public void setLastStepError(CachedError val) {
+        lastStepError = val;
+    }
+
+    public void setLastStepError(LogEntry le) {
+        setLastStepError(le, null);
+    }
+
+    public void setLastStepError(LogEntry le, CachedOrderStep cos) {
+        if (le.isError()) {
+            String msg = cos == null ? le.getErrorText() : String.format("[Job=%s, pos=%s]%s", cos.getJobName(), cos.getWorkflowPosition(), le
+                    .getErrorText());
+            setLastStepError(le.getErrorState(), le.getErrorReason(), le.getErrorCode(), msg, le.getReturnCode());
+        } else {
+            lastStepError = null;
+        }
+    }
+
+    private void setLastStepError(String errorState, String errorReason, String errorCode, String errorText, Integer returnCode) {
+        lastStepError = new CachedError(errorState, errorReason, errorCode, errorText);
+        lastStepError.setReturnCode(returnCode);
     }
 
 }

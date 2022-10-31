@@ -986,7 +986,7 @@ public class HistoryModel {
             checkControllerTimezone(dbLayer);
 
             CachedOrderStep cos = getCurrentOrderStep(dbLayer, co, endedOrderSteps);
-            LogEntry le = createOrderLogEntry(eventId, outcome, co, cos, eventType);
+            LogEntry le = createOrderLogEntry(eventType, eventId, outcome, co);
             co.setState(le.getState());
 
             Date endTime = null;
@@ -1018,7 +1018,6 @@ public class HistoryModel {
             case OrderResumeMarked:
                 co.setHasStates(true);
                 break;
-            case OrderOutcomeAdded:
             case OrderFailed:
                 co.setHasStates(true);
                 stateErrorText = orderErrorText;
@@ -1116,9 +1115,6 @@ public class HistoryModel {
                 } else {
                     CachedAgent ca = getCachedAgent(dbLayer, item.getAgentId());
                     step = new CachedOrderStep(item, ca.getTimezone());
-                    if (item.getError()) {
-                        step.setError(item.getErrorState(), item.getErrorReason(), item.getErrorCode(), item.getErrorText());
-                    }
                 }
             } else if (isDebugEnabled) {
                 LOGGER.debug(String.format("[%s][%s][currentStep found]%s", identifier, co.getOrderId(), SOSString.toString(step)));
@@ -1127,57 +1123,50 @@ public class HistoryModel {
         return step;
     }
 
-    private LogEntry createOrderLogEntry(Long eventId, FatOutcome outcome, CachedOrder co, CachedOrderStep cos, EventType eventType) {
+    private LogEntry createOrderLogEntry(EventType eventType, Long eventId, FatOutcome outcome, CachedOrder co) {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, eventType, JocClusterUtil.getEventIdAsDate(eventId), null);
-        boolean stepHasError = (cos != null && cos.getError() != null);
         if (outcome != null) {
             le.setReturnCode(outcome.getReturnCode());
             if (outcome.isFailed()) {
                 boolean setError = true;
-                switch (eventType) {
-                case OrderJoined:// TODO check this ..
-                    if (stepHasError) {
-                        if (le.getReturnCode() != null && le.getReturnCode().equals(0)) {
-                            le.setReturnCode(cos.getReturnCode());
-                        }
-                    } else {
-                        setError = false;
-                    }
-                    break;
-                default:
-                    if (le.getReturnCode() == null || le.getReturnCode().equals(0)) {
-                        if (cos != null) {
-                            le.setReturnCode(cos.getReturnCode());
-                        }
-                    }
-                    break;
+                if (eventType.equals(EventType.OrderJoined) && co.getLastStepError() == null) {
+                    setError = false;
                 }
+
                 if (setError) {
-                    le.setError(OrderStateText.FAILED.value(), outcome);
+                    le.setError(co, outcome);
                 }
             }
         }
-        if (!le.isError() && stepHasError) {
-            le.setReturnCode(cos.getReturnCode());
-            le.setError(OrderStateText.FAILED.value(), cos);
-        }
-        if (le.isError() && SOSString.isEmpty(le.getErrorText())) {
-            if (co != null && co.getFailedError() != null) {
-                le.setErrorText(co.getFailedError().getText());
-                le.setReturnCode(co.getFailedError().getReturnCode());
-            } else if (cos != null && cos.getError() != null && !SOSString.isEmpty(cos.getFirstChunkStdError())) {
-                le.setErrorText(String.format("[%s][%s]%s", cos.getJobName(), cos.getWorkflowPosition(), cos.getFirstChunkStdError()));
+        if (!le.isError()) {
+            if (co.getLastStepError() != null) {
+                le.setError(OrderStateText.FAILED.value(), co);
+                // if (le.isNullOrDefaultReturnCode() && co.getLastStepError().getReturnCode() != null) {
+                le.setReturnCode(co.getLastStepError().getReturnCode());
+                // }
             }
+        }
+
+        if (le.isError()) {
+            co.setLastStepError(le);
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][%s]co.setLastStepError", eventType, co.getOrderId()));
+            }
+        }
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[%s][%s][isError=%s][co.getLastStepError=%s]", eventType, co.getOrderId(), le.isError(), SOSString.toString(co
+                    .getLastStepError())));
         }
 
         switch (eventType) {
         case OrderOutcomeAdded:
-            if (co != null && outcome != null && outcome.isFailed() && outcome.getReturnCode() != null) {
+            if (le.isError()) {
                 le.setState(OrderStateText.FAILED.intValue());
                 le.setLogLevel(LogLevel.ERROR);
-
-                co.setFailedError(le.getErrorState(), le.getErrorReason(), le.getErrorCode(), le.getErrorText(), outcome.getReturnCode());
-                // addCachedOrderStep(cos.getOrderId(), cos);
+            } else {
+                le.setState(OrderStateText.RUNNING.intValue());
+                le.setLogLevel(LogLevel.DETAIL);
             }
             break;
         case OrderFailed:
@@ -1210,7 +1199,16 @@ public class HistoryModel {
             le.setLogLevel(LogLevel.INFO);
             break;
         case OrderFinished:
-            if (le.isError()) {// TODO ??? error on order_finished ???
+            if (le.isError()) {// error on order_finished e.g. if workflow contains a uncatchable Fail instruction
+                le.setState(OrderStateText.FAILED.intValue());
+                le.setLogLevel(LogLevel.ERROR);
+            } else {
+                le.setState(OrderStateText.FINISHED.intValue());
+                le.setLogLevel(LogLevel.MAIN);
+            }
+            break;
+        case OrderJoined:
+            if (le.isError()) {
                 le.setState(OrderStateText.FAILED.intValue());
                 le.setLogLevel(LogLevel.ERROR);
             } else {
@@ -1415,10 +1413,10 @@ public class HistoryModel {
                     endedOrderSteps, true));
         }
 
-        LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, EventType.OrderJoined, JocClusterUtil.getEventIdAsDate(entry.getEventId()), null);
         CachedOrder co = getCachedOrderByCurrentOrderId(dbLayer, entry.getOrderId(), entry.getEventId());
-        le.onOrderJoined(co, entry.getPosition(), entry.getChilds().stream().map(s -> s.getOrderId()).collect(Collectors.toList()), entry
-                .getOutcome());
+        LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, EventType.OrderJoined, JocClusterUtil.getEventIdAsDate(entry.getEventId()), null);
+        le.onOrderJoined(co, entry.getOutcome(), entry.getPosition(), entry.getChilds().stream().map(s -> s.getOrderId()).collect(Collectors
+                .toList()));
         storeLog2File(le);
 
         HistoryOrderBean hob = co.convert(EventType.OrderJoined, entry.getEventId(), controllerConfiguration.getCurrent().getId());
@@ -1564,6 +1562,7 @@ public class HistoryModel {
             if (le.isError() && SOSString.isEmpty(le.getErrorText())) {
                 le.setErrorText(cos.getFirstChunkStdError());
             }
+            co.setLastStepError(le, cos);
             cos.setSeverity(HistorySeverity.map2DbSeverity(le.isError() ? OrderStateText.FAILED : OrderStateText.FINISHED));
 
             Map<String, Value> namedValues = handleNamedValues(entry, co, cos);

@@ -24,7 +24,6 @@ public class CachedOrderStep {
     private Integer returnCode;
     private Date startTime;
     private Date endTime;
-    private CachedError error;
     private Boolean lastStdEndsWithNewLine;
     private String firstChunkStdError;
     private Boolean warnOnStderr;
@@ -183,13 +182,4 @@ public class CachedOrderStep {
     public String getFirstChunkStdError() {
         return firstChunkStdError;
     }
-
-    public CachedError getError() {
-        return error;
-    }
-
-    public void setError(String errorState, String errorReason, String errorCode, String errorText) {
-        error = new CachedError(errorState, errorReason, errorCode, errorText);
-    }
-
 }
