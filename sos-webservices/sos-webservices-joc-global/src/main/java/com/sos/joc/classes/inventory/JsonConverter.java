@@ -382,7 +382,7 @@ public class JsonConverter {
                     Finish finish = invInstruction.cast();
                     if (finish.getUnsuccessful()) {
                         com.sos.sign.model.instruction.Finish sFinish = signInstruction.cast();
-                        sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Failed", new Variables()));
+                        sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Failed", quoteString(finish.getMessage()), new Variables()));
                     }
                     break;
                 default:

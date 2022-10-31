@@ -560,10 +560,6 @@ public class JsonSerializer {
                     }
                     f.setUncatchable(defaultToNull(f.getUncatchable(), Boolean.FALSE));
                     break;
-                case FINISH:
-                    com.sos.sign.model.instruction.Finish fi = inst.cast();
-                    fi.setMessage(quoteString(fi.getMessage()));
-                    break;
                 case EXECUTE_NAMED:
                     com.sos.sign.model.instruction.NamedJob nj = inst.cast();
                     nj.setDefaultArguments(emptyEnvToNullAndQuoteStrings(nj.getDefaultArguments()));
