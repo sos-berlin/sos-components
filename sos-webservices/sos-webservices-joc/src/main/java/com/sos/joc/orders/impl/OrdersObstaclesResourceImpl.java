@@ -54,7 +54,7 @@ public class OrdersObstaclesResourceImpl extends JOCResourceImpl implements IOrd
             if (ordersFilter.getOrderIds() == null || ordersFilter.getOrderIds().isEmpty()) {
                 orderIds = currentState.orderIds();
             } else {
-                orderIds = ordersFilter.getOrderIds().stream().map(o -> OrderId.of(o)).collect(Collectors.toSet());
+                orderIds = ordersFilter.getOrderIds().stream().map(OrderId::of).collect(Collectors.toSet());
             }
             Either<Problem, Map<OrderId, Set<JOrderObstacle>>> obstaclesE = currentState.ordersToObstacles(orderIds, surveyDateInstant);
             ProblemHelper.throwProblemIfExist(obstaclesE);

@@ -84,6 +84,8 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
                     return getJocPermissions(accessToken).getDocumentations().getView();
                 case INVENTORY:
                     return getJocPermissions(accessToken).getInventory().getView();
+                case IDENTITY:
+                    return getJocPermissions(accessToken).getAdministration().getAccounts().getView();
                 default:
                     return true;
                 }

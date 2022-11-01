@@ -185,6 +185,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 }
                 break;
             case IAM:
+                if (!getJocPermissions(accessToken).getAdministration().getAccounts().getManage()) {
+                    return accessDeniedResponse();
+                }
                 dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
                 account = ConfigurationGlobals.ACCOUNT;
                 storeAuditLog(configuration.getAuditLog(), CategoryType.IDENTITY);
