@@ -19,15 +19,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "message",
     "outcome"
 })
 public class Finish
     extends Instruction
 {
 
-    @JsonProperty("message")
-    private String message;
     @JsonProperty("outcome")
     private Outcome outcome;
 
@@ -40,24 +37,12 @@ public class Finish
 
     /**
      * 
-     * @param message
      * @param tYPE
      * @param outcome
      */
-    public Finish(String message, Outcome outcome, InstructionType tYPE) {
+    public Finish(Outcome outcome, InstructionType tYPE) {
         super(tYPE);
-        this.message = message;
         this.outcome = outcome;
-    }
-
-    @JsonProperty("message")
-    public String getMessage() {
-        return message;
-    }
-
-    @JsonProperty("message")
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     @JsonProperty("outcome")
@@ -72,12 +57,12 @@ public class Finish
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("message", message).append("outcome", outcome).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("outcome", outcome).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(message).append(outcome).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(outcome).toHashCode();
     }
 
     @Override
@@ -89,7 +74,7 @@ public class Finish
             return false;
         }
         Finish rhs = ((Finish) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(message, rhs.message).append(outcome, rhs.outcome).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(outcome, rhs.outcome).isEquals();
     }
 
 }

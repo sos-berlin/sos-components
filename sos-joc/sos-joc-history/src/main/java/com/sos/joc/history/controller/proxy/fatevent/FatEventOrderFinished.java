@@ -4,7 +4,7 @@ import java.util.Date;
 
 import com.sos.joc.history.controller.proxy.HistoryEventType;
 
-// without outcome
+// with outcome
 public final class FatEventOrderFinished extends AFatEventOrderProcessed {
 
     public FatEventOrderFinished(Long eventId, Date eventDatetime) {

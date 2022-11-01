@@ -73,6 +73,7 @@ import com.sos.joc.history.helper.HistoryUtil;
 
 import js7.data.event.Event;
 import js7.data.order.OrderEvent.OrderBroken;
+import js7.data.order.OrderEvent.OrderFinished;
 import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
@@ -315,6 +316,7 @@ public class HistoryControllerHandlerTest {
                 event = new FatEventOrderJoined(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
                         .getPosition(), order.getArguments(), childs, outcome);
+
                 break;
 
             case OrderStepStdoutWritten:
@@ -432,8 +434,15 @@ public class HistoryControllerHandlerTest {
             case OrderFinished:
                 order = entry.getCheckedOrder();
 
+                oi = order.getOutcomeInfoFinished(((OrderFinished) entry.getEvent()).outcome());
+                outcome = null;
+                if (oi != null) {
+                    outcome = new FatOutcome(oi.getType(), oi.getReturnCode(), oi.isSucceeded(), oi.isFailed(), oi.getNamedValues(), oi
+                            .getErrorCode(), oi.getErrorMessage());
+                }
+
                 event = new FatEventOrderFinished(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
+                event.set(order.getOrderId(), outcome, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderCancelled:

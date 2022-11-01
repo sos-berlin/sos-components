@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.Finish;
@@ -381,7 +382,7 @@ public class JsonConverter {
                     Finish finish = invInstruction.cast();
                     if (finish.getUnsuccessful()) {
                         com.sos.sign.model.instruction.Finish sFinish = signInstruction.cast();
-                        sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Failed"));
+                        sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Failed", quoteString(finish.getMessage()), new Variables()));
                     }
                     break;
                 default:

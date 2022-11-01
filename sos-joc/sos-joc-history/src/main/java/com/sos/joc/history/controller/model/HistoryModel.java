@@ -1142,9 +1142,7 @@ public class HistoryModel {
         if (!le.isError()) {
             if (co.getLastStepError() != null) {
                 le.setError(OrderStateText.FAILED.value(), co);
-                // if (le.isNullOrDefaultReturnCode() && co.getLastStepError().getReturnCode() != null) {
                 le.setReturnCode(co.getLastStepError().getReturnCode());
-                // }
             }
         }
 
@@ -1199,7 +1197,7 @@ public class HistoryModel {
             le.setLogLevel(LogLevel.INFO);
             break;
         case OrderFinished:
-            if (le.isError()) {// error on order_finished e.g. if workflow contains a uncatchable Fail instruction
+            if (le.isError()) {
                 le.setState(OrderStateText.FAILED.intValue());
                 le.setLogLevel(LogLevel.ERROR);
             } else {
