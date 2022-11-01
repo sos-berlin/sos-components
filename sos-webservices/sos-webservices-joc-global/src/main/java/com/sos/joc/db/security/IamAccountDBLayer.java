@@ -253,10 +253,9 @@ public class IamAccountDBLayer {
                 + "' as accountName" + " from " + DBItemIamAccount2Roles + " u, " + DBItemIamRole
                 + " r where r.id=u.roleId and u.accountId=:accountId and r.identityServiceId=:identityServiceId";
 
-        Query<DBItemIamAccount2RoleWithName> query = sosHibernateSession.createQuery(q);
+        Query<DBItemIamAccount2RoleWithName> query = sosHibernateSession.createQuery(q,DBItemIamAccount2RoleWithName.class);
         query.setParameter("accountId", dbitemIamAccount.getId());
         query.setParameter("identityServiceId", dbitemIamAccount.getIdentityServiceId());
-        query.setResultTransformer(Transformers.aliasToBean(DBItemIamAccount2RoleWithName.class));
         List<DBItemIamAccount2RoleWithName> listOfRolesWithName = sosHibernateSession.getResultList(query);
         return listOfRolesWithName == null ? Collections.emptyList() : listOfRolesWithName;
 
@@ -269,9 +268,8 @@ public class IamAccountDBLayer {
                 + "p.excluded as excluded,p.recursive as recursive,r.roleName as roleName" + " from " + DBItemIamPermission + " p, " + DBItemIamRole
                 + " r where r.identityServiceId=p.identityServiceId and r.id=p.roleId and r.identityServiceId=:identityServiceId";
 
-        Query<DBItemIamPermissionWithName> query = sosHibernateSession.createQuery(q);
+        Query<DBItemIamPermissionWithName> query = sosHibernateSession.createQuery(q,DBItemIamPermissionWithName.class);
         query.setParameter("identityServiceId", identityServiceId);
-        query.setResultTransformer(Transformers.aliasToBean(DBItemIamPermissionWithName.class));
         List<DBItemIamPermissionWithName> listOfPermissionsWithName = sosHibernateSession.getResultList(query);
         return listOfPermissionsWithName == null ? Collections.emptyList() : listOfPermissionsWithName;
 
@@ -283,11 +281,9 @@ public class IamAccountDBLayer {
                 + DBItemIamRole + " r" + " where a.accountName=:accountName"
                 + " and ar.accountId=a.id and r.id=ar.roleId and r.identityServiceId=:identityServiceId";
 
-        Query<DBItemIamPermissionWithName> query = sosHibernateSession.createQuery(q);
+        Query<DBItemIamPermissionWithName> query = sosHibernateSession.createQuery(q,DBItemIamPermissionWithName.class);
         query.setParameter("accountName", accountName);
         query.setParameter("identityServiceId", identityServiceId);
-
-        query.setResultTransformer(Transformers.aliasToBean(DBItemIamPermissionWithName.class));
 
         List<DBItemIamPermissionWithName> listOfRolesForAccountName = sosHibernateSession.getResultList(query);
         return listOfRolesForAccountName == null ? Collections.emptyList() : listOfRolesForAccountName;
@@ -390,12 +386,9 @@ public class IamAccountDBLayer {
                 + DBItemIamPermission + " p," + DBItemIamRole + " r" + " where " + getRoleListSql(setOfRoles)
                 + " and p.roleId=r.id and p.identityServiceId = :identityServiceId";
 
-        Query<DBItemIamPermissionWithName> query = sosHibernateSession.createQuery(q);
+        Query<DBItemIamPermissionWithName> query = sosHibernateSession.createQuery(q,DBItemIamPermissionWithName.class);
 
         query.setParameter("identityServiceId", identityServiceId);
-
-        query.setResultTransformer(Transformers.aliasToBean(DBItemIamPermissionWithName.class));
-
         List<DBItemIamPermissionWithName> listOfPermissionsFromRoles = sosHibernateSession.getResultList(query);
         return listOfPermissionsFromRoles == null ? Collections.emptyList() : listOfPermissionsFromRoles;
 
