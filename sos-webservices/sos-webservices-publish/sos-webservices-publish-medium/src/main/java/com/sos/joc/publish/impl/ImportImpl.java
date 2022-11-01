@@ -15,8 +15,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +49,8 @@ import com.sos.joc.publish.mapper.UpdateableConfigurationObject;
 import com.sos.joc.publish.resource.IImportResource;
 import com.sos.joc.publish.util.ImportUtils;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("inventory")
 public class ImportImpl extends JOCResourceImpl implements IImportResource {

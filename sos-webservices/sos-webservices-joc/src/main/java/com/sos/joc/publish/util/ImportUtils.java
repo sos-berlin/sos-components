@@ -541,20 +541,25 @@ public class ImportUtils {
             DBOpenSessionException {
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
         ZipInputStream zipStream = null;
-        Set<String> notImported = new HashSet<String>();
         try {
             zipStream = new ZipInputStream(inputStream);
             ZipEntry entry = null;
             while ((entry = zipStream.getNextEntry()) != null) {
                 if (entry.isDirectory()) {
+                    try {
+                        SOSCheckJavaVariableName.test("folder", Paths.get(entry.getName()).getFileName().toString());
+                    } catch (IllegalArgumentException e) {
+                        throw new JocImportException("import rejected.", e);
+                    }
                     continue;
                 }
                 String entryName = entry.getName().replace('\\', '/');
                 String filename = Paths.get(entryName).getFileName().toString();
                 filename = filename.replaceFirst("\\.[^.]+\\.json$", "");
-                if(!SOSCheckJavaVariableName.test(filename)) {
-                    notImported.add(filename);
-                    continue;
+                try {
+                    SOSCheckJavaVariableName.test("filename", filename);
+                } catch (IllegalArgumentException e) {
+                    throw new JocImportException("import rejected.", e);
                 }
                 ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
                 byte[] binBuffer = new byte[8192];
@@ -582,10 +587,6 @@ public class ImportUtils {
                     zipStream.close();
                 } catch (IOException e) {
                 }
-            }
-            if(!notImported.isEmpty()) {
-                LOGGER.warn("The following files were not imported, as the filenames do not comply to the JS7 naming rules.");
-                LOGGER.warn(String.format("%1$s", notImported.toString()));
             }
         }
         return objects;
@@ -667,20 +668,25 @@ public class ImportUtils {
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
         GZIPInputStream gzipInputStream = null;
         TarArchiveInputStream tarArchiveInputStream = null;
-        Set<String> notImported = new HashSet<String>();
         try {
             gzipInputStream = new GZIPInputStream(inputStream);
             tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream);
             ArchiveEntry entry = null;
             while ((entry = tarArchiveInputStream.getNextEntry()) != null) {
                 if (entry.isDirectory()) {
+                    try {
+                        SOSCheckJavaVariableName.test("folder", Paths.get(entry.getName()).getFileName().toString());
+                    } catch (IllegalArgumentException e) {
+                        throw new JocImportException("import rejected.", e);
+                    }
                     continue;
                 }
                 String entryName = entry.getName().replace('\\', '/');
                 String filename = Paths.get(entryName).getFileName().toString();
-                if(!SOSCheckJavaVariableName.test(filename)) {
-                    notImported.add(filename);
-                    continue;
+                try {
+                    SOSCheckJavaVariableName.test("filename", filename);
+                } catch (IllegalArgumentException e) {
+                    throw new JocImportException("import rejected.", e);
                 }
                 ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
                 byte[] binBuffer = new byte[8192];
@@ -711,10 +717,6 @@ public class ImportUtils {
                     gzipInputStream.close();
                 }
             } catch (Exception e) {
-            }
-            if(!notImported.isEmpty()) {
-                LOGGER.warn("The following files were not imported, as the filenames do not comply to the JS7 naming rules.");
-                LOGGER.warn(String.format("%1$s", notImported.toString()));
             }
         }
         return objects;
