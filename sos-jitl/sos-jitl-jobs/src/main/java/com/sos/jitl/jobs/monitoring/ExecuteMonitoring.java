@@ -43,14 +43,11 @@ public class ExecuteMonitoring {
         String accessToken = null;
         try {
             ApiResponse apiResponse = apiExecutor.login();
-            if (apiResponse.getStatusCode() == null) {
-                String message = "Could not connect to any uri in " + apiExecutor.getJocUris();
-                throw new SOSException(message);
-            }
+            
             if (apiResponse.getStatusCode() == 200) {
                 accessToken = apiResponse.getAccessToken();
             } else {
-                String message = apiResponse.getStatusCode() + " " + apiExecutor.getClient().getHttpResponse().getStatusLine().getReasonPhrase();
+                String message = apiResponse.getStatusCode() + " " + apiResponse.getReasonPhrase() + " " + apiResponse.getException().getMessage();
                 throw new SOSException(message);
             }
             MonitoringWebserviceExecuter monitoringWebserviceExecuter = new MonitoringWebserviceExecuter(logger, apiExecutor);

@@ -110,80 +110,73 @@ public class ApiExecutor {
         this.jobLogger = jobLogger;
     }
 
+    private String getReasonPhrase() {
+        String reasonPhrase = "";
+        if (this.getClient() != null && this.getClient().getHttpResponse() != null && this.getClient().getHttpResponse().getStatusLine() != null) {
+            reasonPhrase = this.getClient().getHttpResponse().getStatusLine().getReasonPhrase();
+        }
+        return reasonPhrase;
+    }
+
     public ApiResponse login() throws SOSMissingDataException {
         logDebug("***ApiExecutor***");
         jocUris = getUris();
         String latestError = "";
-        String latestErrorDescription = "";
-        String latestAdditionalErrorMessage = "";
         String latestResponse = "";
-        Integer statusCode = 0;
+        Integer statusCode = -1;
+        URI loginUri = null;
         for (String uri : jocUris) {
             try {
                 logDebug(String.format("processing Url - %1$s", uri));
                 tryCreateClient(uri);
                 this.jocUri = URI.create(uri);
-                URI loginUri = jocUri.resolve(WS_API_LOGIN);
+                loginUri = jocUri.resolve(WS_API_LOGIN);
                 logDebug("send login to: " + loginUri.toString());
                 String response = client.postRestService(loginUri, null);
                 latestResponse = response;
                 statusCode = client.statusCode();
                 logDebug("HTTP status code: " + statusCode);
-                try {
-                    handleExitCode(client);
-                    if(client.statusCode() == 401) {
-                        // 401 == Unauthorized!
-                        JsonReader jsonReader = null;
-                        String message = "";
-                        try {
-                            jsonReader = Json.createReader(new StringReader(response));
-                            JsonObject json = jsonReader.readObject();
-                            message = json.getString("message", "");
-                            if (!message.isEmpty() && message.contains(":")) {
-                                String exceptionClass = message.substring(0, message.indexOf(":"));
-                                String errorJson = message.substring(message.indexOf(":") + 1, message.lastIndexOf(":"));
-                                latestAdditionalErrorMessage = message.substring(message.lastIndexOf(":") + 1, message.length());
-                                jsonReader.close();
-                                jsonReader = Json.createReader(new StringReader(errorJson.trim()));
-                                json = jsonReader.readObject();
-                                latestError = json.getString("error", "");
-                                latestErrorDescription = json.getString("error_description", "");
-                            }
-                        } catch(Exception e) {
-                            throw e;
-                        } finally {
-                            jsonReader.close();
+                handleExitCode(client);
+                if (client.statusCode() == 401) {
+                    // 401 == Unauthorized!
+                    JsonReader jsonReader = null;
+                    String message = "";
+                    try {
+                        jsonReader = Json.createReader(new StringReader(response));
+                        JsonObject json = jsonReader.readObject();
+                        message = json.getString("message", "");
+                        if (!message.isEmpty()) {
+                            latestError = message;
+                            throw new Exception(message);
                         }
-                        throw new Exception("login failed.");
-                    } else if (statusCode == 200){
-                        logDebug(String.format("Connection to URI %1$s established.", loginUri.toString()));
-                        return new ApiResponse(statusCode, response, client.getResponseHeader(ACCESS_TOKEN_HEADER), null);
+                    } catch (Exception e) {
+                        throw e;
+                    } finally {
+                        jsonReader.close();
                     }
-                } catch (SOSConnectionRefusedException e) {
-                    logDebug(String.format("connection to URI %1$s failed, trying next Uri.", loginUri.toString()));
-                    continue;
+                    throw new Exception("login failed.");
+                } else if (statusCode == 200) {
+                    logDebug(String.format("Connection to URI %1$s established.", loginUri.toString()));
+                    return new ApiResponse(statusCode, getReasonPhrase(), response, client.getResponseHeader(ACCESS_TOKEN_HEADER), null);
                 }
+
+            } catch (SOSConnectionRefusedException e) {
+                latestError = String.format("connection to URI %1$s failed, trying next Uri.", loginUri.toString());
+                logDebug(latestError);
+                continue;
             } catch (Exception e) {
-                if(this.jocUri != null) {
-                    logDebug(String.format("connection to URI %1$s failed, trying next Uri.", jocUri.resolve(WS_API_LOGIN).toString()));
+                if (this.jocUri != null) {
+                    latestError = String.format("connection to URI %1$s: %2$s occurred: %3$s", this.jocUri, e.getClass(), e.getMessage());
+                    logDebug(latestError);
                 } else {
-                    logDebug(String.format("%1$s occurred: %2$s", e.getClass(), e.getMessage()));
+                    latestError = String.format("%1$s occurred: %2$s", e.getClass(), e.getMessage());
+                    logDebug(latestError);
                 }
                 continue;
             }
         }
-        logDebug("No connection attempt was successful. Check agents private.conf.");
-        if (!latestError.isEmpty() || !latestErrorDescription.isEmpty()) {
-            if(!latestAdditionalErrorMessage.isEmpty()) {
-                return new ApiResponse(statusCode, latestResponse, null, 
-                        new Exception(String.format("%1$s: %2$s - %3$s", latestError, latestErrorDescription, latestAdditionalErrorMessage)));
-            } else {
-                return new ApiResponse(statusCode, latestResponse, null, 
-                        new Exception(String.format("%1$s: %2$s", latestError, latestErrorDescription)));
-            }
-        } else {
-            return new ApiResponse(null, null, null, null);
-        }
+        logInfo("No connection attempt was successful. Check agents private.conf.");
+        return new ApiResponse(statusCode, getReasonPhrase(), latestResponse, null, new Exception(latestError));
     }
 
     public ApiResponse post(String token, String apiUrl, String body) throws SOSConnectionRefusedException, SOSBadRequestException {
@@ -203,9 +196,9 @@ public class ApiExecutor {
                     String response = client.postRestService(jocUri.resolve(apiUrl), body);
                     logDebug("HTTP status code: " + client.statusCode());
                     handleExitCode(client);
-                    return new ApiResponse(client.statusCode(), response, token, null);
+                    return new ApiResponse(client.statusCode(), getReasonPhrase(), response, token, null);
                 } catch (SOSException e) {
-                    return new ApiResponse(client.statusCode(), null, token, e);
+                    return new ApiResponse(client.statusCode(), getReasonPhrase(), null, token, e);
                 }
             } else {
                 throw new SOSConnectionRefusedException("No connection established through previous login api call.");
@@ -221,9 +214,9 @@ public class ApiExecutor {
                 String response = client.postRestService(jocUri.resolve(WS_API_LOGOUT), null);
                 logDebug("HTTP status code: " + client.statusCode());
                 handleExitCode(client);
-                return new ApiResponse(client.statusCode(), response, token, null);
+                return new ApiResponse(client.statusCode(), getReasonPhrase(), response, token, null);
             } catch (SOSException e) {
-                return new ApiResponse(client.statusCode(), null, token, e);
+                return new ApiResponse(client.statusCode(), getReasonPhrase(), null, token, e);
             }
         } else {
             throw new SOSBadRequestException("no access token provided. permission denied.");
@@ -235,7 +228,7 @@ public class ApiExecutor {
     }
 
     private List<String> getUris() throws SOSMissingDataException {
-        if(config == null) {
+        if (config == null) {
             readConfig();
         }
         List<String> uris = config.getConfig(PRIVATE_CONF_JS7_PARAM_API_SERVER).getStringList(PRIVATE_CONF_JS7_PARAM_URL);
@@ -250,7 +243,7 @@ public class ApiExecutor {
 
     private void applySSLContextCredentials(SOSRestApiClient client) throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
             IOException, SOSSSLException, SOSMissingDataException {
-        if(config == null) {
+        if (config == null) {
             readConfig();
         }
         List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(config);
@@ -271,7 +264,8 @@ public class ApiExecutor {
         }
         if (keystore != null && truststore != null) {
             // TODO consider alias JOC-1379
-            client.setSSLContext(keystore, credentials.getKeyPwd() != null ? credentials.getKeyPwd().toCharArray() : "".toCharArray(), credentials.getKeyStoreAlias(), truststore);
+            client.setSSLContext(keystore, credentials.getKeyPwd() != null ? credentials.getKeyPwd().toCharArray() : "".toCharArray(), credentials
+                    .getKeyStoreAlias(), truststore);
         }
     }
 
@@ -280,7 +274,7 @@ public class ApiExecutor {
         if (client != null) {
             client.closeHttpClient();
         }
-        if(config == null) {
+        if (config == null) {
             readConfig();
         }
         client = new SOSRestApiClient();
@@ -290,7 +284,7 @@ public class ApiExecutor {
             applySSLContextCredentials(client);
         }
     }
-    
+
     private void setBasicAuthorizationIfExists(Config config) throws SOSKeePassDatabaseException, SOSMissingDataException {
         String csFile = null;
         String csKeyFile = null;
@@ -321,13 +315,13 @@ public class ApiExecutor {
                 username = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME);
             } catch (ConfigException e) {
                 logDebug("no username found in private.conf.");
-                
+
             }
             try {
                 pwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD);
             } catch (ConfigException e) {
                 logDebug("no (user-)password found in private.conf.");
-                
+
             }
         }
         if (!username.isEmpty() && !pwd.isEmpty()) {
@@ -401,12 +395,12 @@ public class ApiExecutor {
             logDebug("no keystore store-password found in private.conf.");
         }
         String alias = null;
-        try{
+        try {
             alias = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS);
         } catch (ConfigException e) {
             logDebug("no (key-)alias found in private.conf.");
         }
-        if(keystorePath != null && !keystorePath.isEmpty()) {
+        if (keystorePath != null && !keystorePath.isEmpty()) {
             return new KeyStoreCredentials(keystorePath, storePasswd, keyPasswd, alias);
         } else {
             return null;
@@ -416,9 +410,9 @@ public class ApiExecutor {
     private List<KeyStoreCredentials> readTruststoreCredentials(Config config) {
         List<KeyStoreCredentials> credentials = null;
         try {
-            credentials = config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).stream()
-                    .map(item -> new KeyStoreCredentials(item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH), item.getString(
-                        PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD))).filter(Objects::nonNull).collect(Collectors.toList());
+            credentials = config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).stream().map(item -> new KeyStoreCredentials(item.getString(
+                    PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH), item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD))).filter(
+                            Objects::nonNull).collect(Collectors.toList());
             logDebug("read Trustore from: " + config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(
                     PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
         } catch (ConfigException e) {
@@ -455,8 +449,7 @@ public class ApiExecutor {
         }
     }
 
-    private void handleExitCode(SOSRestApiClient client) throws SOSAuthenticationFailedException, SOSConnectionRefusedException,
-            SOSException {
+    private void handleExitCode(SOSRestApiClient client) throws SOSAuthenticationFailedException, SOSConnectionRefusedException, SOSException {
         if (client.statusCode() >= 500) {
             throw new SOSConnectionRefusedException();
         }
@@ -467,7 +460,7 @@ public class ApiExecutor {
     }
 
     public Config getConfig() throws SOSMissingDataException {
-        if(config == null) {
+        if (config == null) {
             readConfig();
         }
         return config;
