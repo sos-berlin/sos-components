@@ -41,7 +41,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public class SOSAuthHelper {
 
     public static final List<String> SUPPORTED_SUBTYPES = Arrays.asList("gif", "jpeg", "png", "icon", "svg");
-    
+
     public static final String INITIAL = "initial";
     public static final String NONE = "*none";
 
@@ -179,7 +179,7 @@ public class SOSAuthHelper {
     public static boolean checkCertificate(HttpServletRequest request, String account) {
 
         boolean success = false;
-        System.out.println("==> check certificate for " + account);
+        LOGGER.debug("==> check certificate for " + account);
 
         if (request != null) {
             String clientCertCN = null;
@@ -196,12 +196,12 @@ public class SOSAuthHelper {
                     if (clientCertHandler.getClientCertificate().getNotBefore() == null) {
                         LOGGER.warn("Certificate not_before is null");
                     }
-                    System.out.println("Now:" + now.getTime());
+                    LOGGER.debug("Now:" + now.getTime());
                     if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotAfter() != null)) {
-                        System.out.println("NotAfter:" + clientCertHandler.getClientCertificate().getNotAfter().getTime());
+                        LOGGER.warn("NotAfter:" + clientCertHandler.getClientCertificate().getNotAfter().getTime());
                     }
                     if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotBefore() != null)) {
-                        System.out.println("NotBefore:" + clientCertHandler.getClientCertificate().getNotBefore().getTime());
+                        LOGGER.warn("NotBefore:" + clientCertHandler.getClientCertificate().getNotBefore().getTime());
                     }
                 }
 
@@ -210,9 +210,12 @@ public class SOSAuthHelper {
                         account = "";
                     }
                     success = (account.isEmpty() || clientCertCN.equals(account));
-                    System.out.println("success " + success);
+                    if (!success) {
+                        LOGGER.warn("Account does not match clientCertCN");
+                    }
+                    LOGGER.debug("success " + success);
                 } else {
-                    System.out.println("clientCertCN could not read");
+                    LOGGER.debug("clientCertCN could not read");
                 }
                 if (success) {
                     account = clientCertCN;
