@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
+import com.sos.joc.model.history.order.OrderLogEntryLogLevel;
 import com.sos.joc.model.history.order.caught.Caught;
 import com.sos.joc.model.history.order.caught.CaughtCause;
 import com.sos.joc.model.order.OrderStateText;
@@ -21,11 +22,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught.FatEven
 
 public class LogEntry {
 
-    public enum LogLevel {
-        MAIN, DETAIL, INFO, ERROR;
-    }
-
-    private LogLevel logLevel;
+    private OrderLogEntryLogLevel logLevel;
     private final EventType eventType;
     private final Date controllerDatetime;
     private final Date agentDatetime;
@@ -53,7 +50,7 @@ public class LogEntry {
     private Date delayedUntil;
     private Caught caught;
 
-    public LogEntry(LogLevel level, EventType type, Date controllerDate, Date agentDate) {
+    public LogEntry(OrderLogEntryLogLevel level, EventType type, Date controllerDate, Date agentDate) {
         logLevel = level;
         eventType = type;
         controllerDatetime = controllerDate;
@@ -124,7 +121,7 @@ public class LogEntry {
     public void setError(String state, FatOutcome outcome) {
         error = true;
         errorState = state == null ? null : state.toLowerCase();
-        errorReason = outcome.getType().name();
+        errorReason = outcome.getErrorReason();
         errorCode = outcome.getErrorCode();
         errorText = outcome.getErrorMessage();
     }
@@ -149,6 +146,9 @@ public class LogEntry {
         if (outcome.getReturnCode() == null && SOSString.isEmpty(outcome.getErrorMessage()) && co.getLastStepError() != null) {
             setError(OrderStateText.FAILED.value(), co);
             setReturnCode(co.getLastStepError().getReturnCode());
+            if (outcome.getErrorReason() != null) {
+                errorReason = outcome.getErrorReason();
+            }
         } else {
             setError(OrderStateText.FAILED.value(), outcome);
         }
@@ -214,11 +214,11 @@ public class LogEntry {
 
     }
 
-    public void setLogLevel(LogLevel val) {
+    public void setLogLevel(OrderLogEntryLogLevel val) {
         logLevel = val;
     }
 
-    public LogLevel getLogLevel() {
+    public OrderLogEntryLogLevel getLogLevel() {
         return logLevel;
     }
 

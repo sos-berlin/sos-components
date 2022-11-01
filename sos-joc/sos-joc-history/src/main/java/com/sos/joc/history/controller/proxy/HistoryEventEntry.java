@@ -20,6 +20,7 @@ import com.sos.joc.event.bean.agent.SubagentVersionUpdatedEvent;
 import com.sos.joc.history.controller.exception.FatEventProblemException;
 import com.sos.joc.history.controller.proxy.fatevent.FatExpectNotice;
 import com.sos.joc.history.controller.proxy.fatevent.FatExpectNotices;
+import com.sos.joc.history.controller.proxy.fatevent.FatOutcome;
 import com.sos.joc.history.controller.proxy.fatevent.FatPostNotice;
 
 import io.vavr.control.Either;
@@ -40,11 +41,13 @@ import js7.data.node.NodeId;
 import js7.data.order.Order;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.LockDemand;
+import js7.data.order.OrderEvent.OrderFinished;
 import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
 import js7.data.order.OrderEvent.OrderNoticePosted;
 import js7.data.order.OrderEvent.OrderNoticesConsumptionStarted;
+import js7.data.order.OrderEvent.OrderOutcomeAdded;
 import js7.data.order.OrderId;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
@@ -57,6 +60,8 @@ import js7.data.subagent.SubagentItemStateEvent.SubagentDedicated;
 import js7.data.value.Value;
 import js7.data.workflow.Instruction;
 import js7.data.workflow.instructions.ExpectNotices;
+import js7.data.workflow.instructions.Fail;
+import js7.data.workflow.instructions.Finish;
 import js7.data.workflow.instructions.executable.WorkflowJob.Name;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerState;
@@ -66,6 +71,7 @@ import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrder.Forked;
 import js7.data_for_java.order.JOrderEvent;
 import js7.data_for_java.order.JOrderEvent.JExpectedNotice;
+import js7.data_for_java.order.JOrderEvent.JOrderFailed;
 import js7.data_for_java.order.JOrderEvent.JOrderForked;
 import js7.data_for_java.subagent.JSubagentItem;
 import js7.data_for_java.workflow.JWorkflow;
@@ -82,6 +88,10 @@ public class HistoryEventEntry {
 
     public static enum OutcomeType {
         succeeded, failed, disrupted, broken, killed, timedout
+    }
+
+    public static enum OutcomeTypeFailedReason {
+        finish_instruction, fail_instruction
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventEntry.class);
@@ -299,29 +309,68 @@ public class HistoryEventEntry {
         }
 
         public OutcomeInfo getOutcomeInfo(Option<Outcome.NotSucceeded> problem) throws Exception {
-            if (problem == null) {
-                return getOutcomeInfo(OutcomeType.failed, null);
-            }
-            Optional<Outcome.NotSucceeded> op = OptionConverters.toJava(problem);
-            if (!op.isPresent()) {
-                return getOutcomeInfo(OutcomeType.failed, null);
-            }
             if (outcomeInfo == null) {
+                if (problem == null) {
+                    outcomeInfo = getOutcomeInfo(OutcomeType.failed, null);
+                    return outcomeInfo;
+                }
+                Optional<Outcome.NotSucceeded> op = OptionConverters.toJava(problem);
+                if (!op.isPresent()) {
+                    outcomeInfo = getOutcomeInfo(OutcomeType.failed, null);
+                    return outcomeInfo;
+                }
+
                 outcomeInfo = new OutcomeInfo(OutcomeType.failed, op.get());
             }
             return outcomeInfo;
         }
 
-        public OutcomeInfo getOutcomeInfoFinished(Option<Completed> completed) throws Exception {
-            if (completed == null) {
-                return getOutcomeInfo(OutcomeType.succeeded, null);
-            }
-            Optional<Completed> op = OptionConverters.toJava(completed);
-            if (!op.isPresent()) {
-                return getOutcomeInfo(OutcomeType.succeeded, null);
-            }
+        public OutcomeInfo getOutcomeInfoOutcomeAdded() throws Exception {
             if (outcomeInfo == null) {
+                outcomeInfo = getOutcomeInfo(((OrderOutcomeAdded) event).outcome());
+                if (outcomeInfo != null) {
+                    Instruction i = getCurrentPositionInstruction();
+                    if (i != null && i instanceof Fail) {
+                        outcomeInfo.errorReason = OutcomeTypeFailedReason.fail_instruction;
+                    }
+                }
+            }
+            return outcomeInfo;
+        }
+
+        public OutcomeInfo getOutcomeInfoFailed() throws Exception {
+            if (outcomeInfo == null) {
+                outcomeInfo = getOutcomeInfo(((JOrderFailed) getJOrderEvent()).outcome());
+                if (outcomeInfo != null) {
+                    Instruction i = getCurrentPositionInstruction();
+                    if (i != null && i instanceof Fail) {
+                        outcomeInfo.errorReason = OutcomeTypeFailedReason.fail_instruction;
+                    }
+                }
+            }
+            return outcomeInfo;
+        }
+
+        public OutcomeInfo getOutcomeInfoFinished() throws Exception {
+            if (outcomeInfo == null) {
+                Option<Completed> completed = ((OrderFinished) event).outcome();
+                if (completed == null) {
+                    outcomeInfo = new OutcomeInfo(OutcomeType.succeeded, (Problem) null);
+                    return outcomeInfo;
+                }
+                Optional<Completed> op = OptionConverters.toJava(completed);
+                if (!op.isPresent()) {
+                    outcomeInfo = new OutcomeInfo(OutcomeType.succeeded, (Problem) null);
+                    return outcomeInfo;
+                }
+
                 outcomeInfo = new OutcomeInfo(op.get());
+                if (outcomeInfo.isFailed) {
+                    Instruction i = getCurrentPositionInstruction();
+                    if (i != null && i instanceof Finish) {
+                        outcomeInfo.errorReason = OutcomeTypeFailedReason.finish_instruction;
+                    }
+                }
             }
             return outcomeInfo;
         }
@@ -510,6 +559,7 @@ public class HistoryEventEntry {
             private boolean isFailed;
             private Map<String, Value> namedValues;
             private OutcomeType type;
+            private OutcomeTypeFailedReason errorReason;
             private String errorCode;
             private String errorMessage;
 
@@ -682,6 +732,14 @@ public class HistoryEventEntry {
 
             public OutcomeType getType() {
                 return type;
+            }
+
+            public OutcomeTypeFailedReason getErrorReason() {
+                return errorReason;
+            }
+
+            public FatOutcome toFatOutcome() {
+                return new FatOutcome(this);
             }
         }
 

@@ -20,7 +20,7 @@ public abstract class AFatEventOrderProcessed extends AFatEvent {
             this.orderId = (String) objects[0];
             if (objects.length > 1) {// FatEventOrderStepProcessed, FatEventOrderFailed
                 if (objects[1] != null) {
-                    this.outcome = (FatOutcome) objects[1];
+                    this.outcome = toFatOutcome(objects[1]);
                 }
                 if (objects.length > 2) {
                     this.position = ((Position) objects[2]).asString();

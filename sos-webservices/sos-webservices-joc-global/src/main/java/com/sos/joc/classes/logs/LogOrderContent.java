@@ -45,6 +45,7 @@ import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.history.order.OrderLogEntry;
 import com.sos.joc.model.history.order.OrderLogEntryError;
+import com.sos.joc.model.history.order.OrderLogEntryLogLevel;
 import com.sos.joc.model.order.OrderLog;
 
 public class LogOrderContent {
@@ -109,18 +110,18 @@ public class LogOrderContent {
                 // only for the rare moment that the file is deleted and now in the database
                 OrderLog oLog = getLogFromDb();
                 if (oLog != null) {
-                   return oLog; 
+                    return oLog;
                 }
             }
         } catch (Exception e) {
             LOGGER.warn(e.toString());
         }
-        
+
         OrderLogEntry item = new OrderLogEntry();
         item.setOrderId(orderId);
         item.setControllerDatetime(ZonedDateTime.now().format(formatter));
         item.setLogEvent(EventType.OrderBroken);
-        item.setLogLevel("INFO");
+        item.setLogLevel(OrderLogEntryLogLevel.INFO);
         item.setPosition("0");
         OrderLogEntryError err = new OrderLogEntryError();
         err.setErrorReason(null);
@@ -130,8 +131,8 @@ public class LogOrderContent {
         } else {
             err.setErrorText("Standby JOC Cockpit instance has no access to the snapshot log");
         }
-        //err.setErrorState("Failed");
-        //err.setErrorCode("99");
+        // err.setErrorState("Failed");
+        // err.setErrorCode("99");
         item.setError(err);
         orderLog.setLogEvents(Arrays.asList(item));
         unCompressedLength = orderLog.toString().length() * 1L;
@@ -371,11 +372,11 @@ public class LogOrderContent {
     }
 
     protected static OrderLogEntry getMappedLogItem(OrderLogEntry item) {
-        if (item.getError() != null) {
-            item.setLogLevel("ERROR");
-        } else if (item.getLogEvent() == EventType.OrderProcessed) {
-            item.setLogLevel("SUCCESS");
-        }
+        // if (item.getError() != null) {
+        // item.setLogLevel(OrderLogEntryLogLevel.ERROR);
+        // } else if (item.getLogEvent() == EventType.OrderProcessed) {
+        // item.setLogLevel(OrderLogEntryLogLevel.SUCCESS);
+        // }
         if (item.getOrderId() != null && item.getOrderId().contains("/")) {
             item.setOrderId(item.getOrderId().replaceFirst("^[^/]+/", ""));
         }

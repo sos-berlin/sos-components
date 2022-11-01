@@ -19,7 +19,7 @@ public final class FatEventOrderJoined extends AFatEventOrder {
     public void set(Object... objects) {
         super.set(objects);
         this.childs = (List<FatForkedChild>) objects[objects.length - 2];
-        this.outcome = (FatOutcome) objects[objects.length - 1];
+        this.outcome = toFatOutcome(objects[objects.length - 1]);
     }
 
     @Override

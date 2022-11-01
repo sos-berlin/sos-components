@@ -67,12 +67,14 @@ public class OrderLogEntry {
     @JsonProperty("orderId")
     private String orderId;
     /**
+     * order history log entry log level
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("logLevel")
-    private String logLevel;
+    private OrderLogEntryLogLevel logLevel;
     /**
      * eventType
      * <p>
@@ -204,22 +206,26 @@ public class OrderLogEntry {
     }
 
     /**
+     * order history log entry log level
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("logLevel")
-    public String getLogLevel() {
+    public OrderLogEntryLogLevel getLogLevel() {
         return logLevel;
     }
 
     /**
+     * order history log entry log level
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("logLevel")
-    public void setLogLevel(String logLevel) {
+    public void setLogLevel(OrderLogEntryLogLevel logLevel) {
         this.logLevel = logLevel;
     }
 

@@ -3,6 +3,7 @@ package com.sos.joc.history.controller.proxy.fatevent;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OutcomeInfo;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.OutcomeType;
 import com.sos.joc.history.helper.HistoryUtil;
 
@@ -18,15 +19,23 @@ public class FatOutcome {
     private final String errorCode;
     private final String errorMessage;
 
-    public FatOutcome(OutcomeType type, Integer returnCode, boolean isSucceeded, boolean isFailed, Map<String, Value> namedValues, String errorCode,
-            String errorMessage) {
-        this.type = type;
-        this.returnCode = returnCode;
-        this.isSucceeded = isSucceeded;
-        this.isFailed = isFailed;
-        this.namedValues = namedValues;
-        this.errorCode = errorCode;
-        this.errorMessage = errorMessage;
+    private String errorReason;
+
+    public FatOutcome(OutcomeInfo oi) {
+        this.type = oi.getType();
+        this.returnCode = oi.getReturnCode();
+        this.isSucceeded = oi.isSucceeded();
+        this.isFailed = oi.isFailed();
+        this.namedValues = oi.getNamedValues();
+        this.errorCode = oi.getErrorCode();
+        this.errorMessage = oi.getErrorMessage();
+        if (isFailed) {
+            if (oi.getErrorReason() == null) {
+                this.errorReason = type == null ? null : type.name();
+            } else {
+                this.errorReason = oi.getErrorReason().name();
+            }
+        }
     }
 
     public OutcomeType getType() {
@@ -59,6 +68,10 @@ public class FatOutcome {
 
     public String getErrorMessage() {
         return errorMessage;
+    }
+
+    public String getErrorReason() {
+        return errorReason;
     }
 
 }
