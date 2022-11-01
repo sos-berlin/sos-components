@@ -19,7 +19,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
-import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
@@ -43,16 +42,16 @@ public class JOCResourceImpl {
     protected JobSchedulerUser jobschedulerUser;
     protected SOSAuthFolderPermissions folderPermissions;
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
-    private String accessToken;
-    private String orig_accessToken;
+//    private String accessToken;
+    private String headerAccessToken;
     private JocAuditLog jocAuditLog;
 
     private JocError jocError = new JocError();
 
     private void initGetPermissions(String accessToken) throws JocException {
-        orig_accessToken = accessToken;
+        headerAccessToken = accessToken;
         if (jobschedulerUser == null) {
-            this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
+//            this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
             jobschedulerUser = new JobSchedulerUser(accessToken);
         }
 
@@ -83,7 +82,7 @@ public class JOCResourceImpl {
     }
 
     public String getAccessToken() {
-        return orig_accessToken;
+        return headerAccessToken;
     }
 
     public String getAccessToken(String accessToken, String oldAccessToken) {
@@ -258,8 +257,8 @@ public class JOCResourceImpl {
 
     public void initLogging(String request, byte[] body, String accessToken) throws JocException, JsonParseException, JsonMappingException,
             IOException {
-        orig_accessToken = accessToken;
-        this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
+        headerAccessToken = accessToken;
+//        this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);
         }
@@ -274,11 +273,6 @@ public class JOCResourceImpl {
         if (sosAuthCurrentAccountAnswer.getSessionTimeout() == 0L) {
             throw new SessionNotExistException("Session has expired. New login is neccessary");
         }
-
-        if (jobschedulerUser == null) {
-            jobschedulerUser = new JobSchedulerUser(this.accessToken);
-        }
-
     }
 
     public void initLogging(String request, byte[] body) {
