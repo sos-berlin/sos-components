@@ -301,9 +301,14 @@ public class HistoryEventEntry {
             return outcomeInfo;
         }
 
-        public OutcomeInfo getOutcomeInfo(OutcomeType type, Problem problem) throws Exception {
+        public OutcomeInfo getOutcomeInfo(OutcomeType type, Option<Problem> problem) throws Exception {
             if (outcomeInfo == null) {
-                outcomeInfo = new OutcomeInfo(type, problem);
+                Optional<Problem> op = OptionConverters.toJava(problem);
+                if (!op.isPresent()) {
+                    outcomeInfo = getOutcomeInfo(type, null);
+                    return outcomeInfo;
+                }
+                outcomeInfo = new OutcomeInfo(type, op.get());
             }
             return outcomeInfo;
         }
