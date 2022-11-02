@@ -963,54 +963,61 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             }
         }
 
-        Map<String, Object> map = new HashMap<String, Object>();
-        List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
+        Map<String, Object> map = vars.getAdditionalProperties();
+//        List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
 
-        for (Entry<String, Object> variable : vars.getAdditionalProperties().entrySet()) {
-            if (variable.getValue() instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<Map<String, Object>> valList = (List<Map<String, Object>>) variable.getValue();
-                values.clear();
-                for (Map<String, Object> par : valList) {
-                    for (Object key : par.keySet()) {
-                        if (key != null) {
-                            values.add(par);
-                        }
-                    }
-                }
-                map.put(variable.getKey(), values);
-            } else {
-                map.put(variable.getKey(), variable.getValue());
-            }
+//        for (Entry<String, Object> variable : vars.getAdditionalProperties().entrySet()) {
+//            if (variable.getValue() instanceof List) {
+//                @SuppressWarnings("unchecked")
+//                List<Map<String, Object>> valList = (List<Map<String, Object>>) variable.getValue();
+//                values.clear();
+//                for (Map<String, Object> par : valList) {
+//                    for (Object key : par.keySet()) {
+//                        if (key != null) {
+//                            values.add(par);
+//                        }
+//                    }
+//                }
+//                map.put(variable.getKey(), values);
+//            } else {
+//                map.put(variable.getKey(), variable.getValue());
+//            }
+//        }
+
+//        for (Entry<String, Object> variable : toUpdate.getAdditionalProperties().entrySet()) {
+//            if (variable.getValue() instanceof List) {
+//                @SuppressWarnings("unchecked")
+//                List<Map<String, Object>> valList = (List<Map<String, Object>>) variable.getValue();
+//                values.clear();
+//                for (Map<String, Object> par : valList) {
+//                    for (Object key : par.keySet()) {
+//                        if (key != null) {
+//                            values.add(par);
+//                        }
+//                    }
+//                }
+//                map.put(variable.getKey(), values);
+//            } else {
+//                map.put(variable.getKey(), variable.getValue());
+//            }
+//        }
+        
+        if (toUpdate != null) {
+            map.putAll(toUpdate.getAdditionalProperties());
         }
-
-        for (Entry<String, Object> variable : toUpdate.getAdditionalProperties().entrySet()) {
-            if (variable.getValue() instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<Map<String, Object>> valList = (List<Map<String, Object>>) variable.getValue();
-                values.clear();
-                for (Map<String, Object> par : valList) {
-                    for (Object key : par.keySet()) {
-                        if (key != null) {
-                            values.add(par);
-                        }
-                    }
-                }
-                map.put(variable.getKey(), values);
-            } else {
-                map.put(variable.getKey(), variable.getValue());
-            }
+        if (toRemove != null) {
+            toRemove.forEach(k -> map.remove(k));
         }
         vars.setAdditionalProperties(map);
-        removeVariables(vars, toRemove);
+        //removeVariables(vars, toRemove);
         return Globals.objectMapper.writeValueAsString(vars);
     }
 
-    private Variables removeVariables(Variables vars, List<String> toRemove) throws IOException {
-        if (toRemove != null) {
-            toRemove.forEach(k -> vars.getAdditionalProperties().remove(k));
-        }
-        return vars;
-    }
+//    private Variables removeVariables(Variables vars, List<String> toRemove) throws IOException {
+//        if (toRemove != null) {
+//            toRemove.forEach(k -> vars.getAdditionalProperties().remove(k));
+//        }
+//        return vars;
+//    }
 
 }
