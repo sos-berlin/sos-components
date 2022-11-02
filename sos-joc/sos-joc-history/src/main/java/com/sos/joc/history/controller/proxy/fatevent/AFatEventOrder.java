@@ -31,7 +31,9 @@ public abstract class AFatEventOrder extends AFatEvent {
             if (objects[3] != null) {
                 this.position = ((Position) objects[3]).asString();
             }
-            this.arguments = (Map<String, Value>) objects[4];
+            if (objects[4] != null) {
+                this.arguments = (Map<String, Value>) objects[4];
+            }
         }
     }
 

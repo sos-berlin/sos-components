@@ -18,10 +18,6 @@ public final class FatEventOrderMoved extends AFatEventOrderBase {
     private String jobName;
     private boolean isOrderStarted;
 
-    public FatEventOrderMoved() {
-        super(null, null, null, null);
-    }
-
     public FatEventOrderMoved(Long eventId, Date eventDatetime, String orderId, Position position, OrderMoved om, Instruction instruction,
             boolean isOrderStarted) {
         super(eventId, eventDatetime, orderId, position);

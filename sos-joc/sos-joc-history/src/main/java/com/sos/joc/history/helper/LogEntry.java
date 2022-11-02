@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
+import com.sos.inventory.model.common.Variables;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderBase;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderLocks;
@@ -51,6 +52,7 @@ public class LogEntry {
     private Date delayedUntil;
     private Caught caught;
     private FatEventOrderMoved orderMoved;
+    private Variables arguments;
 
     public LogEntry(OrderLogEntryLogLevel level, EventType type, Date controllerDate, Date agentDate) {
         logLevel = level;
@@ -358,5 +360,13 @@ public class LogEntry {
 
     public FatEventOrderMoved getOrderMoved() {
         return orderMoved;
+    }
+
+    public void setArguments(Variables val) {
+        arguments = val;
+    }
+
+    public Variables getArguments() {
+        return arguments;
     }
 }

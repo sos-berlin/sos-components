@@ -10,6 +10,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.inventory.model.common.Variables;
+
 import js7.data.value.BooleanValue;
 import js7.data.value.ListValue;
 import js7.data.value.NumberValue;
@@ -31,7 +33,9 @@ public class HistoryUtilTest {
         m.put("numeric", NumberValue.of(1));
         m.put("list", getListValue());
 
-        LOGGER.info(HistoryUtil.toJsonString(m));
+        Variables v = HistoryUtil.toVariables(m);
+        LOGGER.info(HistoryUtil.toJsonString(v));
+
     }
 
     private ListValue getListValue() {

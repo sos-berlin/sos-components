@@ -40,6 +40,8 @@ import js7.data.subagent.SubagentItemStateEvent.SubagentDedicated;
 
 public enum HistoryEventType {
 
+    Empty("Empty"),// special case for skipped events
+
     EventWithProblem("EventWithProblem"),// special case for events with problems
 
     ControllerReady(ControllerReady.class.getSimpleName()),

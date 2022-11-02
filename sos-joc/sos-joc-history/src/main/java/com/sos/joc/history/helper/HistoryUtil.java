@@ -7,13 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.json.Json;
-import javax.json.JsonObjectBuilder;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.util.SOSParameterSubstitutor;
+import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 
 import js7.data.value.ListValue;
@@ -54,105 +52,79 @@ public class HistoryUtil {
         return value.replaceAll("\\r\\n|\\r|\\n", " ");
     }
 
-    public static String json2String(Object o) throws JsonProcessingException {
+    public static String toJsonString(Object o) throws JsonProcessingException {
         if (o == null) {
             return null;
         }
         return Globals.objectMapper.writeValueAsString(o);
     }
 
-    public static <T> T json2object(String content, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {
+    public static <T> T fromJsonString(String content, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {
         if (content == null) {
             return null;
         }
         return (T) Globals.objectMapper.readValue(content, clazz);
     }
 
-    public static JsonObjectBuilder toJson(Map<String, js7.data.value.Value> map) throws JsonProcessingException {
+    public static Variables toVariables(Map<String, js7.data.value.Value> map) {
         if (map == null || map.isEmpty()) {
             return null;
         }
-
-        JsonObjectBuilder b = Json.createObjectBuilder();
+        Variables v = new Variables();
         for (Map.Entry<String, js7.data.value.Value> entry : map.entrySet()) {
-            convert2JsonType(b, entry.getKey(), entry.getValue());
+            if (entry.getValue() instanceof js7.data.value.ListValue) {
+                List<Value> lv = ((ListValue) entry.getValue()).toJava();
+                for (Value l : lv) {
+                    if (l instanceof ObjectValue) {
+                        try {
+                            v.setAdditionalProperty(entry.getKey(), toVariables(JavaConverters.asJava(((ObjectValue) l).nameToValue())));
+                        } catch (Throwable e) {
+                        }
+                    }
+                }
+            } else {
+                v.setAdditionalProperty(entry.getKey(), entry.getValue().toJava());
+            }
         }
-        return b;
+        return v;
     }
 
-    public static String toJsonString(Map<String, js7.data.value.Value> map) throws JsonProcessingException {
-        JsonObjectBuilder b = toJson(map);
-        return b == null ? null : b.build().toString();
-    }
-
-    public static String toJsonString(Map<String, js7.data.value.Value> map, List<CachedWorkflowParameter> params) throws JsonProcessingException {
-        JsonObjectBuilder b = toJson(map, params);
-        return b == null ? null : b.build().toString();
-    }
-
-    public static JsonObjectBuilder toJson(Map<String, js7.data.value.Value> map, List<CachedWorkflowParameter> params)
-            throws JsonProcessingException {
-        JsonObjectBuilder b = toJson(map);
-        if (b == null && params == null) {
+    public static Variables toVariables(Map<String, js7.data.value.Value> map, List<CachedWorkflowParameter> params) throws JsonProcessingException {
+        Variables v = toVariables(map);
+        if (v == null && params == null) {
             return null;
         }
         if (params == null || params.size() == 0) {
-            return b;
+            return v;
         }
-        if (b == null) {
+        if (v == null) {
             map = new HashMap<>();
-            b = Json.createObjectBuilder();
+            v = new Variables();
         }
         for (CachedWorkflowParameter param : params) {
             if (!map.containsKey(param.getName())) {
                 if (param.getValue() != null) {
                     if (param.getType() == null) {// final
-                        b.add(param.getName(), param.getValue());
+                        v.setAdditionalProperty(param.getName(), param.getValue());
                     } else {
                         switch (param.getType()) {
                         case Boolean:
-                            b.add(param.getName(), Boolean.parseBoolean(param.getValue()));
+                            v.setAdditionalProperty(param.getName(), Boolean.parseBoolean(param.getValue()));
                             break;
                         case Number:
-                            b.add(param.getName(), new BigDecimal(param.getValue()));
+                            v.setAdditionalProperty(param.getName(), new BigDecimal(param.getValue()));
                             break;
                         case List:
                             break;
                         case String:
                         default:
-                            b.add(param.getName(), param.getValue());
+                            v.setAdditionalProperty(param.getName(), param.getValue());
                             break;
                         }
                     }
                 }
             }
         }
-        return b;
-    }
-
-    private static void convert2JsonType(JsonObjectBuilder b, String name, js7.data.value.Value value) {
-        if (value instanceof js7.data.value.StringValue) {
-            b.add(name, value.convertToString());
-        } else if (value instanceof js7.data.value.NumberValue) {
-            try {
-                b.add(name, ((js7.data.value.NumberValue) value).toJava());
-            } catch (Throwable e) {
-            }
-        } else if (value instanceof js7.data.value.BooleanValue) {
-            b.add(name, (Boolean.parseBoolean(value.convertToString())));
-        } else if (value instanceof js7.data.value.ListValue) {
-            List<Value> lv = ((ListValue) value).toJava();
-            for (Value l : lv) {
-                if (l instanceof ObjectValue) {
-                    try {
-                        JsonObjectBuilder lb = toJson(JavaConverters.asJava(((ObjectValue) l).nameToValue()));
-                        if (lb != null) {
-                            b.add(name, lb);
-                        }
-                    } catch (Throwable e) {
-                    }
-                }
-            }
-        }
+        return v;
     }
 }

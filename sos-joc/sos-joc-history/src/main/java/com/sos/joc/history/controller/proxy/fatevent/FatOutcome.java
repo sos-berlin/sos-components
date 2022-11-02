@@ -2,10 +2,8 @@ package com.sos.joc.history.controller.proxy.fatevent;
 
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OutcomeInfo;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.OutcomeType;
-import com.sos.joc.history.helper.HistoryUtil;
 
 import js7.data.value.Value;
 
@@ -56,10 +54,6 @@ public class FatOutcome {
 
     public Map<String, Value> getNamedValues() {
         return namedValues;
-    }
-
-    public String getNamedValuesAsJsonString() throws JsonProcessingException {
-        return HistoryUtil.toJsonString(namedValues);
     }
 
     public String getErrorCode() {

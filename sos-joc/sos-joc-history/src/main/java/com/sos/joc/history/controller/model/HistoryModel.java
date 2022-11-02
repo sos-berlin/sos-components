@@ -31,6 +31,7 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
+import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.JobCriticality;
@@ -255,6 +256,9 @@ public class HistoryModel {
                     break;
                 }
                 Long eventId = entry.getEventId();
+                if (eventId == null) {
+                    continue;
+                }
 
                 if (counter.getProcessed() == 0) {
                     firstEventId = eventId;
@@ -464,6 +468,8 @@ public class HistoryModel {
                         FatEventWithProblem ep = (FatEventWithProblem) entry;
                         LOGGER.warn(String.format("[entry]%s", SOSString.toString(ep.getEntry())));
                         LOGGER.error(ep.getError().toString(), ep.getError());
+                        break;
+                    case Empty:
                         break;
                     }
                     counter.addProcessed();
@@ -899,7 +905,9 @@ public class HistoryModel {
             item.setStartTime(entry.getEventDatetime());
             item.setStartWorkflowPosition(item.getWorkflowPosition());
             item.setStartEventId(entry.getEventId());
-            item.setStartVariables(HistoryUtil.toJsonString(entry.getArguments(), cw.getOrderPreparation()));
+
+            Variables arguments = HistoryUtil.toVariables(entry.getArguments(), cw.getOrderPreparation());
+            item.setStartVariables(HistoryUtil.toJsonString(arguments));
 
             item.setCurrentHistoryOrderStepId(Long.valueOf(0));
 
@@ -936,6 +944,7 @@ public class HistoryModel {
             CachedOrder co = new CachedOrder(item);
             LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, EventType.OrderStarted, entry.getEventDatetime(), null);
             le.onOrder(co, item.getWorkflowPosition());
+            le.setArguments(arguments);
             storeLog2File(le);
             addCachedOrder(item.getOrderId(), co);
 
@@ -1343,7 +1352,8 @@ public class HistoryModel {
             item.setStartTime(entry.getEventDatetime());
             item.setStartWorkflowPosition(SOSString.isEmpty(entry.getPosition()) ? "0" : entry.getPosition());
             item.setStartEventId(entry.getEventId());
-            item.setStartVariables(HistoryUtil.toJsonString(entry.getArguments())); // TODO or forkOrder arguments ???
+            // item.setStartVariables(HistoryUtil.toJsonString(entry.getArguments())); // TODO or forkOrder arguments ???
+            item.setStartVariables(null);
 
             item.setCurrentHistoryOrderStepId(Long.valueOf(0));
 
@@ -1468,7 +1478,9 @@ public class HistoryModel {
             item.setStartCause(OrderStepStartCause.order.name());// TODO
             item.setStartTime(agentStartTime);
             item.setStartEventId(entry.getEventId());
-            item.setStartVariables(HistoryUtil.toJsonString(entry.getArguments()));
+
+            Variables arguments = HistoryUtil.toVariables(entry.getArguments());
+            item.setStartVariables(HistoryUtil.toJsonString(arguments));
 
             item.setEndTime(null);
             item.setEndEventId(null);
@@ -1496,6 +1508,7 @@ public class HistoryModel {
             LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, EventType.OrderProcessingStarted, JocClusterUtil.getEventIdAsDate(entry
                     .getEventId()), agentStartTime);
             le.onOrderStep(cos, ca.getTimezone());
+            le.setArguments(arguments);
             storeLog2File(le);
             addCachedOrderStep(item.getOrderId(), cos);
 
@@ -1563,11 +1576,12 @@ public class HistoryModel {
             co.setLastStepError(le, cos);
             cos.setSeverity(HistorySeverity.map2DbSeverity(le.isError() ? OrderStateText.FAILED : OrderStateText.FINISHED));
 
-            Map<String, Value> namedValues = handleNamedValues(entry, co, cos);
-            String endVariables = HistoryUtil.toJsonString(namedValues);
+            Variables outcome = HistoryUtil.toVariables(handleNamedValues(entry, co, cos));
+            String endVariables = HistoryUtil.toJsonString(outcome);
             dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), entry.getEventId(), endVariables, le.getReturnCode(), cos.getSeverity(), le
                     .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), le.getErrorText(), new Date());
             le.onOrderStep(cos);
+            le.setArguments(outcome);
 
             hosb = onOrderStepProcessed(dbLayer, entry.getEventId(), co, cos, le, endVariables);
 
@@ -1932,7 +1946,7 @@ public class HistoryModel {
 
     private Workflow getWorkflow(String workflowName, String workflowVersionId, String content) {
         try {
-            return HistoryUtil.json2object(content, Workflow.class);
+            return HistoryUtil.fromJsonString(content, Workflow.class);
         } catch (Throwable e) {
             LOGGER.warn(String.format("[workflowName=%s,workflowVersionId=%s][can't parse workflow]%s", workflowName, workflowVersionId, e
                     .toString()));
@@ -1947,7 +1961,7 @@ public class HistoryModel {
             String notification = null;
             if (!HistoryNotification.isJobMailNotificationEmpty(job.getJob().getNotification())) {
                 try {
-                    notification = HistoryUtil.json2String(job.getJob().getNotification());
+                    notification = HistoryUtil.toJsonString(job.getJob().getNotification());
                 } catch (JsonProcessingException e) {
                     LOGGER.error(String.format("[workflow=%s][job=%s][error on read notification]%s", workflowName, job.getName(), e.toString()), e);
                 }
@@ -2295,13 +2309,13 @@ public class HistoryModel {
         return storeLog2File(entry, null, null);
     }
 
-    private Path storeLog2File(LogEntry entry, CachedOrderStep cos, String stdout) throws Exception {
+    private Path storeLog2File(LogEntry le, CachedOrderStep cos, String stdout) throws Exception {
 
         OrderLogEntry orderEntry = null;
         StringBuilder content = new StringBuilder();
         String contentAsString = null;
         StringBuilder orderEntryContent = null;
-        Path dir = getOrderLogDirectory(entry);
+        Path dir = getOrderLogDirectory(le);
         Path file = null;
         boolean newLine;
         boolean append;
@@ -2309,62 +2323,64 @@ public class HistoryModel {
         boolean log2file = true;
         boolean postEvent = true;
 
-        switch (entry.getEventType()) {
+        switch (le.getEventType()) {
         case OrderProcessingStarted:
             // order log
             newLine = true;
-            orderEntry = createOrderLogEntry(entry);
-            orderEntry.setControllerDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
-            orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
-            orderEntry.setAgentId(entry.getAgentId());
-            orderEntry.setAgentName(entry.getAgentName());
-            orderEntry.setAgentUrl(entry.getAgentUri());
-            orderEntry.setSubagentClusterId(entry.getSubagentClusterId());
-            orderEntry.setJob(entry.getJobName());
-            orderEntry.setTaskId(entry.getHistoryOrderStepId());
-            orderEntryContent = new StringBuilder(HistoryUtil.json2String(orderEntry));
-            postEventOrderLog(entry, orderEntry);
-            log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent.toString(), newLine, entry.getEventType());
+            orderEntry = createOrderLogEntry(le);
+            orderEntry.setArguments(le.getArguments());
+            orderEntry.setControllerDatetime(getDateAsString(le.getControllerDatetime(), controllerTimezone));
+            orderEntry.setAgentDatetime(getDateAsString(le.getAgentDatetime(), le.getAgentTimezone()));
+            orderEntry.setAgentId(le.getAgentId());
+            orderEntry.setAgentName(le.getAgentName());
+            orderEntry.setAgentUrl(le.getAgentUri());
+            orderEntry.setSubagentClusterId(le.getSubagentClusterId());
+            orderEntry.setJob(le.getJobName());
+            orderEntry.setTaskId(le.getHistoryOrderStepId());
+            orderEntryContent = new StringBuilder(HistoryUtil.toJsonString(orderEntry));
+            postEventOrderLog(le, orderEntry);
+            log2file(getOrderLog(dir, le.getHistoryOrderId()), orderEntryContent.toString(), newLine, le.getEventType());
 
             // task log
-            file = getOrderStepLog(dir, entry);
-            content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
-            content.append("[").append(entry.getLogLevel().name()).append("]    ");
-            content.append(entry.getInfo());
+            file = getOrderStepLog(dir, le);
+            content.append(getDateAsString(le.getAgentDatetime(), le.getAgentTimezone())).append(" ");
+            content.append("[").append(le.getLogLevel().name()).append("]    ");
+            content.append(le.getInfo());
 
             contentAsString = content.toString();
-            postEventTaskLog(entry, contentAsString, newLine);
+            postEventTaskLog(le, contentAsString, newLine);
             break;
         case OrderProcessed:
             // order log
             newLine = true;
-            orderEntry = createOrderLogEntry(entry);
+            orderEntry = createOrderLogEntry(le);
+            orderEntry.setReturnValues(le.getArguments());
             orderEntry.setLogLevel(orderEntry.getError() == null ? OrderLogEntryLogLevel.SUCCESS : OrderLogEntryLogLevel.ERROR);
-            orderEntry.setControllerDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
-            orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
+            orderEntry.setControllerDatetime(getDateAsString(le.getControllerDatetime(), controllerTimezone));
+            orderEntry.setAgentDatetime(getDateAsString(le.getAgentDatetime(), le.getAgentTimezone()));
             // orderEntry.setAgentPath(entry.getAgentPath());
             // orderEntry.setAgentUrl(entry.getAgentUri());
-            orderEntry.setJob(entry.getJobName());
-            orderEntry.setTaskId(entry.getHistoryOrderStepId());
-            orderEntryContent = new StringBuilder(HistoryUtil.json2String(orderEntry));
-            postEventOrderLog(entry, orderEntry);
-            log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent.toString(), newLine, entry.getEventType());
+            orderEntry.setJob(le.getJobName());
+            orderEntry.setTaskId(le.getHistoryOrderStepId());
+            orderEntryContent = new StringBuilder(HistoryUtil.toJsonString(orderEntry));
+            postEventOrderLog(le, orderEntry);
+            log2file(getOrderLog(dir, le.getHistoryOrderId()), orderEntryContent.toString(), newLine, le.getEventType());
 
             // task log
-            file = getOrderStepLog(dir, entry);
-            content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
-            content.append("[").append(entry.getLogLevel().name()).append("]    ");
-            content.append(entry.getInfo());
+            file = getOrderStepLog(dir, le);
+            content.append(getDateAsString(le.getAgentDatetime(), le.getAgentTimezone())).append(" ");
+            content.append("[").append(le.getLogLevel().name()).append("]    ");
+            content.append(le.getInfo());
 
             contentAsString = content.toString();
-            postEventTaskLog(entry, contentAsString, newLine);
+            postEventTaskLog(le, contentAsString, newLine);
             break;
 
         case OrderStdoutWritten:
         case OrderStderrWritten:
             newLine = false;
             append = false;
-            file = getOrderStepLog(dir, entry);
+            file = getOrderStepLog(dir, le);
 
             if (cos.isLastStdEndsWithNewLine() == null) {
                 try {
@@ -2383,7 +2399,7 @@ public class HistoryModel {
                         cos.addLogSize(stdout.getBytes().length);
                     }
                 } catch (Throwable e) {
-                    LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, entry.getEventType(), file, e.toString()), e);
+                    LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, le.getEventType(), file, e.toString()), e);
                 }
             } else {
                 if (cos.isLastStdEndsWithNewLine().booleanValue()) {
@@ -2401,15 +2417,15 @@ public class HistoryModel {
 
             if (log2file) {
                 if (append) {
-                    String outType = entry.getEventType().equals(EventType.OrderStdoutWritten) ? "STDOUT" : "STDERR";
-                    content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
+                    String outType = le.getEventType().equals(EventType.OrderStdoutWritten) ? "STDOUT" : "STDERR";
+                    content.append(getDateAsString(le.getAgentDatetime(), le.getAgentTimezone())).append(" ");
                     content.append("[").append(outType).append("]  ");
                 }
                 cos.setLastStdEndsWithNewLine(SOSPath.endsWithNewLine(stdout));
                 content.append(stdout);
                 contentAsString = content.toString();
                 if (postEvent) {
-                    postEventTaskLog(entry, contentAsString, newLine);
+                    postEventTaskLog(le, contentAsString, newLine);
                 }
             }
             break;
@@ -2421,28 +2437,28 @@ public class HistoryModel {
         default:
             // order log
             newLine = true;
-            file = getOrderLog(dir, entry.getHistoryOrderId());
+            file = getOrderLog(dir, le.getHistoryOrderId());
 
-            orderEntry = createOrderLogEntry(entry);
-            orderEntry.setControllerDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
-            if (entry.getAgentDatetime() != null && entry.getAgentTimezone() != null) {
-                orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
+            orderEntry = createOrderLogEntry(le);
+            orderEntry.setArguments(le.getArguments());
+            orderEntry.setControllerDatetime(getDateAsString(le.getControllerDatetime(), controllerTimezone));
+            if (le.getAgentDatetime() != null && le.getAgentTimezone() != null) {
+                orderEntry.setAgentDatetime(getDateAsString(le.getAgentDatetime(), le.getAgentTimezone()));
             }
-            content.append(HistoryUtil.json2String(orderEntry));
+            content.append(HistoryUtil.toJsonString(orderEntry));
             contentAsString = content.toString();
-            postEventOrderLog(entry, orderEntry);
+            postEventOrderLog(le, orderEntry);
         }
         content = null;
 
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][%s][%s][%s]log2file=%s", identifier, entry.getEventType().value(), entry.getOrderId(), file, log2file));
+            LOGGER.debug(String.format("[%s][%s][%s][%s]log2file=%s", identifier, le.getEventType().value(), le.getOrderId(), file, log2file));
         }
         if (log2file) {
-            log2file(file, contentAsString, newLine, entry.getEventType());
+            log2file(file, contentAsString, newLine, le.getEventType());
 
-            if (orderEntry != null && !entry.getHistoryOrderId().equals(entry.getHistoryOrderMainParentId())) {
-                write2MainOrderLog(entry, dir, (orderEntryContent == null ? contentAsString : orderEntryContent.toString()), newLine, entry
-                        .getEventType());
+            if (orderEntry != null && !le.getHistoryOrderId().equals(le.getHistoryOrderMainParentId())) {
+                write2MainOrderLog(le, dir, (orderEntryContent == null ? contentAsString : orderEntryContent.toString()), newLine, le.getEventType());
             }
         }
         return file;
