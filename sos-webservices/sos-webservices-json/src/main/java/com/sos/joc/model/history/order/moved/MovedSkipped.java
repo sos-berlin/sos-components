@@ -10,7 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Retrying
+ * Moved Skipped
  * <p>
  * 
  * 
@@ -25,7 +25,7 @@ public class MovedSkipped {
     @JsonProperty("jobName")
     private String jobName;
     /**
-     * Retrying
+     * Moved Skip Reason
      * <p>
      * 
      * (Required)
@@ -45,7 +45,7 @@ public class MovedSkipped {
     }
 
     /**
-     * Retrying
+     * Moved Skip Reason
      * <p>
      * 
      * (Required)
@@ -57,7 +57,7 @@ public class MovedSkipped {
     }
 
     /**
-     * Retrying
+     * Moved Skip Reason
      * <p>
      * 
      * (Required)

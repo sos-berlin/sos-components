@@ -10,22 +10,29 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Retrying
+ * Moved
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "toPosition",
+    "to",
     "skipped"
 })
 public class Moved {
 
-    @JsonProperty("toPosition")
-    private String toPosition;
     /**
-     * Retrying
+     * Mover To
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("to")
+    private MovedTo to;
+    /**
+     * Moved Skipped
      * <p>
      * 
      * 
@@ -33,18 +40,32 @@ public class Moved {
     @JsonProperty("skipped")
     private MovedSkipped skipped;
 
-    @JsonProperty("toPosition")
-    public String getToPosition() {
-        return toPosition;
-    }
-
-    @JsonProperty("toPosition")
-    public void setToPosition(String toPosition) {
-        this.toPosition = toPosition;
+    /**
+     * Mover To
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("to")
+    public MovedTo getTo() {
+        return to;
     }
 
     /**
-     * Retrying
+     * Mover To
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("to")
+    public void setTo(MovedTo to) {
+        this.to = to;
+    }
+
+    /**
+     * Moved Skipped
      * <p>
      * 
      * 
@@ -55,7 +76,7 @@ public class Moved {
     }
 
     /**
-     * Retrying
+     * Moved Skipped
      * <p>
      * 
      * 
@@ -67,12 +88,12 @@ public class Moved {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("toPosition", toPosition).append("skipped", skipped).toString();
+        return new ToStringBuilder(this).append("to", to).append("skipped", skipped).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(toPosition).append(skipped).toHashCode();
+        return new HashCodeBuilder().append(to).append(skipped).toHashCode();
     }
 
     @Override
@@ -84,7 +105,7 @@ public class Moved {
             return false;
         }
         Moved rhs = ((Moved) other);
-        return new EqualsBuilder().append(toPosition, rhs.toPosition).append(skipped, rhs.skipped).isEquals();
+        return new EqualsBuilder().append(to, rhs.to).append(skipped, rhs.skipped).isEquals();
     }
 
 }

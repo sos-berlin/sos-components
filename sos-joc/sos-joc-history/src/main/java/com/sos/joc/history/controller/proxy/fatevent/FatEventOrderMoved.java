@@ -25,9 +25,7 @@ public final class FatEventOrderMoved extends AFatEventOrderBase {
     public FatEventOrderMoved(Long eventId, Date eventDatetime, String orderId, Position position, OrderMoved om, Instruction instruction,
             boolean isOrderStarted) {
         super(eventId, eventDatetime, orderId, position);
-        if (om.to() != null) {
-            this.to = JPosition.apply(om.to()).toString();
-        }
+        this.to = JPosition.apply(om.to()).toString();
         this.reason = getReason(om.reason().get().getClass().getSimpleName());
         this.jobName = getJobName(instruction);
         this.isOrderStarted = isOrderStarted;

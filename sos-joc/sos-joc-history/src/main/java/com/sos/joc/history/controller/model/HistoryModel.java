@@ -120,6 +120,7 @@ import com.sos.joc.model.history.order.OrderLogEntryLogLevel;
 import com.sos.joc.model.history.order.moved.Moved;
 import com.sos.joc.model.history.order.moved.MovedSkipped;
 import com.sos.joc.model.history.order.moved.MovedSkippedReason;
+import com.sos.joc.model.history.order.moved.MovedTo;
 import com.sos.joc.model.history.order.notice.BaseNotice;
 import com.sos.joc.model.history.order.notice.ConsumeNotices;
 import com.sos.joc.model.history.order.notice.ExpectNotices;
@@ -2264,7 +2265,10 @@ public class HistoryModel {
             entry.setCaught(logEntry.getCaught());
         } else if (logEntry.getOrderMoved() != null) {
             Moved m = new Moved();
-            m.setToPosition(logEntry.getOrderMoved().getTo());
+
+            MovedTo mt = new MovedTo();
+            mt.setPosition(logEntry.getOrderMoved().getTo());
+            m.setTo(mt);
 
             MovedSkipped ms = new MovedSkipped();
             ms.setJobName(logEntry.getOrderMoved().getJobName());

@@ -157,7 +157,7 @@ public class OrderLogEntry {
     @JsonProperty("caught")
     private Caught caught;
     /**
-     * Retrying
+     * Moved
      * <p>
      * 
      * 
@@ -494,7 +494,7 @@ public class OrderLogEntry {
     }
 
     /**
-     * Retrying
+     * Moved
      * <p>
      * 
      * 
@@ -505,7 +505,7 @@ public class OrderLogEntry {
     }
 
     /**
-     * Retrying
+     * Moved
      * <p>
      * 
      * 
