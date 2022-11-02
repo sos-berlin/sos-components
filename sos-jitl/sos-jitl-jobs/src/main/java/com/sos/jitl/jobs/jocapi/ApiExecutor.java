@@ -118,13 +118,14 @@ public class ApiExecutor {
         return reasonPhrase;
     }
 
-    public ApiResponse login() throws SOSMissingDataException {
+    public ApiResponse login() throws Exception {
         logDebug("***ApiExecutor***");
         jocUris = getUris();
         String latestError = "";
         String latestResponse = "";
         Integer statusCode = -1;
         URI loginUri = null;
+        Exception latestException = null;
         for (String uri : jocUris) {
             try {
                 logDebug(String.format("processing Url - %1$s", uri));
@@ -146,37 +147,44 @@ public class ApiExecutor {
                         JsonObject json = jsonReader.readObject();
                         message = json.getString("message", "");
                         if (!message.isEmpty()) {
-                            latestError = message;
-                            throw new Exception(message);
+                            latestError = statusCode + " : " + getReasonPhrase() + " " + message;
+                            throw new Exception(latestError);
                         }
                     } catch (Exception e) {
                         throw e;
                     } finally {
                         jsonReader.close();
                     }
-                    throw new Exception("login failed.");
+                    latestException = new Exception("login failed.");
+                    throw latestException;
                 } else if (statusCode == 200) {
+                    // successful login
                     logDebug(String.format("Connection to URI %1$s established.", loginUri.toString()));
                     return new ApiResponse(statusCode, getReasonPhrase(), response, client.getResponseHeader(ACCESS_TOKEN_HEADER), null);
+                } else {
+                    String message = statusCode + " : " + getReasonPhrase();
+                    throw new Exception(latestError);
                 }
-
             } catch (SOSConnectionRefusedException e) {
                 latestError = String.format("connection to URI %1$s failed, trying next Uri.", loginUri.toString());
                 logDebug(latestError);
+                latestException = e;
                 continue;
             } catch (Exception e) {
-                if (this.jocUri != null) {
-                    latestError = String.format("connection to URI %1$s: %2$s occurred: %3$s", this.jocUri, e.getClass(), e.getMessage());
+                if (loginUri != null) {
+                    latestError = String.format("connection to URI %1$s: %2$s occurred: %3$s", loginUri, e.getClass(), e.getMessage());
                     logDebug(latestError);
                 } else {
                     latestError = String.format("%1$s occurred: %2$s", e.getClass(), e.getMessage());
                     logDebug(latestError);
                 }
+                latestException = e;
                 continue;
             }
         }
         logInfo("No connection attempt was successful. Check agents private.conf.");
-        return new ApiResponse(statusCode, getReasonPhrase(), latestResponse, null, new Exception(latestError));
+        throw latestException;
+//        return new ApiResponse(statusCode, getReasonPhrase(), latestResponse, null, new Exception(latestError));
     }
 
     public ApiResponse post(String token, String apiUrl, String body) throws SOSConnectionRefusedException, SOSBadRequestException {

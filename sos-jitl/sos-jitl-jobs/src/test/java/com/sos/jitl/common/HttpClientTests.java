@@ -161,7 +161,7 @@ public class HttpClientTests {
     
     @Ignore
     @Test
-    public void testApiExecutorLogin() throws SOSMissingDataException {
+    public void testApiExecutorLogin() throws Exception {
         Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
         System.setProperty("js7.config-directory", privateConfPath.toString());
         System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
