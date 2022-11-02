@@ -240,7 +240,7 @@ public class HistoryEventEntry {
             return null;
         }
 
-        public Boolean isStarted() {
+        public boolean isStarted() {
             if (order != null) {
                 try {
                     return order.asScala().isStarted();
@@ -248,7 +248,7 @@ public class HistoryEventEntry {
                     LOGGER.warn(String.format("[%s][isStarted]%s", getOrderId(), e.toString()), e);
                 }
             }
-            return null;
+            return false;
         }
 
         public Map<String, Value> getArguments() {
@@ -301,11 +301,15 @@ public class HistoryEventEntry {
             return outcomeInfo;
         }
 
+        private OutcomeInfo newOutcomeInfo(OutcomeType type) {
+            return new OutcomeInfo(type, (Problem) null);
+        }
+
         public OutcomeInfo getOutcomeInfo(OutcomeType type, Option<Problem> problem) throws Exception {
             if (outcomeInfo == null) {
                 Optional<Problem> op = OptionConverters.toJava(problem);
                 if (!op.isPresent()) {
-                    outcomeInfo = getOutcomeInfo(type, null);
+                    outcomeInfo = newOutcomeInfo(type);
                     return outcomeInfo;
                 }
                 outcomeInfo = new OutcomeInfo(type, op.get());
@@ -316,12 +320,12 @@ public class HistoryEventEntry {
         public OutcomeInfo getOutcomeInfo(Option<Outcome.NotSucceeded> problem) throws Exception {
             if (outcomeInfo == null) {
                 if (problem == null) {
-                    outcomeInfo = getOutcomeInfo(OutcomeType.failed, null);
+                    outcomeInfo = newOutcomeInfo(OutcomeType.failed);
                     return outcomeInfo;
                 }
                 Optional<Outcome.NotSucceeded> op = OptionConverters.toJava(problem);
                 if (!op.isPresent()) {
-                    outcomeInfo = getOutcomeInfo(OutcomeType.failed, null);
+                    outcomeInfo = newOutcomeInfo(OutcomeType.failed);
                     return outcomeInfo;
                 }
 
@@ -360,12 +364,12 @@ public class HistoryEventEntry {
             if (outcomeInfo == null) {
                 Option<Completed> completed = ((OrderFinished) event).outcome();
                 if (completed == null) {
-                    outcomeInfo = new OutcomeInfo(OutcomeType.succeeded, (Problem) null);
+                    outcomeInfo = newOutcomeInfo(OutcomeType.succeeded);
                     return outcomeInfo;
                 }
                 Optional<Completed> op = OptionConverters.toJava(completed);
                 if (!op.isPresent()) {
-                    outcomeInfo = new OutcomeInfo(OutcomeType.succeeded, (Problem) null);
+                    outcomeInfo = newOutcomeInfo(OutcomeType.succeeded);
                     return outcomeInfo;
                 }
 

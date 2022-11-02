@@ -6,19 +6,20 @@ import java.util.List;
 
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
-import com.sos.joc.model.history.order.OrderLogEntryLogLevel;
-import com.sos.joc.model.history.order.caught.Caught;
-import com.sos.joc.model.history.order.caught.CaughtCause;
-import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderBase;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderLocks;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderNotice;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught.FatEventOrderCaughtCause;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderMoved;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
 import com.sos.joc.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.joc.history.controller.proxy.fatevent.FatOutcome;
-import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught.FatEventOrderCaughtCause;
+import com.sos.joc.model.history.order.OrderLogEntryLogLevel;
+import com.sos.joc.model.history.order.caught.Caught;
+import com.sos.joc.model.history.order.caught.CaughtCause;
+import com.sos.joc.model.order.OrderStateText;
 
 public class LogEntry {
 
@@ -49,6 +50,7 @@ public class LogEntry {
     private AFatEventOrderNotice orderNotice;
     private Date delayedUntil;
     private Caught caught;
+    private FatEventOrderMoved orderMoved;
 
     public LogEntry(OrderLogEntryLogLevel level, EventType type, Date controllerDate, Date agentDate) {
         logLevel = level;
@@ -106,6 +108,11 @@ public class LogEntry {
     public void onOrderNotice(CachedOrder order, AFatEventOrderNotice entry) {
         onOrder(order, entry.getPosition(), null);
         orderNotice = entry;
+    }
+
+    public void onOrderMoved(CachedOrder order, FatEventOrderMoved entry) {
+        onOrder(order, entry.getPosition(), null);
+        orderMoved = entry;
     }
 
     public void setError(String state, CachedOrder co) {
@@ -347,5 +354,9 @@ public class LogEntry {
 
     public Caught getCaught() {
         return caught;
+    }
+
+    public FatEventOrderMoved getOrderMoved() {
+        return orderMoved;
     }
 }

@@ -49,6 +49,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderJoined;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksAcquired;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksQueued;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderLocksReleased;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderMoved;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticePosted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumptionStarted;
@@ -74,6 +75,7 @@ import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
+import js7.data.order.OrderEvent.OrderMoved;
 import js7.data.order.OrderEvent.OrderNoticesConsumed;
 import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStderrWritten;
@@ -148,20 +150,21 @@ public class HistoryControllerHandlerTest {
             flux = flux.doOnCancel(this::fluxDoOnCancel);
             flux = flux.doFinally(this::fluxDoFinally);
             flux = flux.onErrorStop();
-            flux.takeUntilOther(stopper.stopped()).map(this::map2fat).bufferTimeout(1000, Duration.ofSeconds(1)).toIterable().forEach(list -> {
-                LOGGER.info("[HANDLE BLOCK][START][" + closed.get() + "]" + list.size());
+            flux.takeUntilOther(stopper.stopped()).map(this::map2fat).filter(e -> e.getEventId() != null).bufferTimeout(1000, Duration.ofSeconds(1))
+                    .toIterable().forEach(list -> {
+                        LOGGER.info("[HANDLE BLOCK][START][" + closed.get() + "]" + list.size());
 
-                // while (!closed.get()) {
-                if (!closed.get()) {
-                    try {
-                        handleBlock(list);
-                    } catch (Throwable e) {
-                        LOGGER.error(e.toString(), e);
-                    }
-                }
+                        // while (!closed.get()) {
+                        if (!closed.get()) {
+                            try {
+                                handleBlock(list);
+                            } catch (Throwable e) {
+                                LOGGER.error(e.toString(), e);
+                            }
+                        }
 
-                LOGGER.info("[HANDLE BLOCK][END]");
-            });
+                        LOGGER.info("[HANDLE BLOCK][END]");
+                    });
             LOGGER.info("[flux][END]");
             return eventId;
         }
@@ -248,6 +251,31 @@ public class HistoryControllerHandlerTest {
                 event.set(acs.getId());
                 break;
 
+            case OrderMoved:
+                try {
+                    OrderMoved om = (OrderMoved) entry.getEvent();
+                    if (om.reason().isEmpty()) {
+                        event = new FatEventOrderMoved();
+                    } else {
+                        order = entry.getCheckedOrderFromPreviousState();
+                        boolean isStarted = order.isStarted();
+                        if (isStarted) {
+                            event = new FatEventOrderMoved(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                                    .getPosition(), om, order.getCurrentPositionInstruction(), isStarted);
+                        } else {
+                            event = new FatEventOrderMoved();
+                        }
+                    }
+                } catch (Throwable e) {
+                    try {
+                        order = entry.getCheckedOrder();
+                        LOGGER.warn(String.format("[OrderMoved][%s]%s", order.getOrderId(), e.toString()), e);
+                    } catch (Throwable ee) {
+                        LOGGER.warn(String.format("[OrderMoved]%s", e.toString()), e);
+                    }
+                    event = new FatEventOrderMoved();
+                }
+                break;
             case OrderStarted:
                 order = entry.getCheckedOrder();
                 Date scheduledFor = null;
@@ -256,6 +284,7 @@ public class HistoryControllerHandlerTest {
                 } catch (Throwable e) {
                     LOGGER.warn(String.format("[%s][%s][PreviousState]%s", entry.getEventType().name(), order.getOrderId(), e.toString()), e);
                 }
+
                 event = new FatEventOrderStarted(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
                         .getPosition(), order.getArguments(), scheduledFor);
@@ -389,8 +418,6 @@ public class HistoryControllerHandlerTest {
                 break;
 
             case OrderFinished:
-                LOGGER.info(SOSString.toString(entry.getEvent()));
-
                 order = entry.getCheckedOrder();
 
                 event = new FatEventOrderFinished(entry.getEventId(), entry.getEventDate());
@@ -398,16 +425,14 @@ public class HistoryControllerHandlerTest {
                 break;
 
             case OrderCancelled:
-                order = entry.getCheckedOrder();
-                Boolean isStarted = null;
-                try {
-                    isStarted = entry.getCheckedOrderFromPreviousState().isStarted();
-                } catch (Throwable e) {
-                    LOGGER.warn(String.format("[%s][%s][PreviousState]%s", entry.getEventType().name(), order.getOrderId(), e.toString()), e);
-                }
+                if (entry.getCheckedOrderFromPreviousState().isStarted()) {
+                    order = entry.getCheckedOrder();
 
-                event = new FatEventOrderCancelled(entry.getEventId(), entry.getEventDate(), isStarted);
-                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
+                    event = new FatEventOrderCancelled(entry.getEventId(), entry.getEventDate());
+                    event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
+                } else {
+                    event = new FatEventOrderCancelled();
+                }
                 break;
 
             case OrderLocksAcquired:

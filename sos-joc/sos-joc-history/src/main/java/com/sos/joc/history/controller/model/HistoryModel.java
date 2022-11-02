@@ -81,6 +81,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCancelled;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderForked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderJoined;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderMoved;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticePosted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumptionStarted;
@@ -116,6 +117,9 @@ import com.sos.joc.model.history.order.LockState;
 import com.sos.joc.model.history.order.OrderLogEntry;
 import com.sos.joc.model.history.order.OrderLogEntryError;
 import com.sos.joc.model.history.order.OrderLogEntryLogLevel;
+import com.sos.joc.model.history.order.moved.Moved;
+import com.sos.joc.model.history.order.moved.MovedSkipped;
+import com.sos.joc.model.history.order.moved.MovedSkippedReason;
 import com.sos.joc.model.history.order.notice.BaseNotice;
 import com.sos.joc.model.history.order.notice.ConsumeNotices;
 import com.sos.joc.model.history.order.notice.ExpectNotices;
@@ -391,14 +395,10 @@ public class HistoryModel {
                         break;
                     case OrderCancelled:
                         FatEventOrderCancelled oc = (FatEventOrderCancelled) entry;
-                        if (oc.isStarted() != null && !oc.isStarted()) {
-                            counter.getOrder().addCancelledNotStarted();
-                        } else {
-                            hob = orderTerminated(dbLayer, oc, EventType.OrderCancelled, endedOrderSteps);
-                            counter.getOrder().addCancelled();
+                        hob = orderTerminated(dbLayer, oc, EventType.OrderCancelled, endedOrderSteps);
+                        counter.getOrder().addCancelled();
 
-                            postEventOrderTerminated(hob);
-                        }
+                        postEventOrderTerminated(hob);
                         break;
                     case OrderBroken:
                         // TODO update main order when a child is broken
@@ -454,6 +454,10 @@ public class HistoryModel {
                     case OrderRetrying:
                         orderLog(dbLayer, (FatEventOrderRetrying) entry, EventType.OrderRetrying);
                         counter.getOrder().addRetrying();
+                        break;
+                    case OrderMoved:
+                        orderLogMoved(dbLayer, (FatEventOrderMoved) entry, EventType.OrderMoved);
+                        counter.getOrder().addMoved();
                         break;
                     case EventWithProblem:
                         FatEventWithProblem ep = (FatEventWithProblem) entry;
@@ -1260,6 +1264,16 @@ public class HistoryModel {
 
         LogEntry le = new LogEntry(OrderLogEntryLogLevel.DETAIL, eventType, entry.getEventDatetime(), null);
         le.onOrderNotice(co, entry);
+        storeLog2File(le);
+    }
+
+    private void orderLogMoved(DBLayerHistory dbLayer, FatEventOrderMoved entry, EventType eventType) throws Exception {
+        checkControllerTimezone(dbLayer);
+
+        CachedOrder co = getCachedOrderByCurrentOrderId(dbLayer, entry.getOrderId(), entry.getEventId());
+
+        LogEntry le = new LogEntry(OrderLogEntryLogLevel.DETAIL, eventType, entry.getEventDatetime(), null);
+        le.onOrderMoved(co, entry);
         storeLog2File(le);
     }
 
@@ -2248,6 +2262,19 @@ public class HistoryModel {
             }
         } else if (logEntry.getCaught() != null) {
             entry.setCaught(logEntry.getCaught());
+        } else if (logEntry.getOrderMoved() != null) {
+            Moved m = new Moved();
+            m.setToPosition(logEntry.getOrderMoved().getTo());
+
+            MovedSkipped ms = new MovedSkipped();
+            ms.setJobName(logEntry.getOrderMoved().getJobName());
+            try {
+                ms.setReason(MovedSkippedReason.valueOf(logEntry.getOrderMoved().getReason()));
+            } catch (Throwable e) {
+                ms.setReason(MovedSkippedReason.Unknown);
+            }
+            m.setSkipped(ms);
+            entry.setMoved(m);
         }
         return entry;
     }

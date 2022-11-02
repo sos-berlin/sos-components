@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.event.EventType;
 import com.sos.joc.model.history.order.caught.Caught;
+import com.sos.joc.model.history.order.moved.Moved;
 import com.sos.joc.model.history.order.notice.ConsumeNotices;
 import com.sos.joc.model.history.order.notice.ExpectNotices;
 import com.sos.joc.model.history.order.notice.PostNotice;
@@ -46,7 +47,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "consumeNotices",
     "postNotice",
     "retrying",
-    "caught"
+    "caught",
+    "moved"
 })
 public class OrderLogEntry {
 
@@ -154,6 +156,14 @@ public class OrderLogEntry {
      */
     @JsonProperty("caught")
     private Caught caught;
+    /**
+     * Retrying
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("moved")
+    private Moved moved;
 
     /**
      * 
@@ -483,14 +493,36 @@ public class OrderLogEntry {
         this.caught = caught;
     }
 
+    /**
+     * Retrying
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("moved")
+    public Moved getMoved() {
+        return moved;
+    }
+
+    /**
+     * Retrying
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("moved")
+    public void setMoved(Moved moved) {
+        this.moved = moved;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentId", agentId).append("agentName", agentName).append("agentUrl", agentUrl).append("subagentClusterId", subagentClusterId).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("msg", msg).append("error", error).append("locks", locks).append("expectNotices", expectNotices).append("consumeNotices", consumeNotices).append("postNotice", postNotice).append("retrying", retrying).append("caught", caught).toString();
+        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentId", agentId).append("agentName", agentName).append("agentUrl", agentUrl).append("subagentClusterId", subagentClusterId).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("msg", msg).append("error", error).append("locks", locks).append("expectNotices", expectNotices).append("consumeNotices", consumeNotices).append("postNotice", postNotice).append("retrying", retrying).append("caught", caught).append("moved", moved).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(msg).append(expectNotices).append(caught).append(agentId).append(orderId).append(agentName).append(consumeNotices).append(error).append(postNotice).append(locks).append(agentDatetime).append(logEvent).append(returnCode).append(controllerDatetime).append(logLevel).append(retrying).append(position).append(agentUrl).append(subagentClusterId).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(msg).append(expectNotices).append(caught).append(agentId).append(orderId).append(moved).append(agentName).append(consumeNotices).append(error).append(postNotice).append(locks).append(agentDatetime).append(logEvent).append(returnCode).append(controllerDatetime).append(logLevel).append(retrying).append(position).append(agentUrl).append(subagentClusterId).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -502,7 +534,7 @@ public class OrderLogEntry {
             return false;
         }
         OrderLogEntry rhs = ((OrderLogEntry) other);
-        return new EqualsBuilder().append(msg, rhs.msg).append(expectNotices, rhs.expectNotices).append(caught, rhs.caught).append(agentId, rhs.agentId).append(orderId, rhs.orderId).append(agentName, rhs.agentName).append(consumeNotices, rhs.consumeNotices).append(error, rhs.error).append(postNotice, rhs.postNotice).append(locks, rhs.locks).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(retrying, rhs.retrying).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(subagentClusterId, rhs.subagentClusterId).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(msg, rhs.msg).append(expectNotices, rhs.expectNotices).append(caught, rhs.caught).append(agentId, rhs.agentId).append(orderId, rhs.orderId).append(moved, rhs.moved).append(agentName, rhs.agentName).append(consumeNotices, rhs.consumeNotices).append(error, rhs.error).append(postNotice, rhs.postNotice).append(locks, rhs.locks).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(retrying, rhs.retrying).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(subagentClusterId, rhs.subagentClusterId).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
 }

@@ -158,8 +158,6 @@ public class Counter {
         @SuppressWarnings("unused")
         private int cancelled = 0;
         @SuppressWarnings("unused")
-        private int cancelledNotStarted = 0;
-        @SuppressWarnings("unused")
         private int broken = 0;
         @SuppressWarnings("unused")
         private int finished = 0;
@@ -183,6 +181,8 @@ public class Counter {
         private int caught = 0;
         @SuppressWarnings("unused")
         private int retrying = 0;
+        @SuppressWarnings("unused")
+        private int moved = 0;
 
         public void addStarted() {
             started += 1;
@@ -222,10 +222,6 @@ public class Counter {
 
         public void addCancelled() {
             cancelled += 1;
-        }
-
-        public void addCancelledNotStarted() {
-            cancelledNotStarted += 1;
         }
 
         public void addBroken() {
@@ -274,6 +270,10 @@ public class Counter {
 
         public void addRetrying() {
             retrying += 1;
+        }
+
+        public void addMoved() {
+            moved += 1;
         }
     }
 

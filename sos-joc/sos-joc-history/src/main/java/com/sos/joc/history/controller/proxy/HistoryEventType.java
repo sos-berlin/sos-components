@@ -19,6 +19,12 @@ import js7.data.order.OrderEvent.OrderJoined;
 import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
+import js7.data.order.OrderEvent.OrderMoved;
+import js7.data.order.OrderEvent.OrderNoticePosted;
+import js7.data.order.OrderEvent.OrderNoticesConsumed;
+import js7.data.order.OrderEvent.OrderNoticesConsumptionStarted;
+import js7.data.order.OrderEvent.OrderNoticesExpected;
+import js7.data.order.OrderEvent.OrderNoticesRead$;
 import js7.data.order.OrderEvent.OrderOutcomeAdded;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingStarted;
@@ -30,11 +36,6 @@ import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderEvent.OrderSuspended$;
 import js7.data.order.OrderEvent.OrderSuspensionMarked;
-import js7.data.order.OrderEvent.OrderNoticesConsumed;
-import js7.data.order.OrderEvent.OrderNoticesConsumptionStarted;
-import js7.data.order.OrderEvent.OrderNoticesExpected;
-import js7.data.order.OrderEvent.OrderNoticePosted;
-import js7.data.order.OrderEvent.OrderNoticesRead$;
 import js7.data.subagent.SubagentItemStateEvent.SubagentDedicated;
 
 public enum HistoryEventType {
@@ -100,6 +101,8 @@ public enum HistoryEventType {
     OrderRetrying(OrderRetrying.class.getSimpleName()),
 
     OrderFinished(OrderFinished.class.getSimpleName()),
+
+    OrderMoved(OrderMoved.class.getSimpleName()),
 
     OrderStepStarted(OrderProcessingStarted.class.getSimpleName()),
 
