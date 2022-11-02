@@ -35,10 +35,9 @@ public class MaintenanceWindowImpl {
 
                 if (apiResponse.getStatusCode() == 200) {
                     accessToken = apiResponse.getAccessToken();
-                } else {
-                    String message = apiResponse.getStatusCode() + " " + apiResponse.getReasonPhrase() + " " + apiResponse.getException().getMessage();
-                    throw new SOSException(message);
-                }                MaintenanceWindowExecuter maintenanceWindowExecuter = new MaintenanceWindowExecuter(logger, apiExecutor);
+                }
+                
+                MaintenanceWindowExecuter maintenanceWindowExecuter = new MaintenanceWindowExecuter(logger, apiExecutor);
                 // ManageMaintenanceWindowProfile manageMaintenanceWindowProfile =
                 // maintenanceWindowExecuter.getSettings(accessToken,args.getMaintenanceProfile());
 

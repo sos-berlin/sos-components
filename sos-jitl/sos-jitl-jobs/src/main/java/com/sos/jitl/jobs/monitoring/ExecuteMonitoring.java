@@ -46,10 +46,8 @@ public class ExecuteMonitoring {
             
             if (apiResponse.getStatusCode() == 200) {
                 accessToken = apiResponse.getAccessToken();
-            } else {
-                String message = apiResponse.getStatusCode() + " " + apiResponse.getReasonPhrase() + " " + apiResponse.getException().getMessage();
-                throw new SOSException(message);
-            }
+            }  
+            
             MonitoringWebserviceExecuter monitoringWebserviceExecuter = new MonitoringWebserviceExecuter(logger, apiExecutor);
             MonitoringControllerStatus monitoringControllerStatus = monitoringWebserviceExecuter.getControllerStatus(accessToken, args
                     .getControllerId());
