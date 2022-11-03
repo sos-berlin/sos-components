@@ -381,12 +381,16 @@ public class JsonConverter {
                 case FINISH:
                     Finish finish = invInstruction.cast();
                     com.sos.sign.model.instruction.Finish sFinish = signInstruction.cast();
+                    Variables var = new Variables();
                     if (finish.getUnsuccessful()) {
-                        sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Failed", quoteString(finish.getMessage()), new Variables()));
+                        var.setAdditionalProperty("returnCode", 1);
+                        sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Failed", finish.getMessage(), var));
                     } else {
                         if (finish.getMessage() != null && !finish.getMessage().isEmpty()) {
-                            sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Succeeded", quoteString(finish.getMessage()), new Variables()));
+                            var.setAdditionalProperty("returnMessage", finish.getMessage());
                         }
+                        var.setAdditionalProperty("returnCode", 0);
+                        sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Succeeded", null, var));
                     }
                     break;
                 default:

@@ -465,7 +465,7 @@ public class JsonSerializer {
                 switch (inst.getTYPE()) {
                 case FAIL:
                     Fail f = inst.cast();
-                    f.setMessage(quoteString(f.getMessage()));
+                    //f.setMessage(quoteString(f.getMessage()));
                     if (f.getOutcome() == null) {
                         f.setOutcome(new Variables());
                     }
@@ -476,7 +476,7 @@ public class JsonSerializer {
                     break;
                 case FINISH:
                     Finish fi = inst.cast();
-                    fi.setMessage(quoteString(fi.getMessage()));
+                    //fi.setMessage(quoteString(fi.getMessage()));
                     fi.setUnsuccessful(defaultToNull(fi.getUnsuccessful(), Boolean.FALSE));
                     break;
                 case EXECUTE_NAMED:
@@ -551,7 +551,7 @@ public class JsonSerializer {
                 switch (inst.getTYPE()) {
                 case FAIL:
                     com.sos.sign.model.instruction.Fail f = inst.cast();
-                    f.setMessage(quoteString(f.getMessage()));
+                    //f.setMessage(quoteString(f.getMessage()));
                     if (f.getNamedValues() == null) {
                         f.setNamedValues(new Variables());
                     }
