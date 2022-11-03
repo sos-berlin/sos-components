@@ -546,13 +546,15 @@ public class HistoryService extends AJocClusterService {
                         if (f.isDirectory()) {
                             try {
                                 Long id = Long.parseLong(f.getName());
-                                if (!dbLayer.mainOrderLogNotFinished(id)) {
-                                    try {
-                                        if (SOSPath.deleteIfExists(p)) {
-                                            LOGGER.info(String.format("    [deleted]%s", p));
-                                            i++;
+                                if (id > 0) {// id=0 is a temporary folder for not started orders - see config.getLogDirTmpOrders()
+                                    if (!dbLayer.mainOrderLogNotFinished(id)) {
+                                        try {
+                                            if (SOSPath.deleteIfExists(p)) {
+                                                LOGGER.info(String.format("    [deleted]%s", p));
+                                                i++;
+                                            }
+                                        } catch (Throwable e) {// in the same moment deleted by history
                                         }
-                                    } catch (Throwable e) {// in the same moment deleted by history
                                     }
                                 }
                             } catch (Throwable e) {

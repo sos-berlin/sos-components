@@ -16,10 +16,11 @@ public class HistoryConfiguration implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryConfiguration.class);
-    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
-    // Directory, History LOGS
+    // Directory, History LOGS - see CleanupTaskHistory
     private Path logDir = SOSPath.toAbsolutePath("logs/history");
+    // Directory, History LOGS of not started orders - see CleanupTaskHistory
+    private Path logDirTmpOrders = logDir.resolve("0");
     // commit after n db operations
     private int maxTransactions = 100;
 
@@ -44,6 +45,7 @@ public class HistoryConfiguration implements Serializable {
     private int logMaximumDisplayByteSize = JocClusterUtil.mb2bytes(logMaximumDisplayMBSize);
 
     public void load(final Properties conf) throws Exception {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         if (conf.getProperty("history_log_dir") != null) {
             logDir = SOSPath.toAbsolutePath(HistoryUtil.resolveVars(conf.getProperty("history_log_dir").trim()));
             if (isDebugEnabled) {
@@ -84,6 +86,10 @@ public class HistoryConfiguration implements Serializable {
 
     public Path getLogDir() {
         return logDir;
+    }
+
+    public Path getLogDirTmpOrders() {
+        return logDirTmpOrders;
     }
 
     public int getMaxTransactions() {

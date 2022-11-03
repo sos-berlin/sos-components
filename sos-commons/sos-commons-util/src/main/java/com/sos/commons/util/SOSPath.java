@@ -411,6 +411,13 @@ public class SOSPath {
         Files.setLastModifiedTime(path, FileTime.fromMillis(date.getTime()));
     }
 
+    public static Date getLastModified(Path path) {
+        if (path == null) {
+            return null;
+        }
+        return new Date(path.toAbsolutePath().toFile().lastModified());
+    }
+
     public static long getCountSubfolders(Path dir, int maxDepth) throws IOException {
         long count = 0;
         Path sourceDir = dir.toAbsolutePath();

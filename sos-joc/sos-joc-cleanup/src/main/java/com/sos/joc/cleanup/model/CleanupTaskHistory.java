@@ -4,9 +4,11 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,6 +39,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
     // TODO read from history/cluster/globals ..
     private String logDir = "logs/history";
+    private String logDirTmpOrders = "logs/history/0";
 
     private int totalOrders = 0;
     private int totalOrderStates = 0;
@@ -61,7 +64,9 @@ public class CleanupTaskHistory extends CleanupTaskModel {
                 LOGGER.info(String.format("[%s][orders,logs][%s][%s]start cleanup", getIdentifier(), orderDatetime.getAge().getConfigured(),
                         orderDatetime.getZonedDatetime()));
 
+                // Cleanup DB Logs and Orders/Steps/States
                 state = cleanupOrders(orderDatetime, true);
+                deleteNotStartedOrdersLogs(orderDatetime);
                 deleteNotReferencedLogs(state);
                 return state;
             }
@@ -368,6 +373,47 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         LOGGER.info(log.toString());
     }
 
+    private void deleteNotStartedOrdersLogs(TaskDateTime datetime) {
+        if (isStopped()) {
+            return;
+        }
+        if (datetime == null || datetime.getDatetime() == null) {
+            return;
+        }
+        Path dir = Paths.get(logDirTmpOrders).toAbsolutePath();
+        if (Files.exists(dir)) {
+            String method = "deleteNotStartedOrdersLogs";
+            String info = new StringBuilder().append(datetime.getAge().getConfigured()).append(" ").append(getDateTime(datetime.getDatetime()))
+                    .toString();
+            LOGGER.info(String.format("[%s][%s][%s]%s", getIdentifier(), method, info, dir));
+            try {
+                if (SOSPath.isDirectoryEmpty(dir)) {
+                    LOGGER.info(String.format("[%s][%s][%s][skip]directory is empty", getIdentifier(), method, info));
+                } else {
+                    int i = 0;
+                    BiPredicate<Path, BasicFileAttributes> predicate = (path, attributes) -> attributes.isRegularFile() && (datetime.getDatetime()
+                            .getTime() > attributes.lastModifiedTime().toMillis());
+
+                    try (Stream<Path> stream = Files.find(dir, 1, predicate)) {
+                        for (Path p : stream.collect(Collectors.toList())) {
+                            try {
+                                String lm = getDateTime(SOSPath.getLastModified(p));
+                                if (SOSPath.deleteIfExists(p)) {
+                                    LOGGER.info(String.format("[%s][%s][%s][deleted][lastModified(UTC)=%s]%s", getIdentifier(), method, info, lm, p));
+                                    i++;
+                                }
+                            } catch (Throwable e) {// in the same moment deleted by history
+                            }
+                        }
+                    }
+                    LOGGER.info(String.format("[%s][%s][%s][deleted][total]%s", getIdentifier(), method, info, i));
+                }
+            } catch (Throwable e) {
+                LOGGER.warn(String.format("[%s][%s][%s]%s", getIdentifier(), method, info, e.toString()), e);
+            }
+        }
+    }
+
     // TODO duplicate method (some changes) - see com.sos.js7.history.controller.HistoryService
     private void deleteNotReferencedLogs(JocServiceTaskAnswerState state) {
         if (state != null && !state.equals(JocServiceTaskAnswerState.COMPLETED)) {
@@ -378,11 +424,12 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         }
         Path dir = Paths.get(logDir).toAbsolutePath();
         if (Files.exists(dir)) {
-            LOGGER.info(String.format("[%s][logDirectory]%s", getIdentifier(), dir));
+            String method = "deleteNotReferencedLogs";
+            LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), method, dir));
 
             try {
                 if (SOSPath.isDirectoryEmpty(dir)) {
-                    LOGGER.info(String.format("[%s][logDirectory][skip]is empty", getIdentifier()));
+                    LOGGER.info(String.format("[%s][%s][skip]directory is empty", getIdentifier(), method));
                 } else {
                     tryOpenSession();
                     int i = 0;
@@ -392,30 +439,34 @@ public class CleanupTaskHistory extends CleanupTaskModel {
                             if (f.isDirectory()) {
                                 try {
                                     Long id = Long.parseLong(f.getName());
-                                    if (!getDbLayer().mainOrderLogNotFinished(id)) {
-                                        try {
-                                            if (SOSPath.deleteIfExists(p)) {
-                                                LOGGER.info(String.format("[%s][logDirectory][deleted]%s", getIdentifier(), p));
-                                                i++;
+                                    if (id > 0) {// id=0 is a temporary folder for not started orders - see config.getLogDirTmpOrders()
+                                        if (!getDbLayer().mainOrderLogNotFinished(id)) {
+                                            try {
+                                                if (SOSPath.deleteIfExists(p)) {
+                                                    LOGGER.info(String.format("[%s][%s][deleted]%s", getIdentifier(), method, p));
+                                                    i++;
+                                                }
+                                            } catch (Throwable e) {// in the same moment deleted by history
                                             }
-                                        } catch (Throwable e) {// in the same moment deleted by history
                                         }
                                     }
                                 } catch (Throwable e) {
-                                    LOGGER.info(String.format("[%s][logDirectory][skip][non numeric]%s", getIdentifier(), p));
+                                    LOGGER.info(String.format("[%s][%s][skip][non numeric]%s", getIdentifier(), method, p));
                                 }
                             }
                         }
                     }
-                    LOGGER.info(String.format("[%s][logDirectory][deleted][total]%s", getIdentifier(), i));
+                    LOGGER.info(String.format("[%s][%s][deleted][total]%s", getIdentifier(), method, i));
                 }
             } catch (Throwable e) {
-                LOGGER.warn(String.format("[%s][logDirectory]%s", getIdentifier(), e.toString()), e);
+                LOGGER.warn(String.format("[%s][%s]%s", getIdentifier(), method, e.toString()), e);
             }
         }
     }
 
     private JocServiceTaskAnswerState cleanupLogs(Scope scope, Range range, TaskDateTime datetime) throws Exception {
+        deleteNotStartedOrdersLogs(datetime);
+
         tryOpenSession();
 
         List<Long> ids = getLogsOrderIds(scope, range, datetime);

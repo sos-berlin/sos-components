@@ -53,27 +53,29 @@ public class LogEntry {
     private Caught caught;
     private FatEventOrderMoved orderMoved;
     private Variables arguments;
+    private boolean isOrderStarted;
 
     public LogEntry(OrderLogEntryLogLevel level, EventType type, Date controllerDate, Date agentDate) {
         logLevel = level;
         eventType = type;
         controllerDatetime = controllerDate;
         agentDatetime = agentDate;
+        isOrderStarted = true;
     }
 
-    public void onOrder(CachedOrder order, String position) {
-        onOrder(order, position, null);
+    public void onOrder(CachedOrder co, String position) {
+        onOrder(co, position, null);
     }
 
-    public void onOrderBase(CachedOrder order, String position, AFatEventOrderBase entry) {
-        onOrder(order, position, null);
-        switch (entry.getType()) {
+    public void onOrderBase(CachedOrder co, String position, AFatEventOrderBase eo) {
+        onOrder(co, position, null);
+        switch (eo.getType()) {
         case OrderRetrying:
-            delayedUntil = ((FatEventOrderRetrying) entry).getDelayedUntil();
+            delayedUntil = ((FatEventOrderRetrying) eo).getDelayedUntil();
             break;
         case OrderCaught:
             caught = new Caught();
-            caught.setCause(getCaughtCause(((FatEventOrderCaught) entry).getCause()));
+            caught.setCause(getCaughtCause(((FatEventOrderCaught) eo).getCause()));
             break;
         default:
             break;
@@ -94,27 +96,44 @@ public class LogEntry {
         }
     }
 
-    public void onOrder(CachedOrder order, String workflowPosition, List<FatForkedChild> childs) {
-        orderId = order.getOrderId();
-        historyOrderMainParentId = order.getMainParentId();
-        historyOrderId = order.getId();
-        position = SOSString.isEmpty(workflowPosition) ? "0" : workflowPosition;
-        info = order.getOrderId();
+    public void onOrder(CachedOrder co, String workflowPosition, List<FatForkedChild> childs) {
+        orderId = co.getOrderId();
+        historyOrderMainParentId = co.getMainParentId();
+        historyOrderId = co.getId();
+        position = getPosition(workflowPosition);
+        info = co.getOrderId();
     }
 
-    public void onOrderLock(CachedOrder order, AFatEventOrderLocks entry) {
-        onOrder(order, entry.getPosition(), null);
-        orderLocks = entry.getOrderLocks();
+    public void onNotStartedOrder(String orderId, String position) {
+        this.orderId = orderId;
+        this.historyOrderMainParentId = 0L;
+        this.historyOrderId = 0L;
+        this.position = getPosition(position);
+        this.info = orderId;
+        this.isOrderStarted = false;
     }
 
-    public void onOrderNotice(CachedOrder order, AFatEventOrderNotice entry) {
-        onOrder(order, entry.getPosition(), null);
-        orderNotice = entry;
+    private String getPosition(String position) {
+        return SOSString.isEmpty(position) ? "0" : position;
     }
 
-    public void onOrderMoved(CachedOrder order, FatEventOrderMoved entry) {
-        onOrder(order, entry.getPosition(), null);
-        orderMoved = entry;
+    public void onOrderLock(CachedOrder co, AFatEventOrderLocks eo) {
+        onOrder(co, eo.getPosition(), null);
+        orderLocks = eo.getOrderLocks();
+    }
+
+    public void onOrderNotice(CachedOrder co, AFatEventOrderNotice eo) {
+        onOrder(co, eo.getPosition(), null);
+        orderNotice = eo;
+    }
+
+    public void onOrderMoved(CachedOrder co, FatEventOrderMoved eo) {
+        if (co == null) {
+            onNotStartedOrder(eo.getOrderId(), eo.getPosition());
+        } else {
+            onOrder(co, eo.getPosition(), null);
+        }
+        orderMoved = eo;
     }
 
     public void setError(String state, CachedOrder co) {
@@ -163,22 +182,22 @@ public class LogEntry {
         }
     }
 
-    public void onOrderStep(CachedOrderStep orderStep) {
-        onOrderStep(orderStep, null);
+    public void onOrderStep(CachedOrderStep cos) {
+        onOrderStep(cos, null);
     }
 
-    public void onOrderStep(CachedOrderStep orderStep, String entryInfo) {
-        orderId = orderStep.getOrderId();
-        historyOrderMainParentId = orderStep.getHistoryOrderMainParentId();
-        historyOrderId = orderStep.getHistoryOrderId();
-        historyOrderStepId = orderStep.getId();
-        position = orderStep.getWorkflowPosition();
-        jobName = orderStep.getJobName();
-        agentTimezone = orderStep.getAgentTimezone();
-        agentId = orderStep.getAgentId();
-        agentName = orderStep.getAgentName();
-        agentUri = orderStep.getAgentUri();
-        subagentClusterId = orderStep.getSubagentClusterId();
+    public void onOrderStep(CachedOrderStep cos, String entryInfo) {
+        orderId = cos.getOrderId();
+        historyOrderMainParentId = cos.getHistoryOrderMainParentId();
+        historyOrderId = cos.getHistoryOrderId();
+        historyOrderStepId = cos.getId();
+        position = cos.getWorkflowPosition();
+        jobName = cos.getJobName();
+        agentTimezone = cos.getAgentTimezone();
+        agentId = cos.getAgentId();
+        agentName = cos.getAgentName();
+        agentUri = cos.getAgentUri();
+        subagentClusterId = cos.getSubagentClusterId();
         StringBuilder sb;
         switch (eventType) {
         case OrderProcessingStarted:
@@ -186,7 +205,7 @@ public class LogEntry {
             info = String.format("[Start] Job=%s, Agent (url=%s, id=%s, name=%s%s)", jobName, agentUri, agentId, agentName, add);
             return;
         case OrderProcessed:
-            returnCode = orderStep.getReturnCode();
+            returnCode = cos.getReturnCode();
             sb = new StringBuilder("[End]");
             if (error) {
                 sb.append(" [Error]");
@@ -368,5 +387,9 @@ public class LogEntry {
 
     public Variables getArguments() {
         return arguments;
+    }
+
+    public boolean isOrderStarted() {
+        return isOrderStarted;
     }
 }

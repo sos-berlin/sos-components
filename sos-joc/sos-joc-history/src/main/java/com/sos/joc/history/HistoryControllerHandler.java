@@ -24,6 +24,7 @@ import com.sos.joc.cluster.notifier.DefaultNotifier;
 import com.sos.joc.cluster.notifier.INotifier;
 import com.sos.joc.cluster.notifier.Mailer;
 import com.sos.joc.history.controller.configuration.HistoryConfiguration;
+import com.sos.joc.history.controller.exception.FatEventProblemException;
 import com.sos.joc.history.controller.model.HistoryModel;
 import com.sos.joc.history.controller.proxy.EventFluxStopper;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry;
@@ -332,13 +333,8 @@ public class HistoryControllerHandler {
                         event = new FatEventEmpty();
                     } else {
                         order = entry.getCheckedOrderFromPreviousState();
-                        boolean isStarted = order.isStarted();
-                        if (isStarted) {
-                            event = new FatEventOrderMoved(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
-                                    .getPosition(), om, order.getCurrentPositionInstruction(), isStarted);
-                        } else {
-                            event = new FatEventEmpty();
-                        }
+                        event = new FatEventOrderMoved(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                                .getPosition(), om, order.getCurrentPositionInstruction(), order.isStarted());
                     }
                 } catch (Throwable e) {
                     try {
@@ -463,45 +459,29 @@ public class HistoryControllerHandler {
             case OrderSuspended:
                 order = entry.getCheckedOrder();
 
-                if (order.isStarted()) {
-                    event = new FatEventOrderSuspended(entry.getEventId(), entry.getEventDate());
-                    event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
-                } else {
-                    event = new FatEventEmpty();
-                }
+                event = new FatEventOrderSuspended(entry.getEventId(), entry.getEventDate(), order.isStarted());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderSuspendMarked:
                 order = entry.getCheckedOrder();
 
-                if (order.isStarted()) {
-                    event = new FatEventOrderSuspendMarked(entry.getEventId(), entry.getEventDate());
-                    event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
-                } else {
-                    event = new FatEventEmpty();
-                }
+                event = new FatEventOrderSuspendMarked(entry.getEventId(), entry.getEventDate(), order.isStarted());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderResumed:
-                order = entry.getOrder();
+                order = entry.getCheckedOrder();
 
-                if (order.isStarted()) {
-                    event = new FatEventOrderResumed(entry.getEventId(), entry.getEventDate());
-                    event.set(order.getOrderId());
-                } else {
-                    event = new FatEventEmpty();
-                }
+                event = new FatEventOrderResumed(entry.getEventId(), entry.getEventDate(), hasOrderStarted(entry, order.isStarted()));
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderResumeMarked:
                 order = entry.getCheckedOrder();
 
-                if (order.isStarted()) {
-                    event = new FatEventOrderResumeMarked(entry.getEventId(), entry.getEventDate());
-                    event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
-                } else {
-                    event = new FatEventEmpty();
-                }
+                event = new FatEventOrderResumeMarked(entry.getEventId(), entry.getEventDate(), hasOrderStarted(entry, order.isStarted()));
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderFinished:
@@ -513,7 +493,8 @@ public class HistoryControllerHandler {
 
             case OrderCancelled:
                 order = entry.getCheckedOrder();
-                if (order.isStarted()) {
+
+                if (hasOrderStarted(entry, order.isStarted())) {
                     event = new FatEventOrderCancelled(entry.getEventId(), entry.getEventDate());
                     event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 } else {
@@ -607,6 +588,13 @@ public class HistoryControllerHandler {
             }
         }
         return event;
+    }
+
+    private boolean hasOrderStarted(HistoryEventEntry entry, boolean currentIsStarted) throws FatEventProblemException {
+        if (!currentIsStarted) {
+            return entry.getCheckedOrderFromPreviousState().isStarted();
+        }
+        return true;
     }
 
     @SuppressWarnings("unused")

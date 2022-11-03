@@ -7,8 +7,15 @@ import com.sos.joc.history.controller.proxy.HistoryEventType;
 // without outcome
 public final class FatEventOrderResumeMarked extends AFatEventOrderProcessed {
 
-    public FatEventOrderResumeMarked(Long eventId, Date eventDatetime) {
+    private boolean isStarted;
+
+    public FatEventOrderResumeMarked(Long eventId, Date eventDatetime, boolean isStarted) {
         super(eventId, eventDatetime);
+        this.isStarted = isStarted;
+    }
+
+    public boolean isStarted() {
+        return isStarted;
     }
 
     @Override

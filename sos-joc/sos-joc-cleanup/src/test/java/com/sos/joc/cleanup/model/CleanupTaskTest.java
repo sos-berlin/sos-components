@@ -1,14 +1,23 @@
 package com.sos.joc.cleanup.model;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.TimeZone;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSPath;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.db.DBLayer;
 
 public class CleanupTaskTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskTest.class);
 
     @Ignore
     @Test
@@ -29,6 +38,19 @@ public class CleanupTaskTest {
                 factory.close();
             }
         }
+    }
+
+    @Ignore
+    @Test
+    public void testLastModified() throws SOSInvalidDataException {
+        Path p = Paths.get("src/test/resources/hibernate.cfg.xml");
+        LOGGER.info(String.format("[%s][ms=%s]%s", TimeZone.getDefault().getID(), SOSPath.getLastModified(p).getTime(), SOSDate.getDateTimeAsString(
+                SOSPath.getLastModified(p))));
+
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        LOGGER.info(String.format("[%s][ms=%s]%s", TimeZone.getDefault().getID(), SOSPath.getLastModified(p).getTime(), SOSDate.getDateTimeAsString(
+                SOSPath.getLastModified(p))));
+
     }
 
     private JocClusterHibernateFactory createFactory() throws Exception {
