@@ -87,7 +87,6 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
                 resultMap.put("js7CheckHistoryResult", false);
             }
         }
-
         checkHistoryJobReturn.setResultMap(resultMap);
 
         return checkHistoryJobReturn;

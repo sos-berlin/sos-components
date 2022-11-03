@@ -166,13 +166,13 @@ public class HistoryInfo {
             return historyItem;
         } catch (Exception e) {
             Globals.error(logger, "", e);
+            throw e;
         } finally {
             if (accessToken != null) {
                 apiExecutor.logout(accessToken);
             }
             apiExecutor.close();
         }
-        return null;
     }
 
     public HistoryItem queryHistory() throws Exception {
