@@ -465,7 +465,7 @@ public class JsonSerializer {
                 switch (inst.getTYPE()) {
                 case FAIL:
                     Fail f = inst.cast();
-                    //f.setMessage(quoteString(f.getMessage()));
+                    f.setMessage(quoteString(f.getMessage()));
                     if (f.getOutcome() == null) {
                         f.setOutcome(new Variables());
                     }
