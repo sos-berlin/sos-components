@@ -30,6 +30,8 @@ public class HistoryOrderBean extends AHistoryBean {
     private Date endTime;
     private String endWorkflowPosition;
     private Long endHistoryOrderStepId;
+    private Integer endReturnCode;
+    private String endMessage;
     private Integer severity;
     private Integer state;
     private Date stateTime;
@@ -70,6 +72,8 @@ public class HistoryOrderBean extends AHistoryBean {
         this.endTime = item.getEndTime();
         this.endWorkflowPosition = item.getEndWorkflowPosition();
         this.endHistoryOrderStepId = item.getEndHistoryOrderStepId();
+        this.endReturnCode = item.getEndReturnCode();
+        this.endMessage = item.getEndMessage();
         this.severity = item.getSeverity();
         this.state = item.getState();
         this.stateTime = item.getStateTime();
@@ -241,6 +245,22 @@ public class HistoryOrderBean extends AHistoryBean {
 
     public Long getEndHistoryOrderStepId() {
         return endHistoryOrderStepId;
+    }
+
+    public void setEndReturnCode(Integer val) {
+        endReturnCode = val;
+    }
+
+    public Integer getEndReturnCode() {
+        return endReturnCode;
+    }
+
+    public String getEndMessage() {
+        return endMessage;
+    }
+
+    public void setEndMessage(String val) {
+        endMessage = val;
     }
 
     public Integer getSeverity() {

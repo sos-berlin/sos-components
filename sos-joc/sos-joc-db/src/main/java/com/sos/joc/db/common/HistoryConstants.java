@@ -2,6 +2,8 @@ package com.sos.joc.db.common;
 
 public class HistoryConstants {
 
+    public static final int MAX_LEN_END_MESSAGE = 500;
+
     public static final int MAX_LEN_ERROR_CODE = 50;
     public static final int MAX_LEN_ERROR_TEXT = 500;
 

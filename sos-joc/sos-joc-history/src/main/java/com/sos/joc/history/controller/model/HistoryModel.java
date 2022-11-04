@@ -141,6 +141,7 @@ public class HistoryModel {
 
     private static final String KEY_DELIMITER = "|||";
     private static final String RETURN_CODE_KEY = "returnCode";
+    private static final String RETURN_MESSAGE_KEY = "returnMessage";
     private static final String AGENT_COUPLING_FAILED_SHUTDOWN_MESSAGE = "shutting down";// lower case
 
     private final SOSHibernateFactory dbFactory;
@@ -938,6 +939,8 @@ public class HistoryModel {
             item.setEndTime(null);
             item.setEndWorkflowPosition(null);
             item.setEndHistoryOrderStepId(Long.valueOf(0));
+            item.setEndReturnCode(null);
+            item.setEndMessage(null);
 
             item.setSeverity(OrderStateText.RUNNING);
             item.setState(OrderStateText.RUNNING);
@@ -1048,6 +1051,8 @@ public class HistoryModel {
             String endWorkflowPosition = null;
             Long endHistoryOrderStepId = null;
             Long endEventId = null;
+            Integer endReturnCode = null;
+            String endMessage = null;
             Long currentHistoryOrderStepId = (cos == null) ? co.getCurrentHistoryOrderStepId() : cos.getId();
             if (terminateOrder) {
                 endTime = eventDate;
@@ -1077,11 +1082,28 @@ public class HistoryModel {
                 co.setHasStates(true);
                 stateErrorText = orderErrorText;
                 break;
+            case OrderFinished:
+                if (outcome != null) {
+                    endReturnCode = outcome.getReturnCode();
+                    if (outcome.isSucceeded()) {
+                        if (outcome.getNamedValues() != null && outcome.getNamedValues().containsKey(RETURN_MESSAGE_KEY)) {
+                            String rm = HistoryUtil.toString(outcome.getNamedValues().get(RETURN_MESSAGE_KEY));
+                            if (!SOSString.isEmpty(rm)) {
+                                endMessage = rm;
+                                le.setReturnMessage(endMessage);
+                            }
+                        }
+                    } else {
+                        endMessage = orderErrorText;
+                    }
+                }
+                break;
             default:
                 break;
             }
-            dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endHistoryOrderStepId, endEventId, le.getState(), eventDate, co
-                    .getHasStates(), le.isError(), le.getErrorState(), le.getErrorReason(), le.getReturnCode(), le.getErrorCode(), orderErrorText);
+            dbLayer.setOrderEnd(co.getId(), le.getState(), eventDate, co.getHasStates(), le.isError(), le.getErrorState(), le.getErrorReason(), le
+                    .getReturnCode(), le.getErrorCode(), orderErrorText, endTime, endWorkflowPosition, endHistoryOrderStepId, endEventId,
+                    endReturnCode, endMessage);
 
             if (co.getHasStates()) {
                 saveOrderState(dbLayer, co, le.getState(), eventDate, eventId, le.getErrorCode(), stateErrorText);
@@ -1092,6 +1114,8 @@ public class HistoryModel {
             hob.setEndTime(endTime);
             hob.setEndWorkflowPosition(endWorkflowPosition);
             hob.setEndHistoryOrderStepId(endHistoryOrderStepId);
+            hob.setEndReturnCode(endReturnCode);
+            hob.setEndMessage(endMessage);
             hob.setState(le.getState());
             hob.setStateTime(eventDate);
             hob.setSeverity(HistorySeverity.map2DbSeverity(hob.getState()));
@@ -1413,6 +1437,8 @@ public class HistoryModel {
             item.setEndTime(null);
             item.setEndWorkflowPosition(null);
             item.setEndHistoryOrderStepId(Long.valueOf(0));
+            item.setEndReturnCode(null);
+            item.setEndMessage(null);
 
             item.setSeverity(OrderStateText.RUNNING);
             item.setState(OrderStateText.RUNNING);
@@ -2229,6 +2255,7 @@ public class HistoryModel {
         ole.setLogEvent(le.getEventType());
         ole.setPosition(SOSString.isEmpty(le.getPosition()) ? null : le.getPosition());
         ole.setReturnCode(le.getReturnCode() == null ? null : le.getReturnCode().longValue());// TODO change to Integer
+        ole.setReturnMessage(le.getReturnMessage());
         ole.setLocks(null);
         if (le.isError()) {
             OrderLogEntryError error = new OrderLogEntryError();

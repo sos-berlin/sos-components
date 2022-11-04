@@ -389,9 +389,9 @@ public class DBLayerHistory extends DBLayer {
         return getSession().executeUpdate(query);
     }
 
-    public int setOrderEnd(Long id, Date endTime, String endWorkflowPosition, Long endHistoryOrderStepId, Long endEventId, Integer state,
-            Date stateTime, boolean hasStates, boolean error, String errorState, String errorReason, Integer errorReturnCode, String errorCode,
-            String errorText) throws SOSHibernateException {
+    public int setOrderEnd(Long id, Integer state, Date stateTime, boolean hasStates, boolean error, String errorState, String errorReason,
+            Integer errorReturnCode, String errorCode, String errorText, Date endTime, String endWorkflowPosition, Long endHistoryOrderStepId,
+            Long endEventId, Integer endReturnCode, String endMessage) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
         hql.append("set modified=:modified ");
         if (endTime != null) {
@@ -399,8 +399,9 @@ public class DBLayerHistory extends DBLayer {
             hql.append(",endWorkflowPosition=:endWorkflowPosition ");
             hql.append(",endHistoryOrderStepId=:endHistoryOrderStepId ");
             hql.append(",endEventId=:endEventId ");
+            hql.append(",endReturnCode=:endReturnCode ");
+            hql.append(",endMessage=:endMessage ");
         }
-
         hql.append(",severity=:severity ");
         hql.append(",state=:state ");
         hql.append(",stateTime=:stateTime ");
@@ -420,8 +421,9 @@ public class DBLayerHistory extends DBLayer {
             query.setParameter("endWorkflowPosition", DBItemHistoryOrder.normalizeWorkflowPosition(endWorkflowPosition));
             query.setParameter("endHistoryOrderStepId", endHistoryOrderStepId);
             query.setParameter("endEventId", endEventId);
+            query.setParameter("endReturnCode", endReturnCode);
+            query.setParameter("endMessage", endMessage);
         }
-
         query.setParameter("severity", HistorySeverity.map2DbSeverity(state));
         query.setParameter("state", state);
         query.setParameter("stateTime", stateTime);

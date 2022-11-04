@@ -66,6 +66,13 @@ public class HistoryUtil {
         return (T) Globals.objectMapper.readValue(content, clazz);
     }
 
+    public static String toString(js7.data.value.Value val) {
+        if (val == null) {
+            return null;
+        }
+        return val.toJava().toString();
+    }
+
     public static Variables toVariables(Map<String, js7.data.value.Value> map) {
         if (map == null || map.isEmpty()) {
             return null;

@@ -47,6 +47,7 @@ public class LogEntry {
     private String errorCode;
     private String errorText;
     private Integer returnCode;
+    private String returnMessage;
     private List<OrderLock> orderLocks;
     private AFatEventOrderNotice orderNotice;
     private Date delayedUntil;
@@ -359,6 +360,14 @@ public class LogEntry {
 
     public Integer getReturnCode() {
         return returnCode;
+    }
+
+    public String getReturnMessage() {
+        return returnMessage;
+    }
+
+    public void setReturnMessage(String val) {
+        returnMessage = val;
     }
 
     public List<OrderLock> getOrderLocks() {

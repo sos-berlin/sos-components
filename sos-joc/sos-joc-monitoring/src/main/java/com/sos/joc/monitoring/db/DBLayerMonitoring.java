@@ -122,6 +122,8 @@ public class DBLayerMonitoring extends DBLayer {
             hql.append(",endTime=:endTime ");
             hql.append(",endWorkflowPosition=:endWorkflowPosition ");
             hql.append(",endHistoryOrderStepId=:endHistoryOrderStepId ");
+            hql.append(",endReturnCode=:endReturnCode ");
+            hql.append(",endMessage=:endMessage ");
         }
         if (hob.getCurrentHistoryOrderStepId() != null) {
             hql.append(",currentHistoryOrderStepId=:currentHistoryOrderStepId ");
@@ -145,6 +147,8 @@ public class DBLayerMonitoring extends DBLayer {
             query.setParameter("endTime", hob.getEndTime());
             query.setParameter("endWorkflowPosition", DBItemMonitoringOrder.normalizeWorkflowPosition(hob.getEndWorkflowPosition()));
             query.setParameter("endHistoryOrderStepId", hob.getEndHistoryOrderStepId());
+            query.setParameter("endReturnCode", hob.getEndReturnCode());
+            query.setParameter("endMessage", hob.getEndMessage());
         }
         if (hob.getCurrentHistoryOrderStepId() != null) {
             query.setParameter("currentHistoryOrderStepId", hob.getCurrentHistoryOrderStepId());
@@ -435,6 +439,8 @@ public class DBLayerMonitoring extends DBLayer {
         item.setEndTime(history.getEndTime());
         item.setEndWorkflowPosition(history.getEndWorkflowPosition());
         item.setEndHistoryOrderStepId(history.getEndHistoryOrderStepId());
+        item.setEndReturnCode(history.getEndReturnCode());
+        item.setEndMessage(history.getEndMessage());
         item.setSeverity(history.getSeverity());
         item.setState(history.getState());
         item.setStateTime(history.getStateTime());

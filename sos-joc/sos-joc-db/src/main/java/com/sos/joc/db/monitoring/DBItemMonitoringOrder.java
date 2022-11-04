@@ -94,6 +94,12 @@ public class DBItemMonitoringOrder extends DBItem {
     @Column(name = "[END_HOS_ID]", nullable = false)
     private Long endHistoryOrderStepId;
 
+    @Column(name = "[END_RETURN_CODE]", nullable = true)
+    private Integer endReturnCode; // event. outcome returnCode (finish instruction)
+
+    @Column(name = "[END_MESSAGE]", nullable = true)
+    private String endMessage; // event. outcome returnCode (finish instruction)
+
     @Column(name = "[SEVERITY]", nullable = false)
     private Integer severity;
 
@@ -331,6 +337,22 @@ public class DBItemMonitoringOrder extends DBItem {
         return endHistoryOrderStepId;
     }
 
+    public void setEndReturnCode(Integer val) {
+        endReturnCode = val;
+    }
+
+    public Integer getEndReturnCode() {
+        return endReturnCode;
+    }
+
+    public void setEndMessage(String val) {
+        endMessage = normalizeEndMessage(val);
+    }
+
+    public String getEndMessage() {
+        return endMessage;
+    }
+
     public Integer getSeverity() {
         return severity;
     }
@@ -425,6 +447,11 @@ public class DBItemMonitoringOrder extends DBItem {
 
     public Date getModified() {
         return modified;
+    }
+
+    @Transient
+    public static String normalizeEndMessage(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_END_MESSAGE);
     }
 
     @Transient
