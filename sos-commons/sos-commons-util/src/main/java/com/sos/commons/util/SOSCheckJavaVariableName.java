@@ -19,10 +19,15 @@ public class SOSCheckJavaVariableName {
     private static final Predicate<String> controlChars = controlCharsPattern.asPredicate();
     private static final Pattern spaceCharsPattern = Pattern.compile("\\s");
     private static final Predicate<String> spaceChars = spaceCharsPattern.asPredicate();
-    // punction and symbol chars without ._-
+    // punctuation and symbol chars without ._-
     private static final Pattern punctuationAndSymbolCharsPattern = Pattern.compile(
             "[\\x21-\\x2C\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x7E\\xA0-\\xBF\\xD7\\xF7]");
     private static final Predicate<String> punctuationAndSymbolChars = punctuationAndSymbolCharsPattern.asPredicate();
+    // half and full width punctuations, see https://en.wikipedia.org/wiki/Halfwidth_and_Fullwidth_Forms_(Unicode_block)
+    private static final Pattern halfFullWidthPunctuationAndSymbolCharsPattern = Pattern.compile(
+            "[\\uFF01-\\uFF0C\\uFFFF\\uFF1A-\\uFF20\\uFF3B-\\uFF3E\\uFF40\\uFF5B-\\uFF60\\uFF62-\\uFF65\\uFFE0-\\uFFEE]");
+    private static final Predicate<String> halfFullWidthPunctuationAndSymbolChars = halfFullWidthPunctuationAndSymbolCharsPattern.asPredicate();
+    
 //    private static final Predicate<String> digits = Pattern.compile("\\d").asPredicate();
     private static final Pattern leadingHyphensAndDotsPattern = Pattern.compile("^[.-]");
     private static final Predicate<String> leadingHyphensAndDots = leadingHyphensAndDotsPattern.asPredicate();
@@ -84,6 +89,9 @@ public class SOSCheckJavaVariableName {
         if (punctuationAndSymbolChars.test(value)) {
             return errorMessages.get(Result.PUNCTUATION);
         }
+        if (halfFullWidthPunctuationAndSymbolChars.test(value)) {
+            return errorMessages.get(Result.PUNCTUATION);
+        }
 //        if (digits.test(value.substring(0, 1))) {
 //            return errorMessages.get(Result.DIGIT);
 //        }
@@ -108,6 +116,7 @@ public class SOSCheckJavaVariableName {
         }
         value = controlCharsPattern.matcher(value).replaceAll("");
         value = punctuationAndSymbolCharsPattern.matcher(value).replaceAll("");
+        value = halfFullWidthPunctuationAndSymbolCharsPattern.matcher(value).replaceAll("");
         value = value.replaceAll("\\s+", "-");
         value = value.replaceAll("--+", "-");
         value = value.replaceAll("\\.\\.+", ".");

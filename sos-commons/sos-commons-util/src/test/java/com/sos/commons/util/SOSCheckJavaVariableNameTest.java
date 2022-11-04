@@ -7,7 +7,7 @@ import org.junit.Test;
 
 public class SOSCheckJavaVariableNameTest {
     
-    private String[] strings = {"こんにちは", "niño", "ha/lo", "final", "1st", null, "w.1", "2021-01-27", "come on", "see...more", "continue..."};
+    private String[] strings = {"こんにちは", "niño", "ha/lo", "final", "1st", null, "w.1", "2021-01-27", "come on", "see...more", "continue...", "配置テストTEST１（確認用）"};
     
     private boolean test(String s) {
         try {
@@ -93,6 +93,13 @@ public class SOSCheckJavaVariableNameTest {
     public void test11() {
         assertFalse(test(strings[10]));
         String updated = SOSCheckJavaVariableName.makeStringRuleConform(strings[10]);
+        assertTrue(test(updated));
+    }
+    
+    @Test
+    public void test12() {
+        assertFalse(test(strings[11]));
+        String updated = SOSCheckJavaVariableName.makeStringRuleConform(strings[11]);
         assertTrue(test(updated));
     }
 
