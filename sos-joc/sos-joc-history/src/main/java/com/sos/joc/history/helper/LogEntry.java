@@ -16,6 +16,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught.FatEven
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderMoved;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
 import com.sos.joc.history.controller.proxy.fatevent.FatForkedChild;
+import com.sos.joc.history.controller.proxy.fatevent.FatInstruction;
 import com.sos.joc.history.controller.proxy.fatevent.FatOutcome;
 import com.sos.joc.model.history.order.OrderLogEntryLogLevel;
 import com.sos.joc.model.history.order.caught.Caught;
@@ -53,6 +54,7 @@ public class LogEntry {
     private Date delayedUntil;
     private Caught caught;
     private FatEventOrderMoved orderMoved;
+    private FatInstruction instruction;
     private Variables arguments;
     private boolean isOrderStarted;
 
@@ -405,4 +407,13 @@ public class LogEntry {
     public boolean isOrderStarted() {
         return isOrderStarted;
     }
+
+    public void setInstruction(FatInstruction val) {
+        instruction = val;
+    }
+
+    public FatInstruction getInstruction() {
+        return instruction;
+    }
+
 }

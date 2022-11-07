@@ -16,7 +16,6 @@ import com.sos.joc.model.history.order.notice.ConsumeNotices;
 import com.sos.joc.model.history.order.notice.ExpectNotices;
 import com.sos.joc.model.history.order.notice.PostNotice;
 import com.sos.joc.model.history.order.retry.Retrying;
-import com.sos.joc.model.history.order.suspended.Suspended;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -54,6 +53,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "caught",
     "moved",
     "stopped",
+    "resumed",
     "arguments",
     "returnValues"
 })
@@ -174,13 +174,21 @@ public class OrderLogEntry {
     @JsonProperty("moved")
     private Moved moved;
     /**
-     * Suspended (stopped)
+     * order history log entry
      * <p>
      * 
      * 
      */
     @JsonProperty("stopped")
-    private Suspended stopped;
+    private OrderLogEntryInstruction stopped;
+    /**
+     * order history log entry
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("resumed")
+    private OrderLogEntryInstruction resumed;
     /**
      * key-value pairs
      * <p>
@@ -561,25 +569,47 @@ public class OrderLogEntry {
     }
 
     /**
-     * Suspended (stopped)
+     * order history log entry
      * <p>
      * 
      * 
      */
     @JsonProperty("stopped")
-    public Suspended getStopped() {
+    public OrderLogEntryInstruction getStopped() {
         return stopped;
     }
 
     /**
-     * Suspended (stopped)
+     * order history log entry
      * <p>
      * 
      * 
      */
     @JsonProperty("stopped")
-    public void setStopped(Suspended stopped) {
+    public void setStopped(OrderLogEntryInstruction stopped) {
         this.stopped = stopped;
+    }
+
+    /**
+     * order history log entry
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("resumed")
+    public OrderLogEntryInstruction getResumed() {
+        return resumed;
+    }
+
+    /**
+     * order history log entry
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("resumed")
+    public void setResumed(OrderLogEntryInstruction resumed) {
+        this.resumed = resumed;
     }
 
     /**
@@ -628,12 +658,12 @@ public class OrderLogEntry {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentId", agentId).append("agentName", agentName).append("agentUrl", agentUrl).append("subagentClusterId", subagentClusterId).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("returnMessage", returnMessage).append("msg", msg).append("error", error).append("locks", locks).append("expectNotices", expectNotices).append("consumeNotices", consumeNotices).append("postNotice", postNotice).append("retrying", retrying).append("caught", caught).append("moved", moved).append("stopped", stopped).append("arguments", arguments).append("returnValues", returnValues).toString();
+        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentId", agentId).append("agentName", agentName).append("agentUrl", agentUrl).append("subagentClusterId", subagentClusterId).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("returnMessage", returnMessage).append("msg", msg).append("error", error).append("locks", locks).append("expectNotices", expectNotices).append("consumeNotices", consumeNotices).append("postNotice", postNotice).append("retrying", retrying).append("caught", caught).append("moved", moved).append("stopped", stopped).append("resumed", resumed).append("arguments", arguments).append("returnValues", returnValues).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(msg).append(caught).append(agentId).append(orderId).append(moved).append(returnMessage).append(error).append(locks).append(agentDatetime).append(returnValues).append(returnCode).append(controllerDatetime).append(logLevel).append(expectNotices).append(stopped).append(agentName).append(consumeNotices).append(postNotice).append(logEvent).append(retrying).append(arguments).append(position).append(agentUrl).append(subagentClusterId).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(msg).append(caught).append(agentId).append(orderId).append(moved).append(returnMessage).append(error).append(locks).append(agentDatetime).append(returnValues).append(returnCode).append(controllerDatetime).append(logLevel).append(expectNotices).append(stopped).append(agentName).append(consumeNotices).append(postNotice).append(logEvent).append(retrying).append(arguments).append(position).append(agentUrl).append(subagentClusterId).append(job).append(resumed).append(taskId).toHashCode();
     }
 
     @Override
@@ -645,7 +675,7 @@ public class OrderLogEntry {
             return false;
         }
         OrderLogEntry rhs = ((OrderLogEntry) other);
-        return new EqualsBuilder().append(msg, rhs.msg).append(caught, rhs.caught).append(agentId, rhs.agentId).append(orderId, rhs.orderId).append(moved, rhs.moved).append(returnMessage, rhs.returnMessage).append(error, rhs.error).append(locks, rhs.locks).append(agentDatetime, rhs.agentDatetime).append(returnValues, rhs.returnValues).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(expectNotices, rhs.expectNotices).append(stopped, rhs.stopped).append(agentName, rhs.agentName).append(consumeNotices, rhs.consumeNotices).append(postNotice, rhs.postNotice).append(logEvent, rhs.logEvent).append(retrying, rhs.retrying).append(arguments, rhs.arguments).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(subagentClusterId, rhs.subagentClusterId).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(msg, rhs.msg).append(caught, rhs.caught).append(agentId, rhs.agentId).append(orderId, rhs.orderId).append(moved, rhs.moved).append(returnMessage, rhs.returnMessage).append(error, rhs.error).append(locks, rhs.locks).append(agentDatetime, rhs.agentDatetime).append(returnValues, rhs.returnValues).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(expectNotices, rhs.expectNotices).append(stopped, rhs.stopped).append(agentName, rhs.agentName).append(consumeNotices, rhs.consumeNotices).append(postNotice, rhs.postNotice).append(logEvent, rhs.logEvent).append(retrying, rhs.retrying).append(arguments, rhs.arguments).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(subagentClusterId, rhs.subagentClusterId).append(job, rhs.job).append(resumed, rhs.resumed).append(taskId, rhs.taskId).isEquals();
     }
 
 }

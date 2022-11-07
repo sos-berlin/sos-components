@@ -4,6 +4,7 @@ package com.sos.joc.model.history.order.moved;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.history.order.OrderLogEntryInstruction;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -17,13 +18,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "job",
+    "instruction",
     "reason"
 })
 public class MovedSkipped {
 
-    @JsonProperty("job")
-    private String job;
+    /**
+     * order history log entry
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("instruction")
+    private OrderLogEntryInstruction instruction;
     /**
      * Moved Skip Reason
      * <p>
@@ -34,14 +42,28 @@ public class MovedSkipped {
     @JsonProperty("reason")
     private MovedSkippedReason reason;
 
-    @JsonProperty("job")
-    public String getJob() {
-        return job;
+    /**
+     * order history log entry
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("instruction")
+    public OrderLogEntryInstruction getInstruction() {
+        return instruction;
     }
 
-    @JsonProperty("job")
-    public void setJob(String job) {
-        this.job = job;
+    /**
+     * order history log entry
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("instruction")
+    public void setInstruction(OrderLogEntryInstruction instruction) {
+        this.instruction = instruction;
     }
 
     /**
@@ -70,12 +92,12 @@ public class MovedSkipped {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("job", job).append("reason", reason).toString();
+        return new ToStringBuilder(this).append("instruction", instruction).append("reason", reason).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(job).append(reason).toHashCode();
+        return new HashCodeBuilder().append(reason).append(instruction).toHashCode();
     }
 
     @Override
@@ -87,7 +109,7 @@ public class MovedSkipped {
             return false;
         }
         MovedSkipped rhs = ((MovedSkipped) other);
-        return new EqualsBuilder().append(job, rhs.job).append(reason, rhs.reason).isEquals();
+        return new EqualsBuilder().append(reason, rhs.reason).append(instruction, rhs.instruction).isEquals();
     }
 
 }

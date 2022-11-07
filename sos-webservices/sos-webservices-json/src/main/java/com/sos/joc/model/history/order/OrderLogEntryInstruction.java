@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.history.order.suspended;
+package com.sos.joc.model.history.order;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,40 +10,38 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Suspended (stopped)
+ * order history log entry
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "instruction",
     "job"
 })
-public class Suspended {
+public class OrderLogEntryInstruction {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
+    @JsonProperty("instruction")
+    private String instruction;
     @JsonProperty("job")
     private String job;
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
+    @JsonProperty("instruction")
+    public String getInstruction() {
+        return instruction;
+    }
+
+    @JsonProperty("instruction")
+    public void setInstruction(String instruction) {
+        this.instruction = instruction;
+    }
+
     @JsonProperty("job")
     public String getJob() {
         return job;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("job")
     public void setJob(String job) {
         this.job = job;
@@ -51,12 +49,12 @@ public class Suspended {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("job", job).toString();
+        return new ToStringBuilder(this).append("instruction", instruction).append("job", job).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(job).toHashCode();
+        return new HashCodeBuilder().append(job).append(instruction).toHashCode();
     }
 
     @Override
@@ -64,11 +62,11 @@ public class Suspended {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Suspended) == false) {
+        if ((other instanceof OrderLogEntryInstruction) == false) {
             return false;
         }
-        Suspended rhs = ((Suspended) other);
-        return new EqualsBuilder().append(job, rhs.job).isEquals();
+        OrderLogEntryInstruction rhs = ((OrderLogEntryInstruction) other);
+        return new EqualsBuilder().append(job, rhs.job).append(instruction, rhs.instruction).isEquals();
     }
 
 }

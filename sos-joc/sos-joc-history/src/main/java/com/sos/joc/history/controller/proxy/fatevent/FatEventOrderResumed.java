@@ -9,17 +9,17 @@ import js7.data.workflow.Instruction;
 // without outcome
 public final class FatEventOrderResumed extends AFatEventOrderProcessed {
 
-    private String jobName;
+    private FatInstruction instruction;
     private boolean isStarted;
 
     public FatEventOrderResumed(Long eventId, Date eventDatetime, Instruction instruction, boolean isStarted) {
         super(eventId, eventDatetime);
-        this.jobName = getJobName(instruction);
+        this.instruction = new FatInstruction(instruction);
         this.isStarted = isStarted;
     }
 
-    public String getJobName() {
-        return jobName;
+    public FatInstruction getInstruction() {
+        return instruction;
     }
 
     public boolean isStarted() {
