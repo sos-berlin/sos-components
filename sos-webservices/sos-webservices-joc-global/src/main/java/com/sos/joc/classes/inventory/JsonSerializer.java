@@ -487,6 +487,9 @@ public class JsonSerializer {
                     ForkList fl = inst.cast();
                     fl.setJoinIfFailed(defaultToNull(fl.getJoinIfFailed(), Boolean.FALSE));
                     fl.setAgentName(defaultToNull(fl.getAgentName(), ""));
+                    if (fl.getSubagentClusterIdExpr() != null && fl.getSubagentClusterIdExpr().replaceAll("['\"]", "").trim().isEmpty()) {
+                        fl.setSubagentClusterIdExpr(null); 
+                    }
                     if (fl.getSubagentClusterIdExpr() != null && !fl.getSubagentClusterIdExpr().isEmpty()) {
                         fl.setSubagentClusterId(null);
                     }

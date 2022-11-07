@@ -119,7 +119,11 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 URI otherUri = index == 0 ? null : body.getControllers().get(0).getUrl();
                 Controller jobScheduler = testConnection(controller.getUrl(), controllerId, otherUri);
                 if (jobScheduler.getConnectionState().get_text() == ConnectionStateText.unreachable) {
-                    throw new ControllerConnectionRefusedException(controller.getUrl().toString());
+                    if (requestWithEmptyControllerId) {
+                        throw new ControllerConnectionRefusedException(controller.getUrl().toString());
+//                    } else {
+//                        LOGGER.warn("");
+                    }
                 }
                 
                 controllerId = jobScheduler.getControllerId();

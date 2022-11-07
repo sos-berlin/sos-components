@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -325,7 +326,7 @@ public class Proxies {
                     LOGGER.error("", e);
                     return null;
                 }
-            }).filter(credential -> credential != null && credential.getUrl() != null).forEach(credential -> {
+            }).filter(Objects::nonNull).filter(credential -> credential.getUrl() != null).forEach(credential -> {
                 try {
                     start(credential);
                 } catch (ControllerConnectionRefusedException e) {

@@ -167,7 +167,7 @@ public class Validator {
                     Set<String> jobNames = workflow.getJobs() == null ? Collections.emptySet() : workflow.getJobs().getAdditionalProperties()
                             .keySet();
                     validateInstructions(workflow.getInstructions(), "instructions", jobNames, workflow.getOrderPreparation(),
-                            new HashMap<String, String>(), boardNames, dbLayer);
+                            new HashMap<String, String>(), boardNames, false, dbLayer);
                     //validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
                     validateLockRefs(json, dbLayer);
                     //validateBoardRefs(json, dbLayer);
@@ -519,8 +519,8 @@ public class Validator {
     }
 
     private static void validateInstructions(Collection<Instruction> instructions, String position, Set<String> jobNames,
-            Requirements orderPreparation, Map<String, String> labels, List<String> boardNames, InventoryDBLayer dbLayer) throws SOSJsonSchemaException,
-            JsonProcessingException, IOException, JocConfigurationException, SOSHibernateException {
+            Requirements orderPreparation, Map<String, String> labels, List<String> boardNames, boolean forkListExist, InventoryDBLayer dbLayer)
+            throws SOSJsonSchemaException, JsonProcessingException, IOException, JocConfigurationException, SOSHibernateException {
         if (instructions != null) {
             int index = 0;
             for (Instruction inst : instructions) {
@@ -585,12 +585,15 @@ public class Validator {
                         String branchInstPosition = branchPosition + "[" + branchIndex + "].";
                         if (branch.getWorkflow() != null) {
                             validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobNames,
-                                    orderPreparation, labels, boardNames, dbLayer);
+                                    orderPreparation, labels, boardNames, forkListExist, dbLayer);
                         }
                         branchIndex++;
                     }
                     break;
                 case FORKLIST:
+                    if (forkListExist) {
+                        throw new JocConfigurationException("$." + instPosition + "ForkList instructions can not be nested.");
+                    }
                     ForkList fl = inst.cast();
                     if (licensedForkList && fl.getAgentName() != null) {
                         testJavaNameRules("$." + instPosition, "subagentIdVariable", fl.getSubagentIdVariable());
@@ -598,7 +601,7 @@ public class Validator {
                     }
                     if (fl.getWorkflow() != null) {
                         validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "forklist.instructions", jobNames, orderPreparation,
-                                labels, boardNames, dbLayer);
+                                labels, boardNames, true, dbLayer);
                     }
                     break;
                 case IF:
@@ -606,24 +609,24 @@ public class Validator {
                     validateExpression("$." + instPosition + "predicate: ", ifElse.getPredicate());
                     if (ifElse.getThen() != null) {
                         validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobNames, orderPreparation,
-                                labels, boardNames, dbLayer);
+                                labels, boardNames, forkListExist, dbLayer);
                     }
                     if (ifElse.getElse() != null) {
                         validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobNames, orderPreparation,
-                                labels, boardNames, dbLayer);
+                                labels, boardNames, forkListExist, dbLayer);
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
                     validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobNames, orderPreparation, labels,
-                            boardNames, dbLayer);
+                            boardNames, forkListExist, dbLayer);
                     validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", jobNames, orderPreparation,
-                            labels, boardNames, dbLayer);
+                            labels, boardNames, forkListExist, dbLayer);
                     break;
                 case LOCK:
                     Lock lock = inst.cast();
                     validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", jobNames,
-                            orderPreparation, labels, boardNames, dbLayer);
+                            orderPreparation, labels, boardNames, forkListExist, dbLayer);
                     break;
                 case PROMPT:
                     Prompt prompt = inst.cast();
@@ -656,7 +659,7 @@ public class Validator {
                                 .toString());
                     }
                     validateInstructions(cns.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobNames,
-                            orderPreparation, labels, boardNames, dbLayer);
+                            orderPreparation, labels, boardNames, forkListExist, dbLayer);
                     break;
                 case POST_NOTICE:
                     PostNotice pn = inst.cast();
@@ -699,7 +702,7 @@ public class Validator {
                 case CYCLE:
                     Cycle cycle = inst.cast();
                     validateInstructions(cycle.getCycleWorkflow().getInstructions(), instPosition + "cycleWorkflow.instructions", jobNames,
-                            orderPreparation, labels, boardNames, dbLayer);
+                            orderPreparation, labels, boardNames, forkListExist, dbLayer);
                     break;
                 default:
                     break;
