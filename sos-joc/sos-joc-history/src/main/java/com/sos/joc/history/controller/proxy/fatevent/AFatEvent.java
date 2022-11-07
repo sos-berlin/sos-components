@@ -3,6 +3,10 @@ package com.sos.joc.history.controller.proxy.fatevent;
 import java.util.Date;
 
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OutcomeInfo;
+
+import js7.data.workflow.Instruction;
+import js7.data.workflow.instructions.Execute.Named;
+
 import com.sos.joc.history.controller.proxy.HistoryEventType;
 
 public abstract class AFatEvent {
@@ -32,6 +36,13 @@ public abstract class AFatEvent {
             return null;
         }
         return ((OutcomeInfo) o).toFatOutcome();
+    }
+
+    public String getJobName(Instruction instruction) {
+        if (instruction instanceof Named) {
+            return ((Named) instruction).name().string();
+        }
+        return null;
     }
 
 }

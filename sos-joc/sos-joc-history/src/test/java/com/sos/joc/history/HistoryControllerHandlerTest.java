@@ -58,16 +58,16 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsump
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOutcomeAdded;
-import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumptionMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStdWritten;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStdWritten.StdType;
-import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderSuspendMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderSuspended;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderSuspensionMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventWithProblem;
 import com.sos.joc.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.joc.history.helper.HistoryUtil;
@@ -83,6 +83,7 @@ import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderId;
+import js7.data.workflow.Instruction;
 import js7.data_for_java.order.JOrder.Forked;
 import js7.data_for_java.order.JOrderEvent.JOrderForked;
 import js7.data_for_java.order.JOrderEvent.JOrderJoined;
@@ -387,30 +388,36 @@ public class HistoryControllerHandlerTest {
                 break;
 
             case OrderSuspended:
-                order = entry.getCheckedOrder();
+                order = entry.getCheckedOrderFromPreviousState();
 
-                event = new FatEventOrderSuspended(entry.getEventId(), entry.getEventDate(), order.isStarted());
+                Instruction cin = null;
+                if (!order.isMarked()) {
+                    cin = order.getCurrentPositionInstruction();
+                }
+
+                event = new FatEventOrderSuspended(entry.getEventId(), entry.getEventDate(), cin, order.isStarted());
                 event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
-            case OrderSuspendMarked:
+            case OrderSuspensionMarked:
                 order = entry.getCheckedOrder();
 
-                event = new FatEventOrderSuspendMarked(entry.getEventId(), entry.getEventDate(), order.isStarted());
+                event = new FatEventOrderSuspensionMarked(entry.getEventId(), entry.getEventDate(), order.isStarted());
                 event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderResumed:
                 order = entry.getCheckedOrder();
 
-                event = new FatEventOrderResumed(entry.getEventId(), entry.getEventDate(), hasOrderStarted(entry, order.isStarted()));
+                event = new FatEventOrderResumed(entry.getEventId(), entry.getEventDate(), order.getCurrentPositionInstruction(), hasOrderStarted(
+                        entry, order.isStarted()));
                 event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
-            case OrderResumeMarked:
+            case OrderResumptionMarked:
                 order = entry.getCheckedOrder();
 
-                event = new FatEventOrderResumeMarked(entry.getEventId(), entry.getEventDate(), hasOrderStarted(entry, order.isStarted()));
+                event = new FatEventOrderResumptionMarked(entry.getEventId(), entry.getEventDate(), hasOrderStarted(entry, order.isStarted()));
                 event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 

@@ -74,11 +74,11 @@ public enum HistoryEventType {
 
     OrderSuspended(OrderSuspended$.class.getSimpleName()),
 
-    OrderSuspendMarked(OrderSuspensionMarked.class.getSimpleName()),
+    OrderSuspensionMarked(OrderSuspensionMarked.class.getSimpleName()),
 
     OrderResumed(OrderResumed.class.getSimpleName()),
 
-    OrderResumeMarked(OrderResumptionMarked.class.getSimpleName()),
+    OrderResumptionMarked(OrderResumptionMarked.class.getSimpleName()),
 
     OrderLocksAcquired(OrderLocksAcquired.class.getSimpleName()),
 

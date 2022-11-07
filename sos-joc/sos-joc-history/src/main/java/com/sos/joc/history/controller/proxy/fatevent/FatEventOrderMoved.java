@@ -7,7 +7,6 @@ import com.sos.joc.history.controller.proxy.HistoryEventType;
 
 import js7.data.order.OrderEvent.OrderMoved;
 import js7.data.workflow.Instruction;
-import js7.data.workflow.instructions.Execute.Named;
 import js7.data_for_java.workflow.position.JPosition;
 
 // without outcome
@@ -22,7 +21,7 @@ public final class FatEventOrderMoved extends AFatEventOrderBase {
             boolean isOrderStarted) {
         super(eventId, eventDatetime, orderId, position);
         this.to = JPosition.apply(om.to()).toString();
-        this.reason = getReason(om.reason().get().getClass().getSimpleName());
+        this.reason = getReason(om.reason().get().getClass().getName());
         this.jobName = getJobName(instruction);
         this.isOrderStarted = isOrderStarted;
     }
@@ -48,14 +47,16 @@ public final class FatEventOrderMoved extends AFatEventOrderBase {
         return HistoryEventType.OrderMoved;
     }
 
-    private String getReason(String className) {
-        return className.endsWith("$") ? className.substring(0, className.length() - 1) : className;
-    }
-
-    private String getJobName(Instruction instruction) {
-        if (instruction instanceof Named) {
-            return ((Named) instruction).name().string();
+    // js7.data.order.OrderEvent$OrderMoved$SkippedDueToWorkflowPathControl$
+    private String getReason(final String className) {
+        String cn = className;
+        if (className.endsWith("$")) {
+            cn = className.substring(0, className.length() - 1);
         }
-        return null;
+        int indx = cn.lastIndexOf("$");
+        if (indx == -1) {
+            indx = cn.lastIndexOf(".");
+        }
+        return indx == -1 ? cn : cn.substring(indx + 1);
     }
 }

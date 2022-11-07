@@ -224,6 +224,10 @@ public class HistoryEventEntry {
             }
         }
 
+        public JOrder getJOrder() {
+            return order;
+        }
+
         public String getOrderId() {
             return orderId.string();
         }
@@ -246,6 +250,17 @@ public class HistoryEventEntry {
                     return order.asScala().isStarted();
                 } catch (Throwable e) {
                     LOGGER.warn(String.format("[%s][isStarted]%s", getOrderId(), e.toString()), e);
+                }
+            }
+            return false;
+        }
+
+        public boolean isMarked() {
+            if (order != null) {
+                try {
+                    return order.asScala().isMarked();
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[%s][isMarked]%s", getOrderId(), e.toString()), e);
                 }
             }
             return false;
@@ -813,6 +828,7 @@ public class HistoryEventEntry {
                 path = workflowId.path().string();
                 versionId = workflowId.versionId().string();
                 position = new Position(wp.position());
+
             }
 
             public JWorkflow getWorkflow() throws Exception {

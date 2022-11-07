@@ -88,15 +88,15 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsume
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumptionStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
-import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumptionMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStdWritten;
-import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderSuspendMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderSuspended;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderSuspensionMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventWithProblem;
 import com.sos.joc.history.controller.proxy.fatevent.FatExpectNotice;
 import com.sos.joc.history.controller.proxy.fatevent.FatExpectNotices;
@@ -130,6 +130,7 @@ import com.sos.joc.model.history.order.notice.ConsumeNotices;
 import com.sos.joc.model.history.order.notice.ExpectNotices;
 import com.sos.joc.model.history.order.notice.PostNotice;
 import com.sos.joc.model.history.order.retry.Retrying;
+import com.sos.joc.model.history.order.suspended.Suspended;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.yade.commons.Yade;
 
@@ -345,18 +346,18 @@ public class HistoryModel {
 
                         postEventOrderUpdated(hob);
                         break;
-                    case OrderResumeMarked:
-                        FatEventOrderResumeMarked eorm = (FatEventOrderResumeMarked) entry;
+                    case OrderResumptionMarked:
+                        FatEventOrderResumptionMarked eorm = (FatEventOrderResumptionMarked) entry;
 
-                        orderLog(dbLayer, eorm, EventType.OrderResumeMarked, OrderLogEntryLogLevel.DETAIL, hasOrderStarted(eorm.getOrderId(), eorm
-                                .isStarted()));
+                        orderLog(dbLayer, eorm, EventType.OrderResumptionMarked, OrderLogEntryLogLevel.DETAIL, null, hasOrderStarted(eorm
+                                .getOrderId(), eorm.isStarted()));
                         counter.getOrder().addResumeMarked();
                         break;
-                    case OrderSuspendMarked:
-                        FatEventOrderSuspendMarked eosm = (FatEventOrderSuspendMarked) entry;
+                    case OrderSuspensionMarked:
+                        FatEventOrderSuspensionMarked eosm = (FatEventOrderSuspensionMarked) entry;
 
-                        orderLog(dbLayer, eosm, EventType.OrderSuspendMarked, OrderLogEntryLogLevel.DETAIL, hasOrderStarted(eosm.getOrderId(), eosm
-                                .isStarted()));
+                        orderLog(dbLayer, eosm, EventType.OrderSuspensionMarked, OrderLogEntryLogLevel.DETAIL, null, hasOrderStarted(eosm
+                                .getOrderId(), eosm.isStarted()));
                         counter.getOrder().addSuspendMarked();
                         break;
                     case OrderForked:
@@ -391,13 +392,13 @@ public class HistoryModel {
                         postEventOrderTaskTerminated(dbLayer, (FatEventOrderStepProcessed) entry, hosb);
                         break;
                     case OrderOutcomeAdded:
-                        hob = orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderOutcomeAdded, endedOrderSteps);
+                        hob = orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderOutcomeAdded, endedOrderSteps, null);
                         counter.getOrder().addOutcomeAdded();
 
                         postEventOrderUpdated(hob);
                         break;
                     case OrderFailed:
-                        hob = orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFailed, endedOrderSteps);
+                        hob = orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFailed, endedOrderSteps, null);
                         counter.getOrder().addFailed();
 
                         postEventOrderUpdated(hob);
@@ -405,30 +406,30 @@ public class HistoryModel {
                     case OrderSuspended:
                         FatEventOrderSuspended eos = (FatEventOrderSuspended) entry;
                         if (hasOrderStarted(eos.getOrderId(), eos.isStarted())) {
-                            hob = orderNotCompleted(dbLayer, eos, EventType.OrderSuspended, endedOrderSteps);
+                            hob = orderNotCompleted(dbLayer, eos, EventType.OrderSuspended, endedOrderSteps, eos.getStoppedJobName());
                             postEventOrderUpdated(hob);
                         } else {
-                            orderLog(dbLayer, eos, EventType.OrderSuspended, OrderLogEntryLogLevel.MAIN, false);
+                            orderLog(dbLayer, eos, EventType.OrderSuspended, OrderLogEntryLogLevel.MAIN, eos.getStoppedJobName(), false);
                         }
                         counter.getOrder().addSuspended();
 
                         break;
                     case OrderCancelled:
                         FatEventOrderCancelled oc = (FatEventOrderCancelled) entry;
-                        hob = orderTerminated(dbLayer, oc, EventType.OrderCancelled, endedOrderSteps);
+                        hob = orderTerminated(dbLayer, oc, EventType.OrderCancelled, endedOrderSteps, null);
                         counter.getOrder().addCancelled();
 
                         postEventOrderTerminated(hob);
                         break;
                     case OrderBroken:
                         // TODO update main order when a child is broken
-                        hob = orderTerminated(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderBroken, endedOrderSteps);
+                        hob = orderTerminated(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderBroken, endedOrderSteps, null);
                         counter.getOrder().addBroken();
 
                         postEventOrderTerminated(hob);
                         break;
                     case OrderFinished:
-                        hob = orderTerminated(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFinished, endedOrderSteps);
+                        hob = orderTerminated(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFinished, endedOrderSteps, null);
                         counter.getOrder().addFinished();
 
                         postEventOrderTerminated(hob);
@@ -1014,19 +1015,20 @@ public class HistoryModel {
     }
 
     private HistoryOrderBean orderTerminated(DBLayerHistory dbLayer, AFatEventOrderProcessed eo, EventType eventType,
-            Map<String, CachedOrderStep> endedOrderSteps) throws Exception {
+            Map<String, CachedOrderStep> endedOrderSteps, String jobName) throws Exception {
         return orderUpdate(dbLayer, eventType, eo.getEventId(), eo.getOrderId(), eo.getEventDatetime(), eo.getOutcome(), eo.getPosition(),
-                endedOrderSteps, true);
+                endedOrderSteps, jobName, true);
     }
 
     private HistoryOrderBean orderNotCompleted(DBLayerHistory dbLayer, AFatEventOrderProcessed eo, EventType eventType,
-            Map<String, CachedOrderStep> endedOrderSteps) throws Exception {
+            Map<String, CachedOrderStep> endedOrderSteps, String jobName) throws Exception {
         return orderUpdate(dbLayer, eventType, eo.getEventId(), eo.getOrderId(), eo.getEventDatetime(), eo.getOutcome(), eo.getPosition(),
-                endedOrderSteps, false);
+                endedOrderSteps, jobName, false);
     }
 
     private HistoryOrderBean orderUpdate(DBLayerHistory dbLayer, EventType eventType, Long eventId, String orderId, Date eventDate,
-            FatOutcome outcome, String position, Map<String, CachedOrderStep> endedOrderSteps, boolean terminateOrder) throws Exception {
+            FatOutcome outcome, String position, Map<String, CachedOrderStep> endedOrderSteps, String jobName, boolean terminateOrder)
+            throws Exception {
 
         HistoryOrderBean hob = null;
         CachedOrder co = null;
@@ -1070,12 +1072,13 @@ public class HistoryModel {
                 }
                 le.setLogLevel(OrderLogEntryLogLevel.DETAIL);
                 break;
+            case OrderSuspended:
+                le.setJobName(jobName);
             case OrderBroken:
             case OrderCancelled:
-            case OrderSuspended:
-            case OrderSuspendMarked:
+            case OrderSuspensionMarked:
             case OrderResumed:
-            case OrderResumeMarked:
+            case OrderResumptionMarked:
                 co.setHasStates(true);
                 break;
             case OrderFailed:
@@ -1267,7 +1270,7 @@ public class HistoryModel {
             le.setState(OrderStateText.SUSPENDED.intValue());
             le.setLogLevel(OrderLogEntryLogLevel.MAIN);
             break;
-        case OrderSuspendMarked:
+        case OrderSuspensionMarked:
             le.setState(OrderStateText.SUSPENDED.intValue());// TODO check
             le.setLogLevel(OrderLogEntryLogLevel.INFO);
             break;
@@ -1275,7 +1278,7 @@ public class HistoryModel {
             le.setState(OrderStateText.RUNNING.intValue());// TODO check
             le.setLogLevel(OrderLogEntryLogLevel.MAIN);
             break;
-        case OrderResumeMarked:
+        case OrderResumptionMarked:
             le.setState(OrderStateText.RUNNING.intValue()); // TODO check
             le.setLogLevel(OrderLogEntryLogLevel.INFO);
             break;
@@ -1296,6 +1299,7 @@ public class HistoryModel {
         checkControllerTimezone(dbLayer);
         HistoryOrderBean hob = null;
         LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, EventType.OrderResumed, eo.getEventDatetime(), null);
+        le.setJobName(eo.getJobName());
         if (hasOrderStarted(eo.getOrderId(), eo.isStarted())) {
             CachedOrder co = getCachedOrderByCurrentOrderId(dbLayer, eo.getOrderId(), eo.getEventId());
             co.setState(OrderStateText.RUNNING.intValue());
@@ -1317,11 +1321,12 @@ public class HistoryModel {
         return hob;
     }
 
-    private void orderLog(DBLayerHistory dbLayer, AFatEventOrderProcessed eo, EventType eventType, OrderLogEntryLogLevel logLevel,
+    private void orderLog(DBLayerHistory dbLayer, AFatEventOrderProcessed eo, EventType eventType, OrderLogEntryLogLevel logLevel, String jobName,
             boolean isOrderStarted) throws Exception {
         checkControllerTimezone(dbLayer);
 
         LogEntry le = new LogEntry(logLevel, eventType, eo.getEventDatetime(), null);
+        le.setJobName(jobName);
         if (isOrderStarted) {
             CachedOrder co = getCachedOrderByCurrentOrderId(dbLayer, eo.getOrderId(), eo.getEventId());
             le.onOrder(co, eo.getPosition());
@@ -1497,7 +1502,7 @@ public class HistoryModel {
         List<HistoryOrderBean> children = new ArrayList<HistoryOrderBean>();
         for (FatForkedChild child : eo.getChilds()) {
             children.add(orderUpdate(dbLayer, EventType.OrderJoined, eo.getEventId(), child.getOrderId(), endTime, eo.getOutcome(), null,
-                    endedOrderSteps, true));
+                    endedOrderSteps, null, true));
         }
 
         CachedOrder co = getCachedOrderByCurrentOrderId(dbLayer, eo.getOrderId(), eo.getEventId());
@@ -2368,7 +2373,7 @@ public class HistoryModel {
             m.setTo(mt);
 
             MovedSkipped ms = new MovedSkipped();
-            ms.setJobName(le.getOrderMoved().getJobName());
+            ms.setJob(le.getOrderMoved().getJobName());
             try {
                 ms.setReason(MovedSkippedReason.valueOf(le.getOrderMoved().getReason()));
             } catch (Throwable e) {
@@ -2376,6 +2381,23 @@ public class HistoryModel {
             }
             m.setSkipped(ms);
             ole.setMoved(m);
+        } else {
+            switch (le.getEventType()) {
+            case OrderSuspended:
+                if (!SOSString.isEmpty(le.getJobName())) {
+                    Suspended s = new Suspended();
+                    s.setJob(le.getJobName());
+                    ole.setStopped(s);
+                }
+                break;
+            case OrderResumed:
+                if (!SOSString.isEmpty(le.getJobName())) {
+                    ole.setJob(le.getJobName());
+                }
+                break;
+            default:
+                break;
+            }
         }
         return ole;
     }
