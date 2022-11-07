@@ -5,11 +5,11 @@ import java.util.Date;
 import com.sos.joc.history.controller.proxy.HistoryEventType;
 
 // without outcome
-public final class FatEventOrderSuspendMarked extends AFatEventOrderProcessed {
+public final class FatEventOrderSuspensionMarked extends AFatEventOrderProcessed {
 
     private boolean isStarted;
 
-    public FatEventOrderSuspendMarked(Long eventId, Date eventDatetime, boolean isStarted) {
+    public FatEventOrderSuspensionMarked(Long eventId, Date eventDatetime, boolean isStarted) {
         super(eventId, eventDatetime);
         this.isStarted = isStarted;
     }
@@ -20,6 +20,6 @@ public final class FatEventOrderSuspendMarked extends AFatEventOrderProcessed {
 
     @Override
     public HistoryEventType getType() {
-        return HistoryEventType.OrderSuspendMarked;
+        return HistoryEventType.OrderSuspensionMarked;
     }
 }

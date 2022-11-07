@@ -17,13 +17,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobName",
+    "job",
     "reason"
 })
 public class MovedSkipped {
 
-    @JsonProperty("jobName")
-    private String jobName;
+    @JsonProperty("job")
+    private String job;
     /**
      * Moved Skip Reason
      * <p>
@@ -34,14 +34,14 @@ public class MovedSkipped {
     @JsonProperty("reason")
     private MovedSkippedReason reason;
 
-    @JsonProperty("jobName")
-    public String getJobName() {
-        return jobName;
+    @JsonProperty("job")
+    public String getJob() {
+        return job;
     }
 
-    @JsonProperty("jobName")
-    public void setJobName(String jobName) {
-        this.jobName = jobName;
+    @JsonProperty("job")
+    public void setJob(String job) {
+        this.job = job;
     }
 
     /**
@@ -70,12 +70,12 @@ public class MovedSkipped {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobName", jobName).append("reason", reason).toString();
+        return new ToStringBuilder(this).append("job", job).append("reason", reason).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobName).append(reason).toHashCode();
+        return new HashCodeBuilder().append(job).append(reason).toHashCode();
     }
 
     @Override
@@ -87,7 +87,7 @@ public class MovedSkipped {
             return false;
         }
         MovedSkipped rhs = ((MovedSkipped) other);
-        return new EqualsBuilder().append(jobName, rhs.jobName).append(reason, rhs.reason).isEquals();
+        return new EqualsBuilder().append(job, rhs.job).append(reason, rhs.reason).isEquals();
     }
 
 }

@@ -275,6 +275,10 @@ public class LogEntry {
         return position;
     }
 
+    public void setJobName(String val) {
+        jobName = val;
+    }
+
     public String getJobName() {
         return jobName;
     }
