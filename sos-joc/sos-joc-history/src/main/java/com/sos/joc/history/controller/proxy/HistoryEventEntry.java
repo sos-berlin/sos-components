@@ -266,6 +266,17 @@ public class HistoryEventEntry {
             return false;
         }
 
+        public boolean isSuspended() {
+            if (order != null) {
+                try {
+                    return order.asScala().isSuspended();
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[%s][isSuspended]%s", getOrderId(), e.toString()), e);
+                }
+            }
+            return false;
+        }
+
         public Map<String, Value> getArguments() {
             return order == null ? null : order.arguments();
         }

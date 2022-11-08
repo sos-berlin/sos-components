@@ -14,8 +14,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ProxyUser;
+import com.sos.joc.history.controller.configuration.HistoryConfiguration;
 import com.sos.joc.history.controller.exception.FatEventProblemException;
 import com.sos.joc.history.controller.proxy.EventFluxStopper;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry;
@@ -105,6 +107,7 @@ public class HistoryControllerHandlerTest {
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
     private static final Long START_EVENT_ID = 0L;
 
+    private HistoryConfiguration config = new HistoryConfiguration();
     private EventFluxStopper stopper;
     private AtomicBoolean closed;
 
@@ -431,11 +434,18 @@ public class HistoryControllerHandlerTest {
             case OrderCancelled:
                 order = entry.getCheckedOrder();
 
-                if (hasOrderStarted(entry, order.isStarted())) {
+                HistoryOrder orderFromPrevState = null;
+                boolean isStarted = order.isStarted();
+                if (!isStarted) {
+                    orderFromPrevState = entry.getCheckedOrderFromPreviousState();
+                    isStarted = orderFromPrevState.isStarted();
+                }
+
+                if (isStarted) {
                     event = new FatEventOrderCancelled(entry.getEventId(), entry.getEventDate());
                     event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 } else {
-                    // not check/remove logDirTmp orders - performance
+                    deleteNotStartedOrderLog(orderFromPrevState);
                     event = new FatEventEmpty();
                 }
                 break;
@@ -536,6 +546,16 @@ public class HistoryControllerHandlerTest {
             return entry.getCheckedOrderFromPreviousState().isStarted();
         }
         return true;
+    }
+
+    private void deleteNotStartedOrderLog(HistoryOrder order) {
+        if (order == null || !order.isSuspended()) {
+            return;
+        }
+        try {
+            SOSPath.deleteIfExists(HistoryUtil.getOrderLog(config.getLogDirTmpOrders(), order.getOrderId()));
+        } catch (Throwable e) {
+        }
     }
 
     private synchronized void setStopper() {

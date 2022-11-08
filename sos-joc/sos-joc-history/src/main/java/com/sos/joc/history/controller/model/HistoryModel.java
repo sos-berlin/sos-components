@@ -1001,16 +1001,38 @@ public class HistoryModel {
     }
 
     private void handleNotStartedOrderLog(String orderId, Long mainParentId) {
-        Path tmpLog = getOrderLog(historyConfiguration.getLogDirTmpOrders(), orderId);
-        if (Files.exists(tmpLog)) {
-            Path dir = HistoryUtil.getOrderLogDirectory(historyConfiguration.getLogDir(), mainParentId);
-            if (!Files.exists(dir)) {
-                try {
-                    Files.createDirectories(dir);
-                    SOSPath.renameTo(tmpLog, getOrderLog(dir, mainParentId));
-                } catch (Throwable e) {
-                    LOGGER.warn(String.format("[handleNotStartedOrderLog][%s][%s]%s", orderId, tmpLog, e.toString()), e);
+        Path notStartedOrderLog = HistoryUtil.getOrderLog(historyConfiguration.getLogDirTmpOrders(), orderId);
+        if (Files.exists(notStartedOrderLog)) {
+            String method = "handleNotStartedOrderLog";
+
+            Path orderDir = HistoryUtil.getOrderLogDirectory(historyConfiguration.getLogDir(), mainParentId);
+            Path orderLog = HistoryUtil.getOrderLog(orderDir, mainParentId);
+            boolean removeNotStartedOrderLog = false;
+            if (Files.exists(orderDir)) {
+                if (Files.exists(orderLog)) {
+                    removeNotStartedOrderLog = true;
+                    LOGGER.info(String.format("[%s][%s][%s][skip move file][order log file already exists]%s", method, orderId, notStartedOrderLog,
+                            orderLog));
                 }
+            } else {
+                try {
+                    Files.createDirectories(orderDir);
+                } catch (Throwable e) {
+                    removeNotStartedOrderLog = true;
+                    LOGGER.warn(String.format("[%s][%s][%s][cannot create directory=%s]%s", method, orderId, notStartedOrderLog, orderDir, e
+                            .toString()), e);
+                }
+            }
+
+            try {
+                if (removeNotStartedOrderLog) {
+                    Files.delete(notStartedOrderLog);
+                    LOGGER.info(String.format("[%s][%s][%s]tmp order log file deleted", method, orderId, notStartedOrderLog));
+                } else {
+                    SOSPath.renameTo(notStartedOrderLog, orderLog);
+                }
+            } catch (Throwable e) {
+                LOGGER.warn(String.format("[%s][%s][%s]%s", method, orderId, notStartedOrderLog, e.toString()), e);
             }
         }
     }
@@ -2238,18 +2260,6 @@ public class HistoryModel {
         return file;
     }
 
-    private Path getOrderLog(Path dir, Long orderId) {
-        return dir.resolve(orderId + ".log");
-    }
-
-    private Path getOrderLog(Path dir, String orderId) {
-        return dir.resolve(orderId + ".log");
-    }
-
-    private Path getOrderStepLog(Path dir, LogEntry le) {
-        return dir.resolve(le.getHistoryOrderId() + "_" + le.getHistoryOrderStepId() + ".log");
-    }
-
     private Path getOrderLogDirectory(LogEntry entry) {
         return HistoryUtil.getOrderLogDirectory(historyConfiguration.getLogDir(), entry.getHistoryOrderMainParentId());
     }
@@ -2452,10 +2462,10 @@ public class HistoryModel {
             ole.setTaskId(le.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder(HistoryUtil.toJsonString(ole));
             postEventOrderLog(le, ole);
-            log2file(getOrderLog(dir, le.getHistoryOrderId()), orderEntryContent.toString(), newLine, le.getEventType());
+            log2file(HistoryUtil.getOrderLog(dir, le.getHistoryOrderId()), orderEntryContent.toString(), newLine, le.getEventType());
 
             // task log
-            file = getOrderStepLog(dir, le);
+            file = HistoryUtil.getOrderStepLog(dir, le);
             content.append(getDateAsString(le.getAgentDatetime(), le.getAgentTimezone())).append(" ");
             content.append("[").append(le.getLogLevel().name()).append("]    ");
             content.append(le.getInfo());
@@ -2477,10 +2487,10 @@ public class HistoryModel {
             ole.setTaskId(le.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder(HistoryUtil.toJsonString(ole));
             postEventOrderLog(le, ole);
-            log2file(getOrderLog(dir, le.getHistoryOrderId()), orderEntryContent.toString(), newLine, le.getEventType());
+            log2file(HistoryUtil.getOrderLog(dir, le.getHistoryOrderId()), orderEntryContent.toString(), newLine, le.getEventType());
 
             // task log
-            file = getOrderStepLog(dir, le);
+            file = HistoryUtil.getOrderStepLog(dir, le);
             content.append(getDateAsString(le.getAgentDatetime(), le.getAgentTimezone())).append(" ");
             content.append("[").append(le.getLogLevel().name()).append("]    ");
             content.append(le.getInfo());
@@ -2493,7 +2503,7 @@ public class HistoryModel {
         case OrderStderrWritten:
             newLine = false;
             append = false;
-            file = getOrderStepLog(dir, le);
+            file = HistoryUtil.getOrderStepLog(dir, le);
 
             if (cos.isLastStdEndsWithNewLine() == null) {
                 try {
@@ -2552,12 +2562,12 @@ public class HistoryModel {
             newLine = true;
 
             if (le.isOrderStarted()) {
-                file = getOrderLog(dir, le.getHistoryOrderId());
+                file = HistoryUtil.getOrderLog(dir, le.getHistoryOrderId());
             } else {
                 if (!Files.exists(dir)) {
                     Files.createDirectories(dir);
                 }
-                file = getOrderLog(dir, le.getOrderId());
+                file = HistoryUtil.getOrderLog(dir, le.getOrderId());
             }
 
             ole = createOrderLogEntry(le);
@@ -2588,7 +2598,7 @@ public class HistoryModel {
     }
 
     private void write2MainOrderLog(LogEntry le, Path dir, String content, boolean newLine, EventType eventType) throws Exception {
-        Path file = getOrderLog(dir, le.getHistoryOrderMainParentId());
+        Path file = HistoryUtil.getOrderLog(dir, le.getHistoryOrderMainParentId());
         log2file(file, content, newLine, eventType);
     }
 

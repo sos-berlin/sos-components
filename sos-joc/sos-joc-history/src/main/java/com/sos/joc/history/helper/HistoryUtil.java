@@ -32,6 +32,18 @@ public class HistoryUtil {
         return li > -1 ? path.substring(0, li) : path;
     }
 
+    public static Path getOrderLog(Path dir, Long orderId) {
+        return dir.resolve(orderId + ".log");
+    }
+
+    public static Path getOrderLog(Path dir, String orderId) {
+        return dir.resolve(orderId + ".log");
+    }
+
+    public static Path getOrderStepLog(Path dir, LogEntry le) {
+        return dir.resolve(le.getHistoryOrderId() + "_" + le.getHistoryOrderStepId() + ".log");
+    }
+
     public static Path getOrderLogDirectory(Path logDir, Long historyOrderMainParentId) {
         return logDir.resolve(String.valueOf(historyOrderMainParentId));
     }

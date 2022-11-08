@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -501,10 +502,18 @@ public class HistoryControllerHandler {
             case OrderCancelled:
                 order = entry.getCheckedOrder();
 
-                if (hasOrderStarted(entry, order.isStarted())) {
+                HistoryOrder orderFromPrevState = null;
+                boolean isStarted = order.isStarted();
+                if (!isStarted) {
+                    orderFromPrevState = entry.getCheckedOrderFromPreviousState();
+                    isStarted = orderFromPrevState.isStarted();
+                }
+
+                if (isStarted) {
                     event = new FatEventOrderCancelled(entry.getEventId(), entry.getEventDate());
                     event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 } else {
+                    deleteNotStartedOrderLog(orderFromPrevState);
                     event = new FatEventEmpty();
                 }
                 break;
@@ -602,6 +611,16 @@ public class HistoryControllerHandler {
             return entry.getCheckedOrderFromPreviousState().isStarted();
         }
         return true;
+    }
+
+    private void deleteNotStartedOrderLog(HistoryOrder order) {
+        if (order == null || !order.isSuspended()) {
+            return;
+        }
+        try {
+            SOSPath.deleteIfExists(HistoryUtil.getOrderLog(config.getLogDirTmpOrders(), order.getOrderId()));
+        } catch (Throwable e) {
+        }
     }
 
     @SuppressWarnings("unused")
