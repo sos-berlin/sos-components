@@ -50,7 +50,7 @@ public class HistoryLogMapper {
         } else if (entry.getReturnValues() != null && entry.getReturnValues().getAdditionalProperties().size() > 0) {
             info.add("returnValues(" + toString(entry.getReturnValues()) + ")");
         } else if (entry.getLocks() != null && entry.getLocks().size() > 0) {
-            // TODO
+            info.add(getLocks(entry));
         } else if (entry.getConsumeNotices() != null) {
             info.add(getConsumeNotices(entry));
         } else if (entry.getExpectNotices() != null) {
@@ -105,6 +105,19 @@ public class HistoryLogMapper {
             info.add("time=" + entry.getAgentDatetime());
         }
         return info.stream().collect(Collectors.joining(", ", "Agent(", ")"));
+    }
+
+    // TODO lock details
+    private static String getLocks(OrderLogEntry entry) {
+        StringBuilder sb = new StringBuilder();
+        try {
+            if (!SOSString.isEmpty(entry.getMsg())) {
+                sb.append(entry.getMsg());
+            }
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[getLocks]%s", e.toString()), e);
+        }
+        return sb.toString();
     }
 
     private static String getConsumeNotices(OrderLogEntry entry) {
