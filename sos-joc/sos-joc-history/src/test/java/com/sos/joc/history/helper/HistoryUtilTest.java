@@ -36,6 +36,22 @@ public class HistoryUtilTest {
         Variables v = HistoryUtil.toVariables(m);
         LOGGER.info(HistoryUtil.toJsonString(v));
 
+        LOGGER.info(toString(v));
+
+    }
+
+    private String toString(Variables var) {
+        StringBuilder sb = new StringBuilder();
+        var.getAdditionalProperties().entrySet().forEach(e -> {
+            if (e.getValue() instanceof Variables) {
+                sb.append(e.getKey()).append("={").append(toString((Variables) e.getValue())).append("}");
+            } else {
+                sb.append(e.getKey()).append("=").append(e.getValue());
+            }
+            sb.append(",");
+        });
+        String r = sb.toString();
+        return r.endsWith(",") ? r.substring(0, r.length() - 1) : r;
     }
 
     private ListValue getListValue() {

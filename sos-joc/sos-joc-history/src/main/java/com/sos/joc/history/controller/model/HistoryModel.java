@@ -2264,6 +2264,7 @@ public class HistoryModel {
         return HistoryUtil.getOrderLogDirectory(historyConfiguration.getLogDir(), entry.getHistoryOrderMainParentId());
     }
 
+    // see HistoryMapper.toString
     private OrderLogEntry createOrderLogEntry(LogEntry le) {
         OrderLogEntry ole = new OrderLogEntry();
         ole.setOrderId(le.getOrderId());

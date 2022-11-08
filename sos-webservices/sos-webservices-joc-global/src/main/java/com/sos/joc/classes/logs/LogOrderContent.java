@@ -13,14 +13,10 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
-
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.StreamingOutput;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +27,10 @@ import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
-import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.classes.history.HistoryLogMapper;
 import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
@@ -47,6 +43,9 @@ import com.sos.joc.model.history.order.OrderLogEntry;
 import com.sos.joc.model.history.order.OrderLogEntryError;
 import com.sos.joc.model.history.order.OrderLogEntryLogLevel;
 import com.sos.joc.model.order.OrderLog;
+
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.StreamingOutput;
 
 public class LogOrderContent {
 
@@ -278,96 +277,7 @@ public class LogOrderContent {
         // " ,Job=job, Agent (url=agentUrl, id=agentId, time=agentDatetime), Job=job"
         // " ,Error (status=error.errorState, code=error.errorCode, reason=error.errorReason, msg=error.errorText), returncode=returncode
         item = getMappedLogItem(item);
-        List<String> info = new ArrayList<String>();
-
-        String agent = null;
-        if (item.getLogEvent() == EventType.OrderProcessingStarted) {
-            if (!SOSString.isEmpty(item.getAgentUrl())) {
-                info.add("url=" + item.getAgentUrl());
-            }
-            if (!SOSString.isEmpty(item.getAgentName())) {
-                info.add("name=" + item.getAgentName());
-            } else if (!SOSString.isEmpty(item.getAgentId())) {
-                info.add("id=" + item.getAgentId());
-            }
-            if (!SOSString.isEmpty(item.getSubagentClusterId())) {
-                info.add("clusterId=" + item.getSubagentClusterId());
-            }
-            if (!SOSString.isEmpty(item.getAgentDatetime())) {
-                info.add("time=" + item.getAgentDatetime());
-            }
-            if (!info.isEmpty()) {
-                agent = info.stream().collect(Collectors.joining(", ", "Agent (", ")"));
-            }
-        }
-
-        info.clear();
-        String error = null;
-        if (item.getError() != null) {
-            OrderLogEntryError err = item.getError();
-            if (!SOSString.isEmpty(err.getErrorState())) {
-                info.add("status=" + err.getErrorState());
-            }
-            if (!SOSString.isEmpty(err.getErrorCode())) {
-                info.add("code=" + err.getErrorCode());
-            }
-            if (!SOSString.isEmpty(err.getErrorReason())) {
-                info.add("reason=" + err.getErrorReason());
-            }
-            if (!SOSString.isEmpty(err.getErrorText())) {
-                info.add("msg=" + err.getErrorText());
-            }
-            if (!info.isEmpty()) {
-                error = info.stream().collect(Collectors.joining(", ", "Error (", ")"));
-            }
-        }
-
-        info.clear();
-        if (!SOSString.isEmpty(item.getOrderId())) {
-            info.add("id=" + item.getOrderId());
-        }
-        if (!SOSString.isEmpty(item.getPosition())) {
-            info.add("pos=" + item.getPosition());
-        }
-        if (!SOSString.isEmpty(item.getJob())) {
-            info.add("Job=" + item.getJob());
-        }
-        if (agent != null) {
-            info.add(agent);
-        }
-        if (item.getReturnCode() != null) {
-            info.add("returnCode=" + item.getReturnCode());
-        }
-        if (error != null) {
-            info.add(error);
-        }
-        if (item.getLocks() != null && !item.getLocks().isEmpty()) {
-            List<String> lock = new ArrayList<String>();
-            item.getLocks().forEach(l -> {
-                lock.add("name=" + l.getLockName());
-                lock.add("limit=" + l.getLimit());
-                if (l.getCount() != null) {
-                    lock.add("count=" + l.getCount());
-                }
-                if (l.getLockState() != null) {
-                    if (!SOSString.isEmpty(l.getLockState().getOrderIds())) {
-                        lock.add("orderIds=" + l.getLockState().getOrderIds());
-                    }
-                    if (!SOSString.isEmpty(l.getLockState().getQueuedOrderIds())) {
-                        lock.add("queuedOrderIds=" + l.getLockState().getQueuedOrderIds());
-                    }
-                }
-            });
-            info.add(lock.stream().collect(Collectors.joining(", ", "Lock (", ")")));
-        }
-
-        String loglineAdditionals = "";
-        if (!info.isEmpty()) {
-            loglineAdditionals = info.stream().collect(Collectors.joining(", "));
-        }
-
-        String logline = String.format("%s [%-8s [%-15s %s", item.getControllerDatetime(), item.getLogLevel() + "]", item.getLogEvent().value() + "]",
-                loglineAdditionals) + newlineString;
+        String logline = HistoryLogMapper.toString(item) + newlineString;
         return new ByteArrayInputStream(logline.getBytes(StandardCharsets.UTF_8));
     }
 
