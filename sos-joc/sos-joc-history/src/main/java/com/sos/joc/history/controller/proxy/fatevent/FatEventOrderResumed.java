@@ -14,7 +14,9 @@ public final class FatEventOrderResumed extends AFatEventOrderProcessed {
 
     public FatEventOrderResumed(Long eventId, Date eventDatetime, Instruction instruction, boolean isStarted) {
         super(eventId, eventDatetime);
-        this.instruction = new FatInstruction(instruction);
+        if (instruction != null) {
+            this.instruction = new FatInstruction(instruction);
+        }
         this.isStarted = isStarted;
     }
 

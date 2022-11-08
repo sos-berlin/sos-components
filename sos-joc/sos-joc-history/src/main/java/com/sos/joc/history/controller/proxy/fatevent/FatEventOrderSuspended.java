@@ -14,7 +14,9 @@ public final class FatEventOrderSuspended extends AFatEventOrderProcessed {
 
     public FatEventOrderSuspended(Long eventId, Date eventDatetime, Instruction instruction, boolean isStarted) {
         super(eventId, eventDatetime);
-        this.stoppedInstruction = new FatInstruction(instruction);
+        if (instruction != null) {
+            this.stoppedInstruction = new FatInstruction(instruction);
+        }
         this.isStarted = isStarted;
     }
 
