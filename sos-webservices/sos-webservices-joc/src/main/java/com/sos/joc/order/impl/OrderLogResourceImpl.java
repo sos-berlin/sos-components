@@ -56,7 +56,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             }
             
             LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions);
-            return JOCDefaultResponse.responseStatus200(logOrderContent.getOrderLog());
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(logOrderContent.getOrderLog()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -151,7 +151,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                 break;
             }
             
-            return JOCDefaultResponse.responseStatus200(orderLog);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(orderLog));
             
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

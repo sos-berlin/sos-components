@@ -341,7 +341,7 @@ public class LogOrderContent {
         if (error != null) {
             info.add(error);
         }
-        if (item.getLocks() != null) {
+        if (item.getLocks() != null && !item.getLocks().isEmpty()) {
             List<String> lock = new ArrayList<String>();
             item.getLocks().forEach(l -> {
                 lock.add("name=" + l.getLockName());
