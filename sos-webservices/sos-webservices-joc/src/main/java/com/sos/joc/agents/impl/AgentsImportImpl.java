@@ -44,7 +44,7 @@ import com.sos.schema.JsonValidator;
 @Path("agents")
 public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
 
-    private static final String API_CALL = "./agents/export";
+    private static final String API_CALL = "./agents/import";
 
     @Override
     public JOCDefaultResponse postImportConfiguration(String xAccessToken, FormDataBodyPart body, String format, String controllerId, boolean overwrite, 
