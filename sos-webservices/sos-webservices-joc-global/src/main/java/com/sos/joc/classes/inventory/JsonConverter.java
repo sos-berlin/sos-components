@@ -404,8 +404,9 @@ public class JsonConverter {
                     break;
                 case STICKY_SUBAGENT:
                     StickySubagent sticky = invInstruction.cast();
+                    com.sos.sign.model.instruction.StickySubagent sSticky = signInstruction.cast();
+                    convertStickySubagent(sticky, sSticky);
                     if (sticky.getSubworkflow() != null) {
-                        com.sos.sign.model.instruction.StickySubagent sSticky = signInstruction.cast();
                         convertInstructions(w, sticky.getSubworkflow().getInstructions(), sSticky.getSubworkflow().getInstructions(),
                                 addOrderIndex);
                     }
@@ -433,6 +434,14 @@ public class JsonConverter {
             sfl.setChildToId("(x, i) => ($i + 1) ++ \".\" ++ $x");
         }
         //sfl.setChildToId("(x) => $x." + fl.getChildToId());
+    }
+    
+    private static void convertStickySubagent(StickySubagent ss, com.sos.sign.model.instruction.StickySubagent sss) {
+        if (sss.getSubagentSelectionIdExpr() == null) {
+            if (ss.getSubagentClusterId() != null) {
+                sss.setSubagentSelectionIdExpr(quoteString(ss.getSubagentClusterId()));
+            }
+        }
     }
     
     private static void convertAddOrder(Workflow w, AddOrder ao, com.sos.sign.model.instruction.AddOrder sao, AtomicInteger addOrderIndex) {
