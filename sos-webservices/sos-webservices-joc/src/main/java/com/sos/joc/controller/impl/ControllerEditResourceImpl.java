@@ -117,7 +117,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 }
 
                 URI otherUri = index == 0 ? null : body.getControllers().get(0).getUrl();
-                Controller jobScheduler = testConnection(controller.getUrl(), controllerId, otherUri);
+                Controller jobScheduler = testConnection(controller.getUrl(), controllerId, otherUri, false);
                 if (jobScheduler.getConnectionState().get_text() == ConnectionStateText.unreachable) {
                     if (requestWithEmptyControllerId) {
                         throw new ControllerConnectionRefusedException(controller.getUrl().toString());
@@ -137,8 +137,9 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             if (!requestWithEmptyControllerId) { // try update controllers with given controllerId
                 Integer securityLevel = instanceDBLayer.getSecurityLevel(controllerId);
                 if (securityLevel != null && securityLevel != Globals.getJocSecurityLevel().intValue()) {
-                    throw new JocObjectAlreadyExistException(String.format("Controller with ID '%s' is already configured with a different security level '%s'.",
-                            controllerId, JocSecurityLevel.fromValue(securityLevel)));
+                    throw new JocObjectAlreadyExistException(String.format(
+                            "Controller with ID '%s' is already configured with a different security level '%s'.", controllerId, JocSecurityLevel
+                                    .fromValue(securityLevel)));
                 }
             }
             
@@ -562,18 +563,25 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
     }
     
     private Controller testConnection(URI controllerURI, String controllerId, URI otherControllerURI) throws JocException {
+        return testConnection(controllerURI, controllerId, otherControllerURI, true);
+    }
+    
+    private Controller testConnection(URI controllerURI, String controllerId, URI otherControllerURI, boolean withThrow) throws JocException {
         Controller jobScheduler = new Controller();
         jobScheduler.setUrl(controllerURI.toString());
         jobScheduler.setIsCoupled(null);
         Overview answer = null;
-        //try {
+        try {
             JOCJsonCommand jocJsonCommand = new JOCJsonCommand(controllerURI, getAccessToken());
             jocJsonCommand.setUriBuilderForOverview();
             answer = jocJsonCommand.getJsonObjectFromGet(Overview.class);
-//        } catch (ControllerInvalidResponseDataException e) {
-//            throw e;
-//        } catch (JocException e) {
-//        }
+        } catch (ControllerInvalidResponseDataException e) {
+            throw e;
+        } catch (JocException e) {
+            if (withThrow) {
+                throw e;
+            }
+        }
         if (answer != null) {
             if (!controllerId.isEmpty() && !controllerId.equals(answer.getId())) {
                 if (otherControllerURI != null) {
