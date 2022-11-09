@@ -317,9 +317,9 @@ public class Validator {
             } else {
                 dbLayer.getVisibleAgentNames().forEach(a -> agents.remove(a));
             }
-            if (!agents.isEmpty()) {
-                throw new JocConfigurationException("Missing assigned Agents: " + agents.toString());
-            }
+//            if (!agents.isEmpty()) {
+//                throw new JocConfigurationException("Missing assigned Agents: " + agents.toString());
+//            }
         }
         return agents;
     }
@@ -594,7 +594,7 @@ public class Validator {
                                 + "' doesn't exist. Found jobs are: " + jobs.getAdditionalProperties().keySet().toString());
                     }
                     if (invalidAgentRefs.contains(j.getAgentName())) {
-                        throw new JocConfigurationException("$." + instPosition + "agentName: Missing assigned Agents: " + j.getAgentName());
+                        throw new JocConfigurationException("$." + instPosition + "agentName: Missing assigned Agent: " + j.getAgentName());
                     }
                     testJavaNameRules("$." + instPosition, "label", nj.getLabel());
                     if (labels.containsKey(nj.getLabel())) {
@@ -649,7 +649,7 @@ public class Validator {
                         testJavaNameRules("$." + instPosition, "subagentIdVariable", fl.getSubagentIdVariable());
                         validateExpression("$." + instPosition + "subagentClusterIdExpr: ", fl.getSubagentClusterIdExpr());
                         if (invalidAgentRefs.contains(fl.getAgentName())) {
-                            throw new JocConfigurationException("$." + instPosition + "agentName: Missing assigned Agents: " + fl.getAgentName());
+                            throw new JocConfigurationException("$." + instPosition + "agentName: Missing assigned Agent: " + fl.getAgentName());
                         }
                     }
                     if (fl.getWorkflow() != null) {
@@ -763,7 +763,7 @@ public class Validator {
                             orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
                     validateExpression("$." + instPosition + "subagentClusterIdExpr: ", sticky.getSubagentClusterIdExpr());
                     if (invalidAgentRefs.contains(sticky.getAgentName())) {
-                        throw new JocConfigurationException("$." + instPosition + "agentName: Missing assigned Agents: " + sticky.getAgentName());
+                        throw new JocConfigurationException("$." + instPosition + "agentName: Missing assigned Agent: " + sticky.getAgentName());
                     }
                     break;
                 default:
