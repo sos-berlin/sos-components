@@ -172,9 +172,9 @@ public class HistoryModel {
         private static final long serialVersionUID = 1L;
 
         {
-            put(EventType.OrderLocksQueued, "starting to acquire resource locks {{%s}}");
-            put(EventType.OrderLocksAcquired, "acquired resource locks {{%s}}");
-            put(EventType.OrderLocksReleased, "releasing resource locks {{%s}}");
+            put(EventType.OrderLocksQueued, "starting to acquire resource locks %s");
+            put(EventType.OrderLocksAcquired, "acquired resource locks %s");
+            put(EventType.OrderLocksReleased, "releasing resource locks %s");
         }
 
     });
