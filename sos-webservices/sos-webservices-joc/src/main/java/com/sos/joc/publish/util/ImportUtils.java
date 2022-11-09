@@ -1240,15 +1240,19 @@ public class ImportUtils {
                     continue;
                 }
                 String entryName = entry.getName().replace('\\', '/');
-                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-                byte[] binBuffer = new byte[8192];
-                int binRead = 0;
-                while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
-                    outBuffer.write(binBuffer, 0, binRead);
-                }
-                Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer, entryName);
-                if (fromArchive != null) {
-                    agents.add(fromArchive);
+                if (entryName.endsWith(AGENT_FILE_EXTENSION)) {
+                    ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+                    byte[] binBuffer = new byte[8192];
+                    int binRead = 0;
+                    while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
+                        outBuffer.write(binBuffer, 0, binRead);
+                    }
+                    Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer, entryName);
+                    if (fromArchive != null) {
+                        agents.add(fromArchive);
+                    }
+                } else {
+                    continue;
                 }
             }
         } finally {
@@ -1276,15 +1280,19 @@ public class ImportUtils {
                     continue;
                 }
                 String entryName = entry.getName().replace('\\', '/');
-                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-                byte[] binBuffer = new byte[8192];
-                int binRead = 0;
-                while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
-                    outBuffer.write(binBuffer, 0, binRead);
-                }
-                Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer, entryName);
-                if (fromArchive != null) {
-                    agents.add(fromArchive);
+                if (entryName.endsWith(AGENT_FILE_EXTENSION)) {
+                    ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+                    byte[] binBuffer = new byte[8192];
+                    int binRead = 0;
+                    while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
+                        outBuffer.write(binBuffer, 0, binRead);
+                    }
+                    Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer, entryName);
+                    if (fromArchive != null) {
+                        agents.add(fromArchive);
+                    }
+                } else {
+                    continue;
                 }
             }
         } finally {
