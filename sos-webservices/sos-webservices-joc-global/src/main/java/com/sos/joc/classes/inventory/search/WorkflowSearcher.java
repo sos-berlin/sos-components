@@ -25,6 +25,7 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
+import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
@@ -501,7 +502,13 @@ public class WorkflowSearcher {
                 result.add(new WorkflowInstruction<ExpectNotices>(getPosition(parentPosition, index, null), in.cast()));
                 break;
             case CONSUME_NOTICES:
-                result.add(new WorkflowInstruction<ConsumeNotices>(getPosition(parentPosition, index, null), in.cast()));
+                ConsumeNotices cn = in.cast();
+                if (cn.getSubworkflow() != null) {
+                    String position = getPosition(parentPosition, index, "consumeNotices");
+                    result.add(new WorkflowInstruction<ConsumeNotices>(position, cn));
+
+                    handleInstructions(result, cn.getSubworkflow().getInstructions(), position);
+                }
                 break;
             case ADD_ORDER:
                 result.add(new WorkflowInstruction<AddOrder>(getPosition(parentPosition, index, null), in.cast()));
@@ -515,7 +522,16 @@ public class WorkflowSearcher {
                     handleInstructions(result, c.getCycleWorkflow().getInstructions(), position);
                 }
                 break;
-            
+            case STICKY_SUBAGENT:
+                StickySubagent ss = in.cast();
+                if (ss.getSubworkflow() != null) {
+                    String position = getPosition(parentPosition, index, "stickySubagent");
+                    result.add(new WorkflowInstruction<StickySubagent>(position, ss));
+
+                    handleInstructions(result, ss.getSubworkflow().getInstructions(), position);
+                }
+                break;
+                
             default:
 
                 break;

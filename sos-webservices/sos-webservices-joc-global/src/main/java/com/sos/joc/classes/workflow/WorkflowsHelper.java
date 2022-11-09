@@ -49,6 +49,7 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
+import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Parameters;
@@ -570,6 +571,12 @@ public class WorkflowsHelper {
                         }
                     }
                     break;
+                case STICKY_SUBAGENT:
+                    StickySubagent sticky = inst.cast();
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "stickySubagent"), sticky.getSubworkflow().getInstructions(),
+                            forkListVariables, expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels,
+                            stoppedPositions);
+                    break;
                 default:
                     break;
                 }
@@ -616,6 +623,12 @@ public class WorkflowsHelper {
                 case POST_NOTICE:
                     insts.set(i, NoticeToNoticesConverter.postNoticeToPostNotices(inst.cast()));
                     break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cn = inst.cast();
+                    if (cn.getSubworkflow() != null) {
+                        setWorkflowPositions(extendArray(pos, "consumeNotices"), cn.getSubworkflow().getInstructions());
+                    }
+                    break;
                 case IF:
                     IfElse ie = inst.cast();
                     if (ie.getThen() != null) {
@@ -644,6 +657,12 @@ public class WorkflowsHelper {
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
                         setWorkflowPositions(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions());
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    StickySubagent sticky = inst.cast();
+                    if (sticky.getSubworkflow() != null) {
+                        setWorkflowPositions(extendArray(pos, "stickySubagent"), sticky.getSubworkflow().getInstructions());
                     }
                     break;
                 default:
@@ -843,6 +862,13 @@ public class WorkflowsHelper {
                     pns.getNoticeBoardNames().removeIf(pnb -> oldNewBoardNames.keySet().contains(pnb) || oldNewBoardNames.values().contains(pnb));
                     pns.getNoticeBoardNames().addAll(oldNewBoardNames.values().stream().filter(s -> !s.isEmpty()).collect(Collectors.toSet()));
                     break;
+                case STICKY_SUBAGENT:
+                    StickySubagent ss = inst.cast();
+                    if (ss.getSubworkflow() != null) {
+                        updateWorkflowBoardname(oldNewBoardNames, ss.getSubworkflow().getInstructions());
+                    }
+                    break;
+                
                 default:
                     break;
                 }
@@ -904,6 +930,18 @@ public class WorkflowsHelper {
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
                         extractImplicitEnds(c.getCycleWorkflow().getInstructions(), posSet, true);
+                    }
+                    break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cn = inst.cast();
+                    if (cn.getSubworkflow() != null) {
+                        extractImplicitEnds(cn.getSubworkflow().getInstructions(), posSet, true);
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    StickySubagent ss = inst.cast();
+                    if (ss.getSubworkflow() != null) {
+                        extractImplicitEnds(ss.getSubworkflow().getInstructions(), posSet, true);
                     }
                     break;
                 default:

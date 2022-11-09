@@ -54,7 +54,8 @@ import com.sos.inventory.model.common.ClassHelper;
 		@JsonSubTypes.Type(value = ConsumeNotices.class, name = "ConsumeNotices"),
         @JsonSubTypes.Type(value = ImplicitEnd.class, name = "ImplicitEnd"),
         @JsonSubTypes.Type(value = AddOrder.class, name = "AddOrder"),
-        @JsonSubTypes.Type(value = Cycle.class, name = "Cycle")})
+        @JsonSubTypes.Type(value = Cycle.class, name = "Cycle"),
+        @JsonSubTypes.Type(value = StickySubagent.class, name = "StickySubagent")})
 public abstract class Instruction
     extends ClassHelper
 {

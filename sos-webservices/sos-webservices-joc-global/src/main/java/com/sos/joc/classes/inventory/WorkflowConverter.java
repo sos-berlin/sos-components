@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
@@ -13,6 +14,7 @@ import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Workflow;
@@ -95,6 +97,18 @@ public class WorkflowConverter {
                     break;
                 case EXPECT_NOTICE:
                     invInstructions.set(i, NoticeToNoticesConverter.expectNoticeToExpectNotices(invInstruction.cast()));
+                    break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cn = invInstruction.cast();
+                    if (cn.getSubworkflow() != null) {
+                        convertInstructions(cn.getSubworkflow().getInstructions());
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    StickySubagent sticky = invInstruction.cast();
+                    if (sticky.getSubworkflow() != null) {
+                        convertInstructions(sticky.getSubworkflow().getInstructions());
+                    }
                     break;
                 default:
                     break;

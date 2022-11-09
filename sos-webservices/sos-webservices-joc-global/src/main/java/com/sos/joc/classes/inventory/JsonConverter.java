@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.Finish;
 import com.sos.inventory.model.instruction.ForkJoin;
@@ -30,6 +31,7 @@ import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.job.JobReturnCode;
@@ -378,6 +380,13 @@ public class JsonConverter {
                 case EXPECT_NOTICE:
                     signInstructions.set(i, NoticeToNoticesConverter.expectNoticeToSignExpectNotices(signInstruction.cast()));
                     break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cn = invInstruction.cast();
+                    com.sos.sign.model.instruction.ConsumeNotices sCn = signInstruction.cast();
+                    if (cn.getSubworkflow() != null) {
+                        convertInstructions(w, cn.getSubworkflow().getInstructions(), sCn.getSubworkflow().getInstructions(), addOrderIndex);
+                    }
+                    break;
                 case FINISH:
                     Finish finish = invInstruction.cast();
                     com.sos.sign.model.instruction.Finish sFinish = signInstruction.cast();
@@ -391,6 +400,14 @@ public class JsonConverter {
                         }
                         var.setAdditionalProperty("returnCode", 0);
                         sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Succeeded", null, var));
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    StickySubagent sticky = invInstruction.cast();
+                    if (sticky.getSubworkflow() != null) {
+                        com.sos.sign.model.instruction.StickySubagent sSticky = signInstruction.cast();
+                        convertInstructions(w, sticky.getSubworkflow().getInstructions(), sSticky.getSubworkflow().getInstructions(),
+                                addOrderIndex);
                     }
                     break;
                 default:

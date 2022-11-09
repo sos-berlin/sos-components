@@ -115,6 +115,7 @@ import com.sos.sign.model.instruction.ForkJoin;
 import com.sos.sign.model.instruction.ForkList;
 import com.sos.sign.model.instruction.IfElse;
 import com.sos.sign.model.instruction.Instruction;
+import com.sos.sign.model.instruction.StickySubagent;
 import com.sos.sign.model.instruction.TryCatch;
 import com.sos.sign.model.job.Job;
 import com.sos.sign.model.jobclass.JobClass;
@@ -930,7 +931,7 @@ public abstract class PublishUtils {
                 try {
                     String instructionJson = Globals.objectMapper.writeValueAsString(workflow.getInstructions());
                     if (hasAgentPathAttribute.test(instructionJson)) {
-                        getForkListAgentNames(workflow.getInstructions(), path, controllerId, agentIdAliasesMap, update);
+                        setAgentNamesInInstructions(workflow.getInstructions(), path, controllerId, agentIdAliasesMap, update);
                     }
                 } catch (JsonProcessingException e) {
                     throw new JocBadRequestException(e);
@@ -940,7 +941,7 @@ public abstract class PublishUtils {
         return update;
     }
     
-    private static void getForkListAgentNames(List<Instruction> insts, String path, String controllerId, Map<String, Set<String>> agentIdAliasesMap,
+    private static void setAgentNamesInInstructions(List<Instruction> insts, String path, String controllerId, Map<String, Set<String>> agentIdAliasesMap,
             Set<UpdateableWorkflowJobAgentName> jobAgentNames) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
@@ -950,7 +951,7 @@ public abstract class PublishUtils {
                     ForkJoin f = inst.cast();
                     for (Branch b : f.getBranches()) {
                         if (b.getWorkflow() != null) {
-                            getForkListAgentNames(b.getWorkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                            setAgentNamesInInstructions(b.getWorkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
                         }
                     }
                     break;
@@ -962,42 +963,54 @@ public abstract class PublishUtils {
                                         .getAgentPath(), agentId, controllerId)).ifPresent(u -> jobAgentNames.add(u));
                     }
                     if (fl.getWorkflow() != null) {
-                        getForkListAgentNames(fl.getWorkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                        setAgentNamesInInstructions(fl.getWorkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
                     }
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cns = inst.cast();
                     if (cns.getSubworkflow() != null) {
-                        getForkListAgentNames(cns.getSubworkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                        setAgentNamesInInstructions(cns.getSubworkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
                     }
                     break;
                 case IF:
                     IfElse ie = inst.cast();
                     if (ie.getThen() != null) {
-                        getForkListAgentNames(ie.getThen().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                        setAgentNamesInInstructions(ie.getThen().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
                     }
                     if (ie.getElse() != null) {
-                        getForkListAgentNames(ie.getElse().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                        setAgentNamesInInstructions(ie.getElse().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     if (tc.getCatch() != null) {
-                        getForkListAgentNames(tc.getCatch().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                        setAgentNamesInInstructions(tc.getCatch().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
                     }
                     break;
                 case LOCK:
                     com.sos.sign.model.instruction.Lock l = inst.cast();
                     if (l.getLockedWorkflow() != null) {
-                        getForkListAgentNames(l.getLockedWorkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                        setAgentNamesInInstructions(l.getLockedWorkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
                     }
                     break;
                 case CYCLE:
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
-                        getForkListAgentNames(c.getCycleWorkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                        setAgentNamesInInstructions(c.getCycleWorkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
                     }
                     break;
+                case STICKY_SUBAGENT:
+                    StickySubagent ss = inst.cast();
+                    if (ss.getAgentPath() != null) {
+                        agentIdAliasesMap.entrySet().stream().filter(item -> item.getValue().contains(ss.getAgentPath())).filter(Objects::nonNull)
+                                .map(item -> item.getKey()).findFirst().map(agentId -> new UpdateableWorkflowJobAgentName(path, null, ss
+                                        .getAgentPath(), agentId, controllerId)).ifPresent(u -> jobAgentNames.add(u));
+                    }
+                    if (ss.getSubworkflow() != null) {
+                        setAgentNamesInInstructions(ss.getSubworkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                    }
+                    break;
+                
                 default:
                     break;
                 }
@@ -1618,6 +1631,21 @@ public abstract class PublishUtils {
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
                         replaceAgentNameWithAgentIdInInstructions(c.getCycleWorkflow().getInstructions(), controllerId, agentNameToIdMap);
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    StickySubagent ss = inst.cast();
+                    if (ss.getAgentPath() != null) {
+                        String agentId = agentNameToIdMap.get(ss.getAgentPath());
+                        if (agentId == null) {
+                            throw new JocObjectNotExistException("the agent name in StickySubagent instruction is not known for the controller "
+                                    + controllerId);
+                        } else {
+                            ss.setAgentPath(agentId);
+                        }
+                    }
+                    if (ss.getSubworkflow() != null) {
+                        replaceAgentNameWithAgentIdInInstructions(ss.getSubworkflow().getInstructions(), controllerId, agentNameToIdMap);
                     }
                     break;
                 default:

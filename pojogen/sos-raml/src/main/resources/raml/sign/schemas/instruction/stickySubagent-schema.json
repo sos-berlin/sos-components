@@ -1,0 +1,33 @@
+{
+  "title": "StickySubagent",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.StickySubagent",
+  "type": "object",
+  "required": [
+  	"agentPath"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'StickySubagent'",
+  "properties": {
+    "agentPath": {
+		"alias": "agentId,agentName",
+		"type": "string",
+		"pattern": "^[^<>]*$",
+		"maxLength": 255,
+		"minLength": 1
+	},
+	"subagentSelectionIdExpr": {
+		"alias": "subagentClusterIdExpr",
+		"type": "string",
+  		"pattern": "^[^<>]*$",
+  		"maxLength": 255
+	},
+    "subworkflow": {
+        "$ref": "instructions-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

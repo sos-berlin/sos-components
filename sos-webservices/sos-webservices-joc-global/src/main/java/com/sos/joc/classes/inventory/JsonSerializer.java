@@ -7,6 +7,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.Fail;
 import com.sos.inventory.model.instruction.Finish;
@@ -16,6 +17,7 @@ import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.AdmissionTimeScheme;
 import com.sos.inventory.model.job.Environment;
@@ -541,6 +543,18 @@ public class JsonSerializer {
                         cleanInventoryInstructions(cycle.getCycleWorkflow().getInstructions());
                     }
                     break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cn = inst.cast();
+                    if (cn.getSubworkflow() != null) {
+                        cleanInventoryInstructions(cn.getSubworkflow().getInstructions());
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    StickySubagent ss = inst.cast();
+                    if (ss.getSubworkflow() != null) {
+                        cleanInventoryInstructions(ss.getSubworkflow().getInstructions());
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -620,6 +634,18 @@ public class JsonSerializer {
                     com.sos.sign.model.instruction.Cycle cycle = inst.cast();
                     if (cycle.getCycleWorkflow() != null) {
                         cleanSignedInstructions(cycle.getCycleWorkflow().getInstructions());
+                    }
+                    break;
+                case CONSUME_NOTICES:
+                    com.sos.sign.model.instruction.ConsumeNotices cn = inst.cast();
+                    if (cn.getSubworkflow() != null) {
+                        cleanSignedInstructions(cn.getSubworkflow().getInstructions());
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    com.sos.sign.model.instruction.StickySubagent ss = inst.cast();
+                    if (ss.getSubworkflow() != null) {
+                        cleanSignedInstructions(ss.getSubworkflow().getInstructions());
                     }
                     break;
                 default:

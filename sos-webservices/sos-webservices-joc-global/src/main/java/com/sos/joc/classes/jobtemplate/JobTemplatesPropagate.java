@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.jobtemplate.JobTemplate;
+import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
@@ -25,6 +26,7 @@ import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableJava;
@@ -565,6 +567,18 @@ public class JobTemplatesPropagate {
                     if (j.getJobName().equals(jobName)) {
                         setNodeArguments(jReport, j, args, defaultArgs, withAddRequiredParams);
                     }
+                case CONSUME_NOTICES:
+                    ConsumeNotices cn = inst.cast();
+                    if (cn.getSubworkflow() != null) {
+                        setNodeArguments(cn.getSubworkflow().getInstructions(), jobName, jReport, args, defaultArgs, withAddRequiredParams);
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    StickySubagent ss = inst.cast();
+                    if (ss.getSubworkflow() != null) {
+                        setNodeArguments(ss.getSubworkflow().getInstructions(), jobName, jReport, args, defaultArgs, withAddRequiredParams);
+                    }
+                    break;
                 default:
                     break;
                 }
