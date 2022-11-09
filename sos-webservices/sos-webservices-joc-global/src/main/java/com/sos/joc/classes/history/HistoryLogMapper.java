@@ -49,7 +49,8 @@ public class HistoryLogMapper {
             info.add("arguments(" + toString(entry.getArguments()) + ")");
         } else if (entry.getReturnValues() != null && entry.getReturnValues().getAdditionalProperties().size() > 0) {
             info.add("returnValues(" + toString(entry.getReturnValues()) + ")");
-        } else if (entry.getLocks() != null && entry.getLocks().size() > 0) {
+        }
+        if (entry.getLocks() != null && entry.getLocks().size() > 0) {
             info.add(getLocks(entry));
         } else if (entry.getConsumeNotices() != null) {
             info.add(getConsumeNotices(entry));
