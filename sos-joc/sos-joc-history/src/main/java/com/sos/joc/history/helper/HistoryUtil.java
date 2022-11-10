@@ -10,7 +10,9 @@ import java.util.Map;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSParameterSubstitutor;
+import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 
@@ -37,7 +39,19 @@ public class HistoryUtil {
     }
 
     public static Path getOrderLog(Path dir, String orderId) {
-        return dir.resolve(orderId + ".log");
+        try {
+            return dir.resolve(orderId + ".log");
+        } catch (Throwable e) {
+            try {
+                String newName = SOSCheckJavaVariableName.makeStringRuleConform(orderId);
+                if (SOSString.isEmpty(newName)) {
+                    return null;
+                }
+                return dir.resolve(newName + ".log");
+            } catch (Throwable ee) {
+                return null;
+            }
+        }
     }
 
     public static Path getOrderStepLog(Path dir, LogEntry le) {

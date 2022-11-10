@@ -1001,39 +1001,45 @@ public class HistoryModel {
     }
 
     private void handleNotStartedOrderLog(String orderId, Long mainParentId) {
-        Path notStartedOrderLog = HistoryUtil.getOrderLog(historyConfiguration.getLogDirTmpOrders(), orderId);
-        if (Files.exists(notStartedOrderLog)) {
-            String method = "handleNotStartedOrderLog";
-
-            Path orderDir = HistoryUtil.getOrderLogDirectory(historyConfiguration.getLogDir(), mainParentId);
-            Path orderLog = HistoryUtil.getOrderLog(orderDir, mainParentId);
-            boolean removeNotStartedOrderLog = false;
-            if (Files.exists(orderDir)) {
-                if (Files.exists(orderLog)) {
-                    removeNotStartedOrderLog = true;
-                    LOGGER.info(String.format("[%s][%s][%s][skip move file][order log file already exists]%s", method, orderId, notStartedOrderLog,
-                            orderLog));
-                }
-            } else {
-                try {
-                    Files.createDirectories(orderDir);
-                } catch (Throwable e) {
-                    removeNotStartedOrderLog = true;
-                    LOGGER.warn(String.format("[%s][%s][%s][cannot create directory=%s]%s", method, orderId, notStartedOrderLog, orderDir, e
-                            .toString()), e);
-                }
+        String method = "handleNotStartedOrderLog";
+        try {
+            Path notStartedOrderLog = HistoryUtil.getOrderLog(historyConfiguration.getLogDirTmpOrders(), orderId);
+            if (notStartedOrderLog == null) {
+                return;
             }
-
-            try {
-                if (removeNotStartedOrderLog) {
-                    Files.delete(notStartedOrderLog);
-                    LOGGER.info(String.format("[%s][%s][%s]tmp order log file deleted", method, orderId, notStartedOrderLog));
+            if (Files.exists(notStartedOrderLog)) {
+                Path orderDir = HistoryUtil.getOrderLogDirectory(historyConfiguration.getLogDir(), mainParentId);
+                Path orderLog = HistoryUtil.getOrderLog(orderDir, mainParentId);
+                boolean removeNotStartedOrderLog = false;
+                if (Files.exists(orderDir)) {
+                    if (Files.exists(orderLog)) {
+                        removeNotStartedOrderLog = true;
+                        LOGGER.info(String.format("[%s][%s][%s][skip move file][order log file already exists]%s", method, orderId,
+                                notStartedOrderLog, orderLog));
+                    }
                 } else {
-                    SOSPath.renameTo(notStartedOrderLog, orderLog);
+                    try {
+                        Files.createDirectories(orderDir);
+                    } catch (Throwable e) {
+                        removeNotStartedOrderLog = true;
+                        LOGGER.warn(String.format("[%s][%s][%s][cannot create directory=%s]%s", method, orderId, notStartedOrderLog, orderDir, e
+                                .toString()), e);
+                    }
                 }
-            } catch (Throwable e) {
-                LOGGER.warn(String.format("[%s][%s][%s]%s", method, orderId, notStartedOrderLog, e.toString()), e);
+
+                try {
+                    if (removeNotStartedOrderLog) {
+                        Files.delete(notStartedOrderLog);
+                        LOGGER.info(String.format("[%s][%s][%s]tmp order log file deleted", method, orderId, notStartedOrderLog));
+                    } else {
+                        SOSPath.renameTo(notStartedOrderLog, orderLog);
+                    }
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[%s][%s][%s]%s", method, orderId, notStartedOrderLog, e.toString()), e);
+                }
             }
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[%s][%s]%s", method, orderId, e.toString()), e);
         }
     }
 
@@ -2588,7 +2594,7 @@ public class HistoryModel {
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[%s][%s][%s][%s]log2file=%s", identifier, le.getEventType().value(), le.getOrderId(), file, log2file));
         }
-        if (log2file) {
+        if (log2file && file != null) {
             log2file(file, contentAsString, newLine, le.getEventType());
 
             if (ole != null && !le.getHistoryOrderId().equals(le.getHistoryOrderMainParentId())) {

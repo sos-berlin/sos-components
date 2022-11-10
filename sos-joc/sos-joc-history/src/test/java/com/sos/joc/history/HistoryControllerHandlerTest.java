@@ -1,5 +1,6 @@
 package com.sos.joc.history;
 
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
@@ -553,7 +554,10 @@ public class HistoryControllerHandlerTest {
             return;
         }
         try {
-            SOSPath.deleteIfExists(HistoryUtil.getOrderLog(config.getLogDirTmpOrders(), order.getOrderId()));
+            Path file = HistoryUtil.getOrderLog(config.getLogDirTmpOrders(), order.getOrderId());
+            if (file != null) {
+                SOSPath.deleteIfExists(file);
+            }
         } catch (Throwable e) {
         }
     }
