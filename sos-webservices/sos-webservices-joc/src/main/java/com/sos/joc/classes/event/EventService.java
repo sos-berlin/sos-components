@@ -485,7 +485,7 @@ public class EventService {
                     uncoupledSubagents.add(subagentPath);
                     addEvent(createAgentEvent(eventId, subagentPath));
                 }
-            } else if (evt instanceof SubagentItemStateEvent && !(evt instanceof SubagentItemStateEvent.SubagentEventsObserved$)) {
+            } else if (evt instanceof SubagentItemStateEvent && !(evt instanceof SubagentItemStateEvent.SubagentEventsObserved)) {
                 String subagentPath = ((SubagentId) key).string();
                 addEvent(createAgentEvent(eventId, subagentPath));
                 uncoupledSubagents.remove(subagentPath);
