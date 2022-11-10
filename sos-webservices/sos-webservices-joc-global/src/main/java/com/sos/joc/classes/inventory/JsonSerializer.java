@@ -467,7 +467,7 @@ public class JsonSerializer {
         cleanInventoryInstructions(w.getInstructions(), w.getJobs(), null);
     }
     
-    private static void cleanInventoryInstructions(List<Instruction> instructions, Jobs jobs, String agentName) {
+    private static void cleanInventoryInstructions(List<Instruction> instructions, Jobs jobs, String forkListAgentName) {
         if (instructions != null) {
             for (Instruction inst : instructions) {
                 switch (inst.getTYPE()) {
@@ -490,12 +490,17 @@ public class JsonSerializer {
                 case EXECUTE_NAMED:
                     NamedJob nj = inst.cast();
                     nj.setDefaultArguments(emptyEnvToNullAndQuoteStrings(nj.getDefaultArguments()));
-                    if (agentName != null && jobs != null && jobs.getAdditionalProperties() != null) {
+                    if (forkListAgentName != null && !forkListAgentName.isEmpty() && jobs != null && jobs.getAdditionalProperties() != null) {
                         Job job = jobs.getAdditionalProperties().get(nj.getJobName());
                         if (job.getAgentName() == null || job.getAgentName().isEmpty()) {
-                            job.setAgentName(agentName);
+                            job.setAgentName(forkListAgentName);
                             job.setSubagentClusterId(null);
                             job.setSubagentClusterIdExpr("$js7ForkListSubagentId");
+                        } else {
+                            //propagate agentName from Forklist to all forkListJobs
+                            if (!forkListAgentName.equals(job.getAgentName()) && "$js7ForkListSubagentId".equals(job.getSubagentClusterIdExpr())) {
+                                job.setAgentName(forkListAgentName);
+                            }
                         }
                     }
                     break;
@@ -510,10 +515,10 @@ public class JsonSerializer {
                         fl.setSubagentClusterId(null);
                     }
                     if (fl.getWorkflow() != null) {
-                        if (agentName == null) {
-                            agentName = fl.getAgentName();
+                        if (forkListAgentName == null) {
+                            forkListAgentName = fl.getAgentName();
                         }
-                        cleanInventoryInstructions(fl.getWorkflow().getInstructions(), jobs, agentName);
+                        cleanInventoryInstructions(fl.getWorkflow().getInstructions(), jobs, forkListAgentName);
                     }
                     break;
                 case FORK:
@@ -521,32 +526,32 @@ public class JsonSerializer {
                     fj.setJoinIfFailed(defaultToNull(fj.getJoinIfFailed(), Boolean.FALSE));
                     for (Branch branch : fj.getBranches()) {
                         if (branch.getWorkflow() != null) {
-                            cleanInventoryInstructions(branch.getWorkflow().getInstructions(), jobs, agentName);
+                            cleanInventoryInstructions(branch.getWorkflow().getInstructions(), jobs, forkListAgentName);
                         }
                     }
                     break;
                 case IF:
                     IfElse ifElse = inst.cast();
                     if (ifElse.getThen() != null) {
-                        cleanInventoryInstructions(ifElse.getThen().getInstructions(), jobs, agentName);
+                        cleanInventoryInstructions(ifElse.getThen().getInstructions(), jobs, forkListAgentName);
                     }
                     if (ifElse.getElse() != null) {
-                        cleanInventoryInstructions(ifElse.getElse().getInstructions(), jobs, agentName);
+                        cleanInventoryInstructions(ifElse.getElse().getInstructions(), jobs, forkListAgentName);
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
                     if (tryCatch.getTry() != null) {
-                        cleanInventoryInstructions(tryCatch.getTry().getInstructions(), jobs, agentName);
+                        cleanInventoryInstructions(tryCatch.getTry().getInstructions(), jobs, forkListAgentName);
                     }
                     if (tryCatch.getCatch() != null) {
-                        cleanInventoryInstructions(tryCatch.getCatch().getInstructions(), jobs, agentName);
+                        cleanInventoryInstructions(tryCatch.getCatch().getInstructions(), jobs, forkListAgentName);
                     }
                     break;
                 case LOCK:
                     Lock lock = inst.cast();
                     if (lock.getLockedWorkflow() != null) {
-                        cleanInventoryInstructions(lock.getLockedWorkflow().getInstructions(), jobs, agentName);
+                        cleanInventoryInstructions(lock.getLockedWorkflow().getInstructions(), jobs, forkListAgentName);
                     }
                     break;
                 case ADD_ORDER:
@@ -557,19 +562,19 @@ public class JsonSerializer {
                 case CYCLE:
                     Cycle cycle = inst.cast();
                     if (cycle.getCycleWorkflow() != null) {
-                        cleanInventoryInstructions(cycle.getCycleWorkflow().getInstructions(), jobs, agentName);
+                        cleanInventoryInstructions(cycle.getCycleWorkflow().getInstructions(), jobs, forkListAgentName);
                     }
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cn = inst.cast();
                     if (cn.getSubworkflow() != null) {
-                        cleanInventoryInstructions(cn.getSubworkflow().getInstructions(), jobs, agentName);
+                        cleanInventoryInstructions(cn.getSubworkflow().getInstructions(), jobs, forkListAgentName);
                     }
                     break;
                 case STICKY_SUBAGENT:
                     StickySubagent ss = inst.cast();
                     if (ss.getSubworkflow() != null) {
-                        cleanInventoryInstructions(ss.getSubworkflow().getInstructions(), jobs, agentName);
+                        cleanInventoryInstructions(ss.getSubworkflow().getInstructions(), jobs, forkListAgentName);
                     }
                     break;
                 default:
