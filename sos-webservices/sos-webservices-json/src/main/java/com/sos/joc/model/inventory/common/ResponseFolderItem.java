@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.inventory.common;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -25,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "objectType",
     "title",
     "valid",
+    "workflowNames",
     "deleted",
     "deployed",
     "released",
@@ -80,6 +83,13 @@ public class ResponseFolderItem {
     private String title;
     @JsonProperty("valid")
     private Boolean valid;
+    /**
+     * additional field only for schedules
+     * 
+     */
+    @JsonProperty("workflowNames")
+    @JsonPropertyDescription("additional field only for schedules")
+    private List<String> workflowNames = new ArrayList<String>();
     @JsonProperty("deleted")
     private Boolean deleted;
     @JsonProperty("deployed")
@@ -225,6 +235,24 @@ public class ResponseFolderItem {
         this.valid = valid;
     }
 
+    /**
+     * additional field only for schedules
+     * 
+     */
+    @JsonProperty("workflowNames")
+    public List<String> getWorkflowNames() {
+        return workflowNames;
+    }
+
+    /**
+     * additional field only for schedules
+     * 
+     */
+    @JsonProperty("workflowNames")
+    public void setWorkflowNames(List<String> workflowNames) {
+        this.workflowNames = workflowNames;
+    }
+
     @JsonProperty("deleted")
     public Boolean getDeleted() {
         return deleted;
@@ -299,12 +327,12 @@ public class ResponseFolderItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasDeployments", hasDeployments).append("hasReleases", hasReleases).append("syncState", syncState).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("workflowNames", workflowNames).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasDeployments", hasDeployments).append("hasReleases", hasReleases).append("syncState", syncState).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(hasDeployments).append(syncState).append(deployed).append(title).append(objectType).append(valid).append(path).append(deleted).append(name).append(id).append(released).append(hasReleases).toHashCode();
+        return new HashCodeBuilder().append(hasDeployments).append(syncState).append(deployed).append(workflowNames).append(title).append(objectType).append(valid).append(path).append(deleted).append(name).append(id).append(released).append(hasReleases).toHashCode();
     }
 
     @Override
@@ -316,7 +344,7 @@ public class ResponseFolderItem {
             return false;
         }
         ResponseFolderItem rhs = ((ResponseFolderItem) other);
-        return new EqualsBuilder().append(hasDeployments, rhs.hasDeployments).append(syncState, rhs.syncState).append(deployed, rhs.deployed).append(title, rhs.title).append(objectType, rhs.objectType).append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(name, rhs.name).append(id, rhs.id).append(released, rhs.released).append(hasReleases, rhs.hasReleases).isEquals();
+        return new EqualsBuilder().append(hasDeployments, rhs.hasDeployments).append(syncState, rhs.syncState).append(deployed, rhs.deployed).append(workflowNames, rhs.workflowNames).append(title, rhs.title).append(objectType, rhs.objectType).append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(name, rhs.name).append(id, rhs.id).append(released, rhs.released).append(hasReleases, rhs.hasReleases).isEquals();
     }
 
 }

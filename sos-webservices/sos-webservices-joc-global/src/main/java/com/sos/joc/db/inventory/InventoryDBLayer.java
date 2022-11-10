@@ -381,6 +381,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append(",ic.valid as valid");
         hql.append(",ic.type as type");
         hql.append(",ic.path as path");
+        hql.append(",ic.jsonContent as json");
         if (forTrash) {
             hql.append(",false as deleted ");// TODO?
             hql.append(",false as deployed ");
