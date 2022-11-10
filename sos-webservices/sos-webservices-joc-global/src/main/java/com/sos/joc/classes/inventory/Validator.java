@@ -581,9 +581,12 @@ public class Validator {
                                 inst.getTYPE())));
                     }
                 } catch (SOSJsonSchemaException e) {
-                    //TODO improve message: [$.children: is missing but it is required, $.childToId: is missing but it is required, $.subagentClusterId: is missing but it is required, $.subagentClusterIdExpr: is missing but it is required]
-                    String msg = e.getMessage().replaceAll("(\\$\\.)", "$1" + instPosition);
-                    throw new SOSJsonSchemaException(msg);
+                    String msg = e.getMessage();
+                    //improve message: [$.children: is missing but it is required, $.childToId: is missing but it is required, $.subagentClusterId: is missing but it is required, $.subagentClusterIdExpr: is missing but it is required]
+                    if (inst.getTYPE().equals(InstructionType.FORKLIST) && hasLicense && msg.contains("$.children")) {
+                        msg = "[($.children and $.childToId) or ($.agentName and $.subagentClusterId) or ($.agentName and $.subagentClusterIdExpr) are missing but required]";
+                    }
+                    throw new SOSJsonSchemaException(msg.replaceAll("(\\$\\.)", "$1" + instPosition));
                 }
                 switch (inst.getTYPE()) {
                 case EXECUTE_NAMED:
@@ -760,7 +763,7 @@ public class Validator {
                     break;
                 case STICKY_SUBAGENT:
                     if (!hasLicense) {
-                        throw new JocConfigurationException("$." + instPosition + ": StickySubagent instruction needs license");
+                        throw new JocConfigurationException("$." + instPosition + "StickySubagent instruction needs license");
                     }
                     StickySubagent sticky = inst.cast();
                     validateExpression("$." + instPosition + "subagentClusterIdExpr: ", sticky.getSubagentClusterIdExpr());
