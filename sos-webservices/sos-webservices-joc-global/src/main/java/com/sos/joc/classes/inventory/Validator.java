@@ -657,7 +657,7 @@ public class Validator {
                         }
                     }
                     if (fl.getWorkflow() != null) {
-                        validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "forklist.instructions", jobs, orderPreparation,
+                        validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "workflow.instructions", jobs, orderPreparation,
                                 labels, invalidAgentRefs, boardNames, true, dbLayer);
                     }
                     break;
