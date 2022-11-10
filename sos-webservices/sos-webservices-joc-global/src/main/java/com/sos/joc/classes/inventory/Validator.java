@@ -759,12 +759,12 @@ public class Validator {
                     break;
                 case STICKY_SUBAGENT:
                     StickySubagent sticky = inst.cast();
-                    validateInstructions(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
-                            orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
                     validateExpression("$." + instPosition + "subagentClusterIdExpr: ", sticky.getSubagentClusterIdExpr());
                     if (invalidAgentRefs.contains(sticky.getAgentName())) {
                         throw new JocConfigurationException("$." + instPosition + "agentName: Missing assigned Agent: " + sticky.getAgentName());
                     }
+                    validateInstructions(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
+                            orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
                     break;
                 default:
                     break;
