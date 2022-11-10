@@ -130,6 +130,8 @@ public class EventService {
     private JControllerEventBus evtBus = null;
     private volatile CopyOnWriteArraySet<EventCondition> conditions = new CopyOnWriteArraySet<>();
     private volatile ConcurrentMap<String, WorkflowId> orders = new ConcurrentHashMap<>();
+    private volatile CopyOnWriteArraySet<String> uncoupledAgents = new CopyOnWriteArraySet<>();
+    private volatile CopyOnWriteArraySet<String> uncoupledSubagents = new CopyOnWriteArraySet<>();
 
     public EventService(String controllerId) {
         this.controllerId = controllerId;
@@ -363,7 +365,7 @@ public class EventService {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(evt.toString() + ", key=" + SOSString.toString(key));
             }
-
+            
             if (evt instanceof OrderEvent) {
                 final OrderId orderId = (OrderId) key;
                 String mainOrderId = orderId.string().substring(0, OrdersHelper.mainOrderIdLength);
@@ -467,10 +469,26 @@ public class EventService {
                     addEvent(createWorkflowUpdatedEvent(eventId, itemId.path().string()));
                 }
 
+            } else if (evt instanceof AgentRefStateEvent.AgentCouplingFailed) {
+                String agentPath = ((AgentPath) key).string();
+                if (!uncoupledAgents.contains(agentPath)) {
+                    uncoupledAgents.add(agentPath);
+                    addEvent(createAgentEvent(eventId, agentPath));
+                }
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
-                addEvent(createAgentEvent(eventId, ((AgentPath) key).string()));
+                String agentPath = ((AgentPath) key).string();
+                addEvent(createAgentEvent(eventId, agentPath));
+                uncoupledAgents.remove(agentPath);
+            } else if (evt instanceof SubagentItemStateEvent.SubagentCouplingFailed) {
+                String subagentPath = ((SubagentId) key).string();
+                if (!uncoupledSubagents.contains(subagentPath)) {
+                    uncoupledSubagents.add(subagentPath);
+                    addEvent(createAgentEvent(eventId, subagentPath));
+                }
             } else if (evt instanceof SubagentItemStateEvent && !(evt instanceof SubagentItemStateEvent.SubagentEventsObserved$)) {
-                addEvent(createAgentEvent(eventId, ((SubagentId) key).string()));
+                String subagentPath = ((SubagentId) key).string();
+                addEvent(createAgentEvent(eventId, subagentPath));
+                uncoupledSubagents.remove(subagentPath);
             } else if (evt instanceof BoardEvent) {
                 addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
             }
