@@ -89,6 +89,7 @@ public class Validator {
             InstructionType.EXPECT_NOTICE.value(), InstructionType.EXPECT_NOTICES.value(), InstructionType.CONSUME_NOTICES.value());
     private final static Predicate<String> hasNoticesInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + noticesInstructions + ")\"")
             .asPredicate();
+    private final static boolean hasLicense = AgentHelper.hasClusterLicense();
 
     /** @param type
      * @param configBytes
@@ -570,9 +571,9 @@ public class Validator {
             int index = 0;
             for (Instruction inst : instructions) {
                 String instPosition = position + "[" + index + "].";
-                boolean licensedForkList = inst.getTYPE().equals(InstructionType.FORKLIST) && !AgentHelper.hasClusterLicense();
+                boolean unLicensedForkList = inst.getTYPE().equals(InstructionType.FORKLIST) && !hasLicense;
                 try {
-                    if (licensedForkList) {
+                    if (unLicensedForkList) {
                         JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(inst), URI.create(
                                 JocInventory.FORKLIST_SCHEMA_WITHOUT_LICENSE));
                     } else {
@@ -645,7 +646,7 @@ public class Validator {
                         throw new JocConfigurationException("$." + instPosition + "ForkList instructions can not be nested.");
                     }
                     ForkList fl = inst.cast();
-                    if (licensedForkList && fl.getAgentName() != null) {
+                    if (!unLicensedForkList && fl.getAgentName() != null) {
                         testJavaNameRules("$." + instPosition, "subagentIdVariable", fl.getSubagentIdVariable());
                         validateExpression("$." + instPosition + "subagentClusterIdExpr: ", fl.getSubagentClusterIdExpr());
                         if (invalidAgentRefs.contains(fl.getAgentName())) {
@@ -758,6 +759,9 @@ public class Validator {
                             orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
                     break;
                 case STICKY_SUBAGENT:
+                    if (!hasLicense) {
+                        throw new JocConfigurationException("$." + instPosition + ": StickySubagent instruction needs license");
+                    }
                     StickySubagent sticky = inst.cast();
                     validateExpression("$." + instPosition + "subagentClusterIdExpr: ", sticky.getSubagentClusterIdExpr());
                     if (invalidAgentRefs.contains(sticky.getAgentName())) {
