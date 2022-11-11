@@ -41,6 +41,7 @@ public class SOSVaultLogin implements ISOSLogin {
 
         try {
             SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
+            webserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
             webserviceCredentials.setValuesFromProfile(identityService);
 
             if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))){
@@ -59,16 +60,25 @@ public class SOSVaultLogin implements ISOSLogin {
 
             disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
 
+<<<<<<< HEAD
             if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
                     .getAccountname())))) {
                 sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
+=======
+            if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
+                sosVaultAccountAccessToken = sosVaultHandler.login(identityService.getIdentyServiceType(),pwd);
+>>>>>>> origin/release/2.4
             }
 
             sosVaultSubject = new SOSVaultSubject(currentAccount.getAccountname(), identityService);
 
-            if (sosVaultAccountAccessToken.getAuth() == null) {
+            if (sosVaultAccountAccessToken == null || sosVaultAccountAccessToken.getAuth() == null) {
                 sosVaultSubject.setAuthenticated(false);
-                setMsg("There is no user with the given account/password combination");
+                if (sosVaultAccountAccessToken == null) {
+                    setMsg("Account has no roles. Login skipped.");
+                }else {
+                    setMsg("There is no user with the given account/password combination");
+                }
             } else {
                 sosVaultSubject.setAuthenticated(true);
                 sosVaultSubject.setAccessToken(sosVaultAccountAccessToken);

@@ -25,6 +25,17 @@ public class SOSKeycloakWebserviceCredentials {
     private String account = "";
     private String accessToken = "";
     private String serviceUrl;
+    private Long identityServiceId;
+
+    
+    public Long getIdentityServiceId() {
+        return identityServiceId;
+    }
+
+    
+    public void setIdentityServiceId(Long identityServiceId) {
+        this.identityServiceId = identityServiceId;
+    }
 
     private String truststorePath = "";
     private String truststorePassword = "";
@@ -98,6 +109,8 @@ public class SOSKeycloakWebserviceCredentials {
     }
 
     public void setValuesFromProfile(SOSIdentityService sosIdentityService) {
+
+        setIdentityServiceId(sosIdentityService.getIdentityServiceId());
 
         SOSHibernateSession sosHibernateSession = null;
         try {

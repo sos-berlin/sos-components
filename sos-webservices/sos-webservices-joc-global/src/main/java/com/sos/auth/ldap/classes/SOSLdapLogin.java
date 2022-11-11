@@ -33,8 +33,12 @@ public class SOSLdapLogin implements ISOSLogin {
         try {
 
             SOSLdapWebserviceCredentials sosLdapWebserviceCredentials = new SOSLdapWebserviceCredentials();
+<<<<<<< HEAD
             sosLdapWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
             sosLdapWebserviceCredentials.setAccount(currentAccount.getAccountname());
+=======
+            sosLdapWebserviceCredentials.setAccount(account);
+>>>>>>> origin/release/2.4
             sosLdapWebserviceCredentials.setValuesFromProfile(identityService);
 
             SOSAuthAccessToken sosAuthAccessToken = null;
