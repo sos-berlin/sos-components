@@ -220,6 +220,7 @@ public class JsonSerializer {
                 j.getAdditionalProperties().forEach((key, job) -> {
                     job.setFailOnErrWritten(defaultToNull(job.getFailOnErrWritten(), Boolean.FALSE));
                     job.setWarnOnErrWritten(defaultToNull(job.getWarnOnErrWritten(), Boolean.FALSE));
+                    job.setWithSubagentClusterIdExpr(defaultToNull(job.getWithSubagentClusterIdExpr(), Boolean.FALSE));
                     job.setParallelism(defaultToNull(job.getParallelism(), 1));
                     job.setDefaultArguments(emptyEnvToNullAndQuoteStrings(job.getDefaultArguments()));
                     emptyStringCollectionsToNull(job.getJobResourceNames());
