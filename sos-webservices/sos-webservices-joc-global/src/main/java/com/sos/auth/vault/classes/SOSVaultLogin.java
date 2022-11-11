@@ -44,10 +44,10 @@ public class SOSVaultLogin implements ISOSLogin {
             webserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
             webserviceCredentials.setValuesFromProfile(identityService);
 
-            if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))){
-            truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
-                    webserviceCredentials.getTruststorePassword());
-            }else {
+            if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
+                truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                        webserviceCredentials.getTruststorePassword());
+            } else {
                 LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
             }
 
@@ -60,14 +60,9 @@ public class SOSVaultLogin implements ISOSLogin {
 
             disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
 
-<<<<<<< HEAD
             if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
                     .getAccountname())))) {
-                sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
-=======
-            if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
-                sosVaultAccountAccessToken = sosVaultHandler.login(identityService.getIdentyServiceType(),pwd);
->>>>>>> origin/release/2.4
+                sosVaultAccountAccessToken = sosVaultHandler.login(identityService.getIdentyServiceType(), pwd);
             }
 
             sosVaultSubject = new SOSVaultSubject(currentAccount.getAccountname(), identityService);
@@ -76,7 +71,7 @@ public class SOSVaultLogin implements ISOSLogin {
                 sosVaultSubject.setAuthenticated(false);
                 if (sosVaultAccountAccessToken == null) {
                     setMsg("Account has no roles. Login skipped.");
-                }else {
+                } else {
                     setMsg("There is no user with the given account/password combination");
                 }
             } else {

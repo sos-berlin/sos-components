@@ -52,29 +52,18 @@ public class SOSKeycloakLogin implements ISOSLogin {
             truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
                     webserviceCredentials.getTruststorePassword());
 
-<<<<<<< HEAD
             webserviceCredentials.setAccount(currentAccount.getAccountname());
             SOSKeycloakHandler sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, truststore);
-
-=======
-            webserviceCredentials.setAccount(account);
-            SOSKeycloakHandler sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, trustStore);
-            webserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
->>>>>>> origin/release/2.4
+ 
             SOSKeycloakAccountAccessToken sosKeycloakAccountAccessToken = null;
 
             boolean disabled;
 
             disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
 
-<<<<<<< HEAD
             if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
                     .getAccountname())))) {
-                sosKeycloakAccountAccessToken = sosKeycloakHandler.login(pwd);
-=======
-            if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
-                sosKeycloakAccountAccessToken = sosKeycloakHandler.login(identityService.getIdentyServiceType(), pwd);
->>>>>>> origin/release/2.4
+                sosKeycloakAccountAccessToken = sosKeycloakHandler.login(identityService.getIdentyServiceType(),pwd);
             }
 
             sosKeycloakSubject = new SOSKeycloakSubject(currentAccount.getAccountname(), identityService);
