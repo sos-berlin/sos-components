@@ -511,10 +511,25 @@ public class JsonSerializer {
                                     job.setSubagentClusterId(null);
                                     job.setSubagentClusterIdExpr("$js7ForkListSubagentId");
                                 } else {
+                                    if (forkListAgentName.equals(job.getAgentName()) && (job.getSubagentClusterIdExpr() == null || job
+                                            .getSubagentClusterIdExpr().isEmpty()) && (job.getSubagentClusterId() == null || job
+                                            .getSubagentClusterId().isEmpty())) {
+                                        job.setSubagentClusterIdExpr("$js7ForkListSubagentId");
+                                        job.setSubagentClusterId(null);
+                                    }
                                     // propagate agentName from Forklist
-                                    if (!forkListAgentName.equals(job.getAgentName()) && "$js7ForkListSubagentId".equals(job
-                                            .getSubagentClusterIdExpr())) {
-                                        job.setAgentName(forkListAgentName);
+                                    if (!forkListAgentName.equals(job.getAgentName())) {
+                                        if ("$js7ForkListSubagentId".equals(job.getSubagentClusterIdExpr())) {
+                                            job.setAgentName(forkListAgentName);
+                                            job.setSubagentClusterId(null);
+//                                        } else if ((job.getSubagentClusterIdExpr() == null || job.getSubagentClusterIdExpr().isEmpty()) && (job
+//                                                .getSubagentClusterId() == null || job.getSubagentClusterId().isEmpty())) {
+//                                            // TODO it can be a standalone agent at the job
+//                                            // only if not then
+////                                            job.setAgentName(forkListAgentName);
+////                                            job.setSubagentClusterId(null);
+////                                            job.setSubagentClusterIdExpr("$js7ForkListSubagentId");
+                                        }
                                     }
                                 }
                             }
