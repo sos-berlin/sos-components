@@ -26,8 +26,9 @@ public class YadeTransferResultSerializerTest {
         LOGGER.info("deserialize ...");
         YadeTransferResult r = serializer.deserialize(serialized);
 
-        LOGGER.info(r.getSource().getHost());
-        LOGGER.info(r.getEntries().get(1).getTarget());
+        LOGGER.info("result ...");
+        LOGGER.info("source_host=" + r.getSource().getHost());
+        LOGGER.info("entries=" + r.getEntries().size() + ", first entry target=" + r.getEntries().get(1).getTarget());
     }
 
     @Ignore
@@ -74,7 +75,7 @@ public class YadeTransferResultSerializerTest {
 
     private List<YadeTransferResultEntry> generateEntries() {
         List<YadeTransferResultEntry> l = new ArrayList<YadeTransferResultEntry>();
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= 1_000; i++) {
             YadeTransferResultEntry e = new YadeTransferResultEntry();
             e.setSource("/tmp/source/ロバート /роберт_" + i + ".txt");
             e.setTarget("/tmp/target/ロバート /роберт_" + i + ".txt");

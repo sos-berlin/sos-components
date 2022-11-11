@@ -117,6 +117,7 @@ import com.sos.joc.history.helper.CachedWorkflowParameter;
 import com.sos.joc.history.helper.Counter;
 import com.sos.joc.history.helper.HistoryUtil;
 import com.sos.joc.history.helper.LogEntry;
+import com.sos.joc.history.helper.OrderStepProcessedResult;
 import com.sos.joc.model.history.order.Lock;
 import com.sos.joc.model.history.order.LockState;
 import com.sos.joc.model.history.order.OrderLogEntry;
@@ -133,16 +134,14 @@ import com.sos.joc.model.history.order.notice.ExpectNotices;
 import com.sos.joc.model.history.order.notice.PostNotice;
 import com.sos.joc.model.history.order.retry.Retrying;
 import com.sos.joc.model.order.OrderStateText;
-import com.sos.yade.commons.Yade;
-
-import js7.data.value.Value;
 
 public class HistoryModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryModel.class);
 
+    public static final String RETURN_CODE_KEY = "returnCode";
+
     private static final String KEY_DELIMITER = "|||";
-    private static final String RETURN_CODE_KEY = "returnCode";
     private static final String RETURN_MESSAGE_KEY = "returnMessage";
     private static final String AGENT_COUPLING_FAILED_SHUTDOWN_MESSAGE = "shutting down";// lower case
 
@@ -1684,13 +1683,23 @@ public class HistoryModel {
                     le.setError(OrderStateText.FAILED.value(), eos.getOutcome());
                 }
             }
+
+            OrderStepProcessedResult r = new OrderStepProcessedResult(eos, controllerConfiguration.getCurrent().getId(), co, cos);
+            if (r.getYadeTransferResult() != null) {
+                if (le.isError()) {
+                    le.setErrorText(r.getYadeTransferResult().getErrorMessage());
+                }
+                yadeHandler.process(r.getYadeTransferResult(), co.getWorkflowPath(), co.getOrderId(), cos.getId(), cos.getJobName(), cos
+                        .getWorkflowPosition());
+            }
+
             if (le.isError() && SOSString.isEmpty(le.getErrorText())) {
                 le.setErrorText(cos.getFirstChunkStdError());
             }
             co.setLastStepError(le, cos);
             cos.setSeverity(HistorySeverity.map2DbSeverity(le.isError() ? OrderStateText.FAILED : OrderStateText.FINISHED));
 
-            Variables outcome = HistoryUtil.toVariables(handleNamedValues(eos, co, cos));
+            Variables outcome = HistoryUtil.toVariables(r.getReturnValues());
             String endVariables = HistoryUtil.toJsonString(outcome);
             dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), eos.getEventId(), endVariables, le.getReturnCode(), cos.getSeverity(), le
                     .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), le.getErrorText(), new Date());
@@ -1755,25 +1764,6 @@ public class HistoryModel {
 
     private int getJobCriticality(CachedWorkflowJob job) {
         return job.getCriticality() == null ? JobCriticality.NORMAL.intValue() : job.getCriticality().intValue();
-    }
-
-    private Map<String, Value> handleNamedValues(FatEventOrderStepProcessed eos, CachedOrder co, CachedOrderStep cos) {
-        Map<String, Value> namedValues = eos.getOutcome() == null ? null : eos.getOutcome().getNamedValues();
-        if (namedValues != null) {
-            Value yadeTransfer = namedValues.get(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES);
-            if (yadeTransfer != null) {
-                // copy without yade serialized value
-                namedValues = namedValues.entrySet().stream().filter(e -> !e.getKey().equals(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES)).collect(Collectors
-                        .toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-                yadeHandler.process(dbFactory, yadeTransfer, co.getWorkflowPath(), co.getOrderId(), cos.getId(), cos.getJobName(), cos
-                        .getWorkflowPosition());
-            }
-            // copy without returnCode
-            namedValues = namedValues.entrySet().stream().filter(e -> !e.getKey().equals(RETURN_CODE_KEY)).collect(Collectors.toMap(Map.Entry::getKey,
-                    Map.Entry::getValue));
-        }
-        return namedValues;
     }
 
     private void orderStepStd(DBLayerHistory dbLayer, FatEventOrderStepStdWritten eos, EventType eventType) throws Exception {

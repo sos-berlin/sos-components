@@ -10,10 +10,10 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.Globals;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.db.DBLayer;
@@ -27,9 +27,6 @@ import com.sos.yade.commons.Yade;
 import com.sos.yade.commons.result.YadeTransferResult;
 import com.sos.yade.commons.result.YadeTransferResultEntry;
 import com.sos.yade.commons.result.YadeTransferResultProtocol;
-import com.sos.yade.commons.result.YadeTransferResultSerializer;
-
-import js7.data.value.Value;
 
 public class YadeHandler {
 
@@ -44,28 +41,17 @@ public class YadeHandler {
         this.protocols = new ConcurrentHashMap<String, Long>();
     }
 
-    public void process(SOSHibernateFactory dbFactory, Value value, String workflowPath, String orderId, Long historyOrderStepId, String job,
-            String jobPosition) {
-
+    public void process(YadeTransferResult result, String workflowPath, String orderId, Long historyOrderStepId, String job, String jobPosition) {
+        if (result == null) {
+            return;
+        }
         CompletableFuture<Long> save = CompletableFuture.supplyAsync(() -> {
             AJocClusterService.setLogger(IDENTIFIER);
             SOSHibernateSession session = null;
             String logMsg = String.format("%s][%s][%s][job name=%s,pos=%s,id=%s", controllerId, workflowPath, orderId, job, jobPosition,
                     historyOrderStepId);
             try {
-                String serialized = value.convertToString();
-                if (SOSString.isEmpty(serialized)) {
-                    LOGGER.warn(String.format("[%s][%s]is empty", logMsg, Yade.JOB_ARGUMENT_NAME_RETURN_VALUES));
-                    return null;
-                }
-
-                YadeTransferResultSerializer<YadeTransferResult> serializer = new YadeTransferResultSerializer<YadeTransferResult>();
-                YadeTransferResult result = serializer.deserialize(serialized);
-                if (result == null) {
-                    return null;
-                }
-
-                session = dbFactory.openStatelessSession("yade");
+                session = Globals.createSosHibernateStatelessConnection("yade");
                 session.beginTransaction();
 
                 Long transferId = saveTransfer(session, result, workflowPath, orderId, historyOrderStepId, job, jobPosition);
@@ -88,14 +74,12 @@ public class YadeHandler {
                 if (session != null) {
                     session.close();
                 }
-                // AJocClusterService.clearAllLoggers();
             }
         });
         save.thenAccept(transferId -> {
             if (transferId != null) {
                 AJocClusterService.setLogger(IDENTIFIER);
                 LOGGER.debug("[stored]transferId=" + transferId);
-                // AJocClusterService.clearAllLoggers();
                 postEventTransferHistoryTerminated(transferId);
             }
         });

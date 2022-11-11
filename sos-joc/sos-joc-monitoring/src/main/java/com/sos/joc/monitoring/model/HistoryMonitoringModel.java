@@ -906,7 +906,7 @@ public class HistoryMonitoringModel implements Serializable {
         try {
             AJocClusterService.setLogger(serviceIdentifier);
 
-            dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
+            dbLayer.setSession(Globals.createSosHibernateStatelessConnection(dbLayer.getIdentifier()));
             String configXml = dbLayer.getReleasedConfiguration();
 
             if (configuration == null) {
