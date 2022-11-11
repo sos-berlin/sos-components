@@ -147,6 +147,8 @@ public class SOSLdapWebserviceCredentials {
 
     public void setValuesFromProfile(SOSIdentityService sosIdentityService) {
 
+        setIdentityServiceId(sosIdentityService.getIdentityServiceId());
+
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSLdapAuthWebserviceCredentials");
@@ -283,17 +285,14 @@ public class SOSLdapWebserviceCredentials {
         return this.ldapServerUrl;
     }
 
-    
     public String getSystemUserDn() {
         return userDnTemplate.replaceAll("\\{0\\}", systemUser);
-     }
-
+    }
 
     public String getSystemUser() {
         return systemUser;
-     }
+    }
 
-    
     public String getSystemPassword() {
         return systemPassword;
     }

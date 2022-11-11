@@ -30,6 +30,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSKeycloakHandler {
 
@@ -129,8 +130,14 @@ public class SOSKeycloakHandler {
 
     }
 
-    public SOSKeycloakAccountAccessToken login(String password) throws SOSException, JsonParseException, JsonMappingException, IOException {
+    public SOSKeycloakAccountAccessToken login(IdentityServiceTypes identityServiceType, String password) throws SOSException, JsonParseException, JsonMappingException, IOException {
 
+        if (identityServiceType == IdentityServiceTypes.KEYCLOAK_JOC) {
+            if (!SOSAuthHelper.accountExist(webserviceCredentials.getAccount(),webserviceCredentials.getIdentityServiceId())) {
+                return null;
+            }
+        }
+        
         Map<String, String> body = new HashMap<String, String>();
 
         body.put("username", webserviceCredentials.getAccount());

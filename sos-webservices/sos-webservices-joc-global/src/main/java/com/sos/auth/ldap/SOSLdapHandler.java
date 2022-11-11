@@ -20,10 +20,16 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthAccessToken;
 import com.sos.auth.classes.SOSAuthHelper;
+import com.sos.auth.classes.SOSPasswordHasher;
 import com.sos.auth.ldap.classes.SOSLdapGroupRolesMapping;
 import com.sos.auth.ldap.classes.SOSLdapWebserviceCredentials;
+import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
+import com.sos.joc.db.authentication.DBItemIamAccount;
+import com.sos.joc.db.security.IamAccountDBLayer;
+import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSLdapHandler {
@@ -77,12 +83,12 @@ public class SOSLdapHandler {
                 env.put("java.naming.ldap.factory.socket", "com.sos.auth.ldap.classes.SOSLdapSSLSocketFactory");
             }
 
-            ldapContext = new InitialLdapContext(env, null);//Authentication
-            
+            ldapContext = new InitialLdapContext(env, null);// Authentication
+
             if (sosLdapWebserviceCredentials.getSystemUser() != null && !sosLdapWebserviceCredentials.getSystemUser().isEmpty()) {
                 env.put(Context.SECURITY_PRINCIPAL, sosLdapWebserviceCredentials.getSystemUserDn());
                 env.put(Context.SECURITY_CREDENTIALS, sosLdapWebserviceCredentials.getSystemPassword());
-                ldapContext = new InitialLdapContext(env, null);               
+                ldapContext = new InitialLdapContext(env, null);
             }
             startTls(sosLdapWebserviceCredentials);
         }
@@ -100,6 +106,14 @@ public class SOSLdapHandler {
 
         SOSAuthAccessToken sosAuthAccessToken = null;
         try {
+
+            if (identityServiceType == IdentityServiceTypes.LDAP_JOC) {
+                if (!SOSAuthHelper.accountExist(sosLdapWebserviceCredentials.getAccount(),sosLdapWebserviceCredentials.getIdentityServiceId())) {
+                    msg = "Account has no roles. Login skipped.";
+                    return null;
+                }
+            }
+
             if (identityServiceType == IdentityServiceTypes.LDAP && sosLdapWebserviceCredentials.getSearchBaseNotNull().isEmpty() && "memberOf"
                     .equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
                 msg = "LDAP configuration is not valid: Missing setting 'searchBase'";

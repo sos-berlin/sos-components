@@ -33,7 +33,6 @@ public class SOSLdapLogin implements ISOSLogin {
         try {
 
             SOSLdapWebserviceCredentials sosLdapWebserviceCredentials = new SOSLdapWebserviceCredentials();
-            sosLdapWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
             sosLdapWebserviceCredentials.setAccount(account);
             sosLdapWebserviceCredentials.setValuesFromProfile(identityService);
 

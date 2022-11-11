@@ -57,7 +57,7 @@ public class TestSOSVaultHandler {
         SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
  
 
-        SOSVaultAccountAccessToken sosVaultUserAccessToken = sosVaultHandler.login("urpass");
+        SOSVaultAccountAccessToken sosVaultUserAccessToken = sosVaultHandler.login(sosIdentityService.getIdentyServiceType(),"urpass");
 
         System.out.println(sosVaultUserAccessToken.getAuth().getClient_token());
         sosVaultHandler.accountAccessTokenIsValid(sosVaultUserAccessToken);

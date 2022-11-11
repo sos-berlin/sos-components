@@ -40,6 +40,7 @@ public class SOSVaultLogin implements ISOSLogin {
 
         try {
             SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
+            webserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
             webserviceCredentials.setValuesFromProfile(identityService);
 
             trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
@@ -55,14 +56,18 @@ public class SOSVaultLogin implements ISOSLogin {
             disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), account);
 
             if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
-                sosVaultAccountAccessToken = sosVaultHandler.login(pwd);
+                sosVaultAccountAccessToken = sosVaultHandler.login(identityService.getIdentyServiceType(),pwd);
             }
 
             sosVaultSubject = new SOSVaultSubject(account, identityService);
 
-            if (sosVaultAccountAccessToken.getAuth() == null) {
+            if (sosVaultAccountAccessToken == null || sosVaultAccountAccessToken.getAuth() == null) {
                 sosVaultSubject.setAuthenticated(false);
-                setMsg("There is no user with the given account/password combination");
+                if (sosVaultAccountAccessToken == null) {
+                    setMsg("Account has no roles. Login skipped.");
+                }else {
+                    setMsg("There is no user with the given account/password combination");
+                }
             } else {
                 sosVaultSubject.setAuthenticated(true);
                 sosVaultSubject.setAccessToken(sosVaultAccountAccessToken);

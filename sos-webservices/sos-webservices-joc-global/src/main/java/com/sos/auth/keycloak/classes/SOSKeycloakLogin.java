@@ -47,7 +47,7 @@ public class SOSKeycloakLogin implements ISOSLogin {
 
             webserviceCredentials.setAccount(account);
             SOSKeycloakHandler sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, trustStore);
-
+            webserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
             SOSKeycloakAccountAccessToken sosKeycloakAccountAccessToken = null;
 
             boolean disabled;
@@ -55,14 +55,19 @@ public class SOSKeycloakLogin implements ISOSLogin {
             disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), account);
 
             if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(httpServletRequest, account)))) {
-                sosKeycloakAccountAccessToken = sosKeycloakHandler.login(pwd);
+                sosKeycloakAccountAccessToken = sosKeycloakHandler.login(identityService.getIdentyServiceType(), pwd);
             }
 
             sosKeycloakSubject = new SOSKeycloakSubject(account, identityService);
 
-            if (sosKeycloakAccountAccessToken.getAccess_token() == null || sosKeycloakAccountAccessToken.getAccess_token().isEmpty()) {
+            if (sosKeycloakAccountAccessToken == null || sosKeycloakAccountAccessToken.getAccess_token() == null || sosKeycloakAccountAccessToken
+                    .getAccess_token().isEmpty()) {
                 sosKeycloakSubject.setAuthenticated(false);
-                setMsg("There is no user with the given account/password combination");
+                if (sosKeycloakAccountAccessToken == null) {
+                    setMsg("Account has no roles. Login skipped.");
+                } else {
+                    setMsg("There is no user with the given account/password combination");
+                }
             } else {
                 sosKeycloakSubject.setAuthenticated(true);
                 sosKeycloakSubject.setAccessToken(sosKeycloakAccountAccessToken);

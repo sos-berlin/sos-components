@@ -23,6 +23,7 @@ import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSVaultHandler {
 
@@ -157,13 +158,18 @@ public class SOSVaultHandler {
         return response;
     }
 
-    public SOSVaultAccountAccessToken login(String password) throws SOSException, JsonParseException, JsonMappingException, IOException {
+    public SOSVaultAccountAccessToken login(IdentityServiceTypes identityServiceType,String password) throws SOSException, JsonParseException, JsonMappingException, IOException {
 
         SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
         sosVaultAccountCredentials.setUsername(webserviceCredentials.getAccount());
         sosVaultAccountCredentials.setPassword(password);
         String body = Globals.objectMapper.writeValueAsString(sosVaultAccountCredentials);
         sosVaultAccountCredentials.setPassword(null);
+        if (identityServiceType == IdentityServiceTypes.VAULT_JOC || identityServiceType == IdentityServiceTypes.VAULT_JOC_ACTIVE ) {
+            if (!SOSAuthHelper.accountExist(webserviceCredentials.getAccount(),webserviceCredentials.getIdentityServiceId())) {
+                return null;
+            }
+        }
 
         String response = getResponse(POST, "/v1/auth/" + webserviceCredentials.getAuthenticationMethodPath() + "/login/" + sosVaultAccountCredentials
                 .getUsername(), body, null);

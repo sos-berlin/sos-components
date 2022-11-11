@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.client.ClientCertificateHandler;
+import com.sos.auth.ldap.SOSLdapHandler;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -83,7 +84,7 @@ public class SOSAuthHelper {
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSAuthHelper:getForcePasswordChange");
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSAuthHelper.class.getName() + ":getForcePasswordChange");
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
@@ -107,7 +108,7 @@ public class SOSAuthHelper {
             if (account == null || account.isEmpty()) {
                 return false;
             }
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSInternAuthLogin.class.getName());
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSAuthHelper.class.getName() + ":accountIsDisabled");
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
             IamAccountFilter filter = new IamAccountFilter();
@@ -129,11 +130,11 @@ public class SOSAuthHelper {
         return false;
     }
 
-    public static SOSInitialPasswordSetting getInitialPasswordSettings(SOSHibernateSession sosHibernateSession) throws JsonParseException,
-            JsonMappingException, IOException, SOSHibernateException {
+    public static SOSInitialPasswordSetting getInitialPasswordSettings(SOSHibernateSession sosHibernateSession) throws JsonParseException, JsonMappingException, IOException,
+            SOSHibernateException {
 
         if (sosHibernateSession == null) {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSAuthHelper");
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSAuthHelper.class.getName() + ":accountIsDisabled");
         }
         SOSInitialPasswordSetting sosInitialPasswordSetting = new SOSInitialPasswordSetting();
         JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
@@ -259,5 +260,25 @@ public class SOSAuthHelper {
         }
         return setOfPermissions;
 
+    }
+
+    public static boolean accountExist(String account, Long identityServiceId) {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSAuthHelper.class.getName() + ":accountExist");
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+            IamAccountFilter filter = new IamAccountFilter();
+            filter.setAccountName(account);
+            filter.setIdentityServiceId(identityServiceId);
+
+            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(filter);
+
+            return (dbItemIamAccount != null && !dbItemIamAccount.getDisabled());
+        } catch (SOSHibernateException e) {
+            LOGGER.error("", e);
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+        return false;
     }
 }
