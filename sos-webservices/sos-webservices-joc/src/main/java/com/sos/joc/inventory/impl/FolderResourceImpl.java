@@ -10,9 +10,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -34,6 +34,7 @@ import com.sos.joc.model.inventory.common.ResponseFolderItem;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.data_for_java.controller.JControllerState;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -94,13 +95,14 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 configTypes = in.getObjectTypes().stream().map(ConfigurationType::intValue).collect(Collectors.toSet());
             }
 
+            boolean forTrash = TRASH_IMPL_PATH.equals(action);
             List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), in.getRecursive() == Boolean.TRUE, configTypes, in
-                    .getOnlyValidObjects(), TRASH_IMPL_PATH.equals(action));
+                    .getOnlyValidObjects(), forTrash);
 
             ResponseFolder folder = new ResponseFolder();
             folder.setDeliveryDate(Date.from(Instant.now()));
             folder.setPath(in.getPath());
-            
+
             boolean withSync = action.equals(IMPL_PATH) && in.getControllerId() != null && !in.getControllerId().isEmpty();
             JControllerState currentstate = null;
             Map<Integer, Map<Long, String>> deloyedNames = Collections.emptyMap();
@@ -120,7 +122,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                     ProblemHelper.postExceptionEventIfExist(Either.left(e), null, getJocError(), null);
                 }
             }
-            
+
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
             if (items != null && !items.isEmpty()) {
@@ -161,6 +163,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                             folder.getFileOrderSources().add(config);
                             break;
                         case SCHEDULE:
+                            config.setWorkflowNames(getWorkflowNames(dbLayer, config.getId(), forTrash));
                             folder.getSchedules().add(config);
                             break;
                         case INCLUDESCRIPT:
@@ -197,6 +200,19 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    private List<String> getWorkflowNames(InventoryDBLayer dbLayer, Long id, boolean forTrash) throws Exception {
+        List<String> workflows = null;
+        String json = dbLayer.getConfigurationContent(id, forTrash);
+        if (!SOSString.isEmpty(json)) {
+            Schedule schedule = Globals.objectMapper.readValue(json, Schedule.class);
+            workflows = schedule.getWorkflowNames();
+            if (workflows == null && schedule.getWorkflowName() != null) {
+                workflows = Collections.singletonList(schedule.getWorkflowName());
+            }
+        }
+        return workflows;
     }
 
     private Set<ResponseFolderItem> sort(Set<ResponseFolderItem> set) {
