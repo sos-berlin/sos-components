@@ -419,7 +419,7 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("where ").append(String.join(" and ", where)).append(" ");
         }
         if (!forTrash) {
-            hql.append("group by ic.id,ic.name,ic.title,ic.valid,ic.type,ic.path,ic.deleted,ic.deployed,ic.released");
+            hql.append("group by ic.id,ic.name,ic.title,ic.valid,ic.type,ic.path,ic.jsonContent,ic.deleted,ic.deployed,ic.released");
         }
         Query<InventoryTreeFolderItem> query = getSession().createQuery(hql.toString(), InventoryTreeFolderItem.class);
         if (recursive) {
