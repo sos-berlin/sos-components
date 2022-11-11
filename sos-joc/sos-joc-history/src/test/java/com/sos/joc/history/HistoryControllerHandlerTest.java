@@ -3,7 +3,6 @@ package com.sos.joc.history;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.OptionalLong;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +18,6 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.history.controller.configuration.HistoryConfiguration;
-import com.sos.joc.history.controller.exception.FatEventProblemException;
 import com.sos.joc.history.controller.proxy.EventFluxStopper;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.AgentInfo;
@@ -280,16 +278,10 @@ public class HistoryControllerHandlerTest {
                 break;
             case OrderStarted:
                 order = entry.getCheckedOrder();
-                Date scheduledFor = null;
-                try {
-                    scheduledFor = entry.getCheckedOrderFromPreviousState().getScheduledFor();
-                } catch (Throwable e) {
-                    LOGGER.warn(String.format("[%s][%s][PreviousState]%s", entry.getEventType().name(), order.getOrderId(), e.toString()), e);
-                }
 
-                event = new FatEventOrderStarted(entry.getEventId(), entry.getEventDate());
+                event = new FatEventOrderStarted(entry.getEventId(), entry.getEventDate(), order.getOrderStartedInfo());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
-                        .getPosition(), order.getArguments(), scheduledFor);
+                        .getPosition(), order.getArguments());
                 break;
             case OrderForked:
                 order = entry.getCheckedOrder();
@@ -413,15 +405,14 @@ public class HistoryControllerHandlerTest {
             case OrderResumed:
                 order = entry.getCheckedOrder();
 
-                event = new FatEventOrderResumed(entry.getEventId(), entry.getEventDate(), order.getCurrentPositionInstruction(), hasOrderStarted(
-                        entry, order.isStarted()));
+                event = new FatEventOrderResumed(entry.getEventId(), entry.getEventDate(), order.getCurrentPositionInstruction(), order.wasStarted());
                 event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderResumptionMarked:
                 order = entry.getCheckedOrder();
 
-                event = new FatEventOrderResumptionMarked(entry.getEventId(), entry.getEventDate(), hasOrderStarted(entry, order.isStarted()));
+                event = new FatEventOrderResumptionMarked(entry.getEventId(), entry.getEventDate(), order.wasStarted());
                 event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
@@ -540,13 +531,6 @@ public class HistoryControllerHandlerTest {
             }
         }
         return event;
-    }
-
-    private boolean hasOrderStarted(HistoryEventEntry entry, boolean currentIsStarted) throws FatEventProblemException {
-        if (!currentIsStarted) {
-            return entry.getCheckedOrderFromPreviousState().isStarted();
-        }
-        return true;
     }
 
     private void deleteNotStartedOrderLog(HistoryOrder order) {

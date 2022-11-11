@@ -39,6 +39,7 @@ import js7.data.lock.Lock;
 import js7.data.lock.LockPath;
 import js7.data.node.NodeId;
 import js7.data.order.Order;
+import js7.data.order.Order.State;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.LockDemand;
 import js7.data.order.OrderEvent.OrderFinished;
@@ -232,16 +233,8 @@ public class HistoryEventEntry {
             return orderId.string();
         }
 
-        public Date getScheduledFor() {
-            if (order != null) {
-                try {
-                    Optional<Instant> ot = order.scheduledFor();
-                    return ot.isPresent() ? Date.from(ot.get()) : null;
-                } catch (Throwable e) {
-                    LOGGER.warn(String.format("[%s][getScheduledFor]%s", getOrderId(), e.toString()), e);
-                }
-            }
-            return null;
+        public OrderStartedInfo getOrderStartedInfo() {
+            return new OrderStartedInfo();
         }
 
         public boolean isStarted() {
@@ -253,6 +246,17 @@ public class HistoryEventEntry {
                 }
             }
             return false;
+        }
+
+        public boolean wasStarted() {
+            if (!isStarted()) {
+                try {
+                    return getCheckedOrderFromPreviousState().isStarted();
+                } catch (FatEventProblemException e) {
+                    LOGGER.warn(String.format("[%s][wasStarted]%s", getOrderId(), e.toString()), e);
+                }
+            }
+            return true;
         }
 
         public boolean isMarked() {
@@ -512,6 +516,62 @@ public class HistoryEventEntry {
                 l = jl.asScala();
             }
             return new OrderLock(l.path().string(), l.limit(), count == null ? null : OptionConverters.toJava(count), orderIds, queuedOrderIds);
+        }
+
+        public class OrderStartedInfo {
+
+            private Date scheduledFor;
+            private boolean maybePreviousStatesLogged;
+
+            private OrderStartedInfo() {
+                try {
+                    JOrder jo = getCheckedOrderFromPreviousState().getJOrder();
+                    this.scheduledFor = getScheduledFor(jo);
+                    this.maybePreviousStatesLogged = maybePreviousStatesLogged(jo);
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[%s][OrderStarted]%s", getOrderId(), e.toString()), e);
+                }
+            }
+
+            private Date getScheduledFor(JOrder jo) {
+                if (jo != null) {
+                    try {
+                        Optional<Instant> ot = jo.scheduledFor();
+                        return ot.isPresent() ? Date.from(ot.get()) : null;
+                    } catch (Throwable e) {
+                        LOGGER.warn(String.format("[%s][getScheduledFor]%s", getOrderId(), e.toString()), e);
+                    }
+                }
+                return null;
+            }
+
+            private boolean maybePreviousStatesLogged(JOrder jo) {
+                if (jo != null) {
+                    try {
+                        // Moved/Skipped before OrderStarted
+                        // TODO check previous event instead of position, because can be skipped by 0/try+0:1 etc
+                        String position = getWorkflowInfo().getPosition().asString();
+                        if (position != null && !position.equals("0")) {// problem: true for 0/try:0:0 etc ... or an order starts with a position > 0...
+                            return true;
+                        }
+                        // Suspended/Stopped and Resumed before OrderStarted
+                        Order<State> os = jo.asScala();
+                        return os.isResumed();
+                    } catch (Throwable e) {
+                        LOGGER.warn(String.format("[%s][maybePreviousStateLogged]%s", getOrderId(), e.toString()), e);
+                    }
+                }
+                return false;
+            }
+
+            public Date getScheduledFor() {
+                return scheduledFor;
+            }
+
+            public boolean maybePreviousStatesLogged() {
+                return maybePreviousStatesLogged;
+            }
+
         }
 
         public class OrderLock {

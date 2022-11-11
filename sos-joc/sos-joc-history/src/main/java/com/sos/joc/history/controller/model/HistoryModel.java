@@ -970,7 +970,9 @@ public class HistoryModel {
             item.setMainParentId(item.getId()); // TODO see above
             dbLayer.setMainParentId(item.getId(), item.getMainParentId());
 
-            handleNotStartedOrderLog(item.getOrderId(), item.getId());
+            if (eo.maybePreviousStatesLogged()) {
+                handleNotStartedOrderLog(item.getOrderId(), item.getId());
+            }
 
             LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, EventType.OrderStarted, eo.getEventDatetime(), null);
             CachedOrder co = new CachedOrder(item);
