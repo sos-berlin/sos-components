@@ -492,28 +492,30 @@ public class JsonSerializer {
                     nj.setDefaultArguments(emptyEnvToNullAndQuoteStrings(nj.getDefaultArguments()));
                     if (jobs != null && jobs.getAdditionalProperties() != null) {
                         Job job = jobs.getAdditionalProperties().get(nj.getJobName());
-                        if (stickyAgentName != null && !stickyAgentName.isEmpty()) {
-                            if (job.getAgentName() == null || job.getAgentName().isEmpty()) {
-                                job.setAgentName(stickyAgentName);
-                                job.setSubagentClusterId(null);
-                                job.setSubagentClusterIdExpr(null);
-                            } else {
-                                // propagate agentName from StickySubagent???
-//                                if (!stickyAgentName.equals(job.getAgentName()) && job.getSubagentClusterIdExpr() == null) {
-//                                    job.setAgentName(stickyAgentName);
-//                                }
+                        if (job != null) {
+                            if (stickyAgentName != null && !stickyAgentName.isEmpty()) {
+                                if (job.getAgentName() == null || job.getAgentName().isEmpty()) {
+                                    job.setAgentName(stickyAgentName);
+                                    job.setSubagentClusterId(null);
+                                    job.setSubagentClusterIdExpr(null);
+                                } else {
+                                    // propagate agentName from StickySubagent???
+                                    // if (!stickyAgentName.equals(job.getAgentName()) && job.getSubagentClusterIdExpr() == null) {
+                                    // job.setAgentName(stickyAgentName);
+                                    // }
+                                }
                             }
-                        }
-                        if (forkListAgentName != null && !forkListAgentName.isEmpty()) {
-                            if (job.getAgentName() == null || job.getAgentName().isEmpty()) {
-                                job.setAgentName(forkListAgentName);
-                                job.setSubagentClusterId(null);
-                                job.setSubagentClusterIdExpr("$js7ForkListSubagentId");
-                            } else {
-                                // propagate agentName from Forklist
-                                if (!forkListAgentName.equals(job.getAgentName()) && "$js7ForkListSubagentId".equals(job
-                                        .getSubagentClusterIdExpr())) {
+                            if (forkListAgentName != null && !forkListAgentName.isEmpty()) {
+                                if (job.getAgentName() == null || job.getAgentName().isEmpty()) {
                                     job.setAgentName(forkListAgentName);
+                                    job.setSubagentClusterId(null);
+                                    job.setSubagentClusterIdExpr("$js7ForkListSubagentId");
+                                } else {
+                                    // propagate agentName from Forklist
+                                    if (!forkListAgentName.equals(job.getAgentName()) && "$js7ForkListSubagentId".equals(job
+                                            .getSubagentClusterIdExpr())) {
+                                        job.setAgentName(forkListAgentName);
+                                    }
                                 }
                             }
                         }
