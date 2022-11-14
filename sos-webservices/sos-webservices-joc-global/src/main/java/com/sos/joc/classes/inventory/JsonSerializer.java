@@ -32,6 +32,7 @@ import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.agent.AgentHelper;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -553,7 +554,7 @@ public class JsonSerializer {
                         fl.setSubagentClusterId(null);
                     }
                     if (fl.getWorkflow() != null) {
-                        if (forkListAgentName == null) {
+                        if (forkListAgentName == null && AgentHelper.hasClusterLicense()) {
                             forkListAgentName = fl.getAgentName();
                         }
                         cleanInventoryInstructions(fl.getWorkflow().getInstructions(), jobs, forkListAgentName, stickyAgentName);
@@ -612,7 +613,10 @@ public class JsonSerializer {
                 case STICKY_SUBAGENT:
                     StickySubagent ss = inst.cast();
                     if (ss.getSubworkflow() != null) {
-                        cleanInventoryInstructions(ss.getSubworkflow().getInstructions(), jobs, forkListAgentName, ss.getAgentName());
+                        if (AgentHelper.hasClusterLicense()) {
+                            stickyAgentName = ss.getAgentName();
+                        }
+                        cleanInventoryInstructions(ss.getSubworkflow().getInstructions(), jobs, forkListAgentName, stickyAgentName);
                     }
                     break;
                 default:
