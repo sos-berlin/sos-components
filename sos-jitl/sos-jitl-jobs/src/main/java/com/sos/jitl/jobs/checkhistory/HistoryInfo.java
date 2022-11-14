@@ -35,9 +35,7 @@ public class HistoryInfo {
         String accessToken = null;
         try {
             ApiResponse apiResponse = apiExecutor.login();
-            if (apiResponse.getStatusCode() == 200) {
-                accessToken = apiResponse.getAccessToken();
-            } 
+            accessToken = apiResponse.getAccessToken();
 
             HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(logger, apiExecutor);
             HistoryFilter historyFilter = new HistoryFilter();

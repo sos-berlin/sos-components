@@ -43,10 +43,7 @@ public class ExecuteMonitoring {
         String accessToken = null;
         try {
             ApiResponse apiResponse = apiExecutor.login();
-            
-            if (apiResponse.getStatusCode() == 200) {
-                accessToken = apiResponse.getAccessToken();
-            }  
+            accessToken = apiResponse.getAccessToken();
             
             MonitoringWebserviceExecuter monitoringWebserviceExecuter = new MonitoringWebserviceExecuter(logger, apiExecutor);
             MonitoringControllerStatus monitoringControllerStatus = monitoringWebserviceExecuter.getControllerStatus(accessToken, args
