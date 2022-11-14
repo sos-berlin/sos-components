@@ -100,6 +100,9 @@ public class SSLContext {
                         .getDefaultAlgorithm()));
                 sslContextBuilder.setTrustManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm",
                         TrustManagerFactory.getDefaultAlgorithm()));
+                if(keyPassChars == null) {
+                    keyPassChars = "".toCharArray();
+                }
                 if (keystore != null) {
                     if (keystoreAlias != null && !keystoreAlias.isEmpty()) {
                         if (keystore.containsAlias(keystoreAlias)) {
