@@ -124,9 +124,12 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
 //                    } else {
 //                        LOGGER.warn("");
                     }
+                } else {
+                    if (requestWithEmptyControllerId) {
+                        controllerId = jobScheduler.getControllerId();
+                    }
                 }
                 
-                controllerId = jobScheduler.getControllerId();
                 index++;
             }
             
@@ -225,14 +228,18 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                         boolean uriChanged = false;
                         for (RegisterParameter controller : body.getControllers()) {
                             if (Role.PRIMARY.equals(controller.getRole())) {
-                                uriChanged = !dbControllers.get(0).getUri().equalsIgnoreCase(controller.getUrl().toString());
+                                if (!uriChanged) {
+                                    uriChanged = !dbControllers.get(0).getUri().equalsIgnoreCase(controller.getUrl().toString());
+                                }
                                 if (controller.getClusterUrl() == null) {
                                     controller.setClusterUrl(controller.getUrl());
                                 }
                                 clusterUriChanged = !dbControllers.get(0).getClusterUri().equalsIgnoreCase(controller.getClusterUrl().toString());
                                 instance = setInventoryInstance(dbControllers.get(0), controller, controllerId);
                             } else {
-                                uriChanged = !dbControllers.get(1).getUri().equalsIgnoreCase(controller.getUrl().toString());
+                                if (!uriChanged) {
+                                    uriChanged = !dbControllers.get(1).getUri().equalsIgnoreCase(controller.getUrl().toString());
+                                }
                                 if (controller.getClusterUrl() == null) {
                                     controller.setClusterUrl(controller.getUrl());
                                 }
