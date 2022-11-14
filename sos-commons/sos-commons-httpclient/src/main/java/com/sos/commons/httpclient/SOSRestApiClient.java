@@ -118,12 +118,20 @@ public class SOSRestApiClient {
     }
 
     public int statusCode() {
-        return httpResponse.getStatusLine().getStatusCode();
+        if(httpResponse.getStatusLine() != null) {
+            return httpResponse.getStatusLine().getStatusCode();
+        } else {
+            return -1;
+        }
     }
 
     public String printStatusLine() {
         StatusLine s = httpResponse.getStatusLine();
-        return String.format("%s %d %s", s.getProtocolVersion(), s.getStatusCode(), s.getReasonPhrase());
+        if (s != null) {
+            return String.format("%s %d %s", s.getProtocolVersion(), s.getStatusCode(), s.getReasonPhrase());
+        } else {
+            return "statusline n/a";
+        }
     }
 
     public void clearHeaders() {

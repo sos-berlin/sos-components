@@ -110,7 +110,10 @@ public class Globals {
             setJobSchedulerSocketTimeout();
             setHostnameVerification();
         }
-        setSSLContext();
+        // servletBaseUri not set on first call (JocServletContainer.init)
+        if(Globals.servletBaseUri != null && Globals.servletBaseUri.getPath().startsWith("https")) {
+            setSSLContext();
+        }
     }
 
     private static void setSSLContext() {

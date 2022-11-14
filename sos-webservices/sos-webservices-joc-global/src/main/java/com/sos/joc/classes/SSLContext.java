@@ -97,6 +97,9 @@ public class SSLContext {
                         .getDefaultAlgorithm()));
                 sslContextBuilder.setTrustManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm",
                         TrustManagerFactory.getDefaultAlgorithm()));
+                if(keyPassChars == null) {
+                    keyPassChars = "".toCharArray();
+                }
                 if (keystore != null) {
                     sslContextBuilder.loadKeyMaterial(keystore, keyPassChars);
                 }
