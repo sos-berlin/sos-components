@@ -127,7 +127,7 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
             
             if (!updateItems.isEmpty()) {
                 proxy.api().updateItems(Flux.fromIterable(updateItems)).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
                         try {
@@ -141,7 +141,7 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, updateAgentIds));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
                         } finally {
                             Globals.disconnect(connection1);
                         }

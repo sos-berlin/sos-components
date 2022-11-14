@@ -110,7 +110,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
 //                                        JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
 
                 proxy.api().updateItems(Flux.fromStream(subAgents)).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
                         try {
@@ -123,7 +123,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
                         } finally {
                             Globals.disconnect(connection1);
                         }
@@ -187,7 +187,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                         JUpdateItemOperation::deleteSimple);
                 
                 proxy.api().updateItems(Flux.fromStream(subAgents)).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
                         try {
@@ -200,7 +200,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
                         } finally {
                             Globals.disconnect(connection1);
                         }
@@ -251,7 +251,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                 if (resetSubagentCommand != null) {
                     LOGGER.debug("Reset Subagent: " + resetSubagentCommand.toJson());
                     proxy.api().executeCommand(resetSubagentCommand).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken,
-                            getJocError(), controllerId));
+                            getJocError(), null));
                 }
             } else {
                 throw new ControllerObjectNotExistException(String.format("Unknown Subagent '%s'", subAgentCommand.getSubagentId()));
@@ -317,7 +317,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                                 JUpdateItemOperation::addOrChangeSimple);
 
                 proxy.api().updateItems(Flux.fromStream(subAgents)).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
                         try {
@@ -330,7 +330,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
                         } finally {
                             Globals.disconnect(connection1);
                         }

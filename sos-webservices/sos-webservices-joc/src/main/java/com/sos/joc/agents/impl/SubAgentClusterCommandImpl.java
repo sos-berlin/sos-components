@@ -89,7 +89,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
             
             if (!s.isEmpty()) {
                 proxy.api().updateItems(Flux.fromIterable(s)).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
                         try {
@@ -102,7 +102,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, dbAgentIds));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
                         } finally {
                             Globals.disconnect(connection1);
                         }
@@ -175,7 +175,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
 
             proxy.api().updateItems(Flux.fromStream(subagentClusterIds.stream().filter(knownInController).map(SubagentSelectionId::of).map(
                     JUpdateItemOperation::deleteSimple))).thenAccept(e -> {
-                        ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                        ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
                         if (e.isRight()) {
                             SOSHibernateSession connection1 = null;
                             try {
@@ -188,7 +188,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
                                 EventBus.getInstance().post(new AgentInventoryEvent(controllerId, dbAgentIds));
                             } catch (Exception e1) {
                                 Globals.rollback(connection1);
-                                ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
+                                ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
                             } finally {
                                 Globals.disconnect(connection1);
                             }

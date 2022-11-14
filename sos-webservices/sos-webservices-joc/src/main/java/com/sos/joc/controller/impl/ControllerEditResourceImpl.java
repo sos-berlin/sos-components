@@ -411,7 +411,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                             .addOrChangeSimple(createSubagentDirector(a, subagentId)));
                 
                 }).flatMap(List::stream))).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), cId);
+                    ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
                         try {
@@ -428,7 +428,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                             EventBus.getInstance().post(new AgentInventoryEvent(cId, agentIds));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), cId);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
                         } finally {
                             Globals.disconnect(connection1);
                         }

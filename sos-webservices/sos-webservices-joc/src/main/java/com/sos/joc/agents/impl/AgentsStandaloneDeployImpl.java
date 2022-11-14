@@ -124,7 +124,7 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
             
             if (!agentRefs.isEmpty()) {
                 proxy.api().updateItems(Flux.fromIterable(agentRefs)).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId);
+                    ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
                         try {
@@ -137,7 +137,7 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, updateAgentIds));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
                         } finally {
                             Globals.disconnect(connection1);
                         }

@@ -144,7 +144,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, agentId));
         } catch (Exception e1) {
             Globals.rollback(connection);
-            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, jocError, controllerId);
+            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, jocError, null);
         } finally {
             Globals.disconnect(connection);
         }

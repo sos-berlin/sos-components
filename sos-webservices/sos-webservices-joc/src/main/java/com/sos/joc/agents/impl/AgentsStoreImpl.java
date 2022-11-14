@@ -170,7 +170,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
 //            if (!subAgentsToController.isEmpty()) {
 //                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(subAgentsToController)).thenAccept(e -> ProblemHelper
-//                        .postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
+//                        .postProblemEventIfExist(e, accessToken, getJocError(), null));
 //            }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

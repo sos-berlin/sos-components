@@ -131,7 +131,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             idToUri.put(inst.getIsPrimary() ? activeId : NodeId.of("Backup"), Uri.of(inst.getClusterUri()));
         }
         ControllerApi.of(controllerId).clusterAppointNodes(idToUri, activeId, Proxies.getClusterWatchers(controllerId, dbLayer)).thenAccept(
-                e -> ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, controllerId));
+                e -> ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, null));
     }
 
 }
