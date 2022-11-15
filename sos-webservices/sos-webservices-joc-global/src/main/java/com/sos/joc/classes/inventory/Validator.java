@@ -789,7 +789,7 @@ public class Validator {
     private static void firstChildIsForkInstruction(List<Instruction> insts, String pos, String parent) {
         if (insts != null && !insts.isEmpty()) {
             if (InstructionType.FORK.equals(insts.get(0).getTYPE())) {
-                throw new JocConfigurationException(pos + ": A Fork instruction must not be the first instruction within a " + parent + " instruction.");
+                throw new JocConfigurationException(pos + ".[0]: A Fork instruction must not be the first instruction within a " + parent + " instruction.");
             }
         }
     }
