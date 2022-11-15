@@ -443,12 +443,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                         Collectors.toCollection(LinkedHashSet::new));
                 final String positionString = positionOpt.isPresent() ? positionOpt.get().toString() : "";
                 boolean isNotFuturePosition = true;
-                //TODO problem with JHistoryOperation.insert -> isNotFuturePosition always true
-//                if (positionOpt.isPresent()) {
-//                    int posIndex = getIndex(allowedPositionsWithImplicitEnds, positionString);
-//                    int curPosIndex = getIndex(allowedPositionsWithImplicitEnds, cop.getCurrentPosition().toString());
-//                    isNotFuturePosition = posIndex <= curPosIndex;
-//                }
+                if (positionOpt.isPresent()) {
+                    int posIndex = getIndex(allowedPositionsWithImplicitEnds, positionString);
+                    int curPosIndex = getIndex(allowedPositionsWithImplicitEnds, cop.getCurrentPosition().toString());
+                    isNotFuturePosition = posIndex <= curPosIndex;
+                }
 
                 // TODO for the time being: quick and dirty solution by replacing historicOutcome of previous allowed position
                 List<Object> prevPos = null;
@@ -489,7 +488,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
                         String json = Globals.objectMapper.writeValueAsString(h);
                         JHistoricOutcome jH = JHistoricOutcome.fromJson(json).get();
-                        historyOperations = Collections.singletonList(JHistoryOperation.insert(JPosition.fromList(prevPos).get(), jH.asScala()));
+                        //historyOperations = Collections.singletonList(JHistoryOperation.insert(JPosition.fromList(prevPos).get(), jH.asScala()));
+                        historyOperations = Collections.singletonList(JHistoryOperation.append(jH.asScala()));
                     }
                 }
             }
