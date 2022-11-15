@@ -657,6 +657,7 @@ public class Validator {
                         }
                     }
                     if (fl.getWorkflow() != null) {
+                        firstChildIsForkInstruction(fl.getWorkflow().getInstructions(), instPosition + "workflow.instructions", "ForkList");
                         validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "workflow.instructions", jobs, orderPreparation,
                                 labels, invalidAgentRefs, boardNames, true, dbLayer);
                     }
@@ -770,13 +771,25 @@ public class Validator {
                     if (invalidAgentRefs.contains(sticky.getAgentName())) {
                         throw new JocConfigurationException("$." + instPosition + "agentName: Missing assigned Agent: " + sticky.getAgentName());
                     }
-                    validateInstructions(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
-                            orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    if (sticky.getSubworkflow() != null) {
+                        firstChildIsForkInstruction(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", "StickySubagent");
+                        validateInstructions(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
+                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    }
                     break;
                 default:
                     break;
                 }
                 index++;
+            }
+        }
+    }
+    
+    //TODO this check is only temporary for 2.5.0 and can be deleted for 2.5.1 
+    private static void firstChildIsForkInstruction(List<Instruction> insts, String pos, String parent) {
+        if (insts != null && !insts.isEmpty()) {
+            if (InstructionType.FORK.equals(insts.get(0).getTYPE())) {
+                throw new JocConfigurationException(pos + ": A Fork instruction must not be the first instruction within a " + parent + " instruction.");
             }
         }
     }
