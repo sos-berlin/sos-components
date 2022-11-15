@@ -69,6 +69,9 @@ public class SSLContext {
     }
 
     public char[] getKeyStorePass() {
+        if (keyPassChars == null) {
+            return "".toCharArray();
+        }
         return keyPassChars;
     }
 
@@ -100,9 +103,6 @@ public class SSLContext {
                         .getDefaultAlgorithm()));
                 sslContextBuilder.setTrustManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm",
                         TrustManagerFactory.getDefaultAlgorithm()));
-                if(keyPassChars == null) {
-                    keyPassChars = "".toCharArray();
-                }
                 if (keystore != null) {
                     if (keystoreAlias != null && !keystoreAlias.isEmpty()) {
                         if (keystore.containsAlias(keystoreAlias)) {
@@ -326,7 +326,7 @@ public class SSLContext {
         if (keyPass != null) {
             return keyPass.toCharArray();
         }
-        return null;
+        return "".toCharArray();
     }
 
     private KeyStore readTrustStore() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {

@@ -221,7 +221,7 @@ public class SOSRestApiClient {
         if (kStorePass != null) {
             return kStorePass.toCharArray();
         }
-        return null;
+        return "".toCharArray();
     }
 
     public void setKeystoreType(String keystoreType) {
@@ -263,7 +263,7 @@ public class SOSRestApiClient {
         if (kPass != null) {
             return kPass.toCharArray();
         }
-        return null;
+        return "".toCharArray();
     }
 
     public void createHttpClient() {
