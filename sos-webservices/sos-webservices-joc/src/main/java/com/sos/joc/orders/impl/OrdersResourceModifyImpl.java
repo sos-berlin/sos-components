@@ -480,11 +480,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                         v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
                         h.getOutcome().setNamedValues(v);
 
-                        historyOperations = getJHistoricOperations(h, getJocError());
+                        historyOperations = getJHistoricOperations(h, getJocError(), false);
                     } else {
                         Variables v = new Variables();
                         v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
-                        historyOperations = getJHistoricOperations(new HistoricOutcome(prevPos, new Outcome("Succeeded", v, null)), getJocError());
+                        historyOperations = getJHistoricOperations(new HistoricOutcome(prevPos, new Outcome("Succeeded", v, null)), getJocError(),
+                                true);
                     }
                 }
             }
@@ -509,14 +510,18 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
     
-    private static List<JHistoryOperation> getJHistoricOperations(HistoricOutcome h, JocError err) throws JsonProcessingException {
+    private static List<JHistoryOperation> getJHistoricOperations(HistoricOutcome h, JocError err, boolean append) throws JsonProcessingException {
         String json = Globals.objectMapper.writeValueAsString(h);
         Either<Problem, JHistoricOutcome> hoE = JHistoricOutcome.fromJson(json);
         if (hoE.isLeft()) {
             ProblemHelper.postProblemEventAsHintIfExist(hoE, null, err, null);
             return Collections.emptyList();
         }
-        return Collections.singletonList(JHistoryOperation.replace(hoE.get().asScala()));
+        if (append) {
+            return Collections.singletonList(JHistoryOperation.append(hoE.get().asScala()));
+        } else {
+            return Collections.singletonList(JHistoryOperation.replace(hoE.get().asScala()));
+        }
     }
 
     private static int getIndex(Set<? extends Object> set, Object value) {
