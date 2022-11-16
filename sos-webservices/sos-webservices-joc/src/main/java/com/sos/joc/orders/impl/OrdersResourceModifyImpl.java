@@ -484,8 +484,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     } else {
                         Variables v = new Variables();
                         v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
-                        historyOperations = getJHistoricOperations(new HistoricOutcome(prevPos, new Outcome("Succeeded", v, null)), getJocError(),
-                                true);
+                        historyOperations = getJHistoricOperations(new HistoricOutcome(prevPos, new Outcome("Succeeded", null, v, null, null)),
+                                getJocError(), true);
                     }
                 }
             }
@@ -514,7 +514,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         String json = Globals.objectMapper.writeValueAsString(h);
         Either<Problem, JHistoricOutcome> hoE = JHistoricOutcome.fromJson(json);
         if (hoE.isLeft()) {
-            ProblemHelper.postProblemEventAsHintIfExist(hoE, null, err, null);
+            ProblemHelper.postProblemEventIfExist(hoE, null, err, null);
+            //ProblemHelper.postProblemEventAsHintIfExist(hoE, null, err, null);
             return Collections.emptyList();
         }
         if (append) {

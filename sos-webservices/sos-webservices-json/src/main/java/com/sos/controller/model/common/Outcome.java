@@ -20,7 +20,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
+    "message",
     "namedValues",
+    "reason",
     "outcome"
 })
 public class Outcome {
@@ -33,6 +35,8 @@ public class Outcome {
     @JsonProperty("TYPE")
     @JsonPropertyDescription("Succeeded, Failed, Disrupted, Cancelled, Killed, TimedOut")
     private String tYPE;
+    @JsonProperty("message")
+    private String message;
     /**
      * key-value pairs
      * <p>
@@ -42,6 +46,8 @@ public class Outcome {
     @JsonProperty("namedValues")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables namedValues;
+    @JsonProperty("reason")
+    private OutcomeReason reason;
     /**
      * outcome
      * <p>
@@ -60,14 +66,18 @@ public class Outcome {
 
     /**
      * 
+     * @param reason
      * @param namedValues
      * @param tYPE
+     * @param message
      * @param outcome
      */
-    public Outcome(String tYPE, Variables namedValues, Outcome outcome) {
+    public Outcome(String tYPE, String message, Variables namedValues, OutcomeReason reason, Outcome outcome) {
         super();
         this.tYPE = tYPE;
+        this.message = message;
         this.namedValues = namedValues;
+        this.reason = reason;
         this.outcome = outcome;
     }
 
@@ -91,6 +101,16 @@ public class Outcome {
         this.tYPE = tYPE;
     }
 
+    @JsonProperty("message")
+    public String getMessage() {
+        return message;
+    }
+
+    @JsonProperty("message")
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     /**
      * key-value pairs
      * <p>
@@ -111,6 +131,16 @@ public class Outcome {
     @JsonProperty("namedValues")
     public void setNamedValues(Variables namedValues) {
         this.namedValues = namedValues;
+    }
+
+    @JsonProperty("reason")
+    public OutcomeReason getReason() {
+        return reason;
+    }
+
+    @JsonProperty("reason")
+    public void setReason(OutcomeReason reason) {
+        this.reason = reason;
     }
 
     /**
@@ -137,12 +167,12 @@ public class Outcome {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("namedValues", namedValues).append("outcome", outcome).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("message", message).append("namedValues", namedValues).append("reason", reason).append("outcome", outcome).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).append(outcome).append(namedValues).toHashCode();
+        return new HashCodeBuilder().append(reason).append(tYPE).append(message).append(outcome).append(namedValues).toHashCode();
     }
 
     @Override
@@ -154,7 +184,7 @@ public class Outcome {
             return false;
         }
         Outcome rhs = ((Outcome) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(outcome, rhs.outcome).append(namedValues, rhs.namedValues).isEquals();
+        return new EqualsBuilder().append(reason, rhs.reason).append(tYPE, rhs.tYPE).append(message, rhs.message).append(outcome, rhs.outcome).append(namedValues, rhs.namedValues).isEquals();
     }
 
 }

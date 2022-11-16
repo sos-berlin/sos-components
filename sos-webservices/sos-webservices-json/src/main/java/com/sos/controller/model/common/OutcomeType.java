@@ -13,7 +13,10 @@ public enum OutcomeType {
     Disrupted("Disrupted"),
     Cancelled("Cancelled"),
     Killed("Killed"),
-    TimedOut("TimedOut");
+    TimedOut("TimedOut"),
+    ProcessLost("ProcessLost"),
+    JobSchedulerRestarted("JobSchedulerRestarted"),
+    Other("Other");
     private final String value;
     private final static Map<String, OutcomeType> CONSTANTS = new HashMap<String, OutcomeType>();
 
