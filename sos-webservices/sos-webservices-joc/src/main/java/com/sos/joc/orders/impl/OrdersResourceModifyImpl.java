@@ -25,6 +25,7 @@ import jakarta.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.common.Outcome;
@@ -54,6 +55,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocBadRequestException;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -478,18 +480,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                         v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
                         h.getOutcome().setNamedValues(v);
 
-                        String json = Globals.objectMapper.writeValueAsString(h);
-                        JHistoricOutcome jH = JHistoricOutcome.fromJson(json).get();
-                        historyOperations = Collections.singletonList(JHistoryOperation.replace(jH.asScala()));
+                        historyOperations = getJHistoricOperations(h, getJocError());
                     } else {
                         Variables v = new Variables();
                         v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
-                        HistoricOutcome h = new HistoricOutcome(prevPos, new Outcome("Succeeded", v, null));
-
-                        String json = Globals.objectMapper.writeValueAsString(h);
-                        JHistoricOutcome jH = JHistoricOutcome.fromJson(json).get();
-                        //historyOperations = Collections.singletonList(JHistoryOperation.insert(JPosition.fromList(prevPos).get(), jH.asScala()));
-                        historyOperations = Collections.singletonList(JHistoryOperation.append(jH.asScala()));
+                        historyOperations = getJHistoricOperations(new HistoricOutcome(prevPos, new Outcome("Succeeded", v, null)), getJocError());
                     }
                 }
             }
@@ -512,6 +507,16 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 });
             }
         }
+    }
+    
+    private static List<JHistoryOperation> getJHistoricOperations(HistoricOutcome h, JocError err) throws JsonProcessingException {
+        String json = Globals.objectMapper.writeValueAsString(h);
+        Either<Problem, JHistoricOutcome> hoE = JHistoricOutcome.fromJson(json);
+        if (hoE.isLeft()) {
+            ProblemHelper.postProblemEventAsHintIfExist(hoE, null, err, null);
+            return Collections.emptyList();
+        }
+        return Collections.singletonList(JHistoryOperation.replace(hoE.get().asScala()));
     }
 
     private static int getIndex(Set<? extends Object> set, Object value) {
