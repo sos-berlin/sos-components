@@ -38,13 +38,16 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
+import com.sos.controller.model.workflow.Workflow;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.OrderPositions;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JobSchedulerDate;
@@ -69,6 +72,8 @@ import com.sos.joc.dailyplan.resource.IDailyPlanModifyOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.event.EventBus;
@@ -335,117 +340,135 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         Map<Long, DBItemDailyPlanVariable> submittedVariables = new HashMap<>();
         Map<Long, List<DBItemDailyPlanOrder>> submittedCyclic = new HashMap<>();
         Map<Long, String> submittedCyclicNewParts = new HashMap<>();
+        Workflow workflow = null;
 
         SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[modifyVariables]");
-            session.setAutoCommit(false);
-            session.beginTransaction();
-
-            DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-            DBLayerOrderVariables ovDbLayer = new DBLayerOrderVariables(session);
-            // modify planned and prepare submitted
-            for (DBItemDailyPlanOrder item : items) {
-                
-                if (withNewPositions) {
-                    OrderParameterisation orderParameterisation = null;
-                    if (item.getOrderParameterisation() != null) {
-                        orderParameterisation = Globals.objectMapper.readValue(item.getOrderParameterisation(), OrderParameterisation.class);
-                    }
-                    if (orderParameterisation == null) {
-                        orderParameterisation = new OrderParameterisation();
-                    }
-                    OrderPositions origOp = orderParameterisation.getPositions();
-                    OrderPositions newOp = new OrderPositions();
-                    if (withNewStartPosition(in)) {
-                        newOp.setStartPosition(in.getStartPosition());
-                    }
-                    if (withNewEndPositions(in)) {
-                        newOp.setEndPositions(in.getEndPositions());
-                    }
-                    if (newOp.equals(origOp)) {
-                        withNewPositions = false;
-                    } else {
-                        orderParameterisation.setPositions(newOp);
-                        item.setOrderParameterisation(Globals.objectMapper.writeValueAsString(orderParameterisation));
-                    }
-                }
+        if (items != null && !items.isEmpty()) {
+            
+            try {
+                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[modifyVariables]");
+                session.setAutoCommit(false);
+                session.beginTransaction();
                 
                 if (withNewVariables) {
-                    DBItemDailyPlanVariable variables = ovDbLayer.getOrderVariable(in.getControllerId(), item.getOrderId(), item.isCyclic());
-                    
-                    // skip when variable not exists and only should be removed
-                    if (variables == null && !withNewPositions && !withAddOrUpdateVariables(in)) {
-                        // not changed
-                        result.getAdditionalProperties().put(item.getOrderId(), item.getOrderId());
-                        continue;
-                    }
-                    
-                    if (item.getSubmitted()) {
-                        // prepare to modify later
-                        submittedVariables.put(item.getId(), variables);
-                    } else {
-                        // modify now
-                        modifyVariables(in, variables, session, item.getOrderId());
+                    // TODO get OrderPreparation from workflow
+                    DeployedConfigurationDBLayer dcDbLayer = new DeployedConfigurationDBLayer(session);
+                    DeployedContent content = dcDbLayer.getDeployedInventory(in.getControllerId(), DeployType.WORKFLOW.intValue(), items.get(0)
+                            .getWorkflowName());
+                    if (content != null && content.getContent() != null && !content.getContent().isEmpty()) {
+                        workflow = Globals.objectMapper.readValue(content.getContent(), Workflow.class);
                     }
                 }
-                
-                
-                // cyclic main order
-                if (item.isCyclic()) {
-                    if (item.getSubmitted()) {
-                        // calculate new OrderId
-                        String newPart = OrdersHelper.getUniqueOrderId();
-                        submittedCyclicNewParts.put(item.getId(), newPart);
-                        result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.getNewFromOldOrderId(item.getOrderId(), newPart));
 
-                        // prepare to modify later
-                        List<DBItemDailyPlanOrder> cyclic = dbLayer.getDailyPlanOrdersByCyclicMainPart(item.getControllerId(), OrdersHelper
-                                .getCyclicOrderIdMainPart(item.getOrderId()));
-                        if (withNewPositions) {
-                            cyclic = cyclic.stream().peek(c -> c.setOrderParameterisation(item.getOrderParameterisation())).collect(Collectors
-                                    .toList());
+                DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+                DBLayerOrderVariables ovDbLayer = new DBLayerOrderVariables(session);
+
+                // modify planned and prepare submitted
+                for (DBItemDailyPlanOrder item : items) {
+
+                    if (withNewPositions) {
+                        OrderParameterisation orderParameterisation = null;
+                        if (item.getOrderParameterisation() != null) {
+                            orderParameterisation = Globals.objectMapper.readValue(item.getOrderParameterisation(), OrderParameterisation.class);
                         }
-                        submittedCyclic.put(item.getId(), cyclic);
-                        submitted.addAll(cyclic);
-                    } else {
-                        // not changed for planned order
-                        result.getAdditionalProperties().put(item.getOrderId(), item.getOrderId());
-
-                        if (withNewPositions) {
-                            // modify cyclic DBItemDailyPlanOrder items now
-                            dbLayer.updateDailyPlanOrdersByCyclicMainPart(item.getControllerId(), OrdersHelper.getCyclicOrderIdMainPart(item
-                                    .getOrderId()), item.getOrderParameterisation());
+                        if (orderParameterisation == null) {
+                            orderParameterisation = new OrderParameterisation();
+                        }
+                        OrderPositions origOp = orderParameterisation.getPositions();
+                        OrderPositions newOp = new OrderPositions();
+                        if (withNewStartPosition(in)) {
+                            newOp.setStartPosition(in.getStartPosition());
+                        }
+                        if (withNewEndPositions(in)) {
+                            newOp.setEndPositions(in.getEndPositions());
+                        }
+                        if (newOp.equals(origOp)) {
+                            withNewPositions = false;
+                        } else {
+                            orderParameterisation.setPositions(newOp);
+                            item.setOrderParameterisation(Globals.objectMapper.writeValueAsString(orderParameterisation));
                         }
                     }
-                } else { // single start
-                    if (item.getSubmitted()) {
-                        // not check the plannedStatTime due to possible cyclic workflow ..
-                        // calculate new OrderId
-                        result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId()));
 
-                        // prepare to modify later
-                        submitted.add(item);
+                    if (withNewVariables) {
+                        DBItemDailyPlanVariable variables = ovDbLayer.getOrderVariable(in.getControllerId(), item.getOrderId(), item.isCyclic());
 
-                    } else {
-                        // not changed for planned order
-                        result.getAdditionalProperties().put(item.getOrderId(), item.getOrderId());
+                        // skip when variable not exists and only should be removed
+                        if (variables == null && !withNewPositions && !withAddOrUpdateVariables(in)) {
+                            // not changed
+                            result.getAdditionalProperties().put(item.getOrderId(), item.getOrderId());
+                            continue;
+                        }
 
-                        if (withNewPositions) {
+                        if (item.getSubmitted()) {
+                            // prepare to modify later
+                            submittedVariables.put(item.getId(), variables);
+                        } else {
                             // modify now
-                            item.setModified(new Date());
-                            session.update(item);
+                            modifyVariables(in, variables, session, item.getOrderId(), (workflow != null) ? workflow.getOrderPreparation() : null);
                         }
                     }
 
+                    // cyclic main order
+                    if (item.isCyclic()) {
+                        if (item.getSubmitted()) {
+                            // calculate new OrderId
+                            String newPart = OrdersHelper.getUniqueOrderId();
+                            submittedCyclicNewParts.put(item.getId(), newPart);
+                            result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.getNewFromOldOrderId(item.getOrderId(), newPart));
+
+                            // prepare to modify later
+                            List<DBItemDailyPlanOrder> cyclic = dbLayer.getDailyPlanOrdersByCyclicMainPart(item.getControllerId(), OrdersHelper
+                                    .getCyclicOrderIdMainPart(item.getOrderId()));
+                            if (withNewPositions) {
+                                cyclic = cyclic.stream().peek(c -> c.setOrderParameterisation(item.getOrderParameterisation())).collect(Collectors
+                                        .toList());
+                            }
+                            submittedCyclic.put(item.getId(), cyclic);
+                            submitted.addAll(cyclic);
+                        } else {
+                            // not changed for planned order
+                            result.getAdditionalProperties().put(item.getOrderId(), item.getOrderId());
+
+                            if (withNewPositions) {
+                                // modify cyclic DBItemDailyPlanOrder items now
+                                dbLayer.updateDailyPlanOrdersByCyclicMainPart(item.getControllerId(), OrdersHelper.getCyclicOrderIdMainPart(item
+                                        .getOrderId()), item.getOrderParameterisation());
+                            }
+                        }
+                    } else { // single start
+                        if (item.getSubmitted()) {
+                            // not check the plannedStatTime due to possible cyclic workflow ..
+                            // calculate new OrderId
+                            result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId()));
+
+                            // prepare to modify later
+                            submitted.add(item);
+
+                        } else {
+                            // not changed for planned order
+                            result.getAdditionalProperties().put(item.getOrderId(), item.getOrderId());
+
+                            if (withNewPositions) {
+                                // modify now
+                                item.setModified(new Date());
+                                session.update(item);
+                            }
+                        }
+
+                    }
                 }
+                Globals.commit(session);
+            } catch (Exception e) {
+                Globals.rollback(session);
+                throw e;
+            } finally {
+                Globals.disconnect(session);
             }
-            session.commit();
-        } finally {
-            Globals.disconnect(session);
         }
 
         if (submitted.size() > 0) {// submitted - single and all cyclic
+            final Requirements orderPreparation = (workflow != null) ? workflow.getOrderPreparation() : null;
             CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(in.getControllerId(), submitted);
             c.thenAccept(either -> {
                 SOSHibernateSession sessionNew = null;
@@ -503,7 +526,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                                 }
                             }
 
-                            modifyVariables(in, variables, sessionNew, newOrderId);
+                            modifyVariables(in, variables, sessionNew, newOrderId, orderPreparation);
                             for (DBItemDailyPlanOrder cyclicItem : cyclic2Submit) {
                                 cyclicItem.setSubmitted(false);
                                 cyclicItem.setOrderId(OrdersHelper.getNewFromOldOrderId(cyclicItem.getOrderId(), newPart));
@@ -514,7 +537,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             }
                         } else { // single start
                             String newOrderId = result.getAdditionalProperties().get(item.getOrderId());
-                            modifyVariables(in, variables, sessionNew, newOrderId);
+                            modifyVariables(in, variables, sessionNew, newOrderId, orderPreparation);
 
                             item.setSubmitted(false);
                             item.setOrderId(newOrderId);
@@ -546,9 +569,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
     private void modifyVariables(DailyPlanModifyOrder in, DBItemDailyPlanVariable variables, SOSHibernateSession session,
-            String orderId) throws SOSHibernateException, IOException {
+            String orderId, Requirements orderPreparation) throws SOSHibernateException, IOException {
         String current = variables == null ? null : variables.getVariableValue();
-        String modified = updateVariables(current, in.getVariables(), in.getRemoveVariables());
+        String modified = updateVariables(current, in.getVariables(), in.getRemoveVariables(), orderPreparation);
         
         if (modified != null) {
             if (variables == null) {
@@ -953,7 +976,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         return item;
     }
 
-    private String updateVariables(String current, Variables toUpdate, List<String> toRemove) throws IOException {
+    private String updateVariables(String current, Variables toUpdate, List<String> toRemove, Requirements orderPreparation) throws IOException {
         Variables vars = new Variables();
         if (!SOSString.isEmpty(current)) {
             try {
@@ -964,44 +987,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
 
         Map<String, Object> map = vars.getAdditionalProperties();
-//        List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
 
-//        for (Entry<String, Object> variable : vars.getAdditionalProperties().entrySet()) {
-//            if (variable.getValue() instanceof List) {
-//                @SuppressWarnings("unchecked")
-//                List<Map<String, Object>> valList = (List<Map<String, Object>>) variable.getValue();
-//                values.clear();
-//                for (Map<String, Object> par : valList) {
-//                    for (Object key : par.keySet()) {
-//                        if (key != null) {
-//                            values.add(par);
-//                        }
-//                    }
-//                }
-//                map.put(variable.getKey(), values);
-//            } else {
-//                map.put(variable.getKey(), variable.getValue());
-//            }
-//        }
-
-//        for (Entry<String, Object> variable : toUpdate.getAdditionalProperties().entrySet()) {
-//            if (variable.getValue() instanceof List) {
-//                @SuppressWarnings("unchecked")
-//                List<Map<String, Object>> valList = (List<Map<String, Object>>) variable.getValue();
-//                values.clear();
-//                for (Map<String, Object> par : valList) {
-//                    for (Object key : par.keySet()) {
-//                        if (key != null) {
-//                            values.add(par);
-//                        }
-//                    }
-//                }
-//                map.put(variable.getKey(), values);
-//            } else {
-//                map.put(variable.getKey(), variable.getValue());
-//            }
-//        }
-        
         if (toUpdate != null) {
             map.putAll(toUpdate.getAdditionalProperties());
         }
@@ -1009,15 +995,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             toRemove.forEach(k -> map.remove(k));
         }
         vars.setAdditionalProperties(map);
-        //removeVariables(vars, toRemove);
+        vars = OrdersHelper.checkArguments(vars, orderPreparation);
         return Globals.objectMapper.writeValueAsString(vars);
     }
-
-//    private Variables removeVariables(Variables vars, List<String> toRemove) throws IOException {
-//        if (toRemove != null) {
-//            toRemove.forEach(k -> vars.getAdditionalProperties().remove(k));
-//        }
-//        return vars;
-//    }
 
 }
