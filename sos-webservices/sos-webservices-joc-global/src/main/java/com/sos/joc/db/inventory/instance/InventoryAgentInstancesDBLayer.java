@@ -29,6 +29,7 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.agent.SubagentDirectorType;
 
 public class InventoryAgentInstancesDBLayer extends DBLayer {
@@ -590,6 +591,30 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         Query<DBItemInventoryAgentInstance> query = getSession().createQuery(hql.toString());
         query.setParameter("agentId", agentId);
         return getSession().getSingleResult(query);
+    }
+
+    public List<DBItemInventoryAgentInstance> getAgentInstances(List<String> agentIds) {
+        try {
+            if(agentIds == null) {
+                agentIds = Collections.emptyList();
+            }
+            StringBuilder hql = new StringBuilder();
+            hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+            if(!agentIds.isEmpty()) {
+                hql.append(" where agentId in (:agentIds)");
+            }
+            Query<DBItemInventoryAgentInstance> query = getSession().createQuery(hql.toString());
+            if(!agentIds.isEmpty()) {
+                query.setParameterList("agentIds", agentIds);
+            }
+            List<DBItemInventoryAgentInstance> result = getSession().getResultList(query);
+            if(result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
     }
 
     public List<DBItemInventorySubAgentInstance> getSubAgentInstancesByAgentId(String agentId) {
