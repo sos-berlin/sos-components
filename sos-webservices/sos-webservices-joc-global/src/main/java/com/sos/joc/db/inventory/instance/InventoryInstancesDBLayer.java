@@ -146,8 +146,6 @@ public class InventoryInstancesDBLayer {
             sql.append(" where securityLevel = :securityLevel");
             if (!controllerIds.isEmpty()) {
                 sql.append(" and controllerId in (:controllerIds)");
-            }
-            if (!controllerIds.isEmpty()) {
                 sql.append(" order by isPrimary desc, startedAt desc");
             } else {
                 sql.append(" order by controllerId asc, isPrimary desc, startedAt desc");

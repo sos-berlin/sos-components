@@ -1,23 +1,22 @@
 package com.sos.joc.joc.versions.impl;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.joc.versions.resource.IGetVersionsResource;
 import com.sos.joc.joc.versions.util.CheckVersion;
 import com.sos.joc.model.joc.AgentVersion;
@@ -44,64 +43,34 @@ public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsReso
                     .collect(Collectors.toSet());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             // only for debugging, as curVersion is not set in dev environment (grizzly)
-                final String jocVersion = !Globals.curVersion.isEmpty() ? Globals.curVersion : "2.5.0-SNAPSHOT_hardcoded";
-            List<ControllerVersion> controllerVersions = new ArrayList<ControllerVersion>();
-            List<AgentVersion> agentVersions = new ArrayList<AgentVersion>();
+            final String jocVersion = !Globals.curVersion.isEmpty() ? Globals.curVersion : "2.5.1-SNAPSHOT_hardcoded";
             InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
-            if (filter.getControllerIds() != null && !filter.getControllerIds().isEmpty() 
-                    && filter.getAgentIds() != null && !filter.getAgentIds().isEmpty()) {
-                if(filter.getControllerIds() != null && !filter.getControllerIds().isEmpty()) {
-                    // only specific controllers
-                    filter.getControllerIds().forEach(controllerId -> {
-                        if(allowedControllerIds.contains(controllerId)) {
-                            controllerVersions.addAll(createControllerVersion(controllerId, jocVersion));
-                        }
-                    });
-                }
-                if(filter.getAgentIds() != null && !filter.getAgentIds().isEmpty()) {
-                    // only specific agents
-                    Set<DBItemInventoryAgentInstance> dbAgents = new HashSet<DBItemInventoryAgentInstance>();
-                    Set<DBItemInventorySubAgentInstance> dbSubagents = new HashSet<DBItemInventorySubAgentInstance>();
-                    filter.getAgentIds().forEach(agentId -> {
-                        try {
-                            DBItemInventoryAgentInstance dbAgent = agentDbLayer.getAgentInstance(agentId);
-                            if(dbAgent != null) {
-                                List<DBItemInventorySubAgentInstance> subagents = new ArrayList<DBItemInventorySubAgentInstance>();
-                                if (allowedControllerIds.contains(dbAgent.getControllerId())) {
-                                    dbAgents.add(dbAgent);
-                                    agentVersions.add(createAgentVersion(dbAgent, getControllerVersion(controllerVersions, dbAgent.getControllerId())));
-                                    subagents = agentDbLayer.getSubAgentsByAgentId(agentId);
-                                    if(!subagents.isEmpty()) {
-                                        subagents.forEach(subagent -> agentVersions.add(
-                                                createSubagentVersion(subagent, getControllerVersion(controllerVersions, dbAgent.getControllerId()))));
-                                    }
-                                }
-                                if(!subagents.isEmpty()) {
-                                    dbSubagents.addAll(subagents);
-                                }
-                            }
-                        } catch (SOSHibernateException e) {
-                            throw new JocSosHibernateException(e);
-                        }
-                    });
-                }
+            InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(hibernateSession);
+            Set<String> filteredControllerIds = Collections.emptySet();
+            if(filter.getControllerIds() != null && !filter.getControllerIds().isEmpty()) {
+                filteredControllerIds = filter.getControllerIds().stream()
+                        .filter(controllerId -> allowedControllerIds.contains(controllerId)).collect(Collectors.toSet());
             } else {
-                // all allowed controllers and agents
-                allowedControllerIds.forEach(controllerId -> {
-                    controllerVersions.addAll(createControllerVersion(controllerId, jocVersion));
-                    List<DBItemInventoryAgentInstance> dbAgents = agentDbLayer.getAgentsByControllerIds(allowedControllerIds);
-                    if(!dbAgents.isEmpty()) {
-                        dbAgents.forEach(agent -> {
-                            agentVersions.add(createAgentVersion(agent, getControllerVersion(controllerVersions, agent.getControllerId())));
-                            List<DBItemInventorySubAgentInstance> dbSubagents = agentDbLayer.getSubAgentInstancesByAgentId(agent.getAgentId());
-                            if(!dbSubagents.isEmpty()) {
-                                dbSubagents.forEach(subagent -> agentVersions.add(
-                                        createSubagentVersion(subagent, getControllerVersion(controllerVersions, controllerId))));
-                            }
-                        });
-                    }
-                });
+                filteredControllerIds = allowedControllerIds;
             }
+            if(filteredControllerIds.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                filteredControllerIds = Collections.emptySet();
+            }
+            List<ControllerVersion> controllerVersions = instanceLayer.getInventoryInstancesByControllerIds(filteredControllerIds).stream()
+                    .map(controllerDbItem -> createControllerVersion(controllerDbItem, jocVersion))
+                    .collect(Collectors.toList());
+            
+            List<DBItemInventoryAgentInstance> agentDbItems = agentDbLayer.getAgentInstances(filter.getAgentIds());
+            List<AgentVersion> agentVersions = agentDbItems.stream().filter(agentDbItem -> allowedControllerIds.contains(agentDbItem.getControllerId()))
+                .map(agent -> createAgentVersion(agent, getControllerVersion(controllerVersions, agent.getControllerId())))
+                .collect(Collectors.toList());
+            agentDbItems.stream().forEach(agentDbItem -> {
+                List<DBItemInventorySubAgentInstance> subagents = agentDbLayer.getSubAgentsByAgentId(agentDbItem.getAgentId());
+                if(!subagents.isEmpty()) {
+                    subagents.forEach(subagent -> agentVersions.add(
+                            createSubagentVersion(subagent, getControllerVersion(controllerVersions, agentDbItem.getControllerId()))));
+                }
+            });
             VersionResponse response = new VersionResponse();
             response.setAgentVersions(agentVersions);
             response.setControllerVersions(controllerVersions);
@@ -117,16 +86,15 @@ public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsReso
         }
     }
 
-    private static List<ControllerVersion> createControllerVersion (String controllerId, String jocVersion) {
-        return Proxies.getControllerDbInstances().get(controllerId).stream()
-                .map(dbItem -> {
-                    ControllerVersion controllerVersion = new ControllerVersion();
-                    controllerVersion.setControllerId(controllerId);
-                    controllerVersion.setUri(dbItem.getUri());
-                    controllerVersion.setVersion(dbItem.getVersion());
-                    controllerVersion.setCompatibility(CheckVersion.checkControllerVersionMatches2Joc(controllerVersion.getVersion(), jocVersion));
-                    return controllerVersion;
-                }).collect(Collectors.toList());
+    private static ControllerVersion createControllerVersion (DBItemInventoryJSInstance controllerDbItem, String jocVersion) {
+        ControllerVersion controllerVersion = new ControllerVersion();
+        controllerVersion.setControllerId(controllerDbItem.getControllerId());
+        controllerVersion.setUri(controllerDbItem.getUri());
+        controllerVersion.setVersion(controllerDbItem.getVersion());
+        if (controllerDbItem.getVersion() != null) {
+            controllerVersion.setCompatibility(CheckVersion.checkControllerVersionMatches2Joc(controllerVersion.getVersion(), jocVersion));
+        }
+        return controllerVersion;
     }
     
     private static AgentVersion createAgentVersion (DBItemInventoryAgentInstance agent, Optional<String> controllerVersion) {
