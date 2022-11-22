@@ -1423,6 +1423,45 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("boardName", getRegexpParameter(boardName, "\""));
         return getSession().getResultList(query);
     }
+    
+    public List<DBItemInventoryConfiguration> getUsedWorkflowsByAgentName(String agentName) throws SOSHibernateException {
+        return getUsedWorkflowsByAgentName(agentName, false);
+    }
+    
+    public List<DBItemInventoryConfiguration> getUsedWorkflowsByAgentName(String agentName, boolean onlyInvalid) throws SOSHibernateException {
+        return getUsedWorkflowsByAgentNames(Collections.singleton(agentName), onlyInvalid);
+    }
+    
+    public List<DBItemInventoryConfiguration> getUsedWorkflowsByAgentNames(Collection<String> agentNames) throws SOSHibernateException {
+        return getUsedWorkflowsByAgentNames(agentNames, false);
+    }
+    
+    public List<DBItemInventoryConfiguration> getUsedWorkflowsByAgentNames(Collection<String> agentNames, boolean onlyInvalid)
+            throws SOSHibernateException {
+        if (agentNames == null || agentNames.isEmpty()) {
+            return Collections.emptyList();
+        }
+        StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+        hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+        hql.append("on ic.id=sw.inventoryConfigurationId ");
+        hql.append("where ic.type=:type ");
+        hql.append("and ic.deployed=sw.deployed ");
+        if (onlyInvalid) {
+            hql.append("and ic.valid=0 ");
+        }
+        hql.append("and ");
+
+        hql.append(agentNames.stream().map(agentName -> SOSHibernateRegexp.getFunction(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs",
+                "$.agentIds"), getRegexpParameter(agentName, "\""))).collect(Collectors.joining(" or ", "(", ")")));
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+        List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return result;
+    }
 
     public List<DBItemInventoryConfiguration> getUsedWorkflowsByJobResource(String jobResourceName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
