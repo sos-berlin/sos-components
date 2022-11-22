@@ -56,6 +56,9 @@ public class NoticeToNoticesConverter {
     }
     
     public static List<String> expectNoticeBoardsToList(String noticeBoardNames) {
+        if (noticeBoardNames == null) {
+            return Collections.emptyList();
+        }
         return Arrays.asList(noticeBoardNames.replaceAll("[|&\\(\\)'\"]", " ").replaceAll("  +", " ").trim().split(" ")).stream().distinct().collect(
                 Collectors.toList());
     }
