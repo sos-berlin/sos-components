@@ -567,6 +567,7 @@ public class JobTemplatesPropagate {
                     if (j.getJobName().equals(jobName)) {
                         setNodeArguments(jReport, j, args, defaultArgs, withAddRequiredParams);
                     }
+                    break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cn = inst.cast();
                     if (cn.getSubworkflow() != null) {
@@ -645,6 +646,7 @@ public class JobTemplatesPropagate {
                     if (j.getJobName().equals(jobName)) {
                         readNodeArguments(j, args);
                     }
+                    break;
                 default:
                     break;
                 }
