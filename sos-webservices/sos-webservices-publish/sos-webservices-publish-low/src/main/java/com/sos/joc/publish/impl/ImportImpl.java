@@ -236,7 +236,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     JocAuditLog.storeAuditLogDetails(filteredConfigurations.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
                             .intValue())), hibernateSession, auditLogId, dbAuditItem.getCreated());
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-                    filteredConfigurations.stream().map(ConfigurationObject::getPath).distinct().map(path -> Paths.get(path).getParent()).forEach(item -> {
+                    filteredConfigurations.stream().map(ConfigurationObject::getPath).map(path -> Paths.get(path).getParent()).distinct().forEach(item -> {
                         try {
                             JocInventory.makeParentDirs(invDbLayer, item, auditLogId);
                         } catch (SOSHibernateException e) {
@@ -246,6 +246,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 }
             }
             ImportUtils.validateAndUpdate(storedConfigurations, agentNames, hibernateSession);
+            storedConfigurations.stream().map(DBItemInventoryConfiguration::getPath).map(path -> Paths.get(path).getParent()).distinct()
+                .forEach(path -> JocInventory.postEvent(path.toString().replace('\\', '/')));
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

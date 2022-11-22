@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -69,6 +70,7 @@ public class AgentStoreUtils {
     public static void storeStandaloneAgent(Map<String, Agent> agentMap, String controllerId, boolean overwrite,
             InventoryAgentInstancesDBLayer dbLayer) throws SOSHibernateException {
         List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAllAgents();
+        Set<String> agentNamesAndAliases = new HashSet<>();
         Map<String, Set<DBItemInventoryAgentName>> allAliases = dbLayer.getAgentNameAliases(agentMap.keySet());
         int position = -1;
         if (dbAgents != null && !dbAgents.isEmpty()) {
@@ -86,7 +88,10 @@ public class AgentStoreUtils {
                                 dbAgent.getControllerId()));
                     }
                     dbAgent.setHidden(agentFound.getHidden());
-                    dbAgent.setAgentName(agentFound.getAgentName());
+                    if (!dbAgent.getAgentName().equals(agentFound.getAgentName())) {
+                        dbAgent.setAgentName(agentFound.getAgentName());
+                        agentNamesAndAliases.add(agentFound.getAgentName());
+                    }
                     dbAgent.setTitle(agentFound.getTitle());
                     if (!dbAgent.getUri().equals(agentFound.getUrl())) {
                         dbAgent.setDeployed(false);
@@ -115,7 +120,12 @@ public class AgentStoreUtils {
             dbAgent.setOrdering(++position);
             dbLayer.saveAgent(dbAgent);
             updateAliases(dbLayer, newAgent, allAliases.get(newAgent.getAgentId()));
+            agentNamesAndAliases.add(newAgent.getAgentName());
         }
+
+        agentNamesAndAliases = Stream.concat(agentNamesAndAliases.stream(), allAliases.values().stream().flatMap(s -> s.stream().map(
+                DBItemInventoryAgentName::getAgentName))).collect(Collectors.toSet());
+        AgentHelper.validateInvalidWorkflowsByAgentNames(dbLayer, agentNamesAndAliases);
     }
     
     public static void storeClusterAgent(ClusterAgent clusterAgent, String controllerId, boolean overwrite,

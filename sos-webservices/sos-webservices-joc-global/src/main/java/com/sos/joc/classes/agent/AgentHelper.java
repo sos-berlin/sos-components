@@ -1,22 +1,30 @@
 package com.sos.joc.classes.agent;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.common.SyncStateHelper;
+import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
+import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocMissingLicenseException;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
@@ -148,6 +156,34 @@ public class AgentHelper {
             }
         } else {
             return SyncStateHelper.getState(SyncStateText.NOT_DEPLOYED);
+        }
+    }
+    
+    public static void validateInvalidWorkflowsByAgentNames(InventoryAgentInstancesDBLayer agentDbLayer, Set<String> agentNamesAndAliases)
+            throws SOSHibernateException {
+
+        if (agentNamesAndAliases != null && !agentNamesAndAliases.isEmpty()) {
+            InventoryDBLayer invDbLayer = new InventoryDBLayer(agentDbLayer.getSession());
+            List<DBItemInventoryConfiguration> invalidWorkflowsByAgentNames = invDbLayer.getUsedWorkflowsByAgentNames(agentNamesAndAliases, true);
+            if (!invalidWorkflowsByAgentNames.isEmpty()) {
+                Set<String> visibleAgentNames = agentDbLayer.getVisibleAgentNames();
+                invalidWorkflowsByAgentNames.stream().filter(w -> {
+                    try {
+                        Validator.validate(ConfigurationType.WORKFLOW, w.getContent().getBytes(StandardCharsets.UTF_8), invDbLayer, visibleAgentNames);
+                        return true;
+                    } catch (Exception e) {
+                        return false;
+                    }
+                }).peek(w -> w.setValid(true)).forEach(w -> {
+                    try {
+                        //JocInventory.updateConfiguration(invDbLayer, w);
+                        invDbLayer.getSession().update(w);
+                    } catch (Exception e) {
+                        //
+                    }
+                });
+            }
+            
         }
     }
 }

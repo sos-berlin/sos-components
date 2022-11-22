@@ -3,12 +3,14 @@ package com.sos.joc.agents.impl;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import jakarta.ws.rs.Path;
 
@@ -21,6 +23,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsImport;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.agent.AgentStoreUtils;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
@@ -168,6 +171,12 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
                 }
             }).collect(Collectors.toList())));
             Globals.commit(hibernateSession);
+            Set<String> agentNamesAndAliases = Stream.concat(
+                    agents.stream().map(agent -> agent.getAgentCluster() != null ?  agent.getAgentCluster().getAgentName() :
+                        agent.getStandaloneAgent().getAgentName()), 
+                    agents.stream().map(agent -> agent.getAgentCluster() != null ? agent.getAgentCluster().getAgentNameAliases() : 
+                        agent.getStandaloneAgent().getAgentNameAliases()).flatMap(Set::stream)).collect(Collectors.toSet());
+            AgentHelper.validateInvalidWorkflowsByAgentNames(agentInstanceDbLayer, agentNamesAndAliases);
             Globals.disconnect(hibernateSession);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
