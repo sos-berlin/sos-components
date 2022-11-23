@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -15,6 +16,7 @@ import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.common.SyncStateHelper;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
@@ -165,6 +167,7 @@ public class AgentHelper {
         if (agentNamesAndAliases != null && !agentNamesAndAliases.isEmpty()) {
             InventoryDBLayer invDbLayer = new InventoryDBLayer(agentDbLayer.getSession());
             List<DBItemInventoryConfiguration> invalidWorkflowsByAgentNames = invDbLayer.getUsedWorkflowsByAgentNames(agentNamesAndAliases, true);
+            Set<String> events = new HashSet<>();
             if (!invalidWorkflowsByAgentNames.isEmpty()) {
                 Set<String> visibleAgentNames = agentDbLayer.getVisibleAgentNames();
                 invalidWorkflowsByAgentNames.stream().filter(w -> {
@@ -176,6 +179,7 @@ public class AgentHelper {
                     }
                 }).peek(w -> w.setValid(true)).forEach(w -> {
                     try {
+                        events.add(w.getFolder());
                         //JocInventory.updateConfiguration(invDbLayer, w);
                         invDbLayer.getSession().update(w);
                     } catch (Exception e) {
@@ -183,7 +187,9 @@ public class AgentHelper {
                     }
                 });
             }
-            
+            for (String event : events) {
+                JocInventory.postEvent(event);
+            }
         }
     }
 }
