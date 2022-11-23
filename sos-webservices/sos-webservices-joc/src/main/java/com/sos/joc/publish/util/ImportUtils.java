@@ -56,6 +56,7 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -1342,5 +1343,33 @@ public class ImportUtils {
         return agent;
         
     }
-
+    
+    public static void revalidateInvalidInvConfigurations (SOSHibernateSession session) {
+        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+        InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(session);
+        Set<Path> folders = new HashSet<Path>();
+        try {
+            List<DBItemInventoryConfiguration> invalidDBItems = dbLayer.getAllInvalidConfigurations();
+            Set<String> visibleAgentNames = agentDbLayer.getVisibleAgentNames();
+            invalidDBItems.stream().filter(cfg -> {
+                try {
+                    Validator.validate(cfg.getTypeAsEnum(), cfg.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, visibleAgentNames);
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }).peek(cfg -> cfg.setValid(true)).forEach(cfg -> {
+                try {
+                    folders.add(Paths.get(cfg.getPath()).getParent());
+                    dbLayer.getSession().update(cfg);
+                } catch (Exception e) {
+                    //
+                }
+            });
+            folders.stream().forEach(folder -> JocInventory.postEvent(folder.toString().replace('\\', '/')));
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+        
+    }
 }
