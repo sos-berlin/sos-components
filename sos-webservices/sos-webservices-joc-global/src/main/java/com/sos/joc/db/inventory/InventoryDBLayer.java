@@ -1723,4 +1723,15 @@ public class InventoryDBLayer extends DBLayer {
         } catch (Throwable e) {
         }
     }
+    
+    public List<DBItemInventoryConfiguration> getAllInvalidConfigurations() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where valid = 0");
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
+        if(result == null) {
+            return Collections.emptyList();
+        }
+        return result;
+    }
 }

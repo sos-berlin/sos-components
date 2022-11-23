@@ -245,6 +245,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 }
             }
             ImportUtils.validateAndUpdate(storedConfigurations, agentNames, hibernateSession);
+                ImportUtils.revalidateInvalidInvConfigurations(hibernateSession);
             storedConfigurations.stream().map(DBItemInventoryConfiguration::getPath).map(path -> Paths.get(path).getParent()).distinct()
                 .forEach(path -> JocInventory.postEvent(path.toString().replace('\\', '/')));
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
