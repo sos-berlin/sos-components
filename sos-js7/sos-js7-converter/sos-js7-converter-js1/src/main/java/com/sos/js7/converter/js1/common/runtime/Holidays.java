@@ -38,6 +38,23 @@ public class Holidays {
         }
     }
 
+    protected Holidays(com.sos.js7.converter.js1.common.json.schedule.Holidays v) throws Exception {
+        this.weekDays = RunTime.convertWeekDays(v.getWeekdays());
+
+        if (v.getDays() != null && v.getDays().size() > 0) {
+            this.holidays = new ArrayList<>();
+            for (int i = 0; i < v.getDays().size(); i++) {
+                this.holidays.add(new Holiday(v.getDays().get(i)));
+            }
+        }
+        if (v.getIncludes() != null && v.getIncludes().size() > 0) {
+            this.includes = new ArrayList<>();
+            for (int i = 0; i < v.getIncludes().size(); i++) {
+                this.includes.add(new Include(v.getIncludes().get(i)));
+            }
+        }
+    }
+
     public List<WeekDays> getWeekDays() {
         return weekDays;
     }

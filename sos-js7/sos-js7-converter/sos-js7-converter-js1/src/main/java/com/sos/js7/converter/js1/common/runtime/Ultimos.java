@@ -16,6 +16,10 @@ public class Ultimos {
         this.days = RunTime.convertDay(path, xpath, node);
     }
 
+    protected Ultimos(com.sos.js7.converter.js1.common.json.schedule.Ultimos v) {
+        this.days = RunTime.convertDay(v.getDays());
+    }
+
     public List<Day> getDays() {
         return days;
     }

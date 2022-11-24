@@ -38,6 +38,16 @@ public class Period {
         this.whenHoliday = JS7ConverterHelper.stringValue(m.get(ATTR_WHEN_HOLIDAY));
     }
 
+    protected Period(com.sos.js7.converter.js1.common.json.schedule.Period p) {
+        this.absoluteRepeat = p.getAbsoluteRepeat();
+        this.begin = p.getBegin();
+        this.end = p.getEnd();
+        this.letRun = p.getLetRun();
+        this.repeat = p.getRepeat();
+        this.singleStart = p.getSingleStart();
+        this.whenHoliday = p.getWhenHoliday();
+    }
+
     public String getAbsoluteRepeat() {
         return absoluteRepeat;
     }

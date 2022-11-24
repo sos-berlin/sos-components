@@ -26,13 +26,13 @@ import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.calendar.WeekDays;
 import com.sos.inventory.model.calendar.WhenHolidayType;
 import com.sos.inventory.model.instruction.Cycle;
-import com.sos.inventory.model.instruction.ExpectNotice;
+import com.sos.inventory.model.instruction.ExpectNotices;
 import com.sos.inventory.model.instruction.Fail;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.NamedJob;
-import com.sos.inventory.model.instruction.PostNotice;
+import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.instruction.schedule.CycleSchedule;
 import com.sos.inventory.model.instruction.schedule.Periodic;
@@ -64,8 +64,8 @@ import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.JS7ConverterResult;
 import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
 import com.sos.js7.converter.commons.agent.JS7AgentConverter;
-import com.sos.js7.converter.commons.agent.JS7AgentHelper;
 import com.sos.js7.converter.commons.agent.JS7AgentConverter.JS7AgentConvertType;
+import com.sos.js7.converter.commons.agent.JS7AgentHelper;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig.Platform;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig.SubFolderConfig;
@@ -238,17 +238,17 @@ public class JS7Converter {
                 ConverterReport.INSTANCE.addErrorRecord("[postProcessing][postNotice][success][workflow not found]" + jobName);
             } else {
                 Workflow w = (Workflow) eo.getObject();
-                w.getInstructions().add(new PostNotice(jobName + "-success"));
+                w.getInstructions().add(new PostNotices(Collections.singletonList(jobName + "-success")));
                 if (result.getPostNotices().getFailed().contains(fullJobName) || result.getPostNotices().getDone().contains(fullJobName)) {
                     TryCatch tryCatch = new TryCatch();
                     tryCatch.setTry(new Instructions(w.getInstructions()));
 
                     List<Instruction> catchIn = new ArrayList<>();
                     if (result.getPostNotices().getFailed().contains(fullJobName)) {
-                        catchIn.add(new PostNotice(jobName + "-failed"));
+                        catchIn.add(new PostNotices(Collections.singletonList(jobName + "-failed")));
                     }
                     if (result.getPostNotices().getDone().contains(fullJobName)) {
-                        catchIn.add(new PostNotice(jobName + "-done"));
+                        catchIn.add(new PostNotices(Collections.singletonList(jobName + "-done")));
                     }
                     catchIn.add(new Fail("'job terminates with return code: ' ++ $returnCode", null, null));
                     tryCatch.setCatch(new Instructions(catchIn));
@@ -273,14 +273,14 @@ public class JS7Converter {
                 ConverterReport.INSTANCE.addErrorRecord("[postProcessing][postNotice][failed][workflow not found]" + jobName);
             } else {
                 Workflow w = (Workflow) eo.getObject();
-                w.getInstructions().add(new PostNotice(jobName + "-failed"));
+                w.getInstructions().add(new PostNotices(Collections.singletonList(jobName + "-failed")));
 
                 TryCatch tryCatch = new TryCatch();
                 tryCatch.setTry(new Instructions(w.getInstructions()));
 
                 List<Instruction> catchIn = new ArrayList<>();
                 if (result.getPostNotices().getDone().contains(fullJobName)) {
-                    catchIn.add(new PostNotice(jobName + "-done"));
+                    catchIn.add(new PostNotices(Collections.singletonList(jobName + "-done")));
                 }
                 catchIn.add(new Fail("'job terminates with return code: ' ++ $returnCode", null, null));
                 tryCatch.setCatch(new Instructions(catchIn));
@@ -307,13 +307,13 @@ public class JS7Converter {
                 ConverterReport.INSTANCE.addErrorRecord("[postProcessing][postNotice][done][workflow not found]" + jobName);
             } else {
                 Workflow w = (Workflow) eo.getObject();
-                w.getInstructions().add(new PostNotice(jobName + "-done"));
+                w.getInstructions().add(new PostNotices(Collections.singletonList(jobName + "-done")));
 
                 TryCatch tryCatch = new TryCatch();
                 tryCatch.setTry(new Instructions(w.getInstructions()));
 
                 List<Instruction> catchIn = new ArrayList<>();
-                catchIn.add(new PostNotice(jobName + "-done"));
+                catchIn.add(new PostNotices(Collections.singletonList(jobName + "-done")));
                 catchIn.add(new Fail("'job terminates with return code: ' ++ $returnCode", null, null));
                 tryCatch.setCatch(new Instructions(catchIn));
 
@@ -1043,7 +1043,7 @@ public class JS7Converter {
         if (!CONFIG.getGenerateConfig().getCyclicOrders() && jilJob.getRunTime().getStartMins().getValue() != null) {
             Periodic p = new Periodic();
             p.setPeriod(3_600L);
-            p.setOffsets(jilJob.getRunTime().getStartMins().getValue().stream().map(e -> Long.valueOf(e * 60)).collect(Collectors.toList()));
+            p.setOffsets(jilJob.getRunTime().getStartMins().getValue().stream().map(e -> new Long(e * 60)).collect(Collectors.toList()));
 
             DailyPeriod dp = new DailyPeriod();
             dp.setSecondOfDay(0L);
@@ -1058,8 +1058,9 @@ public class JS7Converter {
         return in;
     }
 
-    private static ExpectNotice createExpectNotice(JS7ConverterResult result, ACommonJob jilJob, String boardName, String boardTitle) {
-        ExpectNotice en = new ExpectNotice(boardName);
+    private static ExpectNotices createExpectNotice(JS7ConverterResult result, ACommonJob jilJob, String boardName, String boardTitle) {
+        ExpectNotices en = new ExpectNotices();
+        en.setNoticeBoardNames("'" + boardName + "'");
 
         Board b = new Board();
         b.setTitle(boardTitle);
@@ -1067,7 +1068,7 @@ public class JS7Converter {
         b.setExpectOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
         b.setPostOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
 
-        result.add(getNoticeBoardPath(jilJob, en.getNoticeBoardName()), b);
+        result.add(getNoticeBoardPath(jilJob, boardName), b);
         return en;
     }
 

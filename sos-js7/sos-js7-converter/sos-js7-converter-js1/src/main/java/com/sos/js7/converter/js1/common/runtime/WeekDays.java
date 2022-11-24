@@ -16,6 +16,10 @@ public class WeekDays {
         this.days = RunTime.convertDay(path, xpath, node);
     }
 
+    protected WeekDays(com.sos.js7.converter.js1.common.json.schedule.Weekdays v) {
+        this.days = RunTime.convertDay(v.getDays());
+    }
+
     public List<Day> getDays() {
         return days;
     }

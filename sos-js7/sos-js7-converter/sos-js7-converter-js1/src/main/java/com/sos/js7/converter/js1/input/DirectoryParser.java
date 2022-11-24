@@ -1,6 +1,7 @@
 package com.sos.js7.converter.js1.input;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class DirectoryParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryParser.class);
 
-    public static DirectoryParserResult parse(ParserConfig config, Path input, Path outputDir) {
+    public static DirectoryParserResult parse(ParserConfig config, Path input, Path outputDir) throws Exception {
         DirectoryParserResult r = new DirectoryParser().new DirectoryParserResult();
 
         String method = "parse";
@@ -68,7 +69,7 @@ public class DirectoryParser {
                 }
             }
         } else {
-            LOGGER.info(String.format("[%s][not found]%s", method, input));
+            throw new FileNotFoundException("[input]" + input.toString());
         }
         return r;
     }
@@ -221,7 +222,7 @@ public class DirectoryParser {
                 }
                 folder.addJobChain(r, entry.getKey(), entry.getValue());
             } catch (Throwable e) {
-                LOGGER.error(String.format("[%s]%s", method, e.toString()));
+                LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
                 ParserReport.INSTANCE.addErrorRecord(folder.getPath(), "job chain=" + entry.getKey(), e.toString());
             }
         }
