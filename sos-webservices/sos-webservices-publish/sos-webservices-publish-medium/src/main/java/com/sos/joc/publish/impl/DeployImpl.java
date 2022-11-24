@@ -14,8 +14,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +21,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -53,6 +52,9 @@ import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 
+import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
+
 @Path("inventory/deployment")
 public class DeployImpl extends JOCResourceImpl implements IDeploy {
 
@@ -82,7 +84,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             
             Set<String> allowedControllerIds = Collections.emptySet();
             allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
-            		.filter(availableController -> getControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
+                    .filter(availableController -> getControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
             
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -213,10 +215,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             LOGGER.trace("getAllAgents took: " + (getAllAgentsFinished.getTime() - getAllAgentsStarted.getTime()) + " ms");
 
             for (String controllerId : controllerIds) {
-            	if (!allowedControllerIds.contains(controllerId)) {
-            		continue;
-            	}
-            	folderPermissions.setSchedulerId(controllerId);
+                if (!allowedControllerIds.contains(controllerId)) {
+                    continue;
+                }
+                folderPermissions.setSchedulerId(controllerId);
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
                 // sign deployed configurations with new versionId
@@ -237,17 +239,17 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
 
                 if (unsignedDrafts != null) {
                     List<DBItemDeploymentHistory> filteredUnsignedDrafts = unsignedDrafts.stream()
-                    		.filter(draft -> canAdd(draft.getPath(), permittedFolders))
-                    		.map(item -> PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, dbAuditlog.getId(), releasedScripts))
-                    		.collect(Collectors.toList());
+                            .filter(draft -> canAdd(draft.getPath(), permittedFolders))
+                            .map(item -> PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, dbAuditlog.getId(), releasedScripts))
+                            .collect(Collectors.toList());
                     if(filteredUnsignedDrafts != null && !filteredUnsignedDrafts.isEmpty()) {
                         filteredUnsignedDrafts.stream()
-                        	.filter(item -> item.getType() == ConfigurationType.WORKFLOW.intValue())
-                        	.forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item, controllerId)));
+                            .filter(item -> item.getType() == ConfigurationType.WORKFLOW.intValue())
+                            .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item, controllerId)));
                         filteredUnsignedDrafts.stream()
-                        	.filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE.intValue())
-                        	.forEach(item -> {
-                        		UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(agentsWithAliasesByControllerId, item, controllerId);
+                            .filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE.intValue())
+                            .forEach(item -> {
+                                UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(agentsWithAliasesByControllerId, item, controllerId);
 	                            try {
 	                                ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
 	                                updateableAgentNamesFileOrderSources.add(update);
@@ -261,33 +263,33 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // already deployed objects AgentName handling
                 // all items will be signed or re-signed with current commitId
                 if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
-                	// filter regarding folder permissions
-                	List<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream()
-                			.filter(draft -> canAdd(draft.getPath(), permittedFolders))
-                			.peek(item -> {
-                				try {
+                    // filter regarding folder permissions
+                    List<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream()
+                            .filter(draft -> canAdd(draft.getPath(), permittedFolders))
+                            .peek(item -> {
+                                try {
                                     item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(item.getPath(), item.getInvContent(),
                                             StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId, releasedScripts));
-								} catch (IOException e) {
-									throw new JocException(e);
-								}
-            				}).collect(Collectors.toList());
-                	if (!filteredUnsignedReDeployables.isEmpty()) {
+                                } catch (IOException e) {
+                                    throw new JocException(e);
+                                }
+                            }).collect(Collectors.toList());
+                    if (!filteredUnsignedReDeployables.isEmpty()) {
                         filteredUnsignedReDeployables.stream()
-                        	.filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType())))
-                        	.forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item, controllerId)));
+                            .filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType())))
+                            .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item, controllerId)));
                         filteredUnsignedReDeployables.stream()
-	                        .filter(item -> ConfigurationType.FILEORDERSOURCE.equals(ConfigurationType.fromValue(item.getType())))
-	                        .forEach(item -> {
-	                            UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(agentsWithAliasesByControllerId, item, controllerId);
-	                            try {
-	                                ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
-	                                updateableAgentNamesFileOrderSources.add(update);
-	                            } catch (Exception e) {}
-	                        });
+                            .filter(item -> ConfigurationType.FILEORDERSOURCE.equals(ConfigurationType.fromValue(item.getType())))
+                            .forEach(item -> {
+                                UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(agentsWithAliasesByControllerId, item, controllerId);
+                                try {
+                                    ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
+                                    updateableAgentNamesFileOrderSources.add(update);
+                                } catch (Exception e) {}
+                            });
                         verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(
-                        		commitId, account, filteredUnsignedReDeployables, updateableAgentNames, keyPair, controllerId, hibernateSession));
-                	}
+                                commitId, account, filteredUnsignedReDeployables, updateableAgentNames, keyPair, controllerId, hibernateSession));
+                    }
                 }
                 updateAgentNamesFinished = Date.from(Instant.now());
                 LOGGER.trace("*** update agent names finished ***" + updateAgentNamesFinished);
@@ -306,16 +308,26 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     DeleteDeployments.storeNewDepHistoryEntries(dbLayer, toDelete, versionIdForDeleteRenamed);
                         PublishUtils.updateItemsDelete(versionIdForDeleteRenamed, toDelete, controllerId).thenAccept(either -> {
                             DeleteDeployments.processAfterDelete(either, controllerId, account, versionIdForDeleteRenamed, getAccessToken(), getJocError());
+                            if(either.isRight()) {
+                                if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
+                                    SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames, updateableAgentNamesFileOrderSources,
+                                            dbAuditlog.getId());
+                                    // call updateRepo command via ControllerApi for given controller
+                                    try {
+                                        StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
+                                    } catch (Exception e) {
+                                        ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), null);
+                                    }
+                                }
+                            }
                         });
-                }
-                if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
-                    
-                    transferToControllerStarted = Date.from(Instant.now());
-                    LOGGER.trace("*** transfer to controller started ***" + transferToControllerStarted);
-                    SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames, updateableAgentNamesFileOrderSources,
-                    		dbAuditlog.getId());
-                    // call updateRepo command via ControllerApi for given controller
-                    StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
+                } else {
+                    if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
+                        SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames, updateableAgentNamesFileOrderSources,
+                                dbAuditlog.getId());
+                        // call updateRepo command via ControllerApi for given controller
+                        StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
+                    }
                 }
             }
             // Delete from all known controllers
@@ -326,26 +338,25 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             List<DBItemDeploymentHistory> filteredDepHistoryItemsToDelete = Collections.emptyList();
             List<DBItemDeploymentHistory> filteredItemsFromFolderToDelete = Collections.emptyList();
             // loop 1: store db entries optimistically
-
             for (String controllerId : allowedControllerIds) {
-            	folderPermissions.setSchedulerId(controllerId);
+                folderPermissions.setSchedulerId(controllerId);
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                 // store history entries for delete operation optimistically
                 if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
-                	filteredDepHistoryItemsToDelete = depHistoryDBItemsToDeployDelete.stream()
-                			.filter(history -> canAdd(history.getPath(), permittedFolders)).collect(Collectors.toList());
+                    filteredDepHistoryItemsToDelete = depHistoryDBItemsToDeployDelete.stream()
+                            .filter(history -> canAdd(history.getPath(), permittedFolders)).collect(Collectors.toList());
                     invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
                                     DeleteDeployments.storeNewDepHistoryEntries(dbLayer, filteredDepHistoryItemsToDelete, commitIdForDelete)));
                 }
                 if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
-                	// first filter for folder permissions
-                	// remember filtered items for later
-                	filteredItemsFromFolderToDelete = itemsFromFolderToDelete.stream()
-                    		.filter(fromFolder -> canAdd(fromFolder.getPath(), permittedFolders)).collect(Collectors.toList());
-                	// second filter for not already deleted
+                    // first filter for folder permissions
+                    // remember filtered items for later
+                    filteredItemsFromFolderToDelete = itemsFromFolderToDelete.stream()
+                            .filter(fromFolder -> canAdd(fromFolder.getPath(), permittedFolders)).collect(Collectors.toList());
+                    // second filter for not already deleted
                     final List<DBItemDeploymentHistory> itemsToDelete = filteredItemsFromFolderToDelete.stream()
-                    		.filter(item -> item.getControllerId().equals(controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
-                    		.collect(Collectors.toList());
+                            .filter(item -> item.getControllerId().equals(controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
+                            .collect(Collectors.toList());
                     itemsFromFolderToDeletePerController.put(controllerId, itemsToDelete);
                     // store history entries for delete operation optimistically
                     invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
@@ -360,8 +371,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             }
             DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, commitIdForDeleteFromFolder, getAccessToken(), 
                     getJocError(), dbAuditlog.getId(), withoutFolderDeletion);
-
-
             // loop 2: send commands to controllers
             for (String controllerId : allowedControllerIds) {
                 if (filteredDepHistoryItemsToDelete != null && !filteredDepHistoryItemsToDelete.isEmpty()) {
@@ -380,13 +389,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         }); 
                 } 
             }
-//            if (audit != null) {
-//                logAuditMessage(audit);
-//                storeAuditLogEntry(audit);
-//            }
             Date deployWSFinished = Date.from(Instant.now());
             LOGGER.trace("*** deploy finished ***" + deployWSFinished);
-
             LOGGER.trace("complete WS time : " + (deployWSFinished.getTime() - started.getTime()) + " ms");
             LOGGER.trace("collecting items took: " + (collectingItemsFinished.getTime() - started.getTime()) + " ms");
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

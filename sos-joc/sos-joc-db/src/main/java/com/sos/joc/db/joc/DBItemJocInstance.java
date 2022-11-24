@@ -130,6 +130,9 @@ public class DBItemJocInstance extends DBItem {
     }
 
     public void setTitle(String val) {
+        if (val != null && val.length() > 30) {
+            val = val.substring(0, 30);
+        }
         title = val;
     }
     

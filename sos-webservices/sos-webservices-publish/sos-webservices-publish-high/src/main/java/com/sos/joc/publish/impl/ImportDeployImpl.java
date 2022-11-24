@@ -1,9 +1,11 @@
 package com.sos.joc.publish.impl;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.net.URLDecoder;
 import java.nio.file.Paths;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.Date;
@@ -13,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -24,6 +28,9 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
@@ -229,7 +236,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             }
             dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(PublishUtils.updateSetOfPathsWithParents(folders), auditLogId);
             // Deploy
-            final Date deploymentDate = Date.from(Instant.now());
             // call UpdateRepo for all provided Controllers
             final String commitIdForUpdate = commitId;
             if(commitIdForUpdate == null || commitIdForUpdate.isEmpty()) {
@@ -253,72 +259,17 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 DeleteDeployments.storeNewDepHistoryEntries(dbLayer, toDelete, commitIdForDeleteRenamed);
                 PublishUtils.updateItemsDelete(commitIdForDeleteRenamed, toDelete, controllerId).thenAccept(either -> {
                     processAfterDelete(either, toDelete, controllerId, account, commitIdForDeleteRenamed);
+                    try {
+                        // Store to db optimistically
+                        storeItems(importedObjects, account, commitIdForUpdate, controllerId, auditLogId, keyPair, caCertificates, filter);
+                    } catch (Exception e) {
+                        ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), null);
+                    }
                 });
+            } else {
+                // Store to db optimistically
+                storeItems(importedObjects, account, commitIdForUpdate, controllerId, auditLogId, keyPair, caCertificates, filter);
             }
-            // Store to db optimistically
-            Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
-            if (importedObjects != null && !importedObjects.isEmpty()) {
-                deployedObjects.addAll(PublishUtils.cloneInvConfigurationsToDepHistoryItems(importedObjects, account, dbLayer, commitIdForUpdate,
-                        controllerId, deploymentDate, auditLogId));
-                PublishUtils.prepareNextInvConfigGeneration(importedObjects.keySet(), controllerId, dbLayer);
-            }
-            if (!deployedObjects.isEmpty()) {
-                long countWorkflows = deployedObjects.stream().filter(item -> ConfigurationType.WORKFLOW.intValue() == item.getType()).count();
-                long countLocks = deployedObjects.stream().filter(item -> ConfigurationType.LOCK.intValue() == item.getType()).count();
-                long countFileOrderSources = deployedObjects.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.intValue() == item.getType()).count();
-                long countJobResources = deployedObjects.stream().filter(item -> ConfigurationType.JOBRESOURCE.intValue() == item.getType()).count();
-                LOGGER.info(String.format(
-                        "Update command send to Controller \"%1$s\" containing %2$d Workflow(s), %3$d Lock(s), %4$d FileOrderSource(s) and %5$d JobResource(s).",
-                        controllerId, countWorkflows, countLocks, countFileOrderSources, countJobResources));
-                JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
-            }
-            boolean verified = false;
-            String signerDN = null;
-            X509Certificate cert = null;
-            switch (keyPair.getKeyAlgorithm()) {
-            case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                PublishUtils.updateItemsAddOrUpdatePGPFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer).thenAccept(either -> {
-                    StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
-                });
-                break;
-            case SOSKeyConstants.RSA_ALGORITHM_NAME:
-                cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-                if (verified) {
-                    PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
-                            filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate())
-                        .thenAccept(either -> {
-                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
-                            });
-                } else {
-                    signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
-                            filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
-                        .thenAccept(either -> {
-                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
-                            });
-                }
-                break;
-            case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
-                cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-                if (verified) {
-                    PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
-                            filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate())
-                        .thenAccept(either -> {
-                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
-                            });
-                } else {
-                    signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
-                            filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
-                        .thenAccept(either -> {
-                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
-                            });
-                }
-                break;
-            }
-            // no error occurred
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -383,4 +334,73 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         }
     }
 
+    private void storeItems (Map<ControllerObject, DBItemDepSignatures> importedObjects, String account, String commitIdForUpdate,
+            String controllerId, Long auditLogId,JocKeyPair keyPair, List<DBItemInventoryCertificate> caCertificates, ImportDeployFilter filter)
+                    throws JsonParseException, JsonMappingException, IOException, SOSException, InterruptedException, ExecutionException,
+                    TimeoutException, CertificateException {
+        final Date deploymentDate = Date.from(Instant.now());
+        Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
+        if (importedObjects != null && !importedObjects.isEmpty()) {
+            deployedObjects.addAll(PublishUtils.cloneInvConfigurationsToDepHistoryItems(importedObjects, account, dbLayer, commitIdForUpdate,
+                    controllerId, deploymentDate, auditLogId));
+            PublishUtils.prepareNextInvConfigGeneration(importedObjects.keySet(), controllerId, dbLayer);
+        }
+        if (!deployedObjects.isEmpty()) {
+            long countWorkflows = deployedObjects.stream().filter(item -> ConfigurationType.WORKFLOW.intValue() == item.getType()).count();
+            long countLocks = deployedObjects.stream().filter(item -> ConfigurationType.LOCK.intValue() == item.getType()).count();
+            long countFileOrderSources = deployedObjects.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.intValue() == item.getType()).count();
+            long countJobResources = deployedObjects.stream().filter(item -> ConfigurationType.JOBRESOURCE.intValue() == item.getType()).count();
+            LOGGER.info(String.format(
+                    "Update command send to Controller \"%1$s\" containing %2$d Workflow(s), %3$d Lock(s), %4$d FileOrderSource(s) and %5$d JobResource(s).",
+                    controllerId, countWorkflows, countLocks, countFileOrderSources, countJobResources));
+            JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
+        }
+        boolean verified = false;
+        String signerDN = null;
+        X509Certificate cert = null;
+        switch (keyPair.getKeyAlgorithm()) {
+        case SOSKeyConstants.PGP_ALGORITHM_NAME:
+            PublishUtils.updateItemsAddOrUpdatePGPFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer).thenAccept(either -> {
+                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
+            });
+            break;
+        case SOSKeyConstants.RSA_ALGORITHM_NAME:
+            cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+            verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+            if (verified) {
+                PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
+                        filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate())
+                    .thenAccept(either -> {
+                            StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
+                        });
+            } else {
+                signerDN = cert.getSubjectDN().getName();
+                PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
+                        filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
+                    .thenAccept(either -> {
+                            StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
+                        });
+            }
+            break;
+        case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
+            cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+            verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+            if (verified) {
+                PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
+                        filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate())
+                    .thenAccept(either -> {
+                            StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
+                        });
+            } else {
+                signerDN = cert.getSubjectDN().getName();
+                PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
+                        filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
+                    .thenAccept(either -> {
+                            StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
+                        });
+            }
+            break;
+        }
+        
+    }
 }
