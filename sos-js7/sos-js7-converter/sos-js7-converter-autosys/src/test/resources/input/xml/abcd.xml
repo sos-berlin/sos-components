@@ -3,7 +3,7 @@
 	<JIL>
 		<insert_job>abcd.job_1</insert_job>
 		<job_type>CMD</job_type>
-		<command><![CDATA["/bin/ksh -c "/tmp/script.sh -c ARG"]]></command>
+		<command><![CDATA[/bin/ksh -c "/ngs/app/b2bp/data/share/bin/startWmService_PLM.sh -c WMPM_p_c_sendVendorDataToAGILE"]]></command>
 		<machine>xyz.machine</machine>
 		<owner>owner</owner>
 		<permission>gx</permission>
@@ -28,7 +28,7 @@
 	<JIL>
 		<insert_job>abcd.job_2</insert_job>
 		<job_type>CMD</job_type>
-		<command><![CDATA["/bin/ksh -c "/tmp/script.sh -c ARG"]]></command>
+		<command><![CDATA[/bin/ksh -c "/ngs/app/b2bp/data/share/bin/startWmService_PLM.sh -c WMPM_p_c_sendVendorDataToAGILE"]]></command>
 		<machine>xyz.machine</machine>
 		<owner>owner</owner>
 		<permission>gx</permission>

@@ -19,6 +19,10 @@ public class Holiday {
         this.date = JS7ConverterHelper.stringValue(m.get(ATTR_DATE));
     }
 
+    protected Holiday(com.sos.js7.converter.js1.common.json.schedule.Holiday v) {
+        this.date = v.getDate();
+    }
+
     public String getDate() {
         return date;
     }

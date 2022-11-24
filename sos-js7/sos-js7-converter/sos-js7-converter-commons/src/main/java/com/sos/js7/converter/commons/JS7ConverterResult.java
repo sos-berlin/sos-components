@@ -69,6 +69,9 @@ public class JS7ConverterResult {
 
     @SuppressWarnings("rawtypes")
     public JS7ExportObject getExportObjectWorkflowByPath(Path path) {
+        if (path == null) {
+            return null;
+        }
         Path p = normalize(path);
         return workflows.getItems().stream().filter(o -> o.getOriginalPath().getPath().equals(p)).findAny().orElse(null);
     }

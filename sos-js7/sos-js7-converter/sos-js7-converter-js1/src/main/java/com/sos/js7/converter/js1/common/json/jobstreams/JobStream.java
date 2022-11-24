@@ -4,14 +4,15 @@ package com.sos.js7.converter.js1.common.json.jobstreams;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.audit.AuditParams;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -30,8 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "folder",
     "state",
     "jobstreamStarters",
-    "jobs",
-    "auditLog"
+    "jobs"
 })
 public class JobStream {
 
@@ -97,14 +97,7 @@ public class JobStream {
     private List<JobStreamStarter> jobstreamStarters = new ArrayList<JobStreamStarter>();
     @JsonProperty("jobs")
     private List<JobStreamJob> jobs = new ArrayList<JobStreamJob>();
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    private AuditParams auditLog;
+   
 
     /**
      * date time
@@ -282,36 +275,16 @@ public class JobStream {
         this.jobs = jobs;
     }
 
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    public AuditParams getAuditLog() {
-        return auditLog;
-    }
-
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    public void setAuditLog(AuditParams auditLog) {
-        this.auditLog = auditLog;
-    }
+    
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("jobschedulerId", jobschedulerId).append("jobStreamId", jobStreamId).append("oldJobStreamName", oldJobStreamName).append("jobStream", jobStream).append("folder", folder).append("state", state).append("jobstreamStarters", jobstreamStarters).append("jobs", jobs).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("jobschedulerId", jobschedulerId).append("jobStreamId", jobStreamId).append("oldJobStreamName", oldJobStreamName).append("jobStream", jobStream).append("folder", folder).append("state", state).append("jobstreamStarters", jobstreamStarters).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(auditLog).append(jobs).append(jobStream).append(jobstreamStarters).append(state).append(deliveryDate).append(jobschedulerId).append(jobStreamId).append(oldJobStreamName).toHashCode();
+        return new HashCodeBuilder().append(folder).append(jobs).append(jobStream).append(jobstreamStarters).append(state).append(deliveryDate).append(jobschedulerId).append(jobStreamId).append(oldJobStreamName).toHashCode();
     }
 
     @Override
@@ -323,7 +296,7 @@ public class JobStream {
             return false;
         }
         JobStream rhs = ((JobStream) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(auditLog, rhs.auditLog).append(jobs, rhs.jobs).append(jobStream, rhs.jobStream).append(jobstreamStarters, rhs.jobstreamStarters).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(jobschedulerId, rhs.jobschedulerId).append(jobStreamId, rhs.jobStreamId).append(oldJobStreamName, rhs.oldJobStreamName).isEquals();
+        return new EqualsBuilder().append(folder, rhs.folder).append(jobs, rhs.jobs).append(jobStream, rhs.jobStream).append(jobstreamStarters, rhs.jobstreamStarters).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(jobschedulerId, rhs.jobschedulerId).append(jobStreamId, rhs.jobStreamId).append(oldJobStreamName, rhs.oldJobStreamName).isEquals();
     }
 
 }

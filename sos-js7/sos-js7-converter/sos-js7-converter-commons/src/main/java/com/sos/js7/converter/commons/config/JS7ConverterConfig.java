@@ -645,8 +645,8 @@ public class JS7ConverterConfig {
 
         private String forcedWorkingDayCalendarName;
         private String forcedNonWorkingDayCalendarName;
-        private String defaultWorkingDayCalendarName;
-        private String defaultNonWorkingDayCalendarName;
+        private String defaultWorkingDayCalendarName = "AnyDays";
+        private String defaultNonWorkingDayCalendarName = "AnyDays";
 
         private String defaultTimeZone = "Etc/UTC";
         private Boolean planOrders;

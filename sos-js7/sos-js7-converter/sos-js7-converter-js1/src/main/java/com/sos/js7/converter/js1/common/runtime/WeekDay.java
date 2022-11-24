@@ -32,6 +32,12 @@ public class WeekDay {
         this.periods = RunTime.convertPeriod(path, xpath, node);
     }
 
+    protected WeekDay(com.sos.js7.converter.js1.common.json.schedule.WeekdayOfMonth v) {
+        this.day = v.getDay();
+        this.which = v.getWhich();
+        this.periods = RunTime.convertPeriod(v.getPeriods());
+    }
+
     public List<Period> getPeriods() {
         return periods;
     }

@@ -25,6 +25,11 @@ public class Day {
         this.periods = RunTime.convertPeriod(path, xpath, node);
     }
 
+    protected Day(com.sos.js7.converter.js1.common.json.schedule.Day v) {
+        this.day = v.getDay();
+        this.periods = RunTime.convertPeriod(v.getPeriods());
+    }
+
     public List<Period> getPeriods() {
         return periods;
     }

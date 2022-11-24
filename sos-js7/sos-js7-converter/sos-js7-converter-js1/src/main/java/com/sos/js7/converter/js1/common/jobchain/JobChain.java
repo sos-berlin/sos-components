@@ -77,7 +77,7 @@ public class JobChain {
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
-                AJobChainNode jcn = AJobChainNode.parse(path,n);
+                AJobChainNode jcn = AJobChainNode.parse(path, n);
                 if (jcn != null) {
                     nodes.add(jcn);
                 }
@@ -111,13 +111,22 @@ public class JobChain {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[handleFiles][%s]%s", this.name, file));
             }
-            String fileName = file.getFileName().toString();
-            if (fileName.endsWith(EConfigFileExtensions.ORDER.extension())) {
-                orders.add(new JobChainOrder(pr, file));
-            } else if (fileName.endsWith(EConfigFileExtensions.JOB_CHAIN.extension())) {
-                jobChainFile = file;
-            } else if (fileName.endsWith(EConfigFileExtensions.JOB_CHAIN_CONFIG.extension())) {
-                config = new JobChainConfig(pr, file);
+            try {
+                String fileName = file.getFileName().toString();
+                if (fileName.endsWith(EConfigFileExtensions.ORDER.extension())) {
+                    orders.add(new JobChainOrder(pr, file));
+                } else if (fileName.endsWith(EConfigFileExtensions.JOB_CHAIN.extension())) {
+                    jobChainFile = file;
+                } else if (fileName.endsWith(EConfigFileExtensions.JOB_CHAIN_CONFIG.extension())) {
+                    config = new JobChainConfig(pr, file);
+                }
+            } catch (Throwable e) {
+                String fileSize = "unknown";
+                try {
+                    fileSize = file.toAbsolutePath().toFile().length() + " bytes";
+                } catch (Throwable ee) {
+                }
+                throw new Exception(String.format("[%s][fileSize=%s]%s", file, fileSize, e.toString()), e);
             }
         }
         if (isDebugEnabled) {

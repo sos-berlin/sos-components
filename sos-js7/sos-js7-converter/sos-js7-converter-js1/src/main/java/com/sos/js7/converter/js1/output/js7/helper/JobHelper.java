@@ -1,15 +1,18 @@
-package com.sos.js7.converter.js1.output.js7;
+package com.sos.js7.converter.js1.output.js7.helper;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.job.Job;
+import com.sos.js7.converter.commons.config.json.JS7Agent;
 import com.sos.js7.converter.commons.report.ConverterReport;
 import com.sos.js7.converter.js1.common.Script;
 import com.sos.js7.converter.js1.common.job.ACommonJob;
 
-public class JS7JobHelper {
+public class JobHelper {
 
     // public static final String JS1_JAVA_JITL_CHECK_HISTORY_JOB = "com.sos.jitl.checkhistory.JobSchedulerCheckHistoryJSAdapterClass";
 
@@ -35,16 +38,22 @@ public class JS7JobHelper {
     public static final String JS1_JAVA_JITL_YADE_JOB_ADAPTER = "sos.scheduler.job.SOSDExJSAdapterClass";
     public static final String JS1_JAVA_JITL_YADE_DMZ_JOB = "sos.scheduler.jade.SOSJade4DMZJSAdapter";
 
+    private final ACommonJob js1Job;
+
     private JavaJITLJobHelper javaJITLJob;
     private ShellJobHelper shellJob;
+    private Job js7Job;
+    private JS7Agent js7Agent;
+    private Variables js7OrderVariables;
 
     private String language;
 
-    public JS7JobHelper(ACommonJob job) {
-        this.language = job.getScript().getLanguage() == null ? "shell" : job.getScript().getLanguage().toLowerCase();
+    public JobHelper(ACommonJob js1Job) {
+        this.js1Job = js1Job;
+        this.language = js1Job.getScript().getLanguage() == null ? "shell" : js1Job.getScript().getLanguage().toLowerCase();
         switch (language) {
         case "java":
-            String jc = job.getScript().getJavaClass();
+            String jc = js1Job.getScript().getJavaClass();
             switch (jc) {
             // DB
             case JS1_JAVA_JITL_DB_RESULTSET_TO_CSV_JOB:
@@ -119,12 +128,12 @@ public class JS7JobHelper {
                 break;
             default:
                 shellJob = new ShellJobHelper(language, jc);
-                ConverterReport.INSTANCE.addWarningRecord(job.getPath(), "[job " + jc + "]", "not implemented yet");
+                ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "[job " + jc + "]", "not implemented yet");
                 break;
             }
             break;
         default:
-            shellJob = new ShellJobHelper(language, job.getScript() == null ? null : job.getScript().getComClass());
+            shellJob = new ShellJobHelper(language, js1Job.getScript() == null ? null : js1Job.getScript().getComClass());
             break;
         }
     }
@@ -143,6 +152,34 @@ public class JS7JobHelper {
 
     public ShellJobHelper getShellJob() {
         return shellJob;
+    }
+
+    public ACommonJob getJS1Job() {
+        return js1Job;
+    }
+
+    public void setJS7Job(Job val) {
+        js7Job = val;
+    }
+
+    public Job getJS7Job() {
+        return js7Job;
+    }
+
+    public void setJS7Agent(JS7Agent val) {
+        js7Agent = val;
+    }
+
+    public JS7Agent getJS7Agent() {
+        return js7Agent;
+    }
+
+    public void setJS7OrderVariables(Variables val) {
+        js7OrderVariables = val;
+    }
+
+    public Variables getJS7OrderVariables() {
+        return js7OrderVariables;
     }
 
     public class JavaJITLJobHelper {
