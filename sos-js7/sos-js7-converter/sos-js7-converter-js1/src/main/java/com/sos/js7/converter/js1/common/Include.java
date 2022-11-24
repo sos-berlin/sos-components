@@ -34,6 +34,16 @@ public class Include {
         }
     }
 
+    public Include(com.sos.js7.converter.js1.common.json.Include v) throws Exception {
+        this.file = v.getFile();
+        this.liveFile = v.getLiveFile();
+        this.node = null;
+
+        if (SOSString.isEmpty(this.file) && SOSString.isEmpty(this.liveFile)) {
+            throw new Exception("missing file or live_file");
+        }
+    }
+
     public String getNodeText() {
         return nodeText;
     }

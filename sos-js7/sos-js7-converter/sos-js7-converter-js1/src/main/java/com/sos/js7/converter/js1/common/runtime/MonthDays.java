@@ -18,6 +18,11 @@ public class MonthDays {
         this.weekDays = RunTime.convertWeekDay(path, xpath, node);
     }
 
+    protected MonthDays(com.sos.js7.converter.js1.common.json.schedule.Monthdays v) {
+        this.days = RunTime.convertDay(v.getDays());
+        this.weekDays = RunTime.convertWeekDay(v.getWeekdays());
+    }
+
     public List<Day> getDays() {
         return days;
     }

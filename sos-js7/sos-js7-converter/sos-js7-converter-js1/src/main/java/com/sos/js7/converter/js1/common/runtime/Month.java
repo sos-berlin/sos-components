@@ -33,6 +33,15 @@ public class Month {
         this.ultimos = RunTime.convertUltimos(path, xpath, node);
     }
 
+    protected Month(com.sos.js7.converter.js1.common.json.schedule.Month v) {
+        this.month = v.getMonth();
+
+        this.periods = RunTime.convertPeriod(v.getPeriods());
+        this.monthDays = RunTime.convertMonthDays(v.getMonthdays());
+        this.weekDays = RunTime.convertWeekDays(v.getWeekdays());
+        this.ultimos = RunTime.convertUltimos(v.getUltimos());
+    }
+
     public List<Period> getPeriods() {
         return periods;
     }

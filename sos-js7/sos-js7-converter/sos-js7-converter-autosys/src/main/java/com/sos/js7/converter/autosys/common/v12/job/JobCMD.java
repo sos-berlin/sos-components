@@ -103,7 +103,8 @@ public class JobCMD extends ACommonMachineJob {
 
     @ArgumentSetter(name = ATTR_COMMAND)
     public void setCommand(String val) {
-        command.setValue(JS7ConverterHelper.stringValue(val));
+        // command.setValue(JS7ConverterHelper.stringValue(val));
+        command.setValue(val);
     }
 
     public SOSArgument<String> getStdErrFile() {

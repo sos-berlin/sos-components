@@ -17,6 +17,10 @@ public class At {
         this.at = JS7ConverterHelper.stringValue(m.get(ATTR_AT));
     }
 
+    protected At(com.sos.js7.converter.js1.common.json.schedule.At v) {
+        this.at = v.getAt();
+    }
+
     public String getAt() {
         return at;
     }

@@ -20,7 +20,7 @@ public class DirectoryParserTest {
 
     @Ignore
     @Test
-    public void testParser() {
+    public void testParser() throws Exception {
         Path input = Paths.get("src/test/resources/input");
         Path outputDir = Paths.get("src/test/resources/output");
 

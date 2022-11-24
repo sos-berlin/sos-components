@@ -21,8 +21,6 @@ import com.sos.js7.converter.js1.output.js7.JS7Converter;
 
 public class RunTime {
 
-    // private static final Logger LOGGER = LoggerFactory.getLogger(RunTime.class);
-
     private static final String ATTR_SINGLE_START = "single_start";
     private static final String ATTR_BEGIN = "begin";
     private static final String ATTR_END = "end";
@@ -77,8 +75,10 @@ public class RunTime {
         convertChildElements(currentPath, xpath, node);
     }
 
+    // XML 2 RunTime
     public RunTime(DirectoryParserResult pr, SOSXMLXPath xpath, Node node, Path currentPath) throws Exception {
-        this.nodeText = JS7ConverterHelper.nodeToString(node);
+
+        this.nodeText = getNodeText(currentPath, node);
         this.currentPath = currentPath;
 
         Map<String, String> m = JS7ConverterHelper.attribute2map(node);
@@ -95,16 +95,60 @@ public class RunTime {
         convertChildElements(currentPath, xpath, node);
     }
 
+    private String getNodeText(Path currentPath, Node node) {
+        try {
+            long fileSize = currentPath.toAbsolutePath().toFile().length();
+            if (fileSize > 1_000) {
+                return "[without node text]fileSize=" + fileSize + " bytes";
+            }
+            return JS7ConverterHelper.nodeToString(node);
+        } catch (Throwable e) {
+            return "";
+        }
+    }
+
+    // JSON 2 RunTime
+    public RunTime(com.sos.js7.converter.js1.common.json.schedule.RunTime rt) throws Exception {
+        if (rt != null) {
+            this.singleStart = null;
+            this.begin = rt.getBegin();
+            this.end = rt.getEnd();
+            this.repeat = null;
+            this.schedule = null;// TODO rt.getSchedule();
+            this.timeZone = rt.getTimeZone();
+            this.whenHoliday = null;
+            this.letRun = rt.getLetRun();
+            this.once = rt.getRunOnce();
+            convertChildElements(rt);
+        }
+    }
+
     private void convertChildElements(Path path, SOSXMLXPath xpath, Node node) throws Exception {
-        this.periods = convertPeriod(path, xpath, node);
-        this.ats = convertAt(path, xpath, node);
-        this.dates = convertDate(path, xpath, node);
-        this.weekDays = convertWeekDays(path, xpath, node);
-        this.monthDays = convertMonthDays(path, xpath, node);
-        this.months = convertMonth(path, xpath, node);
-        this.ultimos = convertUltimos(path, xpath, node);
-        this.holidays = convertHolidays(path, xpath, node);
-        this.calendarsHelper = convertCalendars(path, xpath, node, nodeText);
+        this.calendarsHelper = convertCalendars(path, xpath, node);
+        if (this.calendarsHelper == null) {
+            this.periods = convertPeriod(path, xpath, node);
+            this.ats = convertAt(path, xpath, node);
+            this.dates = convertDate(path, xpath, node);
+            this.weekDays = convertWeekDays(path, xpath, node);
+            this.monthDays = convertMonthDays(path, xpath, node);
+            this.months = convertMonth(path, xpath, node);
+            this.ultimos = convertUltimos(path, xpath, node);
+            this.holidays = convertHolidays(path, xpath, node);
+        }
+    }
+
+    private void convertChildElements(com.sos.js7.converter.js1.common.json.schedule.RunTime rt) throws Exception {
+        this.calendarsHelper = convertCalendars(rt.getCalendars());
+        if (this.calendarsHelper == null) {
+            this.periods = convertPeriod(rt.getPeriods());
+            this.ats = convertAt(rt.getAts());
+            this.dates = convertDate(rt.getDates());
+            this.weekDays = convertWeekDays(rt.getWeekdays());
+            this.monthDays = convertMonthDays(rt.getMonthdays());
+            this.months = convertMonth(rt.getMonths());
+            this.ultimos = convertUltimos(rt.getUltimos());
+            this.holidays = convertHolidays(rt.getHolidays());
+        }
     }
 
     public boolean isEmpty() {
@@ -171,17 +215,58 @@ public class RunTime {
         return result;
     }
 
-    public static CalendarsHelper convertCalendars(Path path, SOSXMLXPath xpath, Node node, String nodeText) throws SOSXMLXPathException {
+    protected static List<Period> convertPeriod(List<com.sos.js7.converter.js1.common.json.schedule.Period> l) {
+        List<Period> result = null;
+        if (l != null && l.size() > 0) {
+            result = new ArrayList<>();
+            for (int i = 0; i < l.size(); i++) {
+                if (i > MAX_ELEMENTS_PRO_CHILD) {
+                    // TODO path
+                    addReportSkipRecord(null, "convertPeriod", l.size());
+                    break;
+                }
+                result.add(new Period(l.get(i)));
+            }
+        }
+        return result;
+    }
+
+    public static CalendarsHelper convertCalendars(Path path, SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
         String c = SOSXML.getValue(xpath.selectNode(node, "./" + ELEMENT_CALENDARS));
         if (c != null) {
             try {
-                // return new CalendarsHelper(c, JS7ConverterHelper.JSON_OM.readValue(c, JS1Calendars.class));
                 return CalendarsHelper.convert(c);
             } catch (Throwable e) {
-                ParserReport.INSTANCE.addErrorRecord(path, "[runtime][covertCalendars]" + nodeText, e);
+                ParserReport.INSTANCE.addErrorRecord(path, "[runtime][covertCalendars]" + c, e);
             }
         }
         return null;
+    }
+
+    public static CalendarsHelper convertCalendars(String c) throws SOSXMLXPathException {
+        if (c != null) {
+            try {
+                return CalendarsHelper.convert(c);
+            } catch (Throwable e) {
+                ParserReport.INSTANCE.addErrorRecord(null, "[runtime][covertCalendars]" + c, e);
+            }
+        }
+        return null;
+    }
+
+    private List<At> convertAt(List<com.sos.js7.converter.js1.common.json.schedule.At> l) {
+        List<At> result = null;
+        if (l != null && l.size() > 0) {
+            result = new ArrayList<>();
+            for (int i = 0; i < l.size(); i++) {
+                if (i > MAX_ELEMENTS_PRO_CHILD) {
+                    addReportSkipRecord(null, "convertAt", l.size());
+                    break;
+                }
+                result.add(new At(l.get(i)));
+            }
+        }
+        return result;
     }
 
     private List<At> convertAt(Path path, SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
@@ -195,6 +280,21 @@ public class RunTime {
                     break;
                 }
                 result.add(new At(l.item(i)));
+            }
+        }
+        return result;
+    }
+
+    protected static List<Date> convertDate(List<com.sos.js7.converter.js1.common.json.schedule.Date> l) {
+        List<Date> result = null;
+        if (l != null && l.size() > 0) {
+            result = new ArrayList<>();
+            for (int i = 0; i < l.size(); i++) {
+                if (i > MAX_ELEMENTS_PRO_CHILD) {
+                    addReportSkipRecord(null, "convertDate", l.size());
+                    break;
+                }
+                result.add(new Date(l.get(i)));
             }
         }
         return result;
@@ -216,6 +316,15 @@ public class RunTime {
         return result;
     }
 
+    protected static List<WeekDays> convertWeekDays(com.sos.js7.converter.js1.common.json.schedule.Weekdays w) {
+        List<WeekDays> result = null;
+        if (w != null) {
+            result = new ArrayList<>();
+            result.add(new WeekDays(w));
+        }
+        return result;
+    }
+
     protected static List<WeekDays> convertWeekDays(Path path, SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
         List<WeekDays> result = null;
         NodeList l = xpath.selectNodes(node, "./" + ELEMENT_WEEKDAYS);
@@ -227,6 +336,21 @@ public class RunTime {
                     break;
                 }
                 result.add(new WeekDays(path, xpath, l.item(i)));
+            }
+        }
+        return result;
+    }
+
+    protected static List<MonthDays> convertMonthDaysList(List<com.sos.js7.converter.js1.common.json.schedule.Monthdays> l) {
+        List<MonthDays> result = null;
+        if (l != null && l.size() > 0) {
+            result = new ArrayList<>();
+            for (int i = 0; i < l.size(); i++) {
+                if (i > MAX_ELEMENTS_PRO_CHILD) {
+                    addReportSkipRecord(null, "convertMonthDays", l.size());
+                    break;
+                }
+                result.add(new MonthDays(l.get(i)));
             }
         }
         return result;
@@ -248,6 +372,15 @@ public class RunTime {
         return result;
     }
 
+    protected static List<MonthDays> convertMonthDays(com.sos.js7.converter.js1.common.json.schedule.Monthdays v) {
+        List<MonthDays> result = null;
+        if (v != null) {
+            result = new ArrayList<>();
+            result.add(new MonthDays(v));
+        }
+        return result;
+    }
+
     private List<Month> convertMonth(Path path, SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
         List<Month> result = null;
         NodeList l = xpath.selectNodes(node, "./" + ELEMENT_MONTH);
@@ -259,6 +392,21 @@ public class RunTime {
                     break;
                 }
                 result.add(new Month(path, xpath, l.item(i)));
+            }
+        }
+        return result;
+    }
+
+    private List<Month> convertMonth(List<com.sos.js7.converter.js1.common.json.schedule.Month> l) throws SOSXMLXPathException {
+        List<Month> result = null;
+        if (l != null && l.size() > 0) {
+            result = new ArrayList<>();
+            for (int i = 0; i < l.size(); i++) {
+                if (i > MAX_ELEMENTS_PRO_CHILD) {
+                    addReportSkipRecord(null, "convertMonth", l.size());
+                    break;
+                }
+                result.add(new Month(l.get(i)));
             }
         }
         return result;
@@ -280,6 +428,21 @@ public class RunTime {
         return result;
     }
 
+    protected static List<WeekDay> convertWeekDay(List<com.sos.js7.converter.js1.common.json.schedule.WeekdayOfMonth> l) {
+        List<WeekDay> result = null;
+        if (l != null && l.size() > 0) {
+            result = new ArrayList<>();
+            for (int i = 0; i < l.size(); i++) {
+                if (i > MAX_ELEMENTS_PRO_CHILD) {
+                    addReportSkipRecord(null, "convertWeekDay", l.size());
+                    break;
+                }
+                result.add(new WeekDay(l.get(i)));
+            }
+        }
+        return result;
+    }
+
     protected static List<Day> convertDay(Path path, SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
         List<Day> result = null;
         NodeList l = xpath.selectNodes(node, "./" + ELEMENT_DAY);
@@ -291,6 +454,21 @@ public class RunTime {
                     break;
                 }
                 result.add(new Day(path, xpath, l.item(i)));
+            }
+        }
+        return result;
+    }
+
+    protected static List<Day> convertDay(List<com.sos.js7.converter.js1.common.json.schedule.Day> l) {
+        List<Day> result = null;
+        if (l != null && l.size() > 0) {
+            result = new ArrayList<>();
+            for (int i = 0; i < l.size(); i++) {
+                if (i > MAX_ELEMENTS_PRO_CHILD) {
+                    addReportSkipRecord(null, "convertDay", l.size());
+                    break;
+                }
+                result.add(new Day(l.get(i)));
             }
         }
         return result;
@@ -312,6 +490,15 @@ public class RunTime {
         return result;
     }
 
+    protected static List<Ultimos> convertUltimos(com.sos.js7.converter.js1.common.json.schedule.Ultimos u) {
+        List<Ultimos> result = null;
+        if (u != null) {
+            result = new ArrayList<>();
+            result.add(new Ultimos(u));
+        }
+        return result;
+    }
+
     protected static Holidays convertHolidays(Path path, SOSXMLXPath xpath, Node node) throws Exception {
         Holidays result = null;
         Node h = xpath.selectNode(node, "./" + ELEMENT_HOLIDAYS);
@@ -321,8 +508,16 @@ public class RunTime {
         return result;
     }
 
+    protected static Holidays convertHolidays(com.sos.js7.converter.js1.common.json.schedule.Holidays h) throws Exception {
+        Holidays result = null;
+        if (h != null) {
+            result = new Holidays(h);
+        }
+        return result;
+    }
+
     private static void addReportSkipRecord(Path path, String method, int totalSize) {
-        ParserReport.INSTANCE.addAnalyzerRecord(path, method, "total size=" + totalSize + ". converting after  " + MAX_ELEMENTS_PRO_CHILD
+        ParserReport.INSTANCE.addWarningRecord(path, method, "total size=" + totalSize + ". converting after  " + MAX_ELEMENTS_PRO_CHILD
                 + " skipped");
     }
 
