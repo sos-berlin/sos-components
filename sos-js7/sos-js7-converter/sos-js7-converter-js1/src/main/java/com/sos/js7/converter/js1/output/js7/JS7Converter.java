@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1838,10 +1839,11 @@ public class JS7Converter {
         } else {
             command = scriptCommand.toString();
         }
+        command = StringUtils.stripStart(command, null);
         if (checkUnixFirstLine) {
             // // scriptHeader.append("#!/bin/bash");
             // scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
-            if (!command.trim().startsWith("#!/")) {
+            if (!command.startsWith("#!/")) {
                 StringBuilder sb = new StringBuilder();
                 sb.append("#!/bin/bash");
                 sb.append(CONFIG.getJobConfig().getScriptNewLine());
