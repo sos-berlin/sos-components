@@ -1,6 +1,7 @@
 package com.sos.joc.agent.impl;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -61,8 +62,8 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             }
 
             storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId(), CategoryType.CONTROLLER);
-            JControllerCommand resetAgentCommand = JControllerCommand.apply(new ControllerCommand.ResetAgent(AgentPath.of(agentCommand
-                    .getAgentId()), agentCommand.getForce() == Boolean.TRUE));
+            JControllerCommand resetAgentCommand = JControllerCommand.apply(getResetCommand(agentCommand.getAgentId(), agentCommand
+                    .getForce() == Boolean.TRUE));
             LOGGER.debug("Reset Agent: " + resetAgentCommand.toJson());
             ControllerApi.of(controllerId).executeCommand(resetAgentCommand).thenAccept(e -> {
                 ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
@@ -75,6 +76,10 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
+    }
+    
+    public static ControllerCommand.ResetAgent getResetCommand(String agentId, boolean force) {
+        return new ControllerCommand.ResetAgent(AgentPath.of(agentId), force);
     }
     
     @Override
