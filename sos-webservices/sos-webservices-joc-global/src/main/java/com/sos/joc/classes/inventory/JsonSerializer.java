@@ -1,6 +1,7 @@
 package com.sos.joc.classes.inventory;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -606,7 +607,7 @@ public class JsonSerializer {
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cn = inst.cast();
-                    if (cn.getSubworkflow() != null) {
+                    if (cn.getSubworkflow() != null && cn.getSubworkflow().getInstructions() != null) {
                         cleanInventoryInstructions(cn.getSubworkflow().getInstructions(), jobs, forkListAgentName, stickyAgentName);
                     }
                     break;
@@ -702,7 +703,9 @@ public class JsonSerializer {
                     break;
                 case CONSUME_NOTICES:
                     com.sos.sign.model.instruction.ConsumeNotices cn = inst.cast();
-                    if (cn.getSubworkflow() != null) {
+                    if (cn.getSubworkflow() == null || cn.getSubworkflow().getInstructions() == null) {
+                        cn.setSubworkflow(new com.sos.sign.model.instruction.Instructions(Collections.emptyList()));
+                    } else {
                         cleanSignedInstructions(cn.getSubworkflow().getInstructions());
                     }
                     break;

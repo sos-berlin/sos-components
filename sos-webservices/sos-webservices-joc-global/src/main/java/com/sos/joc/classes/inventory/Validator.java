@@ -716,8 +716,10 @@ public class Validator {
                         throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + cnsNames
                                 .toString());
                     }
-                    validateInstructions(cns.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
-                            orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    if (cns.getSubworkflow() != null && cns.getSubworkflow().getInstructions() != null) {
+                        validateInstructions(cns.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
+                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    }
                     break;
                 case POST_NOTICE:
                     PostNotice pn = inst.cast();

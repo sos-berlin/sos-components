@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class NotificationLogEvent extends MonitoringEvent {
 
-    public NotificationLogEvent(String level, String category, long epochMillis, String fqcn, String messsage, Throwable thrown) {
+    public NotificationLogEvent(String level, String category, long epochMillis, String loggerName, String messsage, Throwable thrown) {
         super(NotificationLogEvent.class.getSimpleName(), null, null);
         putVariable("level", level);
         putVariable("category", category);
         putVariable("epochMillis", epochMillis);
-        putVariable("fqcn", fqcn);
+        putVariable("loggerName", loggerName);
         putVariable("messsage", messsage);
         putVariable("thrown", thrown);
     }
@@ -25,16 +25,13 @@ public class NotificationLogEvent extends MonitoringEvent {
     }
     
     @JsonIgnore
-    public Long getInstant() {
+    public Long getEpochMillis() {
         return (Long) getVariables().get("epochMillis");
     }
     
-    /**
-     * @return full qualified class name
-     */
     @JsonIgnore
-    public String getFqcn() {
-        return (String) getVariables().get("fqcn");
+    public String getLoggerName() {
+        return (String) getVariables().get("loggerName");
     }
     
     @JsonIgnore
@@ -45,5 +42,12 @@ public class NotificationLogEvent extends MonitoringEvent {
     @JsonIgnore
     public Throwable getThrown() {
         return (Throwable) getVariables().get("thrown");
+    }
+    
+    @JsonIgnore
+    public String toString() {
+        String thrown = getThrown() != null ? getThrown().toString() : "";
+        return String.format("level:%s, category:%s, epochMillis:%d, clazz:%s, messsage:%s, thrown:%s", getLevel(), getCategory(), getEpochMillis(),
+                getLoggerName(), getMessage(), thrown);
     }
 }
