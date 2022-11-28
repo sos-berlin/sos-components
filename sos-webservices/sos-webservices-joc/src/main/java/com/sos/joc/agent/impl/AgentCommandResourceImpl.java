@@ -1,13 +1,10 @@
 package com.sos.joc.agent.impl;
 
 import java.time.Instant;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +27,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.data.agent.AgentPath;
 import js7.data.controller.ControllerCommand;
 import js7.data.subagent.SubagentId;

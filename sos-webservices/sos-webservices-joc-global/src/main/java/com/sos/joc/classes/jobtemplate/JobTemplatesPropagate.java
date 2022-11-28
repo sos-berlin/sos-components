@@ -570,7 +570,7 @@ public class JobTemplatesPropagate {
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cn = inst.cast();
-                    if (cn.getSubworkflow() != null) {
+                    if (cn.getSubworkflow() != null && cn.getSubworkflow().getInstructions() != null) {
                         setNodeArguments(cn.getSubworkflow().getInstructions(), jobName, jReport, args, defaultArgs, withAddRequiredParams);
                     }
                     break;

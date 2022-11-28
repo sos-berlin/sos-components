@@ -45,6 +45,7 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionState;
 import com.sos.inventory.model.instruction.InstructionStateText;
 import com.sos.inventory.model.instruction.InstructionType;
+import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.PostNotice;
@@ -524,6 +525,9 @@ public class WorkflowsHelper {
                     String cnsNamesExpr = cns.getNoticeBoardNames();
                     List<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToList(cnsNamesExpr);
                     cnsNames.forEach(nb -> consumeNoticeBoards.add(nb));
+                    if (cns.getSubworkflow() == null || cns.getSubworkflow().getInstructions() == null) {
+                        cns.setSubworkflow(new Instructions(Collections.emptyList())); 
+                    }
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "consumeNotices"), cns.getSubworkflow().getInstructions(), forkListVariables,
                             expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     break;
@@ -625,9 +629,10 @@ public class WorkflowsHelper {
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cn = inst.cast();
-                    if (cn.getSubworkflow() != null) {
-                        setWorkflowPositions(extendArray(pos, "consumeNotices"), cn.getSubworkflow().getInstructions());
+                    if (cn.getSubworkflow() == null || cn.getSubworkflow().getInstructions() == null) {
+                        cn.setSubworkflow(new Instructions(Collections.emptyList())); 
                     }
+                    setWorkflowPositions(extendArray(pos, "consumeNotices"), cn.getSubworkflow().getInstructions());
                     break;
                 case IF:
                     IfElse ie = inst.cast();
@@ -810,7 +815,9 @@ public class WorkflowsHelper {
                         }
                     }
                     cns.setNoticeBoardNames(cnsNamesExpr);
-                    updateWorkflowBoardname(oldNewBoardNames, cns.getSubworkflow().getInstructions());
+                    if (cns.getSubworkflow() != null) {
+                        updateWorkflowBoardname(oldNewBoardNames, cns.getSubworkflow().getInstructions());
+                    }
                     break;
                 case EXPECT_NOTICE:
                     ExpectNotice en = inst.cast();

@@ -26,7 +26,7 @@
   		"minLength": 1
     },
     "subworkflow": {
-    	"$ref": "instructions-schema.json"	
+    	"$ref": "emptyInstructions-schema.json"	
     }
   },
   "additionalProperties": false

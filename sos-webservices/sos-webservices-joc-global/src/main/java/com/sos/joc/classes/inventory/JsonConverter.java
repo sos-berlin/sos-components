@@ -61,8 +61,8 @@ import js7.data_for_java.value.JExpression;
 public class JsonConverter {
     
     private final static String instructionsToConvert = String.join("|", InstructionType.FORKLIST.value(), InstructionType.ADD_ORDER.value(),
-            InstructionType.POST_NOTICE.value(), InstructionType.EXPECT_NOTICE.value(), InstructionType.LOCK.value(), InstructionType.FINISH.value(),
-            InstructionType.STICKY_SUBAGENT.value());
+            InstructionType.POST_NOTICE.value(), InstructionType.EXPECT_NOTICE.value(), InstructionType.CONSUME_NOTICES.value(), InstructionType.LOCK
+                    .value(), InstructionType.FINISH.value(), InstructionType.STICKY_SUBAGENT.value());
     private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"")
             .asPredicate();
     private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"")
@@ -384,7 +384,9 @@ public class JsonConverter {
                 case CONSUME_NOTICES:
                     ConsumeNotices cn = invInstruction.cast();
                     com.sos.sign.model.instruction.ConsumeNotices sCn = signInstruction.cast();
-                    if (cn.getSubworkflow() != null) {
+                    if (sCn.getSubworkflow() == null || sCn.getSubworkflow().getInstructions() == null) {
+                        sCn.setSubworkflow(new com.sos.sign.model.instruction.Instructions(Collections.emptyList()));
+                    } else if (cn.getSubworkflow() != null && cn.getSubworkflow().getInstructions() != null) {
                         convertInstructions(w, cn.getSubworkflow().getInstructions(), sCn.getSubworkflow().getInstructions(), addOrderIndex);
                     }
                     break;
