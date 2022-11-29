@@ -8,8 +8,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.ISubAgentClusterCommand;
@@ -25,11 +23,12 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.agent.DeployClusterAgents;
+import com.sos.joc.model.agent.DeploySubagentClusters;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.data.subagent.SubagentSelectionId;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.proxy.javaapi.JControllerProxy;
@@ -49,8 +48,8 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
 
             AgentHelper.throwJocMissingLicenseException();
 
-            JsonValidator.validateFailFast(filterBytes, DeployClusterAgents.class);
-            DeployClusterAgents agentParameter = Globals.objectMapper.readValue(filterBytes, DeployClusterAgents.class);
+            JsonValidator.validateFailFast(filterBytes, DeploySubagentClusters.class);
+            DeploySubagentClusters agentParameter = Globals.objectMapper.readValue(filterBytes, DeploySubagentClusters.class);
 
             String controllerId = agentParameter.getControllerId();
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
@@ -130,8 +129,8 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
 
             AgentHelper.throwJocMissingLicenseException();
 
-            JsonValidator.validateFailFast(filterBytes, DeployClusterAgents.class);
-            DeployClusterAgents agentParameter = Globals.objectMapper.readValue(filterBytes, DeployClusterAgents.class);
+            JsonValidator.validateFailFast(filterBytes, DeploySubagentClusters.class);
+            DeploySubagentClusters agentParameter = Globals.objectMapper.readValue(filterBytes, DeploySubagentClusters.class);
 
             String controllerId = agentParameter.getControllerId();
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()

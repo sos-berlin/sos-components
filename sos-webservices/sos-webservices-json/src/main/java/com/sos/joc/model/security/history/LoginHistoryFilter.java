@@ -21,8 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "accountName",
     "dateFrom",
     "dateTo",
-    "timeZone",
-    "limit"
+    "timeZone"
 })
 public class LoginHistoryFilter {
 
@@ -60,13 +59,7 @@ public class LoginHistoryFilter {
      */
     @JsonProperty("timeZone")
     private String timeZone;
-    /**
-     * restricts the number of responsed records; -1=unlimited
-     * 
-     */
-    @JsonProperty("limit")
-    @JsonPropertyDescription("restricts the number of responsed records; -1=unlimited")
-    private Integer limit = 10000;
+    
 
     /**
      * No args constructor for use in serialization
@@ -79,17 +72,15 @@ public class LoginHistoryFilter {
      * 
      * @param accountName
      * @param dateTo
-     * @param limit
      * @param timeZone
      * @param dateFrom
      */
-    public LoginHistoryFilter(String accountName, String dateFrom, String dateTo, String timeZone, Integer limit) {
+    public LoginHistoryFilter(String accountName, String dateFrom, String dateTo, String timeZone) {
         super();
         this.accountName = accountName;
         this.dateFrom = dateFrom;
         this.dateTo = dateTo;
         this.timeZone = timeZone;
-        this.limit = limit;
     }
 
     /**
@@ -180,32 +171,14 @@ public class LoginHistoryFilter {
         this.timeZone = timeZone;
     }
 
-    /**
-     * restricts the number of responsed records; -1=unlimited
-     * 
-     */
-    @JsonProperty("limit")
-    public Integer getLimit() {
-        return limit;
-    }
-
-    /**
-     * restricts the number of responsed records; -1=unlimited
-     * 
-     */
-    @JsonProperty("limit")
-    public void setLimit(Integer limit) {
-        this.limit = limit;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("accountName", accountName).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("accountName", accountName).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateTo).append(limit).append(timeZone).append(dateFrom).append(accountName).toHashCode();
+        return new HashCodeBuilder().append(dateTo).append(timeZone).append(dateFrom).append(accountName).toHashCode();
     }
 
     @Override
@@ -217,7 +190,7 @@ public class LoginHistoryFilter {
             return false;
         }
         LoginHistoryFilter rhs = ((LoginHistoryFilter) other);
-        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(accountName, rhs.accountName).isEquals();
+        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(accountName, rhs.accountName).isEquals();
     }
 
 }

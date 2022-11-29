@@ -102,8 +102,11 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
     @Override
     public JOCDefaultResponse getExportDocumentations(String accessToken, String filename) {
         try {
-            String request = String.format("%s?filename=%s", API_CALL, accessToken, filename);
-            initLogging(request, null, accessToken);
+            if (filename == null) {
+                initLogging(API_CALL, null, accessToken); 
+            } else {
+                initLogging(String.format("%s?filename=%s", API_CALL, filename), null, accessToken);
+            }
             checkRequiredParameter("filename", filename);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getManage());
             if (jocDefaultResponse != null) {
