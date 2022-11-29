@@ -69,11 +69,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
             boolean withFolderFilter = calendarsFilter.getFolders() != null && !calendarsFilter.getFolders().isEmpty();
             final Set<Folder> folders = folderPermissions.getPermittedFolders(calendarsFilter.getFolders());
 
-            if (calendarsFilter.getCalendarIds() != null && !calendarsFilter.getCalendarIds().isEmpty()) {
-                calendarsFilter.setRegex(null);
-                dbCalendars = dbLayer.getReleasedConfigurations(calendarsFilter.getCalendarIds());
-
-            } else if (calendarsFilter.getCalendarPaths() != null && !calendarsFilter.getCalendarPaths().isEmpty()) {
+            if (calendarsFilter.getCalendarPaths() != null && !calendarsFilter.getCalendarPaths().isEmpty()) {
                 calendarsFilter.setRegex(null);
                 dbCalendars = dbLayer.getReleasedCalendarsByNames(calendarsFilter.getCalendarPaths().stream().map(p -> JocInventory.pathToName(p))
                         .distinct().collect(Collectors.toList()));

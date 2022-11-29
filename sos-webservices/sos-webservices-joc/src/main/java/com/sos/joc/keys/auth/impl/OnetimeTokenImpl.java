@@ -29,8 +29,8 @@ import com.sos.schema.JsonValidator;
 @Path("token")
 public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
 
-    private static String API_CALL_SHOW = "./token/show";
-    private static String API_CALL_CREATE = "./token/create";
+    private static final String API_CALL_SHOW = "./token/show";
+    private static final String API_CALL_CREATE = "./token/create";
     
     @Override
     public JOCDefaultResponse postCreateToken(String xAccessToken, byte[] filter) {

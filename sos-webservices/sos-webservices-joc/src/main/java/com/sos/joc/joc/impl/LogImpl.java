@@ -85,8 +85,12 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
             if (accessToken == null) {
                 accessToken = queryAccessToken;
             }
-            String s = "{\"filename\":\"" + filename + "\"}";
-            initLogging(API_CALL, s.getBytes(), accessToken);
+            if (filename != null) {
+                String s = "{\"filename\":\"" + filename + "\"}";
+                initLogging(API_CALL, s.getBytes(), accessToken);
+            } else {
+                initLogging(API_CALL, null, accessToken);
+            }
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getGetLog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
