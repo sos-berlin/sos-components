@@ -21,14 +21,6 @@ public final class NotificationAppender extends AbstractAppender {
     public static final String PLUGIN_NAME = "Notification";
     public static final String APPENDER_NAME = NotificationAppender.class.getSimpleName();
 
-    protected  NotificationAppender() {
-        super(APPENDER_NAME, null, null, true, null);
-    }
-    
-    protected  NotificationAppender(Filter filter) {
-        super(APPENDER_NAME, filter, null, true, null);
-    }
-    
     protected  NotificationAppender(String name, Filter filter) {
         super(name, filter, null, true, null);
     }
