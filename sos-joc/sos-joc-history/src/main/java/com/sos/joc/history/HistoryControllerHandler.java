@@ -365,17 +365,14 @@ public class HistoryControllerHandler {
                 childs = new ArrayList<FatForkedChild>();
                 jof.children().forEach(c -> {
                     String branchIdOrName = null;
-                    String name4Position = null;
                     if (c.branchId().isPresent()) {
                         branchIdOrName = c.branchId().get().string();
-                        name4Position = branchIdOrName;
                     } else {
                         branchIdOrName = HistoryUtil.getForkChildNameFromOrderId(c.orderId().string());
-                        name4Position = "fork";
                     }
                     // copy
                     List<Object> childPositions = positions.stream().collect(Collectors.toList());
-                    childPositions.add(name4Position);
+                    childPositions.add("fork+" + branchIdOrName);
                     childPositions.add(0);
                     childs.add(new FatForkedChild(c.orderId().string(), branchIdOrName, wi.createNewPosition(childPositions)));
                 });
