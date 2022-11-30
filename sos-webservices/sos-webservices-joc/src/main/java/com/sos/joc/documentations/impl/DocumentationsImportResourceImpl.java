@@ -63,6 +63,10 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            if (body == null) {
+                throw new JocMissingRequiredParameterException("undefined 'file'");
+            }
 
             if (folder == null || folder.isEmpty()) {
                 folder = "/";
@@ -94,13 +98,12 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
         InputStream stream = null;
         try {
-            DocumentationImport filter = new DocumentationImport();
             if (body == null) {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
-            } else {
-                filter.setFile(filename);
             }
-
+            
+            DocumentationImport filter = new DocumentationImport();
+            filter.setFile(filename);
             filter.setFolder(normalizeFolder(folder.replace('\\', '/')));
 
             stream = body.getEntityAs(InputStream.class);
