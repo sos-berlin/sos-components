@@ -250,9 +250,10 @@ public class Validator {
             if (dbJobResources == null || dbJobResources.isEmpty()) {
                 throw new JocConfigurationException("Missing assigned JobResources: " + jobResources.toString());
             } else {
-                jobResources.removeAll(dbJobResources.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
-                if (!jobResources.isEmpty()) {
-                    throw new JocConfigurationException("Missing assigned JobResources: " + jobResources.toString());
+                Set<String> jobResourcesCopy = new HashSet<>(jobResources);
+                jobResourcesCopy.removeAll(dbJobResources.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
+                if (!jobResourcesCopy.isEmpty()) {
+                    throw new JocConfigurationException("Missing assigned JobResources: " + jobResourcesCopy.toString());
                 }
             }
         }
