@@ -131,7 +131,6 @@ public class JsonValidator {
 
             put("JobsFilter", "job/jobsFilter-schema.json");
             put("TaskFilter", "job/taskFilter-schema.json");
-            // put("RunningTaskLogsFilter", "job/runningTaskLogsFilter-schema.json");
             put("RunningTaskLogFilter", "job/runningTaskLogFilter-schema.json");
 
             put("ApplyConfiguration", "xmleditor/apply/apply-configuration-schema.json");
@@ -157,7 +156,6 @@ public class JsonValidator {
             put("com.sos.joc.model.favorite.ReadFavoritesFilter", "favorite/readFavoritesFilter-schema.json");
             put("com.sos.joc.model.favorite.RenameFavorites", "favorite/renameFavorites-schema.json");
 
-            put("ReleaseFilter", "inventory/release/release-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFolder", "inventory/common/request-folder-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFilter", "inventory/common/request-filter-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFilters", "inventory/common/request-filters-schema.json");
@@ -165,6 +163,7 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.read.RequestWorkflowFilter", "inventory/read/request-workflow-filter-schema.json");
             put("com.sos.joc.model.inventory.deploy.DeployableFilter", "inventory/deploy/request-deployable-schema.json");
             put("com.sos.joc.model.inventory.deploy.DeployablesFilter", "inventory/deploy/request-deployables-schema.json");
+            put("com.sos.joc.model.inventory.release.ReleaseFilter", "inventory/release/release-schema.json");
             put("com.sos.joc.model.inventory.release.ReleasableFilter", "inventory/release/request-releasable-schema.json");
             put("com.sos.joc.model.inventory.release.ReleasablesFilter", "inventory/release/request-releasables-schema.json");
             put("com.sos.joc.model.inventory.release.ReleasablesRecallFilter", "inventory/release/releasableRecallFilter-schema.json");

@@ -26,6 +26,7 @@ import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.order.CheckedAddOrdersPositions;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocException;
@@ -79,7 +80,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             DBItemJocAuditLog dbAuditLog = storeAuditLog(addOrders.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            Predicate<AddOrder> permissions = order -> canAdd(order.getWorkflowPath(), permittedFolders);
+            Predicate<AddOrder> permissions = order -> canAdd(WorkflowPaths.getPath(order.getWorkflowPath()), permittedFolders);
 
             final JControllerProxy proxy = Proxy.of(controllerId);
             final JControllerState currentState = proxy.currentState();
@@ -109,7 +110,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     // TODO check if endPos not before startPos
                     
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd, startPos, endPoss);
-                    auditLogDetails.add(new AuditLogDetail(order.getWorkflowPath(), o.id().string(), controllerId));
+                    auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(order.getWorkflowPath()), o.id().string(), controllerId));
                     either = Either.right(o);
                 } catch (Exception ex) {
                     either = Either.left(new BulkError().get(ex, getJocError(), order));

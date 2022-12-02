@@ -52,15 +52,15 @@ public class WorkflowOrderTemplatesImpl extends JOCResourceImpl implements IWork
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryDBLayer dbLayer = new InventoryDBLayer(connection);
-            String workflame = JocInventory.pathToName(workflowFilter.getWorkflowPath());
-            List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(workflame);
+            String workflowName = JocInventory.pathToName(workflowFilter.getWorkflowPath());
+            List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(workflowName);
             
             entity.setSchedules(schedules.stream().filter(hasOrderParameterisation).map(item -> {
                 try {
                     Schedule s = (Schedule) JocInventory.content2IJSObject(item.getContent(), ConfigurationType.SCHEDULE);
                     if (s.getOrderParameterisations() != null && !s.getOrderParameterisations().isEmpty()) {
-                        if ((s.getWorkflowName() != null && workflame.equals(s.getWorkflowName())) || (s.getWorkflowNames() != null && s
-                                .getWorkflowNames().contains(workflame))) {
+                        if ((s.getWorkflowName() != null && workflowName.equals(s.getWorkflowName())) || (s.getWorkflowNames() != null && s
+                                .getWorkflowNames().contains(workflowName))) {
                             OrderParameterisations op = new OrderParameterisations();
                             op.setOrderParameterisations(s.getOrderParameterisations());
                             op.setName(JocInventory.pathToName(item.getPath()));
