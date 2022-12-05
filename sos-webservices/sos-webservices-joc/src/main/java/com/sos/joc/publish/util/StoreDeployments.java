@@ -224,7 +224,7 @@ public class StoreDeployments {
 
             switch(signedItemsSpec.getKeyPair().getKeyAlgorithm()) {
             case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                PublishUtils.updateItemsAddOrUpdatePGP(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer).thenAccept(either -> 
+                UpdateItemUtils.updateItemsAddOrUpdatePGP(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId).thenAccept(either -> 
                             processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
                 break;
             case SOSKeyConstants.RSA_ALGORITHM_NAME:
@@ -234,12 +234,12 @@ public class StoreDeployments {
                 if (cert != null) {
                     verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
                     if (verified) {
-                        PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, 
+                        UpdateItemUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId, 
                                 SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair().getCertificate()).thenAccept(either -> 
                                     processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
                     } else {
                       signerDN = cert.getSubjectDN().getName();
-                      PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, 
+                      UpdateItemUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId, 
                               SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
                       .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
                     }
@@ -254,14 +254,14 @@ public class StoreDeployments {
                 if (cert != null) {
                     verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
                     if (verified) {
-                        PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId,  
-                                signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
+                        UpdateItemUtils.updateItemsAddOrUpdateWithX509Certificate(commitId,  
+                                signedItemsSpec.getVerifiedDeployables(), controllerId, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
                                 signedItemsSpec.getKeyPair().getCertificate()).thenAccept(either -> 
                                 processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
                     } else {
                       signerDN = cert.getSubjectDN().getName();
-                      PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId,  
-                              signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
+                      UpdateItemUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId,  
+                              signedItemsSpec.getVerifiedDeployables(), controllerId, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
                           .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
                     }
                 } else {

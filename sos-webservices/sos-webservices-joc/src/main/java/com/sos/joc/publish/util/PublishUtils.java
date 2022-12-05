@@ -30,7 +30,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
@@ -58,7 +57,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.order.OrdersHelper;
-import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -130,17 +128,13 @@ import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
 import js7.data.board.BoardPath;
-import js7.data.item.VersionId;
-import js7.data.job.JobResourcePath;
 import js7.data.lock.LockPath;
 import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.board.JBoard;
-import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.lock.JLock;
 import js7.data_for_java.orderwatch.JFileWatch;
 import js7.data_for_java.value.JExpression;
-import reactor.core.publisher.Flux;
 
 public abstract class PublishUtils {
 
@@ -449,452 +443,6 @@ public abstract class PublishUtils {
             throw new JocMissingKeyException("Neither PublicKey nor Certificate found for signature verification.");
         }
         return verifiedDeployment;
-    }
-
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP(String commitId,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer) throws SOSException,
-            IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateItemOperationsSigned = new HashSet<JUpdateItemOperation>();
-        if (alreadyDeployed != null) {
-            updateItemOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW
-                    .intValue()).map(item -> {
-                        LOGGER.debug("JSON send to controller: ");
-                        try {
-                            String json = JsonSerializer.serializeAsString(item.getKey().readUpdateableContent());
-                            LOGGER.debug(json);
-                            return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue()
-                                    .getSignature()));
-                        } catch (JsonProcessingException e) {
-                            return null;
-                        }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            updateItemOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.JOBRESOURCE
-                    .intValue()).map(item -> {
-                        LOGGER.debug("JSON send to controller: ");
-                        try {
-                            String json = JsonSerializer.serializeAsString(item.getKey().readUpdateableContent());
-                            LOGGER.debug(json);
-                            return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue()
-                                    .getSignature()));
-                        } catch (JsonProcessingException e) {
-                            return null;
-                        }
-                    }).collect(Collectors.toSet()));
-            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == ConfigurationType.LOCK.intValue())
-                    .map(item -> {
-                        try {
-                            Lock lock = (Lock) item.readUpdateableContent();
-                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE
-                    .intValue()).map(item -> {
-                        try {
-                            FileOrderSource fileOrderSource = (FileOrderSource) item.readUpdateableContent();
-                            fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                        } catch (JocDeployException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            // Board
-            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.NOTICEBOARD.intValue()).map(
-                    item -> {
-                        try {
-                            Board board = (Board) item.readUpdateableContent();
-                            if (board.getPath() == null) {
-                                board.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            }
-                            return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
-                        } catch (JocDeployException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        }
-        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemOperationsSigned)));
-    }
-
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGPFromImport(String commitId,
-            Map<ControllerObject, DBItemDepSignatures> drafts, String controllerId, DBLayerDeploy dbLayer) throws SOSException, IOException,
-            InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateItemsOperationsSigned = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        if (drafts != null) {
-            updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.WORKFLOW))
-                    .map(item -> {
-                        LOGGER.debug("JSON send to controller: ");
-                        String json = item.getKey().getSignedContent();
-                        LOGGER.debug(json);
-                        return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue()
-                                .getSignature()));
-                    }).collect(Collectors.toSet()));
-            updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.JOBRESOURCE))
-                    .map(item -> {
-                        LOGGER.debug("JSON send to controller: ");
-                        String json = item.getKey().getSignedContent();
-                        LOGGER.debug(json);
-                        return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue()
-                                .getSignature()));
-                    }).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.LOCK)).map(item -> {
-                try {
-                    Lock lock = (Lock) item.getContent();
-                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
-                }
-            }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.FILEORDERSOURCE)).map(
-                    item -> {
-                        try {
-                            FileOrderSource fileOrderSource = (FileOrderSource) item.getContent();
-                            if (fileOrderSource.getPath() == null) {
-                                fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            }
-                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                        } catch (JocDeployException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            // Board
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.NOTICEBOARD)).map(item -> {
-                try {
-                    Board board = (Board) item.getContent();
-                    if (board.getPath() == null) {
-                        board.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    }
-                    return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
-                } catch (JocDeployException e) {
-                    throw e;
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
-                }
-            }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        }
-        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsSigned)));
-    }
-
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509Certificate(String commitId,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm,
-            String certificate) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateRepoOperationsSigned = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateRepoOperationsSimple = new HashSet<JUpdateItemOperation>();
-        if (alreadyDeployed != null) {
-            // workflows
-            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW
-                    .intValue()).map(item -> {
-                        try {
-                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(JsonSerializer.serializeAsString(item
-                                    .getKey().readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, certificate));
-                        } catch (IOException e) {
-                            return null;
-                        }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            // job resources
-            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.JOBRESOURCE
-                    .intValue()).map(item -> {
-                        try {
-                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(JsonSerializer.serializeAsString(item
-                                    .getKey().readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, certificate));
-                        } catch (IOException e) {
-                            return null;
-                        }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            // locks
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue()).map(
-                    item -> {
-                        try {
-                            Lock lock = (Lock) item.readUpdateableContent();
-                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).collect(Collectors.toSet()));
-            // file order sources
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE
-                    .intValue()).map(item -> {
-                        try {
-                            FileOrderSource fileOrderSource = (FileOrderSource) item.readUpdateableContent();
-                            if (fileOrderSource.getPath() == null) {
-                                fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            }
-                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                        } catch (JocDeployException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).collect(Collectors.toSet()));
-            // Board
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.NOTICEBOARD.intValue()).map(
-                    item -> {
-                        try {
-                            Board board = (Board) item.readUpdateableContent();
-                            if (board.getPath() == null) {
-                                board.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            }
-                            return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
-                        } catch (JocDeployException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).collect(Collectors.toSet()));
-        }
-        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateRepoOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateRepoOperationsSigned)));
-    }
-
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDN(String commitId,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm,
-            String signerDN) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateRepoOperationsSigned = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateRepoOperationsSimple = new HashSet<JUpdateItemOperation>();
-        if (alreadyDeployed != null) {
-            // workflows
-            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW
-                    .intValue()).map(item -> {
-                        try {
-                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(JsonSerializer.serializeAsString(item.getKey()
-                                    .readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, signerDN));
-                        } catch (IOException e) {
-                            return null;
-                        }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            // job resources
-            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.JOBRESOURCE
-                    .intValue()).map(item -> {
-                        try {
-                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(JsonSerializer.serializeAsString(item.getKey()
-                                    .readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, signerDN));
-                        } catch (IOException e) {
-                            return null;
-                        }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            // locks
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue()).map(
-                    item -> {
-                        try {
-                            Lock lock = (Lock) item.readUpdateableContent();
-                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).collect(Collectors.toSet()));
-            // file order sources
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE
-                    .intValue()).map(item -> {
-                        try {
-                            FileOrderSource fileOrderSource = (FileOrderSource) item.readUpdateableContent();
-                            fileOrderSource.setPath(item.getName());
-                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                        } catch (JocDeployException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).collect(Collectors.toSet()));
-            // Board
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.NOTICEBOARD.intValue()).map(
-                    item -> {
-                        try {
-                            Board board = (Board) item.readUpdateableContent();
-                            if (board.getPath() == null) {
-                                board.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            }
-                            return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
-                        } catch (JocDeployException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).collect(Collectors.toSet()));
-        }
-        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateRepoOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateRepoOperationsSigned)));
-    }
-
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509CertificateFromImport(String commitId,
-            Map<ControllerObject, DBItemDepSignatures> drafts, String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm,
-            String certificate) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateItemsOperationsSigned = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        if (drafts != null) {
-            // workflows
-            updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.WORKFLOW))
-                    .map(item -> {
-                        return JUpdateItemOperation.addOrChangeSigned(
-                                getSignedStringWithCertificate(item.getKey().getSignedContent(), item.getValue().getSignature(), signatureAlgorithm, certificate));
-                    }).collect(Collectors.toSet()));
-            // job resources
-            updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.JOBRESOURCE)).map(
-                    item -> {
-                        return JUpdateItemOperation.addOrChangeSigned(
-                                getSignedStringWithCertificate(item.getSignedContent(), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
-                    }).collect(Collectors.toSet()));
-            // locks
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.LOCK)).map(
-                    item -> {
-                        try {
-                            Lock lock = (Lock) item.getContent();
-                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).collect(Collectors.toSet()));
-            // file order sources
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.FILEORDERSOURCE))
-                    .map(item -> {
-                        try {
-                            FileOrderSource fileOrderSource = (FileOrderSource) item.getContent();
-                            fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                        } catch (JocDeployException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).collect(Collectors.toSet()));
-            // Board
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.NOTICEBOARD)).map(item -> {
-                try {
-                    Board board = (Board) item.getContent();
-                    board.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
-                } catch (JocDeployException e) {
-                    throw e;
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
-                }
-            }).collect(Collectors.toSet()));
-        }
-        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsSigned)));
-    }
-
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDNFromImport(String commitId,
-            Map<ControllerObject, DBItemDepSignatures> drafts, String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm, String signerDN)
-            throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateItemsOperationsSigned = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        if (drafts != null) {
-            // workflows
-            updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.WORKFLOW))
-                    .map(item -> {
-                        return JUpdateItemOperation.addOrChangeSigned(
-                                getSignedStringWithSignerDN(item.getKey().getSignedContent(), item.getValue().getSignature(), signatureAlgorithm, signerDN));
-                    }).collect(Collectors.toSet()));
-            // job resources
-            updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.JOBRESOURCE)).map(
-                    item -> {
-                        return JUpdateItemOperation.addOrChangeSigned(
-                                getSignedStringWithSignerDN(item.getSignedContent(), drafts.get(item).getSignature(), signatureAlgorithm, signerDN));
-                    }).collect(Collectors.toSet()));
-            // locks
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.LOCK)).map(item -> {
-                try {
-                    Lock lock = (Lock) item.getContent();
-                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
-                }
-            }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            // file order sources
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.FILEORDERSOURCE)).map(
-                    item -> {
-                        try {
-                            FileOrderSource fileOrderSource = (FileOrderSource) item.getContent();
-                            if (fileOrderSource.getPath() == null) {
-                                fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            }
-                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                        } catch (JocDeployException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            // Board
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.NOTICEBOARD)).map(item -> {
-                try {
-                    Board board = (Board) item.getContent();
-                    if (board.getPath() == null) {
-                        board.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    }
-                    return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
-                } catch (JocDeployException e) {
-                    throw e;
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
-                }
-            }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        }
-        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsSigned)));
-    }
-
-    public static CompletableFuture<Either<Problem, Void>> updateItemsDelete(String commitId, List<DBItemDeploymentHistory> alreadyDeployedtoDelete,
-            String controllerId) {
-        //Set<JUpdateItemOperation> updateItemOperationsSigned = new HashSet<JUpdateItemOperation>();
-        //Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateItemOperations = new HashSet<JUpdateItemOperation>();
-        if (alreadyDeployedtoDelete != null) {
-            updateItemOperations.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
-                    .map(item -> {
-                        try {
-                            FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getContent(), FileOrderSource.class);
-                            fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            return JUpdateItemOperation.deleteSimple(OrderWatchPath.of(fileOrderSource.getPath()));
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).collect(Collectors.toSet()));
-            updateItemOperations.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-                    item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()))).filter(Objects::nonNull).collect(Collectors
-                            .toSet()));
-            updateItemOperations.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.JOBRESOURCE.intValue())
-                    .map(item -> JUpdateItemOperation.deleteSimple(JobResourcePath.of(item.getName()))).filter(Objects::nonNull).collect(Collectors
-                            .toSet()));
-            updateItemOperations.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.NOTICEBOARD.intValue()).map(
-                    item -> {
-                        try {
-                            Board board = Globals.objectMapper.readValue(item.getContent(), Board.class);
-                            board.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            return JUpdateItemOperation.deleteSimple(BoardPath.of(board.getPath()));
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).collect(Collectors.toSet()));
-            updateItemOperations.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.LOCK.intValue()).map(
-                    item -> {
-                        try {
-                            Lock lock = Globals.objectMapper.readValue(item.getContent(), Lock.class);
-                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            return JUpdateItemOperation.deleteSimple(LockPath.of(lock.getPath()));
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).collect(Collectors.toSet()));
-        }
-        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemOperations), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId)))));
     }
 
     private static void updateVersionId(DBItemDeploymentHistory draft, String commitId) {
@@ -2090,7 +1638,7 @@ public abstract class PublishUtils {
         return false;
     }
 
-    private static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException {
+    public static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException {
         Long delay = fileOrderSource.getDelay() == null ? 2L : fileOrderSource.getDelay();
         String directory = fileOrderSource.getDirectoryExpr() == null ? JExpression.quoteString(fileOrderSource.getDirectory()) : fileOrderSource
                 .getDirectoryExpr();
@@ -2112,11 +1660,11 @@ public abstract class PublishUtils {
         return e.get();
     }
 
-    private static JLock getJLock(Lock lock) {
+    public static JLock getJLock(Lock lock) {
         return JLock.of(LockPath.of(lock.getPath()), lock.getLimit());
     }
 
-    private static JBoard getJBoard(Board board) {
+    public static JBoard getJBoard(Board board) {
         // JBoard(Board(boardPath, toNotice.asScala, readingOrderToNoticeId.asScala, endOfLife.asScala))
         JExpression toNoticeExpression = null;
         JExpression readingOrderToNoticeIdExpression = null;
@@ -2137,18 +1685,6 @@ public abstract class PublishUtils {
             endOfLifeExpression = getOrThrowEither(JExpression.parse(board.getEndOfLife()));
         }
         return JBoard.of(BoardPath.of(board.getPath()), toNoticeExpression, readingOrderToNoticeIdExpression, endOfLifeExpression);
-    }
-
-    private static SignedString getSignedStringWithCertificate(String jsonContent, String signature, String signatureAlgorithm, String certificate) {
-        LOGGER.debug("JSON send to controller: ");
-        LOGGER.debug(jsonContent);
-        return SignedString.x509WithCertificate(jsonContent, signature, signatureAlgorithm, certificate);
-    }
-
-    private static SignedString getSignedStringWithSignerDN(String jsonContent, String signature, String signatureAlgorithm, String signerDN) {
-        LOGGER.debug("JSON send to controller: ");
-        LOGGER.debug(jsonContent);
-        return SignedString.x509WithSignerId(jsonContent, signature, signatureAlgorithm, SignerId.of(signerDN));
     }
 
     private static Optional<String> getFileOrderSourcePattern(FileOrderSource fileOrderSource) {
