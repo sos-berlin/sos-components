@@ -697,7 +697,7 @@ public class DeploymentTestUtils {
     public static PathFilter createExamplePathFilter () {
         PathFilter filter = new PathFilter();
         filter.setName("test_wf");
-        filter.setObjectType(ConfigurationType.WORKFLOW.toString());
+        filter.setObjectType(ConfigurationType.WORKFLOW);
         filter.setUseDrafts(true);
         return filter;
     }
