@@ -17,7 +17,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentVersionUpdatedEvent;
 import com.sos.joc.event.bean.agent.SubagentVersionUpdatedEvent;
-import com.sos.joc.history.controller.exception.FatEventProblemException;
+import com.sos.joc.history.controller.exception.proxy.HistoryControllerProxyEventException;
 import com.sos.joc.history.controller.proxy.fatevent.FatExpectNotice;
 import com.sos.joc.history.controller.proxy.fatevent.FatExpectNotices;
 import com.sos.joc.history.controller.proxy.fatevent.FatOutcome;
@@ -105,17 +105,18 @@ public class HistoryEventEntry {
     private final Long eventId;
     private final Date eventDate;
     private final HistoryEventType eventType;
+    private final String controllerId;
 
-    public HistoryEventEntry(JEventAndControllerState<Event> es) {
+    public HistoryEventEntry(String controllerId, JEventAndControllerState<Event> es) {
+        this.controllerId = controllerId;
+
         eventAndState = es;
 
         Stamped<KeyedEvent<Event>> stampedEvent = eventAndState.stampedEvent();
-
         keyedEvent = stampedEvent.value();
         event = keyedEvent.event();
         eventId = stampedEvent.eventId();
         eventDate = Date.from(Instant.ofEpochMilli(stampedEvent.timestampMillis()));
-
         eventType = HistoryEventType.fromValue(event.getClass().getSimpleName());
     }
 
@@ -169,7 +170,7 @@ public class HistoryEventEntry {
         return new HistoryControllerReady();
     }
 
-    public HistoryAgentCouplingFailed getAgentCouplingFailed() throws FatEventProblemException {
+    public HistoryAgentCouplingFailed getAgentCouplingFailed() {
         return new HistoryAgentCouplingFailed();
     }
 
@@ -177,23 +178,23 @@ public class HistoryEventEntry {
         return new HistoryAgentShutDown();
     }
 
-    public HistoryAgentReady getAgentReady() throws FatEventProblemException {
+    public HistoryAgentReady getAgentReady() throws HistoryControllerProxyEventException {
         return new HistoryAgentReady();
     }
 
-    public HistoryAgentSubagentDedicated getAgentSubagentDedicated() throws FatEventProblemException {
+    public HistoryAgentSubagentDedicated getAgentSubagentDedicated() {
         return new HistoryAgentSubagentDedicated();
     }
 
-    public HistoryOrder getOrder() throws FatEventProblemException {
+    public HistoryOrder getOrder() throws HistoryControllerProxyEventException {
         return new HistoryOrder();
     }
 
-    public HistoryOrder getCheckedOrder() throws FatEventProblemException {
+    public HistoryOrder getCheckedOrder() throws HistoryControllerProxyEventException {
         return new HistoryOrder(eventAndState.state());
     }
 
-    public HistoryOrder getCheckedOrderFromPreviousState() throws FatEventProblemException {
+    public HistoryOrder getCheckedOrderFromPreviousState() throws HistoryControllerProxyEventException {
         return new HistoryOrder(eventAndState.previousState());
     }
 
@@ -208,11 +209,11 @@ public class HistoryEventEntry {
         private OutcomeInfo outcomeInfo;
         private List<ForkedChild> forkedChilds;
 
-        private HistoryOrder() throws FatEventProblemException {
+        private HistoryOrder() throws HistoryControllerProxyEventException {
             this(null);
         }
 
-        private HistoryOrder(JControllerState controllerState) throws FatEventProblemException {
+        private HistoryOrder(JControllerState controllerState) throws HistoryControllerProxyEventException {
             orderId = (OrderId) keyedEvent.key();
             if (controllerState != null) {
                 state = controllerState;
@@ -220,7 +221,8 @@ public class HistoryEventEntry {
                 // order = getFromEither(po);
                 order = state.idToOrder().get(orderId);
                 if (order == null) {
-                    throw new FatEventProblemException(String.format("Unknown OrderId in JControllerState:%s", orderId.string()));
+                    throw new HistoryControllerProxyEventException(controllerId, String.format("Unknown OrderId in JControllerState:%s", orderId
+                            .string()));
                 }
             }
         }
@@ -252,7 +254,7 @@ public class HistoryEventEntry {
             if (!isStarted()) {
                 try {
                     return getCheckedOrderFromPreviousState().isStarted();
-                } catch (FatEventProblemException e) {
+                } catch (HistoryControllerProxyEventException e) {
                     LOGGER.warn(String.format("[%s][wasStarted]%s", getOrderId(), e.toString()), e);
                 }
             }
@@ -285,7 +287,7 @@ public class HistoryEventEntry {
             return order == null ? null : order.arguments();
         }
 
-        public Forked getForked() throws FatEventProblemException {
+        public Forked getForked() throws HistoryControllerProxyEventException {
             if (order == null) {
                 return null;
             }
@@ -471,7 +473,7 @@ public class HistoryEventEntry {
             return null;
         }
 
-        public List<OrderLock> getOrderLocks(OrderLocksAcquired event) throws FatEventProblemException {
+        public List<OrderLock> getOrderLocks(OrderLocksAcquired event) throws HistoryControllerProxyEventException {
             // why FatEventProblemException is not a runtime exception
             // return JavaConverters.asJava(event.demands()).stream().map(ld -> getOrderLock(ld.lockPath(), ld.count(), false)).collect(Collectors.toList());
             List<OrderLock> result = new ArrayList<>();
@@ -481,7 +483,7 @@ public class HistoryEventEntry {
             return result;
         }
 
-        public List<OrderLock> getOrderLocks(OrderLocksQueued event) throws FatEventProblemException {
+        public List<OrderLock> getOrderLocks(OrderLocksQueued event) throws HistoryControllerProxyEventException {
             // why FatEventProblemException is not a runtime exception
             // return JavaConverters.asJava(event.demands()).stream().map(ld -> getOrderLock(ld.lockPath(), ld.count(), true)).collect(Collectors.toList());
             List<OrderLock> result = new ArrayList<>();
@@ -491,7 +493,7 @@ public class HistoryEventEntry {
             return result;
         }
 
-        public List<OrderLock> getOrderLocks(OrderLocksReleased event) throws FatEventProblemException {
+        public List<OrderLock> getOrderLocks(OrderLocksReleased event) throws HistoryControllerProxyEventException {
             // count not available
             // why FatEventProblemException is not a runtime exception
             // return JavaConverters.asJava(event.lockPaths()).stream().map(lp -> getOrderLock(lp, null, false)).collect(Collectors.toList());
@@ -502,7 +504,7 @@ public class HistoryEventEntry {
             return result;
         }
 
-        private OrderLock getOrderLock(LockPath lockPath, Option<Object> count, boolean checkState) throws FatEventProblemException {
+        private OrderLock getOrderLock(LockPath lockPath, Option<Object> count, boolean checkState) throws HistoryControllerProxyEventException {
             Lock l = null;
             Collection<OrderId> orderIds = null;
             List<OrderId> queuedOrderIds = null;
@@ -1014,7 +1016,7 @@ public class HistoryEventEntry {
         private final String id;
         private String message;
 
-        public HistoryAgentCouplingFailed() throws FatEventProblemException {
+        public HistoryAgentCouplingFailed() {
             AgentPath arp = (AgentPath) keyedEvent.key();
             id = arp.string();
 
@@ -1050,7 +1052,7 @@ public class HistoryEventEntry {
     /** only post event - not used by the history */
     public class HistoryAgentSubagentDedicated {
 
-        public HistoryAgentSubagentDedicated() throws FatEventProblemException {
+        public HistoryAgentSubagentDedicated() {
         }
 
         public void postEvent() {
@@ -1076,7 +1078,7 @@ public class HistoryEventEntry {
         private String uri;
         // private Map<String, String> subAgents;
 
-        public HistoryAgentReady() throws FatEventProblemException {
+        public HistoryAgentReady() throws HistoryControllerProxyEventException {
             AgentReady ev = (AgentReady) event;
             timezone = ev.timezone();
 
@@ -1186,16 +1188,16 @@ public class HistoryEventEntry {
         }
     }
 
-    private <T> T getFromEither(Either<Problem, T> either) throws FatEventProblemException {
+    private <T> T getFromEither(Either<Problem, T> either) throws HistoryControllerProxyEventException {
         if (either.isLeft()) {
-            throw new FatEventProblemException(either.getLeft());
+            throw new HistoryControllerProxyEventException(controllerId, either.getLeft());
         }
         return either.get();
     }
 
-    private <T> T getFromMap(T o, String name) throws FatEventProblemException {
+    private <T> T getFromMap(T o, String name) throws HistoryControllerProxyEventException {
         if (o == null) {
-            throw new FatEventProblemException(Problem.of("Object '" + name + "' doesn't exist."));
+            throw new HistoryControllerProxyEventException(controllerId, Problem.of("Object '" + name + "' doesn't exist."));
         }
         return o;
     }

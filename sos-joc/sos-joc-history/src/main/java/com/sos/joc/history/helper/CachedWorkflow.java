@@ -1,8 +1,10 @@
 package com.sos.joc.history.helper;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.job.JobCriticality;
 
 public class CachedWorkflow {
@@ -11,6 +13,9 @@ public class CachedWorkflow {
     private final String title;
     private final List<CachedWorkflowParameter> orderPreparation;
     private final Map<String, CachedWorkflowJob> jobs;
+
+    // minutes
+    private long lastUsage;
 
     public CachedWorkflow(final String path, final String title, final List<CachedWorkflowParameter> orderPreparation,
             final Map<String, CachedWorkflowJob> jobs) {
@@ -38,6 +43,14 @@ public class CachedWorkflow {
         }
         CachedWorkflowJob wj = jobs.get(name);
         return wj == null ? defaultJob() : wj;
+    }
+
+    public void setLastUsage() {
+        lastUsage = SOSDate.getMinutes(new Date());
+    }
+
+    public long getLastUsage() {
+        return lastUsage;
     }
 
     private CachedWorkflowJob defaultJob() {

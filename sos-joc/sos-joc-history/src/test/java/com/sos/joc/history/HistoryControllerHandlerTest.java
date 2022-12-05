@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.OptionalLong;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -205,7 +204,7 @@ public class HistoryControllerHandlerTest {
         AFatEvent event = null;
         HistoryEventEntry entry = null;
         try {
-            entry = new HistoryEventEntry(eventAndState);
+            entry = new HistoryEventEntry(CONTROLLER_ID, eventAndState);
             HistoryOrder order;
             List<FatForkedChild> childs;
             List<OrderLock> ol;
@@ -288,8 +287,8 @@ public class HistoryControllerHandlerTest {
                 JOrderForked jof = (JOrderForked) entry.getJOrderEvent();
 
                 WorkflowInfo wi = order.getWorkflowInfo();
-                Position position = wi.getPosition();
-                List<?> positions = position.getUnderlying().toList();
+                Position parentPosition = wi.getPosition();
+                List<Object> parentPositionAsList = parentPosition.getUnderlying().toList();
                 childs = new ArrayList<FatForkedChild>();
                 jof.children().forEach(c -> {
                     String branchIdOrName = null;
@@ -298,14 +297,14 @@ public class HistoryControllerHandlerTest {
                     } else {
                         branchIdOrName = HistoryUtil.getForkChildNameFromOrderId(c.orderId().string());
                     }
-                    // copy
-                    List<Object> childPositions = positions.stream().collect(Collectors.toList());
-                    childPositions.add("fork+" + branchIdOrName);
-                    childPositions.add(0);
-                    childs.add(new FatForkedChild(c.orderId().string(), branchIdOrName, wi.createNewPosition(childPositions)));
+                    // copy parent position
+                    List<Object> childPosition = new ArrayList<>(parentPositionAsList);
+                    childPosition.add("fork+" + branchIdOrName);
+                    childPosition.add(0);
+                    childs.add(new FatForkedChild(c.orderId().string(), branchIdOrName, wi.createNewPosition(childPosition)));
                 });
                 event = new FatEventOrderForked(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), wi.getPath(), wi.getVersionId(), position, null, childs);
+                event.set(order.getOrderId(), wi.getPath(), wi.getVersionId(), parentPosition, null, childs);
                 break;
 
             case OrderJoined:
