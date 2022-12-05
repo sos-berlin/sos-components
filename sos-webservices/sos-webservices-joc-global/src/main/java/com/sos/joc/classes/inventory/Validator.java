@@ -250,9 +250,10 @@ public class Validator {
             if (dbJobResources == null || dbJobResources.isEmpty()) {
                 throw new JocConfigurationException("Missing assigned JobResources: " + jobResources.toString());
             } else {
-                jobResources.removeAll(dbJobResources.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
-                if (!jobResources.isEmpty()) {
-                    throw new JocConfigurationException("Missing assigned JobResources: " + jobResources.toString());
+                Set<String> jobResourcesCopy = new HashSet<>(jobResources);
+                jobResourcesCopy.removeAll(dbJobResources.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
+                if (!jobResourcesCopy.isEmpty()) {
+                    throw new JocConfigurationException("Missing assigned JobResources: " + jobResourcesCopy.toString());
                 }
             }
         }
@@ -716,8 +717,10 @@ public class Validator {
                         throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + cnsNames
                                 .toString());
                     }
-                    validateInstructions(cns.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
-                            orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    if (cns.getSubworkflow() != null && cns.getSubworkflow().getInstructions() != null) {
+                        validateInstructions(cns.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
+                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    }
                     break;
                 case POST_NOTICE:
                     PostNotice pn = inst.cast();

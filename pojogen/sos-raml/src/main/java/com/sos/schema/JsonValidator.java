@@ -62,10 +62,8 @@ public class JsonValidator {
             put("DocumentationShowFilter", "docu/documentationShow-schema.json");
             put("DocumentationFilter", "docu/documentationFilter-schema.json");
             put("DocumentationsFilter", "docu/documentationsFilter-schema.json");
-            put("DocumentationImport", "docu/documentationImport-schema.json");
             put("DocumentationsDeleteFilter", "docu/documentationsDeleteFilter-schema.json");
 
-            put("RegisterEvent", "event/register-schema.json"); // obsolete
             put("Controller", "event/controllerFilter-schema.json");
 
             put("com.sos.joc.model.controller.ControllerId", "controller/controllerId-optional-schema.json");
@@ -81,7 +79,8 @@ public class JsonValidator {
             put("DeployAgents", "agent/deployAgents-schema.json");
             put("StoreSubAgents", "agent/storeSubagentsParam-schema.json");
             put("StoreClusterAgents", "agent/storeClusterParam-schema.json");
-            put("DeployClusterAgents", "agent/deployClusterParam-schema.json");
+            put("DeployClusterAgents", "agent/deployClusterAgents-schema.json");
+            put("DeploySubAgentClusters", "agent/deploySubagentClusters-schema.json");
             put("ReadAgents", "agent/readAgents-schema.json");
             put("ReadAgentsV", "agent/readAgents_v-schema.json");
             put("AgentReportFilter", "agent/agentReportFilter-schema.json");
@@ -92,6 +91,7 @@ public class JsonValidator {
             put("OrderingSubagentClusters", "agent/orderingSubagentCluster-schema.json");
             put("AgentExportFilter", "agent/transfer/agentExportFilter-schema.json");
             put("AgentImportFilter", "agent/transfer/agentImportFilter-schema.json");
+            
             put("VersionsFilter", "joc/versionsFilter-schema.json");
 
             put("JobTemplateFilter", "jobTemplate/jobTemplateFilter-schema.json");
@@ -131,7 +131,6 @@ public class JsonValidator {
 
             put("JobsFilter", "job/jobsFilter-schema.json");
             put("TaskFilter", "job/taskFilter-schema.json");
-            // put("RunningTaskLogsFilter", "job/runningTaskLogsFilter-schema.json");
             put("RunningTaskLogFilter", "job/runningTaskLogFilter-schema.json");
 
             put("ApplyConfiguration", "xmleditor/apply/apply-configuration-schema.json");
@@ -157,7 +156,6 @@ public class JsonValidator {
             put("com.sos.joc.model.favorite.ReadFavoritesFilter", "favorite/readFavoritesFilter-schema.json");
             put("com.sos.joc.model.favorite.RenameFavorites", "favorite/renameFavorites-schema.json");
 
-            put("ReleaseFilter", "inventory/release/release-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFolder", "inventory/common/request-folder-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFilter", "inventory/common/request-filter-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFilters", "inventory/common/request-filters-schema.json");
@@ -165,6 +163,7 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.read.RequestWorkflowFilter", "inventory/read/request-workflow-filter-schema.json");
             put("com.sos.joc.model.inventory.deploy.DeployableFilter", "inventory/deploy/request-deployable-schema.json");
             put("com.sos.joc.model.inventory.deploy.DeployablesFilter", "inventory/deploy/request-deployables-schema.json");
+            put("com.sos.joc.model.inventory.release.ReleaseFilter", "inventory/release/release-schema.json");
             put("com.sos.joc.model.inventory.release.ReleasableFilter", "inventory/release/request-releasable-schema.json");
             put("com.sos.joc.model.inventory.release.ReleasablesFilter", "inventory/release/request-releasables-schema.json");
             put("com.sos.joc.model.inventory.release.ReleasablesRecallFilter", "inventory/release/releasableRecallFilter-schema.json");

@@ -51,11 +51,10 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             auditLog.setTimeSpent(Integer.valueOf(timeSpent));
         } catch (Exception e) {
         }
-        return postImportDocumentations(getAccessToken(xAccessToken, accessToken), folder, null, body, auditLog);
+        return postImportDocumentations(getAccessToken(xAccessToken, accessToken), folder, body, auditLog);
     }
 
-    private JOCDefaultResponse postImportDocumentations(String xAccessToken, String folder, String filename, FormDataBodyPart body,
-            AuditParams auditLog) {
+    private JOCDefaultResponse postImportDocumentations(String xAccessToken, String folder, FormDataBodyPart body, AuditParams auditLog) {
 
         SOSHibernateSession connection = null;
         try {
@@ -63,6 +62,10 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getDocumentations().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
+            }
+            
+            if (body == null) {
+                throw new JocMissingRequiredParameterException("undefined 'file'");
             }
 
             if (folder == null || folder.isEmpty()) {
@@ -74,11 +77,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, null, CategoryType.DOCUMENTATIONS, connection);
-            if (filename == null) {
-                filename = body.getContentDisposition().getFileName();
-            }
-
-            filename = URLDecoder.decode(filename, "UTF-8");
+            String filename = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
 
             postImportDocumentations(folder, filename, body, new DocumentationDBLayer(connection), dbAudit);
 
@@ -99,13 +98,12 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
         InputStream stream = null;
         try {
-            DocumentationImport filter = new DocumentationImport();
             if (body == null) {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
-            } else {
-                filter.setFile(filename);
             }
-
+            
+            DocumentationImport filter = new DocumentationImport();
+            filter.setFile(filename);
             filter.setFolder(normalizeFolder(folder.replace('\\', '/')));
 
             stream = body.getEntityAs(InputStream.class);

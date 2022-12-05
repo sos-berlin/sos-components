@@ -11,7 +11,6 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernate;
-import com.sos.commons.util.SOSString;
 
 public class SOSHibernateException extends SOSException {
 
@@ -197,7 +196,7 @@ public class SOSHibernateException extends SOSException {
             result = String.format("%s[%s]", result, parameters);
         }
         if (dbItem != null) {
-            result = String.format("%s [%s]", result, SOSString.toString(dbItem));
+            result = String.format("%s [%s]", result, SOSHibernate.toString(dbItem));
         }
         return result;
     }

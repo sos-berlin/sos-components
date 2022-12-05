@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +27,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.data.agent.AgentPath;
 import js7.data.controller.ControllerCommand;
 import js7.data.subagent.SubagentId;
@@ -61,8 +60,8 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             }
 
             storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId(), CategoryType.CONTROLLER);
-            JControllerCommand resetAgentCommand = JControllerCommand.apply(new ControllerCommand.ResetAgent(AgentPath.of(agentCommand
-                    .getAgentId()), agentCommand.getForce() == Boolean.TRUE));
+            JControllerCommand resetAgentCommand = JControllerCommand.apply(getResetCommand(agentCommand.getAgentId(), agentCommand
+                    .getForce() == Boolean.TRUE));
             LOGGER.debug("Reset Agent: " + resetAgentCommand.toJson());
             ControllerApi.of(controllerId).executeCommand(resetAgentCommand).thenAccept(e -> {
                 ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
@@ -75,6 +74,10 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
+    }
+    
+    public static ControllerCommand.ResetAgent getResetCommand(String agentId, boolean force) {
+        return new ControllerCommand.ResetAgent(AgentPath.of(agentId), force);
     }
     
     @Override

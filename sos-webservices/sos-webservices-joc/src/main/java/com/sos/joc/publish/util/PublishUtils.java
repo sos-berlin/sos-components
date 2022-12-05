@@ -516,7 +516,7 @@ public abstract class PublishUtils {
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cns = inst.cast();
-                    if (cns.getSubworkflow() != null) {
+                    if (cns.getSubworkflow() != null && cns.getSubworkflow().getInstructions() != null) {
                         setAgentNamesInInstructions(cns.getSubworkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
                     }
                     break;
@@ -1150,7 +1150,7 @@ public abstract class PublishUtils {
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cns = inst.cast();
-                    if (cns.getSubworkflow() != null) {
+                    if (cns.getSubworkflow() != null && cns.getSubworkflow().getInstructions() != null) {
                         replaceAgentNameWithAgentIdInInstructions(cns.getSubworkflow().getInstructions(), controllerId, agentNameToIdMap);
                     }
                     break;

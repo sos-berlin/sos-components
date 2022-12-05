@@ -1,0 +1,18 @@
+{
+  "title": "instructions",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "javaType": "com.sos.sign.model.instruction.Instructions",
+  "required": [
+    "instructions"
+  ],
+  "properties": {
+    "instructions": {
+      "type": "array",
+      "items": {
+        "$ref": "instruction-schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

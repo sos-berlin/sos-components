@@ -1,5 +1,6 @@
 package com.sos.joc.classes.inventory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -13,6 +14,7 @@ import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
+import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
@@ -23,7 +25,7 @@ import com.sos.joc.Globals;
 public class WorkflowConverter {
     
     private final static String convertInstructions = String.join("|", InstructionType.POST_NOTICE.value(), InstructionType.EXPECT_NOTICE.value(),
-            InstructionType.LOCK.value());
+            InstructionType.CONSUME_NOTICES.value(), InstructionType.LOCK.value());
     private final static Predicate<String> hasConvertInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + convertInstructions + ")\"")
             .asPredicate();
 
@@ -100,7 +102,9 @@ public class WorkflowConverter {
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cn = invInstruction.cast();
-                    if (cn.getSubworkflow() != null) {
+                    if (cn.getSubworkflow() == null || cn.getSubworkflow().getInstructions() == null) {
+                        cn.setSubworkflow(new Instructions(Collections.emptyList())); 
+                    } else {
                         convertInstructions(cn.getSubworkflow().getInstructions());
                     }
                     break;
