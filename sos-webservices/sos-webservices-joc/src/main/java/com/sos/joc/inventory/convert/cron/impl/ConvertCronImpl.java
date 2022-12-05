@@ -114,7 +114,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             String timezone = getTimezoneFromProfileConfiguration(hibernateSession, account);
             InventoryDBLayer invDbLayer = new InventoryDBLayer(hibernateSession);
-            DBItemInventoryConfiguration calDbItem = invDbLayer.getCalendarByName(filter.getCalendarName());
+            DBItemInventoryConfiguration calDbItem = invDbLayer.getCalendarByName(JocInventory.pathToName(filter.getCalendarName()));
             Calendar cal = Globals.objectMapper.readValue(calDbItem.getContent(), Calendar.class);
             cal.setName(calDbItem.getName());
             cal.setPath(calDbItem.getPath());
