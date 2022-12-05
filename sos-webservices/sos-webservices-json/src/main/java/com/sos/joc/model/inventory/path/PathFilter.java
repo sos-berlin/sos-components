@@ -4,6 +4,7 @@ package com.sos.joc.model.inventory.path;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -33,14 +34,14 @@ public class PathFilter {
     @JsonProperty("name")
     private String name;
     /**
-     * string without < and >
+     * configuration types
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("objectType")
-    private String objectType;
+    private ConfigurationType objectType;
     @JsonProperty("useDrafts")
     private Boolean useDrafts = false;
 
@@ -69,26 +70,26 @@ public class PathFilter {
     }
 
     /**
-     * string without < and >
+     * configuration types
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("objectType")
-    public String getObjectType() {
+    public ConfigurationType getObjectType() {
         return objectType;
     }
 
     /**
-     * string without < and >
+     * configuration types
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("objectType")
-    public void setObjectType(String objectType) {
+    public void setObjectType(ConfigurationType objectType) {
         this.objectType = objectType;
     }
 

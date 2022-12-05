@@ -25,7 +25,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "id",
     "folder",
     "objectName",
-    "account",
     "objectType",
     "valid",
     "deleted",
@@ -59,14 +58,6 @@ public class ResponseReleasableTreeItem {
      */
     @JsonProperty("objectName")
     private String objectName;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("account")
-    private String account;
     /**
      * configuration types
      * <p>
@@ -152,28 +143,6 @@ public class ResponseReleasableTreeItem {
     }
 
     /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("account")
-    public String getAccount() {
-        return account;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("account")
-    public void setAccount(String account) {
-        this.account = account;
-    }
-
-    /**
      * configuration types
      * <p>
      * 
@@ -237,12 +206,12 @@ public class ResponseReleasableTreeItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("valid", valid).append("deleted", deleted).append("released", released).append("releasableVersions", releasableVersions).toString();
+        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("objectType", objectType).append("valid", valid).append("deleted", deleted).append("released", released).append("releasableVersions", releasableVersions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(valid).append(folder).append(deleted).append(releasableVersions).append(objectName).append(id).append(account).append(released).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(valid).append(folder).append(deleted).append(releasableVersions).append(objectName).append(id).append(released).append(objectType).toHashCode();
     }
 
     @Override
@@ -254,7 +223,7 @@ public class ResponseReleasableTreeItem {
             return false;
         }
         ResponseReleasableTreeItem rhs = ((ResponseReleasableTreeItem) other);
-        return new EqualsBuilder().append(valid, rhs.valid).append(folder, rhs.folder).append(deleted, rhs.deleted).append(releasableVersions, rhs.releasableVersions).append(objectName, rhs.objectName).append(id, rhs.id).append(account, rhs.account).append(released, rhs.released).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(valid, rhs.valid).append(folder, rhs.folder).append(deleted, rhs.deleted).append(releasableVersions, rhs.releasableVersions).append(objectName, rhs.objectName).append(id, rhs.id).append(released, rhs.released).append(objectType, rhs.objectType).isEquals();
     }
 
 }
