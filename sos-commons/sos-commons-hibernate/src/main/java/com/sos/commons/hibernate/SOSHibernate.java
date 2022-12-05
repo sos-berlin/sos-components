@@ -18,7 +18,10 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
+import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.hibernate.exception.SOSHibernateLockAcquisitionException;
+import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 
@@ -68,6 +71,25 @@ public class SOSHibernate {
             e = e.getCause();
         }
         return null;
+    }
+
+    public static boolean isConnectException(Throwable cause) {
+        Throwable e = cause;
+        while (e != null) {
+            if (e instanceof SOSHibernateFactoryBuildException) {
+                return true;
+            } else if (e instanceof SOSHibernateInvalidSessionException) {
+                return true;
+            } else if (e instanceof SOSHibernateOpenSessionException) {
+                return true;
+            } else if (e instanceof org.hibernate.exception.JDBCConnectionException) {
+                return true;
+            } else if (e instanceof java.net.ConnectException || e instanceof java.net.SocketException) {
+                return true;
+            }
+            e = e.getCause();
+        }
+        return false;
     }
 
     public static Object getId(Object item) throws SOSHibernateException {

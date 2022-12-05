@@ -8,6 +8,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.history.helper.HistoryUtil;
@@ -28,11 +29,20 @@ public class HistoryConfiguration implements Serializable {
     private int bufferTimeoutMaxSize = 1000; // the max collected size
     private int bufferTimeoutMaxTime = 1; // the timeout in seconds to use to release a buffered list
 
-    // minutes, JS7 Proxy ControllerApi
-    private int releaseEventsInterval = 15;
+    // seconds, JS7 Proxy ControllerApi
+    private long releaseEventsInterval = 15 * 60;
+
+    // seconds, clear HistoryModel cache - workflows etc
+    private long cacheAge = 60 * 60;
 
     // seconds
-    private int waitIntervalOnError = 5;
+    private long waitIntervalOnError = 5;
+    // seconds
+    private long waitIntervalOnProcessingError = 30;
+    // seconds
+    private long waitIntervalStopProcessingOnErrors = 2 * 60;
+
+    private int maxStopProcessingOnErrors = 5;
 
     // MB
     private int logApplicableMBSize = 500;
@@ -73,15 +83,28 @@ public class HistoryConfiguration implements Serializable {
             bufferTimeoutMaxTime = Integer.parseInt(conf.getProperty("history_buffer_timeout_max_time").trim());
         }
         if (conf.getProperty("history_release_events_interval") != null) {
-            releaseEventsInterval = Integer.parseInt(conf.getProperty("history_release_events_interval").trim());
+            releaseEventsInterval = SOSDate.resolveAge("s", conf.getProperty("history_release_events_interval").trim());
         }
-        LOGGER.info(String.format(
-                "[history]max_transactions=%s, buffer_timeout_max_size=%s, buffer_timeout_max_time=%ss, release_events_interval=%sm", maxTransactions,
-                bufferTimeoutMaxSize, bufferTimeoutMaxTime, releaseEventsInterval));
-
+        if (conf.getProperty("history_cache_age") != null) {
+            cacheAge = SOSDate.resolveAge("s", conf.getProperty("history_cache_age").trim());
+        }
         if (conf.getProperty("history_wait_interval_on_error") != null) {
-            waitIntervalOnError = Integer.parseInt(conf.getProperty("history_wait_interval_on_error").trim());
+            waitIntervalOnError = SOSDate.resolveAge("s", conf.getProperty("history_wait_interval_on_error").trim());
         }
+        if (conf.getProperty("history_wait_interval_on_processing_error") != null) {
+            waitIntervalOnProcessingError = SOSDate.resolveAge("s", conf.getProperty("history_wait_interval_on_processing_error").trim());
+        }
+        if (conf.getProperty("history_wait_interval_stop_processing_on_errors") != null) {
+            waitIntervalStopProcessingOnErrors = SOSDate.resolveAge("s", conf.getProperty("history_wait_interval_stop_processing_on_errors").trim());
+        }
+        if (conf.getProperty("history_max_stop_processing_on_errors") != null) {
+            maxStopProcessingOnErrors = Integer.parseInt(conf.getProperty("history_max_stop_processing_on_errors").trim());
+        }
+
+        LOGGER.info(String.format(
+                "[history]max_transactions=%s, buffer_timeout_max_size=%s, buffer_timeout_max_time=%ss, release_events_interval=%ss, cache_age=%ss, wait_interval_stop_processing_on_errors=%ss, max_stop_processing_on_errors=%s",
+                maxTransactions, bufferTimeoutMaxSize, bufferTimeoutMaxTime, releaseEventsInterval, cacheAge, waitIntervalStopProcessingOnErrors,
+                maxStopProcessingOnErrors));
     }
 
     public Path getLogDir() {
@@ -96,10 +119,6 @@ public class HistoryConfiguration implements Serializable {
         return maxTransactions;
     }
 
-    public int getReleaseEventsInterval() {
-        return releaseEventsInterval;
-    }
-
     public int getBufferTimeoutMaxSize() {
         return bufferTimeoutMaxSize;
     }
@@ -108,8 +127,28 @@ public class HistoryConfiguration implements Serializable {
         return bufferTimeoutMaxTime;
     }
 
-    public int getWaitIntervalOnError() {
+    public long getReleaseEventsInterval() {
+        return releaseEventsInterval;
+    }
+
+    public long getCacheAge() {
+        return cacheAge;
+    }
+
+    public long getWaitIntervalOnError() {
         return waitIntervalOnError;
+    }
+
+    public long getWaitIntervalOnProcessingError() {
+        return waitIntervalOnProcessingError;
+    }
+
+    public long getWaitIntervalStopProcessingOnErrors() {
+        return waitIntervalStopProcessingOnErrors;
+    }
+
+    public int getMaxStopProcessingOnErrors() {
+        return maxStopProcessingOnErrors;
     }
 
     public void setLogApplicableMBSize(int val) {

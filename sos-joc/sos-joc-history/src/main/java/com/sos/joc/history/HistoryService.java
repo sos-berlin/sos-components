@@ -44,8 +44,6 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
-import com.sos.joc.cluster.notifier.Mailer;
-import com.sos.joc.cluster.notifier.MailerConfiguration;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.joc.DBItemJocVariable;
@@ -61,7 +59,6 @@ public class HistoryService extends AJocClusterService {
     private static final long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;// in seconds
 
     private HistoryConfiguration config;
-    private MailerConfiguration mailerConfig;
     private JocClusterHibernateFactory factory;
     private ExecutorService threadPool;
     private AtomicBoolean processingStarted = new AtomicBoolean(false);
@@ -92,7 +89,6 @@ public class HistoryService extends AJocClusterService {
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
 
             processingStarted.set(true);
-            Mailer mailer = new Mailer(mailerConfig);
 
             checkLogDirectory();
             createFactory(getJocConfig().getHibernateConfiguration(), controllers.size());
@@ -101,7 +97,7 @@ public class HistoryService extends AJocClusterService {
             // AJocClusterService.clearAllLoggers();
 
             for (ControllerConfiguration controllerConfig : controllers) {
-                HistoryControllerHandler controllerHandler = new HistoryControllerHandler(factory, config, controllerConfig, mailer, IDENTIFIER);
+                HistoryControllerHandler controllerHandler = new HistoryControllerHandler(factory, config, controllerConfig, IDENTIFIER);
                 activeHandlers.add(controllerHandler);
 
                 Runnable task = new Runnable() {
@@ -187,7 +183,7 @@ public class HistoryService extends AJocClusterService {
                 if (!action.equals(Action.REMOVED)) {
                     Optional<ControllerConfiguration> occ = controllers.stream().filter(c -> c.getCurrent().getId().equals(controllerId)).findAny();
                     if (occ.isPresent()) {
-                        h = new HistoryControllerHandler(factory, config, occ.get(), new Mailer(mailerConfig), IDENTIFIER);
+                        h = new HistoryControllerHandler(factory, config, occ.get(), IDENTIFIER);
                         activeHandlers.add(h);
                     } else {
                         LOGGER.error(String.format("[%s]counfiguration not found", controllerId));
@@ -221,9 +217,6 @@ public class HistoryService extends AJocClusterService {
             config = new HistoryConfiguration();
             config.load(conf);
             updateHistoryConfigLogSize(true);
-
-            mailerConfig = new MailerConfiguration();// TODO
-            mailerConfig.load(conf);
         } catch (Exception ex) {
             LOGGER.error(ex.toString(), ex);
         } finally {

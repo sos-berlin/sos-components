@@ -34,7 +34,9 @@ public class CachedAgentCouplingFailed {
     }
 
     public void remove(String agentId) {
-        agents.remove(agentId);
+        if (agents.containsKey(agentId)) {
+            agents.remove(agentId);
+        }
     }
 
     public void clear() {

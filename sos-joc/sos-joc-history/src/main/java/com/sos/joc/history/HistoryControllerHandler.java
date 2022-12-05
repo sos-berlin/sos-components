@@ -9,11 +9,11 @@ import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
@@ -22,10 +22,10 @@ import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
-import com.sos.joc.cluster.notifier.DefaultNotifier;
-import com.sos.joc.cluster.notifier.INotifier;
-import com.sos.joc.cluster.notifier.Mailer;
 import com.sos.joc.history.controller.configuration.HistoryConfiguration;
+import com.sos.joc.history.controller.exception.HistoryFatalException;
+import com.sos.joc.history.controller.exception.HistoryProcessingDatabaseConnectException;
+import com.sos.joc.history.controller.exception.HistoryProcessingException;
 import com.sos.joc.history.controller.model.HistoryModel;
 import com.sos.joc.history.controller.proxy.EventFluxStopper;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry;
@@ -116,32 +116,31 @@ public class HistoryControllerHandler {
 
     private final SOSHibernateFactory factory;
     private final ControllerConfiguration controllerConfig;
-    private final INotifier notifier;
     private final String controllerId;
     private final String serviceIdentifier;
 
     private JControllerApi api;
-    private EventFluxStopper stopper = new EventFluxStopper();
+    private EventFluxStopper stopper = null;
     private final Object lockObject = new Object();
     private HistoryConfiguration config;
     private HistoryModel model;
 
     private AtomicBoolean closed = new AtomicBoolean(false);
     private String identifier;
-    private int releaseEventsInterval;// minutes
+    private long releaseEventsInterval;// seconds
     private long lastReleaseEvents;// seconds
     private Long lastReleaseEventId;
+    private long lastClearCache;// seconds
 
     private AtomicLong tornAfterEventId;
     private AtomicLong lastActivityStart = new AtomicLong();
     private AtomicLong lastActivityEnd = new AtomicLong();
 
     public HistoryControllerHandler(SOSHibernateFactory factory, HistoryConfiguration config, ControllerConfiguration controllerConfig,
-            Mailer notifier, String serviceIdentifier) {
+            String serviceIdentifier) {
         this.factory = factory;
         this.config = config;
         this.controllerConfig = controllerConfig;
-        this.notifier = notifier == null ? new DefaultNotifier() : notifier;
         this.controllerId = controllerConfig.getCurrent().getId();
         this.serviceIdentifier = serviceIdentifier;
         setIdentifier(controllerConfig.getCurrent().getType());
@@ -170,8 +169,7 @@ public class HistoryControllerHandler {
             }
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][%s]%s", identifier, method, e.toString()), e);
-            notifier.notifyOnError(method, e);
-            wait(config.getWaitIntervalOnError());
+            waitFor(config.getWaitIntervalOnError());
         }
     }
 
@@ -179,7 +177,7 @@ public class HistoryControllerHandler {
         String method = getMethodName("start");
         LOGGER.info(String.format("%seventId=%s", method, eventId));
 
-        initReleaseEvents(model.getHistoryConfiguration());
+        initIntervals(model.getHistoryConfiguration());
         api = ControllerApi.of(controllerConfig.getCurrent().getId(), ProxyUser.HISTORY);
         long errorCounter = 0;
         while (!closed.get()) {
@@ -191,6 +189,9 @@ public class HistoryControllerHandler {
                 eventId = process(eventId);
                 errorCounter = 0;
             } catch (Throwable ex) {
+                errorCounter++;
+                boolean waitForDatabaseConnection = false;
+
                 if (closed.get()) {
                     LOGGER.info(String.format("%s[closed][exception ignored]%s", method, ex.toString()));
                 } else {
@@ -198,26 +199,85 @@ public class HistoryControllerHandler {
                         if (isTornException((ProblemException) ex)) {
                             LOGGER.warn(String.format("%s[TORN]%s", method, ex.toString()));
                             tornAfterEventId = new AtomicLong(getTornEventId());
+                        } else {
+                            LOGGER.error(String.format("%s[errorCounter=%s]%s", method, errorCounter, ex.toString()), ex);
                         }
                     } else if (isReactorException(ex)) {
-                        LOGGER.warn(String.format("%s[exception]%s", method, ex.toString()), ex);
+                        LOGGER.warn(String.format("%s[errorCounter=%s]%s", method, errorCounter, ex.toString()), ex);
+                    } else if (isHistoryProcessingException(ex)) {
+                        if (ex instanceof HistoryProcessingDatabaseConnectException) {
+                            waitForDatabaseConnection = true;
+                            errorCounter = 0;
+                            LOGGER.error(String.format("%s%s", method, ex.toString()), ex);
+                        } else {
+                            if (config.getMaxStopProcessingOnErrors() > 0 && errorCounter >= config.getMaxStopProcessingOnErrors()) {
+                                HistoryFatalException hfe = new HistoryFatalException(controllerId, config.getMaxStopProcessingOnErrors(), ex);
+                                LOGGER.error(String.format("%s[errorCounter=%s]%s", method, errorCounter, hfe.toString()), hfe);
+                                close();
+                            } else {
+                                LOGGER.error(String.format("%s[errorCounter=%s]%s", method, errorCounter, ex.toString()), ex);
+                            }
+                        }
                     } else {
-                        LOGGER.error(String.format("%s[exception]%s", method, ex.toString()), ex);
+                        LOGGER.error(String.format("%s[errorCounter=%s]%s", method, errorCounter, ex.toString()), ex);
                     }
                     // notifier.notifyOnError(method, ex); //TODO avoid flooding
                 }
-                errorCounter++;
-                int interval = config.getWaitIntervalOnError();
-                if (errorCounter > 10) {
-                    interval = interval * 2;
+                if (waitForDatabaseConnection) {
+                    waitForDatabaseConnection();
+                } else {
+                    long interval = config.getWaitIntervalOnProcessingError();
+                    if (errorCounter > 10) {
+                        interval = interval * 2;
+                    }
+                    waitFor(interval);
                 }
-                wait(interval);
-
             }
         }
 
         if (isDebugEnabled) {
             LOGGER.debug(String.format("%s[end]%s", method, eventId));
+        }
+    }
+
+    private void waitForDatabaseConnection() {
+        String method = getMethodName("waitForDatabaseConnection");
+        boolean run = true;
+        long counter = 0;
+
+        if (stopper != null) {
+            stopper.stop();
+        }
+
+        while (run) {
+            if (closed.get()) {
+                run = false;
+            } else {
+                counter++;
+                try {
+                    long interval = 0;
+                    if (counter <= 10) {
+                        interval = config.getWaitIntervalOnError();// 5s
+                    } else {
+                        interval = config.getWaitIntervalOnProcessingError();// 30s
+                        if (counter >= 20) {
+                            interval = interval * 2;
+                        }
+                    }
+                    LOGGER.info(String.format("%s[%s]wait %ss...", method, counter, interval));
+                    waitFor(interval);
+
+                    if (this.model == null) {
+                        throw new Exception("HistoryModel is null");
+                    } else {
+                        this.model.checkConnection(method);
+                    }
+                    counter = 0;
+                    run = false;
+                } catch (Throwable e) {
+                    LOGGER.error(String.format("%s[%s]%s", method, counter, e.toString()), e);
+                }
+            }
         }
     }
 
@@ -235,7 +295,7 @@ public class HistoryControllerHandler {
                     return id;
                 } catch (Throwable e) {
                     LOGGER.error(String.format("%s[end]%s", method, e.toString()), e);
-                    wait(config.getWaitIntervalOnError());
+                    waitFor(config.getWaitIntervalOnError());
                 }
             }
         }
@@ -243,6 +303,8 @@ public class HistoryControllerHandler {
     }
 
     private synchronized AtomicLong process(AtomicLong eventId) throws Exception {
+
+        stopper = new EventFluxStopper();
 
         try (JStandardEventBus<ProxyEvent> eventBus = new JStandardEventBus<>(ProxyEvent.class)) {
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId.get()));
@@ -256,16 +318,48 @@ public class HistoryControllerHandler {
 
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).filter(e -> e.getEventId() != null).bufferTimeout(config
                     .getBufferTimeoutMaxSize(), Duration.ofSeconds(config.getBufferTimeoutMaxTime())).toIterable().forEach(list -> {
-                        if (!closed.get()) {
-                            try {
-                                lastActivityStart.set(new Date().getTime());
-                                eventId.set(model.process(list));
-                                list.clear();
-                                releaseEvents(eventId.get());
-                                lastActivityEnd.set(new Date().getTime());
-                            } catch (Throwable e) {
-                                LOGGER.error(e.toString(), e);
-                                wait(config.getWaitIntervalOnError());
+                        boolean run = true;
+                        int errorCounter = 0;
+                        long errorStartMs = 0;
+
+                        clearCache();
+
+                        while (run) {
+                            if (closed.get()) {
+                                run = false;
+                            } else {
+                                try {
+                                    lastActivityStart.set(new Date().getTime());
+                                    eventId.set(model.process(list));
+                                    // list.clear();
+                                    releaseEvents(eventId.get());
+                                    lastActivityEnd.set(new Date().getTime());
+                                    errorCounter = 0;
+                                } catch (Throwable e) {
+                                    if (SOSHibernate.isConnectException(e)) {
+                                        throw new HistoryProcessingDatabaseConnectException(controllerId, e);
+                                    }
+
+                                    errorCounter++;
+                                    if (errorStartMs == 0) {
+                                        errorStartMs = new Date().getTime();
+                                    } else {
+                                        Long current = SOSDate.getSeconds(new Date());
+                                        if ((current - errorStartMs / 1_000) >= config.getWaitIntervalStopProcessingOnErrors()) {
+                                            int totalErrors = errorCounter;
+                                            errorCounter = 0;
+                                            throw new HistoryProcessingException(controllerId, e, config.getWaitIntervalStopProcessingOnErrors(),
+                                                    new Date(errorStartMs), totalErrors);
+                                        }
+                                    }
+                                    LOGGER.error("[processing][errorCounter=" + errorCounter + "]" + e.toString(), e);
+                                    waitFor(config.getWaitIntervalOnProcessingError());
+                                } finally {
+                                    if (errorCounter == 0) {
+                                        errorStartMs = 0;
+                                        run = false;
+                                    }
+                                }
                             }
                         }
                     });
@@ -277,7 +371,7 @@ public class HistoryControllerHandler {
         AFatEvent event = null;
         HistoryEventEntry entry = null;
         try {
-            entry = new HistoryEventEntry(eventAndState);
+            entry = new HistoryEventEntry(model.getControllerConfiguration().getCurrent().getId(), eventAndState);
             HistoryOrder order;
             List<FatForkedChild> childs;
             List<OrderLock> ol;
@@ -360,8 +454,8 @@ public class HistoryControllerHandler {
                 JOrderForked jof = (JOrderForked) entry.getJOrderEvent();
 
                 WorkflowInfo wi = order.getWorkflowInfo();
-                Position position = wi.getPosition();
-                List<?> positions = position.getUnderlying().toList();
+                Position parentPosition = wi.getPosition();
+                List<Object> parentPositionAsList = parentPosition.getUnderlying().toList();
                 childs = new ArrayList<FatForkedChild>();
                 jof.children().forEach(c -> {
                     String branchIdOrName = null;
@@ -370,14 +464,14 @@ public class HistoryControllerHandler {
                     } else {
                         branchIdOrName = HistoryUtil.getForkChildNameFromOrderId(c.orderId().string());
                     }
-                    // copy
-                    List<Object> childPositions = positions.stream().collect(Collectors.toList());
-                    childPositions.add("fork+" + branchIdOrName);
-                    childPositions.add(0);
-                    childs.add(new FatForkedChild(c.orderId().string(), branchIdOrName, wi.createNewPosition(childPositions)));
+                    // copy parent position
+                    List<Object> childPosition = new ArrayList<>(parentPositionAsList);
+                    childPosition.add("fork+" + branchIdOrName);
+                    childPosition.add(0);
+                    childs.add(new FatForkedChild(c.orderId().string(), branchIdOrName, wi.createNewPosition(childPosition)));
                 });
                 event = new FatEventOrderForked(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), wi.getPath(), wi.getVersionId(), position, null, childs);
+                event.set(order.getOrderId(), wi.getPath(), wi.getVersionId(), parentPosition, null, childs);
                 break;
 
             case OrderJoined:
@@ -665,15 +759,19 @@ public class HistoryControllerHandler {
         return false;
     }
 
-    public void wait(int interval) {
-        if (!closed.get() && interval > 0) {
-            String method = getMethodName("wait");
+    private boolean isHistoryProcessingException(Throwable t) {
+        return t instanceof HistoryProcessingException;
+    }
+
+    private void waitFor(long seconds) {
+        if (!closed.get() && seconds > 0) {
+            String method = getMethodName("waitFor");
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s%ss ...", method, interval));
+                LOGGER.debug(String.format("%s%ss ...", method, seconds));
             }
             try {
                 synchronized (lockObject) {
-                    lockObject.wait(interval * 1_000);
+                    lockObject.wait(seconds * 1_000);
                 }
             } catch (InterruptedException e) {
                 if (closed.get()) {
@@ -702,7 +800,9 @@ public class HistoryControllerHandler {
     public void doClose() {
         closed.set(true);
         try {
-            stopper.stop();
+            if (stopper != null) {
+                stopper.stop();
+            }
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
@@ -758,22 +858,23 @@ public class HistoryControllerHandler {
                 }
             } catch (Throwable e) {
                 LOGGER.error(String.format("[%s][%s][%s]%s", identifier, method, count, e.toString()), e);
-                notifier.notifyOnError(String.format("[%s][%s]", method, count), e);
-                wait(config.getWaitIntervalOnError());
+                waitFor(config.getWaitIntervalOnError());
             }
         }
     }
 
-    private void initReleaseEvents(HistoryConfiguration hc) {
+    private void initIntervals(HistoryConfiguration hc) {
         releaseEventsInterval = hc.getReleaseEventsInterval();
         lastReleaseEventId = 0L;
         lastReleaseEvents = SOSDate.getSeconds(new Date());
+
+        lastClearCache = lastReleaseEvents;
     }
 
     private void releaseEvents(Long eventId) {
         if (eventId != null && eventId > 0 && lastReleaseEvents > 0 && !eventId.equals(lastReleaseEventId)) {
             Long current = SOSDate.getSeconds(new Date());
-            if (((current - lastReleaseEvents) / 60) >= releaseEventsInterval) {
+            if ((current - lastReleaseEvents) >= releaseEventsInterval) {
                 String method = "releaseEvents";
                 try {
                     LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), method, eventId));
@@ -784,6 +885,17 @@ public class HistoryControllerHandler {
                     LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, eventId, t.toString()));
                 } finally {
                     lastReleaseEvents = current;
+                }
+            }
+        }
+    }
+
+    private void clearCache() {
+        if (model != null) {
+            if (lastClearCache > 0) {
+                Long current = SOSDate.getSeconds(new Date());
+                if ((current - lastClearCache) >= model.getHistoryConfiguration().getCacheAge()) {
+                    model.getCacheHandler().clear(current, model.getHistoryConfiguration().getCacheAge());
                 }
             }
         }
