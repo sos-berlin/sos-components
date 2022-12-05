@@ -223,6 +223,9 @@ public class HistoryControllerHandler {
                     }
                     // notifier.notifyOnError(method, ex); //TODO avoid flooding
                 }
+
+                stopFlux();
+
                 if (waitForDatabaseConnection) {
                     waitForDatabaseConnection();
                 } else {
@@ -244,10 +247,6 @@ public class HistoryControllerHandler {
         String method = getMethodName("waitForDatabaseConnection");
         boolean run = true;
         long counter = 0;
-
-        if (stopper != null) {
-            stopper.stop();
-        }
 
         while (run) {
             if (closed.get()) {
@@ -799,15 +798,19 @@ public class HistoryControllerHandler {
 
     public void doClose() {
         closed.set(true);
+        stopFlux();
+        synchronized (lockObject) {
+            lockObject.notifyAll();
+        }
+    }
+
+    private void stopFlux() {
         try {
             if (stopper != null) {
                 stopper.stop();
             }
         } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
-        }
-        synchronized (lockObject) {
-            lockObject.notifyAll();
+            LOGGER.warn("[stopFlux]" + e.toString(), e);
         }
     }
 
