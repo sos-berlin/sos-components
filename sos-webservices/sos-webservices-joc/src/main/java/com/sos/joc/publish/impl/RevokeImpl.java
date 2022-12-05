@@ -12,8 +12,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,8 +33,10 @@ import com.sos.joc.model.publish.RevokeFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IRevoke;
 import com.sos.joc.publish.util.DeleteDeployments;
-import com.sos.joc.publish.util.PublishUtils;
+import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("inventory/deployment")
 public class RevokeImpl extends JOCResourceImpl implements IRevoke {
@@ -136,13 +136,13 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                     // set new versionId for second round (delete items)
                     // call updateRepo command via Proxy of given controllers
                     final List<DBItemDeploymentHistory> toRevoke = filteredDepHistoryItemsToRevoke;
-                    PublishUtils.updateItemsDelete(commitIdForRevoke, toRevoke, controllerId).thenAccept(either -> {
+                    UpdateItemUtils.updateItemsDelete(commitIdForRevoke, toRevoke, controllerId).thenAccept(either -> {
                         DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForRevoke, getAccessToken(), getJocError());
                     });
                 }
                 // process folder to Delete
                 if (filteredItemsFromFolderToRevoke != null && !filteredItemsFromFolderToRevoke.isEmpty()) {
-                    PublishUtils.updateItemsDelete(commitIdForRevokeFromFolder, itemsPerControllerToRevokeFromFolder.get(controllerId), controllerId)
+                    UpdateItemUtils.updateItemsDelete(commitIdForRevokeFromFolder, itemsPerControllerToRevokeFromFolder.get(controllerId), controllerId)
                         .thenAccept(either -> {
                             DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForRevokeFromFolder, getAccessToken(), getJocError());
                         }); 

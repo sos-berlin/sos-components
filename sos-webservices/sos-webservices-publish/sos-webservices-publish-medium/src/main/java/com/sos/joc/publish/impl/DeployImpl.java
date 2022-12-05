@@ -49,6 +49,7 @@ import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.publish.util.StoreDeployments;
+import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.schema.JsonValidator;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 
@@ -306,7 +307,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
                         // call updateRepo command via Proxy of given controllers
                     DeleteDeployments.storeNewDepHistoryEntries(dbLayer, toDelete, versionIdForDeleteRenamed);
-                        PublishUtils.updateItemsDelete(versionIdForDeleteRenamed, toDelete, controllerId).thenAccept(either -> {
+                    UpdateItemUtils.updateItemsDelete(versionIdForDeleteRenamed, toDelete, controllerId).thenAccept(either -> {
                             DeleteDeployments.processAfterDelete(either, controllerId, account, versionIdForDeleteRenamed, getAccessToken(), getJocError());
                             if(either.isRight()) {
                                 if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
@@ -377,13 +378,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // set new versionId for second round (delete items)
                     // call updateRepo command via Proxy of given controllers
                     final List<DBItemDeploymentHistory> toDelete = filteredDepHistoryItemsToDelete;
-                    PublishUtils.updateItemsDelete(commitIdForDelete, toDelete, controllerId).thenAccept(either -> {
+                    UpdateItemUtils.updateItemsDelete(commitIdForDelete, toDelete, controllerId).thenAccept(either -> {
                         DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
                     });
                 }
                 // process folder to Delete
                 if (filteredItemsFromFolderToDelete != null && !filteredItemsFromFolderToDelete.isEmpty()) {
-                    PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId)
+                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId)
                         .thenAccept(either -> {
                             DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
                         }); 

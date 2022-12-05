@@ -76,7 +76,7 @@ public class DeleteDeployments {
                 invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, sortedItems, commitId))); 
                 
                 // send commands to controllers
-                PublishUtils.updateItemsDelete(commitId, sortedItems, entry.getKey())
+                UpdateItemUtils.updateItemsDelete(commitId, sortedItems, entry.getKey())
                     .thenAccept(either -> processAfterDelete(either, entry.getKey(), account, commitId, accessToken, jocError));
             } else {
                 List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
@@ -90,7 +90,7 @@ public class DeleteDeployments {
                 invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, sortedItems, commitId)));
 
                 // send commands to controllers
-                PublishUtils.updateItemsDelete(commitIdforFileOrderSource, fileOrderSourceItems, entry.getKey())
+                UpdateItemUtils.updateItemsDelete(commitIdforFileOrderSource, fileOrderSourceItems, entry.getKey())
                     .thenAccept(either2 -> {
                         processAfterDelete(either2, entry.getKey(), account, commitIdforFileOrderSource, accessToken, jocError);
                         try {
@@ -98,7 +98,7 @@ public class DeleteDeployments {
                         } catch (InterruptedException e) {
                             //
                         }
-                        PublishUtils.updateItemsDelete(commitId, sortedItems, entry.getKey())
+                        UpdateItemUtils.updateItemsDelete(commitId, sortedItems, entry.getKey())
                         .thenAccept(either -> {
                             processAfterDelete(either, entry.getKey(), account, commitId, accessToken, jocError);
                         });
@@ -158,7 +158,7 @@ public class DeleteDeployments {
                             storeNewDepHistoryEntries(dbLayer, sortedItems, commitIdForDeleteFromFolder)));
                     
                     // send commands to controllers
-                    PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, sortedItems, controllerId).thenAccept(
+                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, sortedItems, controllerId).thenAccept(
                             either -> processAfterDelete(either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError));
                 } else {
                     List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
@@ -174,7 +174,7 @@ public class DeleteDeployments {
                             storeNewDepHistoryEntries(dbLayer, sortedItems, commitIdForDeleteFromFolder)));
                     
                     // send commands to controllers
-                    PublishUtils.updateItemsDelete(commitIdForDeleteFileOrderSource, fileOrderSourceItems, controllerId).thenAccept(
+                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteFileOrderSource, fileOrderSourceItems, controllerId).thenAccept(
                             either2 -> {
                                 processAfterDelete(either2, controllerId, account, commitIdForDeleteFileOrderSource, accessToken, jocError);
                                 try {
@@ -182,7 +182,7 @@ public class DeleteDeployments {
                                 } catch (InterruptedException e) {
                                     //
                                 }
-                                PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, sortedItems, controllerId).thenAccept(
+                                UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, sortedItems, controllerId).thenAccept(
                                         either -> processAfterDelete(either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError));
                             });
                 }
@@ -250,12 +250,12 @@ public class DeleteDeployments {
         for (String controllerId : controllerIds) {
             if (itemsToDeletePerController.get(controllerId) != null && !itemsToDeletePerController.get(controllerId).isEmpty()) {
                 // send command to controller
-                PublishUtils.updateItemsDelete(commitId, itemsToDeletePerController.get(controllerId), controllerId).thenAccept(
+                UpdateItemUtils.updateItemsDelete(commitId, itemsToDeletePerController.get(controllerId), controllerId).thenAccept(
                         either -> processAfterDelete(either, controllerId, account, commitId, accessToken, jocError));
             }
             // process folder to Delete
             if (itemsFromFolderToDeletePerController.get(controllerId) != null && !itemsFromFolderToDeletePerController.get(controllerId).isEmpty()) {
-                PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId).thenAccept(
+                UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId).thenAccept(
                         either -> processAfterDelete(either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError));
             }
         }
