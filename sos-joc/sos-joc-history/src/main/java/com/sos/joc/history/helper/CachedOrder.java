@@ -2,6 +2,7 @@ package com.sos.joc.history.helper;
 
 import java.util.Date;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.controller.model.event.EventType;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.db.history.DBItemHistoryOrder;
@@ -24,6 +25,9 @@ public class CachedOrder {
     private Integer state;
     private boolean hasStates;
     private Long currentHistoryOrderStepId;
+
+    // minutes
+    private long lastUsage;
 
     public CachedOrder(DBItemHistoryOrder item) {
         id = item.getId();
@@ -154,6 +158,14 @@ public class CachedOrder {
         } else {
             lastStepError = null;
         }
+    }
+
+    public void setLastUsage() {
+        lastUsage = SOSDate.getMinutes(new Date());
+    }
+
+    public long getLastUsage() {
+        return lastUsage;
     }
 
     private void setLastStepError(String errorState, String errorReason, String errorCode, String errorText, Integer returnCode) {
