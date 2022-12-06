@@ -66,16 +66,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
             DailyPlanOrderFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
 
-            if (in.getFilter().getControllerIds() == null) {
-                in.getFilter().setControllerIds(new ArrayList<String>());
-                in.getFilter().getControllerIds().add(in.getControllerId());
-            } else {
-                if (!in.getFilter().getControllerIds().contains(in.getControllerId())) {
-                    in.getFilter().getControllerIds().add(in.getControllerId());
-                }
-            }
-
-            Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getFilter().getControllerIds(), accessToken)
+            Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getFilter().getControllerIds())
                     .stream().filter(availableController -> getControllerPermissions(availableController, accessToken).getOrders().getCreate())
                     .collect(Collectors.toSet());
 

@@ -40,7 +40,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
             DailyPlanOrderFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
 
-            Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getFilter().getControllerIds(), accessToken)
+            Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getFilter().getControllerIds())
                     .stream().filter(availableController -> getControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
                             Collectors.toSet());
             boolean permitted = !allowedControllers.isEmpty();
@@ -49,9 +49,6 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             if (response != null) {
                 return response;
             }
-
-            this.checkRequiredParameter("filter", in.getFilter());
-            this.checkRequiredParameter("dailyPlanDate", in.getFilter().getDailyPlanDate());
 
             boolean isDebugEnabled = LOGGER.isDebugEnabled();
             setSettings();
@@ -92,7 +89,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                 filter.setSubmissionIds(null);
                 filter.setSubmissionForDate(date);
 
-                ArrayList<PlannedOrderItem> result = new ArrayList<PlannedOrderItem>();
+                List<PlannedOrderItem> result = new ArrayList<>();
                 List<DBItemDailyPlanWithHistory> orders = getOrders(session, controllerId, filter, false);
                 addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, false);
 

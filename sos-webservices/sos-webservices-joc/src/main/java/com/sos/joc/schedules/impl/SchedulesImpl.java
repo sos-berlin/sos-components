@@ -1,11 +1,12 @@
 package com.sos.joc.schedules.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -14,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.WebservicePaths;
@@ -46,43 +46,38 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             JsonValidator.validateFailFast(filterBytes, ScheduleSelector.class);
             ScheduleSelector in = Globals.objectMapper.readValue(filterBytes, ScheduleSelector.class);
 
-            this.checkRequiredParameter("controllerId", in.getControllerId());
-
-            if (in.getSelector() == null) {
-                Folder root = new Folder();
-                root.setFolder("/");
-                root.setRecursive(true);
-                in.setSelector(new SchedulesSelector());
-                in.getSelector().setFolders(new ArrayList<Folder>());
-                in.getSelector().getFolders().add(root);
-            }
-
             String controllerId = in.getControllerId();
             JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getView());
             if (response != null) {
                 return response;
             }
+            
+            if (in.getSelector() == null) {
+                Folder root = new Folder();
+                root.setFolder("/");
+                root.setRecursive(true);
+                in.setSelector(new SchedulesSelector());
+                in.getSelector().setFolders(Collections.singletonList(root));
+            }
 
             Set<String> scheduleSingles = null;
             Set<String> workflowSingles = null;
             if (in.getSelector().getSchedulePaths() != null) {
-                scheduleSingles = in.getSelector().getSchedulePaths().stream().distinct().collect(Collectors.toSet());
+                scheduleSingles = in.getSelector().getSchedulePaths().stream().collect(Collectors.toSet());
             }
             if (in.getSelector().getWorkflowPaths() != null) {
-                workflowSingles = in.getSelector().getWorkflowPaths().stream().distinct().collect(Collectors.toSet());
+                workflowSingles = in.getSelector().getWorkflowPaths().stream().collect(Collectors.toSet());
             }
             final Set<Folder> permittedFolders = addPermittedFolder(in.getSelector().getFolders());
-            Map<String, Boolean> checkedFolders = new HashMap<>();
             Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(controllerId, scheduleSingles, workflowSingles, permittedFolders,
-                    checkedFolders);
+                    new HashMap<>());
 
             SchedulesList answer = new SchedulesList();
-            answer.setSchedules(new ArrayList<Schedule>());
+            answer.setSchedules(Collections.emptyList());
 
-            if (dailyPlanSchedules != null && dailyPlanSchedules.size() > 0) {
-                for (DailyPlanSchedule dailyPlanSchedule : dailyPlanSchedules) {
-                    answer.getSchedules().add(dailyPlanSchedule.getSchedule());
-                }
+            if (dailyPlanSchedules != null && !dailyPlanSchedules.isEmpty()) {
+                answer.setSchedules(dailyPlanSchedules.stream().map(DailyPlanSchedule::getSchedule).filter(Objects::nonNull).collect(Collectors
+                        .toList()));
             }
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
@@ -130,7 +125,7 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             session = null;
 
             if (scheduleItems == null || scheduleItems.size() == 0) {
-                return new ArrayList<DailyPlanSchedule>();
+                return Collections.emptyList();
             }
 
             return new DailyPlanRunner(null).convert(scheduleItems, permittedFolders, checkedFolders, false);

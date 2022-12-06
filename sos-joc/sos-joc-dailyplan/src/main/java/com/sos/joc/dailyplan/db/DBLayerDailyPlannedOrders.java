@@ -826,7 +826,7 @@ public class DBLayerDailyPlannedOrders {
             List<DBItemDailyPlanOrder> resultList = new ArrayList<DBItemDailyPlanOrder>();
             int size = filter.getOrderIds().size();
             if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
-                ArrayList<String> copy = (ArrayList<String>) filter.getOrderIds().stream().collect(Collectors.toList());
+                List<String> copy = filter.getOrderIds().stream().collect(Collectors.toList());
                 for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
                     if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
                         filter.setOrderIds(copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE)));
