@@ -19,7 +19,7 @@ import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
-import com.sos.joc.cluster.service.active.IJocActiveClusterService;
+import com.sos.joc.cluster.service.active.IJocActiveMemberService;
 
 public class CleanupTaskModel implements ICleanupTask {
 
@@ -39,7 +39,7 @@ public class CleanupTaskModel implements ICleanupTask {
 
     private final JocClusterHibernateFactory factory;
     private final DBLayerCleanup dbLayer;
-    private final IJocActiveClusterService service;
+    private final IJocActiveMemberService service;
     private final int batchSize;
     private final TaskType type;
     private final String identifier;
@@ -53,11 +53,11 @@ public class CleanupTaskModel implements ICleanupTask {
         this(factory, null, batchSize, identifier);
     }
 
-    protected CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveClusterService service, int batchSize) {
+    protected CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize) {
         this(factory, service, batchSize, null);
     }
 
-    private CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveClusterService service, int batchSize, String identifier) {
+    private CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, String identifier) {
         this.factory = factory;
         this.service = service;
         this.batchSize = batchSize;
@@ -184,7 +184,7 @@ public class CleanupTaskModel implements ICleanupTask {
         return batchSize;
     }
 
-    public IJocActiveClusterService getService() {
+    public IJocActiveMemberService getService() {
         return service;
     }
 

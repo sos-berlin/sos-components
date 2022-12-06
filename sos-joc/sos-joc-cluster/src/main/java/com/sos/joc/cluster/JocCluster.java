@@ -25,7 +25,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleState
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.joc.cluster.JocClusterHandler.PerformType;
+import com.sos.joc.cluster.JocClusterActiveMemberHandler.PerformType;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
@@ -58,7 +58,7 @@ public class JocCluster {
     private final SOSHibernateFactory dbFactory;
     private final JocClusterConfiguration config;
     private final JocConfiguration jocConfig;
-    private final JocClusterHandler handler;
+    private final JocClusterActiveMemberHandler handler;
     private final Object lock = new Object();
     private final Object lockMember = new Object();
     private final String currentMemberId;
@@ -79,7 +79,7 @@ public class JocCluster {
         this.dbFactory = factory;
         this.config = jocClusterConfiguration;
         this.jocConfig = jocConfiguration;
-        this.handler = new JocClusterHandler(this);
+        this.handler = new JocClusterActiveMemberHandler(this);
         this.currentMemberId = jocConfig.getMemberId();
         jocStartTime = jocStartDateTime;
     }
@@ -997,7 +997,7 @@ public class JocCluster {
         return jocConfig;
     }
 
-    public JocClusterHandler getHandler() {
+    public JocClusterActiveMemberHandler getHandler() {
         return handler;
     }
 

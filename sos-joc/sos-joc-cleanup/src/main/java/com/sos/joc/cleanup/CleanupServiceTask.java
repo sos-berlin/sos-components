@@ -36,7 +36,7 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
-import com.sos.joc.cluster.service.active.IJocActiveClusterService;
+import com.sos.joc.cluster.service.active.IJocActiveMemberService;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
@@ -80,7 +80,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         JocCluster cluster = JocClusterService.getInstance().getCluster();
         if (cluster.getHandler().isActive()) {
             CleanupServiceSchedule cleanupSchedule = this.schedule;
-            List<IJocActiveClusterService> services = cluster.getHandler().getServices();
+            List<IJocActiveMemberService> services = cluster.getHandler().getServices();
             LOGGER.info(String.format("[%s][run]found %s running services", logIdentifier, services.size()));
 
             try {
@@ -104,7 +104,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
             List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
             // 1) service tasks
-            for (IJocActiveClusterService service : services) {
+            for (IJocActiveMemberService service : services) {
                 if (service.getIdentifier().equals(ClusterServices.cleanup.name())) {
                     LOGGER.info("  [service][skip]" + service.getIdentifier());
                     continue;

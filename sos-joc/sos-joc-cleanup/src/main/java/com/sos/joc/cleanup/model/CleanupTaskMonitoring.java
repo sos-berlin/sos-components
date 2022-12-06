@@ -11,7 +11,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
-import com.sos.joc.cluster.service.active.IJocActiveClusterService;
+import com.sos.joc.cluster.service.active.IJocActiveMemberService;
 import com.sos.joc.db.DBLayer;
 
 public class CleanupTaskMonitoring extends CleanupTaskModel {
@@ -33,7 +33,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     private int totalNotificationMonitors = 0;
     private int totalNotificationAcknowledgements = 0;
 
-    public CleanupTaskMonitoring(JocClusterHibernateFactory factory, IJocActiveClusterService service, int batchSize) {
+    public CleanupTaskMonitoring(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize) {
         super(factory, service, batchSize);
     }
 

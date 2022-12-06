@@ -28,10 +28,10 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Acti
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsCleanup;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
-import com.sos.joc.cluster.service.active.AJocActiveClusterService;
+import com.sos.joc.cluster.service.active.AJocActiveMemberService;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
-public class CleanupService extends AJocActiveClusterService {
+public class CleanupService extends AJocActiveMemberService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupService.class);
 

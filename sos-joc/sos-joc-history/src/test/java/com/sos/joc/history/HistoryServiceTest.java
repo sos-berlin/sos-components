@@ -20,14 +20,14 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
-import com.sos.joc.cluster.service.active.IJocActiveClusterService;
+import com.sos.joc.cluster.service.active.IJocActiveMemberService;
 import com.sos.joc.model.common.JocSecurityLevel;
 
 public class HistoryServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryServiceTest.class);
 
-    private static void stopAfter(IJocActiveClusterService service, StartupMode mode, int seconds) {
+    private static void stopAfter(IJocActiveMemberService service, StartupMode mode, int seconds) {
         LOGGER.info(String.format("[start][stopAfter][%ss]...", seconds));
 
         try {

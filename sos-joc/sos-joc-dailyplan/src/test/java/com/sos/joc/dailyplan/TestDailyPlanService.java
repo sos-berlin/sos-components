@@ -24,7 +24,7 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
-import com.sos.joc.cluster.service.active.IJocActiveClusterService;
+import com.sos.joc.cluster.service.active.IJocActiveMemberService;
 import com.sos.joc.model.common.JocSecurityLevel;
 
 public class TestDailyPlanService {
@@ -66,7 +66,7 @@ public class TestDailyPlanService {
         LOGGER.info(OrdersHelper.getNewFromOldOrderId("#2021-10-12#C4038226057-00002-12-dailyplan_shedule_cyclic", "XXX"));
     }
 
-    private static void stopAfter(IJocActiveClusterService service, StartupMode mode, int seconds) {
+    private static void stopAfter(IJocActiveMemberService service, StartupMode mode, int seconds) {
         LOGGER.info(String.format("[start][stopAfter][%ss]...", seconds));
 
         try {

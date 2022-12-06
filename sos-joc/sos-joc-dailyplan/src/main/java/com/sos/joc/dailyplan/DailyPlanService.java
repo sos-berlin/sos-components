@@ -17,13 +17,13 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
-import com.sos.joc.cluster.service.active.AJocActiveClusterService;
+import com.sos.joc.cluster.service.active.AJocActiveMemberService;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.GlobalSettingsReader;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
-public class DailyPlanService extends AJocActiveClusterService {
+public class DailyPlanService extends AJocActiveMemberService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanService.class);
 

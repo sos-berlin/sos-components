@@ -29,28 +29,28 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
-import com.sos.joc.cluster.service.active.IJocActiveClusterService;
+import com.sos.joc.cluster.service.active.IJocActiveMemberService;
 
-public class JocClusterHandler {
+public class JocClusterActiveMemberHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JocClusterHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JocClusterActiveMemberHandler.class);
 
     public static enum PerformType {
         START, STOP
     };
 
     private final JocCluster cluster;
-    private List<IJocActiveClusterService> services;
+    private List<IJocActiveMemberService> services;
     private boolean active;
 
-    protected JocClusterHandler(JocCluster jocCluster) {
+    protected JocClusterActiveMemberHandler(JocCluster jocCluster) {
         cluster = jocCluster;
     }
 
     protected synchronized JocClusterAnswer perform(StartupMode mode, PerformType type, ConfigurationGlobals configurations) {
         LOGGER.info(String.format("[%s][perform][active=%s]%s", mode, active, type.name()));
 
-        if (cluster.getConfig().getServices() == null || cluster.getConfig().getServices().size() == 0) {
+        if (cluster.getConfig().getActiveMemberServices() == null || cluster.getConfig().getActiveMemberServices().size() == 0) {
             return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_CONFIGURATION);
         }
 
@@ -91,7 +91,7 @@ public class JocClusterHandler {
         ScheduledExecutorService heartBeat = scheduleHeartBeat(mode, method);
         List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
         for (int i = 0; i < services.size(); i++) {
-            IJocActiveClusterService s = services.get(i);
+            IJocActiveMemberService s = services.get(i);
             Supplier<JocClusterAnswer> task = new Supplier<JocClusterAnswer>() {
 
                 @Override
@@ -193,13 +193,13 @@ public class JocClusterHandler {
 
     private void tryCreateServices() {
         if (services == null) {
-            services = new ArrayList<IJocActiveClusterService>();
-            for (int i = 0; i < cluster.getConfig().getServices().size(); i++) {
-                Class<?> clazz = cluster.getConfig().getServices().get(i);
+            services = new ArrayList<IJocActiveMemberService>();
+            for (int i = 0; i < cluster.getConfig().getActiveMemberServices().size(); i++) {
+                Class<?> clazz = cluster.getConfig().getActiveMemberServices().get(i);
                 try {
                     Constructor<?> ctor = clazz.getDeclaredConstructor(JocConfiguration.class, ThreadGroup.class);
                     ctor.setAccessible(true);
-                    IJocActiveClusterService s = (IJocActiveClusterService) ctor.newInstance(cluster.getJocConfig(), cluster.getConfig()
+                    IJocActiveMemberService s = (IJocActiveMemberService) ctor.newInstance(cluster.getJocConfig(), cluster.getConfig()
                             .getThreadGroup());
                     services.add(s);
                 } catch (Throwable e) {
@@ -214,31 +214,31 @@ public class JocClusterHandler {
     }
 
     public void updateService(String identifier, String controllerId, Action action) {
-        Optional<IJocActiveClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
+        Optional<IJocActiveMemberService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
             JocClusterServiceLogger.setLogger();
             LOGGER.error((String.format("handler not found for %s", identifier)));
             JocClusterServiceLogger.removeLogger();
             return;
         }
-        IJocActiveClusterService s = os.get();
+        IJocActiveMemberService s = os.get();
         s.update(cluster.getControllers(), controllerId, action);
     }
 
     public void updateService(String identifier, StartupMode mode, AConfigurationSection configuration) {
-        Optional<IJocActiveClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
+        Optional<IJocActiveMemberService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
             JocClusterServiceLogger.setLogger();
             LOGGER.error((String.format("handler not found for %s", identifier)));
             JocClusterServiceLogger.removeLogger();
             return;
         }
-        IJocActiveClusterService s = os.get();
+        IJocActiveMemberService s = os.get();
         s.update(mode, configuration);
     }
 
     public JocClusterAnswer restartService(String identifier, StartupMode mode, AConfigurationSection configuration) {
-        Optional<IJocActiveClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
+        Optional<IJocActiveMemberService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));
         }
@@ -247,7 +247,7 @@ public class JocClusterHandler {
         LOGGER.info(String.format("[%s][restart][%s]start...", mode, identifier));
         JocClusterServiceLogger.removeLogger();
 
-        IJocActiveClusterService s = os.get();
+        IJocActiveMemberService s = os.get();
         JocServiceAnswer answer = s.getInfo();
         if (!answer.getState().equals(JocServiceAnswerState.RELAX)) {
             if (answer.getDiff() < 0) {
@@ -298,7 +298,7 @@ public class JocClusterHandler {
         return active;
     }
 
-    public List<IJocActiveClusterService> getServices() {
+    public List<IJocActiveMemberService> getServices() {
         return services;
     }
 
