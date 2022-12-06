@@ -55,6 +55,7 @@
     <apache.commons.lang.version>3.1</apache.commons.lang.version>
     <apache.commons.compress.version>1.21</apache.commons.compress.version>
     <apache.commons.csv.version>1.9.0</apache.commons.csv.version>
+    <apache.commons.net.version>3.9.0</apache.commons.net.version>
     <apache.httpcomponents.httpclient.version>4.5.13</apache.httpcomponents.httpclient.version>
     <json.version>1.0.4</json.version>
     <servlet.version>5.0.0</servlet.version>
@@ -82,7 +83,6 @@
     <typesafe.config.version>1.4.1</typesafe.config.version>
     <keepass.java2.version>2.1.4</keepass.java2.version>
     <sshj.version>0.34.0</sshj.version>
-    <apache.commons.net.version>3.8.0</apache.commons.net.version>
     <javax.jms-api.version>2.0.1</javax.jms-api.version>
     <jsendnsca.version>2.1.1</jsendnsca.version>
     <jna.version>5.11.0</jna.version>
