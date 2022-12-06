@@ -23,13 +23,13 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Acti
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
-import com.sos.joc.cluster.service.active.AJocActiveClusterService;
+import com.sos.joc.cluster.service.active.AJocActiveMemberService;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel;
 
-public class MonitorService extends AJocActiveClusterService {
+public class MonitorService extends AJocActiveMemberService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MonitorService.class);
 

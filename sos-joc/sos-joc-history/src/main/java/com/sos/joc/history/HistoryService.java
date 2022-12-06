@@ -44,7 +44,7 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSec
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
-import com.sos.joc.cluster.service.active.AJocActiveClusterService;
+import com.sos.joc.cluster.service.active.AJocActiveMemberService;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.joc.DBItemJocVariable;
@@ -52,7 +52,7 @@ import com.sos.joc.history.controller.configuration.HistoryConfiguration;
 import com.sos.joc.history.db.DBLayerHistory;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
-public class HistoryService extends AJocActiveClusterService {
+public class HistoryService extends AJocActiveMemberService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryService.class);
 

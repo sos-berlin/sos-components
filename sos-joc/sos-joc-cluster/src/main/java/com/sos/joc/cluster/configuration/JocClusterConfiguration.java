@@ -27,14 +27,14 @@ public class JocClusterConfiguration {
         unknown, automatic, manual_restart, automatic_switchover, manual_switchover, settings_changed, manual;
     }
 
-    private static final String CLASS_NAME_SERVICE_CLEANUP = "com.sos.joc.cleanup.CleanupService";
-    private static final String CLASS_NAME_SERVICE_DAILYPLAN = "com.sos.joc.dailyplan.DailyPlanService";
-    private static final String CLASS_NAME_SERVICE_HISTORY = "com.sos.joc.history.HistoryService";
-    private static final String CLASS_NAME_SERVICE_MONITOR = "com.sos.joc.monitoring.MonitorService";
+    private static final String ACTIVE_MEMBER_SERVICE_CLEANUP = "com.sos.joc.cleanup.CleanupService";
+    private static final String ACTIVE_MEMBER_SERVICE_DAILYPLAN = "com.sos.joc.dailyplan.DailyPlanService";
+    private static final String ACTIVE_MEMBER_SERVICE_HISTORY = "com.sos.joc.history.HistoryService";
+    private static final String ACTIVE_MEMBER_SERVICE_MONITOR = "com.sos.joc.monitoring.MonitorService";
 
-    private static final String CLASS_NAME_CLUSTER_MODE = "com.sos.js7.license.joc.ClusterLicenseCheck";
+    private static final String CLUSTER_MODE = "com.sos.js7.license.joc.ClusterLicenseCheck";
 
-    private List<Class<?>> services;
+    private List<Class<?>> activeMemberServices;
     private final ThreadGroup threadGroup;
 
     private ClusterModeResult clusterModeResult;
@@ -60,20 +60,20 @@ public class JocClusterConfiguration {
         }
         threadGroup = new ThreadGroup(JocClusterConfiguration.IDENTIFIER);
         clusterModeResult = clusterMode();
-        register();
+        registerActiveServices();
     }
 
-    private void register() {
-        services = new ArrayList<>();
-        addServiceClass(CLASS_NAME_SERVICE_HISTORY);
-        addServiceClass(CLASS_NAME_SERVICE_DAILYPLAN);
-        addServiceClass(CLASS_NAME_SERVICE_CLEANUP);
-        addServiceClass(CLASS_NAME_SERVICE_MONITOR);
+    private void registerActiveServices() {
+        activeMemberServices = new ArrayList<>();
+        addActiveMemberService(ACTIVE_MEMBER_SERVICE_HISTORY);
+        addActiveMemberService(ACTIVE_MEMBER_SERVICE_DAILYPLAN);
+        addActiveMemberService(ACTIVE_MEMBER_SERVICE_CLEANUP);
+        addActiveMemberService(ACTIVE_MEMBER_SERVICE_MONITOR);
     }
 
-    private void addServiceClass(String className) {
+    private void addActiveMemberService(String className) {
         try {
-            services.add(Class.forName(className));
+            activeMemberServices.add(Class.forName(className));
         } catch (ClassNotFoundException e) {
             LOGGER.error(String.format("[%s]%s", className, e.toString()), e);
         }
@@ -135,8 +135,8 @@ public class JocClusterConfiguration {
         return heartBeatExceededInterval;
     }
 
-    public List<Class<?>> getServices() {
-        return services;
+    public List<Class<?>> getActiveMemberServices() {
+        return activeMemberServices;
     }
 
     public ThreadGroup getThreadGroup() {
@@ -159,7 +159,7 @@ public class JocClusterConfiguration {
         final ClassLoader webAppCL = this.getClass().getClassLoader();
         URL lJar = null;
         try {
-            lJar = webAppCL.loadClass(CLASS_NAME_CLUSTER_MODE).getProtectionDomain().getCodeSource().getLocation();
+            lJar = webAppCL.loadClass(CLUSTER_MODE).getProtectionDomain().getCodeSource().getLocation();
         } catch (Throwable e1) {
             return new ClusterModeResult(false);
         }
@@ -177,7 +177,7 @@ public class JocClusterConfiguration {
                 jars.add(jar.toUri().toURL());
             }
             currentCL = new URLClassLoader(jars.stream().toArray(URL[]::new));
-            Object o = currentCL.loadClass(CLASS_NAME_CLUSTER_MODE).getDeclaredConstructor().newInstance();
+            Object o = currentCL.loadClass(CLUSTER_MODE).getDeclaredConstructor().newInstance();
             for (Method m : o.getClass().getDeclaredMethods()) {
                 switch (m.getName()) {
                 case "getValidFrom":

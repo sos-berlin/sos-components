@@ -15,9 +15,9 @@ import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
-import com.sos.joc.cluster.service.active.AJocActiveClusterService;
+import com.sos.joc.cluster.service.active.AJocActiveMemberService;
 
-public class ProxyService extends AJocActiveClusterService {
+public class ProxyService extends AJocActiveMemberService {
 
     private static final String IDENTIFIER = "proxy";
 

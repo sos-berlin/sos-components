@@ -2,7 +2,7 @@ package com.sos.joc.cluster.service.active;
 
 import com.sos.joc.cluster.configuration.JocConfiguration;
 
-public abstract class AJocActiveClusterService implements IJocActiveClusterService {
+public abstract class AJocActiveMemberService implements IJocActiveMemberService {
 
     private final JocConfiguration jocConfig;
     private final ThreadGroup parentThreadGroup;
@@ -10,7 +10,7 @@ public abstract class AJocActiveClusterService implements IJocActiveClusterServi
 
     private ThreadGroup threadGroup;
 
-    public AJocActiveClusterService(final JocConfiguration jocConf, ThreadGroup clusterThreadGroup, String serviceIdentifier) {
+    public AJocActiveMemberService(final JocConfiguration jocConf, ThreadGroup clusterThreadGroup, String serviceIdentifier) {
         jocConfig = jocConf;
         parentThreadGroup = clusterThreadGroup;
         threadGroup = new ThreadGroup(parentThreadGroup, serviceIdentifier);
