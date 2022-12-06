@@ -1,11 +1,8 @@
-package com.sos.joc.cluster;
-
-import org.slf4j.MDC;
+package com.sos.joc.cluster.service.active;
 
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.model.cluster.common.ClusterServices;
 
-public abstract class AJocClusterService implements IJocClusterService {
+public abstract class AJocActiveClusterService implements IJocActiveClusterService {
 
     private final JocConfiguration jocConfig;
     private final ThreadGroup parentThreadGroup;
@@ -13,7 +10,7 @@ public abstract class AJocClusterService implements IJocClusterService {
 
     private ThreadGroup threadGroup;
 
-    public AJocClusterService(final JocConfiguration jocConf, ThreadGroup clusterThreadGroup, String serviceIdentifier) {
+    public AJocActiveClusterService(final JocConfiguration jocConf, ThreadGroup clusterThreadGroup, String serviceIdentifier) {
         jocConfig = jocConf;
         parentThreadGroup = clusterThreadGroup;
         threadGroup = new ThreadGroup(parentThreadGroup, serviceIdentifier);
@@ -45,25 +42,5 @@ public abstract class AJocClusterService implements IJocClusterService {
             threadGroup = new ThreadGroup(parentThreadGroup, identifier);
         }
         return threadGroup;
-    }
-
-    public static void setLogger() {
-        setLogger(ClusterServices.cluster.name());
-    }
-
-    public static void removeLogger() {
-        removeLogger(ClusterServices.cluster.name());
-    }
-
-    public static void setLogger(String identifier) {
-        MDC.put("clusterService", "service-" + identifier);
-    }
-
-    public static void removeLogger(String identifier) {
-        MDC.remove("service-" + identifier);
-    }
-
-    public static void clearAllLoggers() {
-        MDC.clear();
     }
 }

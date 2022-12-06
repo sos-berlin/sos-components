@@ -17,17 +17,19 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
+import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
-import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
+import com.sos.joc.cluster.service.active.IJocActiveClusterService;
 
 public class JocClusterHandler {
 
@@ -38,7 +40,7 @@ public class JocClusterHandler {
     };
 
     private final JocCluster cluster;
-    private List<IJocClusterService> services;
+    private List<IJocActiveClusterService> services;
     private boolean active;
 
     protected JocClusterHandler(JocCluster jocCluster) {
@@ -89,14 +91,14 @@ public class JocClusterHandler {
         ScheduledExecutorService heartBeat = scheduleHeartBeat(mode, method);
         List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
         for (int i = 0; i < services.size(); i++) {
-            IJocClusterService s = services.get(i);
+            IJocActiveClusterService s = services.get(i);
             Supplier<JocClusterAnswer> task = new Supplier<JocClusterAnswer>() {
 
                 @Override
                 public JocClusterAnswer get() {
-                    AJocClusterService.setLogger();
+                    JocClusterServiceLogger.setLogger();
                     LOGGER.info(String.format("[%s][%s][%s]start...", mode, method, s.getIdentifier()));
-                    AJocClusterService.removeLogger();
+                    JocClusterServiceLogger.removeLogger();
                     JocClusterAnswer answer = null;
                     if (isStart) {
                         AConfigurationSection configuration = null;
@@ -116,9 +118,9 @@ public class JocClusterHandler {
                     } else {
                         answer = s.stop(mode);
                     }
-                    AJocClusterService.setLogger();
+                    JocClusterServiceLogger.setLogger();
                     LOGGER.info(String.format("[%s][%s][%s]completed", mode, method, s.getIdentifier()));
-                    AJocClusterService.removeLogger();
+                    JocClusterServiceLogger.removeLogger();
                     return answer;
                 }
             };
@@ -134,7 +136,7 @@ public class JocClusterHandler {
 
             @Override
             public void run() {
-                AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
+                JocClusterServiceLogger.setLogger(JocClusterConfiguration.IDENTIFIER);
                 cluster.updateHeartBeat(mode, method, 3, true);
             }
         }, 5 /* start delay */, cluster.getConfig().getPollingInterval() /* duration */, TimeUnit.SECONDS);
@@ -155,7 +157,7 @@ public class JocClusterHandler {
             // ThreadHelper.print(mode, "before stop active services");
         }
 
-        AJocClusterService.setLogger();
+        JocClusterServiceLogger.setLogger();
         LOGGER.info(String.format("[%s][%s][active=%s]start...", mode, type.name(), active));
 
         ExecutorService es = Executors.newFixedThreadPool(services.size(), new JocClusterThreadFactory(cluster.getConfig().getThreadGroup(),
@@ -191,13 +193,14 @@ public class JocClusterHandler {
 
     private void tryCreateServices() {
         if (services == null) {
-            services = new ArrayList<IJocClusterService>();
+            services = new ArrayList<IJocActiveClusterService>();
             for (int i = 0; i < cluster.getConfig().getServices().size(); i++) {
                 Class<?> clazz = cluster.getConfig().getServices().get(i);
                 try {
                     Constructor<?> ctor = clazz.getDeclaredConstructor(JocConfiguration.class, ThreadGroup.class);
                     ctor.setAccessible(true);
-                    IJocClusterService s = (IJocClusterService) ctor.newInstance(cluster.getJocConfig(), cluster.getConfig().getThreadGroup());
+                    IJocActiveClusterService s = (IJocActiveClusterService) ctor.newInstance(cluster.getJocConfig(), cluster.getConfig()
+                            .getThreadGroup());
                     services.add(s);
                 } catch (Throwable e) {
                     LOGGER.error(String.format("[can't create new instance][%s]%s", clazz.getName(), e.toString()), e);
@@ -211,44 +214,44 @@ public class JocClusterHandler {
     }
 
     public void updateService(String identifier, String controllerId, Action action) {
-        Optional<IJocClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
+        Optional<IJocActiveClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
-            AJocClusterService.setLogger();
+            JocClusterServiceLogger.setLogger();
             LOGGER.error((String.format("handler not found for %s", identifier)));
-            AJocClusterService.removeLogger();
+            JocClusterServiceLogger.removeLogger();
             return;
         }
-        IJocClusterService s = os.get();
+        IJocActiveClusterService s = os.get();
         s.update(cluster.getControllers(), controllerId, action);
     }
 
     public void updateService(String identifier, StartupMode mode, AConfigurationSection configuration) {
-        Optional<IJocClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
+        Optional<IJocActiveClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
-            AJocClusterService.setLogger();
+            JocClusterServiceLogger.setLogger();
             LOGGER.error((String.format("handler not found for %s", identifier)));
-            AJocClusterService.removeLogger();
+            JocClusterServiceLogger.removeLogger();
             return;
         }
-        IJocClusterService s = os.get();
+        IJocActiveClusterService s = os.get();
         s.update(mode, configuration);
     }
 
     public JocClusterAnswer restartService(String identifier, StartupMode mode, AConfigurationSection configuration) {
-        Optional<IJocClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
+        Optional<IJocActiveClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));
         }
 
-        AJocClusterService.setLogger();
+        JocClusterServiceLogger.setLogger();
         LOGGER.info(String.format("[%s][restart][%s]start...", mode, identifier));
-        AJocClusterService.removeLogger();
+        JocClusterServiceLogger.removeLogger();
 
-        IJocClusterService s = os.get();
+        IJocActiveClusterService s = os.get();
         JocServiceAnswer answer = s.getInfo();
         if (!answer.getState().equals(JocServiceAnswerState.RELAX)) {
             if (answer.getDiff() < 0) {
-                AJocClusterService.setLogger();
+                JocClusterServiceLogger.setLogger();
                 LOGGER.info(String.format("[%s][restart][%s][service status %s][last activity start=%s, end=%s]wait 30s and ask again...", mode,
                         identifier, answer.getState(), answer.getLastActivityStart(), answer.getLastActivityEnd()));
                 cluster.waitFor(10);
@@ -263,30 +266,30 @@ public class JocClusterHandler {
             }
         }
 
-        AJocClusterService.setLogger(identifier);
+        JocClusterServiceLogger.setLogger(identifier);
         ThreadHelper.print(mode, "[" + identifier + "]before stop");
-        AJocClusterService.removeLogger();
+        JocClusterServiceLogger.removeLogger();
 
         s.stop(mode);
 
-        AJocClusterService.setLogger(identifier);
+        JocClusterServiceLogger.setLogger(identifier);
         ThreadHelper.tryStop(mode, s.getThreadGroup());
         ThreadHelper.print(mode, "[" + identifier + "]after stop");
-        AJocClusterService.removeLogger();
+        JocClusterServiceLogger.removeLogger();
 
         try {
             s.start(cluster.getControllers(), configuration, mode);
         } catch (Exception e) {
-            AJocClusterService.setLogger();
+            JocClusterServiceLogger.setLogger();
             LOGGER.error(String.format("[%s][restart][%s]%s", mode, identifier, e.toString()), e);
-            AJocClusterService.removeLogger();
+            JocClusterServiceLogger.removeLogger();
 
             return JocCluster.getErrorAnswer(e);
         }
 
-        AJocClusterService.setLogger();
+        JocClusterServiceLogger.setLogger();
         LOGGER.info(String.format("[%s][restart][%s]completed", mode, identifier));
-        AJocClusterService.removeLogger();
+        JocClusterServiceLogger.removeLogger();
 
         return JocCluster.getOKAnswer(JocClusterAnswerState.RESTARTED);
     }
@@ -295,7 +298,7 @@ public class JocClusterHandler {
         return active;
     }
 
-    public List<IJocClusterService> getServices() {
+    public List<IJocActiveClusterService> getServices() {
         return services;
     }
 

@@ -27,8 +27,8 @@ import com.sos.joc.classes.documentation.JitlDocumentation;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.classes.workflow.WorkflowPaths;
-import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.DbInstaller;
 
 import jakarta.servlet.ServletException;
@@ -87,7 +87,7 @@ public class JocServletContainer extends ServletContainer {
 
         // 1 - stop cluster
         JocClusterService.getInstance().stop(StartupMode.automatic, true);
-        AJocClusterService.clearAllLoggers();
+        JocClusterServiceLogger.clearAllLoggers();
         // 2 - close proxies
         Proxies.closeAll();
 

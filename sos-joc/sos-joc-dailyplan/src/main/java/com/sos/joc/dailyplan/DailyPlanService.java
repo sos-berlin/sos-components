@@ -7,7 +7,6 @@ import java.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
@@ -17,12 +16,14 @@ import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
+import com.sos.joc.cluster.service.active.AJocActiveClusterService;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.GlobalSettingsReader;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
-public class DailyPlanService extends AJocClusterService {
+public class DailyPlanService extends AJocActiveClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanService.class);
 
@@ -42,7 +43,7 @@ public class DailyPlanService extends AJocClusterService {
         try {
             lastActivityStart = Instant.now();
 
-            AJocClusterService.setLogger(IDENTIFIER);
+            JocClusterServiceLogger.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s] start", getIdentifier(), mode));
 
             DailyPlanSettings settings = getSettings(mode, controllers, globalSettings);
@@ -67,19 +68,19 @@ public class DailyPlanService extends AJocClusterService {
             LOGGER.error(e.toString(), e);
             return JocCluster.getErrorAnswer(e);
         } finally {
-            AJocClusterService.removeLogger(IDENTIFIER);
+            JocClusterServiceLogger.removeLogger(IDENTIFIER);
         }
     }
 
     @Override
     public JocClusterAnswer stop(StartupMode mode) {
-        AJocClusterService.setLogger(IDENTIFIER);
+        JocClusterServiceLogger.setLogger(IDENTIFIER);
         LOGGER.info(String.format("[%s][%s] stop", getIdentifier(), mode));
         if (timer != null) {
             timer.cancel();
             timer.purge();
         }
-        AJocClusterService.removeLogger(IDENTIFIER);
+        JocClusterServiceLogger.removeLogger(IDENTIFIER);
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
 

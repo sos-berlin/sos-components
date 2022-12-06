@@ -26,8 +26,8 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.dailyplan.common.PlannedOrder;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
@@ -127,10 +127,10 @@ public class OrderApi {
             final JControllerProxy proxy = Proxy.of(controllerId);
             proxy.api().addOrders(Flux.fromIterable(map.values())).thenAccept(either -> {
                 if (log2serviceFile) {
-                    AJocClusterService.setLogger(ClusterServices.dailyplan.name());
+                    JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
                 }
                 if (either.isRight()) {
-                    // AJocClusterService.setLogger(ClusterServices.dailyplan.name());
+                    // JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
                     // Set<OrderId> set = map.keySet();
                     SOSHibernateSession session = null;
                     try {
@@ -147,7 +147,7 @@ public class OrderApi {
                         Globals.commit(session);
                         session.close();
                         session = null;
-                        
+
                         controllerApi.deleteOrdersWhenTerminated(set).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, jocError,
                                 controllerId));
 
@@ -163,7 +163,7 @@ public class OrderApi {
                         Globals.disconnect(session);
                     }
                 } else {
-                    // AJocClusterService.setLogger(ClusterServices.dailyplan.name());
+                    // JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
                     SOSHibernateSession session = null;
                     try {
                         String msg = either.getLeft().toString();
@@ -195,7 +195,7 @@ public class OrderApi {
             });
         }
         // if (fromService) {
-        // AJocClusterService.setLogger(ClusterServices.dailyplan.name());
+        // JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
         // }
         return orders;
     }

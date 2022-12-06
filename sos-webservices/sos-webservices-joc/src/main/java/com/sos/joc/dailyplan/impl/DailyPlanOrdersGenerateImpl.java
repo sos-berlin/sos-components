@@ -25,8 +25,8 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.common.FolderPath;
 import com.sos.joc.classes.order.OrdersHelper;
-import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.dailyplan.DailyPlanRunner;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSchedule;
@@ -99,7 +99,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             }
 
             // log to service log file
-            AJocClusterService.setLogger(ClusterServices.dailyplan.name());
+            JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
 
             setSettings();
 
@@ -118,7 +118,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
 
             Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, dailyPlanSchedules, in
                     .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken);
-            AJocClusterService.clearAllLoggers();
+            JocClusterServiceLogger.clearAllLoggers();
 
             Set<AuditLogDetail> auditLogDetails = new HashSet<>();
 
@@ -132,11 +132,11 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
-            AJocClusterService.clearAllLoggers();
+            JocClusterServiceLogger.clearAllLoggers();
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            AJocClusterService.clearAllLoggers();
+            JocClusterServiceLogger.clearAllLoggers();
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }

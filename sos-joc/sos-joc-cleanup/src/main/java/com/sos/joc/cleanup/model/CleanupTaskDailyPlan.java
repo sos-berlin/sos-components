@@ -8,9 +8,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
-import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
+import com.sos.joc.cluster.service.active.IJocActiveClusterService;
 import com.sos.joc.db.DBLayer;
 
 public class CleanupTaskDailyPlan extends CleanupTaskModel {
@@ -22,7 +22,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
     private int totalOrders = 0;
     private int totalSubmissions;
 
-    public CleanupTaskDailyPlan(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize) {
+    public CleanupTaskDailyPlan(JocClusterHibernateFactory factory, IJocActiveClusterService service, int batchSize) {
         super(factory, service, batchSize);
     }
 

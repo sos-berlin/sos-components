@@ -28,7 +28,6 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSPath.SOSPathResult;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ProxyUser;
-import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
@@ -44,6 +43,8 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
+import com.sos.joc.cluster.service.active.AJocActiveClusterService;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.joc.DBItemJocVariable;
@@ -51,7 +52,7 @@ import com.sos.joc.history.controller.configuration.HistoryConfiguration;
 import com.sos.joc.history.db.DBLayerHistory;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
-public class HistoryService extends AJocClusterService {
+public class HistoryService extends AJocActiveClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryService.class);
 
@@ -85,7 +86,7 @@ public class HistoryService extends AJocClusterService {
     @Override
     public JocClusterAnswer start(List<ControllerConfiguration> controllers, AConfigurationSection configuration, StartupMode mode) {
         try {
-            AJocClusterService.setLogger(IDENTIFIER);
+            JocClusterServiceLogger.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
 
             processingStarted.set(true);
@@ -94,7 +95,7 @@ public class HistoryService extends AJocClusterService {
             createFactory(getJocConfig().getHibernateConfiguration(), controllers.size());
             handleLogsOnStart(mode);
             threadPool = Executors.newFixedThreadPool((controllers.size() + 1), new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER));
-            // AJocClusterService.clearAllLoggers();
+            // JocClusterServiceLogger.clearAllLoggers();
 
             for (ControllerConfiguration controllerConfig : controllers) {
                 HistoryControllerHandler controllerHandler = new HistoryControllerHandler(factory, config, controllerConfig, IDENTIFIER);
@@ -104,13 +105,13 @@ public class HistoryService extends AJocClusterService {
 
                     @Override
                     public void run() {
-                        AJocClusterService.setLogger(IDENTIFIER);
+                        JocClusterServiceLogger.setLogger(IDENTIFIER);
 
                         LOGGER.info(String.format("[%s][run]start...", controllerHandler.getIdentifier()));
                         controllerHandler.start();
                         LOGGER.info(String.format("[%s][run]end", controllerHandler.getIdentifier()));
 
-                        // AJocClusterService.clearAllLoggers();
+                        // JocClusterServiceLogger.clearAllLoggers();
                     }
 
                 };
@@ -126,13 +127,13 @@ public class HistoryService extends AJocClusterService {
     public JocClusterAnswer stop(StartupMode mode) {
         stop.set(true);
         try {
-            AJocClusterService.setLogger(IDENTIFIER);
+            JocClusterServiceLogger.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
-            // AJocClusterService.clearAllLoggers();
+            // JocClusterServiceLogger.clearAllLoggers();
 
             int size = closeEventHandlers(mode);
 
-            AJocClusterService.setLogger(IDENTIFIER);
+            JocClusterServiceLogger.setLogger(IDENTIFIER);
             if (size > 0) {
                 handleLogsOnStop(mode);
             }
@@ -144,7 +145,7 @@ public class HistoryService extends AJocClusterService {
         }
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
 
-        AJocClusterService.removeLogger(IDENTIFIER);
+        JocClusterServiceLogger.removeLogger(IDENTIFIER);
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
 
@@ -171,7 +172,7 @@ public class HistoryService extends AJocClusterService {
 
             @Override
             public void run() {
-                AJocClusterService.setLogger(IDENTIFIER);
+                JocClusterServiceLogger.setLogger(IDENTIFIER);
                 LOGGER.info(String.format("[%s][%s]start...", controllerId, action));
                 Optional<HistoryControllerHandler> oh = activeHandlers.stream().filter(c -> c.getControllerId().equals(controllerId)).findAny();
                 if (oh.isPresent()) {
@@ -198,7 +199,7 @@ public class HistoryService extends AJocClusterService {
                     h.start();
                 }
                 LOGGER.info(String.format("[%s][%s]end", controllerId, action));
-                // AJocClusterService.clearAllLoggers();
+                // JocClusterServiceLogger.clearAllLoggers();
             }
         };
         threadPool.submit(task);
@@ -206,12 +207,12 @@ public class HistoryService extends AJocClusterService {
 
     @Override
     public void update(StartupMode mode, AConfigurationSection configuration) {
-        AJocClusterService.setLogger(IDENTIFIER);
+        JocClusterServiceLogger.setLogger(IDENTIFIER);
         updateHistoryConfiguration();
     }
 
     private void setConfig() {
-        AJocClusterService.setLogger(IDENTIFIER);
+        JocClusterServiceLogger.setLogger(IDENTIFIER);
         try {
             Properties conf = Globals.sosCockpitProperties == null ? new Properties() : Globals.sosCockpitProperties.getProperties();
             config = new HistoryConfiguration();
@@ -220,7 +221,7 @@ public class HistoryService extends AJocClusterService {
         } catch (Exception ex) {
             LOGGER.error(ex.toString(), ex);
         } finally {
-            // AJocClusterService.clearAllLoggers();
+            // JocClusterServiceLogger.clearAllLoggers();
         }
     }
 
@@ -567,9 +568,9 @@ public class HistoryService extends AJocClusterService {
         String method = "closeEventHandlers";
 
         int size = activeHandlers.size();
-        AJocClusterService.setLogger(IDENTIFIER);
+        JocClusterServiceLogger.setLogger(IDENTIFIER);
         LOGGER.info(String.format("[%s]found %s active handlers", method, size));
-        // AJocClusterService.clearAllLoggers();
+        // JocClusterServiceLogger.clearAllLoggers();
         if (size > 0) {
             // close all event handlers
             ExecutorService threadPool = Executors.newFixedThreadPool(size, new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER + "-stop"));
@@ -579,24 +580,24 @@ public class HistoryService extends AJocClusterService {
 
                     @Override
                     public void run() {
-                        AJocClusterService.setLogger(IDENTIFIER);
+                        JocClusterServiceLogger.setLogger(IDENTIFIER);
                         LOGGER.info(String.format("[%s][%s]start...", method, h.getIdentifier()));
                         h.close();
                         LOGGER.info(String.format("[%s][%s]end", method, h.getIdentifier()));
-                        // AJocClusterService.clearAllLoggers();
+                        // JocClusterServiceLogger.clearAllLoggers();
                     }
                 };
                 threadPool.submit(thread);
             }
-            AJocClusterService.setLogger(IDENTIFIER);
+            JocClusterServiceLogger.setLogger(IDENTIFIER);
             JocCluster.shutdownThreadPool(mode, threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
-            // AJocClusterService.clearAllLoggers();
+            // JocClusterServiceLogger.clearAllLoggers();
             activeHandlers = new CopyOnWriteArrayList<>();
         } else {
             if (LOGGER.isDebugEnabled()) {
-                AJocClusterService.setLogger(IDENTIFIER);
+                JocClusterServiceLogger.setLogger(IDENTIFIER);
                 LOGGER.debug(String.format("[%s][skip]already closed", method));
-                // AJocClusterService.clearAllLoggers();
+                // JocClusterServiceLogger.clearAllLoggers();
             }
         }
         return size;
