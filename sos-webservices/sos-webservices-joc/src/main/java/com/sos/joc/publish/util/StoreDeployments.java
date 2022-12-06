@@ -83,8 +83,6 @@ public class StoreDeployments {
             Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
 
             if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
-                Date storeToDBStarted = Date.from(Instant.now());
-                LOGGER.trace("*** store to db started ***" + storeToDBStarted);
                 Set<String> folders = signedItemsSpec.getVerifiedDeployables().keySet().stream().map(DBItemDeploymentHistory::getFolder).collect(Collectors.toSet());
                 for (Map.Entry<DBItemDeploymentHistory, DBItemDepSignatures> entry : signedItemsSpec.getVerifiedDeployables().entrySet()) {
                 	DBItemDeploymentHistory item = entry.getKey();
@@ -121,9 +119,6 @@ public class StoreDeployments {
                 	}
                 }
                 folders.forEach(folder -> JocInventory.postEvent(folder));
-                Date storeToDBFinished = Date.from(Instant.now());
-                LOGGER.trace("*** store to db finished ***" + storeToDBFinished);
-                LOGGER.trace("store to db took: " + (storeToDBFinished.getTime() - storeToDBStarted.getTime()) + " ms");
             }
             if (!deployedObjects.isEmpty()) {
                 long countWorkflows = deployedObjects.stream().filter(item -> ConfigurationType.WORKFLOW.intValue() == item.getType()).count();
@@ -134,12 +129,7 @@ public class StoreDeployments {
                 LOGGER.info(String.format(
                         "Update command send to Controller \"%1$s\" containing %2$d Workflow(s), %3$d Lock(s), %4$d FileOrderSource(s), %5$d JobResource(s) and %6$d Board(s).", 
                         controllerId, countWorkflows, countLocks, countFileOrderSources, countJobResources, countBoards));
-                Date handleWorkflowSearchStarted = Date.from(Instant.now());
-                LOGGER.trace("*** handle workflow search started ***" + handleWorkflowSearchStarted);
                  JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
-                 Date handleWorkflowSearchFinished = Date.from(Instant.now());
-                 LOGGER.trace("*** handle workflow search finished ***" + handleWorkflowSearchFinished);
-                 LOGGER.trace("handle workflow search took: " + (handleWorkflowSearchFinished.getTime() - handleWorkflowSearchStarted.getTime()) + " ms");
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
@@ -205,17 +195,10 @@ public class StoreDeployments {
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
         
         if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
-            
-            Date storeEntriesStarted = Date.from(Instant.now());
-            LOGGER.trace("*** store entries started ***" + storeEntriesStarted);
 
             // store new history entries and update inventory for update operation optimistically
             storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer);
             
-            Date storeEntriesFinished = Date.from(Instant.now());
-            LOGGER.trace("*** store entries finished ***" + storeEntriesFinished);
-            LOGGER.trace("store entries optimistically took: " + (storeEntriesFinished.getTime() - storeEntriesStarted.getTime()) + " ms");
-
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             boolean verified = false;
             String signerDN = null;

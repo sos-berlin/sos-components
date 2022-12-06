@@ -2,6 +2,7 @@ package com.sos.joc.publish.util;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,11 +21,14 @@ import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.proxy.ControllerApi;
+import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.model.common.IDeployObject;
 import com.sos.joc.model.publish.ControllerObject;
+import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.sign.model.board.Board;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 import com.sos.sign.model.lock.Lock;
@@ -94,6 +98,14 @@ public class UpdateItemUtils {
                 Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId)))));
     }
     
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrDeletePGP(String commitId,
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, Set<DBItemDeploymentHistory> toDelete, String controllerId) 
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(
+                Flux.fromIterable(createUpdateAndDeleteItemOperations(alreadyDeployed, toDelete, SOSKeyConstants.PGP_ALGORITHM_NAME, null, null)), 
+                Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId)))));
+    }
+    
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrDeleteX509Certificate(String commitId,
             Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, Set<DBItemDeploymentHistory> toDelete, String controllerId,
             String signatureAlgorithm, String certificate) 
@@ -103,6 +115,41 @@ public class UpdateItemUtils {
                 Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId)))));
     }
     
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrDeleteX509SignerDN(String commitId,
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, Set<DBItemDeploymentHistory> toDelete, String controllerId,
+            String signatureAlgorithm, String signerDN) 
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(
+                Flux.fromIterable(createUpdateAndDeleteItemOperations(alreadyDeployed, toDelete, signatureAlgorithm, null, signerDN)), 
+                Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId)))));
+    }
+    
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrDeletePGPFromImport(String commitId,
+            Map<ControllerObject, DBItemDepSignatures> alreadyDeployed, Set<DBItemDeploymentHistory> toDelete, String controllerId) 
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(
+                Flux.fromIterable(createUpdateAndDeleteItemOperationsFromImport(alreadyDeployed, toDelete, SOSKeyConstants.PGP_ALGORITHM_NAME, null,
+                        null)), 
+                Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId)))));
+    }
+    
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrDeleteX509CertificateFromImport(String commitId,
+            Map<ControllerObject, DBItemDepSignatures> alreadyDeployed, Set<DBItemDeploymentHistory> toDelete, String controllerId,
+            String signatureAlgorithm, String certificate) 
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(
+                Flux.fromIterable(createUpdateAndDeleteItemOperationsFromImport(alreadyDeployed, toDelete, signatureAlgorithm, certificate, null)), 
+                Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId)))));
+    }
+    
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrDeleteX509SignerDNFromImport(String commitId,
+            Map<ControllerObject, DBItemDepSignatures> alreadyDeployed, Set<DBItemDeploymentHistory> toDelete, String controllerId,
+            String signatureAlgorithm, String signerDN) 
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(
+                Flux.fromIterable(createUpdateAndDeleteItemOperationsFromImport(alreadyDeployed, toDelete, signatureAlgorithm, null, signerDN)), 
+                Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId)))));
+    }
     public static CompletableFuture<Either<Problem, Void>> updateItemsDelete(String commitId, List<DBItemDeploymentHistory> toDelete,
             String controllerId) {
         Set<JUpdateItemOperation> updateItemOperations = new HashSet<JUpdateItemOperation>();
@@ -128,6 +175,39 @@ public class UpdateItemUtils {
                 Flux.fromIterable(updateItemOperations), Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId)))));
     }
     
+    public static<T extends DBItem> Set<DBItemDeploymentHistory> checkRenamingForUpdate(Set<T> verifiedObjects,
+            String controllerId, DBLayerDeploy dbLayer)
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        // check first if a deploymentHistory item related to the configuration item exist
+        Set<DBItemDeploymentHistory> renamedOriginalHistoryEntries = new HashSet<DBItemDeploymentHistory>();
+        DBItemDeploymentHistory latestDepHistory = null;
+        DBItemDeploymentHistory depHistory = null;
+        DBItemInventoryConfiguration invConf = null;
+        for (T object : verifiedObjects) {
+            if (DBItemInventoryConfiguration.class.isInstance(object)) {
+                invConf = (DBItemInventoryConfiguration) object;
+                latestDepHistory = dbLayer.getLatestDepHistoryItem(invConf, controllerId);
+                // if operation of latest history item was 'delete', no need to delete again
+                // if so, check if the paths of both are the same
+                if (latestDepHistory != null && latestDepHistory.getOperation() != 1 && invConf != null 
+                        && !invConf.getName().equals(latestDepHistory.getName())) {
+                    // if not, delete the old deployed item via updateRepo before deploy of the new configuration
+                    renamedOriginalHistoryEntries.add(latestDepHistory);
+                }
+            } else {
+                depHistory = (DBItemDeploymentHistory) object;
+                latestDepHistory = dbLayer.getLatestDepHistoryItem(depHistory.getInventoryConfigurationId(), controllerId);
+                // if so, check if the paths of both are the same
+                if (depHistory != null && latestDepHistory != null && latestDepHistory.getOperation() != 1 
+                        && !depHistory.getName().equals(latestDepHistory.getName())) {
+                    // if not, delete the old deployed item via updateRepo before deploy of the new configuration
+                    renamedOriginalHistoryEntries.add(latestDepHistory);
+                }
+            }
+        }
+        return renamedOriginalHistoryEntries;
+    }
+
     private static Set<JUpdateItemOperation> createUpdateItemOperations(Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
             String signatureAlgorithm, String certificate, String signerDN)
             throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
@@ -307,8 +387,78 @@ public class UpdateItemUtils {
                     return null;
                 }
             }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        }
+        return updateRepoOperations;
+    }
+    
+    private static Set<JUpdateItemOperation> createUpdateAndDeleteItemOperationsFromImport(Map<ControllerObject, DBItemDepSignatures> alreadyDeployed,
+            Set<DBItemDeploymentHistory> toDeleteForRename, String signatureAlgorithm, String certificate, String signerDN)
+            throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        Set<JUpdateItemOperation> updateRepoOperations = new HashSet<JUpdateItemOperation>();
+        if (alreadyDeployed != null) {
+            updateRepoOperations.addAll(alreadyDeployed.entrySet().stream().map(item -> {
+                try {
+                    switch (item.getKey().getObjectType()) {
+                    case WORKFLOW: 
+                    case JOBRESOURCE:
+                        LOGGER.debug("JSON send to controller: ");
+                        String json = item.getKey().getSignedContent();
+                        LOGGER.debug(json);
+                        if(signatureAlgorithm.equals(SOSKeyConstants.PGP_ALGORITHM_NAME)) {
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringPGP(json, item.getValue().getSignature()));
+                        } else if (certificate != null) {
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(json, item.getValue().getSignature(), 
+                                    signatureAlgorithm, certificate));
+                        } else { // signerDN != null
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(json, item.getValue().getSignature(), 
+                                    signatureAlgorithm, signerDN));
+                        }
+                    case LOCK:
+                        Lock lock = (Lock) item.getKey().getContent();
+                        lock.setPath(Paths.get(item.getKey().getPath()).getFileName().toString());
+                        return JUpdateItemOperation.addOrChangeSimple(PublishUtils.getJLock(lock));
+                    case FILEORDERSOURCE:
+                        FileOrderSource fileOrderSource = (FileOrderSource) item.getKey().getContent();
+                        if (fileOrderSource.getPath() == null) {
+                            fileOrderSource.setPath(Paths.get(item.getKey().getPath()).getFileName().toString());
+                        }
+                        return JUpdateItemOperation.addOrChangeSimple(PublishUtils.getJFileWatch(fileOrderSource));
+                    case NOTICEBOARD:
+                        Board board = (Board) item.getKey().getContent();
+                        if (board.getPath() == null) {
+                            board.setPath(Paths.get(item.getKey().getPath()).getFileName().toString());
+                        }
+                        return JUpdateItemOperation.addOrChangeSimple(PublishUtils.getJBoard(board));
+                    default:
+                        return null;
+                    }
+                } catch (JocDeployException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        }
+        if(toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
+            updateRepoOperations.addAll(toDeleteForRename.stream().map(item -> {
+                switch(item.getTypeAsEnum()) {
+                case WORKFLOW:
+                    return JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()));
+                case JOBRESOURCE:
+                    return JUpdateItemOperation.deleteSimple(JobResourcePath.of(item.getName()));
+                case FILEORDERSOURCE:
+                    return JUpdateItemOperation.deleteSimple(OrderWatchPath.of(Paths.get(item.getPath()).getFileName().toString()));
+                case LOCK:
+                    return JUpdateItemOperation.deleteSimple(LockPath.of(Paths.get(item.getPath()).getFileName().toString()));
+                case NOTICEBOARD:
+                    return JUpdateItemOperation.deleteSimple(BoardPath.of(Paths.get(item.getPath()).getFileName().toString()));
+                default:
+                    return null;
+                }
+            }).filter(Objects::nonNull).collect(Collectors.toSet()));
             
         }
+
         return updateRepoOperations;
     }
     
