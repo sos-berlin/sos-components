@@ -51,7 +51,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
             DailyPlanOrderFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
 
-            Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getFilter().getControllerIds(), accessToken)
+            Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getFilter().getControllerIds())
                     .stream().filter(availableController -> getControllerPermissions(availableController, accessToken).getOrders().getModify())
                     .collect(Collectors.toSet());
             boolean permitted = !allowedControllers.isEmpty();
@@ -60,8 +60,6 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             if (response != null) {
                 return response;
             }
-            this.checkRequiredParameter("filter", in.getFilter());
-            this.checkRequiredParameter("dailyPlanDate", in.getFilter().getDailyPlanDate());
             storeAuditLog(in.getAuditLog(), in.getControllerId(), CategoryType.DAILYPLAN);
             setSettings();
 
@@ -99,6 +97,9 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
                 Globals.beginTransaction(session);
                 dbLayer.deleteCascading(filter);
                 Globals.commit(session);
+            } catch (Exception e) {
+                Globals.rollback(session);
+                throw e;
             } finally {
                 Globals.disconnect(session);
             }

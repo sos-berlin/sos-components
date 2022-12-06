@@ -44,7 +44,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
             this.checkRequiredParameter("filter", in.getFilter());
             this.checkRequiredParameter("dailyPlanDate", in.getFilter().getDailyPlanDate());
 
-            Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getFilter().getControllerIds(), accessToken)
+            Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getFilter().getControllerIds())
                     .stream().filter(availableController -> getControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
                             Collectors.toSet());
 

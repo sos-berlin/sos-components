@@ -2,6 +2,7 @@ package com.sos.joc.dailyplan.common;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -126,10 +127,9 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return result;
     }
 
-    protected List<String> getAllowedControllersOrdersView(String controllerId, List<String> controllerIds, String accessToken) {
+    protected List<String> getAllowedControllersOrdersView(String controllerId, List<String> controllerIds) {
         if (controllerIds == null) {
-            controllerIds = new ArrayList<String>();
-            controllerIds.add(controllerId);
+            controllerIds = Collections.singletonList(controllerId);
         } else {
             if (controllerId != null && !controllerIds.contains(controllerId)) {
                 controllerIds.add(controllerId);
@@ -183,7 +183,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
     }
 
     protected void addOrders(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo, DailyPlanOrderFilter in,
-            List<DBItemDailyPlanWithHistory> orders, ArrayList<PlannedOrderItem> result, boolean getCyclicDetails) {
+            List<DBItemDailyPlanWithHistory> orders, List<PlannedOrderItem> result, boolean getCyclicDetails) {
 
         if (orders != null) {
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
