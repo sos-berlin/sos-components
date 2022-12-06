@@ -1,4 +1,4 @@
-package com.sos.joc.cluster;
+package com.sos.joc.cluster.service.active;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 
-public interface IJocClusterService {
+public interface IJocActiveClusterService {
 
     public JocClusterAnswer start(List<ControllerConfiguration> controllers, AConfigurationSection configuration, StartupMode mode);
 

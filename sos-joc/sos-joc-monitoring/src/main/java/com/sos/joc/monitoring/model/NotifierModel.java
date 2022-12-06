@@ -16,7 +16,6 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
 import com.sos.history.JobWarning;
-import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
@@ -25,6 +24,7 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
@@ -57,7 +57,7 @@ public class NotifierModel {
     private ExecutorService threadPool;
 
     protected NotifierModel(ThreadGroup threadGroup, Path hibernateConfigFile, String serviceIdentifier) {
-        AJocClusterService.setLogger(serviceIdentifier);
+        JocClusterServiceLogger.setLogger(serviceIdentifier);
 
         factory = createFactory(hibernateConfigFile);
         if (factory == null) {
@@ -78,7 +78,7 @@ public class NotifierModel {
 
             @Override
             public void run() {
-                AJocClusterService.setLogger(serviceIdentifier);
+                JocClusterServiceLogger.setLogger(serviceIdentifier);
                 if (!closed.get()) {
                     notifySteps(conf, toNotifyPayloads.getSteps());
                     notifyOrders(conf, toNotifyPayloads.getErrorOrders(), toNotifyPayloads.getSuccessOrders());
@@ -359,7 +359,7 @@ public class NotifierModel {
     }
 
     protected JocClusterAnswer close(StartupMode mode) {
-        AJocClusterService.setLogger(serviceIdentifier);
+        JocClusterServiceLogger.setLogger(serviceIdentifier);
         closed.set(true);
 
         if (threadPool != null) {
@@ -379,7 +379,7 @@ public class NotifierModel {
             factory.addClassMapping(DBLayer.getMonitoringClassMapping());
             factory.build();
         } catch (SOSHibernateException e) {
-            AJocClusterService.setLogger(serviceIdentifier);
+            JocClusterServiceLogger.setLogger(serviceIdentifier);
             LOGGER.error(e.toString(), e);
         }
         return factory;

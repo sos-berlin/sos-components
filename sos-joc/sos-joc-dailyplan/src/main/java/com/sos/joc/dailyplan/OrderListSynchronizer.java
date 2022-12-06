@@ -30,8 +30,8 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.workflow.WorkflowPaths;
-import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.MainCyclicOrderKey;
 import com.sos.joc.dailyplan.common.OrderCounter;
@@ -316,7 +316,7 @@ public class OrderListSynchronizer {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
                     if (log2serviceFile) {
-                        AJocClusterService.setLogger(ClusterServices.dailyplan.name());
+                        JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
                     }
                     SOSHibernateSession session4delete = null;
                     try {

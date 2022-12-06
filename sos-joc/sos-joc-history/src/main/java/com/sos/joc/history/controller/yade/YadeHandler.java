@@ -14,8 +14,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
-import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.common.JocClusterUtil;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.yade.DBItemYadeFile;
 import com.sos.joc.db.yade.DBItemYadeProtocol;
@@ -46,7 +46,7 @@ public class YadeHandler {
             return;
         }
         CompletableFuture<Long> save = CompletableFuture.supplyAsync(() -> {
-            AJocClusterService.setLogger(IDENTIFIER);
+            JocClusterServiceLogger.setLogger(IDENTIFIER);
             SOSHibernateSession session = null;
             String logMsg = String.format("%s][%s][%s][job name=%s,pos=%s,id=%s", controllerId, workflowPath, orderId, job, jobPosition,
                     historyOrderStepId);
@@ -78,7 +78,7 @@ public class YadeHandler {
         });
         save.thenAccept(transferId -> {
             if (transferId != null) {
-                AJocClusterService.setLogger(IDENTIFIER);
+                JocClusterServiceLogger.setLogger(IDENTIFIER);
                 LOGGER.debug("[stored]transferId=" + transferId);
                 postEventTransferHistoryTerminated(transferId);
             }

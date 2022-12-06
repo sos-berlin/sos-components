@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
@@ -23,12 +22,14 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
+import com.sos.joc.cluster.service.active.AJocActiveClusterService;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel;
 
-public class MonitorService extends AJocClusterService {
+public class MonitorService extends AJocActiveClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MonitorService.class);
 
@@ -40,14 +41,14 @@ public class MonitorService extends AJocClusterService {
 
     public MonitorService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
         super(jocConf, clusterThreadGroup, IDENTIFIER);
-        AJocClusterService.setLogger(IDENTIFIER);
+        JocClusterServiceLogger.setLogger(IDENTIFIER);
     }
 
     @Override
     public JocClusterAnswer start(List<ControllerConfiguration> controllers, AConfigurationSection configuration, StartupMode mode) {
         try {
             closed.set(false);
-            AJocClusterService.setLogger(IDENTIFIER);
+            JocClusterServiceLogger.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
 
             createFactory(getJocConfig().getHibernateConfiguration());
@@ -58,20 +59,20 @@ public class MonitorService extends AJocClusterService {
         } catch (Exception e) {
             return JocCluster.getErrorAnswer(e);
         } finally {
-            AJocClusterService.removeLogger(IDENTIFIER);
+            JocClusterServiceLogger.removeLogger(IDENTIFIER);
         }
     }
 
     @Override
     public JocClusterAnswer stop(StartupMode mode) {
-        AJocClusterService.setLogger(IDENTIFIER);
+        JocClusterServiceLogger.setLogger(IDENTIFIER);
         LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
 
         closed.set(true);
         close(mode);
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
 
-        AJocClusterService.removeLogger(IDENTIFIER);
+        JocClusterServiceLogger.removeLogger(IDENTIFIER);
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
 
@@ -95,7 +96,7 @@ public class MonitorService extends AJocClusterService {
         if (!closed.get()) {
             if (history != null && configuration != null) {
                 if (configuration instanceof ConfigurationGlobalsJoc) {
-                    AJocClusterService.setLogger(IDENTIFIER);
+                    JocClusterServiceLogger.setLogger(IDENTIFIER);
 
                     ConfigurationGlobalsJoc joc = (ConfigurationGlobalsJoc) configuration;
                     String oldValue = Configuration.getJocReverseProxyUri();
@@ -129,7 +130,7 @@ public class MonitorService extends AJocClusterService {
 
     private void closeFactory() {
         if (factory != null) {
-            AJocClusterService.setLogger(IDENTIFIER);
+            JocClusterServiceLogger.setLogger(IDENTIFIER);
 
             factory.close();
             factory = null;

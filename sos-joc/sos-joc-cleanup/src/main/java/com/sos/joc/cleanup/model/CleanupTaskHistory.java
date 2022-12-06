@@ -20,9 +20,9 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
-import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
+import com.sos.joc.cluster.service.active.IJocActiveClusterService;
 import com.sos.joc.db.DBLayer;
 
 public class CleanupTaskHistory extends CleanupTaskModel {
@@ -46,7 +46,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     private int totalOrderSteps = 0;
     private int totalOrderLogs = 0;
 
-    public CleanupTaskHistory(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize) {
+    public CleanupTaskHistory(JocClusterHibernateFactory factory, IJocActiveClusterService service, int batchSize) {
         super(factory, service, batchSize);
     }
 

@@ -14,12 +14,12 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.db.DBLayerCleanup;
-import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
+import com.sos.joc.cluster.service.active.IJocActiveClusterService;
 
 public class CleanupTaskModel implements ICleanupTask {
 
@@ -39,7 +39,7 @@ public class CleanupTaskModel implements ICleanupTask {
 
     private final JocClusterHibernateFactory factory;
     private final DBLayerCleanup dbLayer;
-    private final IJocClusterService service;
+    private final IJocActiveClusterService service;
     private final int batchSize;
     private final TaskType type;
     private final String identifier;
@@ -53,11 +53,11 @@ public class CleanupTaskModel implements ICleanupTask {
         this(factory, null, batchSize, identifier);
     }
 
-    protected CleanupTaskModel(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize) {
+    protected CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveClusterService service, int batchSize) {
         this(factory, service, batchSize, null);
     }
 
-    private CleanupTaskModel(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize, String identifier) {
+    private CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveClusterService service, int batchSize, String identifier) {
         this.factory = factory;
         this.service = service;
         this.batchSize = batchSize;
@@ -184,7 +184,7 @@ public class CleanupTaskModel implements ICleanupTask {
         return batchSize;
     }
 
-    public IJocClusterService getService() {
+    public IJocActiveClusterService getService() {
         return service;
     }
 

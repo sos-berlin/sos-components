@@ -34,7 +34,6 @@ import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
 import com.sos.history.JobWarning;
 import com.sos.joc.Globals;
-import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.history.AHistoryBean;
@@ -43,6 +42,7 @@ import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
@@ -108,7 +108,7 @@ public class HistoryMonitoringModel implements Serializable {
 
     @Subscribe({ HistoryOrderEvent.class, HistoryTaskEvent.class, HistoryOrderTaskLogFirstStderr.class })
     public void handleHistoryEvents(HistoryEvent evt) {
-        AJocClusterService.setLogger(serviceIdentifier);
+        JocClusterServiceLogger.setLogger(serviceIdentifier);
         // LOGGER.info("[EV]" + SOSString.toString(evt));
         if (evt.getPayload() != null) {
             add2Payload((AHistoryBean) evt.getPayload());
@@ -118,7 +118,7 @@ public class HistoryMonitoringModel implements Serializable {
     @Subscribe({ NotificationConfigurationReleased.class, NotificationConfigurationRemoved.class })
     public void handleMonitoringEvents(MonitoringEvent evt) {
         if (configuration != null) {
-            AJocClusterService.setLogger(serviceIdentifier);
+            JocClusterServiceLogger.setLogger(serviceIdentifier);
             LOGGER.info(String.format("[%s][%s][configuration]%s", serviceIdentifier, NOTIFICATION_IDENTIFIER, evt.getClass().getSimpleName()));
             setConfiguration();
         }
@@ -127,7 +127,7 @@ public class HistoryMonitoringModel implements Serializable {
     @Subscribe({ DeployHistoryJobResourceEvent.class })
     public void handleMonitoringEvents(DeployHistoryJobResourceEvent evt) {
         if (configuration != null && configuration.exists() && evt.getName() != null) {
-            AJocClusterService.setLogger(serviceIdentifier);
+            JocClusterServiceLogger.setLogger(serviceIdentifier);
             List<String> names = configuration.getMailResources().entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
             if (names.contains(evt.getName())) {
                 LOGGER.info(String.format("[%s][%s][configuration]%s jr=%s", serviceIdentifier, NOTIFICATION_IDENTIFIER, evt.getClass()
@@ -174,7 +174,7 @@ public class HistoryMonitoringModel implements Serializable {
         setConfiguration();
         schedule(threadGroup);
 
-        AJocClusterService.setLogger(serviceIdentifier);
+        JocClusterServiceLogger.setLogger(serviceIdentifier);
         LOGGER.info(String.format("[%s][%s]start..", serviceIdentifier, IDENTIFIER));
     }
 
@@ -186,7 +186,7 @@ public class HistoryMonitoringModel implements Serializable {
         }
 
         if (threadPool != null) {
-            AJocClusterService.setLogger(serviceIdentifier);
+            JocClusterServiceLogger.setLogger(serviceIdentifier);
             JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
             threadPool = null;
             serialize();
@@ -224,7 +224,7 @@ public class HistoryMonitoringModel implements Serializable {
                 }
                 lastStart.set(currentStart);
                 try {
-                    AJocClusterService.setLogger(serviceIdentifier);
+                    JocClusterServiceLogger.setLogger(serviceIdentifier);
                     boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
                     if (!closed.get()) {
@@ -237,7 +237,7 @@ public class HistoryMonitoringModel implements Serializable {
                     }
 
                 } catch (Throwable e) {
-                    AJocClusterService.setLogger(serviceIdentifier);
+                    JocClusterServiceLogger.setLogger(serviceIdentifier);
                     LOGGER.error(e.toString(), e);
                 }
             }
@@ -359,7 +359,7 @@ public class HistoryMonitoringModel implements Serializable {
             return toNotify;
         }
 
-        AJocClusterService.setLogger(serviceIdentifier);
+        JocClusterServiceLogger.setLogger(serviceIdentifier);
         DBLayerMonitoring dbLayer = new DBLayerMonitoring(serviceIdentifier + "_" + IDENTIFIER, serviceIdentifier);
         try {
             setLastActivityStart();
@@ -904,7 +904,7 @@ public class HistoryMonitoringModel implements Serializable {
     private synchronized void setConfiguration() {
         DBLayerMonitoring dbLayer = new DBLayerMonitoring(serviceIdentifier + "_" + IDENTIFIER, serviceIdentifier);
         try {
-            AJocClusterService.setLogger(serviceIdentifier);
+            JocClusterServiceLogger.setLogger(serviceIdentifier);
 
             dbLayer.setSession(Globals.createSosHibernateStatelessConnection(dbLayer.getIdentifier()));
             String configXml = dbLayer.getReleasedConfiguration();

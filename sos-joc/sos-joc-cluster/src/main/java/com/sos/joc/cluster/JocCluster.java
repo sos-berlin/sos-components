@@ -35,6 +35,7 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
 import com.sos.joc.cluster.instances.JocInstance;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.joc.DBItemJocCluster;
@@ -88,7 +89,7 @@ public class JocCluster {
     }
 
     public void doProcessing(StartupMode mode, ConfigurationGlobals configurations) {
-        AJocClusterService.setLogger();
+        JocClusterServiceLogger.setLogger();
         LOGGER.info(String.format("[inactive][current memberId]%s", currentMemberId));
 
         while (!closed) {
@@ -145,7 +146,7 @@ public class JocCluster {
                     dbLayer.close();
                     dbLayer = null;
 
-                    AJocClusterService.setLogger();
+                    JocClusterServiceLogger.setLogger();
                     LOGGER.info(String.format("[%s]no controllers found. sleep 1m and try again ...", jocConfig.getSecurityLevel().name()));
                     waitFor(60);
                 }
@@ -155,7 +156,7 @@ public class JocCluster {
                     dbLayer.close();
                     dbLayer = null;
                 }
-                AJocClusterService.setLogger();
+                JocClusterServiceLogger.setLogger();
                 LOGGER.error(String.format("[error occured][sleep 1m and try again ...]%s", e.toString()));
                 waitFor(60);
             } finally {
@@ -203,7 +204,7 @@ public class JocCluster {
                     }
                     map.put(item.getControllerId(), p);
                 }
-                AJocClusterService.setLogger();
+                JocClusterServiceLogger.setLogger();
                 for (Map.Entry<String, Properties> entry : map.entrySet()) {
                     LOGGER.info(String.format("[add][controllerConfiguration]%s", entry));
                     ControllerConfiguration mc = new ControllerConfiguration();
@@ -372,7 +373,7 @@ public class JocCluster {
         if (activeMemberId != null) {
             if (lastActiveMemberId == null || !lastActiveMemberId.equals(activeMemberId)) {
                 try {
-                    AJocClusterService.setLogger();
+                    JocClusterServiceLogger.setLogger();
                     ActiveClusterChangedEvent event = new ActiveClusterChangedEvent();
                     event.setOldClusterMemberId(lastActiveMemberId);
                     event.setNewClusterMemberId(activeMemberId);
@@ -392,7 +393,7 @@ public class JocCluster {
         if (StartupMode.automatic.equals(mode) && handler.isActive() && firstStep) {
             firstStep = false;
             try {
-                AJocClusterService.setLogger();
+                JocClusterServiceLogger.setLogger();
                 LOGGER.info("[post]DailyPlanCalendarEvent");
                 new Thread(() -> {
                     EventBus.getInstance().post(new DailyPlanCalendarEvent());

@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.cleanup.exception.CleanupComputeException;
-import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
@@ -28,9 +27,11 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsCleanup;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
+import com.sos.joc.cluster.service.active.AJocActiveClusterService;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
-public class CleanupService extends AJocClusterService {
+public class CleanupService extends AJocActiveClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupService.class);
 
@@ -210,10 +211,10 @@ public class CleanupService extends AJocClusterService {
     }
 
     protected static void setServiceLogger() {
-        AJocClusterService.setLogger(IDENTIFIER);
+        JocClusterServiceLogger.setLogger(IDENTIFIER);
     }
 
     private static void removeServiceLogger() {
-        AJocClusterService.removeLogger(IDENTIFIER);
+        JocClusterServiceLogger.removeLogger(IDENTIFIER);
     }
 }

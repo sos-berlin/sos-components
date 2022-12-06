@@ -51,9 +51,9 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
-import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSchedule;
 import com.sos.joc.dailyplan.common.DailyPlanScheduleWorkflow;
@@ -111,7 +111,7 @@ public class DailyPlanRunner extends TimerTask {
         if (createdPlans == null) {
             createdPlans = new HashSet<String>();
         }
-        AJocClusterService.setLogger("dailyplan");
+        JocClusterServiceLogger.setLogger("dailyplan");
         boolean manuelStart = false;
         if (firstStart && StartupMode.manual_restart.equals(settings.getStartMode())) {
             firstStart = false;
@@ -165,7 +165,7 @@ public class DailyPlanRunner extends TimerTask {
                 }
             }
         }
-        // AJocClusterService.clearAllLoggers();
+        // JocClusterServiceLogger.clearAllLoggers();
     }
 
     /* service */
