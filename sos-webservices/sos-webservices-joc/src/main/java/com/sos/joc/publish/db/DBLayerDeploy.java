@@ -1338,22 +1338,12 @@ public class DBLayerDeploy {
         }
     }
 
-    public DBItemDeploymentHistory getLatestActiveDepHistoryItem(DBItemInventoryConfiguration invConfig, DBItemInventoryJSInstance controller)
-            throws SOSHibernateException {
-        return getLatestActiveDepHistoryItem(invConfig.getId(), controller.getControllerId());
-    }
-
-    public DBItemDeploymentHistory getLatestActiveDepHistoryItem(DBItemInventoryConfiguration invConfig, String controllerId)
-            throws SOSHibernateException {
-        return getLatestActiveDepHistoryItem(invConfig.getId(), controllerId);
-    }
-
     public DBItemDeploymentHistory getLatestActiveDepHistoryItem(Long configurationId, String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
         hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
-        hql.append(" where dep.inventoryConfigurationId = :cid");
-        hql.append(" and dep.controllerId = :controllerId");
-        hql.append(" and dep.operation = 0").append(")");
+        hql.append(" where history.inventoryConfigurationId = :cid");
+        hql.append(" and history.controllerId = :controllerId");
+        hql.append(" and history.state = 0").append(")");
         Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
         query.setParameter("cid", configurationId);
         query.setParameter("controllerId", controllerId);
