@@ -936,9 +936,9 @@ public class JS7Converter {
         ExecutableScript e = new ExecutableScript();
         // TODO unix/windows
         StringBuilder script = new StringBuilder("#!/bin/sh");
-        script.append(CONFIG.getJobConfig().getScriptNewLine());
+        script.append(CONFIG.getJobConfig().getUnixNewLine());
         if (jilJob.getProfile().getValue() != null) {
-            script.append(jilJob.getProfile().getValue()).append(CONFIG.getJobConfig().getScriptNewLine());
+            script.append(jilJob.getProfile().getValue()).append(CONFIG.getJobConfig().getUnixNewLine());
         }
         if (CONFIG.getMockConfig().hasScript()) {
             // TODO unix/windows

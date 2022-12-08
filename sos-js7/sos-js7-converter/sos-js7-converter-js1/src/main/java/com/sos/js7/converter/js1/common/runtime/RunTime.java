@@ -3,6 +3,7 @@ package com.sos.js7.converter.js1.common.runtime;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +14,11 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
 import com.sos.commons.xml.exception.SOSXMLXPathException;
+import com.sos.inventory.model.instruction.schedule.CycleSchedule;
+import com.sos.inventory.model.instruction.schedule.Periodic;
+import com.sos.inventory.model.instruction.schedule.Scheme;
+import com.sos.inventory.model.job.AdmissionTimeScheme;
+import com.sos.inventory.model.job.DailyPeriod;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
@@ -164,6 +170,30 @@ public class RunTime {
 
     public boolean isConvertableWithoutCalendars() {
         return !isEmpty() && !hasCalendars();
+    }
+
+    // TODO
+    public CycleSchedule convertForCyclicWorkflow() {
+        Scheme scheme = null;
+        if (begin != null && end != null && repeat != null && !hasChildElements()) {
+            Periodic p = new Periodic();
+            p.setPeriod(3_600L);
+            // p.setOffsets(jilJob.getRunTime().getStartMins().getValue().stream().map(e -> new Long(e * 60)).collect(Collectors.toList()));
+
+            DailyPeriod dp = new DailyPeriod();
+            dp.setSecondOfDay(0L);
+            dp.setDuration(86_400L);
+
+            scheme = new Scheme(p, new AdmissionTimeScheme(Collections.singletonList(dp)));
+        } else {
+
+        }
+        
+        if (scheme == null) {
+
+        }
+
+        return scheme == null ? null : new CycleSchedule(Collections.singletonList(scheme));
     }
 
     public boolean hasChildElements() {

@@ -24,8 +24,7 @@ public class JS7ConverterTest {
         JS7Converter.CONFIG.getMockConfig().withUnixScript("$HOME/MockScript.sh");
         JS7Converter.CONFIG.getScheduleConfig().withDefaultWorkingDayCalendarName("AnyDays").withDefaultNonWorkingDayCalendarName(null)
                 .withPlanOrders(true).withSubmitOrders(true);
-        JS7Converter.CONFIG.getJobConfig().withForcedGraceTimeout(15).withForcedParallelism(1).withForcedFailOnErrWritten(true).withScriptNewLine(
-                "\n");
+        JS7Converter.CONFIG.getJobConfig().withForcedGraceTimeout(15).withForcedParallelism(1).withForcedFailOnErrWritten(true);
         JS7Converter.CONFIG.getSubFolderConfig().withMappings("aapg=2;ebzc=0;wmad=0;abcd=0").withSeparator("_");
 
         JS7Converter.convert(new XMLJobParser(), input, outputDir, reportDir);

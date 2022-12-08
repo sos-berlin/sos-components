@@ -1091,16 +1091,13 @@ public class JS7Converter {
         return in;
     }
 
+    // TODO
     private List<Instruction> getCyclicWorkflowInstructions(ACommonJob job, List<Instruction> in) {
-        /** if (!CONFIG.getGenerateConfig().getCyclicOrders() && job.getRunTime().getStartMins().getValue() != null) { Periodic p = new Periodic();
-         * p.setPeriod(3_600L); p.setOffsets(jilJob.getRunTime().getStartMins().getValue().stream().map(e -> new Long(e * 60)).collect(Collectors.toList()));
-         * 
-         * DailyPeriod dp = new DailyPeriod(); dp.setSecondOfDay(0L); dp.setDuration(86_400L);
-         * 
-         * CycleSchedule cs = new CycleSchedule(Collections.singletonList(new Scheme(p, new AdmissionTimeScheme(Collections.singletonList(dp))))); Instructions
-         * ci = new Instructions(in);
-         * 
-         * in = new ArrayList<>(); in.add(new Cycle(ci, cs)); } */
+        if (!CONFIG.getGenerateConfig().getCyclicOrders() && job.getRunTime() != null) {
+            /** CycleSchedule cs = job.getRunTime().convertForCyclicWorkflow(); if (cs != null) { Instructions ci = new Instructions(in);
+             * 
+             * in = new ArrayList<>(); in.add(new Cycle(ci, cs)); } */
+        }
         return in;
     }
 
@@ -1766,16 +1763,22 @@ public class JS7Converter {
         String commentBegin = "#";
         boolean isMock = CONFIG.getMockConfig().hasScript();
         boolean isUnix = jh.getJS7Agent().getPlatform().equalsIgnoreCase(Platform.UNIX.name());
+        String newLine = isUnix ? CONFIG.getJobConfig().getUnixNewLine() : CONFIG.getJobConfig().getWindowsNewLine();
         Environment jobArguments = getJobArguments(jh);
 
         ShellJobHelper shellJob = jh.getShellJob();
         boolean checkUnixFirstLine = false;
+        boolean isPowershell = false;
         if (isUnix) {
             commentBegin = "#";
             if (shellJob.getLanguage().equals("powershell")) {
-                scriptHeader.append("#!/usr/bin/env pwsh");
-                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
-                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+                isPowershell = true;
+
+                if (!SOSString.isEmpty(CONFIG.getJobConfig().getUnixPowershellShebang())) {
+                    scriptHeader.append(CONFIG.getJobConfig().getUnixPowershellShebang());
+                    scriptHeader.append(newLine);
+                    scriptHeader.append(newLine);
+                }
             } else {
                 checkUnixFirstLine = true;
                 // scriptHeader.append("#!/bin/bash");
@@ -1784,28 +1787,32 @@ public class JS7Converter {
         } else {
             commentBegin = "REM";
             if (shellJob.getLanguage().equals("powershell")) {
-                scriptHeader.append("@@findstr/v \"^@@f.*&\" \"%~f0\"|pwsh.exe -&goto:eof");
-                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
-                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+                isPowershell = true;
+                commentBegin = "#";
+                if (!SOSString.isEmpty(CONFIG.getJobConfig().getWindowsPowershellShebang())) {
+                    scriptHeader.append(CONFIG.getJobConfig().getWindowsPowershellShebang());
+                    scriptHeader.append(newLine);
+                    scriptHeader.append(newLine);
+                }
             }
         }
 
         boolean isYADE = shellJob.getYADE() != null;
         if (!shellJob.getLanguage().equals("shell")) {// language always lower case
-            if (!isYADE) {
+            if (!isYADE && !isPowershell) {
                 scriptHeader.append(commentBegin).append(" language=").append(shellJob.getLanguage());
                 if (shellJob.getClassName() != null) {
                     scriptHeader.append(",className=" + shellJob.getClassName());
                 }
-                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+                scriptHeader.append(newLine);
             }
         }
         if (isYADE) {
             StringBuilder yadeCommand = getYADECommand(shellJob, isUnix, jobArguments);
             if (isMock) {
-                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+                scriptHeader.append(newLine);
                 scriptHeader.append(commentBegin).append(" ").append(yadeCommand.toString().trim());
-                scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
+                scriptHeader.append(newLine);
             } else {
                 scriptCommand.append(yadeCommand.toString().trim());
             }
@@ -1826,7 +1833,7 @@ public class JS7Converter {
                     ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "[script][find include=" + job.getScript().getInclude().getNodeText()
                             + "]", e);
                 }
-                scriptCommand.append(CONFIG.getJobConfig().getScriptNewLine());
+                scriptCommand.append(newLine);
             }
             if (job.getScript().getScript() != null) {
                 scriptCommand.append(job.getScript().getScript());
@@ -1845,8 +1852,10 @@ public class JS7Converter {
             // scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
             if (!command.startsWith("#!/")) {
                 StringBuilder sb = new StringBuilder();
-                sb.append("#!/bin/bash");
-                sb.append(CONFIG.getJobConfig().getScriptNewLine());
+                if (!SOSString.isEmpty(CONFIG.getJobConfig().getUnixDefaultShebang())) {
+                    sb.append(CONFIG.getJobConfig().getUnixDefaultShebang());
+                    sb.append(newLine);
+                }
                 sb.append(scriptHeader);
                 scriptHeader = sb;
             }
