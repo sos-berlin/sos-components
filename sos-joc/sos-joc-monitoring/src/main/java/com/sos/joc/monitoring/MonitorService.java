@@ -1,141 +1,26 @@
 package com.sos.joc.monitoring;
 
-import java.nio.file.Path;
-import java.sql.Connection;
-import java.time.Instant;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.sos.commons.util.SOSString;
-import com.sos.joc.cluster.JocCluster;
-import com.sos.joc.cluster.JocClusterHibernateFactory;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
-import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
-import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
-import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
-import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
-import com.sos.joc.cluster.service.active.AJocActiveMemberService;
-import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.cluster.common.ClusterServices;
-import com.sos.joc.monitoring.configuration.Configuration;
-import com.sos.joc.monitoring.model.HistoryMonitoringModel;
 
-public class MonitorService extends AJocActiveMemberService {
+public class MonitorService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MonitorService.class);
+    public static final String MAIN_SERVICE_IDENTIFIER = ClusterServices.monitor.name();
+    public static final String SUB_SERVICE_IDENTIFIER_HISTORY = MonitorService.getIdentifier(ClusterServices.history.name());
+    public static final String SUB_SERVICE_IDENTIFIER_SYSTEM = MonitorService.getIdentifier("system");
 
-    private static final String IDENTIFIER = ClusterServices.monitor.name();
+    public static final String NOTIFICATION_IDENTIFIER = "notification";
 
-    private JocClusterHibernateFactory factory;
-    private HistoryMonitoringModel history = null;
-    private AtomicBoolean closed = new AtomicBoolean(false);
-
-    public MonitorService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
-        super(jocConf, clusterThreadGroup, IDENTIFIER);
-        JocClusterServiceLogger.setLogger(IDENTIFIER);
+    public static void setLogger() {
+        JocClusterServiceLogger.setLogger(MAIN_SERVICE_IDENTIFIER);
     }
 
-    @Override
-    public JocClusterAnswer start(List<ControllerConfiguration> controllers, AConfigurationSection configuration, StartupMode mode) {
-        try {
-            closed.set(false);
-            JocClusterServiceLogger.setLogger(IDENTIFIER);
-            LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
-
-            createFactory(getJocConfig().getHibernateConfiguration());
-            history = new HistoryMonitoringModel(getThreadGroup(), factory, getJocConfig(), IDENTIFIER);
-            history.start(getThreadGroup());
-
-            return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
-        } catch (Exception e) {
-            return JocCluster.getErrorAnswer(e);
-        } finally {
-            JocClusterServiceLogger.removeLogger(IDENTIFIER);
-        }
+    public static void removeLogger() {
+        JocClusterServiceLogger.removeLogger(MAIN_SERVICE_IDENTIFIER);
     }
 
-    @Override
-    public JocClusterAnswer stop(StartupMode mode) {
-        JocClusterServiceLogger.setLogger(IDENTIFIER);
-        LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
-
-        closed.set(true);
-        close(mode);
-        LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
-
-        JocClusterServiceLogger.removeLogger(IDENTIFIER);
-        return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
-    }
-
-    @Override
-    public JocServiceAnswer getInfo() {
-        if (history == null) {
-            return new JocServiceAnswer(JocServiceAnswerState.RELAX);
-        } else {
-            return new JocServiceAnswer(Instant.ofEpochMilli(history.getLastActivityStart().get()), Instant.ofEpochMilli(history.getLastActivityEnd()
-                    .get()));
-        }
-    }
-
-    @Override
-    public void update(List<ControllerConfiguration> controllers, String controllerId, Action action) {
-
-    }
-
-    @Override
-    public void update(StartupMode mode, AConfigurationSection configuration) {
-        if (!closed.get()) {
-            if (history != null && configuration != null) {
-                if (configuration instanceof ConfigurationGlobalsJoc) {
-                    JocClusterServiceLogger.setLogger(IDENTIFIER);
-
-                    ConfigurationGlobalsJoc joc = (ConfigurationGlobalsJoc) configuration;
-                    String oldValue = Configuration.getJocReverseProxyUri();
-                    String newValue = joc.getJocReverseProxyUrl().getValue();
-                    if (!SOSString.equals(oldValue, newValue)) {
-                        Configuration.setJocReverseProxyUri(newValue);
-                        LOGGER.info(String.format("[%s][%s][%s][old=%s][new=%s]", IDENTIFIER, StartupMode.settings_changed.name(), joc
-                                .getJocReverseProxyUrl().getName(), oldValue, newValue));
-                    }
-                }
-            }
-        }
-    }
-
-    private void close(StartupMode mode) {
-        if (history != null) {
-            history.close(mode);
-        }
-        closeFactory();
-    }
-
-    private void createFactory(Path configFile) throws Exception {
-        // 1-history monitoring, 2 - configuration thread
-        factory = new JocClusterHibernateFactory(configFile, 1, 2);
-        factory.setIdentifier(IDENTIFIER);
-        factory.setAutoCommit(false);
-        factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-        factory.addClassMapping(DBLayer.getMonitoringClassMapping());
-        factory.build();
-    }
-
-    private void closeFactory() {
-        if (factory != null) {
-            JocClusterServiceLogger.setLogger(IDENTIFIER);
-
-            factory.close();
-            factory = null;
-            LOGGER.info(String.format("[%s]database factory closed", IDENTIFIER));
-        }
+    public static String getIdentifier(String caller) {
+        return MAIN_SERVICE_IDENTIFIER + "_" + caller;
     }
 
 }
