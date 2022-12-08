@@ -9,11 +9,16 @@ import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.configuration.Configuration;
 
 public class JocHref {
 
     private static final String JOC_URI_PART = "/joc/#/";
+
+    private static final String VAR_JOC_TITLE = "JOC_TITLE";
+    private static final String VAR_JOC_URI = "JOC_URI";
+    private static final String VAR_JOC_REVERSE_PROXY_URI = "JOC_REVERSE_PROXY_URI";
 
     private static final String VAR_JOC_HREF_WORKFLOW = "JOC_HREF_WORKFLOW";
     private static final String VAR_JOC_HREF_ORDER = "JOC_HREF_ORDER";
@@ -29,19 +34,36 @@ public class JocHref {
 
     private static final boolean SET_AS_ENVS = true;
 
+    private final boolean isSystemNotification;
+
+    private String title;
+    private String uri;
     private String workflow;
     private String workflowOrder;
     private String workflowOrderLog;
     private String workflowJob;
     private String workflowJobLog;
 
+    private String reverseProxyUri;
     private String reverseProxyWorkflow;
     private String reverseProxyWorkflowOrder;
     private String reverseProxyWorkflowOrderLog;
     private String reverseProxyWorkflowJob;
     private String reverseProxyWorkflowJobLog;
 
+    protected JocHref(SystemMonitoringEvent evt) {
+        isSystemNotification = true;
+        setTitle();
+        setUri();
+        setReverseProxyUri();
+    }
+
     protected JocHref(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
+        isSystemNotification = false;
+        setTitle();
+        setUri();
+        setReverseProxyUri();
+
         setWorkflow(mo);
         setWorkflowOrder(mo);
         setWorkflowOrderLog(mo);
@@ -56,45 +78,76 @@ public class JocHref {
     }
 
     protected void addKeys(SOSParameterSubstitutor ps) {
-        ps.addKey(VAR_JOC_HREF_WORKFLOW, workflow);
-        ps.addKey(VAR_JOC_HREF_ORDER, workflowOrder);
-        ps.addKey(VAR_JOC_HREF_ORDER_LOG, workflowOrderLog);
-        ps.addKey(VAR_JOC_HREF_JOB, workflowJob);
-        ps.addKey(VAR_JOC_HREF_JOB_LOG, workflowJobLog);
+        ps.addKey(VAR_JOC_TITLE, title);
+        ps.addKey(VAR_JOC_URI, uri);
+        ps.addKey(VAR_JOC_REVERSE_PROXY_URI, reverseProxyUri);
 
-        ps.addKey(VAR_JOC_REVERSE_PROXY_HREF_WORKFLOW, reverseProxyWorkflow);
-        ps.addKey(VAR_JOC_REVERSE_PROXY_HREF_ORDER, reverseProxyWorkflowOrder);
-        ps.addKey(VAR_JOC_REVERSE_PROXY_HREF_ORDER_LOG, reverseProxyWorkflowOrderLog);
-        ps.addKey(VAR_JOC_REVERSE_PROXY_HREF_JOB, reverseProxyWorkflowJob);
-        ps.addKey(VAR_JOC_REVERSE_PROXY_HREF_JOB_LOG, reverseProxyWorkflowJobLog);
+        if (!isSystemNotification) {
+            ps.addKey(VAR_JOC_HREF_WORKFLOW, workflow);
+            ps.addKey(VAR_JOC_HREF_ORDER, workflowOrder);
+            ps.addKey(VAR_JOC_HREF_ORDER_LOG, workflowOrderLog);
+            ps.addKey(VAR_JOC_HREF_JOB, workflowJob);
+            ps.addKey(VAR_JOC_HREF_JOB_LOG, workflowJobLog);
+
+            ps.addKey(VAR_JOC_REVERSE_PROXY_HREF_WORKFLOW, reverseProxyWorkflow);
+            ps.addKey(VAR_JOC_REVERSE_PROXY_HREF_ORDER, reverseProxyWorkflowOrder);
+            ps.addKey(VAR_JOC_REVERSE_PROXY_HREF_ORDER_LOG, reverseProxyWorkflowOrderLog);
+            ps.addKey(VAR_JOC_REVERSE_PROXY_HREF_JOB, reverseProxyWorkflowJob);
+            ps.addKey(VAR_JOC_REVERSE_PROXY_HREF_JOB_LOG, reverseProxyWorkflowJobLog);
+        }
     }
 
     protected void addEnvs(Map<String, String> map) {
         if (!SET_AS_ENVS) {
             return;
         }
-        map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_WORKFLOW, workflow);
-        map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_ORDER, workflowOrder);
-        map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_ORDER_LOG, workflowOrderLog);
-        map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_JOB, workflowJob);
-        map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_JOB_LOG, workflowJobLog);
 
-        map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_REVERSE_PROXY_HREF_WORKFLOW, reverseProxyWorkflow);
-        map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_REVERSE_PROXY_HREF_ORDER, reverseProxyWorkflowOrder);
-        map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_REVERSE_PROXY_HREF_ORDER_LOG, reverseProxyWorkflowOrderLog);
-        map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_REVERSE_PROXY_HREF_JOB, reverseProxyWorkflowJob);
-        map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_REVERSE_PROXY_HREF_JOB_LOG, reverseProxyWorkflowJobLog);
+        map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_TITLE, title);
+        map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_URI, uri);
+        map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_REVERSE_PROXY_URI, reverseProxyUri);
+
+        if (!isSystemNotification) {
+            map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_WORKFLOW, workflow);
+            map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_ORDER, workflowOrder);
+            map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_ORDER_LOG, workflowOrderLog);
+            map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_JOB, workflowJob);
+            map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_JOB_LOG, workflowJobLog);
+
+            map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_REVERSE_PROXY_HREF_WORKFLOW, reverseProxyWorkflow);
+            map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_REVERSE_PROXY_HREF_ORDER, reverseProxyWorkflowOrder);
+            map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_REVERSE_PROXY_HREF_ORDER_LOG, reverseProxyWorkflowOrderLog);
+            map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_REVERSE_PROXY_HREF_JOB, reverseProxyWorkflowJob);
+            map.put(ANotifier.PREFIX_ENV_VAR + "_" + VAR_JOC_REVERSE_PROXY_HREF_JOB_LOG, reverseProxyWorkflowJobLog);
+        }
+    }
+
+    private void setTitle() {
+        if (title == null) {
+            title = ANotifier.getVarValue(Configuration.INSTANCE.getJocTitle());
+        }
+    }
+
+    private void setUri() {
+        if (uri == null) {
+            uri = ANotifier.getVarValue(Configuration.INSTANCE.getJocUri());
+        }
+    }
+
+    private void setReverseProxyUri() {
+        if (reverseProxyUri == null) {
+            reverseProxyUri = ANotifier.getVarValue(Configuration.INSTANCE.getJocReverseProxyUri());
+        }
     }
 
     private void setWorkflow(DBItemMonitoringOrder mo) {
         if (workflow == null) {
-            workflow = getWorkflowUri(Configuration.getJocUri(), mo);
+            workflow = getWorkflowUri(Configuration.INSTANCE.getJocUri(), mo);
         }
     }
 
     private void setReverseProxyWorkflow(DBItemMonitoringOrder mo) {
         if (reverseProxyWorkflow == null) {
-            reverseProxyWorkflow = SOSString.isEmpty(Configuration.getJocReverseProxyUri()) ? "" : getWorkflowUri(Configuration
+            reverseProxyWorkflow = SOSString.isEmpty(Configuration.INSTANCE.getJocReverseProxyUri()) ? "" : getWorkflowUri(Configuration.INSTANCE
                     .getJocReverseProxyUri(), mo);
         }
     }
@@ -112,14 +165,14 @@ public class JocHref {
 
     private void setWorkflowOrder(DBItemMonitoringOrder mo) {
         if (workflowOrder == null) {
-            workflowOrder = getWorkflowOrderUri(Configuration.getJocUri(), mo);
+            workflowOrder = getWorkflowOrderUri(Configuration.INSTANCE.getJocUri(), mo);
         }
     }
 
     private void setReverseProxyWorkflowOrder(DBItemMonitoringOrder mo) {
         if (reverseProxyWorkflowOrder == null) {
-            reverseProxyWorkflowOrder = SOSString.isEmpty(Configuration.getJocReverseProxyUri()) ? "" : getWorkflowOrderUri(Configuration
-                    .getJocReverseProxyUri(), mo);
+            reverseProxyWorkflowOrder = SOSString.isEmpty(Configuration.INSTANCE.getJocReverseProxyUri()) ? "" : getWorkflowOrderUri(
+                    Configuration.INSTANCE.getJocReverseProxyUri(), mo);
         }
     }
 
@@ -137,14 +190,14 @@ public class JocHref {
 
     private void setWorkflowOrderLog(DBItemMonitoringOrder mo) {
         if (workflowOrderLog == null) {
-            workflowOrderLog = getWorkflowOrderLogUri(Configuration.getJocUri(), mo);
+            workflowOrderLog = getWorkflowOrderLogUri(Configuration.INSTANCE.getJocUri(), mo);
         }
     }
 
     private void setReverseProxyWorkflowOrderLog(DBItemMonitoringOrder mo) {
         if (reverseProxyWorkflowOrderLog == null) {
-            reverseProxyWorkflowOrderLog = SOSString.isEmpty(Configuration.getJocReverseProxyUri()) ? "" : getWorkflowOrderLogUri(Configuration
-                    .getJocReverseProxyUri(), mo);
+            reverseProxyWorkflowOrderLog = SOSString.isEmpty(Configuration.INSTANCE.getJocReverseProxyUri()) ? "" : getWorkflowOrderLogUri(
+                    Configuration.INSTANCE.getJocReverseProxyUri(), mo);
         }
     }
 
@@ -163,14 +216,14 @@ public class JocHref {
 
     private void setWorkflowJob(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
         if (workflowJob == null) {
-            workflowJob = getWorkflowJobUri(Configuration.getJocUri(), mo, mos);
+            workflowJob = getWorkflowJobUri(Configuration.INSTANCE.getJocUri(), mo, mos);
         }
     }
 
     private void setReverseProxyWorkflowJob(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
         if (reverseProxyWorkflowJob == null) {
-            reverseProxyWorkflowJob = SOSString.isEmpty(Configuration.getJocReverseProxyUri()) ? "" : getWorkflowJobUri(Configuration
-                    .getJocReverseProxyUri(), mo, mos);
+            reverseProxyWorkflowJob = SOSString.isEmpty(Configuration.INSTANCE.getJocReverseProxyUri()) ? "" : getWorkflowJobUri(
+                    Configuration.INSTANCE.getJocReverseProxyUri(), mo, mos);
         }
     }
 
@@ -191,14 +244,14 @@ public class JocHref {
 
     private void setWorkflowJobLog(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
         if (workflowJobLog == null) {
-            workflowJobLog = getWorkflowJobLogUri(Configuration.getJocUri(), mo, mos);
+            workflowJobLog = getWorkflowJobLogUri(Configuration.INSTANCE.getJocUri(), mo, mos);
         }
     }
 
     private void setReverseProxyWorkflowJobLog(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
         if (reverseProxyWorkflowJobLog == null) {
-            reverseProxyWorkflowJobLog = SOSString.isEmpty(Configuration.getJocReverseProxyUri()) ? "" : getWorkflowJobLogUri(Configuration
-                    .getJocReverseProxyUri(), mo, mos);
+            reverseProxyWorkflowJobLog = SOSString.isEmpty(Configuration.INSTANCE.getJocReverseProxyUri()) ? "" : getWorkflowJobLogUri(
+                    Configuration.INSTANCE.getJocReverseProxyUri(), mo, mos);
         }
     }
 

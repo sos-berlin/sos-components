@@ -12,7 +12,7 @@ import org.apache.logging.log4j.core.config.plugins.Plugin;
  * delete comment at @Plugin annotation to activate the Notification appender
  *
  */
-//@Plugin(name = SOSLog4j2ConfigurationFactory.PLUGIN_NAME, category = ConfigurationFactory.CATEGORY)
+@Plugin(name = SOSLog4j2ConfigurationFactory.PLUGIN_NAME, category = ConfigurationFactory.CATEGORY)
 @Order(10)
 public class SOSLog4j2ConfigurationFactory extends ConfigurationFactory {
     

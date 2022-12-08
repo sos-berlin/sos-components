@@ -78,9 +78,9 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         schedule.getService().setLastActivityStart(new Date().getTime());
         LOGGER.info(String.format("[%s][run]start ...", logIdentifier));
         JocCluster cluster = JocClusterService.getInstance().getCluster();
-        if (cluster.getHandler().isActive()) {
+        if (cluster.getActiveMemberHandler().isActive()) {
             CleanupServiceSchedule cleanupSchedule = this.schedule;
-            List<IJocActiveMemberService> services = cluster.getHandler().getServices();
+            List<IJocActiveMemberService> services = cluster.getActiveMemberHandler().getServices();
             LOGGER.info(String.format("[%s][run]found %s running services", logIdentifier, services.size()));
 
             try {

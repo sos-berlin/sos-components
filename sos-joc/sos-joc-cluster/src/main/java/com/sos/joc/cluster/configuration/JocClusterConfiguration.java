@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSPath;
+import com.sos.joc.cluster.service.embedded.IJocEmbeddedService;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
 public class JocClusterConfiguration {
@@ -30,12 +31,15 @@ public class JocClusterConfiguration {
     private static final String ACTIVE_MEMBER_SERVICE_CLEANUP = "com.sos.joc.cleanup.CleanupService";
     private static final String ACTIVE_MEMBER_SERVICE_DAILYPLAN = "com.sos.joc.dailyplan.DailyPlanService";
     private static final String ACTIVE_MEMBER_SERVICE_HISTORY = "com.sos.joc.history.HistoryService";
-    private static final String ACTIVE_MEMBER_SERVICE_MONITOR = "com.sos.joc.monitoring.MonitorService";
+    private static final String ACTIVE_MEMBER_SERVICE_MONITOR = "com.sos.joc.monitoring.HistoryMonitorService";
+
+    private static final String EMBEDDED_SERVICE_MONITOR = "com.sos.joc.monitoring.SystemMonitorService";
 
     private static final String CLUSTER_MODE = "com.sos.js7.license.joc.ClusterLicenseCheck";
 
-    private List<Class<?>> activeMemberServices;
     private final ThreadGroup threadGroup;
+    private List<Class<?>> activeMemberServices;
+    private List<Class<IJocEmbeddedService>> embeddedServices;
 
     private ClusterModeResult clusterModeResult;
 
@@ -60,10 +64,11 @@ public class JocClusterConfiguration {
         }
         threadGroup = new ThreadGroup(JocClusterConfiguration.IDENTIFIER);
         clusterModeResult = clusterMode();
-        registerActiveServices();
+        registerActiveMemberServices();
+        registerEmbeddedServices();
     }
 
-    private void registerActiveServices() {
+    private void registerActiveMemberServices() {
         activeMemberServices = new ArrayList<>();
         addActiveMemberService(ACTIVE_MEMBER_SERVICE_HISTORY);
         addActiveMemberService(ACTIVE_MEMBER_SERVICE_DAILYPLAN);
@@ -71,9 +76,23 @@ public class JocClusterConfiguration {
         addActiveMemberService(ACTIVE_MEMBER_SERVICE_MONITOR);
     }
 
+    private void registerEmbeddedServices() {
+        embeddedServices = new ArrayList<>();
+        addEmbeddedService(EMBEDDED_SERVICE_MONITOR);
+    }
+
     private void addActiveMemberService(String className) {
         try {
             activeMemberServices.add(Class.forName(className));
+        } catch (ClassNotFoundException e) {
+            LOGGER.error(String.format("[%s]%s", className, e.toString()), e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void addEmbeddedService(String className) {
+        try {
+            embeddedServices.add((Class<IJocEmbeddedService>) Class.forName(className));
         } catch (ClassNotFoundException e) {
             LOGGER.error(String.format("[%s]%s", className, e.toString()), e);
         }
@@ -137,6 +156,10 @@ public class JocClusterConfiguration {
 
     public List<Class<?>> getActiveMemberServices() {
         return activeMemberServices;
+    }
+
+    public List<Class<IJocEmbeddedService>> getEmbeddedServices() {
+        return embeddedServices;
     }
 
     public ThreadGroup getThreadGroup() {

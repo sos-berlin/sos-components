@@ -3,7 +3,6 @@ package com.sos.joc.monitoring.configuration.monitor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.notification.notifier.NotifierNSCA;
 import com.sos.monitoring.MonitorType;
 
@@ -56,8 +55,8 @@ public class MonitorNSCA extends AMonitor {
     }
 
     @Override
-    public NotifierNSCA createNotifier(int nr, Configuration conf) throws Exception {
-        return new NotifierNSCA(nr, this, conf);
+    public NotifierNSCA createNotifier(int nr) throws Exception {
+        return new NotifierNSCA(nr, this);
     }
 
     @Override

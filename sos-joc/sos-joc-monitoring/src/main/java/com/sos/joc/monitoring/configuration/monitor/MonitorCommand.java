@@ -6,7 +6,6 @@ import org.w3c.dom.Node;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
-import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.notification.notifier.NotifierCommand;
 import com.sos.monitoring.MonitorType;
 
@@ -23,7 +22,7 @@ public class MonitorCommand extends AMonitor {
     }
 
     @Override
-    public NotifierCommand createNotifier(int nr, Configuration conf) throws Exception {
+    public NotifierCommand createNotifier(int nr) throws Exception {
         return new NotifierCommand(nr, this);
     }
 

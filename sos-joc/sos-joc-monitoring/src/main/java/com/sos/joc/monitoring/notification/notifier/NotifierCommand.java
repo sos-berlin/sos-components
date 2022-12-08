@@ -16,6 +16,7 @@ import com.sos.joc.classes.JOCSOSShell;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
+import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.configuration.monitor.MonitorCommand;
@@ -38,6 +39,28 @@ public class NotifierCommand extends ANotifier {
     @Override
     public AMonitor getMonitor() {
         return monitor;
+    }
+
+    @Override
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event) {
+
+        set(type, timeZone, event);
+        String cmd = resolveSystemVars(monitor.getCommand(), false);
+        LOGGER.info(getInfo4execute(true, event, type, cmd));
+
+        SOSCommandResult commandResult = JOCSOSShell.executeCommand(cmd, TIMEOUT, getEnvVariables(cmd));
+        NotifyResult result = new NotifyResult(commandResult.getCommand(), getSendInfo());
+        if (commandResult.hasError()) {
+            StringBuilder info = new StringBuilder();
+            info.append("[").append(monitor.getInfo()).append("]");
+            info.append(commandResult);
+
+            result.setError(getInfo4executeFailed(event, type, info.toString()));
+            return result;
+        }
+
+        LOGGER.info(Configuration.LOG_INTENT_2 + getInfo4execute(false, event, type, commandResult.getCommand()));
+        return result;
     }
 
     @Override

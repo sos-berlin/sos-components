@@ -42,7 +42,7 @@ public class DBLayerMonitoringTest {
             factory = createFactory();
             session = factory.openStatelessSession();
 
-            DBLayerMonitoring dbLayer = new DBLayerMonitoring("test", null);
+            DBLayerMonitoring dbLayer = new DBLayerMonitoring("test");
             dbLayer.setSession(session);
 
             LOGGER.info(SOSString.toString(dbLayer.getLastNotification("1", NotificationRange.WORKFLOW, 663L)));
@@ -117,7 +117,7 @@ public class DBLayerMonitoringTest {
     }
 
     private void saveJocVariable(SOSHibernateFactory factory, byte[] val) throws Exception {
-        DBLayerMonitoring dbLayer = new DBLayerMonitoring("test", "monitor");
+        DBLayerMonitoring dbLayer = new DBLayerMonitoring("test");
         try {
             dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
             dbLayer.getSession().beginTransaction();

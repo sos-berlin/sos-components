@@ -18,7 +18,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
-import com.sos.joc.monitoring.configuration.Configuration;
+import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.configuration.monitor.MonitorNSCA;
 import com.sos.monitoring.notification.NotificationType;
@@ -57,7 +57,7 @@ public class NotifierNSCA extends ANotifier {
     private String serviceName;
     private Level level;
 
-    public NotifierNSCA(int nr, MonitorNSCA monitor, Configuration conf) throws Exception {
+    public NotifierNSCA(int nr, MonitorNSCA monitor) throws Exception {
         super.setNr(nr);
         this.monitor = monitor;
         init();
@@ -70,6 +70,38 @@ public class NotifierNSCA extends ANotifier {
 
     @Override
     public void close() {
+    }
+
+    @Override
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event) {
+
+        try {
+            set(type, timeZone, event);
+            set(type);
+
+            Map<String, String> map = new HashMap<>();
+            map.put(VAR_SERVICE_NAME, serviceName);
+            message = resolveSystemVars(monitor.getMessage(), true, map);
+
+            MessagePayload payload = new MessagePayloadBuilder().withHostname(monitor.getServiceHost()).withLevel(level).withServiceName(serviceName)
+                    .withMessage(message).create();
+
+            NagiosPassiveCheckSender sender = new NagiosPassiveCheckSender(settings);
+
+            StringBuilder info = new StringBuilder();
+            info.append("[monitor host=").append(settings.getNagiosHost()).append(":").append(settings.getPort()).append("]");
+            info.append("[service host=").append(payload.getHostname()).append("]");
+            info.append("[level=").append(payload.getLevel()).append("]");
+            info.append(payload.getMessage());
+            LOGGER.info(getInfo4execute(true, event, type, info.toString()));
+
+            sender.send(payload);
+            return new NotifyResult(payload.getMessage(), getSendInfo());
+        } catch (Throwable e) {
+            NotifyResult result = new NotifyResult(message, getSendInfo());
+            result.setError(getInfo4executeFailed(event, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
+            return result;
+        }
     }
 
     @Override

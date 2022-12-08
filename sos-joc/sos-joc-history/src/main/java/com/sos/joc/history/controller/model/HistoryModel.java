@@ -739,7 +739,7 @@ public class HistoryModel {
     private void controllerShutDown(DBLayerHistory dbLayer, FatEventControllerShutDown event) throws Exception {
         DBItemHistoryController item = dbLayer.getControllerByNextEventId(controllerConfiguration.getCurrent().getId(), event.getEventId());
         if (item == null) {
-            LOGGER.warn(String.format("[%s][%s][%s][skip]not found controller entry with the ready time < %s", identifier, event.getType(),
+            LOGGER.info(String.format("[%s][%s][%s][skip]not found controller entry with the ready time < %s", identifier, event.getType(),
                     controllerConfiguration.getCurrent().getId(), getDateAsString(event.getEventDatetime())));
         } else {
             if (item.getShutdownTime() == null) {
@@ -774,7 +774,7 @@ public class HistoryModel {
     private void agentCouplingFailed(DBLayerHistory dbLayer, FatEventAgentCouplingFailed event) throws Exception {
         DBItemHistoryAgent item = dbLayer.getAgentByNextEventId(controllerConfiguration.getCurrent().getId(), event.getId(), event.getEventId());
         if (item == null) {
-            LOGGER.warn(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, event.getType(), event.getId(),
+            LOGGER.info(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, event.getType(), event.getId(),
                     getDateAsString(event.getEventDatetime())));
         } else {
             if (item.getShutdownTime() == null) {
@@ -795,7 +795,7 @@ public class HistoryModel {
     private void agentShutDown(DBLayerHistory dbLayer, FatEventAgentShutDown event) throws Exception {
         DBItemHistoryAgent item = dbLayer.getAgentByNextEventId(controllerConfiguration.getCurrent().getId(), event.getId(), event.getEventId());
         if (item == null) {
-            LOGGER.warn(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, event.getType(), event.getId(),
+            LOGGER.info(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, event.getType(), event.getId(),
                     getDateAsString(event.getEventDatetime())));
         } else {
             if (item.getShutdownTime() == null || isAgentCouplingFailedBecauseShutdown(item)) {
