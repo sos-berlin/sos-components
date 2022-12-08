@@ -20,6 +20,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
+import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.configuration.monitor.jms.MonitorJMS;
@@ -37,7 +38,7 @@ public class NotifierJMS extends ANotifier {
     private String userName;
     private String password;
 
-    public NotifierJMS(int nr, MonitorJMS monitor, Configuration conf) throws Exception {
+    public NotifierJMS(int nr, MonitorJMS monitor) throws Exception {
         super.setNr(nr);
         this.monitor = monitor;
         try {
@@ -56,6 +57,42 @@ public class NotifierJMS extends ANotifier {
     @Override
     public void close() {
         closeConnection();
+    }
+
+    @Override
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event) {
+
+        MessageProducer producer = null;
+        String message = null;
+        try {
+            producer = createProducer();
+            set(type, timeZone, event);
+
+            message = resolveSystemVars(monitor.getMessage(), true);
+
+            producer.setPriority(monitor.getPriority());
+            producer.setDeliveryMode(monitor.getDeliveryMode());
+            producer.setTimeToLive(monitor.getTimeToLive());
+
+            StringBuilder info = new StringBuilder();
+            info.append("[destination ").append(monitor.getDestinationName()).append("(").append(monitor.getDestination()).append(")]");
+            info.append(message);
+            LOGGER.info(getInfo4execute(true, event, type, info.toString()));
+
+            producer.send(session.createTextMessage(message));
+            return new NotifyResult(message, getSendInfo());
+        } catch (Throwable e) {
+            NotifyResult result = new NotifyResult(message, getSendInfo());
+            result.setError(getInfo4executeFailed(event, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
+            return result;
+        } finally {
+            if (producer != null) {
+                try {
+                    producer.close();
+                } catch (Exception e) {
+                }
+            }
+        }
     }
 
     @Override

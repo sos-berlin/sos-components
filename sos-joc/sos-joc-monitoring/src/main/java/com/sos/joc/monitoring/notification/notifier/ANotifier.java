@@ -4,8 +4,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.Map.Entry;
+import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
@@ -25,9 +27,10 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
-import com.sos.joc.monitoring.model.NotifyAnalyzer;
+import com.sos.joc.monitoring.model.HistoryNotifyAnalyzer;
 import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationStatus;
 import com.sos.monitoring.notification.NotificationType;
@@ -51,12 +54,15 @@ public abstract class ANotifier {
     private JocHref jocHref;
     private Map<String, String> tableFields;
     private Map<String, String> commonVars;
+    private Map<String, String> systemVars;
     private NotificationStatus status;
     private TimeZone timeZone;
     private int nr;
 
     public abstract NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
             DBItemNotification mn);
+
+    public abstract NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event);
 
     public abstract void close();
 
@@ -76,6 +82,73 @@ public abstract class ANotifier {
         return type == null ? "" : type.name();
     }
 
+    // SystemNotification
+    protected void set(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event) {
+        this.timeZone = timeZone;
+        setStatus(type);
+        setCommonVars();
+        setSystemVars(type, timeZone, event);
+
+        this.jocHref = new JocHref(event);
+    }
+
+    private void setSystemVars(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event) {
+        systemVars = new HashMap<>();
+        systemVars.put("MON_SN_TYPE", getVarValue(type.name()));
+        systemVars.put("MON_SN_CATEGORY", event.getCategory().name());
+        systemVars.put("MON_SN_SECTION", getVarValue(event.getSection()));
+
+        systemVars.put("MON_SN_NOTIFIER", getVarValue(event.getLoggerName()));
+        systemVars.put("MON_SN_TIME", epochMillis2String(timeZone, event.getEpochMillis()));
+
+        systemVars.put("MON_SN_MESSAGE", event.getMessage());
+        systemVars.put("MON_SN_EXCEPTION", getVarValue(SOSClassUtil.getStackTrace(event.getThrown())));
+    }
+
+    public static String getVarValue(String val) {
+        if (val == null) {
+            return "";
+        }
+        return val;
+    }
+
+    private String epochMillis2String(TimeZone timeZone, long epochMillis) {
+        if (epochMillis <= 0) {
+            return String.valueOf(epochMillis);
+        }
+        try {
+            return SOSDate.getDateTimeWithZoneOffsetAsString(new Date(epochMillis), timeZone);
+        } catch (SOSInvalidDataException e) {
+            return String.valueOf(epochMillis);
+        }
+    }
+
+    protected String resolveSystemVars(String msg, boolean resolveEnv) {
+        return resolveSystemVars(msg, resolveEnv, null);
+    }
+
+    protected String resolveSystemVars(String msg, boolean resolveEnv, Map<String, String> map) {
+        SOSParameterSubstitutor ps = new SOSParameterSubstitutor(false, "${", "}");
+        jocHref.addKeys(ps);
+
+        commonVars.entrySet().forEach(e -> {
+            ps.addKey(e.getKey(), e.getValue());
+        });
+
+        systemVars.entrySet().forEach(e -> {
+            ps.addKey(e.getKey(), e.getValue());
+        });
+
+        if (map != null) {
+            map.entrySet().forEach(e -> {
+                ps.addKey(e.getKey(), e.getValue());
+            });
+        }
+        String m = ps.replace(msg);
+        return resolveEnv ? ps.replaceEnvVars(m) : m;
+    }
+
+    // HistoryNotification
     protected void set(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
         this.timeZone = timeZone;
 
@@ -126,6 +199,34 @@ public abstract class ANotifier {
         }
     }
 
+    // SystemNotification
+    protected String getInfo4execute(boolean isExecute, SystemMonitoringEvent event, NotificationType type, String addInfo) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(Configuration.LOG_INTENT);
+        sb.append("[").append(nr).append("]");
+        sb.append("[").append(isExecute ? "execute" : "executed").append("]");
+        sb.append("[").append(getClass().getSimpleName()).append(" ").append(getMonitorInfo(getMonitor())).append("]");
+        sb.append(getInfo(event, type));
+        if (addInfo != null) {
+            sb.append(addInfo);
+        }
+        return sb.toString();
+    }
+
+    protected String getInfo4executeFailed(SystemMonitoringEvent event, NotificationType type, String addInfo) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(Configuration.LOG_INTENT);
+        sb.append("[").append(nr).append("]");
+        sb.append("[failed]");
+        sb.append("[").append(getClass().getSimpleName()).append(" ").append(getMonitorInfo(getMonitor())).append("]");
+        sb.append(getInfo(event, type));
+        if (addInfo != null) {
+            sb.append(addInfo);
+        }
+        return sb.toString();
+    }
+
+    // HistoryNotification
     protected String getInfo4execute(boolean isExecute, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type,
             String addInfo) {
         StringBuilder sb = new StringBuilder();
@@ -180,7 +281,7 @@ public abstract class ANotifier {
         return sb.toString();
     }
 
-    public static StringBuilder getInfo(NotifyAnalyzer analyzer, AMonitor monitor, NotificationType type) {
+    public static StringBuilder getInfo(HistoryNotifyAnalyzer analyzer, AMonitor monitor, NotificationType type) {
         if (analyzer == null || monitor == null) {
             return null;
         }
@@ -188,7 +289,7 @@ public abstract class ANotifier {
         return sb.append(getInfo(analyzer));
     }
 
-    public static StringBuilder getInfo(NotifyAnalyzer analyzer) {
+    public static StringBuilder getInfo(HistoryNotifyAnalyzer analyzer) {
         if (analyzer == null) {
             return null;
         }
@@ -211,6 +312,19 @@ public abstract class ANotifier {
             sb.append(",label=").append(mos.getJobLabel());
             sb.append(",position=").append(mos.getPosition());
         }
+        sb.append("]");
+        return sb;
+    }
+
+    // SystemNotifier
+    private static StringBuilder getInfo(SystemMonitoringEvent event, NotificationType type) {
+        StringBuilder sb = new StringBuilder();
+        if (type != null) {
+            sb.append("[").append(getTypeAsString(type)).append("]");
+        }
+        sb.append("[");
+        sb.append("category=").append(event.getCategory());
+        sb.append(",name=").append(event.getLoggerName());
         sb.append("]");
         return sb;
     }

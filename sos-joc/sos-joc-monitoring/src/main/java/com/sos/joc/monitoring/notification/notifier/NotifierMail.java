@@ -21,6 +21,7 @@ import com.sos.joc.classes.history.HistoryNotification;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
+import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
@@ -36,15 +37,54 @@ public class NotifierMail extends ANotifier {
 
     private SOSMail mail = null;
 
-    public NotifierMail(int nr, MonitorMail monitor, Configuration conf) throws Exception {
+    public NotifierMail(int nr, MonitorMail monitor) throws Exception {
         super.setNr(nr);
         this.monitor = monitor;
-        init(conf);
+        init();
     }
 
     @Override
     public AMonitor getMonitor() {
         return monitor;
+    }
+
+    @Override
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event) {
+        NotifyResult result = new NotifyResult(monitor.getMessage(), getSendInfo());
+        if (mail == null) {
+            result.setError("mail is null");
+            return result;
+        }
+
+        set(type, timeZone, event);
+
+        mail.setSubject(resolveSystemVars(monitor.getSubject(), true));
+        mail.setBody(resolveSystemVars(monitor.getMessage(), true));
+
+        try {
+            StringBuilder info = new StringBuilder();
+            info.append("[subject=").append(mail.getSubject()).append("]");
+
+            LOGGER.info(getInfo4execute(true, event, type, info.toString()));
+
+            if (!mail.send()) {
+                if (QUEUE_MAIL_ON_ERROR) {
+                    // - mail will be stored to the mail queue directory
+                    // - a warning message will be logged by SOSMail
+                } else {
+                    result.setError(getInfo4executeFailed(event, type, monitor.getInfo().toString()));
+                }
+            }
+            return result;
+        } catch (Throwable e) {
+            result.setError(getInfo4executeFailed(event, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
+            return result;
+        } finally {
+            try {
+                mail.clearRecipients();
+            } catch (Exception e) {
+            }
+        }
     }
 
     @Override
@@ -77,7 +117,7 @@ public class NotifierMail extends ANotifier {
                     // - mail will be stored to the mail queue directory
                     // - a warning message will be logged by SOSMail
                 } else {
-                    LOGGER.error(getInfo4executeFailed(mo, mos, type, monitor.getInfo().toString()));
+                    result.setError(getInfo4executeFailed(mo, mos, type, monitor.getInfo().toString()));
                 }
             }
             return result;
@@ -101,9 +141,9 @@ public class NotifierMail extends ANotifier {
         return new StringBuilder("[").append(monitor.getInfo()).append("]");
     }
 
-    private void init(Configuration conf) throws Exception {
+    private void init() throws Exception {
         try {
-            MailResource mr = getMailResource(conf);
+            MailResource mr = getMailResource();
             createMail(mr);
             if (SOSString.isEmpty(mail.getHost())) {
                 throw new Exception(String.format("[%s][missing host][known properties]%s", monitor.getInfo(), mr.getMaskedMailProperties()));
@@ -117,16 +157,16 @@ public class NotifierMail extends ANotifier {
         }
     }
 
-    private MailResource getMailResource(Configuration conf) throws Exception {
+    private MailResource getMailResource() throws Exception {
         MailResource resource = null;
         List<String> notDeployed = new ArrayList<>();
         if (monitor.getJobResources() != null) {
             if (monitor.getJobResources().size() == 1) {
-                resource = conf.getMailResources().get(monitor.getJobResources().get(0));
+                resource = Configuration.INSTANCE.getMailResources().get(monitor.getJobResources().get(0));
             } else {
                 List<MailResource> list = new ArrayList<>();
                 for (String res : monitor.getJobResources()) {
-                    MailResource r = conf.getMailResources().get(res);
+                    MailResource r = Configuration.INSTANCE.getMailResources().get(res);
                     if (r == null) {
                         notDeployed.add(res);
                     } else {

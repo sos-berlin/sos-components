@@ -7,7 +7,6 @@ import org.w3c.dom.Node;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
-import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.notification.notifier.NotifierMail;
 import com.sos.monitoring.MonitorType;
@@ -53,8 +52,8 @@ public class MonitorMail extends AMonitor {
     }
 
     @Override
-    public NotifierMail createNotifier(int nr, Configuration conf) throws Exception {
-        return new NotifierMail(nr, this, conf);
+    public NotifierMail createNotifier(int nr) throws Exception {
+        return new NotifierMail(nr, this);
     }
 
     @Override

@@ -13,7 +13,6 @@ import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
 import com.sos.commons.xml.exception.SOSXMLXPathException;
 import com.sos.joc.monitoring.configuration.AElement;
-import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.notification.notifier.ANotifier;
 import com.sos.monitoring.MonitorType;
 
@@ -56,7 +55,7 @@ public abstract class AMonitor extends AElement {
         this.monitorName = getValue(this.refElement.getAttribute(ATTRIBUTE_NAME_NAME));
     }
 
-    public abstract ANotifier createNotifier(int nr, Configuration conf) throws Exception;
+    public abstract ANotifier createNotifier(int nr) throws Exception;
 
     public abstract MonitorType getType();
 

@@ -58,7 +58,8 @@ public class JocCluster {
     private final SOSHibernateFactory dbFactory;
     private final JocClusterConfiguration config;
     private final JocConfiguration jocConfig;
-    private final JocClusterActiveMemberHandler handler;
+    private final JocClusterActiveMemberHandler activeMemberHandler;
+    private final JocClusterEmbeddedServicesHandler embeddedServicesHandler;
     private final Object lock = new Object();
     private final Object lockMember = new Object();
     private final String currentMemberId;
@@ -79,7 +80,8 @@ public class JocCluster {
         this.dbFactory = factory;
         this.config = jocClusterConfiguration;
         this.jocConfig = jocConfiguration;
-        this.handler = new JocClusterActiveMemberHandler(this);
+        this.activeMemberHandler = new JocClusterActiveMemberHandler(this);
+        this.embeddedServicesHandler = new JocClusterEmbeddedServicesHandler(this);
         this.currentMemberId = jocConfig.getMemberId();
         jocStartTime = jocStartDateTime;
     }
@@ -357,7 +359,7 @@ public class JocCluster {
             }
             if (!skipPerform) {
                 if (item != null) {
-                    JocClusterAnswer answer = performServices(mode, configurations, item.getMemberId());
+                    JocClusterAnswer answer = performActiveMemberServices(mode, configurations, item.getMemberId());
                     if (answer.getError() != null) {
                         LOGGER.error(SOSString.toString(answer));
                     }
@@ -390,7 +392,7 @@ public class JocCluster {
     }
 
     private void postDailyPlanCalendarEvent(StartupMode mode) {
-        if (StartupMode.automatic.equals(mode) && handler.isActive() && firstStep) {
+        if (StartupMode.automatic.equals(mode) && activeMemberHandler.isActive() && firstStep) {
             firstStep = false;
             try {
                 JocClusterServiceLogger.setLogger();
@@ -478,10 +480,10 @@ public class JocCluster {
     }
 
     private void inactiveMemberTryStopServices(ConfigurationGlobals configurations) {
-        if (handler.isActive()) {
+        if (activeMemberHandler.isActive()) {
             StartupMode mode = StartupMode.automatic;
             LOGGER.info("[" + mode + "][start][stop services because current is inactive]" + currentMemberId);
-            handler.perform(mode, PerformType.STOP, configurations);
+            activeMemberHandler.perform(mode, PerformType.STOP, configurations);
         }
     }
 
@@ -548,7 +550,7 @@ public class JocCluster {
             return getErrorAnswer(new Exception("missing newMemberId"));
         }
         if (newMemberId.equals(currentMemberId)) {
-            if (handler.isActive()) {
+            if (activeMemberHandler.isActive()) {
                 return getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
             }
         } else {// check if exists
@@ -593,9 +595,9 @@ public class JocCluster {
                     LOGGER.info("[" + mode + "][switch][end][skip][already active]currentMemberId=switch memberId");
                     answer = getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
                 } else {
-                    if (handler.isActive()) {
+                    if (activeMemberHandler.isActive()) {
                         LOGGER.info("[" + mode + "][switch][start][stop current]" + currentMemberId);
-                        handler.perform(mode, PerformType.STOP, configurations);
+                        activeMemberHandler.perform(mode, PerformType.STOP, configurations);
                     }
                     item.setMemberId(newMemberId);
                     item.setHeartBeat(new Date());
@@ -676,10 +678,10 @@ public class JocCluster {
                                     .getSwitchMemberId(), SOSDate.getDateTimeAsString(item.getSwitchHeartBeat())));
                         } else {
                             LOGGER.info("[" + mode + "][switch][stop current]newMemberId=" + item.getSwitchMemberId());
-                            if (handler.isActive()) {
+                            if (activeMemberHandler.isActive()) {
                                 // perform STOP can take a time ...
                                 // the stops of the individual services are executed in parallel, but are joined at the end
-                                handler.perform(mode, PerformType.STOP, configurations);
+                                activeMemberHandler.perform(mode, PerformType.STOP, configurations);
                             }
                             item.setMemberId(item.getSwitchMemberId());
                             skipPerform = true;
@@ -703,7 +705,7 @@ public class JocCluster {
             }
         } else {
             if (!config.getClusterModeResult().getUse()) {
-                if (!handler.isActive() && !isFirstRun()) { // changed in the database directly
+                if (!activeMemberHandler.isActive() && !isFirstRun()) { // changed in the database directly
                     return null;
                 }
             }
@@ -781,16 +783,16 @@ public class JocCluster {
         return false;
     }
 
-    private JocClusterAnswer performServices(StartupMode mode, ConfigurationGlobals configurations, String memberId) {
+    private JocClusterAnswer performActiveMemberServices(StartupMode mode, ConfigurationGlobals configurations, String memberId) {
         if (memberId.equals(currentMemberId)) {
-            if (handler.isActive()) {
+            if (activeMemberHandler.isActive()) {
                 return getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
             } else {
-                return handler.perform(mode, PerformType.START, configurations);
+                return activeMemberHandler.perform(mode, PerformType.START, configurations);
             }
         } else {
-            if (handler.isActive()) {
-                return handler.perform(mode, PerformType.STOP, configurations);
+            if (activeMemberHandler.isActive()) {
+                return activeMemberHandler.perform(mode, PerformType.STOP, configurations);
             } else {
                 return getOKAnswer(JocClusterAnswerState.ALREADY_STOPPED);
             }
@@ -806,22 +808,37 @@ public class JocCluster {
         synchronized (lockMember) {
             lockMember.notifyAll();
         }
-        closeServices(mode, configurations);
+        closeEmbeddedServices(mode);
+        closeActiveMemberServices(mode, configurations);
         if (deleteActiveCurrentMember) {
             tryDeleteActiveCurrentMember();
         }
         LOGGER.info("[" + mode + "][cluster][close]end----------------------------------------------");
     }
 
-    private JocClusterAnswer closeServices(StartupMode mode, ConfigurationGlobals configurations) {
-        LOGGER.info("[" + mode + "][cluster][closeServices][isActive=" + handler.isActive() + "]start...");
+    private JocClusterAnswer closeActiveMemberServices(StartupMode mode, ConfigurationGlobals configurations) {
+        LOGGER.info("[" + mode + "][cluster][closeActiveMemberServices][isActive=" + activeMemberHandler.isActive() + "]start...");
         JocClusterAnswer answer = null;
-        if (handler.isActive()) {
-            answer = handler.perform(mode, PerformType.STOP, configurations);
+        if (activeMemberHandler.isActive()) {
+            answer = activeMemberHandler.perform(mode, PerformType.STOP, configurations);
         } else {
             answer = getOKAnswer(JocClusterAnswerState.ALREADY_STOPPED);
         }
-        LOGGER.info("[" + mode + "][cluster][closeServices][isActive=" + handler.isActive() + "]end");
+        LOGGER.info("[" + mode + "][cluster][closeActiveMemberServices][isActive=" + activeMemberHandler.isActive() + "]end");
+        return answer;
+    }
+
+    private JocClusterAnswer closeEmbeddedServices(StartupMode mode) {
+        LOGGER.info("[" + mode + "][cluster][closeEmbeddedServices]start...");
+        JocClusterAnswer answer = embeddedServicesHandler.perform(mode, JocClusterEmbeddedServicesHandler.PerformType.STOP);
+        LOGGER.info("[" + mode + "][cluster][closeEmbeddedServices]end");
+        return answer;
+    }
+
+    public JocClusterAnswer startEmbeddedServices(StartupMode mode) {
+        LOGGER.info("[" + mode + "][cluster][startEmbeddedServices]start...");
+        JocClusterAnswer answer = embeddedServicesHandler.perform(mode, JocClusterEmbeddedServicesHandler.PerformType.START);
+        LOGGER.info("[" + mode + "][cluster][startEmbeddedServices]end");
         return answer;
     }
 
@@ -997,8 +1014,8 @@ public class JocCluster {
         return jocConfig;
     }
 
-    public JocClusterActiveMemberHandler getHandler() {
-        return handler;
+    public JocClusterActiveMemberHandler getActiveMemberHandler() {
+        return activeMemberHandler;
     }
 
     public List<ControllerConfiguration> getControllers() {

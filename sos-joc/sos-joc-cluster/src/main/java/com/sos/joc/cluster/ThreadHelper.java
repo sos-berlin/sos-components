@@ -106,10 +106,6 @@ public class ThreadHelper {
         }
     }
 
-    public static void tryStop(final StartupMode mode, List<String> l) {
-        tryStop(mode, String.join("|", l));
-    }
-
     @SuppressWarnings("deprecation")
     public static void tryStop(final StartupMode mode, final String threadPrefix) {
         try {

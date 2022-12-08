@@ -24,11 +24,12 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.db.monitoring.DBItemNotificationWorkflow;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResult;
-import com.sos.joc.monitoring.model.NotifyAnalyzer;
+import com.sos.joc.monitoring.model.HistoryNotifyAnalyzer;
 import com.sos.joc.monitoring.notification.notifier.NotifyResult;
 import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
@@ -36,12 +37,12 @@ import com.sos.monitoring.notification.NotificationType;
 public class DBLayerMonitoring extends DBLayer {
 
     private static final long serialVersionUID = 1L;
-    private final String identifier;
-    private final String jocVariableName;
+    private static final String JOC_VARIABLE_NAME = ClusterServices.monitor.name();
 
-    public DBLayerMonitoring(String identifier, String jocVariableName) {
+    private final String identifier;
+
+    public DBLayerMonitoring(String identifier) {
         this.identifier = identifier;
-        this.jocVariableName = jocVariableName;
     }
 
     public void setSession(SOSHibernateSession session) {
@@ -51,10 +52,6 @@ public class DBLayerMonitoring extends DBLayer {
 
     public String getIdentifier() {
         return identifier;
-    }
-
-    public String getJocVariableName() {
-        return jocVariableName;
     }
 
     public DBItemHistoryOrder getHistoryOrder(Long historyId) throws SOSHibernateException {
@@ -217,14 +214,14 @@ public class DBLayerMonitoring extends DBLayer {
     public DBItemJocVariable getVariable() throws SOSHibernateException {
         String hql = String.format("from %s where name=:name", DBLayer.DBITEM_JOC_VARIABLES);
         Query<DBItemJocVariable> query = getSession().createQuery(hql);
-        query.setParameter("name", jocVariableName);
+        query.setParameter("name", JOC_VARIABLE_NAME);
         return getSession().getSingleResult(query);
     }
 
     public int deleteVariable() throws SOSHibernateException {
         String hql = String.format("delete from %s where name=:name", DBLayer.DBITEM_JOC_VARIABLES);
         Query<DBItemJocVariable> query = getSession().createQuery(hql);
-        query.setParameter("name", jocVariableName);
+        query.setParameter("name", JOC_VARIABLE_NAME);
         return getSession().executeUpdate(query);
     }
 
@@ -232,7 +229,7 @@ public class DBLayerMonitoring extends DBLayer {
         DBItemJocVariable item = getVariable();
         if (item == null) {
             item = new DBItemJocVariable();
-            item.setName(jocVariableName);
+            item.setName(JOC_VARIABLE_NAME);
             item.setBinaryValue(val);
             getSession().save(item);
         } else {
@@ -331,7 +328,7 @@ public class DBLayerMonitoring extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public DBItemNotification saveNotification(Notification notification, NotifyAnalyzer analyzer, NotificationRange range, NotificationType type,
+    public DBItemNotification saveNotification(Notification notification, HistoryNotifyAnalyzer analyzer, NotificationRange range, NotificationType type,
             Long recoveredNotificationId, JobWarning warn, String warnText) throws SOSHibernateException {
         DBItemNotification item = new DBItemNotification();
         item.setType(type);

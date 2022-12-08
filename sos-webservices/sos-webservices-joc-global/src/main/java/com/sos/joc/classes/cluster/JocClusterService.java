@@ -115,6 +115,8 @@ public class JocClusterService {
                         createFactory(config.getHibernateConfiguration());
 
                         cluster = new JocCluster(factory, clusterConfig, config, startTime);
+                        cluster.startEmbeddedServices(mode);
+
                         Globals.configurationGlobals = cluster.getConfigurationGlobals(mode);
                         if (cluster != null) {// null when closed during cluster.getConfigurationGlobals (empty database or db errors)
                             cluster.doProcessing(mode, Globals.configurationGlobals);
@@ -169,7 +171,7 @@ public class JocClusterService {
         if (cluster == null) {
             return false;
         }
-        return cluster.getHandler().isActive();
+        return cluster.getActiveMemberHandler().isActive();
     }
 
     /** not occur during JOC start/stop */
@@ -218,7 +220,7 @@ public class JocClusterService {
         if (cluster == null) {
             return;
         }
-        if (cluster.getHandler().isActive()) {
+        if (cluster.getActiveMemberHandler().isActive()) {
             handleGlobalsOnActiveMember(evt);
         } else {
             handleGlobalsOnNonActiveMember(evt);
@@ -270,14 +272,14 @@ public class JocClusterService {
                                 JocClusterServiceLogger.setLogger();
                                 LOGGER.info(String.format("[%s][%s]restart", StartupMode.settings_changed.name(), identifier));
                                 JocClusterServiceLogger.removeLogger();
-                                cluster.getHandler().restartService(identifier, StartupMode.settings_changed, section);
+                                cluster.getActiveMemberHandler().restartService(identifier, StartupMode.settings_changed, section);
                             }
                         }
                         if (sections.contains(DefaultSections.joc.name())) {
                             AConfigurationSection joc = Globals.configurationGlobals.getConfigurationSection(DefaultSections.joc);
                             if (joc != null) {
-                                cluster.getHandler().updateService(ClusterServices.history.name(), StartupMode.settings_changed, joc);
-                                cluster.getHandler().updateService(ClusterServices.monitor.name(), StartupMode.settings_changed, joc);
+                                cluster.getActiveMemberHandler().updateService(ClusterServices.history.name(), StartupMode.settings_changed, joc);
+                                cluster.getActiveMemberHandler().updateService(ClusterServices.monitor.name(), StartupMode.settings_changed, joc);
                             }
                         }
                     }
@@ -309,11 +311,11 @@ public class JocClusterService {
     }
 
     public void updateControllerInfos(String controllerId, Action action) {
-        if (cluster == null || !cluster.getHandler().isActive()) {
+        if (cluster == null || !cluster.getActiveMemberHandler().isActive()) {
             return;
         }
-        cluster.getHandler().updateControllerInfos();
-        cluster.getHandler().updateService(ClusterServices.history.name(), controllerId, action);
+        cluster.getActiveMemberHandler().updateControllerInfos();
+        cluster.getActiveMemberHandler().updateService(ClusterServices.history.name(), controllerId, action);
     }
 
     public JocClusterAnswer restartService(ClusterRestart r, StartupMode mode) {
@@ -321,7 +323,7 @@ public class JocClusterService {
             return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. %s restart %s can't be performed.", mode, r
                     .getType())));
         }
-        if (!cluster.getHandler().isActive()) {
+        if (!cluster.getActiveMemberHandler().isActive()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("cluster inactiv. %s restart %s can't be performed.", mode, r.getType())));
         }
 
@@ -329,18 +331,18 @@ public class JocClusterService {
         JocClusterAnswer answer = null;
         switch (r.getType()) {
         case history:
-            answer = cluster.getHandler().restartService(ClusterServices.history.name(), mode, null);
+            answer = cluster.getActiveMemberHandler().restartService(ClusterServices.history.name(), mode, null);
             break;
         case dailyplan:
-            answer = cluster.getHandler().restartService(ClusterServices.dailyplan.name(), mode, Globals.configurationGlobals.getConfigurationSection(
-                    DefaultSections.dailyplan));
+            answer = cluster.getActiveMemberHandler().restartService(ClusterServices.dailyplan.name(), mode, Globals.configurationGlobals
+                    .getConfigurationSection(DefaultSections.dailyplan));
             break;
         case cleanup:
-            answer = cluster.getHandler().restartService(ClusterServices.cleanup.name(), mode, Globals.configurationGlobals.getConfigurationSection(
-                    DefaultSections.cleanup));
+            answer = cluster.getActiveMemberHandler().restartService(ClusterServices.cleanup.name(), mode, Globals.configurationGlobals
+                    .getConfigurationSection(DefaultSections.cleanup));
             break;
         case monitor:
-            answer = cluster.getHandler().restartService(ClusterServices.monitor.name(), mode, null);
+            answer = cluster.getActiveMemberHandler().restartService(ClusterServices.monitor.name(), mode, null);
             break;
         default:
             answer = JocCluster.getErrorAnswer(new Exception(String.format("%s restart not yet supported for %s", mode, r.getType())));
