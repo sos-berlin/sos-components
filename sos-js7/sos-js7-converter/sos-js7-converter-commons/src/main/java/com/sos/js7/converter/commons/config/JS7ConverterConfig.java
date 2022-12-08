@@ -101,9 +101,6 @@ public class JS7ConverterConfig {
                             workflowConfig.defaultTimeZone = val;
                             break;
                         // JOB
-                        case "jobConfig.scriptNewLine":
-                            jobConfig.scriptNewLine = val;
-                            break;
                         case "jobConfig.forcedGraceTimeout":
                             jobConfig.forcedGraceTimeout = Integer.parseInt(val);
                             break;
@@ -119,6 +116,23 @@ public class JS7ConverterConfig {
                         case "jobConfig.jitl.forcedLogLevel":
                             jobConfig.forcedJitlLogLevel = val;
                             break;
+                        // -- JOB SHELL
+                        case "jobConfig.shell.unix.defaultShebang":
+                            jobConfig.unixDefaultShebang = val;
+                            break;
+                        case "jobConfig.shell.unix.newLine":
+                            jobConfig.unixNewLine = val;
+                            break;
+                        case "jobConfig.shell.unix.powershellShebang":
+                            jobConfig.unixPowershellShebang = val;
+                            break;
+                        case "jobConfig.shell.windows.newLine":
+                            jobConfig.windowsNewLine = val;
+                            break;
+                        case "jobConfig.shell.windows.powershellShebang":
+                            jobConfig.windowsPowershellShebang = val;
+                            break;
+                        // -- JOB NOTIFICATION
                         case "jobConfig.notification.mail.defaultTo":
                             jobConfig.notificationMailDefaultTo = val;
                             break;
@@ -417,21 +431,21 @@ public class JS7ConverterConfig {
 
     public class JobConfig {
 
-        private String scriptNewLine = "\n";
         private String forcedJitlLogLevel;
         private Integer forcedGraceTimeout;
         private Integer forcedParallelism;
         private Boolean forcedFailOnErrWritten;
         private Boolean forcedV1Compatible;
 
+        private String unixDefaultShebang = "#!/bin/bash";
+        private String unixNewLine = "\n";
+        private String unixPowershellShebang = "#!/usr/bin/env pwsh";
+        private String windowsNewLine = "\n"; // "\r\n";
+        private String windowsPowershellShebang = "@@findstr/v \"^@@f.*&\" \"%~f0\"|pwsh.exe -&goto:eof";
+
         private String notificationMailDefaultTo;
         private String notificationMailDefaultCc;
         private String notificationMailDefaultBcc;
-
-        public JobConfig withScriptNewLine(String val) {
-            this.scriptNewLine = val;
-            return this;
-        }
 
         public JobConfig withForcedJitlLogLevel(String val) {
             this.forcedJitlLogLevel = val;
@@ -458,15 +472,36 @@ public class JS7ConverterConfig {
             return this;
         }
 
+        public JobConfig withUnixDefaultShebang(String val) {
+            this.unixDefaultShebang = val;
+            return this;
+        }
+
+        public JobConfig withUnixNewLine(String val) {
+            this.unixNewLine = val;
+            return this;
+        }
+
+        public JobConfig withUnixPowershellShebang(String val) {
+            unixPowershellShebang = val;
+            return this;
+        }
+
+        public JobConfig withWindowsNewLine(String val) {
+            this.windowsNewLine = val;
+            return this;
+        }
+
+        public JobConfig withWindowsPowershellShebang(String val) {
+            windowsPowershellShebang = val;
+            return this;
+        }
+
         public JobConfig withNotificationMailDefault(String to, String cc, String bcc) {
             this.notificationMailDefaultTo = to;
             this.notificationMailDefaultCc = cc;
             this.notificationMailDefaultBcc = bcc;
             return this;
-        }
-
-        public String getScriptNewLine() {
-            return scriptNewLine;
         }
 
         public String getForcedJitlLogLevel() {
@@ -491,6 +526,26 @@ public class JS7ConverterConfig {
 
         public boolean isForcedV1Compatible() {
             return forcedV1Compatible != null && forcedV1Compatible;
+        }
+
+        public String getUnixDefaultShebang() {
+            return unixDefaultShebang;
+        }
+
+        public String getUnixNewLine() {
+            return unixNewLine;
+        }
+
+        public String getUnixPowershellShebang() {
+            return unixPowershellShebang;
+        }
+
+        public String getWindowsNewLine() {
+            return windowsNewLine;
+        }
+
+        public String getWindowsPowershellShebang() {
+            return windowsPowershellShebang;
         }
 
         public String getNotificationMailDefaultTo() {
