@@ -47,7 +47,6 @@ import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.PublishUtils;
-import com.sos.joc.publish.util.RenameDeployments;
 import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.schema.JsonValidator;
@@ -259,15 +258,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
                     SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
                             updateableAgentNamesFileOrderSources, dbAuditlog.getId());
-                    if(!renamedOriginalHistoryEntries.isEmpty()) {
-                        // call updateRepo command via ControllerApi for given controller
-                        RenameDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
-                                getAccessToken(), getJocError(), API_CALL);
-                    } else {
-                        // call updateRepo command via ControllerApi for given controller
-                        StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(),
-                                API_CALL);
-                    }
+                    // call updateRepo command via ControllerApi for given controller
+                    StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, new ArrayList<>(renamedOriginalHistoryEntries), account, commitId,
+                            controllerId, getAccessToken(), getJocError(), API_CALL);
                 }
             }
             // Delete from all known controllers

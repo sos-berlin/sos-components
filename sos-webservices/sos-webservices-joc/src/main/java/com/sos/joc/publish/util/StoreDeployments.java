@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -137,8 +138,8 @@ public class StoreDeployments {
         } 
     }
     
-    public static void processAfterAdd(Either<Problem, Void> either, String account, String commitId, String controllerId, String accessToken, 
-            JocError jocError, String wsIdentifier) {
+    public static void processAfterAdd(Either<Problem, Void> either, List<DBItemDeploymentHistory> renamedToDelete, String account, String commitId,
+            String controllerId, String accessToken, JocError jocError, String wsIdentifier) {
         // asynchronous processing:  this method is called from a CompletableFuture and therefore 
         // creates a new db session as the session of the caller may already be closed
         SOSHibernateSession newHibernateSession = null;
@@ -150,6 +151,13 @@ public class StoreDeployments {
                 dbLayer.cleanupSignatures(commitId, controllerId);
                 // cleanup stored commitIds
                 dbLayer.cleanupCommitIds(commitId);
+                if(renamedToDelete != null && !renamedToDelete.isEmpty()) {
+                    // delete items with old names from controller which where renamed
+                    String commitIdForDeleteRenamed = UUID.randomUUID().toString();
+                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, renamedToDelete, commitIdForDeleteRenamed);
+                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteRenamed, renamedToDelete, controllerId).thenAccept(deleteEither -> 
+                        DeleteDeployments.processAfterDelete(deleteEither, controllerId, account, commitIdForDeleteRenamed, accessToken, jocError));
+                }
             } else  if (either.isLeft()) {
                 // an error occurred
                 String message = String.format(
@@ -189,8 +197,7 @@ public class StoreDeployments {
         }
     }
     
-    public static void callUpdateItemsFor(DBLayerDeploy dbLayer,
-            SignedItemsSpec signedItemsSpec,
+    public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, List<DBItemDeploymentHistory> renamedToDelete,
             String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier) 
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
         
@@ -208,7 +215,7 @@ public class StoreDeployments {
             switch(signedItemsSpec.getKeyPair().getKeyAlgorithm()) {
             case SOSKeyConstants.PGP_ALGORITHM_NAME:
                 UpdateItemUtils.updateItemsAddOrUpdatePGP(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId).thenAccept(either -> 
-                            processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                            processAfterAdd(either, renamedToDelete, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
                 break;
             case SOSKeyConstants.RSA_ALGORITHM_NAME:
                 if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
@@ -219,12 +226,13 @@ public class StoreDeployments {
                     if (verified) {
                         UpdateItemUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId, 
                                 SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair().getCertificate()).thenAccept(either -> 
-                                    processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                                    processAfterAdd(either, renamedToDelete, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
                     } else {
                       signerDN = cert.getSubjectDN().getName();
                       UpdateItemUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId, 
                               SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
-                      .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                          .thenAccept(either -> 
+                              processAfterAdd(either, renamedToDelete, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
                     }
                 } else {
                     String message = "No certificate present! Items could not be deployed to controller.";
@@ -240,12 +248,13 @@ public class StoreDeployments {
                         UpdateItemUtils.updateItemsAddOrUpdateWithX509Certificate(commitId,  
                                 signedItemsSpec.getVerifiedDeployables(), controllerId, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
                                 signedItemsSpec.getKeyPair().getCertificate()).thenAccept(either -> 
-                                processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                                    processAfterAdd(either, renamedToDelete, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
                     } else {
                       signerDN = cert.getSubjectDN().getName();
                       UpdateItemUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId,  
                               signedItemsSpec.getVerifiedDeployables(), controllerId, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
-                          .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                          .thenAccept(either -> 
+                              processAfterAdd(either, renamedToDelete, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
                     }
                 } else {
                     String message = "No certificate present! Items could not be deployed to controller.";

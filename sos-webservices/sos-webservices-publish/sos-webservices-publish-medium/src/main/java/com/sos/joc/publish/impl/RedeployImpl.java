@@ -2,6 +2,7 @@ package com.sos.joc.publish.impl;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,12 +50,12 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
 
     private static final String API_CALL_REDEPLOY = "./inventory/deployment/redeploy";
     private static final String API_CALL_SYNC = "./inventory/deployment/synchronize";
-    
+
     @Override
     public JOCDefaultResponse postRedeploy(String xAccessToken, byte[] filter) {
         return deploy(xAccessToken, filter, API_CALL_REDEPLOY);
     }
-    
+
     @Override
     public JOCDefaultResponse postSync(String xAccessToken, byte[] filter) {
         return deploy(xAccessToken, filter, API_CALL_SYNC);
@@ -78,9 +79,9 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             String controllerId = redeployFilter.getControllerId();
             // get all latest active history objects from the database for the provided controllerId and folder from the filter
-            List<DBItemDeploymentHistory> latest = dbLayer.getLatestDepHistoryItemsFromFolder(redeployFilter.getFolder(), controllerId, 
-                    redeployFilter.getRecursive());
-            
+            List<DBItemDeploymentHistory> latest = dbLayer.getLatestDepHistoryItemsFromFolder(redeployFilter.getFolder(), controllerId, redeployFilter
+                    .getRecursive());
+
             // all items will be resigned with a new commitId
             final String commitId = UUID.randomUUID().toString();
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
@@ -96,13 +97,13 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 }
                 final Map<String, String> releasedScripts = dbLayer.getReleasedScripts();
                 unsignedRedeployables = latestStream.peek(item -> {
-    				try {
+                    try {
                         item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(item.getPath(), item.getInvContent(),
                                 StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId, releasedScripts));
-					} catch (IOException e) {
-						throw new JocException(e);
-					}
-				}).collect(Collectors.toList());
+                    } catch (IOException e) {
+                        throw new JocException(e);
+                    }
+                }).collect(Collectors.toList());
             }
             // preparations
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
@@ -110,28 +111,33 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedRedeployables = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
 
             if (unsignedRedeployables != null && !unsignedRedeployables.isEmpty()) {
-//                PublishUtils.updatePathWithNameInContent(unsignedRedeployables);
-            	
+                // PublishUtils.updatePathWithNameInContent(unsignedRedeployables);
+
                 unsignedRedeployables.stream().filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType()))).forEach(
                         item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
-                unsignedRedeployables.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.equals(ConfigurationType.fromValue(item.getType()))).forEach(
-                        item ->  { 
-                            UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(item, controllerId, dbLayer);
-                        	updateableAgentNamesFileOrderSources.add(update);
+                unsignedRedeployables.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.equals(ConfigurationType.fromValue(item.getType())))
+                        .forEach(item -> {
+                            UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(item, controllerId,
+                                    dbLayer);
+                            updateableAgentNamesFileOrderSources.add(update);
                             try {
-                                ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
+                                ((FileOrderSource) item.readUpdateableContent()).setAgentPath(update.getAgentId());
                                 updateableAgentNamesFileOrderSources.add(update);
-                            } catch (Exception e) {}
+                            } catch (Exception e) {
+                            }
                         });
 
-                verifiedRedeployables.putAll(PublishUtils.getDraftsWithSignature(commitId, account, unsignedRedeployables, updateableAgentNames, keyPair, controllerId, hibernateSession));
+                verifiedRedeployables.putAll(PublishUtils.getDraftsWithSignature(commitId, account, unsignedRedeployables, updateableAgentNames,
+                        keyPair, controllerId, hibernateSession));
             }
             if (verifiedRedeployables != null && !verifiedRedeployables.isEmpty()) {
-                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedRedeployables, updateableAgentNames, updateableAgentNamesFileOrderSources,
-                		dbAuditlog.getId());
-                StoreDeployments.storeNewDepHistoryEntriesForRedeploy(signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), dbLayer);
+                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedRedeployables, updateableAgentNames,
+                        updateableAgentNamesFileOrderSources, dbAuditlog.getId());
+                StoreDeployments.storeNewDepHistoryEntriesForRedeploy(signedItemsSpec, account, commitId, controllerId, getAccessToken(),
+                        getJocError(), dbLayer);
                 // call updateItems command via ControllerApi for given controllers
-                StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), action);
+                StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, Collections.emptyList(), account, commitId, controllerId,
+                        getAccessToken(), getJocError(), action);
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
