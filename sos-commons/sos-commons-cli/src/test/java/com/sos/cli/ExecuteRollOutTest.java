@@ -273,4 +273,27 @@ public class ExecuteRollOutTest {
     private String[] createSkriptArgsWithSourceKeyStore() {
         return new String[] {"cert", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"};
     }
+    
+    private String[] createTest20221209Arguments () {
+        // ./bin/controller_instance.cmd cert test 
+        return new String[] {
+                "--token=ced55cc0-0bd5-4716-b314-ddf6b837607d",
+                "--joc-uri=http://sp.sos:4444",
+                "--san=\"sp.sos, sp\"",
+                "--subject-dn=CN=sp, OU=Development, O=SOS, C=DE, L=Berlin, ST=Berlin",
+                "--key-alias=sp2",
+                "--ca-alias=SP Root CA",
+                "--target-keystore=C:/sp/devel/js7/testing/2022-12-09/controller_primary_keystore.p12",
+                "--target-keystore-pass=jobscheduler",
+                "--target-keystore-entry-pass=jobscheduler",
+                "--target-truststore=C:/sp/devel/js7/testing/2022-12-09/controller_primary_truststore.p12",
+                "--target-truststore-pass=jobscheduler"};
+    }
+
+    @Test
+    @Ignore
+    public void test20221209MainForController() throws Exception {
+//        System.setProperty(ExecuteRollOut.PRIVATE_CONF_JS7_PARAM_CONFDIR, "C:/ProgramData/sos-berlin.com/js7/controller/controller/config");
+        ExecuteRollOut.main(createTest20221209Arguments());
+    }
 }
