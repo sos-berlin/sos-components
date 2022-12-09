@@ -3,6 +3,8 @@ package com.sos.joc.controller.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import jakarta.ws.rs.Path;
 
@@ -21,6 +23,7 @@ import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.controller.JobScheduler200;
 import com.sos.joc.model.controller.UrlParameter;
@@ -30,6 +33,8 @@ import com.sos.schema.JsonValidator;
 public class ControllerResourceImpl extends JOCResourceImpl implements IControllerResource {
 
     private static final String API_CALL = "./controller";
+    private static final String isUrlPattern = "^https?://[^\\s]+$";
+    private static final Predicate<String> isUrl = Pattern.compile(isUrlPattern).asPredicate();
 
     @Override
     public JOCDefaultResponse postJobschedulerP(String accessToken, byte[] filterBytes) {
@@ -77,7 +82,10 @@ public class ControllerResourceImpl extends JOCResourceImpl implements IControll
                         .clusterState());
 
             } else {
-                schedulerInstance = instanceLayer.getInventoryInstanceByURI(jobSchedulerBody.getUrl());
+                if (!isUrl.test(jobSchedulerBody.getUrl())) {
+                    throw new JocBadRequestException("$.url: does not match the url pattern " + isUrlPattern);
+                }
+                schedulerInstance = instanceLayer.getInventoryInstanceByURL(jobSchedulerBody.getUrl());
                 if (schedulerInstance == null) {
                     throw new DBMissingDataException(String.format("Couldn't find Controller with url %s for security level %s", jobSchedulerBody
                             .getUrl(), Globals.getJocSecurityLevel()));

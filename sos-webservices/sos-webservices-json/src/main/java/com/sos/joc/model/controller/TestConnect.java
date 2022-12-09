@@ -1,10 +1,8 @@
 
 package com.sos.joc.model.controller;
 
-import java.net.URI;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -28,26 +26,24 @@ public class TestConnect {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
     private String controllerId;
     /**
-     * uri
+     * string without < and >
      * <p>
-     * URI of a Controller
+     * 
+     * (Required)
      * 
      */
     @JsonProperty("url")
-    @JsonPropertyDescription("URI of a Controller")
-    private URI url;
+    private String url;
 
     /**
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -59,7 +55,6 @@ public class TestConnect {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -68,27 +63,26 @@ public class TestConnect {
     }
 
     /**
-     * uri
+     * string without < and >
      * <p>
-     * URI of a Controller
+     * 
+     * (Required)
      * 
      */
     @JsonProperty("url")
-    public URI getUrl() {
-        if (url != null && !"/".equals(url.toString()) && url.toString().endsWith("/")) {
-            url = URI.create(url.toString().replaceFirst("/$", "")); 
-        }
+    public String getUrl() {
         return url;
     }
 
     /**
-     * uri
+     * string without < and >
      * <p>
-     * URI of a Controller
+     * 
+     * (Required)
      * 
      */
     @JsonProperty("url")
-    public void setUrl(URI url) {
+    public void setUrl(String url) {
         this.url = url;
     }
 

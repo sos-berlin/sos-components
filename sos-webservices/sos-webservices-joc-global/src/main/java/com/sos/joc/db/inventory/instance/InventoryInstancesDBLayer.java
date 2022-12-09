@@ -1,6 +1,5 @@
 package com.sos.joc.db.inventory.instance;
 
-import java.net.URI;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,7 +47,7 @@ public class InventoryInstancesDBLayer {
         }
     }
 
-    public DBItemInventoryJSInstance getInventoryInstanceByURI(URI uri) throws DBInvalidDataException,
+    public DBItemInventoryJSInstance getInventoryInstanceByURL(String url) throws DBInvalidDataException,
             DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -56,7 +55,7 @@ public class InventoryInstancesDBLayer {
             sql.append(" where securityLevel = :securityLevel");
             sql.append(" and lower(uri) = :uri");
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
-            query.setParameter("uri", uri.toString().toLowerCase());
+            query.setParameter("uri", url.toLowerCase());
             query.setParameter("securityLevel", level.intValue());
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -66,7 +65,7 @@ public class InventoryInstancesDBLayer {
         }
     }
     
-    public boolean instanceAlreadyExists(Collection<URI> uris, Collection<Long> ids) throws DBInvalidDataException,
+    public boolean instanceAlreadyExists(Collection<String> urls, Collection<Long> ids) throws DBInvalidDataException,
             DBConnectionRefusedException, JocObjectAlreadyExistException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -77,7 +76,7 @@ public class InventoryInstancesDBLayer {
                 sql.append(" and id not in (:ids)");
             }
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
-            query.setParameter("uris", uris.stream().map(u -> u.toString().toLowerCase()).collect(Collectors.toSet()));
+            query.setParameter("uris", urls.stream().map(String::toLowerCase).collect(Collectors.toSet()));
             if (ids != null && !ids.isEmpty()) {
                 query.setParameter("ids", ids);
             }

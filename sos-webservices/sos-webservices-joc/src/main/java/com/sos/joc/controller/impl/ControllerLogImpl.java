@@ -1,12 +1,12 @@
 package com.sos.joc.controller.impl;
 
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
-import jakarta.ws.rs.Path;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -15,15 +15,19 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.controller.resource.IControllerLogResource;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("controller")
 public class ControllerLogImpl extends JOCResourceImpl implements IControllerLogResource {
 
     private static final String LOG_API_CALL = "./controller/log";
+    private static final String isUrlPattern = "^https?://[^\\s]+$";
+    private static final Predicate<String> isUrl = Pattern.compile(isUrlPattern).asPredicate();
 
     @Override
     public JOCDefaultResponse getDebugLog(String accessToken, byte[] filterBytes) {
@@ -38,15 +42,14 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
                 return jocDefaultResponse;
             }
 
-            try {
+            List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParamSchema.getControllerId());
+            if (controllerInstances.size() > 1) { // is cluster
                 checkRequiredParameter("url", urlParamSchema.getUrl());
-            } catch (JocMissingRequiredParameterException e) {
-                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParamSchema.getControllerId());
-                if (controllerInstances.size() > 1) { // is cluster
-                    throw e;
-                } else {
-                    urlParamSchema.setUrl(URI.create(controllerInstances.get(0).getUri()));
+                if (!isUrl.test(urlParamSchema.getUrl())) {
+                    throw new JocBadRequestException("$.url: does not match the url pattern " + isUrlPattern);
                 }
+            } else {
+                urlParamSchema.setUrl(controllerInstances.get(0).getUri());
             }
 
             // increase timeout for large log files
