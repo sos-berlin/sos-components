@@ -1,8 +1,11 @@
 package com.sos.cli;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +26,8 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.naming.InvalidNameException;
@@ -36,8 +41,8 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
-import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
+import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.model.publish.CreateCSRFilter;
 import com.sos.joc.model.publish.RolloutResponse;
@@ -52,6 +57,8 @@ import com.typesafe.config.ConfigValueFactory;
 
 public class ExecuteRollOut {
     
+    public static final String PRIVATE_CONF_JS7_PARAM_CONFDIR = "js7.config-directory";
+
     private static final String WS_API = "/joc/api/authentication/certificate/create";
     private static final String HELP = "--help";
     private static final String DN_ONLY = "--dn-only";
@@ -81,7 +88,6 @@ public class ExecuteRollOut {
     private static final String SRC_CA_CERT = "--source-ca-cert";
     private static final String PRIVATE_FOLDER_NAME = "private";
     private static final String PRIVATE_CONF_FILENAME = "private.conf";
-    private static final String PRIVATE_CONF_JS7_PARAM_CONFDIR = "js7.config-directory";
     private static final String PRIVATE_CONF_JS7_PARAM_JOCURL = "js7.web.joc.url";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH = "js7.web.https.keystore.file";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD = "js7.web.https.keystore.key-password";
@@ -197,17 +203,54 @@ public class ExecuteRollOut {
             try {
                 createClient();
                 String response = callWebService();
-                RolloutResponse rollout = mapper.readValue(response, RolloutResponse.class);
-                if (!dnOnly) {
-                    addKeyAndCertToStore(rollout);
+                if (client.statusCode() != 200) {
+                    String message = "";
+                    try {
+                        message = parseErrorResponse(response);
+                    } catch (Exception e) {
+                        throw new Exception("API return code was " + client.statusCode());
+                    } 
+                    throw new Exception(message);
+                } else {
+                    RolloutResponse rollout = mapper.readValue(response, RolloutResponse.class);
+                    if (!dnOnly) {
+                        addKeyAndCertToStore(rollout);
+                    }
+                    if(confDir != null) {
+                        updatePrivateConf(toUpdate, rollout);
+                    } else {
+                        System.out.println("no entries stored to private.conf file. Environment variable <" + PRIVATE_CONF_JS7_PARAM_CONFDIR + "> not properly set!");
+                    }
                 }
-                updatePrivateConf(toUpdate, rollout);
             } catch (Throwable e) {
+                System.out.println(e.getMessage());
                 System.out.println("token expired or no valid token found!");
             } finally {
                 closeClient();
             }             
         }
+    }
+    
+    private static String parseErrorResponse(String response) throws IOException {
+//      ^.*code\":\"(.*)\",\"message\":\"([.[^\"]]*)(.*)$
+        Pattern pattern = Pattern.compile("^.*code\\\":\\\"(.*)\\\",\\\"message\\\":\\\"([.[^\\\"]]*).*$");
+        String code = "";
+        String message = "";
+        Reader reader = new StringReader(response);
+        BufferedReader buff = new BufferedReader(reader);
+        String line = null;
+        while ((line = buff.readLine()) != null) {
+            if (line.trim().length() == 0) {
+                continue;
+            }
+            Matcher matcher = pattern.matcher(line);
+            if(matcher.matches()) {
+                code = matcher.group(1);
+                message = matcher.group(2);
+                continue;
+            }
+        }
+        return code + " : " + message;
     }
     
     private static void updatePrivateConf (Config config, RolloutResponse response) throws Exception {
@@ -253,8 +296,8 @@ public class ExecuteRollOut {
          * */
         confDir = System.getProperty(PRIVATE_CONF_JS7_PARAM_CONFDIR);
         Properties props = new Properties();
-        props.put(PRIVATE_CONF_JS7_PARAM_CONFDIR, confDir);
         if (confDir != null && !confDir.isEmpty()) {
+            props.put(PRIVATE_CONF_JS7_PARAM_CONFDIR, confDir);
             // original file without substitution
             toUpdate = ConfigFactory.parseFile(Paths.get(confDir).resolve(PRIVATE_FOLDER_NAME).resolve(PRIVATE_CONF_FILENAME).toFile(), PARSE_OPTIONS).resolve(RESOLVE_OPTIONS);
             // Config to substitute
@@ -278,6 +321,7 @@ public class ExecuteRollOut {
                 if (targetKeyStore != null) {
                     if (keyAlias != null && !keyAlias.isEmpty()) {
                         targetKeyStore.setKeyEntry(keyAlias, privKey, targetKeystoreEntryPasswd.toCharArray(), chain);
+                        targetKeyStore.store(new FileOutputStream(new File(targetKeystore)), targetKeystorePasswd.toCharArray());
                     } else {
                         System.err.println(String.format("no alias provided for the certificate and its private key. Parameter <%1$s> is required.", KS_ALIAS));
                     }
@@ -303,10 +347,10 @@ public class ExecuteRollOut {
                 if (targetTrustStore != null) {
                     if (caAlias != null && !caAlias.isEmpty()) {
                         targetTrustStore.setCertificateEntry(caAlias, rootCaCertificate);
+                        targetTrustStore.store(new FileOutputStream(new File(targetTruststore)), targetTruststorePasswd.toCharArray());
                     } else {
                         System.err.println(String.format("no alias provided for the CA certificate. Parameter <%1$s> is required.", TS_ALIAS));
                     }
-                    targetTrustStore.store(new FileOutputStream(new File(targetTruststore)), targetTruststorePasswd.toCharArray());
                 }
             } else if (resolved != null) {
                 List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(resolved);
@@ -337,23 +381,26 @@ public class ExecuteRollOut {
     }
     
     private static KeyStoreCredentials readKeystoreCredentials(Config config) {
-        String keystorePath = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH);
-        String keyPasswd = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD);
-        String storePasswd = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD);
-        String alias = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS);
+        String keystorePath = "";
+        String keyPasswd = "";
+        String storePasswd = "";
+        String alias = "";
+        try { keystorePath = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH); } catch (Exception e) {}
+        try { keyPasswd = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD); } catch (Exception e) {}
+        try { storePasswd = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD); } catch (Exception e) {}
+        try { alias = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS); } catch (Exception e) {}
         return new KeyStoreCredentials(keystorePath, storePasswd, keyPasswd, alias);
     }
 
     private static List<KeyStoreCredentials> readTruststoreCredentials(Config config) {
-        List<KeyStoreCredentials> credentials = config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).stream().map(item -> {
-            return new KeyStoreCredentials(item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH),
-                    item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD));
-        }).filter(Objects::nonNull).collect(Collectors.toList());
-        if (credentials != null) {
-            return credentials;
-        } else {
-            return Collections.emptyList();
-        }
+        List<KeyStoreCredentials> credentials = Collections.emptyList();
+        try {
+            credentials = config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).stream().map(item -> {
+                    return new KeyStoreCredentials(item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH), 
+                        item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD));
+                }).filter(Objects::nonNull).collect(Collectors.toList());
+        } catch (Exception e) {}
+        return credentials;
     }
 
     private static void createClient() throws Exception {
@@ -364,11 +411,18 @@ public class ExecuteRollOut {
         if (resolved != null) {
             for (Entry<String, ConfigValue> entry : resolved.entrySet()) {
                 if(entry.getKey().startsWith("js7")) {
-                    System.out.println(entry.getKey() + ": " + entry.getValue().toString());
+                    if(entry.getKey().contains("password")) {
+                        System.out.println(entry.getKey() + ": " + "********");
+                    } else {
+                        System.out.println(entry.getKey() + ": " + entry.getValue().toString());
+                    }
                 }
             }
-            String jocUriFromConfig = resolved.getString(PRIVATE_CONF_JS7_PARAM_JOCURL);
-            System.out.println("JOC Url (private.conf): " + jocUriFromConfig);
+            String jocUriFromConfig = "";
+            try {
+                jocUriFromConfig = resolved.getString(PRIVATE_CONF_JS7_PARAM_JOCURL);
+                System.out.println("JOC Url (private.conf): " + jocUriFromConfig);
+            } catch (Exception e) {}
             if (!SOSString.isEmpty(jocUriFromConfig) && jocUri == null) {
                 jocUri = URI.create(jocUriFromConfig);
             }
