@@ -76,6 +76,25 @@ public class SOSClassUtil {
         }
     }
 
+    public static String getFullStackTrace(Throwable e) {
+        if (e == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(getStackTrace(e));
+
+        Throwable ex = e.getCause();
+        while (ex != null) {
+            String s = getStackTrace(ex.getCause());
+            if (s != null) {
+                sb.append(NEW_LINE);
+                sb.append("Caused by: ").append(s);
+            }
+            ex = ex.getCause();
+        }
+        return sb.toString();
+    }
+
     private static String getSimpleName(String className) {
         return className.substring(className.lastIndexOf('.') + 1);
     }

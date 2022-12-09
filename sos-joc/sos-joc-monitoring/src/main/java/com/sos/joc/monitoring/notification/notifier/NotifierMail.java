@@ -87,6 +87,15 @@ public class NotifierMail extends ANotifier {
         }
     }
 
+    @SuppressWarnings("unused")
+    // TODO check ...
+    private String nl2br(String body) {
+        if (mail == null || body == null || !"text/html".equals(mail.getContentType())) {
+            return body;
+        }
+        return body.replaceAll("(\r\n|\n)", "<br/>");
+    }
+
     @Override
     public NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
             DBItemNotification mn) {
