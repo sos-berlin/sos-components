@@ -291,7 +291,7 @@ public class ExecuteRollOutTest {
     }
 
     @Test
-//    @Ignore
+    @Ignore
     public void test20221209MainForController() throws Exception {
 //        System.setProperty(ExecuteRollOut.PRIVATE_CONF_JS7_PARAM_CONFDIR, "C:/ProgramData/sos-berlin.com/js7/controller/controller/config");
         ExecuteRollOut.main(createTest20221209Arguments());
