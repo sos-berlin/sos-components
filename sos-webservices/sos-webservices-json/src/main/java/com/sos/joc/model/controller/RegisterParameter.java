@@ -1,10 +1,8 @@
 
 package com.sos.joc.model.controller;
 
-import java.net.URI;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -31,24 +29,22 @@ public class RegisterParameter {
     @JsonProperty("title")
     private String title;
     /**
-     * uri
+     * string without < and >
      * <p>
-     * URI of a Controller
+     * 
      * (Required)
      * 
      */
     @JsonProperty("url")
-    @JsonPropertyDescription("URI of a Controller")
-    private URI url;
+    private String url;
     /**
-     * uri
+     * string without < and >
      * <p>
-     * URI of a Controller
+     * 
      * 
      */
     @JsonProperty("clusterUrl")
-    @JsonPropertyDescription("URI of a Controller")
-    private URI clusterUrl;
+    private String clusterUrl;
     /**
      * 
      * (Required)
@@ -90,51 +86,48 @@ public class RegisterParameter {
     }
 
     /**
-     * uri
+     * string without < and >
      * <p>
-     * URI of a Controller
+     * 
      * (Required)
      * 
      */
     @JsonProperty("url")
-    public URI getUrl() {
-        if (url != null && !"/".equals(url.toString()) && url.toString().endsWith("/")) {
-            url = URI.create(url.toString().replaceFirst("/$", "")); 
-        }
+    public String getUrl() {
         return url;
     }
 
     /**
-     * uri
+     * string without < and >
      * <p>
-     * URI of a Controller
+     * 
      * (Required)
      * 
      */
     @JsonProperty("url")
-    public void setUrl(URI url) {
+    public void setUrl(String url) {
         this.url = url;
     }
 
     /**
-     * uri
+     * string without < and >
      * <p>
-     * URI of a Controller
+     * 
      * 
      */
     @JsonProperty("clusterUrl")
-    public URI getClusterUrl() {
+    public String getClusterUrl() {
         return clusterUrl;
     }
 
     /**
-     * uri
+     * string without < and >
      * <p>
-     * URI of a Controller
+     * 
      * 
      */
     @JsonProperty("clusterUrl")
-    public void setClusterUrl(URI clusterUrl) {
+    public void setClusterUrl(String clusterUrl) {
         this.clusterUrl = clusterUrl;
     }
 

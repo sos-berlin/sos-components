@@ -1,11 +1,9 @@
 
 package com.sos.joc.model.controller;
 
-import java.net.URI;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -38,14 +36,13 @@ public class UrlParameter {
     @JsonProperty("controllerId")
     private String controllerId;
     /**
-     * uri
+     * string without < and >
      * <p>
-     * URI of a Controller
+     * 
      * 
      */
     @JsonProperty("url")
-    @JsonPropertyDescription("URI of a Controller")
-    private URI url;
+    private String url;
     @JsonProperty("withSwitchover")
     @JsonAlias({
         "withFailover"
@@ -85,27 +82,24 @@ public class UrlParameter {
     }
 
     /**
-     * uri
+     * string without < and >
      * <p>
-     * URI of a Controller
+     * 
      * 
      */
     @JsonProperty("url")
-    public URI getUrl() {
-        if (url != null && !"/".equals(url.toString()) && url.toString().endsWith("/")) {
-            url = URI.create(url.toString().replaceFirst("/$", "")); 
-        }
+    public String getUrl() {
         return url;
     }
 
     /**
-     * uri
+     * string without < and >
      * <p>
-     * URI of a Controller
+     * 
      * 
      */
     @JsonProperty("url")
-    public void setUrl(URI url) {
+    public void setUrl(String url) {
         this.url = url;
     }
 

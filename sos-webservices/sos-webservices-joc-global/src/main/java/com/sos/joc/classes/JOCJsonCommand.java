@@ -13,8 +13,6 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonStructure;
-import jakarta.ws.rs.core.StreamingOutput;
-import jakarta.ws.rs.core.UriBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +38,9 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.UnknownJobSchedulerAgentException;
 
+import jakarta.ws.rs.core.StreamingOutput;
+import jakarta.ws.rs.core.UriBuilder;
+
 public class JOCJsonCommand extends SOSRestApiClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCJsonCommand.class);
@@ -60,8 +61,8 @@ public class JOCJsonCommand extends SOSRestApiClient {
         setProperties();
     }
     
-    public JOCJsonCommand(URI uri, String csrfToken) {
-        this.url = urlMapper.getOrDefault(uri.toString(), uri.toString());
+    public JOCJsonCommand(String uri, String csrfToken) {
+        this.url = urlMapper.getOrDefault(uri, uri);
         this.csrfToken = csrfToken;
         setProperties();
     }

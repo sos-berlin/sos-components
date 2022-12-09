@@ -1,6 +1,5 @@
 package com.sos.joc.controller.impl;
 
-import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,9 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
@@ -65,6 +64,7 @@ import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
@@ -81,6 +81,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
     private static final String API_CALL_REGISTER = "./controller/register";
     private static final String API_CALL_DELETE = "./controller/unregister";
     private static final String API_CALL_TEST = "./controller/test";
+    private static final String isUrlPattern = "^https?://[^\\s]+$";
+    private static final Predicate<String> isUrl = Pattern.compile(isUrlPattern).asPredicate();
 
     @Override
     public JOCDefaultResponse registerController(String accessToken, byte[] filterBytes) {
@@ -106,6 +108,14 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             int index = 0;
             for (RegisterParameter controller : body.getControllers()) {
                 
+                if (!isUrl.test(controller.getUrl())) {
+                    throw new JocBadRequestException("$.controllers[" + index + "].url: does not match the url pattern " + isUrlPattern);
+                }
+                
+                if (controller.getClusterUrl() != null && !controller.getClusterUrl().isEmpty() && !isUrl.test(controller.getClusterUrl())) {
+                    throw new JocBadRequestException("$.controllers[" + index + "].clusterUrl: does not match the url pattern " + isUrlPattern);
+                }
+                
                 if (index == 1 && controller.getUrl().equals(body.getControllers().get(0).getUrl())) {
                     throw new JocBadRequestException("The cluster members must have the different URLs"); 
                 }
@@ -116,7 +126,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     throw new JocBadRequestException("The members of a Controller Cluster must have roles PRIMARY and BACKUP."); 
                 }
 
-                URI otherUri = index == 0 ? null : body.getControllers().get(0).getUrl();
+                String otherUri = index == 0 ? null : body.getControllers().get(0).getUrl();
                 Controller jobScheduler = testConnection(controller.getUrl(), controllerId, otherUri, false);
                 if (jobScheduler.getConnectionState().get_text() == ConnectionStateText.unreachable) {
                     if (requestWithEmptyControllerId) {
@@ -149,6 +159,9 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             ClusterAgent cWatcher = null;
             if (clusterWatcher != null) {
                 SOSCheckJavaVariableName.test("Agent ID", clusterWatcher.getAgentId());
+                if (!isUrl.test(clusterWatcher.getUrl())) {
+                    throw new JocBadRequestException("$.clusterWatcher.url: does not match the url pattern " + isUrlPattern);
+                }
                 agentDBLayer.agentIdAlreadyExists(Collections.singleton(clusterWatcher.getAgentId()), controllerId);
                 
                 cWatcher = new ClusterAgent();
@@ -549,6 +562,10 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 controllerId = ""; 
             }
             
+            if (!isUrl.test(jobSchedulerBody.getUrl())) {
+                throw new JocBadRequestException("$.url: does not match the url pattern " + isUrlPattern);
+            }
+            
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
                     .getView());
             if (jocDefaultResponse != null) {
@@ -569,11 +586,11 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         }
     }
     
-    private Controller testConnection(URI controllerURI, String controllerId, URI otherControllerURI) throws JocException {
+    private Controller testConnection(String controllerURI, String controllerId, String otherControllerURI) throws JocException {
         return testConnection(controllerURI, controllerId, otherControllerURI, true);
     }
     
-    private Controller testConnection(URI controllerURI, String controllerId, URI otherControllerURI, boolean withThrow) throws JocException {
+    private Controller testConnection(String controllerURI, String controllerId, String otherControllerURI, boolean withThrow) throws JocException {
         Controller jobScheduler = new Controller();
         jobScheduler.setUrl(controllerURI.toString());
         jobScheduler.setIsCoupled(null);

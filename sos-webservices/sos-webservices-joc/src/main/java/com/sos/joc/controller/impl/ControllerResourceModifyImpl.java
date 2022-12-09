@@ -1,12 +1,11 @@
 package com.sos.joc.controller.impl;
 
 import java.io.IOException;
-import java.net.URI;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-
-import jakarta.ws.rs.Path;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,17 +23,21 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerNoResponseException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
+import jakarta.ws.rs.Path;
+
 @Path("controller")
 public class ControllerResourceModifyImpl extends JOCResourceImpl implements IControllerResourceModify {
 
     private static String API_CALL = "./controller/";
+    private static final String isUrlPattern = "^https?://[^\\s]+$";
+    private static final Predicate<String> isUrl = Pattern.compile(isUrlPattern).asPredicate();
 
     @Override
     public JOCDefaultResponse postJobschedulerTerminate(String accessToken, byte[] filterBytes) {
@@ -117,15 +120,14 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
             return jocDefaultResponse;
         }
 
-        try {
+        List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParameter.getControllerId());
+        if (controllerInstances == null || controllerInstances.size() > 1) { // is cluster
             checkRequiredParameter("url", urlParameter.getUrl());
-        } catch (JocMissingRequiredParameterException e) {
-            List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParameter.getControllerId());
-            if (controllerInstances == null || controllerInstances.size() > 1) { // is cluster
-                throw e;
-            } else {
-                urlParameter.setUrl(URI.create(controllerInstances.get(0).getUri()));
+            if (!isUrl.test(urlParameter.getUrl())) {
+                throw new JocBadRequestException("$.url: does not match the url pattern " + isUrlPattern);
             }
+        } else {
+            urlParameter.setUrl(controllerInstances.get(0).getUri());
         }
         storeAuditLog(urlParameter.getAuditLog(), urlParameter.getControllerId(), CategoryType.CONTROLLER);
         
