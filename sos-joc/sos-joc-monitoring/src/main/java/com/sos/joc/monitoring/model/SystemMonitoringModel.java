@@ -35,7 +35,6 @@ import com.sos.joc.event.bean.monitoring.NotificationLogEvent;
 import com.sos.joc.monitoring.MonitorService;
 import com.sos.joc.monitoring.SystemMonitorService;
 import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
-import com.sos.joc.monitoring.bean.SystemMonitoringEvent.Category;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.SystemNotification;
 
@@ -57,7 +56,7 @@ public class SystemMonitoringModel {
     private final SystemNotifierModel notifier;
 
     private CopyOnWriteArraySet<SystemMonitoringEvent> allEvents = new CopyOnWriteArraySet<>();
-    private ConcurrentHashMap<String, SystemMonitoringEvent> lastSystemEvents = new ConcurrentHashMap<>();// ConcurrentHashMap??
+    private ConcurrentHashMap<String, SystemMonitoringEvent> lastNotifiedEvents = new ConcurrentHashMap<>();// ConcurrentHashMap??
     private ScheduledExecutorService threadPool;
 
     public SystemMonitoringModel(SystemMonitorService service) {
@@ -131,8 +130,8 @@ public class SystemMonitoringModel {
 
                 ToNotify toNotify = handleEvents();
                 if (toNotify != null) {
+                    tmpLog(toNotify);
                     notifier.notify(toNotify.notification, toNotify.events);
-                    logCache();
                 }
             }
         }, 0 /* start delay */, SCHEDULE_DELAY /* delay */, TimeUnit.SECONDS);
@@ -151,7 +150,7 @@ public class SystemMonitoringModel {
 
         if (toNotify.notification == null) {
             allEvents.clear();
-            lastSystemEvents.clear();
+            lastNotifiedEvents.clear();
             return null;
         }
         if (allEvents.size() == 0) {
@@ -161,7 +160,7 @@ public class SystemMonitoringModel {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
         long currentTime = new Date().getTime();
-        lastSystemEvents.entrySet().removeIf(e -> (currentTime - e.getValue().getEpochMillis()) >= MAX_ADDED_TIME);
+        lastNotifiedEvents.entrySet().removeIf(e -> (currentTime - e.getValue().getEpochMillis()) >= MAX_ADDED_TIME);
 
         List<SystemMonitoringEvent> copy = new ArrayList<>(allEvents);
         copy.sort(Comparator.comparing(SystemMonitoringEvent::getEpochMillis));
@@ -175,36 +174,22 @@ public class SystemMonitoringModel {
                     if (!doAdd(toNotify, evt, isDebugEnabled)) {
                         continue;
                     }
-
-                    if (evt.getLoggerName().equals(HistoryNotifierModel.class.getName()) || evt.getLoggerName().equals(HistoryMonitoringModel.class
-                            .getName())) {
-                        evt.setCategory(Category.JOC);
-                    }
-
-                    if (evt.getCategory().equals(Category.JOC)) {
-                        currentAdded.put(evt.getLoggerName() + "_" + evt.getType(), evt);
-                    } else {
-                        currentAdded.put(evt.getSection() + "_" + evt.getType(), evt);
-                    }
+                    evt.init();
+                    currentAdded.put(evt.getKey() + "_" + evt.getType(), evt);
                 } catch (Throwable ee) {
 
                 }
             }
 
             for (Map.Entry<String, SystemMonitoringEvent> e : currentAdded.entrySet()) {
-                if (e.getValue().getCategory().equals(Category.JOC)) {
-                    toNotify.add(e.getValue());
+                if (e.getValue().forceNotify()) {
+                    if (!e.getValue().skip(currentAdded)) {
+                        toNotify.add(e.getValue());
+                    }
                 } else {
-                    if (!lastSystemEvents.containsKey(e.getKey())) {
-                        lastSystemEvents.put(e.getKey(), e.getValue());
-
-                        boolean skip = false;
-                        if (e.getKey().equals(SystemMonitoringEvent.SECTION_DATABASE_WARNING)) {
-                            if (currentAdded.containsKey(SystemMonitoringEvent.SECTION_DATABASE_ERROR)) {
-                                skip = true;
-                            }
-                        }
-                        if (!skip) {
+                    if (!lastNotifiedEvents.containsKey(e.getKey())) {
+                        lastNotifiedEvents.put(e.getKey(), e.getValue());
+                        if (!e.getValue().skip(currentAdded)) {
                             toNotify.add(e.getValue());
                         }
                     }
@@ -235,8 +220,12 @@ public class SystemMonitoringModel {
         return true;
     }
 
-    private void logCache() {
-        LOGGER.info(String.format("[cached]allEvents=%s,lastSystemEvents=%s", allEvents.size(), lastSystemEvents.size()));
+    private void tmpLog(ToNotify toNotify) {
+        LOGGER.info(String.format("[tmpLog][toNotify]events=%s", toNotify.events.size()));
+        toNotify.events.forEach(e -> {
+            LOGGER.info("    " + e);
+        });
+        LOGGER.info(String.format("[tmpLog][cached]allEvents=%s,lastSystemEvents=%s", allEvents.size(), lastNotifiedEvents.size()));
     }
 
     private class ToNotify {
