@@ -18,6 +18,7 @@ import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.joc.Globals;
+import com.sos.joc.log4j2.NotificationAppender;
 import com.sos.joc.monitoring.MonitorService;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
@@ -86,6 +87,9 @@ public abstract class AConfiguration {
                 setJocReverseProxyUri(Globals.getConfigurationGlobalsJoc().getJocReverseProxyUrl().getValue());
                 process(configXml);
                 if (exists) {
+                    if (systemNotification != null) {
+                        NotificationAppender.doNotify = true;
+                    }
                     List<String> names = handleMailResources(dbLayer);
 
                     LOGGER.info(String.format("[%s][configuration][SystemNotification=%s][Notifications type %s=%s,%s=%s,%s=%s][JobResources=%s]",
@@ -93,6 +97,7 @@ public abstract class AConfiguration {
                             onWarning.size(), NotificationType.SUCCESS.name(), onSuccess.size(), String.join(",", names)));
                 } else {
                     LOGGER.info(String.format("[%s][configuration]exists=false", caller));
+                    NotificationAppender.doNotify = false;
                 }
                 run = false;
                 errorCount = 0;
