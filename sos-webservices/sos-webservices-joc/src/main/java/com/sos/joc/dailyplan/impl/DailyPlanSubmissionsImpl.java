@@ -111,9 +111,11 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             }
             return JOCDefaultResponse.responseStatusJSOk(new Date());
         } catch (JocException e) {
+            Globals.rollback(session);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
+            Globals.rollback(session);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(session);
