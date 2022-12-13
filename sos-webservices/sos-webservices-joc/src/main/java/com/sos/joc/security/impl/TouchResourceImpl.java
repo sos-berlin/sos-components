@@ -29,7 +29,7 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
         try {
             initLogging(API_CALL, null, accessToken);
             if (!jobschedulerUser.isAuthenticated()) {
-                return JOCDefaultResponse.responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser));
+                return JOCDefaultResponse.responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser, API_CALL));
             }
             try {
                  jobschedulerUser.resetTimeOut();
