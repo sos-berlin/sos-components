@@ -156,7 +156,7 @@ public class OrderApi {
                                 controllerId, logDailyPlanDate, set.size(), updateOrders, SOSDate.getDuration(start, updateOrdersEnd), updateHistory,
                                 SOSDate.getDuration(updateOrdersEnd, end)));
                     } catch (Exception e) {
-                        LOGGER.error(String.format("[%s][%s][%s]%s %s", startupMode, method, controllerId, logDailyPlanDate, e.toString()), e);
+                        // LOGGER.error(String.format("[%s][%s][%s]%s %s", startupMode, method, controllerId, logDailyPlanDate, e.toString()), e);
                         Globals.rollback(session);
                         ProblemHelper.postExceptionEventIfExist(apiCall, Either.left(e), accessToken, jocError, controllerId);
                     } finally {
@@ -167,7 +167,7 @@ public class OrderApi {
                     SOSHibernateSession session = null;
                     try {
                         String msg = either.getLeft().toString();
-                        LOGGER.error(String.format("[%s][%s][%s]%s[error]%s", startupMode, method, controllerId, logDailyPlanDate, msg));
+                        // LOGGER.error(String.format("[%s][%s][%s]%s[error]%s", startupMode, method, controllerId, logDailyPlanDate, msg));
 
                         session = Globals.createSosHibernateStatelessConnection(method);
                         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
