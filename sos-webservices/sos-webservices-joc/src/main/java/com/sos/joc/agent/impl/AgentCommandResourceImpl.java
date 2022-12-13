@@ -64,7 +64,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                     .getForce() == Boolean.TRUE));
             LOGGER.debug("Reset Agent: " + resetAgentCommand.toJson());
             ControllerApi.of(controllerId).executeCommand(resetAgentCommand).thenAccept(e -> {
-                ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                ProblemHelper.postProblemEventIfExist(API_CALL_RESET, e, accessToken, getJocError(), controllerId);
             });
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -117,7 +117,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             // TODO consider to delete selection
             if (!subAgentIdsOnController.isEmpty()) {
                 proxy.api().updateItems(Flux.fromIterable(subAgentIdsOnController)).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
+                    ProblemHelper.postProblemEventIfExist(API_CALL_REMOVE, e, accessToken, getJocError(), controllerId);
                     if (e.isRight()) {
                         deleteAgentInstance(agentId, accessToken, getJocError(), controllerId);
                     }
@@ -147,7 +147,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, agentId));
         } catch (Exception e1) {
             Globals.rollback(connection);
-            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, jocError, null);
+            ProblemHelper.postExceptionEventIfExist(API_CALL_REMOVE, Either.left(e1), accessToken, jocError, null);
         } finally {
             Globals.disconnect(connection);
         }

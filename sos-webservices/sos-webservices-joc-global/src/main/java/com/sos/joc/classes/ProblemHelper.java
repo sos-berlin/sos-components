@@ -2,13 +2,15 @@ package com.sos.joc.classes;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.problem.ProblemEvent;
-import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.ControllerConflictException;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.ControllerServiceUnavailableException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 
@@ -35,25 +37,31 @@ public class ProblemHelper {
         }
     }
 
-    public static void postProblemEventIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller) throws JocException {
-        postEventIfExist(either, accessToken, err, controller, false);
-    }
-    
-    public static void postProblemEventAsHintIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller) throws JocException {
-        postEventIfExist(either, accessToken, err, controller, true);
+    public static void postProblemEventIfExist(String apiCall, Either<Problem, ?> either, String accessToken, JocError err, String controller)
+            throws JocException {
+        Marker marker = apiCall == null ? null : MarkerFactory.getMarker(apiCall);
+        postEventIfExist(marker, either, accessToken, err, controller, false);
     }
 
-    public static void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err, String controller)
+    public static void postProblemEventAsHintIfExist(String apiCall, Either<Problem, ?> either, String accessToken, JocError err, String controller)
             throws JocException {
-        postExceptionEventIfExist(either, accessToken, err, controller, false);
+        Marker marker = apiCall == null ? null : MarkerFactory.getMarker(apiCall);
+        postEventIfExist(marker, either, accessToken, err, controller, true);
     }
-    
-    public static void postExceptionEventAsHintIfExist(Either<Exception, ?> either, String accessToken, JocError err, String controller)
+
+    public static void postExceptionEventIfExist(String apiCall, Either<Exception, ?> either, String accessToken, JocError err, String controller)
             throws JocException {
-        postExceptionEventIfExist(either, accessToken, err, controller, true);
+        Marker marker = apiCall == null ? null : MarkerFactory.getMarker(apiCall);
+        postExceptionEventIfExist(marker, either, accessToken, err, controller, false);
     }
-    
-    private static synchronized void postEventIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller,
+
+    public static void postExceptionEventAsHintIfExist(String apiCall, Either<Exception, ?> either, String accessToken, JocError err,
+            String controller) throws JocException {
+        Marker marker = apiCall == null ? null : MarkerFactory.getMarker(apiCall);
+        postExceptionEventIfExist(marker, either, accessToken, err, controller, true);
+    }
+
+    private static synchronized void postEventIfExist(Marker marker, Either<Problem, ?> either, String accessToken, JocError err, String controller,
             boolean isOnlyHint) throws JocException {
         if (either == null || either.isLeft()) {
             if (err != null && !err.getMetaInfo().isEmpty()) {
@@ -66,16 +74,16 @@ public class ProblemHelper {
                 }
             } else {
                 if (accessToken != null && !accessToken.isEmpty()) {
-                    EventBus.getInstance().post(getEventOfProblem(either.getLeft(), accessToken, controller, isOnlyHint));
+                    EventBus.getInstance().post(getEventOfProblem(marker, either.getLeft(), accessToken, controller, isOnlyHint));
                 } else {
-                    getEventOfProblem(either.getLeft(), accessToken, controller, isOnlyHint);
+                    getEventOfProblem(marker, either.getLeft(), accessToken, controller, isOnlyHint);
                 }
             }
         }
     }
-    
-    private static synchronized void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err, String controller, boolean isOnlyHint)
-            throws JocException {
+
+    private static synchronized void postExceptionEventIfExist(Marker marker, Either<Exception, ?> either, String accessToken, JocError err,
+            String controller, boolean isOnlyHint) throws JocException {
         if (either == null || either.isLeft()) {
             if (err != null && !err.getMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
@@ -86,14 +94,14 @@ public class ProblemHelper {
                     EventBus.getInstance().post(new ProblemEvent(accessToken, controller, "BadRequestError: Unknown problem", isOnlyHint));
                 }
             } else {
-                LOGGER.error("", either.getLeft());
+                LOGGER.error(marker, "", either.getLeft());
                 if (accessToken != null && !accessToken.isEmpty()) {
                     EventBus.getInstance().post(new ProblemEvent(accessToken, controller, either.getLeft().toString(), isOnlyHint));
                 }
             }
         }
     }
-    
+
     private static JocException getExceptionOfProblem(Problem problem) throws JocException {
         switch (problem.httpStatusCode()) {
         case 409:
@@ -110,38 +118,39 @@ public class ProblemHelper {
         }
     }
 
-    private static ProblemEvent getEventOfProblem(Problem problem, String accessToken, String controller, boolean isOnlyHint) throws JocException {
+    private static ProblemEvent getEventOfProblem(Marker marker, Problem problem, String accessToken, String controller, boolean isOnlyHint)
+            throws JocException {
         // TODO stacktrace logging
         switch (problem.httpStatusCode()) {
         case 409:
             // duplicate orders are ignored by controller -> 409 is no longer transmitted
             if (isOnlyHint) {
-                LOGGER.warn("ConflictWarning: " + getErrorMessage(problem));
+                LOGGER.warn(marker, "ConflictWarning: " + getErrorMessage(problem));
             } else {
-                LOGGER.error("ConflictError: " + getErrorMessage(problem));
+                LOGGER.error(marker, "ConflictError: " + getErrorMessage(problem));
             }
             return new ProblemEvent(accessToken, controller, "ConflictError: " + getErrorMessage(problem), isOnlyHint);
         case 503:
             if (isOnlyHint) {
-                LOGGER.warn("ServiceUnavailableWarning: " + getErrorMessage(problem));
+                LOGGER.warn(marker, "ServiceUnavailableWarning: " + getErrorMessage(problem));
             } else {
-                LOGGER.error("ServiceUnavailableError: " + getErrorMessage(problem));
+                LOGGER.error(marker, "ServiceUnavailableError: " + getErrorMessage(problem));
             }
             return new ProblemEvent(accessToken, controller, "ServiceUnavailableError: " + getErrorMessage(problem), isOnlyHint);
         default:
             // UnknownKey
             if (problem.codeOrNull() != null && UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string())) {
                 if (isOnlyHint) {
-                    LOGGER.warn("ObjectNotExistWarning: " + getErrorMessage(problem));
+                    LOGGER.warn(marker, "ObjectNotExistWarning: " + getErrorMessage(problem));
                 } else {
-                    LOGGER.error("ObjectNotExistError: " + getErrorMessage(problem));
+                    LOGGER.error(marker, "ObjectNotExistError: " + getErrorMessage(problem));
                 }
                 return new ProblemEvent(accessToken, controller, "ObjectNotExistError: " + getErrorMessage(problem), isOnlyHint);
             }
             if (isOnlyHint) {
-                LOGGER.warn(getErrorMessage(problem));
+                LOGGER.warn(marker, getErrorMessage(problem));
             } else {
-                LOGGER.error("BadRequestError: " + getErrorMessage(problem));
+                LOGGER.error(marker, "BadRequestError: " + getErrorMessage(problem));
             }
             return new ProblemEvent(accessToken, controller, "BadRequestError: " + getErrorMessage(problem), isOnlyHint);
         }

@@ -172,14 +172,16 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
             if (withPostProblem && suspendedWorkflows.containsKey(Boolean.FALSE)) {
                 String msg = suspendedWorkflows.get(Boolean.FALSE).stream().map(WorkflowPath::string).collect(Collectors.joining("', '",
                         "Workflows '", "' are not suspended"));
-                ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+                ProblemHelper.postProblemEventAsHintIfExist(API_CALL + action.name().toLowerCase(), Either.left(Problem.pure(msg)), getAccessToken(),
+                        getJocError(), controllerId);
             }
             return suspendedWorkflows.getOrDefault(Boolean.TRUE, Collections.emptyList());
         default: // Action.SUSPEND.equals(action)
             if (withPostProblem && suspendedWorkflows.containsKey(Boolean.TRUE)) {
                 String msg = suspendedWorkflows.get(Boolean.TRUE).stream().map(WorkflowPath::string).collect(Collectors.joining("', '", "Workflows '",
                         "' are already suspended"));
-                ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+                ProblemHelper.postProblemEventAsHintIfExist(API_CALL + action.name().toLowerCase(), Either.left(Problem.pure(msg)), getAccessToken(),
+                        getJocError(), controllerId);
             }
             return suspendedWorkflows.getOrDefault(Boolean.FALSE, Collections.emptyList());
         }
@@ -204,10 +206,10 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
     private void thenAcceptHandler(Either<Problem, Response> either, String controllerId, Action action, List<WorkflowPath> workflowPaths,
             DBItemJocAuditLog dbAuditLog) {
         WorkflowPath w = workflowPaths.remove(0);
-        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+        ProblemHelper.postProblemEventIfExist(API_CALL + action.name().toLowerCase(), either, getAccessToken(), getJocError(), controllerId);
         if (either.isRight()) {
             WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(w, dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
-                    .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                    .postExceptionEventIfExist(API_CALL + action.name().toLowerCase(), either2, getAccessToken(), getJocError(), controllerId));
         }
         command(controllerId, action, workflowPaths, dbAuditLog);
     }

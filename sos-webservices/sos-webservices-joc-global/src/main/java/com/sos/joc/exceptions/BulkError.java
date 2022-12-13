@@ -4,18 +4,19 @@ import java.time.Instant;
 import java.util.Date;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.order.AddOrder;
 
 
 public class BulkError extends Err419 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BulkError.class);
+    //private static final Logger LOGGER = LoggerFactory.getLogger(BulkError.class);
     //private static final Logger AUDIT_LOGGER = LoggerFactory.getLogger(WebserviceConstants.AUDIT_LOGGER);
     private static final String ERROR_CODE = "JOC-419";
+    private Logger logger;
 
-    public BulkError() {
+    public BulkError(Logger logger) {
+        this.logger = logger;
         setSurveyDate(Date.from(Instant.now()));
     }
     
@@ -51,7 +52,7 @@ public class BulkError extends Err419 {
         setCode(jocError.getCode());
         setMessage(jocError.getMessage());
         printMetaInfo(jocError);
-        LOGGER.error(getMessage());
+        logger.error(getMessage());
         //AUDIT_LOGGER.error(jocError.getMessage());
     }
     
@@ -65,13 +66,13 @@ public class BulkError extends Err419 {
             //AUDIT_LOGGER.error(errorMsg);
         }
         printMetaInfo(jocError);
-        LOGGER.error(e.getMessage(),e);
+        logger.error(e.getMessage(),e);
     }
     
     private void printMetaInfo(JocError jocError) {
         String metaInfo = jocError.printMetaInfo();
         if (!metaInfo.isEmpty()) {
-            LOGGER.info(metaInfo);
+            logger.info(metaInfo);
             jocError.getMetaInfo().clear();
         }
     }

@@ -153,7 +153,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                     Globals.disconnect(session);
                 }
 
-                runner.submitOrders(StartupMode.manual, controllerId, items, null, getJocError(), getAccessToken());
+                runner.submitOrders(IMPL_PATH, StartupMode.manual, controllerId, items, null, getJocError(), getAccessToken());
 
                 EventBus.getInstance().post(new DailyPlanEvent(in.getFilter().getDailyPlanDate()));
 
@@ -163,8 +163,8 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
 
             }
         }
-        OrdersHelper.storeAuditLogDetails(auditLogDetails, auditLog.getId()).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(either,
-                accessToken, getJocError(), null));
+        OrdersHelper.storeAuditLogDetails(auditLogDetails, auditLog.getId()).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(IMPL_PATH,
+                either, accessToken, getJocError(), null));
     }
 
 }

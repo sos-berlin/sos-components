@@ -38,7 +38,6 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -69,9 +68,7 @@ import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
-import js7.base.problem.Problem;
 
 @Path("inventory/deployment")
 public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
@@ -267,20 +264,20 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         }
     }
 
-    private void processAfterDelete(Either<Problem, Void> either, List<DBItemDeploymentHistory> itemsToDelete, String controllerId, String account,
-            String versionIdForDelete) {
-        try {
-            if (either.isLeft()) {
-                String message = String.format("Could not delete renamed object on controller first. Response from Controller \"%1$s:\": %2$s",
-                        controllerId, either.getLeft().message());
-                LOGGER.warn(message);
-                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), null);
-            }
-        } catch (Exception e) {
-            //LOGGER.error(e.getMessage(), e);
-            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), null);
-        }
-    }
+//    private void processAfterDelete(String apiCall, Either<Problem, Void> either, List<DBItemDeploymentHistory> itemsToDelete, String controllerId,
+//            String account, String versionIdForDelete) {
+//        try {
+//            if (either.isLeft()) {
+//                String message = String.format("Could not delete renamed object on controller first. Response from Controller \"%1$s:\": %2$s",
+//                        controllerId, either.getLeft().message());
+//                LOGGER.warn(message);
+//                ProblemHelper.postProblemEventIfExist(apiCall, either, getAccessToken(), getJocError(), null);
+//            }
+//        } catch (Exception e) {
+//            //LOGGER.error(e.getMessage(), e);
+//            ProblemHelper.postProblemEventIfExist(apiCall, Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), null);
+//        }
+//    }
     
     private String getCommitId (ControllerObject config) {
         JsonReader jsonReader = null;
@@ -314,11 +311,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         }
     }
 
-    private void deployItems (Map<ControllerObject, DBItemDepSignatures> importedObjects, Set<DBItemDeploymentHistory> toDeleteForRename, String account,
-            String commitIdForUpdate, String controllerId, Long auditLogId,JocKeyPair keyPair, List<DBItemInventoryCertificate> caCertificates,
-            ImportDeployFilter filter)
-                    throws JsonParseException, JsonMappingException, IOException, SOSException, InterruptedException, ExecutionException,
-                    TimeoutException, CertificateException {
+    private void deployItems(Map<ControllerObject, DBItemDepSignatures> importedObjects,
+            Set<DBItemDeploymentHistory> toDeleteForRename, String account, String commitIdForUpdate, String controllerId, Long auditLogId,
+            JocKeyPair keyPair, List<DBItemInventoryCertificate> caCertificates, ImportDeployFilter filter) throws JsonParseException,
+            JsonMappingException, IOException, SOSException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
         final Date deploymentDate = Date.from(Instant.now());
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         if (importedObjects != null && !importedObjects.isEmpty()) {

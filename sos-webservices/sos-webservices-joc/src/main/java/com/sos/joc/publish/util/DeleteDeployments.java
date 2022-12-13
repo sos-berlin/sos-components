@@ -51,7 +51,7 @@ public class DeleteDeployments {
             DeployType.LOCK);
 
 
-    public static boolean delete(Collection<DBItemDeploymentHistory> dbItems, DBLayerDeploy dbLayer, String account, String accessToken,
+    public static boolean delete(String apiCall, Collection<DBItemDeploymentHistory> dbItems, DBLayerDeploy dbLayer, String account, String accessToken,
             JocError jocError, Long auditlogId, boolean withoutFolderDeletion) throws SOSHibernateException {
         if (dbItems == null || dbItems.isEmpty()) {
             return true;
@@ -77,7 +77,7 @@ public class DeleteDeployments {
                 
                 // send commands to controllers
                 UpdateItemUtils.updateItemsDelete(commitId, sortedItems, entry.getKey())
-                    .thenAccept(either -> processAfterDelete(either, entry.getKey(), account, commitId, accessToken, jocError));
+                    .thenAccept(either -> processAfterDelete(apiCall, either, entry.getKey(), account, commitId, accessToken, jocError));
             } else {
                 List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
                 for (DeployType type : DELETE_ORDER) {
@@ -92,7 +92,7 @@ public class DeleteDeployments {
                 // send commands to controllers
                 UpdateItemUtils.updateItemsDelete(commitIdforFileOrderSource, fileOrderSourceItems, entry.getKey())
                     .thenAccept(either2 -> {
-                        processAfterDelete(either2, entry.getKey(), account, commitIdforFileOrderSource, accessToken, jocError);
+                        processAfterDelete(apiCall, either2, entry.getKey(), account, commitIdforFileOrderSource, accessToken, jocError);
                         try {
                             TimeUnit.SECONDS.sleep(10);
                         } catch (InterruptedException e) {
@@ -100,31 +100,32 @@ public class DeleteDeployments {
                         }
                         UpdateItemUtils.updateItemsDelete(commitId, sortedItems, entry.getKey())
                         .thenAccept(either -> {
-                            processAfterDelete(either, entry.getKey(), account, commitId, accessToken, jocError);
+                            processAfterDelete(apiCall, either, entry.getKey(), account, commitId, accessToken, jocError);
                         });
                     });
             }
         }
         
         // delete configurations optimistically
-        deleteConfigurations(dbLayer, null, fileOrderSourcesToDelete, commitIdforFileOrderSource, accessToken, jocError, auditlogId, withoutFolderDeletion);
-        deleteConfigurations(dbLayer, null, invConfigurationsToDelete, commitId, accessToken, jocError, auditlogId, withoutFolderDeletion);
-        
+        deleteConfigurations(apiCall, dbLayer, null, fileOrderSourcesToDelete, commitIdforFileOrderSource, accessToken, jocError, auditlogId,
+                withoutFolderDeletion);
+        deleteConfigurations(apiCall, dbLayer, null, invConfigurationsToDelete, commitId, accessToken, jocError, auditlogId, withoutFolderDeletion);
+
         return true;
     }
     
-    public static boolean deleteFolder(String folder, boolean recursive, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
-            String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion,
-            boolean withEvents) throws SOSHibernateException {
+    public static boolean deleteFolder(String apiCall, String folder, boolean recursive, Collection<String> controllerIds, DBLayerDeploy dbLayer,
+            String account, String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion, boolean withEvents)
+            throws SOSHibernateException {
         Configuration conf = new Configuration();
         conf.setObjectType(ConfigurationType.FOLDER);
         conf.setPath(folder);
         conf.setRecursive(recursive);
-        return deleteFolder(conf, controllerIds, dbLayer, account, accessToken, jocError, auditlogId, withoutFolderDeletion,
+        return deleteFolder(apiCall, conf, controllerIds, dbLayer, account, accessToken, jocError, auditlogId, withoutFolderDeletion,
                 withEvents);
     }
     
-    public static boolean deleteFolder(Configuration conf, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
+    public static boolean deleteFolder(String apiCall, Configuration conf, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
             String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion,
             boolean withEvents) throws SOSHibernateException {
         if (conf == null || conf.getPath() == null || conf.getPath().isEmpty()) {
@@ -159,7 +160,7 @@ public class DeleteDeployments {
                     
                     // send commands to controllers
                     UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, sortedItems, controllerId).thenAccept(
-                            either -> processAfterDelete(either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError));
+                            either -> processAfterDelete(apiCall, either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError));
                 } else {
                     List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
                     for (DeployType type : DELETE_ORDER) {
@@ -176,28 +177,28 @@ public class DeleteDeployments {
                     // send commands to controllers
                     UpdateItemUtils.updateItemsDelete(commitIdForDeleteFileOrderSource, fileOrderSourceItems, controllerId).thenAccept(
                             either2 -> {
-                                processAfterDelete(either2, controllerId, account, commitIdForDeleteFileOrderSource, accessToken, jocError);
+                                processAfterDelete(apiCall, either2, controllerId, account, commitIdForDeleteFileOrderSource, accessToken, jocError);
                                 try {
                                     TimeUnit.SECONDS.sleep(10);
                                 } catch (InterruptedException e) {
                                     //
                                 }
                                 UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, sortedItems, controllerId).thenAccept(
-                                        either -> processAfterDelete(either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError));
+                                        either -> processAfterDelete(apiCall, either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError));
                             });
                 }
             }
         }
         
         // delete configurations optimistically
-        deleteConfigurations(dbLayer, null, fileOrderSourceToDelete, commitIdForDeleteFileOrderSource,
+        deleteConfigurations(apiCall, dbLayer, null, fileOrderSourceToDelete, commitIdForDeleteFileOrderSource,
                 accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
-        deleteConfigurations(dbLayer, Collections.singletonList(conf), invConfigurationsToDelete, commitIdForDeleteFromFolder,
+        deleteConfigurations(apiCall, dbLayer, Collections.singletonList(conf), invConfigurationsToDelete, commitIdForDeleteFromFolder,
                 accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
         return true;
     }
     
-    public static boolean delete(Collection<Configuration> confs, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
+    public static boolean delete(String apiCall, Collection<Configuration> confs, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
             String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion)
             throws SOSHibernateException {
         if (confs == null || confs.isEmpty()) {
@@ -243,7 +244,7 @@ public class DeleteDeployments {
             }
         }
         // delete configurations optimistically
-        deleteConfigurations(dbLayer, foldersToDelete, invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
+        deleteConfigurations(apiCall, dbLayer, foldersToDelete, invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
                 auditlogId, withoutFolderDeletion);
 
         // send commands to controllers
@@ -251,18 +252,18 @@ public class DeleteDeployments {
             if (itemsToDeletePerController.get(controllerId) != null && !itemsToDeletePerController.get(controllerId).isEmpty()) {
                 // send command to controller
                 UpdateItemUtils.updateItemsDelete(commitId, itemsToDeletePerController.get(controllerId), controllerId).thenAccept(
-                        either -> processAfterDelete(either, controllerId, account, commitId, accessToken, jocError));
+                        either -> processAfterDelete(apiCall, either, controllerId, account, commitId, accessToken, jocError));
             }
             // process folder to Delete
             if (itemsFromFolderToDeletePerController.get(controllerId) != null && !itemsFromFolderToDeletePerController.get(controllerId).isEmpty()) {
                 UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId).thenAccept(
-                        either -> processAfterDelete(either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError));
+                        either -> processAfterDelete(apiCall, either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError));
             }
         }
         return true;
     }
 
-    public static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
+    public static void processAfterDelete(String apiCall, Either<Problem, Void> either, String controllerId, String account, String commitId, 
             String accessToken, JocError jocError) {
         SOSHibernateSession newHibernateSession = null;
         try {
@@ -288,16 +289,17 @@ public class DeleteDeployments {
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
-                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
+                ProblemHelper.postProblemEventIfExist(apiCall, either, accessToken, jocError, null);
             }
         } catch (Exception e) {
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
+            ProblemHelper.postExceptionEventIfExist(apiCall, Either.left(e), accessToken, jocError, null);
         } finally {
             Globals.disconnect(newHibernateSession);
         }
     }
 
-    public static Set<DBItemDeploymentHistory> storeNewDepHistoryEntries(DBLayerDeploy dbLayer, List<DBItemDeploymentHistory> itemsToDelete, String commitId) {
+    public static Set<DBItemDeploymentHistory> storeNewDepHistoryEntries(DBLayerDeploy dbLayer, List<DBItemDeploymentHistory> itemsToDelete,
+            String commitId) {
         return PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer, commitId, false);
     }
 
@@ -342,14 +344,14 @@ public class DeleteDeployments {
                 deletedDeployItems.stream().map(item -> item.getInventoryConfigurationId()).distinct().collect(Collectors.toList()));
     }
     
-    public static void deleteConfigurations(DBLayerDeploy dbLayer, List<Configuration> folders, List<DBItemInventoryConfiguration> itemsToDelete, 
+    public static void deleteConfigurations(String apiCall, DBLayerDeploy dbLayer, List<Configuration> folders, List<DBItemInventoryConfiguration> itemsToDelete, 
             String commitId, String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion) {
-        deleteConfigurations(dbLayer, folders, itemsToDelete, commitId, accessToken, jocError, auditlogId, withoutFolderDeletion, true);
+        deleteConfigurations(apiCall, dbLayer, folders, itemsToDelete, commitId, accessToken, jocError, auditlogId, withoutFolderDeletion, true);
     }
     
-    public static void deleteConfigurations(DBLayerDeploy dbLayer, List<Configuration> folders, List<DBItemInventoryConfiguration> itemsToDelete,
-            String commitId, String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion,
-            boolean withEvents) {
+    public static void deleteConfigurations(String apiCall, DBLayerDeploy dbLayer, List<Configuration> folders,
+            List<DBItemInventoryConfiguration> itemsToDelete, String commitId, String accessToken, JocError jocError, Long auditlogId,
+            boolean withoutFolderDeletion, boolean withEvents) {
         // add all elements from the folder(s)
         Set<String> foldersForEvent = new HashSet<>();
         if (folders != null) {
@@ -380,7 +382,7 @@ public class DeleteDeployments {
                     try {
                         JocInventory.deleteEmptyFolders(invDbLayer, folder.getPath());
                     } catch (SOSHibernateException e) {
-                        ProblemHelper.postProblemEventIfExist(Either.left(Problem.fromThrowable(e)), accessToken, jocError, null);
+                        ProblemHelper.postProblemEventIfExist(apiCall, Either.left(Problem.fromThrowable(e)), accessToken, jocError, null);
                     }
                 }
             }

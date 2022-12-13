@@ -13,7 +13,6 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +43,8 @@ import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
+
+import jakarta.ws.rs.Path;
 
 @Path("configuration")
 public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJocConfigurationResource {
@@ -261,7 +262,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                         getJocError());
             }
             if (updateControllerCalendar) {
-                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
+                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(API_CALL_SAVE, configuration.getControllerId(), accessToken, getJocError());
             }
 
             if (configuration.getConfigurationType() != ConfigurationType.SETTING && configuration.getConfigurationType() != ConfigurationType.CUSTOMIZATION && configuration.getConfigurationType() != ConfigurationType.PROFILE ) {

@@ -79,7 +79,7 @@ public class AgentsClusterCommandImpl extends JOCResourceImpl implements IAgents
             
             if (!deleteItems.isEmpty()) {
                 ControllerApi.of(controllerId).updateItems(Flux.fromIterable(deleteItems)).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
+                    ProblemHelper.postProblemEventIfExist(API_CALL, e, accessToken, getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
                         try {
@@ -93,7 +93,7 @@ public class AgentsClusterCommandImpl extends JOCResourceImpl implements IAgents
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, deleteAgentIds));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
+                            ProblemHelper.postExceptionEventIfExist(API_CALL, Either.left(e1), accessToken, getJocError(), null);
                         } finally {
                             Globals.disconnect(connection1);
                         }

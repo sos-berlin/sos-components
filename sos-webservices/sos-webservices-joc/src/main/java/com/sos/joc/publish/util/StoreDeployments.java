@@ -71,12 +71,12 @@ public class StoreDeployments {
                 }
             });
 
-    public static void storeNewDepHistoryEntriesForRedeploy(SignedItemsSpec signedItemsSpec,
+    public static void storeNewDepHistoryEntriesForRedeploy(String apiCall, SignedItemsSpec signedItemsSpec,
             String account, String commitId, String controllerId, String accessToken, JocError jocError, DBLayerDeploy dbLayer) {
-        storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer);
+        storeNewDepHistoryEntries(apiCall, signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer);
     }
     
-    public static void storeNewDepHistoryEntries(SignedItemsSpec signedItemsSpec,
+    public static void storeNewDepHistoryEntries(String apiCall, SignedItemsSpec signedItemsSpec,
             String account, String commitId, String controllerId, String accessToken, JocError jocError, DBLayerDeploy dbLayer) {
         try {
             final Date deploymentDate = Date.from(Instant.now());
@@ -134,7 +134,7 @@ public class StoreDeployments {
             }
         } catch (Exception e) {
             //LOGGER.error(e.getMessage(), e);
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
+            ProblemHelper.postExceptionEventIfExist(apiCall, Either.left(e), accessToken, jocError, null);
         } 
     }
     
@@ -155,8 +155,9 @@ public class StoreDeployments {
                     // delete items with old names from controller which where renamed
                     String commitIdForDeleteRenamed = UUID.randomUUID().toString();
                     DeleteDeployments.storeNewDepHistoryEntries(dbLayer, renamedToDelete, commitIdForDeleteRenamed);
-                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteRenamed, renamedToDelete, controllerId).thenAccept(deleteEither -> 
-                        DeleteDeployments.processAfterDelete(deleteEither, controllerId, account, commitIdForDeleteRenamed, accessToken, jocError));
+                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteRenamed, renamedToDelete, controllerId).thenAccept(
+                            deleteEither -> DeleteDeployments.processAfterDelete(wsIdentifier, deleteEither, controllerId, account,
+                                    commitIdForDeleteRenamed, accessToken, jocError));
                 }
             } else  if (either.isLeft()) {
                 // an error occurred
@@ -176,11 +177,11 @@ public class StoreDeployments {
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
-                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
+                ProblemHelper.postProblemEventIfExist(wsIdentifier, either, accessToken, jocError, null);
             }
         } catch (Exception e) {
             //LOGGER.error(e.getMessage(), e);
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
+            ProblemHelper.postExceptionEventIfExist(wsIdentifier, Either.left(e), accessToken, jocError, null);
         } finally {
             Globals.disconnect(newHibernateSession);
         }
@@ -202,13 +203,13 @@ public class StoreDeployments {
     }
     
     public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, List<DBItemDeploymentHistory> renamedToDelete,
-            String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier) 
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
-        
+            String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier) throws SOSException,
+            IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
+
         if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
 
             // store new history entries and update inventory for update operation optimistically
-            storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer);
+            storeNewDepHistoryEntries(wsIdentifier, signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer);
             
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             boolean verified = false;

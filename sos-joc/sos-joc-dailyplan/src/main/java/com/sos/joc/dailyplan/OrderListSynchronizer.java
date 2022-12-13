@@ -135,7 +135,7 @@ public class OrderListSynchronizer {
         return result;
     }
 
-    public void submitOrdersToController(StartupMode startupMode, String controllerId, String dailyPlanDate)
+    public void submitOrdersToController(String apiCall, StartupMode startupMode, String controllerId, String dailyPlanDate)
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException, ExecutionException,
             SOSHibernateException, TimeoutException, ParseException {
@@ -180,7 +180,7 @@ public class OrderListSynchronizer {
                         orders.size(), plannedOrders.size(), inserted.size(), SOSDate.getDuration(start, end)));
 
                 if (orders.size() > 0) {
-                    OrderApi.addOrdersToController(startupMode, controllerId, dailyPlanDate, orders, inserted, jocError, accessToken);
+                    OrderApi.addOrdersToController(apiCall, startupMode, controllerId, dailyPlanDate, orders, inserted, jocError, accessToken);
                 } else {
                     LOGGER.info(String.format("[%s][%s][%s]%s[%s of %s orders][skip addOrdersToController]", startupMode, method, controllerId,
                             logDailyPlanDate, orders.size(), plannedOrders.size()));
@@ -282,10 +282,11 @@ public class OrderListSynchronizer {
         return counter;
     }
 
-    public void addPlannedOrderToControllerAndDB(StartupMode startupMode, String operation, String controllerId, String date, Boolean withSubmit,
-            Map<String, Long> durations) throws JocConfigurationException, DBConnectionRefusedException, ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, DBOpenSessionException, DBInvalidDataException, SOSHibernateException,
-            JsonProcessingException, ParseException, InterruptedException, ExecutionException, TimeoutException {
+    public void addPlannedOrderToControllerAndDB(String apiCall, StartupMode startupMode, String operation, String controllerId, String date,
+            Boolean withSubmit, Map<String, Long> durations) throws JocConfigurationException, DBConnectionRefusedException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
+            DBInvalidDataException, SOSHibernateException, JsonProcessingException, ParseException, InterruptedException, ExecutionException,
+            TimeoutException {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String method = "addPlannedOrderToControllerAndDB";
@@ -313,7 +314,7 @@ public class OrderListSynchronizer {
             final boolean log2serviceFile = true;// !StartupMode.manual.equals(startupMode);
             CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, orders);
             c.thenAccept(either -> {
-                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                ProblemHelper.postProblemEventIfExist(apiCall, either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
                     if (log2serviceFile) {
                         JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
@@ -360,7 +361,7 @@ public class OrderListSynchronizer {
 
                         executeStore(startupMode, operation, controllerId, date, durations);
                         if (withSubmit == null || withSubmit) {
-                            submitOrdersToController(startupMode, controllerId, date);
+                            submitOrdersToController(apiCall, startupMode, controllerId, date);
                         } else {
                             if (isDebugEnabled) {
                                 LOGGER.debug(String.format("[%s][%s][%s][%s][skip]withSubmit=%s", startupMode, method, controllerId, date,
@@ -370,7 +371,7 @@ public class OrderListSynchronizer {
                     } catch (SOSHibernateException | JocConfigurationException | DBConnectionRefusedException | ParseException
                             | ControllerConnectionResetException | ControllerConnectionRefusedException | DBMissingDataException
                             | DBOpenSessionException | DBInvalidDataException | InterruptedException | ExecutionException | TimeoutException e) {
-                        ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
+                        ProblemHelper.postExceptionEventIfExist(apiCall, Either.left(e), getAccessToken(), getJocError(), controllerId);
                     } catch (JsonProcessingException e) {
                         e.printStackTrace();
                     } finally {
@@ -382,7 +383,7 @@ public class OrderListSynchronizer {
         } else {
             executeStore(startupMode, operation, controllerId, date, durations);
             if (withSubmit == null || withSubmit) {
-                submitOrdersToController(startupMode, controllerId, date);
+                submitOrdersToController(apiCall, startupMode, controllerId, date);
             } else {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][%s][%s][%s][skip]withSubmit=%s", startupMode, method, controllerId, date, withSubmit));
