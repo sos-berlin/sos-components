@@ -420,7 +420,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
             T json = (T) rdr.read();
             return json;
         } catch (Exception e) {
-            LOGGER.error(jsonStr);
+            //LOGGER.error(jsonStr);
             throw e;
         } finally {
             rdr.close();

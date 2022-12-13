@@ -28,7 +28,7 @@ public class SOSLog4j2Configuration extends XmlConfiguration {
             LoggerConfig rootLogger = getRootLogger();
             if (!rootLogger.getAppenders().containsKey(NotificationAppender.APPENDER_NAME)) {
                 rootLogger.addAppender(appender, Level.WARN, filter);
-                getLoggerContext().updateLoggers();
+                //getLoggerContext().updateLoggers();
             }
         }
     }

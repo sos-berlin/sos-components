@@ -27,7 +27,6 @@ import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.db.monitoring.NotificationDBItemEntity;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.common.MonitoringNotificationTypeText;
 import com.sos.joc.model.monitoring.NotificationItem;
 import com.sos.joc.model.monitoring.NotificationItemAcknowledgementItem;
 import com.sos.joc.model.monitoring.NotificationItemJobItem;
@@ -167,11 +166,11 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
         return item;
     }
 
-    private MonitoringNotificationTypeText getType(Integer type) {
+    private NotificationType getType(Integer type) {
         try {
-            return MonitoringNotificationTypeText.fromValue(NotificationType.fromValue(type).value());
+            return NotificationType.fromValue(type);
         } catch (Throwable e) {
-            return MonitoringNotificationTypeText.ERROR;
+            return NotificationType.ERROR;
         }
     }
 

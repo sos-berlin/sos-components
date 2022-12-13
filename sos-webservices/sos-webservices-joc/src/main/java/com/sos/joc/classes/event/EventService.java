@@ -33,6 +33,7 @@ import com.sos.joc.event.bean.history.HistoryOrderEvent;
 import com.sos.joc.event.bean.history.HistoryTaskEvent;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.inventory.InventoryTrashEvent;
+import com.sos.joc.event.bean.monitoring.MonitoringGuiEvent;
 import com.sos.joc.event.bean.monitoring.NotificationCreated;
 import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.event.bean.proxy.ProxyClosed;
@@ -48,8 +49,11 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.model.common.IEventObject;
+import com.sos.joc.model.event.EventMonitoring;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
+import com.sos.monitoring.notification.NotificationType;
 
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent;
@@ -125,7 +129,7 @@ public class EventService {
             UnsignedSimpleItemEvent.class, UnsignedItemEvent.class, ItemDeleted.class, ItemAttached.class, BoardEvent.class, OrderLocksAcquired.class,
             OrderLocksQueued.class, OrderLocksReleased.class, OrderNoticeEvent.class, SubagentItemStateEvent.class);
     private String controllerId;
-    private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
+    private volatile CopyOnWriteArraySet<IEventObject> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
     private JControllerEventBus evtBus = null;
     private volatile CopyOnWriteArraySet<EventCondition> conditions = new CopyOnWriteArraySet<>();
@@ -173,7 +177,7 @@ public class EventService {
         return conditions.stream().parallel().anyMatch(EventCondition::isHold);
     }
 
-    public CopyOnWriteArraySet<EventSnapshot> getEvents() {
+    public CopyOnWriteArraySet<IEventObject> getEvents() {
         return events;
     }
 
@@ -340,6 +344,23 @@ public class EventService {
         eventSnapshot.setMessage(evt.getAgentId());
         addEvent(eventSnapshot);
     }
+    
+    @Subscribe({ MonitoringGuiEvent.class })
+    public void createEvent(MonitoringGuiEvent evt) {
+        try {
+            EventMonitoring eventM = new EventMonitoring();
+            eventM.setEventId(evt.getEventId() / 1000);
+            eventM.setLevel(getNotificationType(evt.getLevel()));
+            eventM.setSubCategory(evt.getSection());
+            eventM.setCategory(evt.getCategory());
+            eventM.setCaller(evt.getCaller());
+            eventM.setTimestamp(evt.getDate());
+            eventM.setMessage(evt.getMessage());
+            addEventM(eventM);
+        } catch (Exception e) {
+            //
+        }
+    }
 
     @Subscribe({ ProxyCoupled.class })
     public void createEvent(ProxyCoupled evt) {
@@ -497,6 +518,14 @@ public class EventService {
             LOGGER.warn(e.toString());
         }
     };
+    
+    private NotificationType getNotificationType(Integer type) {
+        try {
+            return NotificationType.fromValue(type);
+        } catch (Throwable e) {
+            return NotificationType.ERROR;
+        }
+    }
 
     private static Optional<Set<BoardPath>> orderPositionToBoardPaths(JOrder order, JControllerState controllerState) {
         Optional<JOrder> orderOpt = order == null ? Optional.empty() : Optional.of(order);
@@ -648,6 +677,17 @@ public class EventService {
         if (eventSnapshot != null && eventSnapshot.getEventId() != null && events.add(eventSnapshot)) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("add event for " + controllerId + ": " + eventSnapshot.toString());
+            }
+            if (atLeastOneConditionIsHold()) {
+                signalAll();
+            }
+        }
+    }
+    
+    private void addEventM(EventMonitoring eventMonitoring) {
+        if (eventMonitoring != null && eventMonitoring.getEventId() != null && events.add(eventMonitoring)) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("add event for " + controllerId + ": " + eventMonitoring.toString());
             }
             if (atLeastOneConditionIsHold()) {
                 signalAll();

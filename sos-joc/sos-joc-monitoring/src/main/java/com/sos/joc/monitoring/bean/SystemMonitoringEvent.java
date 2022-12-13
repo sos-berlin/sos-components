@@ -28,6 +28,7 @@ public class SystemMonitoringEvent {
     private final String section;
     private final long epochMillis;
     private final String loggerName;
+    private final String caller;
     private final String message;
     private final Throwable thrown;
 
@@ -42,6 +43,7 @@ public class SystemMonitoringEvent {
         section = getSection(evt);
         epochMillis = evt.getEpochMillis();
         loggerName = evt.getLoggerName();
+        caller = evt.getMarkerName();
         message = evt.getMessage();
         thrown = evt.getThrown();
     }
@@ -169,6 +171,10 @@ public class SystemMonitoringEvent {
 
     public String getLoggerName() {
         return loggerName;
+    }
+    
+    public String getCaller() {
+        return caller;
     }
 
     public String getMessage() {

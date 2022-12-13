@@ -25,6 +25,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.event.Event;
+import com.sos.joc.model.event.EventMonitoring;
 import com.sos.joc.model.event.EventSnapshot;
 
 public class EventServiceFactory {
@@ -150,6 +151,7 @@ public class EventServiceFactory {
             service = getEventService(controllerId);
             SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
             Set<EventSnapshot> evt = new HashSet<>();
+            Set<EventMonitoring> evtM = new HashSet<>();
             Mode mode = service.hasOldEvent(eventId, eventArrived);
             if (Mode.FALSE.equals(mode)) {
                 long delay = Math.min(responsePeriodInMillis - 1000, getSessionTimeout(session));
@@ -176,7 +178,11 @@ public class EventServiceFactory {
                 service.getEvents().iterator().forEachRemaining(e -> {
                     if (e.getEventId() != null && eventId < e.getEventId()) {
                         e.setEventId(e.getEventId() - 1L);
-                        evt.add(e);
+                        if (e instanceof EventSnapshot) {
+                            evt.add((EventSnapshot) e);
+                        } else {
+                            evtM.add((EventMonitoring) e);
+                        }
                         evtIds.add(e.getEventId());
                     }
                 });
@@ -184,20 +190,29 @@ public class EventServiceFactory {
                 service.getEvents().iterator().forEachRemaining(e -> {
                     if (e.getEventId() != null && eventId < e.getEventId()) {
                         e.setEventId(e.getEventId() - 1L);
-                        evt.add(e);
+                        if (e instanceof EventSnapshot) {
+                            evt.add((EventSnapshot) e);
+                        } else {
+                            evtM.add((EventMonitoring) e);
+                        }
                         evtIds.add(e.getEventId());
                     }
                 });
             }
-            if (evt.isEmpty()) {
+            if (evt.isEmpty() && evtM.isEmpty()) {
                 //events.setEventSnapshots(null);
             } else {
                 if (isDebugEnabled) {
-                    LOGGER.debug("Events for " + controllerId + ": " + evt.toString());
+                    if (!evt.isEmpty()) {
+                        LOGGER.debug("Events for " + controllerId + ": " + evt.toString());
+                    }
+                    if (!evtM.isEmpty()) {
+                        LOGGER.debug("Monitoring events for " + controllerId + ": " + evtM.toString());
+                    }
                 }
                 events.setEventId(evtIds.last());
                 events.setEventSnapshots(evt.stream().map(e -> cloneEvent(e)).distinct().collect(Collectors.toList()));
-                //events.setEventSnapshots(evt.stream().collect(Collectors.toList()));
+                events.setEventsFromMonitoring(evtM.stream().map(e -> cloneEventM(e)).distinct().collect(Collectors.toList()));
             }
         } catch (SessionNotExistException e1) {
             throw e1;
@@ -252,6 +267,18 @@ public class EventServiceFactory {
         es.setObjectType(e.getObjectType());
         es.setPath(e.getPath());
         es.setWorkflow(e.getWorkflow());
+        return es;
+    }
+    
+    private static EventMonitoring cloneEventM(EventMonitoring e) {
+        //LOGGER.info("Clone events for " + e.toString());
+        EventMonitoring es = new EventMonitoring();
+        es.setCategory(e.getCategory());
+        es.setEventId(null);
+        es.setLevel(e.getLevel());
+        es.setMessage(e.getMessage());
+        es.setSubCategory(e.getSubCategory());
+        es.setTimestamp(e.getTimestamp());
         return es;
     }
     

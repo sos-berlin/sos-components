@@ -133,7 +133,7 @@ public class StoreDeployments {
                  JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
             }
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            //LOGGER.error(e.getMessage(), e);
             ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
         } 
     }
@@ -160,9 +160,9 @@ public class StoreDeployments {
                 }
             } else  if (either.isLeft()) {
                 // an error occurred
-                String message = String.format(
-                        "Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
-                LOGGER.error(message);
+//                String message = String.format(
+//                        "Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
+//                LOGGER.error(message);
                 // updateRepo command is atomic, therefore all items are rejected
                 
                 // get all already optimistically stored entries for the commit
@@ -179,7 +179,7 @@ public class StoreDeployments {
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
             }
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            //LOGGER.error(e.getMessage(), e);
             ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
         } finally {
             Globals.disconnect(newHibernateSession);

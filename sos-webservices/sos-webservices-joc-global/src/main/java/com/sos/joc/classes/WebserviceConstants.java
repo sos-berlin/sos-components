@@ -1,10 +1,14 @@
 package com.sos.joc.classes;
 
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
+
 public class WebserviceConstants {
 
     public static final String DEFAULT_ERROR_CODE = "JOC-420";
     public static final String COMMAND_ERROR_CODE = "COMMAND-001";
     public static final String AUDIT_LOGGER = "JOCAuditLog";
+    public static final Marker NOT_NOTIFY_LOGGER = MarkerFactory.getMarker("NOT_NOTIFY");
     
     
     public static final String JOC_COCKPIT = "JS7_JOC";

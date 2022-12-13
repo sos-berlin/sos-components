@@ -277,7 +277,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), null);
             }
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            //LOGGER.error(e.getMessage(), e);
             ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), null);
         }
     }

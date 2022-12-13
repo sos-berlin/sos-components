@@ -13,6 +13,8 @@ import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.monitoring.MonitoringGuiEvent;
 import com.sos.joc.monitoring.MonitorService;
 import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.configuration.SystemNotification;
@@ -95,7 +97,8 @@ public class SystemNotifierModel {
         if (event == null) {
             return;
         }
-        // EventBus.getInstance().post(new NotificationCreated(analyzer.getControllerId(), mn.getId()));
+        EventBus.getInstance().post(new MonitoringGuiEvent(event.getType().intValue(), event.getCategory().name(), event.getSection(), event
+                .getCaller(), event.getEpochMillis(), event.getMessage()));
     }
 
     protected JocClusterAnswer close(StartupMode mode) {
