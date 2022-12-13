@@ -11,6 +11,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 
+import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.monitoring.NotificationLogEvent;
 
@@ -21,6 +22,8 @@ public final class NotificationAppender extends AbstractAppender {
     public static final String APPENDER_NAME = NotificationAppender.class.getSimpleName();
 
     public static boolean doNotify = false;
+    
+    private static final String NOT_NOTIFY_LOGGER = WebserviceConstants.NOT_NOTIFY_LOGGER.getName();
 
     protected NotificationAppender(String name, Filter filter) {
         super(name, filter, null, true, null);
@@ -35,16 +38,25 @@ public final class NotificationAppender extends AbstractAppender {
     public void append(final LogEvent event) {
         if (doNotify) {
             if (event.getLevel().isMoreSpecificThan(Level.WARN)) {
-                NotificationLogEvent e = logEventToNotification(event);
-                EventBus.getInstance().post(e);
-                // System.out.println(e);
+                if (event.getMarker() == null) {
+                    post(event);
+                } else if (!NOT_NOTIFY_LOGGER.equals(event.getMarker().getName())) {
+                    post(event);
+                }
             }
         }
+    }
+    
+    private void post(final LogEvent event) {
+        NotificationLogEvent e = logEventToNotification(event);
+        EventBus.getInstance().post(e);
+        // System.out.println(e);
     }
 
     private NotificationLogEvent logEventToNotification(final LogEvent event) {
         String category = event.getContextData().isEmpty() ? "JOC" : "SYSTEM";
-        return new NotificationLogEvent(event.getLevel().name(), category, event.getInstant().getEpochMillisecond(), event.getLoggerName(), event
-                .getMessage().getFormattedMessage(), event.getThrown());
+        String markerName = event.getMarker() != null ? event.getMarker().getName() : null;
+        return new NotificationLogEvent(event.getLevel().name(), category, event.getInstant().getEpochMillisecond(), event.getLoggerName(),
+                markerName, event.getMessage().getFormattedMessage(), event.getThrown());
     }
 }

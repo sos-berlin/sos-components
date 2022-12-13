@@ -6,14 +6,13 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.order.AddOrder;
 
 
 public class BulkError extends Err419 {
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkError.class);
-    private static final Logger AUDIT_LOGGER = LoggerFactory.getLogger(WebserviceConstants.AUDIT_LOGGER);
+    //private static final Logger AUDIT_LOGGER = LoggerFactory.getLogger(WebserviceConstants.AUDIT_LOGGER);
     private static final String ERROR_CODE = "JOC-419";
 
     public BulkError() {
@@ -45,7 +44,7 @@ public class BulkError extends Err419 {
         JocError err = e.getError();
         setCode(err.getCode());
         setMessage(err.getMessage());
-        AUDIT_LOGGER.error(err.getMessage());
+        //AUDIT_LOGGER.error(err.getMessage());
     }
     
     private void setCodeAndMessage(JocError jocError) {
@@ -53,7 +52,7 @@ public class BulkError extends Err419 {
         setMessage(jocError.getMessage());
         printMetaInfo(jocError);
         LOGGER.error(getMessage());
-        AUDIT_LOGGER.error(jocError.getMessage());
+        //AUDIT_LOGGER.error(jocError.getMessage());
     }
     
     private void setCodeAndMessage(Throwable e, JocError jocError) {
@@ -63,7 +62,7 @@ public class BulkError extends Err419 {
             setCode(ERROR_CODE);
             String errorMsg = ((e.getCause() != null) ? e.getCause().toString() : e.getClass().getSimpleName()) + ": " + e.getMessage();
             setMessage(errorMsg);
-            AUDIT_LOGGER.error(errorMsg);
+            //AUDIT_LOGGER.error(errorMsg);
         }
         printMetaInfo(jocError);
         LOGGER.error(e.getMessage(),e);

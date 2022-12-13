@@ -26,6 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "error",
     "eventId",
     "eventSnapshots",
+    "eventsFromMonitoring",
     "deliveryDate"
 })
 public class Event {
@@ -62,6 +63,8 @@ public class Event {
      */
     @JsonProperty("eventSnapshots")
     private List<EventSnapshot> eventSnapshots = new ArrayList<EventSnapshot>();
+    @JsonProperty("eventsFromMonitoring")
+    private List<EventMonitoring> eventsFromMonitoring = new ArrayList<EventMonitoring>();
     /**
      * timestamp
      * <p>
@@ -161,6 +164,16 @@ public class Event {
         this.eventSnapshots = eventSnapshots;
     }
 
+    @JsonProperty("eventsFromMonitoring")
+    public List<EventMonitoring> getEventsFromMonitoring() {
+        return eventsFromMonitoring;
+    }
+
+    @JsonProperty("eventsFromMonitoring")
+    public void setEventsFromMonitoring(List<EventMonitoring> eventsFromMonitoring) {
+        this.eventsFromMonitoring = eventsFromMonitoring;
+    }
+
     /**
      * timestamp
      * <p>
@@ -187,12 +200,12 @@ public class Event {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("error", error).append("eventId", eventId).append("eventSnapshots", eventSnapshots).append("deliveryDate", deliveryDate).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("error", error).append("eventId", eventId).append("eventSnapshots", eventSnapshots).append("eventsFromMonitoring", eventsFromMonitoring).append("deliveryDate", deliveryDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(controllerId).append(error).append(eventSnapshots).append(deliveryDate).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(controllerId).append(eventsFromMonitoring).append(error).append(eventSnapshots).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -204,7 +217,7 @@ public class Event {
             return false;
         }
         Event rhs = ((Event) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(controllerId, rhs.controllerId).append(error, rhs.error).append(eventSnapshots, rhs.eventSnapshots).append(deliveryDate, rhs.deliveryDate).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(controllerId, rhs.controllerId).append(eventsFromMonitoring, rhs.eventsFromMonitoring).append(error, rhs.error).append(eventSnapshots, rhs.eventSnapshots).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }

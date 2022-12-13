@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.MonitoringNotificationTypeText;
+import com.sos.monitoring.notification.NotificationType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -62,7 +62,7 @@ public class NotificationsFilter {
     @JsonPropertyDescription("to restrict the number of responsed records; -1=unlimited")
     private Integer limit = 10000;
     @JsonProperty("types")
-    private List<MonitoringNotificationTypeText> types = new ArrayList<MonitoringNotificationTypeText>();
+    private List<NotificationType> types = new ArrayList<NotificationType>();
     @JsonProperty("notificationIds")
     private List<Long> notificationIds = new ArrayList<Long>();
 
@@ -147,12 +147,12 @@ public class NotificationsFilter {
     }
 
     @JsonProperty("types")
-    public List<MonitoringNotificationTypeText> getTypes() {
+    public List<NotificationType> getTypes() {
         return types;
     }
 
     @JsonProperty("types")
-    public void setTypes(List<MonitoringNotificationTypeText> types) {
+    public void setTypes(List<NotificationType> types) {
         this.types = types;
     }
 

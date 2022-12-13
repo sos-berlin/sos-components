@@ -118,95 +118,98 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             if (EventServiceFactory.isClosed.get()) {
                 return evt;
             }
-            if (evt.getEventSnapshots() == null || evt.getEventSnapshots().isEmpty()) {
-                return evt;
+            if (evt.getEventsFromMonitoring() != null && evt.getEventsFromMonitoring().size() > 10) {
+                evt.getEventsFromMonitoring().subList(10, evt.getEventsFromMonitoring().size() - 1).clear();
             }
+            if (evt.getEventSnapshots() != null && !evt.getEventSnapshots().isEmpty()) {
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            final DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
+                connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                final DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
 
-            // List<EventType> eventsWithWorkflow = Arrays.asList(EventType.WORKFLOW, EventType.JOB, EventType.TASKHISTORY, EventType.ORDERHISTORY);
-            // List<String> workflowNames = evt.getEventSnapshots().stream().filter(e -> eventsWithWorkflow.contains(e.getObjectType())).map(e -> (e
-            // .getWorkflow() != null) ? e.getWorkflow().getPath() : e.getPath()).filter(Objects::nonNull).distinct().collect(Collectors.toList());
+                // List<EventType> eventsWithWorkflow = Arrays.asList(EventType.WORKFLOW, EventType.JOB, EventType.TASKHISTORY, EventType.ORDERHISTORY);
+                // List<String> workflowNames = evt.getEventSnapshots().stream().filter(e -> eventsWithWorkflow.contains(e.getObjectType())).map(e -> (e
+                // .getWorkflow() != null) ? e.getWorkflow().getPath() : e.getPath()).filter(Objects::nonNull).distinct().collect(Collectors.toList());
 
-            List<String> lockNames = evt.getEventSnapshots().stream().filter(e -> EventType.LOCK.equals(e.getObjectType())).map(EventSnapshot::getPath)
-                    .filter(Objects::nonNull).distinct().collect(Collectors.toList());
+                List<String> lockNames = evt.getEventSnapshots().stream().filter(e -> EventType.LOCK.equals(e.getObjectType())).map(
+                        EventSnapshot::getPath).filter(Objects::nonNull).distinct().collect(Collectors.toList());
 
-            List<String> noticeBoardNames = evt.getEventSnapshots().stream().filter(e -> EventType.NOTICEBOARD.equals(e.getObjectType())).map(
-                    EventSnapshot::getPath).filter(Objects::nonNull).distinct().collect(Collectors.toList());
+                List<String> noticeBoardNames = evt.getEventSnapshots().stream().filter(e -> EventType.NOTICEBOARD.equals(e.getObjectType())).map(
+                        EventSnapshot::getPath).filter(Objects::nonNull).distinct().collect(Collectors.toList());
 
-            // List<String> fileOrderSourceNames = evt.getEventSnapshots().stream().filter(e -> EventType.FILEORDERSOURCE.equals(e.getObjectType())).map(
-            // EventSnapshot::getPath).filter(Objects::nonNull).distinct().collect(Collectors.toList());
+                // List<String> fileOrderSourceNames = evt.getEventSnapshots().stream().filter(e -> EventType.FILEORDERSOURCE.equals(e.getObjectType())).map(
+                // EventSnapshot::getPath).filter(Objects::nonNull).distinct().collect(Collectors.toList());
 
-            // List<String> jobResourceNames = evt.getEventSnapshots().stream().filter(e -> EventType.JOBRESOURCE.equals(e.getObjectType())).map(
-            // EventSnapshot::getPath).filter(Objects::nonNull).distinct().collect(Collectors.toList());
+                // List<String> jobResourceNames = evt.getEventSnapshots().stream().filter(e -> EventType.JOBRESOURCE.equals(e.getObjectType())).map(
+                // EventSnapshot::getPath).filter(Objects::nonNull).distinct().collect(Collectors.toList());
 
-            // Map<String, String> namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), workflowNames, DeployType.WORKFLOW
-            // .intValue());
-            Map<String, String> namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), lockNames, DeployType.LOCK.intValue());
-            Map<String, String> namePathNoticeBoardMap = dbCLayer.getNamePathMapping(evt.getControllerId(), noticeBoardNames, DeployType.NOTICEBOARD
-                    .intValue());
-            // Map<String, String> namePathFileOrderSourceMap = dbCLayer.getNamePathMapping(evt.getControllerId(), fileOrderSourceNames,
-            // DeployType.FILEORDERSOURCE.intValue());
-            // Map<String, String> namePathJobResourceMap = dbCLayer.getNamePathMapping(evt.getControllerId(), jobResourceNames,
-            // DeployType.JOBRESOURCE.intValue());
+                // Map<String, String> namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), workflowNames, DeployType.WORKFLOW
+                // .intValue());
+                Map<String, String> namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), lockNames, DeployType.LOCK.intValue());
+                Map<String, String> namePathNoticeBoardMap = dbCLayer.getNamePathMapping(evt.getControllerId(), noticeBoardNames,
+                        DeployType.NOTICEBOARD.intValue());
+                // Map<String, String> namePathFileOrderSourceMap = dbCLayer.getNamePathMapping(evt.getControllerId(), fileOrderSourceNames,
+                // DeployType.FILEORDERSOURCE.intValue());
+                // Map<String, String> namePathJobResourceMap = dbCLayer.getNamePathMapping(evt.getControllerId(), jobResourceNames,
+                // DeployType.JOBRESOURCE.intValue());
 
-            // Map<WorkflowId, String> namePathWorkflowMap = WorkflowPaths.getNamePathMap();
+                // Map<WorkflowId, String> namePathWorkflowMap = WorkflowPaths.getNamePathMap();
 
-            evt.setEventSnapshots(evt.getEventSnapshots().stream().map(e -> {
-                // LOGGER.info(e.toString());
-                if (e.getWorkflow() != null) {
-                    e.setWorkflow(WorkflowPaths.getWorkflowId(e.getWorkflow()));
-                    // LOGGER.info("workflowPath: " + e.getWorkflow().getPath());
-                    if (!canAdd(e.getWorkflow().getPath(), permittedFolders)) {
-                        // LOGGER.info("event skipped");
+                evt.setEventSnapshots(evt.getEventSnapshots().stream().map(e -> {
+                    // LOGGER.info(e.toString());
+                    if (e.getWorkflow() != null) {
+                        e.setWorkflow(WorkflowPaths.getWorkflowId(e.getWorkflow()));
+                        // LOGGER.info("workflowPath: " + e.getWorkflow().getPath());
+                        if (!canAdd(e.getWorkflow().getPath(), permittedFolders)) {
+                            // LOGGER.info("event skipped");
+                            return null;
+                        }
+                    }
+                    String path = e.getPath();
+                    if (path != null) {
+                        if (EventType.WORKFLOW.equals(e.getObjectType())) {
+                            e.setPath(WorkflowPaths.getPath(path));
+                            // LOGGER.info("workflowPath2: " + e.getPath());
+                            if (!canAdd(e.getPath(), permittedFolders)) {
+                                // LOGGER.info("event skipped");
+                                return null;
+                            }
+                        } else if (EventType.LOCK.equals(e.getObjectType())) {
+                            e.setPath(namePathLockMap.getOrDefault(path, path));
+                            // LOGGER.info("lockPath: " + e.getPath());
+                            if (!canAdd(e.getPath(), permittedFolders)) {
+                                // LOGGER.info("event skipped");
+                                return null;
+                            }
+                            // } else if (EventType.FILEORDERSOURCE.equals(e.getObjectType())) {
+                            // e.setPath(namePathFileOrderSourceMap.getOrDefault(path, path));
+                            // if (!canAdd(e.getPath(), permittedFolders)) {
+                            // return null;
+                            // }
+                            // } else if (EventType.JOBRESOURCE.equals(e.getObjectType())) {
+                            // e.setPath(namePathJobResourceMap.getOrDefault(path, path));
+                            // if (!canAdd(e.getPath(), permittedFolders)) {
+                            // return null;
+                            // }
+                        } else if (EventType.NOTICEBOARD.equals(e.getObjectType())) {
+                            e.setPath(namePathNoticeBoardMap.getOrDefault(path, path));
+                            if (!canAdd(e.getPath(), permittedFolders)) {
+                                return null;
+                            }
+                        } else if (EventType.FOLDER.equals(e.getObjectType())) {
+                            // LOGGER.info("folder: " + path);
+                            if (!folderIsPermitted(path, permittedFolders)) {
+                                // LOGGER.info("event skipped");
+                                return null;
+                            }
+                        }
+                    }
+                    if (e.getAccessToken() != null && !accessToken.equals(e.getAccessToken())) {
                         return null;
                     }
-                }
-                String path = e.getPath();
-                if (path != null) {
-                    if (EventType.WORKFLOW.equals(e.getObjectType())) {
-                        e.setPath(WorkflowPaths.getPath(path));
-                        // LOGGER.info("workflowPath2: " + e.getPath());
-                        if (!canAdd(e.getPath(), permittedFolders)) {
-                            // LOGGER.info("event skipped");
-                            return null;
-                        }
-                    } else if (EventType.LOCK.equals(e.getObjectType())) {
-                        e.setPath(namePathLockMap.getOrDefault(path, path));
-                        // LOGGER.info("lockPath: " + e.getPath());
-                        if (!canAdd(e.getPath(), permittedFolders)) {
-                            // LOGGER.info("event skipped");
-                            return null;
-                        }
-                        // } else if (EventType.FILEORDERSOURCE.equals(e.getObjectType())) {
-                        // e.setPath(namePathFileOrderSourceMap.getOrDefault(path, path));
-                        // if (!canAdd(e.getPath(), permittedFolders)) {
-                        // return null;
-                        // }
-                        // } else if (EventType.JOBRESOURCE.equals(e.getObjectType())) {
-                        // e.setPath(namePathJobResourceMap.getOrDefault(path, path));
-                        // if (!canAdd(e.getPath(), permittedFolders)) {
-                        // return null;
-                        // }
-                    } else if (EventType.NOTICEBOARD.equals(e.getObjectType())) {
-                        e.setPath(namePathNoticeBoardMap.getOrDefault(path, path));
-                        if (!canAdd(e.getPath(), permittedFolders)) {
-                            return null;
-                        }
-                    } else if (EventType.FOLDER.equals(e.getObjectType())) {
-                        // LOGGER.info("folder: " + path);
-                        if (!folderIsPermitted(path, permittedFolders)) {
-                            // LOGGER.info("event skipped");
-                            return null;
-                        }
-                    }
-                }
-                if (e.getAccessToken() != null && !accessToken.equals(e.getAccessToken())) {
-                    return null;
-                }
-                return e;
-            }).filter(Objects::nonNull).collect(Collectors.toList()));
+                    return e;
+                }).filter(Objects::nonNull).collect(Collectors.toList()));
+
+            }
 
             return evt;
         } finally {

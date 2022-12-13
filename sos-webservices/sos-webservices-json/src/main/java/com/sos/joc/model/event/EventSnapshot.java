@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.joc.model.common.IEventObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -25,9 +26,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "objectType",
     "workflow",
     "accessToken",
-    "message"
+    "message",
+    "clazz"
 })
-public class EventSnapshot {
+public class EventSnapshot implements IEventObject
+{
 
     /**
      * path
@@ -75,7 +78,7 @@ public class EventSnapshot {
     private String accessToken;
     @JsonProperty("message")
     private String message;
-
+    
     /**
      * path
      * <p>

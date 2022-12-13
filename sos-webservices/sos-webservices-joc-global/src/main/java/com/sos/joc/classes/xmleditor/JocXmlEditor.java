@@ -182,7 +182,6 @@ public class JocXmlEditor {
                 }
                 Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
             } catch (Throwable ex) {
-                LOGGER.error(ex.toString(), ex);
                 throw ex;
             }
         } catch (Throwable e) {
@@ -378,7 +377,7 @@ public class JocXmlEditor {
         if (realPath != null) {
             return;
         }
-//        realPath = Paths.get(System.getProperty("user.dir"), "resources/joc").normalize();
+        // realPath = Paths.get(System.getProperty("user.dir"), "resources/joc").normalize();
         realPath = Globals.sosCockpitProperties.getResourceDir();
     }
 
