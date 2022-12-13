@@ -218,10 +218,8 @@ public class UpdateItemUtils {
                     switch (item.getKey().getTypeAsEnum()) {
                     case WORKFLOW: 
                     case JOBRESOURCE:
-                        LOGGER.debug("JSON send to controller: ");
                         try {
                             String json = JsonSerializer.serializeAsString(content);
-                            LOGGER.debug(json);
                             if(signatureAlgorithm.equals(SOSKeyConstants.PGP_ALGORITHM_NAME)) {
                                 return JUpdateItemOperation.addOrChangeSigned(getSignedStringPGP(json, item.getValue().getSignature()));
                             } else if (certificate != null) {
@@ -274,9 +272,7 @@ public class UpdateItemUtils {
                     switch (item.getKey().getObjectType()) {
                     case WORKFLOW: 
                     case JOBRESOURCE:
-                        LOGGER.debug("JSON send to controller: ");
                         String json = item.getKey().getSignedContent();
-                        LOGGER.debug(json);
                         if(signatureAlgorithm.equals(SOSKeyConstants.PGP_ALGORITHM_NAME)) {
                             return JUpdateItemOperation.addOrChangeSigned(getSignedStringPGP(json, item.getValue().getSignature()));
                         } else if (certificate != null) {
@@ -326,10 +322,8 @@ public class UpdateItemUtils {
                     switch (item.getKey().getTypeAsEnum()) {
                     case WORKFLOW: 
                     case JOBRESOURCE:
-                        LOGGER.debug("JSON send to controller: ");
                         try {
                             String json = JsonSerializer.serializeAsString(content);
-                            LOGGER.debug(json);
                             if(signatureAlgorithm.equals(SOSKeyConstants.PGP_ALGORITHM_NAME)) {
                                 return JUpdateItemOperation.addOrChangeSigned(getSignedStringPGP(json, item.getValue().getSignature()));
                             } else if (certificate != null) {
@@ -400,9 +394,7 @@ public class UpdateItemUtils {
                     switch (item.getKey().getObjectType()) {
                     case WORKFLOW: 
                     case JOBRESOURCE:
-                        LOGGER.debug("JSON send to controller: ");
                         String json = item.getKey().getSignedContent();
-                        LOGGER.debug(json);
                         if(signatureAlgorithm.equals(SOSKeyConstants.PGP_ALGORITHM_NAME)) {
                             return JUpdateItemOperation.addOrChangeSigned(getSignedStringPGP(json, item.getValue().getSignature()));
                         } else if (certificate != null) {
@@ -462,20 +454,20 @@ public class UpdateItemUtils {
     }
     
     private static SignedString getSignedStringPGP(String jsonContent, String signature) {
-        LOGGER.debug("JSON send to controller: ");
-        LOGGER.debug(jsonContent);
+        LOGGER.trace("JSON send to controller: ");
+        LOGGER.trace(jsonContent);
         return SignedString.of(jsonContent, SOSKeyConstants.PGP_ALGORITHM_NAME, signature);
     }
 
     private static SignedString getSignedStringWithCertificate(String jsonContent, String signature, String signatureAlgorithm, String certificate) {
-        LOGGER.debug("JSON send to controller: ");
-        LOGGER.debug(jsonContent);
+        LOGGER.trace("JSON send to controller: ");
+        LOGGER.trace(jsonContent);
         return SignedString.x509WithCertificate(jsonContent, signature, signatureAlgorithm, certificate);
     }
 
     private static SignedString getSignedStringWithSignerDN(String jsonContent, String signature, String signatureAlgorithm, String signerDN) {
-        LOGGER.debug("JSON send to controller: ");
-        LOGGER.debug(jsonContent);
+        LOGGER.trace("JSON send to controller: ");
+        LOGGER.trace(jsonContent);
         return SignedString.x509WithSignerId(jsonContent, signature, signatureAlgorithm, SignerId.of(signerDN));
     }
 

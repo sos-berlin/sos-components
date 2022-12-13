@@ -168,6 +168,10 @@ public class StoreDeployments {
                 // get all already optimistically stored entries for the commit
                 List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
                 // update all previously optimistically stored entries with the error message and change the state
+                LOGGER.trace("JSON(s) rejected from controller: ");
+                
+                optimisticEntries.stream().filter(item -> item.getType() == 1 || item.getType() == 10)
+                    .forEach(item -> LOGGER.trace(item.getContent()));
                 updateOptimisticEntriesIfFailed(optimisticEntries, either.getLeft().message(), dbLayer);
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
