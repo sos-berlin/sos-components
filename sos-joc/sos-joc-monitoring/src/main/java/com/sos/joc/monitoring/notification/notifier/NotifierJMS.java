@@ -21,7 +21,6 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
-import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.configuration.monitor.jms.MonitorJMS;
 import com.sos.joc.monitoring.configuration.monitor.jms.ObjectHelper;
@@ -151,15 +150,12 @@ public class NotifierJMS extends ANotifier {
             }
             connection.start();
         } catch (Throwable e) {
-            LOGGER.error(String.format("%s[%s][exception occurred while trying to connect]%s", Configuration.LOG_INTENT, url4log, e.toString()), e);
-            throw e;
+            throw new Exception(String.format("[%s][exception occurred while trying to connect]%s", url4log, e.toString()), e);
         }
         try {
             session = connection.createSession(false, monitor.getAcknowledgeMode());
         } catch (Throwable e) {
-            LOGGER.error(String.format("%s[%s][exception occurred while trying to create Session]%s", Configuration.LOG_INTENT, url4log, e
-                    .toString()), e);
-            throw e;
+            throw new Exception(String.format("[%s][exception occurred while trying to create Session]%s", url4log, e.toString()), e);
         }
     }
 
@@ -175,9 +171,8 @@ public class NotifierJMS extends ANotifier {
                 return (ConnectionFactory) ObjectHelper.newInstance(monitor.getConnectionFactory().getJavaClass(), monitor.getConnectionFactory()
                         .getConstructorArguments());
             } catch (Throwable e) {
-                LOGGER.error(String.format("%s can't initialize ConnectionFactory[class=%s]: %s", Configuration.LOG_INTENT, monitor
-                        .getConnectionFactory().getJavaClass(), e.toString()), e);
-                throw e;
+                throw new Exception(String.format("[can't initialize ConnectionFactory][class=%s]%s", monitor.getConnectionFactory().getJavaClass(), e
+                        .toString()), e);
             }
         } else if (monitor.getConnectionJNDI() != null) {
             try {
@@ -190,9 +185,8 @@ public class NotifierJMS extends ANotifier {
                 Context jndi = new InitialContext(env);
                 return (ConnectionFactory) jndi.lookup(monitor.getConnectionJNDI().getLookupName());
             } catch (Throwable e) {
-                LOGGER.error(String.format("%s can't initialize ConnectionFactory[jndi file=%s, lookupName=%s]: %s", Configuration.LOG_INTENT, monitor
-                        .getConnectionJNDI().getFile(), monitor.getConnectionJNDI().getLookupName(), e.toString()), e);
-                throw e;
+                throw new Exception(String.format("[can't initialize ConnectionFactory][jndi file=%s, lookupName=%s]%s", monitor.getConnectionJNDI()
+                        .getFile(), monitor.getConnectionJNDI().getLookupName(), e.toString()), e);
             }
         } else {
             throw new Exception(String.format("can't initialize ConnectionFactory: connection element not found (%s or %s)",
@@ -251,16 +245,14 @@ public class NotifierJMS extends ANotifier {
                 destination = session.createTopic(name);
             }
         } catch (Throwable e) {
-            LOGGER.error(String.format("%s[%s][%s][%s]exception occurred while trying to create Destination: %s", Configuration.LOG_INTENT, url4log,
-                    monitor.getDestination(), name, e.toString()), e);
-            throw e;
+            throw new Exception(String.format("[%s][%s][normalized=%s][exception occurred while trying to create Destination]%s", url4log, monitor
+                    .getDestination(), name, e.toString()), e);
         }
         try {
             return session.createProducer(destination);
         } catch (Throwable e) {
-            LOGGER.error(String.format("%s[%s][%s][%s]exception occurred while trying to create MessageProducer: %s", Configuration.LOG_INTENT,
-                    url4log, monitor.getDestination(), name, e.toString()), e);
-            throw e;
+            throw new Exception(String.format("[%s][%s][normalized=%s][exception occurred while trying to create MessageProducer]%s", url4log, monitor
+                    .getDestination(), name, e.toString()), e);
         }
     }
 

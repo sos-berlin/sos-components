@@ -336,17 +336,15 @@ public class JocCluster {
             if (dbLayer != null) {
                 dbLayer.rollback();
             }
-            LOGGER.warn(e.toString(), e);
-            LOGGER.warn(String.format("[%s][exception][current=%s][active=%s][lastActive=%s][locked]%s", mode, currentMemberId, activeMemberId,
-                    lastActiveMemberId, SOSHibernate.toString(item)));
+            LOGGER.warn(String.format("[%s][exception][current=%s][active=%s][lastActive=%s][locked][%s]%s", mode, currentMemberId, activeMemberId,
+                    lastActiveMemberId, SOSHibernate.toString(item), e.toString()), e);
 
         } catch (SOSHibernateObjectOperationException e) {
             if (dbLayer != null) {
                 dbLayer.rollback();
             }
-            LOGGER.error(e.toString(), e);
-            LOGGER.error(String.format("[%s][exception][current=%s][active=%s][lastActive=%s]%s", mode, currentMemberId, activeMemberId,
-                    lastActiveMemberId, SOSHibernate.toString(item)));
+            LOGGER.error(String.format("[%s][exception][current=%s][active=%s][lastActive=%s][%s]%s", mode, currentMemberId, activeMemberId,
+                    lastActiveMemberId, SOSHibernate.toString(item), e.toString()), e);
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
             if (dbLayer != null) {
