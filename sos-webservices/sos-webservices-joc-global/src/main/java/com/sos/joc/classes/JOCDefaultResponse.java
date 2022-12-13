@@ -13,6 +13,7 @@ import jakarta.ws.rs.core.Response;
 import org.apache.commons.lang3.StringEscapeUtils;
  import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MarkerFactory;
 
 import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
@@ -312,7 +313,11 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
 
     public static JOCDefaultResponse responseStatus403(SOSAuthCurrentAccountAnswer entity, String mediaType) {
         Response.ResponseBuilder responseBuilder = Response.status(403).header("Content-Type", mediaType).cacheControl(setNoCaching());
-        LOGGER.error(entity.getMessage());
+        if (entity.getApiCall() == null) {
+            LOGGER.error(entity.getMessage());
+        } else {
+            LOGGER.error(MarkerFactory.getMarker(entity.getApiCall()), entity.getMessage());
+        }
         if (mediaType.contains(MediaType.TEXT_HTML)) {
             String entityStr = String.format(ERROR_HTML, "JOC-403", StringEscapeUtils.escapeHtml4(entity.getMessage()));
             responseBuilder.entity(entityStr);
@@ -328,7 +333,11 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
 
     public static JOCDefaultResponse responseStatus440(SOSAuthCurrentAccountAnswer entity, String mediaType) {
         Response.ResponseBuilder responseBuilder = Response.status(440).header("Content-Type", mediaType).cacheControl(setNoCaching());
-        LOGGER.error(entity.getMessage());
+        if (entity.getApiCall() == null) {
+            LOGGER.error(entity.getMessage());
+        } else {
+            LOGGER.error(MarkerFactory.getMarker(entity.getApiCall()), entity.getMessage());
+        }
         if (mediaType.contains(MediaType.TEXT_HTML)) {
             String entityStr = String.format(ERROR_HTML, "JOC-440", StringEscapeUtils.escapeHtml4(entity.getMessage()));
             responseBuilder.entity(entityStr);
@@ -346,15 +355,20 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return responseStatus440(entity, MediaType.TEXT_HTML + "; charset=UTF-8");
     }
     
-    public static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser) {
-        return getError401Schema(sosJobschedulerUser, null);
+    public static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser, String apiCall) {
+        return getError401Schema(sosJobschedulerUser, null, apiCall);
+    }
+    
+    public static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser, JocError err) {
+        String apiCall = (err != null) ? err.getApiCall() : null;
+        return getError401Schema(sosJobschedulerUser, err, apiCall);
     }
 
-    public static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser, JocError err) {
+    private static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser, JocError err, String apiCall) {
         SOSAuthCurrentAccountAnswer entity = new SOSAuthCurrentAccountAnswer();
         SOSAuthCurrentAccount sosAuthCurrentAccountAnswer=null;
         String message = "Authentication failure";
-        if (err != null && err.getMessage() != null) {
+        if (err != null) {
             if (err.getMessage() != null) {
                 message = err.getMessage(); 
             }
@@ -379,6 +393,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         entity.setIsPermitted(false);
         entity.setIsAuthenticated(sosJobschedulerUser.isAuthenticated());
         entity.setMessage(message);
+        entity.setApiCall(apiCall);
         return entity;
     }
     
@@ -392,17 +407,33 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             errorOutput += e.getCause().getMessage();
             logOutput += e.getCause().toString();
         }
-        LOGGER.error(logOutput, e);
+        if (e.getError() == null || e.getError().getApiCall() == null) {
+            LOGGER.error(logOutput, e);
+        } else {
+            LOGGER.error(MarkerFactory.getMarker(e.getError().getApiCall()), logOutput, e);
+        }
         return errorOutput;
     }
     
     public static String getErrorMessage(Throwable e) {
+        return getErrorMessage(e, null);
+    }
+    
+    public static String getErrorMessage(Throwable e, String apiCall) {
         if (SessionNotExistException.class.isInstance(e)) {
             //LOGGER.warn(e.toString());
         } else if (JocAuthenticationException.class.isInstance(e)) {
-            LOGGER.error(e.toString());
+            if (apiCall == null) {
+                LOGGER.error(e.toString());
+            } else {
+                LOGGER.error(MarkerFactory.getMarker(apiCall), e.toString());
+            }
         } else {
-            LOGGER.error(e.toString(), e);
+            if (apiCall == null) {
+                LOGGER.error(e.toString(), e);
+            } else {
+                LOGGER.error(MarkerFactory.getMarker(apiCall), e.toString(), e);
+            }
         }
         return e.toString();
     }

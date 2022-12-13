@@ -301,6 +301,7 @@ public class JOCResourceImpl {
         jocAuditLog = new JocAuditLog(user, request, bodyStr);
         LOGGER.debug("REQUEST: " + request + ", PARAMS: " + bodyStr);
         jocError.addMetaInfoOnTop("\nREQUEST: " + request, "PARAMS: " + bodyStr, "USER: " + user);
+        jocError.setApiCall(request);
     }
 
     public JOCDefaultResponse initPermissions(String controllerId, boolean permission) throws JocException {
@@ -316,7 +317,8 @@ public class JOCResourceImpl {
 
     private JOCDefaultResponse init401And440() {
         if (!jobschedulerUser.isAuthenticated()) {
-            return JOCDefaultResponse.responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser));
+            String apiCall = jocError == null ? null : jocError.getApiCall();
+            return JOCDefaultResponse.responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser, apiCall));
         }
         return null;
     }

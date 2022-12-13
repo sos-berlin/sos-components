@@ -11,6 +11,10 @@ public class JocError extends Err{
     
     @JsonIgnore
     private List<String> metaInfo = new ArrayList<String>();
+    
+    @JsonIgnore
+    private String apiCall = null;
+
 
     @JsonIgnore
     public JocError() {
@@ -74,6 +78,16 @@ public class JocError extends Err{
     @JsonIgnore
     public String printMetaInfo() {
         return String.join("\n", metaInfo);
+    }
+    
+    @JsonIgnore
+    public void setApiCall(String apiCall) {
+        this.apiCall = apiCall;
+    }
+    
+    @JsonIgnore
+    public String getApiCall() {
+        return apiCall;
     }
     
     @Override

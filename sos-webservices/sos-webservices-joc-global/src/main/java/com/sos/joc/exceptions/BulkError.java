@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Date;
 
 import org.slf4j.Logger;
+import org.slf4j.MarkerFactory;
 
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.order.AddOrder;
@@ -52,7 +53,11 @@ public class BulkError extends Err419 {
         setCode(jocError.getCode());
         setMessage(jocError.getMessage());
         printMetaInfo(jocError);
-        logger.error(getMessage());
+        if (jocError.getApiCall() == null) {
+            logger.error(getMessage());
+        } else {
+            logger.error(MarkerFactory.getMarker(jocError.getApiCall()), getMessage());
+        }
         //AUDIT_LOGGER.error(jocError.getMessage());
     }
     
@@ -66,7 +71,11 @@ public class BulkError extends Err419 {
             //AUDIT_LOGGER.error(errorMsg);
         }
         printMetaInfo(jocError);
-        logger.error(e.getMessage(),e);
+        if (jocError.getApiCall() == null) {
+            logger.error(e.getMessage(), e);
+        } else {
+            logger.error(MarkerFactory.getMarker(jocError.getApiCall()), e.getMessage(), e);
+        }
     }
     
     private void printMetaInfo(JocError jocError) {

@@ -1,5 +1,6 @@
 package com.sos.auth.classes;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -45,6 +46,9 @@ public class SOSAuthCurrentAccountAnswer {
 
     @JsonProperty("identityService")
     private String identityService;
+    
+    @JsonIgnore
+    private String apiCall;
 
     public SOSAuthCurrentAccountAnswer(String account) {
         this.account = account;
@@ -183,6 +187,14 @@ public class SOSAuthCurrentAccountAnswer {
 
     public boolean isForcePasswordChange() {
         return getForcePasswordChange();
+    }
+    
+    public void setApiCall(String apiCall) {
+        this.apiCall = apiCall;
+    }
+
+    public String getApiCall() {
+        return apiCall;
     }
 
     @Override
