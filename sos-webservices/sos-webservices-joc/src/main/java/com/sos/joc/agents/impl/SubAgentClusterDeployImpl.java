@@ -145,7 +145,7 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
             
             if (!updateItems.isEmpty()) {
                 proxy.api().updateItems(Flux.fromIterable(updateItems)).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
+                    ProblemHelper.postProblemEventIfExist(API_CALL, e, accessToken, getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
                         try {
@@ -160,7 +160,7 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, updateAgentIds));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
+                            ProblemHelper.postExceptionEventIfExist(API_CALL, Either.left(e1), accessToken, getJocError(), null);
                         } finally {
                             Globals.disconnect(connection1);
                         }

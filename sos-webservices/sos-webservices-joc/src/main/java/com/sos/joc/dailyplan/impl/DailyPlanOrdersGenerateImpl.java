@@ -59,16 +59,13 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             JsonValidator.validateFailFast(filterBytes, GenerateRequest.class);
             GenerateRequest in = Globals.objectMapper.readValue(filterBytes, GenerateRequest.class);
 
-            DBItemJocAuditLog auditLog = storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN);
-
-            this.checkRequiredParameter("controllerId", in.getControllerId());
-            this.checkRequiredParameter("dailyPlanDate", in.getDailyPlanDate());
-
             String controllerId = in.getControllerId();
             JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getView());
             if (response != null) {
                 return response;
             }
+            
+            DBItemJocAuditLog auditLog = storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN);
 
             Set<Folder> scheduleFolders = null;
             Set<String> scheduleSingles = null;
@@ -116,8 +113,8 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(runner, controllerId, scheduleFolders, scheduleSingles, workflowFolders,
                     workflowSingles, permittedFolders, checkedFolders);
 
-            Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, dailyPlanSchedules, in
-                    .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken);
+            Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(IMPL_PATH, StartupMode.manual, controllerId,
+                    dailyPlanSchedules, in.getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken);
             JocClusterServiceLogger.clearAllLoggers();
 
             Set<AuditLogDetail> auditLogDetails = new HashSet<>();
@@ -126,8 +123,8 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId(), controllerId));
             }
 
-            OrdersHelper.storeAuditLogDetails(auditLogDetails, auditLog.getId()).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(either,
-                    accessToken, getJocError(), null));
+            OrdersHelper.storeAuditLogDetails(auditLogDetails, auditLog.getId()).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(
+                    IMPL_PATH, either, accessToken, getJocError(), null));
 
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 

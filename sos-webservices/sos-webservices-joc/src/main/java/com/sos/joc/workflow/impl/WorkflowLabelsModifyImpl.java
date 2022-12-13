@@ -199,14 +199,15 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
         JControllerCommand commmand = JControllerCommand.controlWorkflowPath(wj.getWorkflowPath(), Optional.empty(), wj.getLabelsForSkipOrUnSkip(
                 Action.SKIP.equals(action)));
         // LOGGER.info(action.name().toLowerCase() + "-command: " + commmand.toJson());
-        ControllerApi.of(controllerId).executeCommand(commmand).thenAccept(either -> thenAcceptHandler(either, controllerId, wj, dbAuditLog));
+        ControllerApi.of(controllerId).executeCommand(commmand).thenAccept(either -> thenAcceptHandler(API_CALL + action.name().toLowerCase(), either,
+                controllerId, wj, dbAuditLog));
     }
 
-    private void thenAcceptHandler(Either<Problem, Response> either, String controllerId, WorkflowJobs wj, DBItemJocAuditLog dbAuditLog) {
-        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+    private void thenAcceptHandler(String apiCall, Either<Problem, Response> either, String controllerId, WorkflowJobs wj, DBItemJocAuditLog dbAuditLog) {
+        ProblemHelper.postProblemEventIfExist(apiCall, either, getAccessToken(), getJocError(), controllerId);
         if (either.isRight()) {
             WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(wj.getWorkflowPath(), dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
-                    .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                    .postExceptionEventIfExist(apiCall, either2, getAccessToken(), getJocError(), controllerId));
         }
     }
     

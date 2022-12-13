@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -45,8 +46,12 @@ import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.release.ReleaseFilter;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path(JocInventory.APPLICATION_PATH)
 public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseResource {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReleaseResourceImpl.class);
 
     @Override
     public JOCDefaultResponse release(final String accessToken, final byte[] inBytes) {
@@ -126,9 +131,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 // ignore missing objects at deletion
             } catch (Exception ex) {
                 if (requestFilter.getPath() != null) {
-                    bulkErrors.add(new BulkError().get(ex, jocError, requestFilter.getPath()));
+                    bulkErrors.add(new BulkError(LOGGER).get(ex, jocError, requestFilter.getPath()));
                 } else {
-                    bulkErrors.add(new BulkError().get(ex, jocError, "Id: " + requestFilter.getId()));
+                    bulkErrors.add(new BulkError(LOGGER).get(ex, jocError, "Id: " + requestFilter.getId()));
                 }
             }
         }
@@ -148,9 +153,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         // either = Either.right(null);
         // } catch (Exception ex) {
         // if (requestFilter.getPath() != null) {
-        // either = Either.left(new BulkError().get(ex, jocError, requestFilter.getPath()));
+        // either = Either.left(new BulkError(LOGGER).get(ex, jocError, requestFilter.getPath()));
         // } else {
-        // either = Either.left(new BulkError().get(ex, jocError, "Id: " + requestFilter.getId()));
+        // either = Either.left(new BulkError(LOGGER).get(ex, jocError, "Id: " + requestFilter.getId()));
         // }
         // }
         // return either;
@@ -199,9 +204,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 }
             } catch (Exception ex) {
                 if (requestFilter.getPath() != null) {
-                    bulkErrors.add(new BulkError().get(ex, jocError, requestFilter.getPath()));
+                    bulkErrors.add(new BulkError(LOGGER).get(ex, jocError, requestFilter.getPath()));
                 } else {
-                    bulkErrors.add(new BulkError().get(ex, jocError, "Id: " + requestFilter.getId()));
+                    bulkErrors.add(new BulkError(LOGGER).get(ex, jocError, "Id: " + requestFilter.getId()));
                 }
             }
         }
@@ -227,9 +232,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         // either = Either.right(null);
         // } catch (Exception ex) {
         // if (requestFilter.getPath() != null) {
-        // either = Either.left(new BulkError().get(ex, jocError, requestFilter.getPath()));
+        // either = Either.left(new BulkError(LOGGER).get(ex, jocError, requestFilter.getPath()));
         // } else {
-        // either = Either.left(new BulkError().get(ex, jocError, "Id: " + requestFilter.getId()));
+        // either = Either.left(new BulkError(LOGGER).get(ex, jocError, "Id: " + requestFilter.getId()));
         // }
         // }
         // return either;
@@ -329,7 +334,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             try {
                 addHash(item);
             } catch (Exception e) {
-                errors.add(new BulkError().get(new JocReleaseException(ConfigurationType.JOBTEMPLATE, item.getPath(), e), getJocError(), item
+                errors.add(new BulkError(LOGGER).get(new JocReleaseException(ConfigurationType.JOBTEMPLATE, item.getPath(), e), getJocError(), item
                         .getPath()));
             }
         default:
@@ -364,13 +369,13 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                     + " order variables]release of multiple workflows with order variables is not allowed");
                         }
                     } catch (Throwable e) {
-                        errors.add(new BulkError().get(new JocReleaseException(ConfigurationType.SCHEDULE, item.getPath(), e), new JocError(
+                        errors.add(new BulkError(LOGGER).get(new JocReleaseException(ConfigurationType.SCHEDULE, item.getPath(), e), new JocError(
                                 workflowMsg + e.toString()), item.getPath()));
                     }
                 }
             }
         } catch (Throwable e) {
-            errors.add(new BulkError().get(new JocReleaseException(ConfigurationType.SCHEDULE, item.getPath(), e), getJocError(), item.getPath()));
+            errors.add(new BulkError(LOGGER).get(new JocReleaseException(ConfigurationType.SCHEDULE, item.getPath(), e), getJocError(), item.getPath()));
         }
         return errors;
     }

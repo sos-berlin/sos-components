@@ -173,7 +173,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             if (allDeployments != null && !allDeployments.isEmpty()) {
                 String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
                         .getConfigurationGlobalsJoc()) : getAccount();
-                DeleteDeployments.delete(allDeployments, deployDbLayer, account, accessToken, getJocError(), dbAuditLog.getId(), true);
+                DeleteDeployments.delete(IMPL_PATH_DELETE, allDeployments, deployDbLayer, account, accessToken, getJocError(), dbAuditLog.getId(), true);
             }
             Globals.commit(session);
             // post events
@@ -210,8 +210,8 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             if (deployables != null && !deployables.isEmpty()) {
                 String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
                         .getConfigurationGlobalsJoc()) : getAccount();
-                DeleteDeployments.deleteFolder(folder.getPath(), true, Proxies.getControllerDbInstances().keySet(), new DBLayerDeploy(session),
-                        account, accessToken, getJocError(), dbAuditLog.getId(), true, false);
+                DeleteDeployments.deleteFolder(IMPL_PATH_FOLDER_DELETE, folder.getPath(), true, Proxies.getControllerDbInstances().keySet(),
+                        new DBLayerDeploy(session), account, accessToken, getJocError(), dbAuditLog.getId(), true, false);
             }
             
             JocInventory.deleteEmptyFolders(dbLayer, folder.getPath());

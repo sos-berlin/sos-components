@@ -119,7 +119,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                     currentstate = Proxy.of(in.getControllerId()).currentState();
                     deloyedNames = deployedDbLayer.getDeployedNames(deployedFilter);
                 } catch (Exception e) {
-                    ProblemHelper.postExceptionEventIfExist(Either.left(e), null, getJocError(), null);
+                    ProblemHelper.postExceptionEventIfExist(action, Either.left(e), null, getJocError(), null);
                 }
             }
 

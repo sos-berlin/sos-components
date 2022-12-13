@@ -92,7 +92,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 Stream<DBItemDeploymentHistory> latestStream = latest.stream().filter(item -> OperationType.DELETE.value() != item.getOperation());
                 if (API_CALL_SYNC.equals(action)) {
                     // filter latest with only "not in sync" objects
-                    final JControllerState currentstate = SyncStateHelper.getControllerState(controllerId, xAccessToken, getJocError());
+                    final JControllerState currentstate = SyncStateHelper.getControllerState(action, controllerId, xAccessToken, getJocError());
                     latestStream = latestStream.filter(item -> SyncStateHelper.isNotInSync(currentstate, item.getName(), item.getType()));
                 }
                 final Map<String, String> releasedScripts = dbLayer.getReleasedScripts();
@@ -133,7 +133,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             if (verifiedRedeployables != null && !verifiedRedeployables.isEmpty()) {
                 SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedRedeployables, updateableAgentNames,
                         updateableAgentNamesFileOrderSources, dbAuditlog.getId());
-                StoreDeployments.storeNewDepHistoryEntriesForRedeploy(signedItemsSpec, account, commitId, controllerId, getAccessToken(),
+                StoreDeployments.storeNewDepHistoryEntriesForRedeploy(action, signedItemsSpec, account, commitId, controllerId, getAccessToken(),
                         getJocError(), dbLayer);
                 // call updateItems command via ControllerApi for given controllers
                 StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, Collections.emptyList(), account, commitId, controllerId,

@@ -106,7 +106,7 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
             // TODO: call for every know controller
             Set<String> controllerIds = Proxies.getControllerDbInstances().keySet();
             controllerIds.stream().forEach(controllerId -> 
-                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(controllerId, accessToken, getJocError()));
+                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(API_CALL, controllerId, accessToken, getJocError()));
         }
     }
     

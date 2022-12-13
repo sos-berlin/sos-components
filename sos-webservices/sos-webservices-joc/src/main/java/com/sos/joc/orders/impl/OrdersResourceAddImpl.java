@@ -13,7 +13,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
@@ -41,6 +42,7 @@ import com.sos.schema.JsonValidator;
 import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
@@ -54,6 +56,7 @@ import reactor.core.publisher.Flux;
 @Path("orders")
 public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersResourceAdd {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceAddImpl.class);
     private static final String API_CALL = "./orders/add";
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
 
@@ -113,7 +116,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(order.getWorkflowPath()), o.id().string(), controllerId));
                     either = Either.right(o);
                 } catch (Exception ex) {
-                    either = Either.left(new BulkError().get(ex, getJocError(), order));
+                    either = Either.left(new BulkError(LOGGER).get(ex, getJocError(), order));
                 }
                 return either;
             };
@@ -132,9 +135,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
 //                                accessToken, getJocError(), addOrders.getControllerId()));
                         // auditlog is written even "deleteOrdersWhenTerminated" has a problem
                         OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
-                                .postExceptionEventIfExist(either2, accessToken, getJocError(), addOrders.getControllerId()));
+                                .postExceptionEventIfExist(API_CALL, either2, accessToken, getJocError(), addOrders.getControllerId()));
                     } else {
-                        ProblemHelper.postProblemEventIfExist(either, accessToken, getJocError(), addOrders.getControllerId());
+                        ProblemHelper.postProblemEventIfExist(API_CALL, either, accessToken, getJocError(), addOrders.getControllerId());
                     }
                 });
 

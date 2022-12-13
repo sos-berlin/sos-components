@@ -211,12 +211,12 @@ public class SyncStateHelper {
         return inSync;
     }
     
-    public static JControllerState getControllerState(String controllerId, String accessToken, JocError jocError) {
+    public static JControllerState getControllerState(String apiCall, String controllerId, String accessToken, JocError jocError) {
         if (controllerId != null && !controllerId.isEmpty()) {
             try {
                 return Proxy.of(controllerId).currentState();
             } catch (Exception e) {
-                ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
+                ProblemHelper.postExceptionEventIfExist(apiCall, Either.left(e), accessToken, jocError, controllerId);
             }
         }
         return null;

@@ -332,12 +332,13 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             updateUnknownOrders(controllerId, orders, jOrders);
         }
         if (!jOrders.isEmpty() || Action.CANCEL_DAILYPLAN.equals(action)) {
+            String apiCall = Action.CANCEL_DAILYPLAN.equals(action) ? API_CALL + "/dailyplan/cancel" : API_CALL + "/" + action.name().toLowerCase();
             command(currentState, action, modifyOrders, dbAuditLog, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(
                     either -> {
-                        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                        ProblemHelper.postProblemEventIfExist(apiCall, either, getAccessToken(), getJocError(), controllerId);
                         if (either.isRight()) {
                             OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(
-                                    either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                                    either2 -> ProblemHelper.postExceptionEventIfExist(apiCall, either2, getAccessToken(), getJocError(), controllerId));
                         }
                     });
         } else {
@@ -432,10 +433,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         if (!positionOpt.isPresent() && !withVariables) {
             command(currentState, Action.RESUME, modifyOrders, dbAuditLog, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(
                     either -> {
-                        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                        ProblemHelper.postProblemEventIfExist(API_CALL + "/resume", either, getAccessToken(), getJocError(), controllerId);
                         if (either.isRight()) {
                             OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(
-                                    either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                                    either2 -> ProblemHelper.postExceptionEventIfExist(API_CALL + "/resume", either2, getAccessToken(), getJocError(), controllerId));
                         }
                     });
         } else if (cop.isSingleOrder()) {
@@ -491,19 +492,19 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
 
             ControllerApi.of(controllerId).resumeOrder(jOrders.iterator().next().id(), positionOpt, historyOperations, true).thenAccept(either -> {
-                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                ProblemHelper.postProblemEventIfExist(API_CALL + "/resume", either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
                     OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
-                            .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                            .postExceptionEventIfExist(API_CALL + "/resume", either2, getAccessToken(), getJocError(), controllerId));
                 }
             });
         } else {
             for (JOrder jOrder : jOrders) {
                 ControllerApi.of(controllerId).resumeOrder(jOrder.id(), positionOpt, historyOperations, true).thenAccept(either -> {
-                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                    ProblemHelper.postProblemEventIfExist(API_CALL + "/resume", either, getAccessToken(), getJocError(), controllerId);
                     if (either.isRight()) {
                         OrdersHelper.storeAuditLogDetailsFromJOrder(jOrder, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
-                                .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                                .postExceptionEventIfExist(API_CALL + "/resume", either2, getAccessToken(), getJocError(), controllerId));
                     }
                 });
             }
@@ -514,8 +515,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         String json = Globals.objectMapper.writeValueAsString(h);
         Either<Problem, JHistoricOutcome> hoE = JHistoricOutcome.fromJson(json);
         if (hoE.isLeft()) {
-            ProblemHelper.postProblemEventIfExist(hoE, null, err, null);
-            //ProblemHelper.postProblemEventAsHintIfExist(hoE, null, err, null);
+            ProblemHelper.postProblemEventIfExist(API_CALL + "/resume", hoE, null, err, null);
+            //ProblemHelper.postProblemEventAsHintIfExist(API_CALL + "/resume", hoE, null, err, null);
             return Collections.emptyList();
         }
         if (append) {
@@ -593,7 +594,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 String msg = suspendedOrFailedOrders.get(Boolean.FALSE).stream().map(o -> o.id().string()).collect(Collectors.joining("', '",
                         "Orders '", "' not failed or suspended"));
                 if (withPostProblem) {
-                    ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+                    ProblemHelper.postProblemEventAsHintIfExist(API_CALL + "/" + action.name().toLowerCase(), Either.left(Problem.pure(msg)),
+                            getAccessToken(), getJocError(), controllerId);
                 }
             }
             return suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
@@ -604,7 +606,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 String msg = promptingOrders.get(Boolean.FALSE).stream().map(o -> o.id().string()).collect(Collectors.joining("', '", "Orders '",
                         "' not prompting"));
                 if (withPostProblem) {
-                    ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+                    ProblemHelper.postProblemEventAsHintIfExist(API_CALL + "/" + action.name().toLowerCase(), Either.left(Problem.pure(msg)),
+                            getAccessToken(), getJocError(), controllerId);
                 }
             }
             return promptingOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
@@ -615,7 +618,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 String msg = freshOrders.get(Boolean.FALSE).stream().map(o -> o.id().string()).collect(Collectors.joining("', '", "Orders '",
                         "' not pending, scheduled or blocked"));
                 if (withPostProblem) {
-                    ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+                    ProblemHelper.postProblemEventAsHintIfExist(API_CALL + "/dailyplan/cancel", Either.left(Problem.pure(msg)), getAccessToken(),
+                            getJocError(), controllerId);
                 }
             }
             return freshOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
@@ -663,7 +667,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             } else {
                 return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
                     if (either.isRight()) {
-                        updateDailyPlan(oIds, controllerId);
+                        updateDailyPlan(API_CALL + "/dailyplan/cancel", oIds, controllerId);
                     }
                     return either;
                 });
@@ -673,7 +677,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
                 // TODO @uwe: This update must be removed when dailyplan service receives events for order state changes
                 if (either.isRight()) {
-                    updateDailyPlan(oIds, controllerId);
+                    updateDailyPlan(API_CALL + "/" + action.name().toLowerCase(), oIds, controllerId);
                 }
                 return either;
             });
@@ -692,7 +696,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             // No bulk operation in API
             JControllerApi api = ControllerApi.of(controllerId);
             oIds.stream().map(oId -> JControllerCommand.apply(new ControllerCommand.AnswerOrderPrompt(oId))).forEach(command -> api.executeCommand(
-                    command).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId)));
+                    command).thenAccept(either -> ProblemHelper.postProblemEventIfExist(API_CALL + "/" + action.name().toLowerCase(), either,
+                            getAccessToken(), getJocError(), controllerId)));
             return CompletableFuture.supplyAsync(() -> Either.right(null));
 
         default: // case REMOVE_WHEN_TERMINATED
@@ -700,14 +705,14 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
 
-    private void updateDailyPlan(Set<OrderId> oIds, String controllerId) {
+    private void updateDailyPlan(String apiCall, Set<OrderId> oIds, String controllerId) {
         try {
             // only for non-temporary and non-file orders
             LOGGER.debug("Cancel orders. Calling updateDailyPlan");
             updateDailyPlan("updateDailyPlan", oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#(T|F|D)[0-9]+-.*")).collect(Collectors
                     .toSet()));
         } catch (Exception e) {
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
+            ProblemHelper.postExceptionEventIfExist(apiCall, Either.left(e), getAccessToken(), getJocError(), controllerId);
         }
     }
 
