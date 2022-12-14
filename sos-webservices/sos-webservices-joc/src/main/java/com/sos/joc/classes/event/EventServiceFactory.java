@@ -276,7 +276,7 @@ public class EventServiceFactory {
         es.setCategory(e.getCategory());
         es.setEventId(null);
         es.setLevel(e.getLevel());
-        es.setCaller(e.getCaller());
+        es.setRequest(e.getRequest());
         es.setMessage(e.getMessage());
         es.setSubCategory(e.getSubCategory());
         es.setTimestamp(e.getTimestamp());

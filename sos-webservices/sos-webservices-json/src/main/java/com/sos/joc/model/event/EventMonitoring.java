@@ -25,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "level",
     "category",
     "subCategory",
-    "caller",
+    "request",
     "timestamp",
     "message"
 })
@@ -67,8 +67,8 @@ public class EventMonitoring implements IEventObject
      */
     @JsonProperty("subCategory")
     private String subCategory;
-    @JsonProperty("caller")
-    private String caller;
+    @JsonProperty("request")
+    private String request;
     /**
      * timestamp
      * <p>
@@ -176,14 +176,14 @@ public class EventMonitoring implements IEventObject
         this.subCategory = subCategory;
     }
 
-    @JsonProperty("caller")
-    public String getCaller() {
-        return caller;
+    @JsonProperty("request")
+    public String getRequest() {
+        return request;
     }
 
-    @JsonProperty("caller")
-    public void setCaller(String caller) {
-        this.caller = caller;
+    @JsonProperty("request")
+    public void setRequest(String request) {
+        this.request = request;
     }
 
     /**
@@ -222,12 +222,12 @@ public class EventMonitoring implements IEventObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("eventId", eventId).append("level", level).append("category", category).append("subCategory", subCategory).append("caller", caller).append("timestamp", timestamp).append("message", message).toString();
+        return new ToStringBuilder(this).append("eventId", eventId).append("level", level).append("category", category).append("subCategory", subCategory).append("request", request).append("timestamp", timestamp).append("message", message).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(subCategory).append(caller).append(level).append(category).append(message).append(timestamp).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(subCategory).append(request).append(level).append(category).append(message).append(timestamp).toHashCode();
     }
 
     @Override
@@ -239,7 +239,7 @@ public class EventMonitoring implements IEventObject
             return false;
         }
         EventMonitoring rhs = ((EventMonitoring) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(subCategory, rhs.subCategory).append(caller, rhs.caller).append(level, rhs.level).append(category, rhs.category).append(message, rhs.message).append(timestamp, rhs.timestamp).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(subCategory, rhs.subCategory).append(request, rhs.request).append(level, rhs.level).append(category, rhs.category).append(message, rhs.message).append(timestamp, rhs.timestamp).isEquals();
     }
 
 }

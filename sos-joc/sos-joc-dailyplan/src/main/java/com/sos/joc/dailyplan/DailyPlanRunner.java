@@ -99,6 +99,7 @@ public class DailyPlanRunner extends TimerTask {
     private Map<String, String> nonWorkingDays;
     private Map<String, Long> durations = null;
     private Set<String> createdPlans;
+    private JocError jocError = JocError.createWithApiCall(IDENTIFIER);
 
     private boolean firstStart = true;
 
@@ -200,7 +201,7 @@ public class DailyPlanRunner extends TimerTask {
                         String dailyPlanDate = SOSDate.getDateWithTimeZoneAsString(dailyPlanCalendar.getTime(), settings.getTimeZone());
                         List<DBItemDailyPlanSubmission> l = getSubmissionsForDate(controllerId, dailyPlanCalendar);
                         if ((l.size() == 0)) {
-                            generateDailyPlan(IDENTIFIER, startupMode, controllerId, controllerSchedules, dailyPlanDate, false, null, "");
+                            generateDailyPlan(startupMode, controllerId, controllerSchedules, dailyPlanDate, false, jocError, "");
                         } else {
                             List<String> copy = l.stream().map(e -> {
                                 String d;
@@ -241,16 +242,16 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     /* service (createPlan) & DailyPlanModifyOrderImpl, DailyPlanOrdersGenerateImpl **/
-    public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(String apiCall, StartupMode startupMode, String controllerId,
+    public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, Boolean withSubmit, JocError jocError, String accessToken)
             throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
-        return generateDailyPlan(apiCall, startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, null, withSubmit, jocError, accessToken);
+        return generateDailyPlan(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, null, withSubmit, jocError, accessToken);
     }
 
     /* DailyPlanModifyOrderImpl **/
-    public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(String apiCall, StartupMode startupMode, String controllerId,
+    public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, DBItemDailyPlanSubmission submission, Boolean withSubmit,
             JocError jocError, String accessToken) throws JsonParseException, JsonMappingException, DBConnectionRefusedException,
             DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, IOException, ParseException,
@@ -282,7 +283,7 @@ public class DailyPlanRunner extends TimerTask {
 
             calculateDurations(controllerId, dailyPlanDate, dailyPlanSchedules);
 
-            synchronizer.addPlannedOrderToControllerAndDB(apiCall, startupMode, operation, controllerId, dailyPlanDate, withSubmit, durations);
+            synchronizer.addPlannedOrderToControllerAndDB(startupMode, operation, controllerId, dailyPlanDate, withSubmit, durations);
             EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
         } else {
             LOGGER.info(String.format("[%s][%s][%s][%s][skip]%s", startupMode, operation, controllerId, dailyPlanDate, c));
@@ -347,7 +348,7 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     /* service (submitDaysAhead) & DailyPlanModifyOrderImpl, DailyPlanSubmitOrdersImpl **/
-    public void submitOrders(String apiCall, StartupMode startupMode, String controllerId, List<DBItemDailyPlanOrder> items, String dailyPlanDate, JocError jocError,
+    public void submitOrders(StartupMode startupMode, String controllerId, List<DBItemDailyPlanOrder> items, String dailyPlanDate, JocError jocError,
             String accessToken) throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
@@ -416,7 +417,7 @@ public class DailyPlanRunner extends TimerTask {
             session = null;
 
             if (synchronizer.getPlannedOrders().size() > 0) {
-                synchronizer.submitOrdersToController(apiCall, startupMode, controllerId, dailyPlanDate);
+                synchronizer.submitOrdersToController(startupMode, controllerId, dailyPlanDate);
             }
         } finally {
             Globals.disconnect(session);
@@ -644,7 +645,7 @@ public class DailyPlanRunner extends TimerTask {
                 LOGGER.info(String.format("[%s][submitting][%s][%s][submission created=%s, id=%s]submit %s start ...", startupMode, controllerId,
                         date, SOSDate.getDateTimeAsString(item.getCreated()), item.getId(), c));
 
-                submitOrders(IDENTIFIER, startupMode, controllerId, plannedOrders, submissionForDate, null, "");
+                submitOrders(startupMode, controllerId, plannedOrders, submissionForDate, jocError, "");
                 // not log end because asynchronous
                 // LOGGER.info(String.format("[submitting][%s][%s][submission=%s]submit end", controllerId, date, submissionForDate));
             }

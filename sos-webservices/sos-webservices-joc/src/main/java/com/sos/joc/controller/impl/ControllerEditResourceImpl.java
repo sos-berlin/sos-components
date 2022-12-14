@@ -402,7 +402,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             }
             if (clusterUriChanged || controllerUpdateRequired) {
                 try {
-                    ControllerResourceModifyClusterImpl.appointNodes(API_CALL_REGISTER, controllerId, agentDBLayer, accessToken, getJocError());
+                    ControllerResourceModifyClusterImpl.appointNodes(controllerId, agentDBLayer, accessToken, getJocError());
                 } catch (JocBadRequestException e) {
                 }
             }
@@ -431,7 +431,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                             .addOrChangeSimple(createSubagentDirector(a, subagentId)));
                 
                 }).flatMap(List::stream))).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(API_CALL_REGISTER, e, getAccessToken(), getJocError(), null);
+                    ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
                         try {
@@ -448,7 +448,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                             EventBus.getInstance().post(new AgentInventoryEvent(cId, agentIds));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(API_CALL_REGISTER, Either.left(e1), accessToken, getJocError(), null);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
                         } finally {
                             Globals.disconnect(connection1);
                         }

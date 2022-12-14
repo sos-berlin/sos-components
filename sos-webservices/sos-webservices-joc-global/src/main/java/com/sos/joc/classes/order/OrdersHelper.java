@@ -728,7 +728,7 @@ public class OrdersHelper {
                 WorkflowPath::string).distinct();
     }
     
-    public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(String apiCall, Collection<String> temporaryOrderIds,
+    public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
             DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId,
             SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
@@ -740,11 +740,11 @@ public class OrdersHelper {
         }
         JControllerProxy proxy = Proxy.of(dailyplanModifyOrder.getControllerId());
         JControllerState currentState = proxy.currentState();
-        return cancelAndAddFreshOrder(apiCall, temporaryOrderIds, dailyplanModifyOrder, accessToken, jocError, auditlogId, proxy, currentState,
+        return cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, jocError, auditlogId, proxy, currentState,
                 folderPermissions);
     }
 
-    public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(String apiCall, Collection<String> temporaryOrderIds,
+    public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
             DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, JControllerProxy proxy,
             JControllerState currentState, SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
@@ -818,20 +818,20 @@ public class OrdersHelper {
                     FreshOrder::getOldOrderId, FreshOrder::getJFreshOrderWithDeleteOrderWhenTerminated));
 
             proxy.api().deleteOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either -> {
-                ProblemHelper.postProblemEventIfExist(apiCall, either, accessToken, jocError, controllerId);
+                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
                 if (either.isRight()) {
                     cancelOrders(proxy.api(), modifyOrders, freshOrders.keySet()).thenAccept(either2 -> {
-                        ProblemHelper.postProblemEventIfExist(apiCall, either2, accessToken, jocError, controllerId);
+                        ProblemHelper.postProblemEventIfExist(either2, accessToken, jocError, controllerId);
                         if (either2.isRight()) {
                             proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either3 -> {
-                                ProblemHelper.postProblemEventIfExist(apiCall, either3, accessToken, jocError, controllerId);
+                                ProblemHelper.postProblemEventIfExist(either3, accessToken, jocError, controllerId);
                                 if (either3.isRight()) {
                                     // proxy.api().deleteOrdersWhenTerminated(Flux.fromStream(freshOrders.values().stream().map(JFreshOrder::id)))
                                     // .thenAccept(either4 -> ProblemHelper.postProblemEventIfExist(either4, accessToken, jocError,
                                     // controllerId));
                                     // auditlog is written even deleteOrdersWhenTerminated has a problem
                                     storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(
-                                            apiCall, either5, accessToken, jocError, controllerId));
+                                            either5, accessToken, jocError, controllerId));
                                 }
                             });
                         }

@@ -175,7 +175,7 @@ public class CronUtils {
     }
 
     private static Schedule createSchedule(final String cronline, final Matcher pcronRegExMatcher, List<AssignedCalendars> assignedCals)
-            throws Exception {
+            throws JocException {
         Schedule schedule = new Schedule();
         schedule.setCalendars(assignedCals);
         try {
@@ -797,7 +797,7 @@ public class CronUtils {
         return formatTwoDigits("" + number);
     }
 
-    private static String convertAlias(final Matcher matcher) throws Exception {
+    private static String convertAlias(final Matcher matcher) throws JocException {
         try {
             String alias = matcher.group(1);
             String rest = matcher.group(2);

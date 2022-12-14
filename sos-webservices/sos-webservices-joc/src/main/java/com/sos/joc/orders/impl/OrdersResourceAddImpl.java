@@ -135,9 +135,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
 //                                accessToken, getJocError(), addOrders.getControllerId()));
                         // auditlog is written even "deleteOrdersWhenTerminated" has a problem
                         OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
-                                .postExceptionEventIfExist(API_CALL, either2, accessToken, getJocError(), addOrders.getControllerId()));
+                                .postExceptionEventIfExist(either2, accessToken, getJocError(), addOrders.getControllerId()));
                     } else {
-                        ProblemHelper.postProblemEventIfExist(API_CALL, either, accessToken, getJocError(), addOrders.getControllerId());
+                        ProblemHelper.postProblemEventIfExist(either, accessToken, getJocError(), addOrders.getControllerId());
                     }
                 });
 

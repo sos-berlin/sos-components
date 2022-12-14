@@ -146,7 +146,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             }
             
             final boolean withSync = in.getControllerId() != null && !in.getControllerId().isEmpty();
-            final JControllerState currentstate = SyncStateHelper.getControllerState(IMPL_PATH, in.getControllerId(), null, getJocError());
+            final JControllerState currentstate = SyncStateHelper.getControllerState(in.getControllerId(), null, getJocError());
             
             Map<Integer, Map<Long, String>> deployedPaths = getDeployedInventoryPaths(in.getControllerId(), in.getFolder(), in.getRecursive(),
                     deployableTypes, session);

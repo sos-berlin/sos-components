@@ -37,31 +37,27 @@ public class ProblemHelper {
         }
     }
 
-    public static void postProblemEventIfExist(String apiCall, Either<Problem, ?> either, String accessToken, JocError err, String controller)
+    public static void postProblemEventIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller)
             throws JocException {
-        Marker marker = apiCall == null ? null : MarkerFactory.getMarker(apiCall);
-        postEventIfExist(marker, either, accessToken, err, controller, false);
+        postEventIfExist(either, accessToken, err, controller, false);
     }
 
-    public static void postProblemEventAsHintIfExist(String apiCall, Either<Problem, ?> either, String accessToken, JocError err, String controller)
+    public static void postProblemEventAsHintIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller)
             throws JocException {
-        Marker marker = apiCall == null ? null : MarkerFactory.getMarker(apiCall);
-        postEventIfExist(marker, either, accessToken, err, controller, true);
+        postEventIfExist(either, accessToken, err, controller, true);
     }
 
-    public static void postExceptionEventIfExist(String apiCall, Either<Exception, ?> either, String accessToken, JocError err, String controller)
+    public static void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err, String controller)
             throws JocException {
-        Marker marker = apiCall == null ? null : MarkerFactory.getMarker(apiCall);
-        postExceptionEventIfExist(marker, either, accessToken, err, controller, false);
+        postExceptionEventIfExist(either, accessToken, err, controller, false);
     }
 
-    public static void postExceptionEventAsHintIfExist(String apiCall, Either<Exception, ?> either, String accessToken, JocError err,
+    public static void postExceptionEventAsHintIfExist(Either<Exception, ?> either, String accessToken, JocError err,
             String controller) throws JocException {
-        Marker marker = apiCall == null ? null : MarkerFactory.getMarker(apiCall);
-        postExceptionEventIfExist(marker, either, accessToken, err, controller, true);
+        postExceptionEventIfExist(either, accessToken, err, controller, true);
     }
 
-    private static synchronized void postEventIfExist(Marker marker, Either<Problem, ?> either, String accessToken, JocError err, String controller,
+    private static synchronized void postEventIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller,
             boolean isOnlyHint) throws JocException {
         if (either == null || either.isLeft()) {
             if (err != null && !err.getMetaInfo().isEmpty()) {
@@ -73,6 +69,10 @@ public class ProblemHelper {
                     EventBus.getInstance().post(new ProblemEvent(accessToken, controller, "BadRequestError: Unknown problem", isOnlyHint));
                 }
             } else {
+                Marker marker = null;
+                if (err != null && err.getApiCall() != null) {
+                    marker = MarkerFactory.getMarker(err.getApiCall());
+                }
                 if (accessToken != null && !accessToken.isEmpty()) {
                     EventBus.getInstance().post(getEventOfProblem(marker, either.getLeft(), accessToken, controller, isOnlyHint));
                 } else {
@@ -82,7 +82,7 @@ public class ProblemHelper {
         }
     }
 
-    private static synchronized void postExceptionEventIfExist(Marker marker, Either<Exception, ?> either, String accessToken, JocError err,
+    private static synchronized void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err,
             String controller, boolean isOnlyHint) throws JocException {
         if (either == null || either.isLeft()) {
             if (err != null && !err.getMetaInfo().isEmpty()) {
@@ -94,7 +94,11 @@ public class ProblemHelper {
                     EventBus.getInstance().post(new ProblemEvent(accessToken, controller, "BadRequestError: Unknown problem", isOnlyHint));
                 }
             } else {
-                LOGGER.error(marker, "", either.getLeft());
+                if (err != null && err.getApiCall() != null) {
+                    LOGGER.error(MarkerFactory.getMarker(err.getApiCall()), "", either.getLeft());
+                } else {
+                    LOGGER.error("", either.getLeft());
+                }
                 if (accessToken != null && !accessToken.isEmpty()) {
                     EventBus.getInstance().post(new ProblemEvent(accessToken, controller, either.getLeft().toString(), isOnlyHint));
                 }
@@ -120,6 +124,9 @@ public class ProblemHelper {
 
     private static ProblemEvent getEventOfProblem(Marker marker, Problem problem, String accessToken, String controller, boolean isOnlyHint)
             throws JocException {
+        if (marker == null) {
+            marker = MarkerFactory.getMarker("ProblemEvent");
+        }
         // TODO stacktrace logging
         switch (problem.httpStatusCode()) {
         case 409:

@@ -39,7 +39,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
                     .getTypes() != null && treeBody.getTypes().contains(TreeType.INVENTORY)));
             
             String controllerId = (treeForInventory || treeForInventoryTrash) ? "" : treeBody.getControllerId();
-//            if (controllerId == null) {
+//            if (controllerId == null) { //e.g. it could be null for Documentation 
 //                throw new JocMissingRequiredParameterException("$.controllerId: is missing but it is required");
 //            }
             List<TreeType> types = TreePermanent.getAllowedTypes(treeBody.getTypes(), getJocPermissions(accessToken), getControllerPermissions(

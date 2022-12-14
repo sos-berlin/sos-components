@@ -353,7 +353,7 @@ public class EventService {
             eventM.setLevel(getNotificationType(evt.getLevel()));
             eventM.setSubCategory(evt.getSection());
             eventM.setCategory(evt.getCategory());
-            eventM.setCaller(evt.getCaller());
+            eventM.setRequest(evt.getRequest());
             eventM.setTimestamp(evt.getDate());
             eventM.setMessage(evt.getMessage());
             addEventM(eventM);

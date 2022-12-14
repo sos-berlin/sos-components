@@ -46,7 +46,7 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
     
             return postLog(accessToken, jocLog);
         } catch (Exception e) {
-            ProblemHelper.postExceptionEventIfExist(API_CALL, Either.left(e), accessToken, getJocError(), null);
+            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, getJocError(), null);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }

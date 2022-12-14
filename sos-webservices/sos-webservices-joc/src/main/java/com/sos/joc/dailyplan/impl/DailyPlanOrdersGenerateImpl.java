@@ -113,7 +113,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(runner, controllerId, scheduleFolders, scheduleSingles, workflowFolders,
                     workflowSingles, permittedFolders, checkedFolders);
 
-            Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(IMPL_PATH, StartupMode.manual, controllerId,
+            Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId,
                     dailyPlanSchedules, in.getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken);
             JocClusterServiceLogger.clearAllLoggers();
 
@@ -124,7 +124,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             }
 
             OrdersHelper.storeAuditLogDetails(auditLogDetails, auditLog.getId()).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(
-                    IMPL_PATH, either, accessToken, getJocError(), null));
+                    either, accessToken, getJocError(), null));
 
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 

@@ -182,15 +182,14 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
         positions.forEach(l -> m.put(l, stop));
         JControllerCommand command = JControllerCommand.controlWorkflow(workflow.id(), m);
         LOGGER.debug("send command: " + command.toJson());
-        ControllerApi.of(controllerId).executeCommand(command).thenAccept(either -> thenAcceptHandler(API_CALL + action.name().toLowerCase(), either,
-                controllerId, workflow, dbAuditLog));
+        ControllerApi.of(controllerId).executeCommand(command).thenAccept(either -> thenAcceptHandler(either, controllerId, workflow, dbAuditLog));
     }
 
-    private void thenAcceptHandler(String apiCall, Either<Problem, Response> either, String controllerId, JWorkflow workflow, DBItemJocAuditLog dbAuditLog) {
-        ProblemHelper.postProblemEventIfExist(apiCall, either, getAccessToken(), getJocError(), controllerId);
+    private void thenAcceptHandler(Either<Problem, Response> either, String controllerId, JWorkflow workflow, DBItemJocAuditLog dbAuditLog) {
+        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
         if (either.isRight()) {
             WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(workflow.id().path(), dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
-                    .postExceptionEventIfExist(apiCall, either2, getAccessToken(), getJocError(), controllerId));
+                    .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
         }
     }
 

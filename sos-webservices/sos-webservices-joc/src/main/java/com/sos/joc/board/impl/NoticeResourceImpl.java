@@ -87,7 +87,7 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
         switch (action) {
         case DELETE:
             controllerApi.executeCommand(JControllerCommand.apply(new ControllerCommand.DeleteNotice(board, notice))).thenAccept(e -> ProblemHelper
-                    .postProblemEventIfExist(API_CALL + action.name().toLowerCase(), e, accessToken, getJocError(), controllerId));
+                    .postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             break;
 
         case POST:
@@ -100,8 +100,8 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
                     endOfLife = Optional.of(endOfLifeInstant);
                 }
             }
-            controllerApi.postNotice(board, notice, endOfLife).thenAccept(e -> ProblemHelper.postProblemEventIfExist(API_CALL + action.name()
-                    .toLowerCase(), e, accessToken, getJocError(), controllerId));
+            controllerApi.postNotice(board, notice, endOfLife).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(),
+                    controllerId));
             break;
         }
 

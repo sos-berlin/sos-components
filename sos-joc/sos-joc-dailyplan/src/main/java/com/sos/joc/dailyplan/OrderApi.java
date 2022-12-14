@@ -89,7 +89,7 @@ public class OrderApi {
                 endPositions);
     }
 
-    public static Set<PlannedOrder> addOrdersToController(String apiCall, StartupMode startupMode, String controllerId, String dailyPlanDate,
+    public static Set<PlannedOrder> addOrdersToController(StartupMode startupMode, String controllerId, String dailyPlanDate,
             Set<PlannedOrder> orders, List<DBItemDailyPlanHistory> items, JocError jocError, String accessToken)
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException, ExecutionException {
@@ -148,7 +148,7 @@ public class OrderApi {
                         session.close();
                         session = null;
 
-                        controllerApi.deleteOrdersWhenTerminated(set).thenAccept(e -> ProblemHelper.postProblemEventIfExist(apiCall, e, accessToken, jocError,
+                        controllerApi.deleteOrdersWhenTerminated(set).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, jocError,
                                 controllerId));
 
                         Instant end = Instant.now();
@@ -158,7 +158,7 @@ public class OrderApi {
                     } catch (Exception e) {
                         // LOGGER.error(String.format("[%s][%s][%s]%s %s", startupMode, method, controllerId, logDailyPlanDate, e.toString()), e);
                         Globals.rollback(session);
-                        ProblemHelper.postExceptionEventIfExist(apiCall, Either.left(e), accessToken, jocError, controllerId);
+                        ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
                     } finally {
                         Globals.disconnect(session);
                     }
@@ -184,7 +184,7 @@ public class OrderApi {
                         LOGGER.info(String.format("[%s][%s][%s]%s[onError][rollback  submitted=false][updated history=%s(%s)]%s", startupMode, method,
                                 controllerId, logDailyPlanDate, updateHistory, SOSDate.getDuration(start, end), msg));
 
-                        ProblemHelper.postProblemEventIfExist(apiCall, either, accessToken, jocError, controllerId);
+                        ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
                     } catch (Throwable e) {
                         LOGGER.error(String.format("[%s][%s][%s]%s %s", startupMode, method, controllerId, logDailyPlanDate, e.toString()), e);
                         Globals.rollback(session);
