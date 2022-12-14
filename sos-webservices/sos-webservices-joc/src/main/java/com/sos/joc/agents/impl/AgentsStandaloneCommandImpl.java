@@ -109,7 +109,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
 
             if (!agentRefs.isEmpty()) {
                 proxy.api().updateItems(Flux.fromIterable(agentRefs)).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(API_CALL_REVOKE, e, getAccessToken(), getJocError(), null);
+                    ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
                         try {
@@ -122,7 +122,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, updateAgentIds));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(API_CALL_REVOKE, Either.left(e1), accessToken, getJocError(), null);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
                         } finally {
                             Globals.disconnect(connection1);
                         }
@@ -201,7 +201,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
             if (!unknownAgents.isEmpty()) {
                 boolean isBulk = agentParameter.getAgentIds().stream().distinct().count() > 1L;
                 if (isBulk) {
-                    ProblemHelper.postExceptionEventAsHintIfExist(apiCall, Either.left(new ControllerObjectNotExistException("Agents " + unknownAgents
+                    ProblemHelper.postExceptionEventAsHintIfExist(Either.left(new ControllerObjectNotExistException("Agents " + unknownAgents
                             .toString() + "not exist or don't have an implicit subagent.")), accessToken, getJocError(), null);
                 } else {
                     throw new ControllerObjectNotExistException("Agents " + unknownAgents.toString()
@@ -215,7 +215,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
                                 JUpdateItemOperation::addOrChangeSimple);
 
                 proxy.api().updateItems(Flux.fromStream(subAgents)).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(apiCall, e, accessToken, getJocError(), null);
+                    ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
                         try {
@@ -228,7 +228,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId));
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(apiCall, Either.left(e1), accessToken, getJocError(), null);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
                         } finally {
                             Globals.disconnect(connection1);
                         }

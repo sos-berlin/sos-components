@@ -24,7 +24,7 @@ public class DailyPlanCalendarImpl extends JOCOrderResourceImpl implements IDail
             if (response != null) {
                 return response;
             }
-            DailyPlanCalendar.getInstance().updateDailyPlanCalendar(IMPL_PATH, null, accessToken, getJocError());
+            DailyPlanCalendar.getInstance().updateDailyPlanCalendar(null, accessToken, getJocError());
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             
         } catch (JocException e) {

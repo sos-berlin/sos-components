@@ -262,7 +262,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                         getJocError());
             }
             if (updateControllerCalendar) {
-                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(API_CALL_SAVE, configuration.getControllerId(), accessToken, getJocError());
+                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
             }
 
             if (configuration.getConfigurationType() != ConfigurationType.SETTING && configuration.getConfigurationType() != ConfigurationType.CUSTOMIZATION && configuration.getConfigurationType() != ConfigurationType.PROFILE ) {

@@ -75,7 +75,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             }
 
             ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(new ClusterSwitchOver()))
-                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(API_CALL_SWITCHOVER, e, getAccessToken(), getJocError(), controllerId));
+                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -103,7 +103,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             storeAuditLog(urlParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_APPOINT_NODES);
-            appointNodes(API_CALL_APPOINT_NODES, controllerId, new InventoryAgentInstancesDBLayer(connection), accessToken, getJocError());
+            appointNodes(controllerId, new InventoryAgentInstancesDBLayer(connection), accessToken, getJocError());
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -116,7 +116,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
         }
     }
     
-    public static void appointNodes(String apiCall, String controllerId, InventoryAgentInstancesDBLayer dbLayer, String accessToken, JocError jocError)
+    public static void appointNodes(String controllerId, InventoryAgentInstancesDBLayer dbLayer, String accessToken, JocError jocError)
             throws DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             ControllerConnectionRefusedException, JsonProcessingException, JocBadRequestException {
         // ask for cluster
@@ -131,7 +131,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             idToUri.put(inst.getIsPrimary() ? activeId : NodeId.of("Backup"), Uri.of(inst.getClusterUri()));
         }
         ControllerApi.of(controllerId).clusterAppointNodes(idToUri, activeId, Proxies.getClusterWatchers(controllerId, dbLayer)).thenAccept(
-                e -> ProblemHelper.postProblemEventIfExist(apiCall, e, accessToken, jocError, null));
+                e -> ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, null));
     }
 
 }

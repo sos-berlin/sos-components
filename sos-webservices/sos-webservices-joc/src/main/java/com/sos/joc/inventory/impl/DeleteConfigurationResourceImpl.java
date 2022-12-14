@@ -173,7 +173,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             if (allDeployments != null && !allDeployments.isEmpty()) {
                 String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
                         .getConfigurationGlobalsJoc()) : getAccount();
-                DeleteDeployments.delete(IMPL_PATH_DELETE, allDeployments, deployDbLayer, account, accessToken, getJocError(), dbAuditLog.getId(), true);
+                DeleteDeployments.delete(allDeployments, deployDbLayer, account, accessToken, getJocError(), dbAuditLog.getId(), true);
             }
             Globals.commit(session);
             // post events

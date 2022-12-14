@@ -90,6 +90,13 @@ public class JocError extends Err{
         return apiCall;
     }
     
+    @JsonIgnore
+    public static JocError createWithApiCall(String apiCall) {
+        JocError je = new JocError();
+        je.setApiCall(apiCall);
+        return je;
+    }
+    
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();

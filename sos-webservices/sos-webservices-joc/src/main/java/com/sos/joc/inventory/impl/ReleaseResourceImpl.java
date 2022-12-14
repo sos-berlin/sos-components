@@ -369,8 +369,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                     + " order variables]release of multiple workflows with order variables is not allowed");
                         }
                     } catch (Throwable e) {
-                        errors.add(new BulkError(LOGGER).get(new JocReleaseException(ConfigurationType.SCHEDULE, item.getPath(), e), new JocError(
-                                workflowMsg + e.toString()), item.getPath()));
+                        errors.add(new BulkError(LOGGER).get(new JocReleaseException(ConfigurationType.SCHEDULE, item.getPath(), e), getJocError(),
+                                item.getPath()));
                     }
                 }
             }

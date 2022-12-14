@@ -129,7 +129,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                     try {
                         currentstate = Proxy.of(in.getControllerId()).currentState();
                     } catch (Exception e) {
-                        ProblemHelper.postExceptionEventIfExist(IMPL_PATH, Either.left(e), null, getJocError(), null);
+                        ProblemHelper.postExceptionEventIfExist(Either.left(e), null, getJocError(), null);
                     }
                     item.setSyncState(SyncStateHelper.getState(currentstate, config.getId(), type, deployedDbLayer.getDeployedName(in
                             .getControllerId(), config.getId(), config.getType())));

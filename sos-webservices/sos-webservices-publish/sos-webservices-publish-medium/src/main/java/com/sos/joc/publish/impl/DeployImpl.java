@@ -302,7 +302,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (foldersToDelete != null) {
                 folders = foldersToDelete.stream().map(item -> item.getConfiguration()).collect(Collectors.toList());
             }
-            DeleteDeployments.deleteConfigurations(API_CALL, dbLayer, folders, invConfigurationsToDelete, commitIdForDeleteFromFolder, getAccessToken(), 
+            DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, commitIdForDeleteFromFolder, getAccessToken(), 
                     getJocError(), dbAuditlog.getId(), withoutFolderDeletion);
             // loop 2: send commands to controllers
             for (String controllerId : allowedControllerIds) {
@@ -311,14 +311,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // call updateRepo command via Proxy of given controllers
                     final List<DBItemDeploymentHistory> toDelete = filteredDepHistoryItemsToDelete;
                     UpdateItemUtils.updateItemsDelete(commitIdForDelete, toDelete, controllerId).thenAccept(either -> {
-                        DeleteDeployments.processAfterDelete(API_CALL, either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
+                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
                     });
                 }
                 // process folder to Delete
                 if (filteredItemsFromFolderToDelete != null && !filteredItemsFromFolderToDelete.isEmpty()) {
                     UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId)
                         .thenAccept(either -> {
-                            DeleteDeployments.processAfterDelete(API_CALL, either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
+                            DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
                         }); 
                 } 
             }

@@ -7,13 +7,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class MonitoringGuiEvent extends MonitoringEvent {
 
-    public MonitoringGuiEvent(Integer type, String category, String section, String caller, long epochMillis, String messsage) {
+    public MonitoringGuiEvent(Integer type, String category, String section, String request, long epochMillis, String messsage) {
         super(MonitoringGuiEvent.class.getSimpleName(), null, null);
         putVariable("level", type);
         putVariable("category", category);
         putVariable("epochMillis", epochMillis);
         putVariable("section", section);
-        putVariable("caller", caller);
+        putVariable("request", request);
         putVariable("messsage", messsage);
     }
 
@@ -33,8 +33,8 @@ public class MonitoringGuiEvent extends MonitoringEvent {
     }
     
     @JsonIgnore
-    public String getCaller() {
-        return (String) getVariables().get("caller");
+    public String getRequest() {
+        return (String) getVariables().get("request");
     }
     
     @JsonIgnore
