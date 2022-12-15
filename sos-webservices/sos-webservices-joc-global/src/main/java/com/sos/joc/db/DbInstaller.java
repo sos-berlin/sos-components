@@ -172,14 +172,16 @@ public class DbInstaller {
                 return true;
             }
             DBItemJocVariable item = session.get(DBItemJocVariable.class, "version");
-            String version = item.getTextValue();
-            if (version != null) {
-                LOGGER.info("Version in database: " + version);
-                int compare = Globals.curVersionCompareWith(version);
-                if (compare < 0) {
-                    update = false;
-                } else if (compare == 0 && !version.contains("-SNAPSHOT")) {
-                    update = false;
+            if (item != null) {
+                String version = item.getTextValue();
+                if (version != null) {
+                    LOGGER.info("Version in database: " + version);
+                    int compare = Globals.curVersionCompareWith(version);
+                    if (compare < 0) {
+                        update = false;
+                    } else if (compare == 0 && !version.contains("-SNAPSHOT")) {
+                        update = false;
+                    }
                 }
             }
         } catch (Exception e) {
