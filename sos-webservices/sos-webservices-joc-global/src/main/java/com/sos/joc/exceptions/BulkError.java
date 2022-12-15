@@ -71,7 +71,7 @@ public class BulkError extends Err419 {
             //AUDIT_LOGGER.error(errorMsg);
         }
         printMetaInfo(jocError);
-        if (jocError.getApiCall() == null) {
+        if (jocError == null || jocError.getApiCall() == null) {
             logger.error(e.getMessage(), e);
         } else {
             logger.error(MarkerFactory.getMarker(jocError.getApiCall()), e.getMessage(), e);
@@ -79,10 +79,12 @@ public class BulkError extends Err419 {
     }
     
     private void printMetaInfo(JocError jocError) {
-        String metaInfo = jocError.printMetaInfo();
-        if (!metaInfo.isEmpty()) {
-            logger.info(metaInfo);
-            jocError.getMetaInfo().clear();
+        if (jocError != null) {
+            String metaInfo = jocError.printMetaInfo();
+            if (!metaInfo.isEmpty()) {
+                logger.info(metaInfo);
+                jocError.getMetaInfo().clear();
+            }
         }
     }
 }

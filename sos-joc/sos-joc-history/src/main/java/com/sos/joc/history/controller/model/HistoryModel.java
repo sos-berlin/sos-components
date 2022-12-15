@@ -276,12 +276,12 @@ public class HistoryModel {
                 }
                 if (storedEventId >= eventId) {
                     if (entry.getType().equals(HistoryEventType.EventWithProblem)) { // EventWithProblem can sets eventId=-1L
-                        LOGGER.warn(String.format("[%s][%s][%s][skip]stored eventId=%s > current eventId=%s %s", identifier, method, entry.getType(),
+                        LOGGER.info(String.format("[%s][%s][%s][skip]stored eventId=%s > current eventId=%s %s", identifier, method, entry.getType(),
                                 storedEventId, eventId, SOSString.toString(entry)));
 
                         FatEventWithProblem ep = (FatEventWithProblem) entry;
-                        LOGGER.warn(String.format("[entry]%s", SOSString.toString(ep.getEntry())));
-                        LOGGER.error(ep.getError().toString(), ep.getError());
+                        LOGGER.info(String.format("[FatEventWithProblem][entry][%s]problem=%s", SOSString.toString(ep.getEntry()), ep
+                                .getError() == null ? "" : ep.getError().toString()));
                     } else {
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format("[%s][%s][%s][skip]stored eventId=%s > current eventId=%s %s", identifier, method, entry
@@ -489,8 +489,8 @@ public class HistoryModel {
                     case EventWithProblem:
                         try {
                             FatEventWithProblem ep = (FatEventWithProblem) entry;
-                            LOGGER.error(String.format("[%s][%s][%s]%s", method, entry.getType(), SOSString.toString(ep.getEntry()), ep.getError()
-                                    .toString()), ep.getError());
+                            LOGGER.info(String.format("[%s][%s][%s]%s", method, entry.getType(), SOSString.toString(ep.getEntry()), ep.getError()
+                                    .toString()));
                         } catch (Throwable ep) {
                         }
                         break;
@@ -700,8 +700,7 @@ public class HistoryModel {
             if (cve == null) {
                 throw e;
             }
-            LOGGER.warn(String.format("[%s][ConstraintViolation][%s][eventId=%s]%s", identifier, event.getType(), event.getEventId(), e.toString()),
-                    e);
+            LOGGER.info(String.format("[%s][ConstraintViolation][%s][eventId=%s]%s", identifier, event.getType(), event.getEventId(), e.toString()));
         } finally {
             if (controllerTimezone == null) {
                 controllerTimezone = event.getTimezone();
@@ -764,7 +763,7 @@ public class HistoryModel {
             if (controllerTimezone == null) {
                 // TODO read from controller api, and instances
                 // throw new Exception(String.format("controller not found: %s", controllerConfiguration.getCurrent().getId()));
-                LOGGER.warn(String.format("[%s][%s]controller not found in the history. set controller timezone=UTC", identifier,
+                LOGGER.info(String.format("[%s][%s]controller not found in the history. set controller timezone=UTC", identifier,
                         controllerConfiguration.getCurrent().getId()));
                 controllerTimezone = "UTC";
             }
@@ -833,8 +832,7 @@ public class HistoryModel {
             if (cve == null) {
                 throw e;
             }
-            LOGGER.warn(String.format("[%s][ConstraintViolation][%s][eventId=%s]%s", identifier, event.getType(), event.getEventId(), e.toString()),
-                    e);
+            LOGGER.info(String.format("[%s][ConstraintViolation][%s][eventId=%s]%s", identifier, event.getType(), event.getEventId(), e.toString()));
             cacheHandler.addAgentByReadyEventId(dbLayer, event.getId(), event.getEventId());
         }
     }
@@ -971,8 +969,8 @@ public class HistoryModel {
             if (cve == null) {
                 throw e;
             }
-            LOGGER.warn(String.format("[%s][ConstraintViolation][%s][eventId=%s][%s]%s", identifier, eo.getType(), eo.getEventId(), eo.getOrderId(), e
-                    .toString()), e);
+            LOGGER.info(String.format("[%s][ConstraintViolation][%s][eventId=%s][%s]%s", identifier, eo.getType(), eo.getEventId(), eo.getOrderId(), e
+                    .toString()));
 
             StringBuilder sb = new StringBuilder(controllerConfiguration.getCurrent().getId());
             sb.append("-").append(eo.getEventId());
@@ -1204,7 +1202,7 @@ public class HistoryModel {
                 }
                 DBItemHistoryOrderStep item = dbLayer.getOrderStep(co.getCurrentHistoryOrderStepId());
                 if (item == null) {
-                    LOGGER.warn(String.format("[%s][%s][currentStep not found]id=%s", identifier, co.getOrderId(), co
+                    LOGGER.info(String.format("[%s][%s][currentStep not found]id=%s", identifier, co.getOrderId(), co
                             .getCurrentHistoryOrderStepId()));
                 } else {
                     CachedAgent ca = cacheHandler.getAgent(dbLayer, item.getAgentId(), controllerTimezone);
@@ -1492,8 +1490,8 @@ public class HistoryModel {
             if (cve == null) {
                 throw e;
             }
-            LOGGER.warn(String.format("[%s][ConstraintViolation][%s][eventId=%s][%s][%s]%s", identifier, eo.getType(), eo.getEventId(), eo
-                    .getOrderId(), forkOrder.getBranchIdOrName(), e.toString()), e);
+            LOGGER.info(String.format("[%s][ConstraintViolation][%s][eventId=%s][%s][%s]%s", identifier, eo.getType(), eo.getEventId(), eo
+                    .getOrderId(), forkOrder.getBranchIdOrName(), e.toString()));
 
             StringBuilder sb = new StringBuilder(controllerConfiguration.getCurrent().getId());
             sb.append("-").append(eo.getEventId());
@@ -1614,8 +1612,8 @@ public class HistoryModel {
             if (cve == null) {
                 throw e;
             }
-            LOGGER.warn(String.format("[%s][ConstraintViolation][%s][eventId=%s][%s][%s]%s", identifier, eos.getType(), eos.getEventId(), eos
-                    .getOrderId(), eos.getPosition(), e.toString()), e);
+            LOGGER.info(String.format("[%s][ConstraintViolation][%s][eventId=%s][%s][%s]%s", identifier, eos.getType(), eos.getEventId(), eos
+                    .getOrderId(), eos.getPosition(), e.toString()));
 
             StringBuilder sb = new StringBuilder(controllerConfiguration.getCurrent().getId());
             sb.append("-").append(eos.getEventId());
@@ -1786,9 +1784,9 @@ public class HistoryModel {
                         postEventTaskLogFirstStderr(eventId, co, cos, job);
                     }
                 }
-            } catch (Exception e) {
-                LOGGER.warn(String.format("[%s][%s][warnOnOrderStepStderr][workflow=%s][orderId=%s][job=%s %s]%s", identifier, controllerConfiguration
-                        .getCurrent().getId(), co.getWorkflowPath(), co.getOrderId(), cos.getJobName(), SOSString.toString(cos), e.toString()), e);
+            } catch (Throwable e) {
+                LOGGER.info(String.format("[%s][%s][warnOnOrderStepStderr][workflow=%s][orderId=%s][job=%s %s]%s", identifier, controllerConfiguration
+                        .getCurrent().getId(), co.getWorkflowPath(), co.getOrderId(), cos.getJobName(), SOSString.toString(cos), e.toString()));
             } finally {
                 cos.setWarnOnStderr(false);
             }
@@ -1904,7 +1902,7 @@ public class HistoryModel {
         try {
             file = Files.write(file, result.toString().getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (Throwable e) {
-            LOGGER.warn(String.format("[moveOriginalLogFile][%s][truncate existing]%s", file, e.toString()), e);
+            LOGGER.info(String.format("[moveOriginalLogFile][%s][truncate existing]%s", file, e.toString()));
             return null;
         }
         return file;
@@ -2008,8 +2006,8 @@ public class HistoryModel {
                     try {
                         pn.setEndOfLife(getDateAsString(fpn.getEndOfLife(), controllerTimezone));
                     } catch (Throwable e) {
-                        LOGGER.warn(String.format("[createOrderLogEntry][OrderNoticePosted][boardName=%s][%s]%s", pn.getBoardName(), fpn
-                                .getEndOfLife(), e.toString()), e);
+                        LOGGER.info(String.format("[createOrderLogEntry][OrderNoticePosted][boardName=%s][%s]%s", pn.getBoardName(), fpn
+                                .getEndOfLife(), e.toString()));
                     }
                 }
                 ole.setPostNotice(pn);
@@ -2023,7 +2021,7 @@ public class HistoryModel {
                 r.setDelayedUntil(getDateAsString(le.getDelayedUntil(), controllerTimezone));
                 ole.setRetrying(r);
             } catch (Throwable e) {
-                LOGGER.warn(String.format("[createOrderLogEntry][OrderRetrying][delayedUntil=%s]%s", le.getDelayedUntil(), e.toString()), e);
+                LOGGER.info(String.format("[createOrderLogEntry][OrderRetrying][delayedUntil=%s]%s", le.getDelayedUntil(), e.toString()));
             }
         } else if (le.getCaught() != null) {
             ole.setCaught(le.getCaught());
@@ -2173,7 +2171,7 @@ public class HistoryModel {
                         cos.addLogSize(stdout.getBytes().length);
                     }
                 } catch (Throwable e) {
-                    LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, le.getEventType(), file, e.toString()), e);
+                    LOGGER.info(String.format("[%s][%s][%s]%s", identifier, le.getEventType(), file, e.toString()));
                 }
             } else {
                 if (cos.isLastStdEndsWithNewLine().booleanValue()) {
@@ -2257,7 +2255,7 @@ public class HistoryModel {
         try {
             write2file(file, content, newLine);
         } catch (NoSuchFileException e) {// e.g. folders deleted
-            LOGGER.warn(String.format("[%s][NoSuchFileException][%s][%s]create the parent directories if not exists and try again ...", identifier,
+            LOGGER.info(String.format("[%s][NoSuchFileException][%s][%s]create the parent directories if not exists and try again ...", identifier,
                     eventType, file));
             try {
                 Path parent = file.getParent();
