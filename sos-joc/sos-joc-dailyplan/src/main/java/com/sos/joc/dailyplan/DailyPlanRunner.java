@@ -99,7 +99,6 @@ public class DailyPlanRunner extends TimerTask {
     private Map<String, String> nonWorkingDays;
     private Map<String, Long> durations = null;
     private Set<String> createdPlans;
-    private JocError jocError = JocError.createWithApiCall(IDENTIFIER);
 
     private boolean firstStart = true;
 
@@ -201,7 +200,7 @@ public class DailyPlanRunner extends TimerTask {
                         String dailyPlanDate = SOSDate.getDateWithTimeZoneAsString(dailyPlanCalendar.getTime(), settings.getTimeZone());
                         List<DBItemDailyPlanSubmission> l = getSubmissionsForDate(controllerId, dailyPlanCalendar);
                         if ((l.size() == 0)) {
-                            generateDailyPlan(startupMode, controllerId, controllerSchedules, dailyPlanDate, false, jocError, "");
+                            generateDailyPlan(startupMode, controllerId, controllerSchedules, dailyPlanDate, false, null, "");
                         } else {
                             List<String> copy = l.stream().map(e -> {
                                 String d;
@@ -645,7 +644,7 @@ public class DailyPlanRunner extends TimerTask {
                 LOGGER.info(String.format("[%s][submitting][%s][%s][submission created=%s, id=%s]submit %s start ...", startupMode, controllerId,
                         date, SOSDate.getDateTimeAsString(item.getCreated()), item.getId(), c));
 
-                submitOrders(startupMode, controllerId, plannedOrders, submissionForDate, jocError, "");
+                submitOrders(startupMode, controllerId, plannedOrders, submissionForDate, null, "");
                 // not log end because asynchronous
                 // LOGGER.info(String.format("[submitting][%s][%s][submission=%s]submit end", controllerId, date, submissionForDate));
             }
