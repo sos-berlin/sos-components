@@ -75,20 +75,18 @@ public class SystemMonitoringModel {
 
     @Subscribe({ NotificationConfigurationReleased.class, NotificationConfigurationRemoved.class })
     public void handleMonitoringEvents(MonitoringEvent evt) {
-        if (Configuration.INSTANCE.exists()) {
-            MonitorService.setLogger();
-            LOGGER.info(String.format("[%s][configuration]%s", service.getIdentifier(), evt.getClass().getSimpleName()));
-            if (evt instanceof NotificationConfigurationRemoved) {
-                Configuration.INSTANCE.clear();
-            } else {
-                Configuration.INSTANCE.load(service.getIdentifier(), service.getJocConfig().getTitle(), service.getJocConfig().getUri());
-            }
+        MonitorService.setLogger();
+        LOGGER.info(String.format("[%s][configuration]%s", service.getIdentifier(), evt.getClass().getSimpleName()));
+        if (evt instanceof NotificationConfigurationRemoved) {
+            Configuration.INSTANCE.clear();
+        } else {
+            Configuration.INSTANCE.load(service.getIdentifier(), service.getJocConfig().getTitle(), service.getJocConfig().getUri());
         }
     }
 
     @Subscribe({ DeployHistoryJobResourceEvent.class })
     public void handleMonitoringEvents(DeployHistoryJobResourceEvent evt) {
-        if (Configuration.INSTANCE.exists() && evt.getName() != null) {
+        if (evt.getName() != null && Configuration.INSTANCE.getMailResources() != null) {
             MonitorService.setLogger();
             List<String> names = Configuration.INSTANCE.getMailResources().entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
             if (names.contains(evt.getName())) {
@@ -130,7 +128,7 @@ public class SystemMonitoringModel {
 
                 ToNotify toNotify = handleEvents();
                 if (toNotify != null) {
-                    tmpLog(toNotify);
+                    // tmpLog(toNotify);
                     notifier.notify(toNotify.notification, toNotify.events);
                 }
             }
@@ -221,12 +219,12 @@ public class SystemMonitoringModel {
         return true;
     }
 
+    @SuppressWarnings("unused")
     private void tmpLog(ToNotify toNotify) {
         LOGGER.info(String.format("[tmpLog][toNotify]events=%s", toNotify.events.size()));
         toNotify.events.forEach(e -> {
             LOGGER.info("    " + e);
         });
-        // LOGGER.info(String.format("[tmpLog][cached]allEvents=%s,lastSystemEvents=%s", allEvents.size(), lastNotifiedEvents.size()));
     }
 
     private class ToNotify {

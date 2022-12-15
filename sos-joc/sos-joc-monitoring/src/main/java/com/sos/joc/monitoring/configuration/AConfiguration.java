@@ -42,17 +42,16 @@ public abstract class AConfiguration {
     private static String JOC_URI;
     private static String JOC_REVERSE_PROXY_URI;
 
-    private SystemNotification systemNotification;
-
     private List<Notification> onError;
     private List<Notification> onWarning;
     private List<Notification> onSuccess;
     private Map<String, MailResource> mailResources;
 
-    private boolean exists;
+    private SystemNotification systemNotification;
+    private boolean hasNotifications;
 
     public void loadIfNotExists(String caller, String jocTitle, String jocUri) {
-        if (exists) {
+        if (hasNotifications || systemNotification != null) {
             if (LOGGER.isDebugEnabled()) {
                 MonitorService.setLogger();
                 LOGGER.debug(String.format("[%s][configuration]already loaded", caller));
@@ -63,7 +62,13 @@ public abstract class AConfiguration {
     }
 
     public void clear() {
-        init();
+        systemNotification = null;
+        hasNotifications = false;
+
+        onError = new ArrayList<>();
+        onWarning = new ArrayList<>();
+        onSuccess = new ArrayList<>();
+        mailResources = new HashMap<>();
     }
 
     public synchronized void load(String caller, String jocTitle, String jocUri) {
@@ -86,21 +91,18 @@ public abstract class AConfiguration {
                 }
                 setJocReverseProxyUri(Globals.getConfigurationGlobalsJoc().getJocReverseProxyUrl().getValue());
                 process(configXml);
-                if (exists) {
-                    if (systemNotification != null) {
-                        NotificationAppender.doNotify = true;
-                    }
-                    List<String> names = handleMailResources(dbLayer);
 
+                if (hasNotifications || systemNotification != null) {
+                    List<String> names = handleMailResources(dbLayer);
                     LOGGER.info(String.format("[%s][configuration][SystemNotification=%s][Notifications type %s=%s,%s=%s,%s=%s][JobResources=%s]",
                             caller, getSystemNotificationInfo(), NotificationType.ERROR.name(), onError.size(), NotificationType.WARNING.name(),
                             onWarning.size(), NotificationType.SUCCESS.name(), onSuccess.size(), String.join(",", names)));
                 } else {
                     LOGGER.info(String.format("[%s][configuration]exists=false", caller));
-                    NotificationAppender.doNotify = false;
                 }
                 run = false;
                 errorCount = 0;
+                NotificationAppender.doNotify = systemNotification != null;
             } catch (Exception e) {
                 errorCount++;
                 LOGGER.error(String.format("[%s][errorCount=%s]%s", caller, errorCount, e.toString()), e);
@@ -207,7 +209,7 @@ public abstract class AConfiguration {
     }
 
     protected void process(String xml) {
-        init();
+        clear();
 
         if (SOSString.isEmpty(xml)) {
             return;
@@ -215,7 +217,6 @@ public abstract class AConfiguration {
 
         try {
             Document doc = SOSXML.parse(xml);
-
             NodeList nl = SOSXML.newXPath().selectNodes(doc, "./Configurations/Notifications/Notification");
             if (nl != null) {
                 for (int i = 0; i < nl.getLength(); i++) {
@@ -230,7 +231,8 @@ public abstract class AConfiguration {
             }
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
-            exists = false;
+            hasNotifications = false;
+            systemNotification = null;
         }
     }
 
@@ -329,17 +331,8 @@ public abstract class AConfiguration {
         return sb.toString();
     }
 
-    private void init() {
-        systemNotification = null;
-        onError = new ArrayList<>();
-        onWarning = new ArrayList<>();
-        onSuccess = new ArrayList<>();
-        mailResources = new HashMap<>();
-        exists = false;
-    }
-
     private void add2type(Notification n) {
-        exists = true;
+        hasNotifications = true;
 
         for (NotificationType nt : n.getTypes()) {
             switch (nt) {
@@ -372,10 +365,6 @@ public abstract class AConfiguration {
         }
     }
 
-    public SystemNotification getSystemNotification() {
-        return systemNotification;
-    }
-
     public List<Notification> getOnError() {
         return onError;
     }
@@ -392,8 +381,12 @@ public abstract class AConfiguration {
         return mailResources;
     }
 
-    public boolean exists() {
-        return exists;
+    public boolean hasNotifications() {
+        return hasNotifications;
+    }
+
+    public SystemNotification getSystemNotification() {
+        return systemNotification;
     }
 
     public boolean hasOnError() {

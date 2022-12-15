@@ -72,7 +72,7 @@ public class HistoryNotifierModel {
     }
 
     protected void notify(ToNotify toNotifyPayloads, ToNotify toNotifyExtraStepsWarnings) {
-        if (!Configuration.INSTANCE.exists() || factory == null) {
+        if (!Configuration.INSTANCE.hasNotifications() || factory == null) {
             return;
         }
 
