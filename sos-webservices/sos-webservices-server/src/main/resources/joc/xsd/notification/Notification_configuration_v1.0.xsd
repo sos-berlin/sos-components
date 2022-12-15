@@ -141,8 +141,9 @@
       </xs:annotation>
         <xs:complexType>
 			      <xs:sequence>
-				        <xs:element ref="Notification" maxOccurs="unbounded"/>
-			      </xs:sequence>
+                <xs:element ref="SystemNotification" minOccurs="0" maxOccurs="1"/>
+			         <xs:element ref="Notification" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
     
@@ -200,6 +201,54 @@
                                 <xs:enumeration value="ERROR"/>
                                 <xs:enumeration value="WARNING"/>
                                 <xs:enumeration value="SUCCESS"/>
+                            </xs:restriction>                  
+                        </xs:simpleType>               
+                    </xs:list>
+                </xs:simpleType>
+			      </xs:attribute>
+			            
+		    </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="SystemNotification">
+		    <xs:annotation>
+         <xs:appinfo>
+                <Parent path="Configurations/Notifications/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>A notification is assigned a type which can be any one of <em>WARNING</em> or <em>ERROR</em>.</p>
+               <p>This allows notifications which are used, for example, in the event of database errors and warnings to be specified.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:sequence>
+			         <xs:element ref="NotificationMonitors" minOccurs="1" maxOccurs="1"/>
+            </xs:sequence>
+            
+            <xs:attribute name="type" default="ERROR WARNING">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Notification type.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+                <xs:simpleType>
+                    <xs:list>
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:enumeration value="ERROR"/>
+                                <xs:enumeration value="WARNING"/>
                             </xs:restriction>                  
                         </xs:simpleType>               
                     </xs:list>

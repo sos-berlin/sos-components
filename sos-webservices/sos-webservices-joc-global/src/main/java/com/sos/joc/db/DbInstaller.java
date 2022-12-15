@@ -73,7 +73,7 @@ public class DbInstaller {
                         throw new SOSHibernateConfigurationException("Unsupported dbms: " + dbms.name());
                     }
                     session = factory.openStatelessSession();
-
+                    
                     // if (missingAnyTable(sosClassList, session)) {
                     // create(session, dbms.name(), sqlsFolderParent);
                     // }
@@ -167,15 +167,21 @@ public class DbInstaller {
     private static boolean updateIsNecessary(SOSHibernateSession session) {
         boolean update = true;
         try {
+            // checks if table JOC_VARIABLES exists
+            if (!session.getDatabaseMetaData().getTables(null, null, DBLayer.TABLE_JOC_VARIABLES, new String[] {"TABLE"}).next()) {
+                return true;
+            }
             DBItemJocVariable item = session.get(DBItemJocVariable.class, "version");
-            String version = item.getTextValue();
-            if (version != null) {
-                LOGGER.info("Version in database: " + version);
-                int compare = Globals.curVersionCompareWith(version);
-                if (compare < 0) {
-                    update = false;
-                } else if (compare == 0 && !version.contains("-SNAPSHOT")) {
-                    update = false;
+            if (item != null) {
+                String version = item.getTextValue();
+                if (version != null) {
+                    LOGGER.info("Version in database: " + version);
+                    int compare = Globals.curVersionCompareWith(version);
+                    if (compare < 0) {
+                        update = false;
+                    } else if (compare == 0 && !version.contains("-SNAPSHOT")) {
+                        update = false;
+                    }
                 }
             }
         } catch (Exception e) {
