@@ -73,8 +73,11 @@ public abstract class DBItem implements Serializable {
 
     @Transient
     public static String normalizeValue(String val, int maxLen) {
-        if (val != null && val.length() > maxLen) {
-            val = val.substring(0, maxLen);
+        if (val != null) {
+            val = val.replaceAll("💥\\s*", ""); //Pflaster for MySQL, if Outcome contains 💥
+            if (val.length() > maxLen) {
+                val = val.substring(0, maxLen);
+            }
         }
         return val;
     }
