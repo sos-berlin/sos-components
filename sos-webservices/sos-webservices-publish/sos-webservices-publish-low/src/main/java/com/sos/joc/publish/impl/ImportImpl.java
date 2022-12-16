@@ -15,8 +15,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +50,8 @@ import com.sos.joc.publish.mapper.UpdateableConfigurationObject;
 import com.sos.joc.publish.resource.IImportResource;
 import com.sos.joc.publish.util.ImportUtils;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("inventory")
 public class ImportImpl extends JOCResourceImpl implements IImportResource {
@@ -247,8 +247,22 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             }
             ImportUtils.validateAndUpdate(storedConfigurations, agentNames, hibernateSession);
             ImportUtils.revalidateInvalidInvConfigurations(hibernateSession);
+            // post events
             storedConfigurations.stream().map(DBItemInventoryConfiguration::getPath).map(path -> Paths.get(path).getParent()).distinct()
                 .forEach(path -> JocInventory.postEvent(path.toString().replace('\\', '/')));
+            // post folder events
+            if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                storedConfigurations.stream().map(DBItemInventoryConfiguration::getFolder)
+                .map(path -> Paths.get(path)).distinct()
+                .peek(targetParentFolder -> JocInventory.postFolderEvent(targetParentFolder.toString().replace('\\', '/')))
+                .map(parent -> parent.toString().replace('\\', '/').replaceFirst(filter.getTargetFolder(), ""))
+                .forEach(sourceFolder -> JocInventory.postFolderEvent(sourceFolder));
+            } else {
+                storedConfigurations.stream().map(DBItemInventoryConfiguration::getFolder)
+                .map(path -> Paths.get(path)).distinct()
+                .forEach(targetParentFolder -> JocInventory.postFolderEvent(targetParentFolder.toString().replace('\\', '/')));
+            }
+            
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
