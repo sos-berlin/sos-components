@@ -245,9 +245,23 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 }
             }
             ImportUtils.validateAndUpdate(storedConfigurations, agentNames, hibernateSession);
-                ImportUtils.revalidateInvalidInvConfigurations(hibernateSession);
+            ImportUtils.revalidateInvalidInvConfigurations(hibernateSession);
+            // post events
             storedConfigurations.stream().map(DBItemInventoryConfiguration::getPath).map(path -> Paths.get(path).getParent()).distinct()
                 .forEach(path -> JocInventory.postEvent(path.toString().replace('\\', '/')));
+            // post folder events
+            if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                storedConfigurations.stream().map(DBItemInventoryConfiguration::getFolder)
+                .map(path -> Paths.get(path)).distinct()
+                .peek(targetParentFolder -> JocInventory.postFolderEvent(targetParentFolder.toString().replace('\\', '/')))
+                .map(parent -> parent.toString().replace('\\', '/').replaceFirst(filter.getTargetFolder(), ""))
+                .forEach(sourceFolder -> JocInventory.postFolderEvent(sourceFolder));
+            } else {
+                storedConfigurations.stream().map(DBItemInventoryConfiguration::getFolder)
+                .map(path -> Paths.get(path)).distinct()
+                .forEach(targetParentFolder -> JocInventory.postFolderEvent(targetParentFolder.toString().replace('\\', '/')));
+            }
+            
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
