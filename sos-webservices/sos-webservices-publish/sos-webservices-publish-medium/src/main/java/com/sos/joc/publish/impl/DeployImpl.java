@@ -259,8 +259,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
                             updateableAgentNamesFileOrderSources, dbAuditlog.getId());
                     // call updateRepo command via ControllerApi for given controller
-                    StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, new ArrayList<>(renamedOriginalHistoryEntries), account, commitId,
-                            controllerId, getAccessToken(), getJocError(), API_CALL);
+                    StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
+                            getAccessToken(), getJocError(), API_CALL);
                 }
             }
             // Delete from all known controllers
