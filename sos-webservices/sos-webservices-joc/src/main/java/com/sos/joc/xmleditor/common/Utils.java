@@ -9,6 +9,7 @@ import javax.json.JsonArray;
 import javax.json.JsonReader;
 
 import com.sos.commons.util.SOSSerializer;
+import com.sos.commons.util.SOSString;
 
 public class Utils {
 
@@ -38,6 +39,9 @@ public class Utils {
     }
 
     public static String serialize(String content) throws Exception {
+        if (SOSString.isEmpty(content)) {
+            return null;
+        }
         return new SOSSerializer<String>().serializeCompressed(content);
     }
 
