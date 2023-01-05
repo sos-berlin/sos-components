@@ -17,8 +17,6 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.sos.joc.Globals;
-
 public class SOSLocker {
 
     private static final String KEY = "APLSOSSECRET";
