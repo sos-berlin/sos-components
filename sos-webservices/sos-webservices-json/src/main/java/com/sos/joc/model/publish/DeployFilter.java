@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerIds",
     "store",
     "delete",
+    "addOrdersDateFrom",
     "auditLog"
 })
 public class DeployFilter {
@@ -45,6 +46,14 @@ public class DeployFilter {
      */
     @JsonProperty("delete")
     private DeployDeleteFilter delete;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("addOrdersDateFrom")
+    private String addOrdersDateFrom;
     /**
      * auditParams
      * <p>
@@ -109,6 +118,28 @@ public class DeployFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("addOrdersDateFrom")
+    public String getAddOrdersDateFrom() {
+        return addOrdersDateFrom;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("addOrdersDateFrom")
+    public void setAddOrdersDateFrom(String addOrdersDateFrom) {
+        this.addOrdersDateFrom = addOrdersDateFrom;
+    }
+
+    /**
      * auditParams
      * <p>
      * 
@@ -132,12 +163,12 @@ public class DeployFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerIds", controllerIds).append("store", store).append("delete", delete).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerIds", controllerIds).append("store", store).append("delete", delete).append("addOrdersDateFrom", addOrdersDateFrom).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(store).append(auditLog).append(delete).append(controllerIds).toHashCode();
+        return new HashCodeBuilder().append(store).append(auditLog).append(delete).append(controllerIds).append(addOrdersDateFrom).toHashCode();
     }
 
     @Override
@@ -149,7 +180,7 @@ public class DeployFilter {
             return false;
         }
         DeployFilter rhs = ((DeployFilter) other);
-        return new EqualsBuilder().append(store, rhs.store).append(auditLog, rhs.auditLog).append(delete, rhs.delete).append(controllerIds, rhs.controllerIds).isEquals();
+        return new EqualsBuilder().append(store, rhs.store).append(auditLog, rhs.auditLog).append(delete, rhs.delete).append(controllerIds, rhs.controllerIds).append(addOrdersDateFrom, rhs.addOrdersDateFrom).isEquals();
     }
 
 }

@@ -20,16 +20,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthAccessToken;
 import com.sos.auth.classes.SOSAuthHelper;
-import com.sos.auth.classes.SOSPasswordHasher;
 import com.sos.auth.ldap.classes.SOSLdapGroupRolesMapping;
 import com.sos.auth.ldap.classes.SOSLdapWebserviceCredentials;
-import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
-import com.sos.joc.db.authentication.DBItemIamAccount;
-import com.sos.joc.db.security.IamAccountDBLayer;
-import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSLdapHandler {

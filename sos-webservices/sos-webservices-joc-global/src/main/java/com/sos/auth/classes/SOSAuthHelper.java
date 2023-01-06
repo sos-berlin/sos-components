@@ -22,8 +22,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.client.ClientCertificateHandler;
-import com.sos.auth.ldap.SOSLdapHandler;
-import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;

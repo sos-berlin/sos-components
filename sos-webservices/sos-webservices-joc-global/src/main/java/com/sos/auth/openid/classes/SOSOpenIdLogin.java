@@ -1,9 +1,6 @@
 package com.sos.auth.openid.classes;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.KeyStore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +12,6 @@ import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.commons.exception.SOSException;
-import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.exceptions.JocException;
 
 public class SOSOpenIdLogin implements ISOSLogin {

@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
-import org.hibernate.transform.Transformers;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -508,7 +507,7 @@ public class IamAccountDBLayer {
     }
 
     public Long getIamCountAccountList(IamAccountFilter filter) throws SOSHibernateException {
-        Query query = sosHibernateSession.createQuery("select count(*) from " + DBItemIamAccount + " a " + getWhere(filter));
+        Query<Long> query = sosHibernateSession.createQuery("select count(*) from " + DBItemIamAccount + " a " + getWhere(filter));
 
         bindParameters(filter, query);
         Long count = (Long) query.uniqueResult();
