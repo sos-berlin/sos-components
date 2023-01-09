@@ -19,10 +19,16 @@
 			<artifactId>sos-commons-credentialstore</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+<!-- replaced by com.sun.mail:javax.mail:1.6.2
 		<dependency>
 			<groupId>javax.mail</groupId>
 			<artifactId>mail</artifactId>
 		</dependency>
+-->
+    <dependency>
+      <groupId>com.sun.mail</groupId>
+      <artifactId>javax.mail</artifactId>
+    </dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
