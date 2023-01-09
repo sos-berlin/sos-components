@@ -70,7 +70,8 @@
     <postgresql.version>42.4.3</postgresql.version>
     <classmate.version>1.3.0</classmate.version>
     <sos.ojdbc8.version>18.3.0.0</sos.ojdbc8.version>
-    <javax.mail.version>1.4.7</javax.mail.version>
+    <!--javax.mail.version>1.4.7</javax.mail.version-->
+    <com.sun.javax.mail.version>1.6.2</com.sun.javax.mail.version>
     <jersey.glassfish.version>3.0.8</jersey.glassfish.version>
     <io.vavr.version>0.10.3</io.vavr.version>
     <txtmark.version>0.13</txtmark.version>
@@ -555,10 +556,17 @@
     	<artifactId>jakarta.ws.rs-api</artifactId>
         <version>${jakarta.ws.rs-api.version}</version>
       </dependency>
+<!-- replaced by com.sun.mail:javax.mail:1.6.2
       <dependency>
         <groupId>javax.mail</groupId>
         <artifactId>mail</artifactId>
         <version>${javax.mail.version}</version>
+      </dependency>
+-->
+      <dependency>
+        <groupId>com.sun.mail</groupId>
+        <artifactId>javax.mail</artifactId>
+        <version>${com.sun.javax.mail.version}</version>
       </dependency>
       <dependency>
         <groupId>io.vavr</groupId>
