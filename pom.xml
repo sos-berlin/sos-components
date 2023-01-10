@@ -119,6 +119,34 @@
           <showWarnings>true</showWarnings>
         </configuration>
       </plugin>
+        <plugin>
+          <groupId>org.cyclonedx</groupId>
+          <artifactId>cyclonedx-maven-plugin</artifactId>
+          <version>2.7.1</version>
+          <inherited>false</inherited>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>makeAggregateBom</goal>
+              </goals>
+            </execution>
+        </executions>
+        <configuration>
+          <projectType>library</projectType>
+          <schemaVersion>1.4</schemaVersion>
+          <includeBomSerialNumber>true</includeBomSerialNumber>
+          <includeCompileScope>true</includeCompileScope>
+          <includeProvidedScope>true</includeProvidedScope>
+          <includeRuntimeScope>true</includeRuntimeScope>
+          <includeSystemScope>true</includeSystemScope>
+          <includeTestScope>false</includeTestScope>
+          <includeLicenseText>false</includeLicenseText>
+          <outputReactorProjects>false</outputReactorProjects>
+          <outputFormat>json</outputFormat>
+          <outputName>sos-components-sbom</outputName>
+        </configuration>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -779,7 +807,6 @@
         <artifactId>java-jwt</artifactId>
         <version>${jwt.version}</version>
       </dependency>
-      
     </dependencies>
   </dependencyManagement>
   <repositories>
