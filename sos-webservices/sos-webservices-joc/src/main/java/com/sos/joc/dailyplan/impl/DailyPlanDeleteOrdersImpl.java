@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -54,25 +55,10 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilterDef.class);
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);
 
-            boolean noControllerAvailable = Proxies.getControllerDbInstances().isEmpty();
-            boolean permitted = true;
-            Set<String> allowedControllers = Collections.emptySet();
-            if (!noControllerAvailable) {
-                Stream<String> controllerIds = Proxies.getControllerDbInstances().keySet().stream();
-                if (in.getControllerIds() != null && !in.getControllerIds().isEmpty()) {
-                    controllerIds = controllerIds.filter(availableController -> in.getControllerIds().contains(availableController));
-                }
-                allowedControllers = controllerIds.filter(availableController -> getControllerPermissions(availableController,
-                        accessToken).getOrders().getCreate()).collect(Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
-            }
-
-            JOCDefaultResponse response = initPermissions(null, permitted);
+            JOCDefaultResponse response = initPermissions(null, deleteOrders(in, accessToken, true));
             if (response != null) {
                 return response;
             }
-
-            deleteOrdersFromPlan(allowedControllers, in, true);
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
@@ -83,10 +69,31 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         }
     }
 
-    private void deleteOrdersFromPlan(Set<String> allowedControllers, DailyPlanOrderFilterDef in, boolean withEvent) throws JocConfigurationException,
+    public boolean deleteOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withEvent) throws JocConfigurationException,
             DBConnectionRefusedException, ControllerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException,
             DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             DBInvalidDataException, InterruptedException, ExecutionException {
+
+        boolean noControllerAvailable = Proxies.getControllerDbInstances().isEmpty();
+        boolean permitted = true;
+        Set<String> allowedControllers = Collections.emptySet();
+        if (!noControllerAvailable) {
+            Stream<String> controllerIds = Proxies.getControllerDbInstances().keySet().stream();
+            if (in.getControllerIds() != null && !in.getControllerIds().isEmpty()) {
+                controllerIds = controllerIds.filter(availableController -> in.getControllerIds().contains(availableController));
+            }
+            allowedControllers = controllerIds.filter(availableController -> getControllerPermissions(availableController,
+                    accessToken).getOrders().getCreate()).collect(Collectors.toSet());
+            permitted = !allowedControllers.isEmpty();
+        }
+        
+        if (!permitted) {
+            return false;
+        }
+        
+        if (folderPermissions == null) {
+            folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
+        }
         
         storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN);
         setSettings();
@@ -119,7 +126,8 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         if (withEvent && sendEvent) {
             EventBus.getInstance().post(new DailyPlanEvent(in.getDailyPlanDateFrom())); //TODO consider getDailyPlanDateTo
         }
-
+        
+        return true;
     }
 
 }

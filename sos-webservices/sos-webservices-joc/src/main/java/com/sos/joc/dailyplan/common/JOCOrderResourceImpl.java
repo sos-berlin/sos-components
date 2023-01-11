@@ -64,7 +64,9 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         evaluator.setSchedulePaths(in.getSchedulePaths());
         evaluator.setWorkflowFolders(in.getWorkflowFolders());
         evaluator.setWorkflowPaths(in.getWorkflowPaths());
-
+        if (folderPermissions == null) {
+            folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
+        }
         evaluator.getPermittedNames(folderPermissions, controllerId, filter);
 
         if (evaluator.isHasPermission()) {
