@@ -70,9 +70,12 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             JsonValidator.validateFailFast(filterBytes, GenerateRequest.class);
             GenerateRequest in = Globals.objectMapper.readValue(filterBytes, GenerateRequest.class);
 
-            JOCDefaultResponse response = initPermissions(null, generateOrders(in, accessToken, true));
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), true);
             if (response != null) {
                 return response;
+            }
+            if (!generateOrders(in, accessToken, true)) {
+                return accessDeniedResponse();
             }
             
             return JOCDefaultResponse.responseStatusJSOk(new Date());

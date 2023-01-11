@@ -31,6 +31,7 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -53,11 +54,15 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilterDef.class);
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);
-
-            JOCDefaultResponse response = initPermissions(null, deleteOrders(in, accessToken, true, true));
+            
+            JOCDefaultResponse response = initPermissions(null, true);
             if (response != null) {
                 return response;
             }
+            if (!deleteOrders(in, accessToken, true, true)) {
+                return accessDeniedResponse();
+            }
+            
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
