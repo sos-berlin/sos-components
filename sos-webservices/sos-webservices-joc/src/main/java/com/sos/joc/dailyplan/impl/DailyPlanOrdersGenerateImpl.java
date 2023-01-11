@@ -1,6 +1,7 @@
 package com.sos.joc.dailyplan.impl;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -10,11 +11,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
@@ -37,7 +41,13 @@ import com.sos.joc.dailyplan.common.PlannedOrderKey;
 import com.sos.joc.dailyplan.db.DBBeanReleasedSchedule2DeployedWorkflow;
 import com.sos.joc.dailyplan.db.DBLayerSchedules;
 import com.sos.joc.dailyplan.resource.IDailyPlanOrdersGenerateResource;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.cluster.common.ClusterServices;
@@ -59,73 +69,14 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             JsonValidator.validateFailFast(filterBytes, GenerateRequest.class);
             GenerateRequest in = Globals.objectMapper.readValue(filterBytes, GenerateRequest.class);
 
-            String controllerId = in.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getCreate());
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), true);
             if (response != null) {
                 return response;
             }
+            if (!generateOrders(in, accessToken, true)) {
+                return accessDeniedResponse();
+            }
             
-            DBItemJocAuditLog auditLog = storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN);
-
-            Set<Folder> scheduleFolders = null;
-            Set<String> scheduleSingles = null;
-            Set<Folder> workflowFolders = null;
-            Set<String> workflowSingles = null;
-            if (in.getSchedulePaths() != null) {
-                scheduleFolders = FolderPath.filterByUniqueFolder(in.getSchedulePaths().getFolders());
-                scheduleSingles = FolderPath.filterByFolders(scheduleFolders, in.getSchedulePaths().getSingles());
-            }
-
-            final Set<Folder> permittedFolders = addPermittedFolder(null);
-            Map<String, Boolean> checkedFolders = new HashMap<>();
-            if (in.getWorkflowPaths() != null) {
-                workflowFolders = FolderPath.filterByUniqueFolder(in.getWorkflowPaths().getFolders());
-                workflowSingles = FolderPath.filterByFolders(workflowFolders, in.getWorkflowPaths().getSingles());
-
-                if (workflowFolders != null && workflowFolders.size() > 0) {
-                    Set<String> toRemove = new HashSet<>();
-                    for (Folder folder : workflowFolders) {
-                        if (!isPermitted(folder, permittedFolders, checkedFolders)) {
-                            toRemove.add(folder.getFolder());
-                        }
-                    }
-                    if (toRemove.size() > 0) {
-                        workflowFolders = workflowFolders.stream().filter(f -> !toRemove.contains(f.getFolder())).collect(Collectors.toSet());
-                    }
-                }
-            }
-
-            // log to service log file
-            JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
-
-            setSettings();
-
-            DailyPlanSettings settings = new DailyPlanSettings();
-            settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
-            settings.setOverwrite(in.getOverwrite());
-            settings.setSubmit(in.getWithSubmit());
-            settings.setTimeZone(getSettings().getTimeZone());
-            settings.setPeriodBegin(getSettings().getPeriodBegin());
-            settings.setDailyPlanDate(DailyPlanHelper.getDailyPlanDateAsDate(SOSDate.getDate(in.getDailyPlanDate()).getTime()));
-            settings.setSubmissionTime(new Date());
-
-            DailyPlanRunner runner = new DailyPlanRunner(settings);
-            Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(runner, controllerId, scheduleFolders, scheduleSingles, workflowFolders,
-                    workflowSingles, permittedFolders, checkedFolders);
-
-            Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId,
-                    dailyPlanSchedules, in.getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken);
-            JocClusterServiceLogger.clearAllLoggers();
-
-            Set<AuditLogDetail> auditLogDetails = new HashSet<>();
-
-            for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {
-                auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId(), controllerId));
-            }
-
-            OrdersHelper.storeAuditLogDetails(auditLogDetails, auditLog.getId()).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(
-                    either, accessToken, getJocError(), null));
-
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
@@ -136,6 +87,87 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             JocClusterServiceLogger.clearAllLoggers();
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
+    }
+    
+    public boolean generateOrders(GenerateRequest in, String accessToken, boolean withAudit) throws SOSInvalidDataException, SOSHibernateException,
+            IOException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException,
+            DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, SOSMissingDataException, ParseException,
+            ExecutionException {
+
+        String controllerId = in.getControllerId();
+        if (!getControllerPermissions(controllerId, accessToken).getOrders().getCreate()) {
+            return false;
+        }
+
+        Long auditLogId = withAudit ? storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN).getId() : 0L;
+        
+        if (folderPermissions == null) {
+            folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
+        }
+        folderPermissions.setSchedulerId(controllerId);
+    
+        Set<Folder> scheduleFolders = null;
+        Set<String> scheduleSingles = null;
+        Set<Folder> workflowFolders = null;
+        Set<String> workflowSingles = null;
+        if (in.getSchedulePaths() != null) {
+            scheduleFolders = FolderPath.filterByUniqueFolder(in.getSchedulePaths().getFolders());
+            scheduleSingles = FolderPath.filterByFolders(scheduleFolders, in.getSchedulePaths().getSingles());
+        }
+
+        final Set<Folder> permittedFolders = addPermittedFolder(null);
+        Map<String, Boolean> checkedFolders = new HashMap<>();
+        if (in.getWorkflowPaths() != null) {
+            workflowFolders = FolderPath.filterByUniqueFolder(in.getWorkflowPaths().getFolders());
+            workflowSingles = FolderPath.filterByFolders(workflowFolders, in.getWorkflowPaths().getSingles());
+
+            if (workflowFolders != null && workflowFolders.size() > 0) {
+                Set<String> toRemove = new HashSet<>();
+                for (Folder folder : workflowFolders) {
+                    if (!isPermitted(folder, permittedFolders, checkedFolders)) {
+                        toRemove.add(folder.getFolder());
+                    }
+                }
+                if (toRemove.size() > 0) {
+                    workflowFolders = workflowFolders.stream().filter(f -> !toRemove.contains(f.getFolder())).collect(Collectors.toSet());
+                }
+            }
+        }
+
+        // log to service log file
+        JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
+
+        setSettings();
+
+        DailyPlanSettings settings = new DailyPlanSettings();
+        settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+        settings.setOverwrite(in.getOverwrite());
+        settings.setSubmit(in.getWithSubmit());
+        settings.setTimeZone(getSettings().getTimeZone());
+        settings.setPeriodBegin(getSettings().getPeriodBegin());
+        settings.setDailyPlanDate(DailyPlanHelper.getDailyPlanDateAsDate(SOSDate.getDate(in.getDailyPlanDate()).getTime()));
+        settings.setSubmissionTime(new Date());
+
+        DailyPlanRunner runner = new DailyPlanRunner(settings);
+        Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(runner, controllerId, scheduleFolders, scheduleSingles, workflowFolders,
+                workflowSingles, permittedFolders, checkedFolders);
+
+        Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId,
+                dailyPlanSchedules, in.getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken);
+        JocClusterServiceLogger.clearAllLoggers();
+        
+        if (withAudit) {
+            Set<AuditLogDetail> auditLogDetails = new HashSet<>();
+
+            for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {
+                auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId(), controllerId));
+            }
+
+            OrdersHelper.storeAuditLogDetails(auditLogDetails, auditLogId).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(either,
+                    accessToken, getJocError(), null));
+        }
+        
+        return true;
     }
 
     private Collection<DailyPlanSchedule> getSchedules(DailyPlanRunner runner, String controllerId, Set<Folder> scheduleFolders,

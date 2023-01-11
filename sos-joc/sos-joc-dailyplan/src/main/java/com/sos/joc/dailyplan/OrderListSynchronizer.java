@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,10 +134,7 @@ public class OrderListSynchronizer {
         return result;
     }
 
-    public void submitOrdersToController(StartupMode startupMode, String controllerId, String dailyPlanDate)
-            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException, ExecutionException,
-            SOSHibernateException, TimeoutException, ParseException {
+    public void submitOrdersToController(StartupMode startupMode, String controllerId, String dailyPlanDate) throws SOSHibernateException {
 
         String method = "submitOrdersToController";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -282,11 +278,10 @@ public class OrderListSynchronizer {
         return counter;
     }
 
-    public void addPlannedOrderToControllerAndDB(StartupMode startupMode, String operation, String controllerId, String date,
-            Boolean withSubmit, Map<String, Long> durations) throws JocConfigurationException, DBConnectionRefusedException,
+    public void addPlannedOrderToControllerAndDB(StartupMode startupMode, String operation, String controllerId, String date, Boolean withSubmit,
+            Map<String, Long> durations) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
-            DBInvalidDataException, SOSHibernateException, JsonProcessingException, ParseException, InterruptedException, ExecutionException,
-            TimeoutException {
+            DBInvalidDataException, ExecutionException, JsonProcessingException, ParseException {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String method = "addPlannedOrderToControllerAndDB";
@@ -370,7 +365,7 @@ public class OrderListSynchronizer {
                         }
                     } catch (SOSHibernateException | JocConfigurationException | DBConnectionRefusedException | ParseException
                             | ControllerConnectionResetException | ControllerConnectionRefusedException | DBMissingDataException
-                            | DBOpenSessionException | DBInvalidDataException | InterruptedException | ExecutionException | TimeoutException e) {
+                            | DBOpenSessionException | DBInvalidDataException e) {
                         ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
                     } catch (JsonProcessingException e) {
                         e.printStackTrace();

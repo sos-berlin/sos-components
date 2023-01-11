@@ -87,7 +87,8 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             JsonValidator.validate(inBytes, SubmissionsDeleteRequest.class);
             SubmissionsDeleteRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsDeleteRequest.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getDailyPlan().getManage());
+            String controllerId = in.getControllerId();
+            JOCDefaultResponse response = initPermissions(controllerId, getJocPermissions(accessToken).getDailyPlan().getManage());
             if (response != null) {
                 return response;
             }
@@ -96,7 +97,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
-            int result = dbLayer.delete(StartupMode.manual, in.getControllerId(), in.getFilter().getDateFor(), in.getFilter().getDateFrom(), in
+            int result = dbLayer.delete(StartupMode.manual, controllerId, in.getFilter().getDateFor(), in.getFilter().getDateFrom(), in
                     .getFilter().getDateTo());
             Globals.commit(session);
             session.close();
@@ -104,9 +105,9 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
 
             if (result > 0) {
                 if (in.getFilter().getDateFor() != null) {
-                    EventBus.getInstance().post(new DailyPlanEvent(in.getFilter().getDateFor()));
+                    EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getFilter().getDateFor()));
                 } else if (in.getFilter().getDateFrom() != null) {
-                    EventBus.getInstance().post(new DailyPlanEvent(in.getFilter().getDateFrom()));
+                    EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getFilter().getDateFrom()));
                 }
             }
             return JOCDefaultResponse.responseStatusJSOk(new Date());

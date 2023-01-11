@@ -23,8 +23,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,6 +94,7 @@ import com.sos.joc.model.order.OrderIdMap200;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.data_for_java.controller.JControllerState;
 import js7.proxy.javaapi.JControllerProxy;
@@ -592,7 +591,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
     private void notifyAndStoreAuditLogDetails(DailyPlanModifyOrder in, List<DBItemDailyPlanOrder> items, DBItemJocAuditLog auditlog) {
-        EventBus.getInstance().post(new DailyPlanEvent(in.getDailyPlanDate()));
+        EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), in.getDailyPlanDate()));
         OrdersHelper.storeAuditLogDetails(items.stream().map(item -> new AuditLogDetail(item.getWorkflowPath(), item.getOrderId(), in
                 .getControllerId())).collect(Collectors.toSet()), auditlog.getId()).thenAccept(either2 -> ProblemHelper.postExceptionEventIfExist(
                         either2, getAccessToken(), getJocError(), in.getControllerId()));
@@ -699,7 +698,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     submitOrdersToController(toSubmit);
                 }
 
-                EventBus.getInstance().post(new DailyPlanEvent(in.getDailyPlanDate()));
+                EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), in.getDailyPlanDate()));
 
                 OrdersHelper.storeAuditLogDetails(items.stream().map(item -> new AuditLogDetail(item.getWorkflowPath(), item.getOrderId(), in
                         .getControllerId())).collect(Collectors.toSet()), auditlog.getId()).thenAccept(either2 -> ProblemHelper
@@ -720,7 +719,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     private String modifyStartTimeCycle(DailyPlanModifyOrder in, DBItemDailyPlanSubmission newSubmission, DBItemDailyPlanOrder mainItem,
             DBItemJocAuditLog auditlog) throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            ExecutionException, InterruptedException {
+            ExecutionException {
         Long oldSubmissionId = mainItem.getSubmissionHistoryId();
 
         SOSHibernateSession session = null;
@@ -897,13 +896,13 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId(), controllerId));
             }
 
-            EventBus.getInstance().post(new DailyPlanEvent(dDate));
+            EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), dDate));
 
             OrdersHelper.storeAuditLogDetails(auditLogDetails, auditlog.getId()).thenAccept(either2 -> ProblemHelper.postExceptionEventIfExist(
                     either2, getAccessToken(), getJocError(), controllerId));
         } catch (JocConfigurationException | DBConnectionRefusedException | ControllerConnectionResetException | ControllerConnectionRefusedException
                 | DBMissingDataException | DBOpenSessionException | DBInvalidDataException | IOException | ParseException | SOSException
-                | URISyntaxException | InterruptedException | ExecutionException | TimeoutException e) {
+                | ExecutionException e) {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
         }
         return generatedOrders;
