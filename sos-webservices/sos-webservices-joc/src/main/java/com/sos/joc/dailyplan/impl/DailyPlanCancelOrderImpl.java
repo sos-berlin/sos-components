@@ -15,7 +15,6 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -31,7 +30,6 @@ import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.dailyplan.resource.IDailyPlanCancelOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
@@ -70,7 +68,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             JsonValidator.validate(filterBytes, DailyPlanOrderFilterDef.class);
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);
             
-            JOCDefaultResponse response = initPermissions(null, cancelOrders(in, accessToken, true));
+            JOCDefaultResponse response = initPermissions(null, cancelOrders(in, accessToken, true, true));
             if (response != null) {
                 return response;
             }
@@ -85,7 +83,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
     
-    public boolean cancelOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withEvent)
+    public boolean cancelOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withAudit, boolean withEvent)
             throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
    
@@ -99,7 +97,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             return false;
         }
 
-        DBItemJocAuditLog dbAuditLog = storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN);
+        Long auditLogId = withAudit ? storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN).getId() : 0L;
         boolean sendEvent = false;
         
         if (folderPermissions == null) {
@@ -139,8 +137,11 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                             ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                             if (either.isRight()) {
                                 updateDailyPlan(oIds, controllerId, getAccessToken(), getJocError());
-                                OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(
-                                        either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                                if (withAudit) {
+                                    OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, auditLogId, controllerId).thenAccept(
+                                            either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(),
+                                                    controllerId));
+                                }
                             }
                         });
             } else {

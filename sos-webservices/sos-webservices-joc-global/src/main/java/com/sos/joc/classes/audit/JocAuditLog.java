@@ -193,7 +193,7 @@ public class JocAuditLog {
     }
     
     public static synchronized void storeAuditLogDetails(Collection<AuditLogDetail> details, SOSHibernateSession connection, Long auditlogId, Date now) {
-        if (details != null && !details.isEmpty() && auditlogId != null) {
+        if (details != null && !details.isEmpty() && auditlogId != null && auditlogId != 0L) {
             Set<AuditLogDetail> details2 = details.stream().peek(d -> d.setControllerId(null)).collect(Collectors.toSet());
             if (connection == null) {
                 try {

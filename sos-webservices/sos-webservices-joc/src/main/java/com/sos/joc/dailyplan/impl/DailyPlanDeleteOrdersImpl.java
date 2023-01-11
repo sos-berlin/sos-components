@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -55,7 +54,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilterDef.class);
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);
 
-            JOCDefaultResponse response = initPermissions(null, deleteOrders(in, accessToken, true));
+            JOCDefaultResponse response = initPermissions(null, deleteOrders(in, accessToken, true, true));
             if (response != null) {
                 return response;
             }
@@ -69,7 +68,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         }
     }
 
-    public boolean deleteOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withEvent) throws JocConfigurationException,
+    public boolean deleteOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withAudit, boolean withEvent) throws JocConfigurationException,
             DBConnectionRefusedException, ControllerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException,
             DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             DBInvalidDataException, InterruptedException, ExecutionException {
@@ -95,7 +94,9 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
         }
         
-        storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN);
+        if (withAudit) {
+            storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN).getId();
+        }
         setSettings();
         boolean sendEvent = false;
         
