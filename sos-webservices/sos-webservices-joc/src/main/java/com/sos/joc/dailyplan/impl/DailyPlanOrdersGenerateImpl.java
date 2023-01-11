@@ -60,7 +60,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             GenerateRequest in = Globals.objectMapper.readValue(filterBytes, GenerateRequest.class);
 
             String controllerId = in.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getView());
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getCreate());
             if (response != null) {
                 return response;
             }

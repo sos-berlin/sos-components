@@ -70,8 +70,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             JsonValidator.validate(filterBytes, DailyPlanOrderFilterDef.class);
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);
             
-            JOCDefaultResponse response = initPermissions(null, cancelOrders(in, accessToken, jobschedulerUser.getSOSAuthCurrentAccount()
-                    .getSosAuthFolderPermissions(), true));
+            JOCDefaultResponse response = initPermissions(null, cancelOrders(in, accessToken, true));
             if (response != null) {
                 return response;
             }
@@ -86,7 +85,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
     
-    public boolean cancelOrders(DailyPlanOrderFilterDef in, String accessToken, SOSAuthFolderPermissions folderPermissions, boolean withEvent)
+    public boolean cancelOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withEvent)
             throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
    
@@ -102,7 +101,11 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
 
         DBItemJocAuditLog dbAuditLog = storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN);
         boolean sendEvent = false;
-
+        
+        if (folderPermissions == null) {
+            folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
+        }
+        
         for (String controllerId : availableControllers) {
             List<DBItemDailyPlanOrder> orders = ordersPerControllerIds.getOrDefault(controllerId, Collections.emptyList());
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders(controllerId);
