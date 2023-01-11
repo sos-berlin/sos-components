@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -13,9 +14,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Daily Plan  Order Filter Definition
+ * Daily Plan Order Filter Definition
  * <p>
- * Define the filter To get orders from the daily plan
+ * Define the filter to get orders from the daily plan
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -29,8 +30,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerIds",
     "states",
     "late",
-    "dailyPlanDate",
-    "schedulesFolder"
+    "dailyPlanDateFrom",
+    "dailyPlanDateTo",
+    "expandCycleOrders",
+    "auditLog"
 })
 public class DailyPlanOrderFilterDef {
 
@@ -68,20 +71,38 @@ public class DailyPlanOrderFilterDef {
      * date
      * <p>
      * ISO date YYYY-MM-DD
+     * (Required)
      * 
      */
-    @JsonProperty("dailyPlanDate")
+    @JsonProperty("dailyPlanDateFrom")
     @JsonPropertyDescription("ISO date YYYY-MM-DD")
-    private String dailyPlanDate;
+    private String dailyPlanDateFrom;
     /**
-     * path
+     * date
      * <p>
-     * absolute path of an object.
+     * ISO date YYYY-MM-DD
      * 
      */
-    @JsonProperty("schedulesFolder")
-    @JsonPropertyDescription("absolute path of an object.")
-    private String schedulesFolder;
+    @JsonProperty("dailyPlanDateTo")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
+    private String dailyPlanDateTo;
+    /**
+     * expandCycleOrders parameter
+     * <p>
+     * controls if the cycle order should be expanded in the answer
+     * 
+     */
+    @JsonProperty("expandCycleOrders")
+    @JsonPropertyDescription("controls if the cycle order should be expanded in the answer")
+    private Boolean expandCycleOrders = false;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     @JsonProperty("submissionHistoryIds")
     public List<Long> getSubmissionHistoryIds() {
@@ -201,11 +222,24 @@ public class DailyPlanOrderFilterDef {
      * date
      * <p>
      * ISO date YYYY-MM-DD
+     * (Required)
      * 
      */
-    @JsonProperty("dailyPlanDate")
-    public String getDailyPlanDate() {
-        return dailyPlanDate;
+    @JsonProperty("dailyPlanDateFrom")
+    public String getDailyPlanDateFrom() {
+        return dailyPlanDateFrom;
+    }
+
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * (Required)
+     * 
+     */
+    @JsonProperty("dailyPlanDateFrom")
+    public void setDailyPlanDateFrom(String dailyPlanDateFrom) {
+        this.dailyPlanDateFrom = dailyPlanDateFrom;
     }
 
     /**
@@ -214,41 +248,74 @@ public class DailyPlanOrderFilterDef {
      * ISO date YYYY-MM-DD
      * 
      */
-    @JsonProperty("dailyPlanDate")
-    public void setDailyPlanDate(String dailyPlanDate) {
-        this.dailyPlanDate = dailyPlanDate;
+    @JsonProperty("dailyPlanDateTo")
+    public String getDailyPlanDateTo() {
+        return dailyPlanDateTo;
     }
 
     /**
-     * path
+     * date
      * <p>
-     * absolute path of an object.
+     * ISO date YYYY-MM-DD
      * 
      */
-    @JsonProperty("schedulesFolder")
-    public String getSchedulesFolder() {
-        return schedulesFolder;
+    @JsonProperty("dailyPlanDateTo")
+    public void setDailyPlanDateTo(String dailyPlanDateTo) {
+        this.dailyPlanDateTo = dailyPlanDateTo;
     }
 
     /**
-     * path
+     * expandCycleOrders parameter
      * <p>
-     * absolute path of an object.
+     * controls if the cycle order should be expanded in the answer
      * 
      */
-    @JsonProperty("schedulesFolder")
-    public void setSchedulesFolder(String schedulesFolder) {
-        this.schedulesFolder = schedulesFolder;
+    @JsonProperty("expandCycleOrders")
+    public Boolean getExpandCycleOrders() {
+        return expandCycleOrders;
+    }
+
+    /**
+     * expandCycleOrders parameter
+     * <p>
+     * controls if the cycle order should be expanded in the answer
+     * 
+     */
+    @JsonProperty("expandCycleOrders")
+    public void setExpandCycleOrders(Boolean expandCycleOrders) {
+        this.expandCycleOrders = expandCycleOrders;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("submissionHistoryIds", submissionHistoryIds).append("scheduleFolders", scheduleFolders).append("workflowFolders", workflowFolders).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("orderIds", orderIds).append("controllerIds", controllerIds).append("states", states).append("late", late).append("dailyPlanDate", dailyPlanDate).append("schedulesFolder", schedulesFolder).toString();
+        return new ToStringBuilder(this).append("submissionHistoryIds", submissionHistoryIds).append("scheduleFolders", scheduleFolders).append("workflowFolders", workflowFolders).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("orderIds", orderIds).append("controllerIds", controllerIds).append("states", states).append("late", late).append("dailyPlanDateFrom", dailyPlanDateFrom).append("dailyPlanDateTo", dailyPlanDateTo).append("expandCycleOrders", expandCycleOrders).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schedulePaths).append(dailyPlanDate).append(late).append(workflowFolders).append(controllerIds).append(submissionHistoryIds).append(workflowPaths).append(orderIds).append(schedulesFolder).append(scheduleFolders).append(states).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDateTo).append(auditLog).append(scheduleFolders).append(states).append(expandCycleOrders).append(schedulePaths).append(late).append(workflowFolders).append(controllerIds).append(submissionHistoryIds).append(workflowPaths).append(orderIds).append(dailyPlanDateFrom).toHashCode();
     }
 
     @Override
@@ -260,7 +327,7 @@ public class DailyPlanOrderFilterDef {
             return false;
         }
         DailyPlanOrderFilterDef rhs = ((DailyPlanOrderFilterDef) other);
-        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(dailyPlanDate, rhs.dailyPlanDate).append(late, rhs.late).append(workflowFolders, rhs.workflowFolders).append(controllerIds, rhs.controllerIds).append(submissionHistoryIds, rhs.submissionHistoryIds).append(workflowPaths, rhs.workflowPaths).append(orderIds, rhs.orderIds).append(schedulesFolder, rhs.schedulesFolder).append(scheduleFolders, rhs.scheduleFolders).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(dailyPlanDateTo, rhs.dailyPlanDateTo).append(auditLog, rhs.auditLog).append(scheduleFolders, rhs.scheduleFolders).append(states, rhs.states).append(expandCycleOrders, rhs.expandCycleOrders).append(schedulePaths, rhs.schedulePaths).append(late, rhs.late).append(workflowFolders, rhs.workflowFolders).append(controllerIds, rhs.controllerIds).append(submissionHistoryIds, rhs.submissionHistoryIds).append(workflowPaths, rhs.workflowPaths).append(orderIds, rhs.orderIds).append(dailyPlanDateFrom, rhs.dailyPlanDateFrom).isEquals();
     }
 
 }

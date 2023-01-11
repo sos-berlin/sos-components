@@ -1,10 +1,10 @@
 package com.sos.joc.dailyplan.common;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +22,7 @@ import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
-import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
+import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.dailyplan.DailyPlanOrderState;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.Period;
@@ -54,30 +54,30 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return settings;
     }
 
-    protected FilterDailyPlannedOrders getOrderFilter(String caller, String controllerId, DailyPlanOrderFilter in, boolean selectCyclicOrders)
+    protected FilterDailyPlannedOrders getOrderFilter(String caller, String controllerId, DailyPlanOrderFilterDef in, boolean selectCyclicOrders)
             throws SOSHibernateException {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
 
         FolderPermissionEvaluator evaluator = new FolderPermissionEvaluator();
 
-        evaluator.setScheduleFolders(in.getFilter().getScheduleFolders());
-        evaluator.setSchedulePaths(in.getFilter().getSchedulePaths());
-        evaluator.setWorkflowFolders(in.getFilter().getWorkflowFolders());
-        evaluator.setWorkflowPaths(in.getFilter().getWorkflowPaths());
+        evaluator.setScheduleFolders(in.getScheduleFolders());
+        evaluator.setSchedulePaths(in.getSchedulePaths());
+        evaluator.setWorkflowFolders(in.getWorkflowFolders());
+        evaluator.setWorkflowPaths(in.getWorkflowPaths());
 
         evaluator.getPermittedNames(folderPermissions, controllerId, filter);
 
         if (evaluator.isHasPermission()) {
-            if (in.getFilter().getOrderIds() != null && !in.getFilter().getOrderIds().isEmpty()) {
-                List<String> orderIds = new ArrayList<String>();
+            if (in.getOrderIds() != null && !in.getOrderIds().isEmpty()) {
+                Set<String> orderIds = new HashSet<>();
                 if (selectCyclicOrders) {
-                    orderIds.addAll(in.getFilter().getOrderIds());
-                    for (String orderId : in.getFilter().getOrderIds()) {
+                    orderIds.addAll(in.getOrderIds());
+                    for (String orderId : in.getOrderIds()) {
                         addCyclicOrderIds(orderIds, orderId, controllerId);
                     }
                 } else {
-                    List<String> cyclicMainParts = new ArrayList<String>();
-                    for (String orderId : in.getFilter().getOrderIds()) {
+                    List<String> cyclicMainParts = new ArrayList<>();
+                    for (String orderId : in.getOrderIds()) {
                         if (OrdersHelper.isCyclicOrderId(orderId)) {
                             cyclicMainParts.add(OrdersHelper.getCyclicOrderIdMainPart(orderId));
                         } else {
@@ -90,15 +90,10 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             }
 
             filter.setControllerId(controllerId);
-            filter.setSubmissionIds(in.getFilter().getSubmissionHistoryIds());
-            filter.setDailyPlanDate(in.getFilter().getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
-            filter.setLate(in.getFilter().getLate());
-
-            if (in.getFilter().getStates() != null) {
-                for (DailyPlanOrderStateText state : in.getFilter().getStates()) {
-                    filter.addState(state);
-                }
-            }
+            filter.setSubmissionIds(in.getSubmissionHistoryIds());
+            filter.setDailyPlanInterval(in.getDailyPlanDateFrom(), in.getDailyPlanDateTo(), settings.getTimeZone(), settings.getPeriodBegin());
+            filter.setLate(in.getLate());
+            filter.setStates(in.getStates());
         } else {
             LOGGER.info(String.format("[%s][getOrderFilter][%s]missing permissions", caller, controllerId));
             return null;
@@ -106,8 +101,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return filter;
     }
 
-    protected List<DBItemDailyPlanWithHistory> getOrders(SOSHibernateSession session, String controllerId, FilterDailyPlannedOrders filter,
-            boolean sort) throws SOSHibernateException {
+    protected List<DBItemDailyPlanWithHistory> getOrders(SOSHibernateSession session, FilterDailyPlannedOrders filter, boolean sort)
+            throws SOSHibernateException {
 
         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
         List<DBItemDailyPlanWithHistory> result = null;
@@ -125,18 +120,6 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             }
         }
         return result;
-    }
-
-    protected List<String> getAllowedControllersOrdersView(String controllerId, List<String> controllerIds) {
-        if (controllerIds == null) {
-            controllerIds = Collections.singletonList(controllerId);
-        } else {
-            if (controllerId != null && !controllerIds.contains(controllerId)) {
-                controllerIds.add(controllerId);
-            }
-        }
-
-        return controllerIds;
     }
 
     protected PlannedOrderItem createPlanItem(DBItemDailyPlanWithHistory item) {
@@ -182,7 +165,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
     }
 
-    protected void addOrders(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo, DailyPlanOrderFilter in,
+    protected void addOrders(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo, DailyPlanOrderFilterDef in,
             List<DBItemDailyPlanWithHistory> orders, List<PlannedOrderItem> result, boolean getCyclicDetails) {
 
         if (orders != null) {
@@ -259,7 +242,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return dbLayer.getCyclicMinPlannedStart(controllerId, OrdersHelper.getCyclicOrderIdMainPart(orderId), plannedStartFrom, plannedStartTo);
     }
 
-    protected DBItemDailyPlanOrder addCyclicOrderIds(Collection<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
+    protected DBItemDailyPlanOrder addCyclicOrderIds(Set<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
         // re - a new session will be opened in the dbLayerDailyPlannedOrders.addCyclicOrderIds
         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(null);
         return dbLayer.addCyclicOrderIds(orderIds, orderId, controllerId, settings.getTimeZone(), settings.getPeriodBegin());
