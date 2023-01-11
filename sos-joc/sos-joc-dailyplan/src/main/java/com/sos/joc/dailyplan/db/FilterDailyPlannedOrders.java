@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.DBFilter;
@@ -20,13 +21,14 @@ import js7.data.order.OrderId;
 public class FilterDailyPlannedOrders extends DBFilter {
 
     private Collection<String> orderIds;
-    private Set<Folder> workflowFolders;
-    private Set<Folder> scheduleFolders;
+    private Collection<Folder> workflowFolders;
+    private Collection<Folder> scheduleFolders;
     private List<DailyPlanOrderStateText> states;
     private List<Long> submissionIds;
     private List<String> cyclicOrdersMainParts;
     private List<String> workflowNames;
     private List<String> scheduleNames;
+    private List<String> controllerIds;
 
     private Date plannedStart;
     private Date periodBegin;
@@ -35,6 +37,8 @@ public class FilterDailyPlannedOrders extends DBFilter {
     private Date orderPlannedStartTo;
     private Date submitTime;
     private Date submissionForDate;
+    private Date submissionForDateFrom;
+    private Date submissionForDateTo;
 
     private Long repeatInterval;
     private Long calendarId;
@@ -47,7 +51,6 @@ public class FilterDailyPlannedOrders extends DBFilter {
 
     private String controllerId;
     private String orderId;
-    private String dailyPlanDate;
     private String workflowName;
     private String scheduleName;
     private String orderName;
@@ -69,6 +72,7 @@ public class FilterDailyPlannedOrders extends DBFilter {
         filter.setCyclicOrdersMainParts(cyclicOrdersMainParts);
         filter.setWorkflowNames(workflowNames);
         filter.setScheduleNames(scheduleNames);
+        filter.setControllerIds(controllerIds);
 
         filter.setPlannedStart(plannedStart);
         filter.setPeriodBegin(periodBegin);
@@ -76,7 +80,9 @@ public class FilterDailyPlannedOrders extends DBFilter {
         filter.setOrderPlannedStartFrom(orderPlannedStartFrom);
         filter.setOrderPlannedStartTo(orderPlannedStartTo);
         filter.setSubmitTime(submitTime);
-        filter.setSubmitTime(submissionForDate);
+        filter.setSubmissionForDate(submissionForDate);
+        filter.setSubmissionForDateFrom(submissionForDateFrom);
+        filter.setSubmissionForDateTo(submissionForDateTo);
 
         filter.setRepeatInterval(repeatInterval);
         filter.setCalendarId(calendarId);
@@ -89,7 +95,6 @@ public class FilterDailyPlannedOrders extends DBFilter {
 
         filter.setControllerId(controllerId);
         filter.setOrderId(orderId);
-        filter.setDailyPlanDate(dailyPlanDate);
         filter.setWorkflowName(workflowName);
         filter.setScheduleName(scheduleName);
         filter.setOrderName(orderName);
@@ -117,8 +122,11 @@ public class FilterDailyPlannedOrders extends DBFilter {
         startMode = val;
     }
 
-    public Collection<String> getOrderIds() {
-        return orderIds;
+    public Set<String> getOrderIds() {
+        if (orderIds != null) {
+            return orderIds.stream().collect(Collectors.toSet());
+        }
+        return null;
     }
 
     public void setOrderIds(Collection<String> val) {
@@ -141,18 +149,13 @@ public class FilterDailyPlannedOrders extends DBFilter {
     public void setCyclicOrdersMainParts(List<String> val) {
         cyclicOrdersMainParts = val;
     }
-
-    private void setDailyPlanDate(String val) {// for copy
-        dailyPlanDate = val;
-    }
-
+    
     public void setDailyPlanDate(String dailyPlanDate, String timeZone, String periodBegin) {
         if (dailyPlanDate != null) {
-            this.dailyPlanDate = dailyPlanDate;
-            setOrderPlanDateInterval(timeZone, periodBegin);
+            setDailyPlanInterval(dailyPlanDate, dailyPlanDate, timeZone, periodBegin);
         }
     }
-
+    
     public void setOrderPlannedStartFrom(Date val) {
         orderPlannedStartFrom = val;
     }
@@ -169,15 +172,15 @@ public class FilterDailyPlannedOrders extends DBFilter {
         return orderPlannedStartTo;
     }
 
-    public Set<Folder> getWorkflowFolders() {
+    public Collection<Folder> getWorkflowFolders() {
         return workflowFolders;
     }
 
-    public void setWorkflowFolders(Set<Folder> val) {
+    public void setWorkflowFolders(Collection<Folder> val) {
         workflowFolders = val;
     }
 
-    public void addWorkflowFolders(Set<Folder> val) {
+    public void addWorkflowFolders(Collection<Folder> val) {
         if (workflowFolders == null) {
             workflowFolders = new HashSet<Folder>();
         }
@@ -186,15 +189,15 @@ public class FilterDailyPlannedOrders extends DBFilter {
         }
     }
 
-    public Set<Folder> getScheduleFolders() {
+    public Collection<Folder> getScheduleFolders() {
         return scheduleFolders;
     }
 
-    public void setScheduleFolders(Set<Folder> val) {
+    public void setScheduleFolders(Collection<Folder> val) {
         scheduleFolders = val;
     }
 
-    public void addScheduleFolders(Set<Folder> val) {
+    public void addScheduleFolders(Collection<Folder> val) {
         if (scheduleFolders == null) {
             scheduleFolders = new HashSet<Folder>();
         }
@@ -282,6 +285,22 @@ public class FilterDailyPlannedOrders extends DBFilter {
         submissionForDate = val;
     }
 
+    public Date getSubmissionForDateFrom() {
+        return submissionForDateFrom;
+    }
+
+    public void setSubmissionForDateFrom(Date val) {
+        submissionForDateFrom = val;
+    }
+
+    public Date getSubmissionForDateTo() {
+        return submissionForDateTo;
+    }
+
+    public void setSubmissionForDateTo(Date val) {
+        submissionForDateTo = val;
+    }
+
     public void setStates(List<DailyPlanOrderStateText> val) {
         states = val;
     }
@@ -323,6 +342,14 @@ public class FilterDailyPlannedOrders extends DBFilter {
 
     public void setScheduleNames(List<String> val) {
         scheduleNames = val;
+    }
+    
+    public List<String> getControllerIds() {
+        return controllerIds;
+    }
+
+    public void setControllerIds(List<String> val) {
+        controllerIds = val;
     }
 
     public String getWorkflowName() {
@@ -373,19 +400,29 @@ public class FilterDailyPlannedOrders extends DBFilter {
         orderName = val;
     }
 
-    private void setOrderPlanDateInterval(String timeZone, String periodBegin) {
-        String dateInString = String.format("%s %s", dailyPlanDate, periodBegin);
+    public void setDailyPlanInterval(String dailyPlanDateFrom, String dailyPlanDateTo, String timeZone, String periodBegin) {
+        if (dailyPlanDateFrom != null) {
+            String dateInStringFrom = String.format("%s %s", dailyPlanDateFrom, periodBegin);
 
-        Optional<Instant> oInstant = JobSchedulerDate.getScheduledForInUTC(dateInString, timeZone);
-        if (!oInstant.isPresent()) {
-            throw new JocMissingRequiredParameterException("wrong parameter (dailyPlanDate periodBegin -->" + periodBegin + " " + dateInString);
+            Optional<Instant> oInstantFrom = JobSchedulerDate.getScheduledForInUTC(dateInStringFrom, timeZone);
+            if (!oInstantFrom.isPresent()) {
+                throw new JocMissingRequiredParameterException("wrong parameter (dailyPlanDateFrom periodBegin -->" + periodBegin + " "
+                        + dateInStringFrom);
+            }
+            orderPlannedStartFrom = Date.from(oInstantFrom.get());
+
+            if (dailyPlanDateTo != null) {
+                String dateInStringTo = String.format("%s %s", dailyPlanDateTo, periodBegin);
+                Optional<Instant> oInstantTo = JobSchedulerDate.getScheduledForInUTC(dateInStringTo, timeZone);
+                if (!oInstantTo.isPresent()) {
+                    throw new JocMissingRequiredParameterException("wrong parameter (dailyPlanDateTo periodBegin -->" + periodBegin + " "
+                            + dateInStringTo);
+                }
+                java.util.Calendar calendar = java.util.Calendar.getInstance();
+                calendar.setTime(Date.from(oInstantTo.get()));
+                calendar.add(java.util.Calendar.HOUR, 24);
+                orderPlannedStartTo = calendar.getTime();
+            }
         }
-        Instant instant = oInstant.get();
-        orderPlannedStartFrom = Date.from(instant);
-
-        java.util.Calendar calendar = java.util.Calendar.getInstance();
-        calendar.setTime(orderPlannedStartFrom);
-        calendar.add(java.util.Calendar.HOUR, 24);
-        orderPlannedStartTo = calendar.getTime();
     }
 }

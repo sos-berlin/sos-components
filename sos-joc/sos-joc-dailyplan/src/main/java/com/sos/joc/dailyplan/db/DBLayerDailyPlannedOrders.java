@@ -85,7 +85,7 @@ public class DBLayerDailyPlannedOrders {
             filterCopy.setOrderPlannedStartTo(null);
 
             int result = 0;
-            ArrayList<String> copy = (ArrayList<String>) filterCopy.getOrderIds().stream().collect(Collectors.toList());
+            List<String> copy = filterCopy.getOrderIds().stream().collect(Collectors.toList());
             for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
                 if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
                     filterCopy.setOrderIds(copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE)));
@@ -207,7 +207,7 @@ public class DBLayerDailyPlannedOrders {
         if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
             FilterDailyPlannedOrders filterCopy = filter.copy();
             int result = 0;
-            ArrayList<String> copy = (ArrayList<String>) filterCopy.getOrderIds().stream().collect(Collectors.toList());
+            List<String> copy = filterCopy.getOrderIds().stream().collect(Collectors.toList());
             for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
                 if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
                     filterCopy.setOrderIds(copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE)));
@@ -273,12 +273,19 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
-        if (filter.getOrderPlannedStartFrom() != null && filter.getOrderPlannedStartTo() != null) {
-            where.append(and).append(" p.plannedStart >= :plannedStartFrom and p.plannedStart < :plannedStartTo");
+        if (filter.getOrderPlannedStartFrom() != null) {
+            where.append(and).append(" p.plannedStart >= :plannedStartFrom");
+            and = " and ";
+        }
+        if (filter.getOrderPlannedStartTo() != null) {
+            where.append(and).append(" p.plannedStart < :plannedStartTo");
             and = " and ";
         }
         if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
             where.append(and).append(" p.controllerId = :controllerId");
+            and = " and ";
+        } else if (filter.getControllerIds() != null && !filter.getControllerIds().isEmpty()) {
+            where.append(and).append(" p.controllerId in (:controllerIds)");
             and = " and ";
         }
 
@@ -413,10 +420,34 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getSubmissionForDate() != null) {
             where.append(and);
             where.append("p.submissionHistoryId in (");
-            where.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
-            where.append("where submissionForDate=:submissionForDate");
+            where.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
+            where.append(" where submissionForDate=:submissionForDate");
             where.append(")");
             and = " and ";
+        } else if (filter.getSubmissionForDateFrom() != null) {
+            if (filter.getSubmissionForDateTo() == null) {
+                where.append(and);
+                where.append("p.submissionHistoryId in (");
+                where.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
+                where.append(" where submissionForDate >= :submissionForDateFrom");
+                where.append(")");
+                and = " and ";
+            } else if (filter.getSubmissionForDateFrom().equals(filter.getSubmissionForDateTo())) {
+                where.append(and);
+                where.append("p.submissionHistoryId in (");
+                where.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
+                where.append(" where submissionForDate=:submissionForDateFrom");
+                where.append(")");
+                and = " and ";
+            } else {
+                where.append(and);
+                where.append("p.submissionHistoryId in (");
+                where.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
+                where.append(" where submissionForDate >= :submissionForDateFrom");
+                where.append(" and submissionForDate <= :submissionForDateTo");
+                where.append(")");
+                and = " and ";
+            }
         }
 
         if (!"".equals(pathField) && filter.getScheduleFolders() != null && filter.getScheduleFolders().size() > 0) {
@@ -498,12 +529,16 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getPlannedStart() != null) {
             query.setParameter("plannedStart", filter.getPlannedStart());
         }
-        if (filter.getOrderPlannedStartFrom() != null && filter.getOrderPlannedStartTo() != null) {
+        if (filter.getOrderPlannedStartFrom() != null) {
             query.setParameter("plannedStartFrom", filter.getOrderPlannedStartFrom());
+        }
+        if (filter.getOrderPlannedStartTo() != null) {
             query.setParameter("plannedStartTo", filter.getOrderPlannedStartTo());
         }
         if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
             query.setParameter("controllerId", filter.getControllerId());
+        } else if (filter.getControllerIds() != null && !filter.getControllerIds().isEmpty()) {
+            query.setParameterList("controllerIds", filter.getControllerIds());
         }
         if (filter.getSubmitted() != null) {
             query.setParameter("submitted", filter.getSubmitted());
@@ -551,6 +586,12 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getSubmissionForDate() != null) {
             query.setParameter("submissionForDate", filter.getSubmissionForDate());
         }
+        if (filter.getSubmissionForDateFrom() != null) {
+            query.setParameter("submissionForDateFrom", filter.getSubmissionForDateFrom());
+            if (filter.getSubmissionForDateTo() != null && !filter.getSubmissionForDateFrom().equals(filter.getSubmissionForDateTo())) {
+                query.setParameter("submissionForDateTo", filter.getSubmissionForDateTo());
+            }
+        }
 
         if (whereHasCurrentTime) {
             query.setParameter(WHERE_PARAM_CURRENT_TIME, new Date());
@@ -588,7 +629,7 @@ public class DBLayerDailyPlannedOrders {
                 q.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
             }
             q.append(getWhere(filter, "p.schedulePath", useHistoryOrderState)).append(" ");
-            q.append("group by p.repeatInterval,p.periodBegin,p.periodEnd,p.orderName,p.scheduleName,p.workflowName ");
+            q.append("group by p.submissionHistoryId,p.repeatInterval,p.periodBegin,p.periodEnd,p.orderName,p.scheduleName,p.workflowName ");
 
             hql.append("select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId");
             hql.append(",p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName");
@@ -705,7 +746,7 @@ public class DBLayerDailyPlannedOrders {
             List<DBItemDailyPlanWithHistory> resultList = new ArrayList<DBItemDailyPlanWithHistory>();
             int size = filter.getOrderIds().size();
             if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
-                ArrayList<String> copy = (ArrayList<String>) filter.getOrderIds().stream().collect(Collectors.toList());
+                List<String> copy = filter.getOrderIds().stream().collect(Collectors.toList());
                 for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
                     if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
                         filter.setOrderIds(copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE)));
@@ -817,7 +858,11 @@ public class DBLayerDailyPlannedOrders {
         if (limit > 0) {
             query.setMaxResults(limit);
         }
-        return session.getResultList(query);
+        List<DBItemDailyPlanOrder> result = session.getResultList(query);
+        if (result == null) {
+           return Collections.emptyList(); 
+        }
+        return result;
     }
 
     public List<DBItemDailyPlanOrder> getDailyPlanList(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {
@@ -971,7 +1016,7 @@ public class DBLayerDailyPlannedOrders {
         int size = filterCopy.getOrderIds() == null ? 0 : filterCopy.getOrderIds().size();
         if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
             int result = 0;
-            ArrayList<String> copy = (ArrayList<String>) filterCopy.getOrderIds().stream().collect(Collectors.toList());
+            List<String> copy = filterCopy.getOrderIds().stream().collect(Collectors.toList());
             for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
                 if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
                     filterCopy.setOrderIds(copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE)));
@@ -1107,12 +1152,10 @@ public class DBLayerDailyPlannedOrders {
                     List<DBItemDailyPlanOrder> cyclicItems = dbLayer.getDailyPlanList(filterCyclic, 0);
                     session.close();
                     session = null;
+                    
+                    cyclicItems.stream().map(DBItemDailyPlanOrder::getOrderId).distinct().filter(oId -> !oId.equals(orderId)).forEach(oId -> orderIds
+                            .add(oId));
 
-                    for (DBItemDailyPlanOrder cyclicItem : cyclicItems) {
-                        if (!cyclicItem.getOrderId().equals(orderId)) {
-                            orderIds.add(cyclicItem.getOrderId());
-                        }
-                    }
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug(String.format("[addCyclicOrderIds][%s=%s]orderIds total=%s", cyclicMainPart, cyclicItems.size(), orderIds
                                 .size()));
@@ -1129,21 +1172,27 @@ public class DBLayerDailyPlannedOrders {
         }
     }
 
-    public List<Long> getSubmissionIds(String controllerId, Date date) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
-        hql.append("where controllerId = :controllerId ");
-        hql.append("and submissionForDate = :date");
+    public List<Long> getSubmissionIds(String controllerId, Date dateFrom, Date dateTo) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
+        hql.append(" where controllerId = :controllerId");
+        hql.append(" and submissionForDate >= :dateFrom");
+        if (dateTo != null) {
+            hql.append(" and submissionForDate <= :dateTo");
+        }
 
         Query<Long> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
-        query.setParameter("date", date);
+        query.setParameter("dateFrom", dateFrom);
+        if (dateTo != null) {
+            query.setParameter("dateTo", dateTo);
+        }
         return session.getResultList(query);
     }
 
     public Long getCountOrdersBySubmissionId(String controllerId, Long submissionHistoryId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
-        hql.append("where controllerId = :controllerId ");
-        hql.append("and submissionHistoryId = :submissionHistoryId");
+        StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_DPL_ORDERS);
+        hql.append(" where controllerId = :controllerId");
+        hql.append(" and submissionHistoryId = :submissionHistoryId");
 
         Query<Long> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
@@ -1153,7 +1202,7 @@ public class DBLayerDailyPlannedOrders {
 
     public int deleteSubmission(Long id) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
-        hql.append("where id = :id ");
+        hql.append("where id = :id");
 
         Query<DBItemDailyPlanSubmission> query = session.createQuery(hql.toString());
         query.setParameter("id", id);
