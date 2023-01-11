@@ -121,8 +121,6 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(null);
         Set<AuditLogDetail> auditLogDetails = new HashSet<>();
         
-        boolean sendEvent = false;
-
         for (String controllerId : allowedControllers) {
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             folderPermissions.setSchedulerId(controllerId);
@@ -163,7 +161,9 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
 
                 runner.submitOrders(StartupMode.manual, controllerId, items, null, getJocError(), getAccessToken());
 
-                sendEvent = true;
+                if (withEvent) {
+                    EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateFrom())); //TODO consider getDailyPlanDateTo
+                }
 
                 for (DBItemDailyPlanOrder item : items) {
                     auditLogDetails.add(new AuditLogDetail(item.getWorkflowPath(), item.getOrderId(), controllerId));
@@ -174,9 +174,6 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
         OrdersHelper.storeAuditLogDetails(auditLogDetails, auditLog.getId()).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(either,
                 accessToken, getJocError(), null));
         
-        if (withEvent && sendEvent) {
-            EventBus.getInstance().post(new DailyPlanEvent(in.getDailyPlanDateFrom())); //TODO consider getDailyPlanDateTo
-        }
     }
 
 }

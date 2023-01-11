@@ -1,19 +1,16 @@
 package com.sos.joc.dailyplan.impl;
 
-import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.WebservicePaths;
@@ -24,15 +21,6 @@ import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.dailyplan.resource.IDailyPlanDeleteOrderResource;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerConnectionResetException;
-import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JocAccessDeniedException;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -73,10 +61,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         }
     }
 
-    public boolean deleteOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withAudit, boolean withEvent) throws JocConfigurationException,
-            DBConnectionRefusedException, ControllerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException,
-            DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
-            DBInvalidDataException, InterruptedException, ExecutionException {
+    public boolean deleteOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withAudit, boolean withEvent) throws SOSHibernateException {
 
         boolean noControllerAvailable = Proxies.getControllerDbInstances().isEmpty();
         boolean permitted = true;
@@ -103,7 +88,6 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN).getId();
         }
         setSettings();
-        boolean sendEvent = false;
         
         for (String controllerId : allowedControllers) {
             FilterDailyPlannedOrders filter = getOrderFilter("deleteOrdersFromPlan", controllerId, in, true);
@@ -120,17 +104,15 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
                 Globals.beginTransaction(session);
                 dbLayer.deleteCascading(filter);
                 Globals.commit(session);
-                sendEvent = true;
+                if (withEvent) {
+                    EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateFrom())); //TODO consider getDailyPlanDateTo
+                }
             } catch (Exception e) {
                 Globals.rollback(session);
                 throw e;
             } finally {
                 Globals.disconnect(session);
             }
-        }
-        
-        if (withEvent && sendEvent) {
-            EventBus.getInstance().post(new DailyPlanEvent(in.getDailyPlanDateFrom())); //TODO consider getDailyPlanDateTo
         }
         
         return true;

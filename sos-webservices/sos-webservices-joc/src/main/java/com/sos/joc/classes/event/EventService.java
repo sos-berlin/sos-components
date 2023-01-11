@@ -294,12 +294,14 @@ public class EventService {
 
     @Subscribe({ DailyPlanEvent.class })
     public void createEvent(DailyPlanEvent evt) {
-        EventSnapshot eventSnapshot = new EventSnapshot();
-        eventSnapshot.setEventId(evt.getEventId() / 1000);
-        eventSnapshot.setEventType(evt.getKey());
-        eventSnapshot.setObjectType(EventType.DAILYPLAN);
-        eventSnapshot.setMessage(evt.getDailyPlanDate());
-        addEvent(eventSnapshot);
+        if (evt.getControllerId() == null || controllerId.equals(evt.getControllerId())) {
+            EventSnapshot eventSnapshot = new EventSnapshot();
+            eventSnapshot.setEventId(evt.getEventId() / 1000);
+            eventSnapshot.setEventType(evt.getKey());
+            eventSnapshot.setObjectType(EventType.DAILYPLAN);
+            eventSnapshot.setMessage(evt.getDailyPlanDate());
+            addEvent(eventSnapshot);
+        }
     }
 
     @Subscribe({ NotificationCreated.class })

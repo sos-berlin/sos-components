@@ -92,8 +92,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
     
     public CompletableFuture<Either<Problem, Void>> cancelOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withAudit, boolean withEvent)
             throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException,
-            JocAccessDeniedException {
+            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
         setSettings();
         Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerIds = getSubmittedOrderIdsFromDailyplanDate(in, getSettings());
@@ -106,7 +105,6 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         }
 
         Long auditLogId = withAudit ? storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN).getId() : 0L;
-        boolean sendEvent = false;
         
         if (folderPermissions == null) {
             folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
@@ -123,7 +121,6 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
 
             Stream<JOrder> orderStream = Stream.empty();
             if (!orderIds.isEmpty()) {
-                sendEvent = true;
                 orderStream = currentState.ordersBy(o -> orderIds.contains(o.id().string()));
                 // determine possibly fresh cyclic orders
                 orderStream = Stream.concat(orderStream, OrdersResourceModifyImpl.cyclicFreshOrderIds(orderIds, currentState));
@@ -131,12 +128,12 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             final Set<JOrder> jOrders = orderStream.filter(OrdersHelper::isPendingOrScheduledOrBlocked).collect(Collectors.toSet());
             final Set<String> oIds = jOrders.stream().map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
 
-            updateUnknownOrders(controllerId, orderIds, oIds, getSettings());
+            updateUnknownOrders(controllerId, orderIds, oIds, getSettings(), withEvent);
 
             if (orderIds != null) {
                 oIds.forEach(o -> orderIds.remove(o));
 
-                updateDailyPlan("command", orderIds);
+                updateDailyPlan("command", orderIds, withEvent);
             }
 
             if (!jOrders.isEmpty()) {
@@ -144,7 +141,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                         either -> {
                             if (either.isRight()) {
                                 try {
-                                    updateDailyPlan("updateDailyPlan", oIds);
+                                    updateDailyPlan("updateDailyPlan", oIds, withEvent);
                                     if (withAudit) {
                                         OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, auditLogId, controllerId).thenAccept(either2 -> {
                                             if (withEvent) {
@@ -170,14 +167,10 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             }
         }
         
-        if (withEvent && sendEvent) {
-            EventBus.getInstance().post(new DailyPlanEvent(in.getDailyPlanDateFrom())); //TODO consider getDailyPlanDateTo
-        }
-        
         return CompletableFuture.supplyAsync(() -> Either.right(null));
     }
     
-    private void updateUnknownOrders(String controllerId, Set<String> orders, Set<String> oIds, DailyPlanSettings settings)
+    private void updateUnknownOrders(String controllerId, Set<String> orders, Set<String> oIds, DailyPlanSettings settings, boolean withEvent)
             throws SOSHibernateException {
         if (orders != null && !orders.isEmpty()) {
             SOSHibernateSession session = null;
@@ -209,14 +202,14 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                     LOGGER.debug(String.format("[updateUnknownOrders][jOrderIds=%s][orderIds(before remove jOrderIds=%s)=%s]", oIds.size(),
                             orderIdsSize, orderIds.size()));
                 }
-                updateDailyPlan("updateUnknownOrders", orderIds);
+                updateDailyPlan("updateUnknownOrders", orderIds, withEvent);
             } finally {
                 Globals.disconnect(session);
             }
         }
     }
     
-    private static void updateDailyPlan(String caller, Collection<String> orderIds) throws SOSHibernateException {
+    private static void updateDailyPlan(String caller, Collection<String> orderIds, boolean withEvent) throws SOSHibernateException {
         // SOSClassUtil.printStackTrace(true, LOGGER);
         SOSHibernateSession session = null;
         if (!orderIds.isEmpty()) {
@@ -248,7 +241,9 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                     String date = item.getDailyPlanDate(settings.getTimeZone());
                     if (!days.contains(date)) {
                         days.add(date);
-                        EventBus.getInstance().post(new DailyPlanEvent(date));
+                        if (withEvent) {
+                            EventBus.getInstance().post(new DailyPlanEvent(item.getControllerId(), date));
+                        }
                     }
                 }
 

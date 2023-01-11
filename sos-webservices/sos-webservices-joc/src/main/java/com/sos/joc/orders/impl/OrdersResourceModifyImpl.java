@@ -628,7 +628,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     String date = item.getDailyPlanDate(settings.getTimeZone());
                     if (!days.contains(date)) {
                         days.add(date);
-                        EventBus.getInstance().post(new DailyPlanEvent(date));
+                        EventBus.getInstance().post(new DailyPlanEvent(item.getControllerId(), date));
                     }
                 }
 

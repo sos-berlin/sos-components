@@ -1,7 +1,6 @@
 package com.sos.joc.dailyplan.impl;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,13 +12,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.exception.SOSException;
+import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
@@ -90,11 +89,11 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         }
     }
     
-    public boolean generateOrders(GenerateRequest in, String accessToken, boolean withAudit) throws IOException, DBConnectionRefusedException,
-            DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, ControllerConnectionResetException,
-            ControllerConnectionRefusedException, ParseException, SOSException, URISyntaxException, InterruptedException, ExecutionException,
-            TimeoutException {
-        
+    public boolean generateOrders(GenerateRequest in, String accessToken, boolean withAudit) throws SOSInvalidDataException, SOSHibernateException,
+            IOException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException,
+            DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, SOSMissingDataException, ParseException,
+            ExecutionException {
+
         String controllerId = in.getControllerId();
         if (!getControllerPermissions(controllerId, accessToken).getOrders().getCreate()) {
             return false;

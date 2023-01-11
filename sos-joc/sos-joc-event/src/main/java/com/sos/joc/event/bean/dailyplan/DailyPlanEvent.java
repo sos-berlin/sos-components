@@ -6,20 +6,16 @@ import com.sos.joc.event.bean.JOCEvent;
 public class DailyPlanEvent extends JOCEvent {
     
  
-    public DailyPlanEvent() {
-    }
-
-     
-    public DailyPlanEvent(String dailyPlanDate) {
-        super("DailyPlanUpdated", null, null);
+    public DailyPlanEvent(String controllerId, String dailyPlanDate) {
+        super("DailyPlanUpdated", controllerId, null);
         if (dailyPlanDate == null) {
             dailyPlanDate = "";
         }
         putVariable("dailyPlanDate", dailyPlanDate);
     }
     
-    public DailyPlanEvent(String key, String dailyPlanDate) {
-        super(key, null, null);
+    public DailyPlanEvent(String key, String controllerId, String dailyPlanDate) {
+        super(key, controllerId, null);
         if (dailyPlanDate == null) {
             dailyPlanDate = "";
         }

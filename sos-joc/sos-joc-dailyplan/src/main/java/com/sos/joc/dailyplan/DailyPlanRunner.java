@@ -243,19 +243,19 @@ public class DailyPlanRunner extends TimerTask {
     /* service (createPlan) & DailyPlanModifyOrderImpl, DailyPlanOrdersGenerateImpl **/
     public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, Boolean withSubmit, JocError jocError, String accessToken)
-            throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
-            ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
+            throws JsonParseException, JsonMappingException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException,
+            JocConfigurationException, DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException,
+            SOSInvalidDataException, SOSMissingDataException, SOSHibernateException, ParseException, IOException, ExecutionException {
         return generateDailyPlan(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, null, withSubmit, jocError, accessToken);
     }
 
     /* DailyPlanModifyOrderImpl **/
     public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, DBItemDailyPlanSubmission submission, Boolean withSubmit,
-            JocError jocError, String accessToken) throws JsonParseException, JsonMappingException, DBConnectionRefusedException,
-            DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, IOException, ParseException,
-            SOSException, URISyntaxException, ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException,
-            ExecutionException, TimeoutException {
+            JocError jocError, String accessToken) throws JsonParseException, JsonMappingException, DBMissingDataException,
+            DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException, DBOpenSessionException, SOSInvalidDataException,
+            SOSMissingDataException, SOSHibernateException, ParseException, IOException, ControllerConnectionResetException,
+            ControllerConnectionRefusedException, ExecutionException {
 
         String operation = withSubmit ? "creating/submitting" : "creating";
         if (dailyPlanSchedules == null || dailyPlanSchedules.size() == 0) {
@@ -283,7 +283,7 @@ public class DailyPlanRunner extends TimerTask {
             calculateDurations(controllerId, dailyPlanDate, dailyPlanSchedules);
 
             synchronizer.addPlannedOrderToControllerAndDB(startupMode, operation, controllerId, dailyPlanDate, withSubmit, durations);
-            EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
+            EventBus.getInstance().post(new DailyPlanEvent(controllerId, dailyPlanDate));
         } else {
             LOGGER.info(String.format("[%s][%s][%s][%s][skip]%s", startupMode, operation, controllerId, dailyPlanDate, c));
         }
@@ -741,9 +741,9 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     private OrderListSynchronizer calculateStartTimes(StartupMode startupMode, String controllerId, Collection<DailyPlanSchedule> dailyPlanSchedules,
-            String dailyPlanDate, DBItemDailyPlanSubmission submission) throws JsonParseException, JsonMappingException, DBConnectionRefusedException,
-            DBInvalidDataException, DBMissingDataException, IOException, SOSMissingDataException, SOSInvalidDataException, ParseException,
-            JocConfigurationException, SOSHibernateException, DBOpenSessionException {
+            String dailyPlanDate, DBItemDailyPlanSubmission submission) throws SOSInvalidDataException, ParseException, JsonParseException,
+            JsonMappingException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException,
+            DBOpenSessionException, SOSMissingDataException, SOSHibernateException, IOException {
 
         String method = "calculateStartTimes";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
