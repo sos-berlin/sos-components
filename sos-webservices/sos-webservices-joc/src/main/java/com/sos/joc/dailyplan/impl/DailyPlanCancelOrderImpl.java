@@ -75,7 +75,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                 return response;
             }
             try {
-                cancelOrders(in, accessToken, true, true).thenAccept(null);
+                cancelOrders(in, accessToken, true, true);
             } catch (JocAccessDeniedException e) {
                 return accessDeniedResponse();
             }
