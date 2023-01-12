@@ -884,6 +884,18 @@ public class FrequencyResolver {
                                     .getDateTimeAsString(curDate), missingDay, dayOfMonth, lastYearMonth));
                         }
                     }
+
+                    if (!missingDaysCurrentDayFound) {
+                        if (curDate.after(dateFromOrig)) {
+                            missingDaysCurrentDayFound = true;
+                            dayOfMonth++;
+                            if (isDebugEnabled) {
+                                LOGGER.debug(String.format("[%s][%s][fromFirstDayOfMonth][%s][dayOfMonth=%s]after %s", method, SOSDate
+                                        .getDateTimeAsString(curDate), SOSDate.getDateAsString(curDate), dayOfMonth, SOSDate.getDateTimeAsString(
+                                                dateFromOrig)));
+                            }
+                        }
+                    }
                 } else {
                     dayOfMonth++;
                 }

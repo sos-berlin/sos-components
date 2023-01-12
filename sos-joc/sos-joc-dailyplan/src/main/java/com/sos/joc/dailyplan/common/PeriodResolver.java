@@ -9,6 +9,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -34,7 +35,7 @@ public class PeriodResolver {
     public PeriodResolver(DailyPlanSettings settings) {
         super();
         this.settings = settings;
-        this.periods = new HashMap<String, Period>();
+        this.periods = new LinkedHashMap<String, Period>();
     }
 
     public void addStartTimes(Period period, String dailyPlanDate, String timeZone) throws ParseException, SOSInvalidDataException {
@@ -51,12 +52,9 @@ public class PeriodResolver {
         }
 
         if (period.getSingleStart() != null && !period.getSingleStart().isEmpty()) {
-            // Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + period.getSingleStart(), timeZone);
-
-            // period.setSingleStart(getTimeFromIso(scheduledFor.get()));
-            // add(scheduledFor.get().getEpochSecond(), period);
             add(period.getSingleStart(), period);
         }
+        // TODO why not else ???
         addRepeat(period, dailyPlanDate, timeZone);
     }
 
@@ -66,22 +64,15 @@ public class PeriodResolver {
         return dateFormat.parse(dateInString);
     }
 
-    private void logPeriod(Period p) {
-        LOGGER.info(p.getBegin() + " - " + p.getEnd());
-        LOGGER.info("Single Start: " + p.getSingleStart());
-        LOGGER.info("Repeat: " + p.getRepeat());
-    }
-
     private void add(String start, Period period) {
-        LOGGER.debug("  Adding " + start);
+        LOGGER.trace("  Adding " + start);
 
         Period p = periods.get(start);
         if (p == null) {
             periods.put(start, period);
         } else {
-            LOGGER.info("Overlapping period for start time: " + start);
-            logPeriod(p);
-            logPeriod(period);
+            LOGGER.info(String.format("[add][overlapping period for start][start=%s][added=%s]current=%s", start, SOSString.toString(p), SOSString
+                    .toString(period)));
         }
     }
 
