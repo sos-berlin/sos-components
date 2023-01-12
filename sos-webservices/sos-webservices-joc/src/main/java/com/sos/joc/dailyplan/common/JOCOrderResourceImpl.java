@@ -38,6 +38,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         if (Globals.configurationGlobals == null) {// TODO to remove
             settings.setTimeZone("Etc/UTC");
             settings.setPeriodBegin("00:00");
+            settings.setDayAheadPlan(7);
+            settings.setDayAheadSubmit(3);
             LOGGER.warn("Could not read settings. Using defaults");
         } else {
             AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
@@ -64,9 +66,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         evaluator.setSchedulePaths(in.getSchedulePaths());
         evaluator.setWorkflowFolders(in.getWorkflowFolders());
         evaluator.setWorkflowPaths(in.getWorkflowPaths());
-        if (folderPermissions == null) {
-            folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
-        }
+        
         evaluator.getPermittedNames(folderPermissions, controllerId, filter);
 
         if (evaluator.isHasPermission()) {

@@ -107,6 +107,8 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             if (availableControllers.isEmpty()) {
                 throw new JocAccessDeniedException("No permissions to cancel dailyplan orders");
             }
+        } else {
+            initGetPermissions(accessToken);
         }
 
         Long auditLogId = withAudit ? storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN).getId() : 0L;

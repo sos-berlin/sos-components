@@ -74,6 +74,8 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             allowedControllers = controllerIds.filter(availableController -> getControllerPermissions(availableController,
                     accessToken).getOrders().getCreate()).collect(Collectors.toSet());
             permitted = !allowedControllers.isEmpty();
+        } else {
+            initGetPermissions(accessToken);
         }
         
         if (!permitted) {

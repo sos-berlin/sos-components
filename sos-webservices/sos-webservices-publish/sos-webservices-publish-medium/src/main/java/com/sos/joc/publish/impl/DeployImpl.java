@@ -1,6 +1,7 @@
 package com.sos.joc.publish.impl;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,28 +13,35 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
+import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.keys.DBLayerKeys;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
@@ -52,7 +60,9 @@ import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.schema.JsonValidator;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 
+import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
+import js7.base.problem.Problem;
 
 @Path("inventory/deployment")
 public class DeployImpl extends JOCResourceImpl implements IDeploy {
@@ -256,11 +266,58 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 Set<DBItemDeploymentHistory> renamedOriginalHistoryEntries = UpdateItemUtils
                         .checkRenamingForUpdate(verifiedDeployables.keySet(), controllerId, dbLayer);
                 if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
+                    if (deployFilter.getAddOrdersDateFrom() != null ) {
+                        
+                        DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
+                        DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
+                        DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
+                        orderFilter.setControllerIds(Collections.singletonList(controllerId));
+                        if("now".equals(deployFilter.getAddOrdersDateFrom().toLowerCase())) {
+                            SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+                            orderFilter.setDailyPlanDateFrom(sdf.format(Date.from(Instant.now())));
+                        } else {
+                            orderFilter.setDailyPlanDateFrom(deployFilter.getAddOrdersDateFrom());
+                        }
+                        orderFilter.setWorkflowPaths(
+                                verifiedDeployables.keySet().stream()
+                                    .filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
+                                    .map(workflow -> workflow.getName()).collect(Collectors.toList())
+                            );
+                        try {
+                            CompletableFuture<Either<Problem, Void>> cancelOrderResponse =
+                                    cancelOrderImpl.cancelOrders(orderFilter, xAccessToken, false, false)
+                                    .getOrDefault(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null)));
+                                cancelOrderResponse.thenAccept(either -> {
+                                    if(either.isRight()) {
+                                        try {
+                                            boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, xAccessToken, false, false);
+                                            if (!successful) {
+                                                JocError je = getJocError();
+                                                if (je != null && je.printMetaInfo() != null) {
+                                                    LOGGER.info(je.printMetaInfo());
+                                                }
+                                                LOGGER.warn("Order delete failed due to missing permission.");
+                                            }
+                                        } catch (SOSHibernateException e) {
+                                            LOGGER.warn("delete of planned orders in db failed.", e.getMessage());
+                                        }
+                                    } else {
+                                        JocError je = getJocError();
+                                        if (je != null && je.printMetaInfo() != null) {
+                                            LOGGER.info(je.printMetaInfo());
+                                        }
+                                        LOGGER.warn("Order cancel failed due to missing permission.");
+                                    }
+                                });
+                        } catch (Exception e) {
+                            LOGGER.warn(e.getMessage());
+                        }
+                    }
                     SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
                             updateableAgentNamesFileOrderSources, dbAuditlog.getId());
                     // call updateRepo command via ControllerApi for given controller
                     StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
-                            getAccessToken(), getJocError(), API_CALL);
+                            getAccessToken(), getJocError(), API_CALL, deployFilter.getAddOrdersDateFrom());
                 }
             }
             // Delete from all known controllers

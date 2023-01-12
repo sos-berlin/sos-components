@@ -2,6 +2,8 @@ package com.sos.joc.dailyplan.impl;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -12,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -22,6 +25,7 @@ import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.ProblemHelper;
@@ -53,6 +57,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.generate.GenerateRequest;
+import com.sos.joc.model.dailyplan.generate.items.PathItem;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -232,5 +237,65 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             checkedFolders.put(folder.getFolder(), result);
         }
         return result;
+    }
+    
+    public boolean generateOrders(List<GenerateRequest> requests, String accessToken, boolean withAudit) 
+            throws DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException, DBOpenSessionException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, SOSInvalidDataException, SOSHibernateException,
+            SOSMissingDataException, IOException, ParseException, ExecutionException {
+        boolean successful = true;
+        for(GenerateRequest req : requests) {
+            if(!generateOrders(req, accessToken, withAudit)) {
+                successful = false;
+            }
+        }
+        return successful;
+    }
+    
+    public List<GenerateRequest> getGenerateRequests (String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId)
+            throws ParseException {
+        setSettings();
+        int planDaysAhead = getSettings().getDayAheadPlan();
+        int submitDaysAhead = getSettings().getDayAheadSubmit();
+        List<GenerateRequest> generateRequests = new ArrayList<GenerateRequest>();
+        for (int i = 0; i < planDaysAhead; i++) {
+            GenerateRequest req = new GenerateRequest();
+            req.setControllerId(controllerId);
+            if(i < submitDaysAhead) {
+                req.setWithSubmit(true);
+            } else {
+                req.setWithSubmit(false);
+            }
+            req.setOverwrite(true);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            if ("now".equals(date)) {
+                Date now = Date.from(Instant.now());
+                if (i > 0) {
+                    req.setDailyPlanDate(sdf.format(now.toInstant().plusSeconds(i * TimeUnit.DAYS.toSeconds(1))));
+                } else {
+                    req.setDailyPlanDate(sdf.format(now));
+                }
+            } else {
+                Date d = sdf.parse(date);
+                if(i > 0) {
+                    d = Date.from(d.toInstant().plusSeconds(i * TimeUnit.DAYS.toSeconds(1)));
+                    req.setDailyPlanDate(sdf.format(d));
+                } else {
+                    req.setDailyPlanDate(date);
+                }
+            }
+            PathItem workflowsPathItem = new PathItem();
+            PathItem schedulesPathItem = new PathItem();
+            if(workflowPaths != null) {
+                workflowPaths.stream().forEach(path -> workflowsPathItem.getSingles().add(path));
+                req.setWorkflowPaths(workflowsPathItem);
+            }
+            if(schedulePaths != null) {
+                schedulePaths.stream().forEach(path -> schedulesPathItem.getSingles().add(path));
+                req.setSchedulePaths(schedulesPathItem);
+            }
+            generateRequests.add(req);
+        }
+        return generateRequests;
     }
 }
