@@ -183,7 +183,7 @@ public class HistoryCacheHandler {
                     constraintHashDetails));
         } else {
             if (ca == null) {
-                LOGGER.warn(String.format(
+                LOGGER.info(String.format(
                         "[%s][agent not found]agent timezone can't be identified. set agent log timezone to controller timezone ...", item
                                 .getAgentId()));
                 addOrderStep(orderId, new CachedOrderStep(item, controllerTimezone));
@@ -271,7 +271,7 @@ public class HistoryCacheHandler {
         if (ca == null) {
             DBItemHistoryAgent item = dbLayer.getLastAgent(controllerId, agentId);
             if (item == null) {
-                LOGGER.warn(String.format("[%s][%s][%s]agent not found in the history. try to find in the agent instances...", identifier,
+                LOGGER.info(String.format("[%s][%s][%s]agent not found in the history. try to find in the agent instances...", identifier,
                         controllerId, agentId));
                 DBItemInventoryAgentInstance inst = dbLayer.getAgentInstance(controllerId, agentId);
                 // TODO read from controller API?
@@ -279,7 +279,7 @@ public class HistoryCacheHandler {
                     Date readyTime = new Date();
                     String uri = "http://localhost:4445";
 
-                    LOGGER.warn(String.format(
+                    LOGGER.info(String.format(
                             "[%s][%s][%s]agent not found in the agent instances. set agent timezone to controller timezone=%s, ready time=%s, uri=%s",
                             identifier, controllerId, agentId, controllerTimezone, HistoryModel.getDateAsString(readyTime), uri));
 
