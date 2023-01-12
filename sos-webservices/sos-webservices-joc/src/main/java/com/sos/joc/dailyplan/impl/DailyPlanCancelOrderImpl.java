@@ -35,7 +35,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
-import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -145,13 +144,13 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                                     if (withAudit) {
                                         OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, auditLogId, controllerId).thenAccept(either2 -> {
                                             if (withEvent) {
-                                                ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId);
+                                                ProblemHelper.postExceptionEventIfExist(either2, accessToken, getJocError(), controllerId);
                                             }
                                         });
                                     }
                                 } catch (Exception e) {
                                     if (withEvent) {
-                                        ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
+                                        ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, getJocError(), controllerId);
                                     }
                                     either = Either.left(Problem.pure(e.toString()));
                                 }
@@ -163,7 +162,10 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                             return either;
                         });
             } else {
-                throw new ControllerObjectNotExistException("No pending, scheduled or blocked orders found.");
+                if (withEvent) {
+                    ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure("No pending, scheduled or blocked orders found.")),
+                            accessToken, getJocError(), controllerId);
+                }
             }
         }
         
