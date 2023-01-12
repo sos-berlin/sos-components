@@ -95,9 +95,17 @@ public class ProblemHelper {
                 }
             } else {
                 if (err != null && err.getApiCall() != null) {
-                    LOGGER.error(MarkerFactory.getMarker(err.getApiCall()), "", either.getLeft());
+                    if (isOnlyHint) {
+                        LOGGER.warn(MarkerFactory.getMarker(err.getApiCall()), "", either.getLeft());
+                    } else {
+                        LOGGER.error(MarkerFactory.getMarker(err.getApiCall()), "", either.getLeft());
+                    }
                 } else {
-                    LOGGER.error("", either.getLeft());
+                    if (isOnlyHint) {
+                        LOGGER.warn("", either.getLeft());
+                    } else {
+                        LOGGER.error("", either.getLeft());
+                    }
                 }
                 if (accessToken != null && !accessToken.isEmpty()) {
                     EventBus.getInstance().post(new ProblemEvent(accessToken, controller, either.getLeft().toString(), isOnlyHint));

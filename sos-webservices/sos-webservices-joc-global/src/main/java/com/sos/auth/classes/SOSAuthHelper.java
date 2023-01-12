@@ -197,10 +197,10 @@ public class SOSAuthHelper {
                     }
                     LOGGER.debug("Now:" + now.getTime());
                     if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotAfter() != null)) {
-                        LOGGER.warn("NotAfter:" + clientCertHandler.getClientCertificate().getNotAfter().getTime());
+                        //LOGGER.warn("NotAfter:" + clientCertHandler.getClientCertificate().getNotAfter().getTime());
                     }
                     if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotBefore() != null)) {
-                        LOGGER.warn("NotBefore:" + clientCertHandler.getClientCertificate().getNotBefore().getTime());
+                        //LOGGER.warn("NotBefore:" + clientCertHandler.getClientCertificate().getNotBefore().getTime());
                     }
                 }
 
