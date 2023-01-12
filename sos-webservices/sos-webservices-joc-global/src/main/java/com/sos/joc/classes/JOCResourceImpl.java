@@ -48,7 +48,7 @@ public class JOCResourceImpl {
 
     private JocError jocError = new JocError();
 
-    private void initGetPermissions(String accessToken) throws JocException {
+    protected void initGetPermissions(String accessToken) throws JocException {
         headerAccessToken = accessToken;
         if (jobschedulerUser == null) {
 //            this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
