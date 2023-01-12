@@ -30,6 +30,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonSerializer;
+import com.sos.joc.dailyplan.impl.DailyPlanOrdersGenerateImpl;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
@@ -37,6 +38,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.common.IDeployObject;
+import com.sos.joc.model.dailyplan.generate.GenerateRequest;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
@@ -139,7 +141,7 @@ public class StoreDeployments {
     }
     
     public static void processAfterAdd(Either<Problem, Void> either, String account, String commitId, String controllerId, String accessToken,
-            JocError jocError, String wsIdentifier) {
+            JocError jocError, String wsIdentifier, String dailyPlanDate) {
         // asynchronous processing:  this method is called from a CompletableFuture and therefore 
         // creates a new db session as the session of the caller may already be closed
         SOSHibernateSession newHibernateSession = null;
@@ -151,6 +153,19 @@ public class StoreDeployments {
                 dbLayer.cleanupSignatures(commitId, controllerId);
                 // cleanup stored commitIds
                 dbLayer.cleanupCommitIds(commitId);
+                // TODO: create new (daily) planned orders
+                if(dailyPlanDate != null) {
+                    DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
+                    List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
+                    List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(dailyPlanDate, 
+                            optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
+                            .map(workflow -> workflow.getPath()).collect(Collectors.toList()),
+                            null, controllerId);
+                    boolean successful = ordersGenerate.generateOrders(requests, accessToken, false);
+                    if (!successful) {
+                        LOGGER.warn("generate orders failed due to missing permission.");
+                    }
+                }
             } else  if (either.isLeft()) {
                 // an error occurred
 //                String message = String.format(
@@ -193,9 +208,14 @@ public class StoreDeployments {
             }
         }
     }
-    
+
     public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
             String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier) throws SOSException,
+            IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
+        callUpdateItemsFor(dbLayer, signedItemsSpec, renamedToDelete, account, commitId, controllerId, accessToken, jocError, wsIdentifier, null);
+    }
+    public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
+            String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier, String dailyPlanDate) throws SOSException,
             IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
 
         if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
@@ -213,7 +233,7 @@ public class StoreDeployments {
             switch(signedItemsSpec.getKeyPair().getKeyAlgorithm()) {
             case SOSKeyConstants.PGP_ALGORITHM_NAME:
                 UpdateItemUtils.updateItemsAddOrDeletePGP(commitId, signedItemsSpec.getVerifiedDeployables(), renamedToDelete, controllerId)
-                    .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                    .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate));
                 break;
             case SOSKeyConstants.RSA_ALGORITHM_NAME:
                 if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
@@ -225,12 +245,12 @@ public class StoreDeployments {
                         UpdateItemUtils.updateItemsAddOrDeleteX509Certificate(commitId, signedItemsSpec.getVerifiedDeployables(), renamedToDelete,
                                 controllerId, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair().getCertificate())
                             .thenAccept(either -> 
-                                    processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                                    processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate));
                     } else {
                       signerDN = cert.getSubjectDN().getName();
                       UpdateItemUtils.updateItemsAddOrDeleteX509SignerDN(commitId, signedItemsSpec.getVerifiedDeployables(),
                               renamedToDelete, controllerId, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> 
-                              processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                              processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate));
                     }
                 } else {
                     String message = "No certificate present! Items could not be deployed to controller.";
@@ -246,12 +266,12 @@ public class StoreDeployments {
                         UpdateItemUtils.updateItemsAddOrDeleteX509Certificate(commitId, signedItemsSpec.getVerifiedDeployables(), renamedToDelete,
                                 controllerId, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair().getCertificate())
                             .thenAccept(either -> 
-                                    processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                                    processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate));
                     } else {
                       signerDN = cert.getSubjectDN().getName();
                       UpdateItemUtils.updateItemsAddOrDeleteX509SignerDN(commitId, signedItemsSpec.getVerifiedDeployables(), renamedToDelete,
                               controllerId, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> 
-                                  processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                                  processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate));
                     }
                 } else {
                     String message = "No certificate present! Items could not be deployed to controller.";

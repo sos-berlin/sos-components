@@ -8,7 +8,6 @@ import java.nio.file.Paths;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -324,7 +323,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         case SOSKeyConstants.PGP_ALGORITHM_NAME:
             UpdateItemUtils.updateItemsAddOrDeletePGPFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId)
                 .thenAccept(either -> 
-                    StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(),getJocError(), API_CALL));
+                    StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(),getJocError(), API_CALL, null));
             break;
         case SOSKeyConstants.RSA_ALGORITHM_NAME:
             cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
@@ -334,14 +333,14 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM,
                         keyPair.getCertificate()).thenAccept(either -> 
                             StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL));
+                                    API_CALL, null));
             } else {
                 signerDN = cert.getSubjectDN().getName();
                 UpdateItemUtils.updateItemsAddOrDeleteX509SignerDNFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId,
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM,
                         signerDN).thenAccept(either -> 
                             StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL));
+                                    API_CALL, null));
             }
             break;
         case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -352,14 +351,14 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM,
                         keyPair.getCertificate()).thenAccept(either -> 
                             StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL));
+                                    API_CALL, null));
             } else {
                 signerDN = cert.getSubjectDN().getName();
                 UpdateItemUtils.updateItemsAddOrDeleteX509SignerDNFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId,
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM,
                         signerDN).thenAccept(either -> 
                             StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL));
+                                    API_CALL, null));
             }
             break;
         }
