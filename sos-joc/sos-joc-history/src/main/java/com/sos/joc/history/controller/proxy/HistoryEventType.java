@@ -8,7 +8,7 @@ import js7.data.agent.AgentRefStateEvent.AgentReady;
 import js7.data.agent.AgentRefStateEvent.AgentShutDown$;
 import js7.data.cluster.ClusterEvent.ClusterCoupled;
 import js7.data.controller.ControllerEvent.ControllerReady;
-import js7.data.controller.ControllerEvent.ControllerShutDown;
+import js7.data.controller.ControllerEvent.ControllerShutDown$;
 import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderCancelled$;
 import js7.data.order.OrderEvent.OrderCaught;
@@ -46,7 +46,7 @@ public enum HistoryEventType {
 
     ControllerReady(ControllerReady.class.getSimpleName()),
 
-    ControllerShutDown(ControllerShutDown.class.getSimpleName()),
+    ControllerShutDown(ControllerShutDown$.class.getSimpleName()),
 
     ClusterCoupled(ClusterCoupled.class.getSimpleName()),
 
