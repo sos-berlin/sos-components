@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.sos.joc.classes.JobSchedulerDate;
@@ -406,8 +407,8 @@ public class FilterDailyPlannedOrders extends DBFilter {
 
             Optional<Instant> oInstantFrom = JobSchedulerDate.getScheduledForInUTC(dateInStringFrom, timeZone);
             if (!oInstantFrom.isPresent()) {
-                throw new JocMissingRequiredParameterException("wrong parameter (dailyPlanDateFrom periodBegin -->" + periodBegin + " "
-                        + dateInStringFrom);
+                throw new JocMissingRequiredParameterException("wrong parameter (dailyPlanDateFrom periodBegin -->" + dateInStringFrom + " "
+                        + periodBegin);
             }
             orderPlannedStartFrom = Date.from(oInstantFrom.get());
 
@@ -415,13 +416,10 @@ public class FilterDailyPlannedOrders extends DBFilter {
                 String dateInStringTo = String.format("%s %s", dailyPlanDateTo, periodBegin);
                 Optional<Instant> oInstantTo = JobSchedulerDate.getScheduledForInUTC(dateInStringTo, timeZone);
                 if (!oInstantTo.isPresent()) {
-                    throw new JocMissingRequiredParameterException("wrong parameter (dailyPlanDateTo periodBegin -->" + periodBegin + " "
-                            + dateInStringTo);
+                    throw new JocMissingRequiredParameterException("wrong parameter (dailyPlanDateTo periodBegin -->" + dateInStringTo + " "
+                            + periodBegin);
                 }
-                java.util.Calendar calendar = java.util.Calendar.getInstance();
-                calendar.setTime(Date.from(oInstantTo.get()));
-                calendar.add(java.util.Calendar.HOUR, 24);
-                orderPlannedStartTo = calendar.getTime();
+                orderPlannedStartTo = Date.from(oInstantTo.get().plusSeconds(TimeUnit.DAYS.toSeconds(1)));
             }
         }
     }
