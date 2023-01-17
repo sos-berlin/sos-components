@@ -177,6 +177,9 @@ public class SOSAuthHelper {
 
     public static boolean checkCertificate(HttpServletRequest request, String account) {
 
+        long notBefore = 0;
+        long notAfter = 0;
+        long now = new Date().getTime();
         boolean success = false;
         LOGGER.debug("==> check certificate for " + account);
 
@@ -185,22 +188,22 @@ public class SOSAuthHelper {
             try {
                 ClientCertificateHandler clientCertHandler = new ClientCertificateHandler(request);
                 clientCertCN = clientCertHandler.getClientCN();
-                Date now = new Date();
                 if (clientCertHandler.getClientCertificate() == null) {
-                    System.out.println("Certificate is null");
+                    LOGGER.warn("Certificate is null");
                 } else {
+                    LOGGER.debug("Now:" + now);
                     if (clientCertHandler.getClientCertificate().getNotAfter() == null) {
                         LOGGER.warn("Certificate not_after is null");
+                    } else {
+                        notAfter = clientCertHandler.getClientCertificate().getNotAfter().getTime();
+                        LOGGER.debug("NotAfter:" + notAfter);
                     }
+
                     if (clientCertHandler.getClientCertificate().getNotBefore() == null) {
                         LOGGER.warn("Certificate not_before is null");
-                    }
-                    LOGGER.debug("Now:" + now.getTime());
-                    if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotAfter() != null)) {
-                        //LOGGER.warn("NotAfter:" + clientCertHandler.getClientCertificate().getNotAfter().getTime());
-                    }
-                    if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotBefore() != null)) {
-                        //LOGGER.warn("NotBefore:" + clientCertHandler.getClientCertificate().getNotBefore().getTime());
+                    } else {
+                        notBefore = clientCertHandler.getClientCertificate().getNotBefore().getTime();
+						LOGGER.debug("NotBefore:" + notBefore);
                     }
                 }
 
@@ -217,7 +220,10 @@ public class SOSAuthHelper {
                     LOGGER.debug("clientCertCN could not read");
                 }
                 if (success) {
-                    account = clientCertCN;
+                    if (now < notBefore && notBefore != 0 || now > notAfter && notAfter != 0) {
+                        LOGGER.warn("Certificate is no longer valid (not before/not after)");
+                        success = false;
+                    }
                 }
 
             } catch (IOException | CertificateEncodingException | InvalidNameException e) {
@@ -227,7 +233,6 @@ public class SOSAuthHelper {
 
         return success;
     }
-
     public static Map<String, List<String>> getMapOfFolderPermissions(List<DBItemIamPermissionWithName> listOfPermissions) {
         Map<String, List<String>> mapOfFolderPermissions = new HashMap<String, List<String>>();
         for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
