@@ -25,7 +25,6 @@ import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
-import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.ProblemHelper;
@@ -257,44 +256,32 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         setSettings();
         int planDaysAhead = getSettings().getDayAheadPlan();
         int submitDaysAhead = getSettings().getDayAheadSubmit();
-        List<GenerateRequest> generateRequests = new ArrayList<GenerateRequest>();
+        List<GenerateRequest> generateRequests = new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Instant now = Instant.now();
+        Instant instant = "now".equals(date) ? now : sdf.parse(date).toInstant();
+        if (instant.isBefore(now)) {
+            instant = now;
+        }
+        
+        PathItem workflowsPathItem = new PathItem();
+        PathItem schedulesPathItem = new PathItem();
+        workflowsPathItem.setSingles(workflowPaths);
+        schedulesPathItem.setSingles(schedulePaths);
+        
         for (int i = 0; i < planDaysAhead; i++) {
+            if (now.isBefore(instant)) {
+                continue;
+            }
             GenerateRequest req = new GenerateRequest();
             req.setControllerId(controllerId);
-            if(i < submitDaysAhead) {
-                req.setWithSubmit(true);
-            } else {
-                req.setWithSubmit(false);
-            }
+            req.setWithSubmit(i < submitDaysAhead);
             req.setOverwrite(true);
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            if ("now".equals(date)) {
-                Date now = Date.from(Instant.now());
-                if (i > 0) {
-                    req.setDailyPlanDate(sdf.format(now.toInstant().plusSeconds(i * TimeUnit.DAYS.toSeconds(1))));
-                } else {
-                    req.setDailyPlanDate(sdf.format(now));
-                }
-            } else {
-                Date d = sdf.parse(date);
-                if(i > 0) {
-                    d = Date.from(d.toInstant().plusSeconds(i * TimeUnit.DAYS.toSeconds(1)));
-                    req.setDailyPlanDate(sdf.format(d));
-                } else {
-                    req.setDailyPlanDate(date);
-                }
-            }
-            PathItem workflowsPathItem = new PathItem();
-            PathItem schedulesPathItem = new PathItem();
-            if(workflowPaths != null) {
-                workflowPaths.stream().forEach(path -> workflowsPathItem.getSingles().add(path));
-                req.setWorkflowPaths(workflowsPathItem);
-            }
-            if(schedulePaths != null) {
-                schedulePaths.stream().forEach(path -> schedulesPathItem.getSingles().add(path));
-                req.setSchedulePaths(schedulesPathItem);
-            }
+            req.setDailyPlanDate(sdf.format(Date.from(now)));
+            req.setWorkflowPaths(workflowsPathItem);
+            req.setSchedulePaths(schedulesPathItem);
             generateRequests.add(req);
+            now = now.plusSeconds(TimeUnit.DAYS.toSeconds(1));
         }
         return generateRequests;
     }
