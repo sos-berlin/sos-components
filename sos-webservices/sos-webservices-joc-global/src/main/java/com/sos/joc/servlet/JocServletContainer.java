@@ -17,6 +17,7 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
@@ -30,6 +31,8 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.DbInstaller;
+import com.sos.joc.db.cluster.CheckInstance;
+import com.sos.joc.exceptions.JocConfigurationException;
 
 import jakarta.servlet.ServletException;
 
@@ -56,6 +59,17 @@ public class JocServletContainer extends ServletContainer {
         } catch (Exception e) {
             throw new ServletException(e);
         }
+        
+        try {
+            CheckInstance.check();
+        } catch (JocConfigurationException | SOSHibernateException e) {
+            LOGGER.info("----> closing DB Connections");
+            Globals.sosHibernateFactory.close();
+            CheckInstance.stopJOC();
+            throw new ServletException(e);
+        }
+        
+        
         DailyPlanCalendar.getInstance();
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         CompletableFuture.runAsync(() -> JitlDocumentation.saveOrUpdate());

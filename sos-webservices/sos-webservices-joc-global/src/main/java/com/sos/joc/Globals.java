@@ -68,6 +68,8 @@ public class Globals {
     private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
     private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
     private static JocSecurityLevel jocSecurityLevel = null;
+    private static String clusterId = null;
+    private static Integer ordering = null;
     public static Integer iamSessionTimeout;
 
     public static synchronized SOSHibernateFactory getHibernateFactory() throws JocConfigurationException {
@@ -101,7 +103,7 @@ public class Globals {
         readJocCockpitVersion();
         readApiSchemaVersion();
         readInventorySchemaVersion();
-        LOGGER.info("Security Level = " + Globals.getJocSecurityLevel().value());
+        LOGGER.info("Security Level = " + getJocSecurityLevel().value());
         setMaxResponseDuration();
     }
 
@@ -340,15 +342,15 @@ public class Globals {
     public static JocSecurityLevel getJocSecurityLevel(JocSecurityLevel defaultLevel) {
         // the JocSecurity classes should have a method getJocSecurityLevel which is
         // callable static during an abstract class
-        if (Globals.jocSecurityLevel == null) {
-            Globals.jocSecurityLevel = defaultLevel; // default
+        if (jocSecurityLevel == null) {
+            jocSecurityLevel = defaultLevel; // default
             try {
                 InputStream stream = Globals.class.getResourceAsStream("/joc-settings.properties");
                 if (stream != null) {
                     Properties properties = new Properties();
                     properties.load(stream);
                     try {
-                        Globals.jocSecurityLevel = JocSecurityLevel.fromValue(properties.getProperty("security_level", defaultLevel.value())
+                        jocSecurityLevel = JocSecurityLevel.fromValue(properties.getProperty("security_level", defaultLevel.value())
                                 .toUpperCase());
                     } catch (Exception e) {
                         //
@@ -358,11 +360,51 @@ public class Globals {
                 LOGGER.error(String.format("Error while reading %1$s:", "joc-settings.properties"), e);
             }
         }
-        return Globals.jocSecurityLevel;
+        return jocSecurityLevel;
     }
 
     public static void setJocSecurityLevel(JocSecurityLevel level) {
-        Globals.jocSecurityLevel = level;
+        jocSecurityLevel = level;
+    }
+    
+    public static String getClusterId() throws JocConfigurationException {
+        if (clusterId == null) {
+            if (sosCockpitProperties == null) {
+                sosCockpitProperties = new JocCockpitProperties();
+            }
+
+            clusterId = sosCockpitProperties.getProperty("cluster_id");
+
+            if (clusterId == null || clusterId.isEmpty()) {
+                throw new JocConfigurationException("The 'cluster_id' setting in the joc.properties file is not defined.");
+            } else if (clusterId.length() > 10) {
+                throw new JocConfigurationException("The 'cluster_id' setting in the joc.properties file can be only max. 10 characters long.");
+            }
+        }
+        return clusterId;
+    }
+    
+    public static void setClusterId(String val) {
+        clusterId = val;
+    }
+    
+    public static Integer getOrdering() throws JocConfigurationException {
+        if (ordering == null) {
+            if (sosCockpitProperties == null) {
+                sosCockpitProperties = new JocCockpitProperties();
+            }
+
+            ordering = Integer.valueOf(sosCockpitProperties.getProperty("ordering", -1));
+
+            if (ordering.intValue() < 0 || ordering.intValue() > 99) {
+                throw new JocConfigurationException("The 'ordering' setting in the joc.properties file must have an integer value from 0 to 99.");
+            }
+        }
+        return ordering;
+    }
+    
+    public static void setOrdering(Integer val) {
+        ordering = val;
     }
 
     public static void setServletBaseUri(UriInfo uriInfo) {
@@ -393,22 +435,22 @@ public class Globals {
     }
 
     public static ConfigurationGlobalsJoc getConfigurationGlobalsJoc() {
-        return Globals.configurationGlobals == null ? new ConfigurationGlobalsJoc() : (ConfigurationGlobalsJoc) Globals.configurationGlobals
+        return configurationGlobals == null ? new ConfigurationGlobalsJoc() : (ConfigurationGlobalsJoc) configurationGlobals
                 .getConfigurationSection(DefaultSections.joc);
     }
 
     public static ConfigurationGlobalsUser getConfigurationGlobalsUser() {
-        return Globals.configurationGlobals == null ? new ConfigurationGlobalsUser() : (ConfigurationGlobalsUser) Globals.configurationGlobals
+        return configurationGlobals == null ? new ConfigurationGlobalsUser() : (ConfigurationGlobalsUser) configurationGlobals
                 .getConfigurationSection(DefaultSections.user);
     }
 
     public static ConfigurationGlobalsDailyPlan getConfigurationGlobalsDailyPlan() {
-        return Globals.configurationGlobals == null ? new ConfigurationGlobalsDailyPlan()
-                : (ConfigurationGlobalsDailyPlan) Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
+        return configurationGlobals == null ? new ConfigurationGlobalsDailyPlan()
+                : (ConfigurationGlobalsDailyPlan) configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
     }
 
     public static ConfigurationGlobalsGit getConfigurationGlobalsGit() {
-        return Globals.configurationGlobals == null ? new ConfigurationGlobalsGit() : (ConfigurationGlobalsGit) Globals.configurationGlobals
+        return configurationGlobals == null ? new ConfigurationGlobalsGit() : (ConfigurationGlobalsGit) configurationGlobals
                 .getConfigurationSection(DefaultSections.git);
     }
 

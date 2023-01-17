@@ -26,7 +26,7 @@ public class JocInstance {
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
 
             dbLayer.getSession().beginTransaction();
-            DBItemInventoryOperatingSystem osItem = getOS(dbLayer);
+            DBItemInventoryOperatingSystem osItem = getOS(dbLayer, config.getHostname());
             DBItemJocInstance item = dbLayer.getInstance(config.getMemberId());
             if (item == null) {
                 item = new DBItemJocInstance();
@@ -36,6 +36,7 @@ public class JocInstance {
                 item.setSecurityLevel(config.getSecurityLevel().name());
                 item.setStartedAt(startTime);
                 item.setTimezone(config.getTimeZone());
+                item.setClusterId(config.getClusterId());
                 item.setTitle(config.getTitle());
                 item.setOrdering(config.getOrdering());
                 item.setUri(null);// TODO
@@ -44,6 +45,9 @@ public class JocInstance {
             } else {
                 if (StartupMode.automatic.equals(mode)) {
                     item.setSecurityLevel(config.getSecurityLevel().name());
+                    item.setClusterId(config.getClusterId());
+                    item.setOrdering(config.getOrdering());
+                    item.setTitle(config.getTitle());
                     item.setStartedAt(startTime);
                     item.setHeartBeat(new Date());
                     dbLayer.getSession().update(item);
@@ -66,11 +70,11 @@ public class JocInstance {
         }
     }
 
-    private DBItemInventoryOperatingSystem getOS(DBLayerJocCluster dbLayer) throws Exception {
-        DBItemInventoryOperatingSystem item = dbLayer.getOS(config.getHostname());
+    public static DBItemInventoryOperatingSystem getOS(DBLayerJocCluster dbLayer, String hostname) throws Exception {
+        DBItemInventoryOperatingSystem item = dbLayer.getOS(hostname);
         if (item == null) {
             item = new DBItemInventoryOperatingSystem();
-            item.setHostname(config.getHostname());
+            item.setHostname(hostname);
             item.setName(SOSShell.OS_NAME);
             item.setArchitecture(SOSShell.OS_ARCHITECTURE);
             item.setDistribution(SOSShell.OS_VERSION);

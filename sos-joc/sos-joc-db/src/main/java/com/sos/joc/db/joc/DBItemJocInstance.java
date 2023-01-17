@@ -31,6 +31,9 @@ public class DBItemJocInstance extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
+    @Column(name = "[CLUSTER_ID]", nullable = false)
+    private String clusterId;
+
     @Column(name = "[MEMBER_ID]", nullable = false)
     private String memberId;// host:appData
 
@@ -69,6 +72,14 @@ public class DBItemJocInstance extends DBItem {
 
     public void setId(Long val) {
         id = val;
+    }
+
+    public String getClusterId() {
+        return clusterId;
+    }
+
+    public void setClusterId(String val) {
+        clusterId = val;
     }
 
     public String getMemberId() {

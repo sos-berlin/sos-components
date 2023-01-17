@@ -21,8 +21,18 @@ public class JocInstancesDBLayer {
     }
 
     public List<DBItemJocInstance> getInstances() throws DBConnectionRefusedException, DBInvalidDataException {
+        return getInstances("ordering");
+    }
+    
+    public List<DBItemJocInstance> getInstances(String orderBy) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            Query<DBItemJocInstance> query = session.createQuery("from " + DBLayer.DBITEM_JOC_INSTANCES + " order by ordering");
+            if (orderBy == null) {
+                orderBy  = "";
+            }
+            if (!orderBy.isEmpty()) {
+                orderBy = " order by " + orderBy;
+            }
+            Query<DBItemJocInstance> query = session.createQuery("from " + DBLayer.DBITEM_JOC_INSTANCES + orderBy);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
