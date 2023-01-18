@@ -63,8 +63,10 @@ public class JocServletContainer extends ServletContainer {
         try {
             CheckInstance.check();
         } catch (JocConfigurationException | SOSHibernateException e) {
-            LOGGER.info("----> closing DB Connections");
-            Globals.sosHibernateFactory.close();
+            if (Globals.sosHibernateFactory != null) {
+                LOGGER.info("----> closing DB Connections");
+                Globals.sosHibernateFactory.close();
+            }
             CheckInstance.stopJOC();
             throw new ServletException(e);
         }

@@ -1,6 +1,5 @@
 package com.sos.joc.db.cluster;
 
-import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -161,31 +160,31 @@ public class CheckInstance {
         String jettyHome = System.getProperty("jetty.home");
         if (jettyHome != null && !jettyHome.isEmpty()) {
             if (SOSShell.IS_WINDOWS) {
-                Path serviceFolder = Paths.get(jettyHome).resolve("..\\service");
-                if (Files.exists(serviceFolder)) {
-                    try {
-                        System.out.println("...try to stop Jetty in 3s");
-                        Files.list(serviceFolder).map(Path::getFileName).map(Path::toString).filter(f -> f.endsWith(".exe")).filter(f -> f.startsWith(
-                                "js7_")).map(f -> f.replaceFirst("w?\\.exe", "")).findAny().ifPresent(serviceName -> {
-                                    System.out.println("...try to stop Jetty in 3s");
-                                    new Thread(() -> {
-                                        try {
-                                            TimeUnit.SECONDS.sleep(3);
-                                        } catch (InterruptedException e) {
-                                            //
-                                        }
-                                        executeCommand("sc.exe stop " + serviceName);
-                                    }).start();
-                                });
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+//                Path jettyHomePath = Paths.get(jettyHome);
+//                Path serviceFolder = jettyHomePath.resolve("..\\service").normalize();
+//                Path startJar = jettyHomePath.resolve("jetty").resolve("start.jar");
+//                Path javaExe = Paths.get(System.getProperty("java.home")).resolve("bin").resolve("java.exe");
+//                // TODO determine stop port. It would be offer from the setup (maybe the whole stop command)
+//                int jettyStopPort = 40446;
+//                
+//                if (Files.exists(serviceFolder) && Files.exists(startJar)) {
+//                    try {
+//                        Files.list(serviceFolder).map(Path::getFileName).map(Path::toString).filter(f -> f.endsWith(".exe")).filter(f -> f.startsWith(
+//                                "js7_")).map(f -> f.replaceFirst("w?\\.exe", "")).findAny().ifPresent(serviceName -> {
+//                                    new Thread(() -> {
+//                                        String command = String.format("\"%s\" -jar \"%s\" --stop STOP.KEY=%s STOP.PORT=%d STOP.WAIT=10", javaExe
+//                                                .toString(), startJar.toString(), serviceName, jettyStopPort);
+//                                        executeCommand(command);
+//                                    }).start();
+//                                });
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
             } else {
                 Path startscript = Paths.get(jettyHome).resolve("bin").resolve("jetty.sh");
                 if (Files.exists(startscript)) {
                     System.out.println("...try to stop Jetty in 3s");
-                    SOSShell.executeCommand(startscript.toString() + " stop");
                     new Thread(() -> {
                         try {
                             TimeUnit.SECONDS.sleep(3);
