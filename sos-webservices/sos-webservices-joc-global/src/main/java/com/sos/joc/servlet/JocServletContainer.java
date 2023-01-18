@@ -25,6 +25,7 @@ import com.sos.joc.classes.agent.AgentStoreUtils;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.documentation.JitlDocumentation;
+import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.classes.workflow.WorkflowPaths;
@@ -86,7 +87,7 @@ public class JocServletContainer extends ServletContainer {
             SOSShell.printSystemInfos();
             SOSShell.printJVMInfos();
         });
-
+        ClusterWatch.getInstance();
         JocClusterService.getInstance().start(StartupMode.automatic);
 
         try {

@@ -1,6 +1,6 @@
 package com.sos.joc.classes.proxy;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,10 +23,10 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.exceptions.ControllerAuthorizationException;
-import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerSSLCertificateException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 
 import io.vavr.control.Either;
@@ -288,9 +288,9 @@ public class ProxyContext {
 
     private JStandardEventBus<ProxyEvent> getProxyEventBus() {
         JStandardEventBus<ProxyEvent> proxyEventBus = new JStandardEventBus<>(ProxyEvent.class);
-        proxyEventBus.subscribe(Arrays.asList(ProxyCoupled.class), this::onProxyCoupled);
-        proxyEventBus.subscribe(Arrays.asList(ProxyDecoupled$.class), this::onProxyDecoupled);
-        proxyEventBus.subscribe(Arrays.asList(ProxyCouplingError.class), this::onProxyCouplingError);
+        proxyEventBus.subscribe(Collections.singletonList(ProxyCoupled.class), this::onProxyCoupled);
+        proxyEventBus.subscribe(Collections.singletonList(ProxyDecoupled$.class), this::onProxyDecoupled);
+        proxyEventBus.subscribe(Collections.singletonList(ProxyCouplingError.class), this::onProxyCouplingError);
         return proxyEventBus;
     }
     
