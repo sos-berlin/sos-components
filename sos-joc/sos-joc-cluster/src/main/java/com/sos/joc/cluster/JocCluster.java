@@ -379,9 +379,7 @@ public class JocCluster {
                     event.setNewClusterMemberId(activeMemberId);
                     LOGGER.info(String.format("[post]%s", SOSString.toString(event)));
 
-                    new Thread(() -> {
-                        EventBus.getInstance().post(event);
-                    }).start();
+                    EventBus.getInstance().post(event);
                 } catch (Throwable e) {
                     LOGGER.error(e.toString(), e);
                 }
@@ -395,9 +393,7 @@ public class JocCluster {
             try {
                 JocClusterServiceLogger.setLogger();
                 LOGGER.info("[post]DailyPlanCalendarEvent");
-                new Thread(() -> {
-                    EventBus.getInstance().post(new DailyPlanCalendarEvent());
-                }).start();
+                EventBus.getInstance().post(new DailyPlanCalendarEvent());
             } catch (Exception e) {
                 LOGGER.error(e.toString(), e);
             }

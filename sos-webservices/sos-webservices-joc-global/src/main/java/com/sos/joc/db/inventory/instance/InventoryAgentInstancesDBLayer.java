@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 
@@ -238,6 +239,28 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 query.setParameterList("agentUrls", agentUrls);
             }
             return getSession().getResultList(query);
+        } catch (DBMissingDataException ex) {
+            throw ex;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public Stream<String> getControllerIdsWithoutAgentWatch() throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append("select a.controllerId, sum(a.isWatcher) from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" a, ");
+            hql.append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" b ");
+            hql.append("where a.controllerId=b.controllerId and b.isCluster=1 group by a.controllerId");
+            
+            Query<Object[]> query = getSession().createQuery(hql.toString());
+            List<Object[]> result = getSession().getResultList(query);
+            if (result == null) {
+                return Stream.empty();
+            }
+            return result.stream().filter(o -> ((long) o[1]) > 0).map(o -> (String) o[0]);
         } catch (DBMissingDataException ex) {
             throw ex;
         } catch (SOSHibernateInvalidSessionException ex) {
