@@ -2,6 +2,7 @@ package com.sos.joc;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,6 +23,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
+import com.sos.commons.util.SOSShell;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.JocWebserviceDataContainer;
 import com.sos.joc.classes.SSLContext;
@@ -405,6 +408,23 @@ public class Globals {
     
     public static void setOrdering(Integer val) {
         ordering = val;
+    }
+    
+    public static String getDataDirectory() {
+        return Paths.get(System.getProperty("user.dir")).toString();
+    }
+    
+    public static String getMemberId() {
+        return getHostname() + ":" + SOSString.hash256(getDataDirectory());
+    }
+    
+    public static String getHostname() {
+        try {
+            return SOSShell.getHostname();
+        } catch (UnknownHostException e) {
+            LOGGER.error(e.toString(), e);
+        }
+        return "unknown";
     }
 
     public static void setServletBaseUri(UriInfo uriInfo) {

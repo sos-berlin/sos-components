@@ -1,6 +1,5 @@
 package com.sos.joc.db.cluster;
 
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSShell;
-import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.joc.Globals;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
@@ -45,7 +43,7 @@ public class CheckInstance {
             session = Globals.createSosHibernateStatelessConnection(CheckInstance.class.getSimpleName());
             JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(session);
             List<DBItemJocInstance> instances = dbLayer.getInstances("ordering, id");
-            String memberId = getMemberId();
+            String memberId = Globals.getMemberId();
             if (instances != null && !instances.isEmpty()) {
                 
                 
@@ -129,12 +127,12 @@ public class CheckInstance {
                                         session.delete(dbInstanceOpt.get());
                                     }
                                     try {
-                                        DBItemInventoryOperatingSystem osItem = JocInstance.getOS(new DBLayerJocCluster(session), getHostname());
+                                        DBItemInventoryOperatingSystem osItem = JocInstance.getOS(new DBLayerJocCluster(session), Globals.getHostname());
                                         dbInstance.setOsId(osItem.getId());
                                     } catch (Exception e) {
                                         LOGGER.error("", e);
                                     }
-                                    dbInstance.setDataDirectory(getDataDirectory());
+                                    dbInstance.setDataDirectory(Globals.getDataDirectory());
                                     dbInstance.setMemberId(memberId);
                                     session.update(dbInstance);
                                 }
@@ -220,23 +218,6 @@ public class CheckInstance {
             }
         }
         return false;
-    }
-    
-    private static String getDataDirectory() {
-        return Paths.get(System.getProperty("user.dir")).toString();
-    }
-    
-    private static String getMemberId() {
-        return getHostname() + ":" + SOSString.hash256(getDataDirectory());
-    }
-    
-    private static String getHostname() {
-        try {
-            return SOSShell.getHostname();
-        } catch (UnknownHostException e) {
-            LOGGER.error(e.toString(), e);
-        }
-        return "unknown";
     }
 
 }
