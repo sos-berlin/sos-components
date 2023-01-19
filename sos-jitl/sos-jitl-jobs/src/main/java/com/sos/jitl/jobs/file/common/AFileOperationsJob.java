@@ -13,9 +13,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
+import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
@@ -151,20 +153,18 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
     public JOutcome.Completed handleResult(JobStep<FileOperationsJobArguments> step, List<File> files, boolean result) throws Exception {
         FileOperationsJobArguments args = step.getArguments();
         int size = 0;
-        StringBuilder fileList = new StringBuilder();
+        String fileList = "";
         if (files != null && files.size() > 0) {
             size = files.size();
-            for (File f : files) {
-                fileList.append(f.getAbsolutePath() + ";");
-            }
+            fileList = files.stream().map(File::getAbsolutePath).collect(Collectors.joining(";"));
         }
-        args.getReturnResultSet().setValue(fileList.toString());
+        args.getReturnResultSet().setValue(fileList);
         args.getReturnResultSetSize().setValue(size);
 
         if (args.getResultSetFile().getValue() != null && fileList.length() > 0) {
             step.getLogger().debug("..try to write file:" + args.getResultSetFile().getValue());
             if (Files.isWritable(args.getResultSetFile().getValue())) {
-                Files.write(args.getResultSetFile().getValue(), fileList.toString().getBytes("UTF-8"));
+                Files.write(args.getResultSetFile().getValue(), fileList.getBytes("UTF-8"));
             } else {
                 throw new SOSFileOperationsException(String.format("file '%s'(%s) is not writable", args.getResultSetFile().getValue(), args
                         .getResultSetFile().getName()));
@@ -177,7 +177,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                 return step.failed(msg, args.getReturnResultSet(), args.getReturnResultSetSize());
             }
         }
-        return step.success(args.getReturnResultSet(), args.getReturnResultSetSize());
+        return step.success(result ? Job.DEFAULT_RETURN_CODE_SUCCEEDED : 1, args.getReturnResultSet(), args.getReturnResultSetSize());
     }
 
     private boolean compareIntValues(final String comparator, final int left, final int right) throws Exception {
