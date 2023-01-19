@@ -95,9 +95,8 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
     public static void main(String[] args) {
 
         CheckHistoryJobArguments arguments = new CheckHistoryJobArguments();
-        arguments.setQuery("isStarted(startedFrom=-1d,startedTo=0d);isCompleted");
-        arguments.setQueryOperator("and");
-
+        arguments.setQuery("isStarted(startedFrom=-1d,startedTo=0d) or isCompleted or isCompleted");
+ 
         // arguments.setQuery("isCompletedSuccessful(startedFrom=-1d,startedTo=-1d)");
         // arguments.setQuery("isCompleted(startedFrom=-100d, count>5)");
 

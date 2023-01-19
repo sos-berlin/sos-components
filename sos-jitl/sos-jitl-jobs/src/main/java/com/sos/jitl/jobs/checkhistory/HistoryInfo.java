@@ -176,17 +176,32 @@ public class HistoryInfo {
 	}
 
 	public HistoryItem queryHistory() throws Exception {
-		String[] queries = args.getQuery().split(";");
-		HistoryItem h = null;
-		if (args.getQueryOperator() == null || args.getQueryOperator().isEmpty()) {
-			args.setQueryOperator("or");
+		String query = args.getQuery().toLowerCase();
+		boolean isOr = true;
+		boolean isAnd = false;
+		if (query.contains(" or ") && query.contains(" and ")) {
+			throw new Exception("AND can not be mixed with OR in one query " + args.getQuery());
 		}
+		if (query.contains(" or ")) {
+			query = query.replaceAll(" or ", ";");
+			isOr = true;
+			isAnd = false;
+		}
+		if (query.contains(" and ")) {
+			query = query.replaceAll(" and ", ";");
+			isOr = false;
+			isAnd = true;
+		}
+
+		String[] queries = query.split(";");
+		HistoryItem h = null;
+
 		for (int i = 0; i < queries.length; i++) {
 			h = executeApiCall(queries[i]);
-			if (h.getResult() && args.getQueryOperator().equalsIgnoreCase("or")) {
+			if (h.getResult() && isOr) {
 				return h;
 			}
-			if (!h.getResult() && args.getQueryOperator().equalsIgnoreCase("and")) {
+			if (!h.getResult() && isAnd) {
 				return h;
 			}
 		}
