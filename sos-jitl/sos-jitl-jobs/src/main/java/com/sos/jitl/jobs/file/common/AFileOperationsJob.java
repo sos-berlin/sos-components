@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
+import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
@@ -176,7 +177,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                 return step.failed(msg, args.getReturnResultSet(), args.getReturnResultSetSize());
             }
         }
-        return step.success(args.getReturnResultSet(), args.getReturnResultSetSize());
+        return step.success(result ? Job.DEFAULT_RETURN_CODE_SUCCEEDED : 1, args.getReturnResultSet(), args.getReturnResultSetSize());
     }
 
     private boolean compareIntValues(final String comparator, final int left, final int right) throws Exception {

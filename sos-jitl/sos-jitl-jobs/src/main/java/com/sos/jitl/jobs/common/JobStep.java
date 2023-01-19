@@ -18,6 +18,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSReflection;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSArgumentHelper;
@@ -509,8 +510,9 @@ public class JobStep<A extends JobArguments> {
     }
 
     public JOutcome.Completed failed(final Integer returnCode, final String msg) {
-        logger.failed2slf4j(msg);
-        return JOutcome.failed(msg, mapResult(null, returnCode));
+        String fm = SOSString.isEmpty(msg) ? "" : msg;
+        logger.failed2slf4j(fm);
+        return JOutcome.failed(fm, mapResult(null, returnCode));
     }
 
     public JOutcome.Completed failed(final String msg, Throwable e) {
@@ -518,14 +520,16 @@ public class JobStep<A extends JobArguments> {
     }
 
     public JOutcome.Completed failed(final Integer returnCode, final String msg, Throwable e) {
+        String fm = SOSString.isEmpty(msg) ? "" : msg;
         Throwable ex = logger.handleException(e);
         logger.failed2slf4j(e.toString(), ex);
-        return JOutcome.failed(logger.throwable2String(msg, ex), mapResult(null, returnCode));
+        return JOutcome.failed(logger.throwable2String(fm, ex), mapResult(null, returnCode));
     }
 
     private JOutcome.Completed failedWithMap(final Integer returnCode, final String msg, final Map<String, Value> outcomes) {
-        logger.failed2slf4j(msg, outcomes);
-        return JOutcome.failed(msg, mapResult(outcomes, returnCode));
+        String fm = SOSString.isEmpty(msg) ? "" : msg;
+        logger.failed2slf4j(fm, outcomes);
+        return JOutcome.failed(fm, mapResult(outcomes, returnCode));
     }
 
     private Map<String, Value> mapResult(Map<String, Value> map, Integer returnCode) {
