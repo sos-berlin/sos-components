@@ -10,7 +10,6 @@ public class CheckHistoryJobArguments extends JobArguments {
 	private JobArgument<String> workflow = new JobArgument<String>("workflow", false);
 	private JobArgument<String> job = new JobArgument<String>("job", false);
 	private JobArgument<String> query = new JobArgument<String>("query", false);
-	private JobArgument<String> queryOperator = new JobArgument<String>("queryOperator", false);
 
 	public CheckHistoryJobArguments() {
 		super(new SOSCredentialStoreArguments());
@@ -46,14 +45,6 @@ public class CheckHistoryJobArguments extends JobArguments {
 
 	public void setQuery(String query) {
 		this.query.setValue(query);
-	}
-
-	public String getQueryOperator() {
-		return queryOperator.getValue();
-	}
-
-	public void setQueryOperator(String queryOperator) {
-		this.queryOperator.setValue(queryOperator);
 	}
 
 }
