@@ -95,7 +95,8 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
     public static void main(String[] args) {
 
         CheckHistoryJobArguments arguments = new CheckHistoryJobArguments();
-        arguments.setQuery("isStarted(startedFrom=-1d,startedTo=-1d)");
+        arguments.setQuery("isStarted(startedFrom=-1d,startedTo=0d);isCompleted");
+        arguments.setQueryOperator("and");
 
         // arguments.setQuery("isCompletedSuccessful(startedFrom=-1d,startedTo=-1d)");
         // arguments.setQuery("isCompleted(startedFrom=-100d, count>5)");
@@ -103,9 +104,8 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
         // arguments.setQuery("lastCompletedSuccessful");
         // arguments.setJob("job2");
         // arguments.setJob("jobCheckHistory2");
-        arguments.setWorkflow("fork");
+        arguments.setWorkflow("exercise1");
 
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
         CheckHistoryJob checkHistoryJob = new CheckHistoryJob(null);
 
         try {
