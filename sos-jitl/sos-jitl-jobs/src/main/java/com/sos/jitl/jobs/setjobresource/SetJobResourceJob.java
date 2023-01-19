@@ -39,8 +39,8 @@ public class SetJobResourceJob extends ABlockingInternalJob<SetJobResourceJobArg
         JitlJobReturn jobReturn = new JitlJobReturn();
         jobReturn.setExitCode(0);
        
-        SetJobResource setJobResource = new SetJobResource(logger, args);
-        setJobResource.execute();
+//        SetJobResource setJobResource = new SetJobResource(logger, args);
+//        setJobResource.execute();
  
         return jobReturn;
     }
