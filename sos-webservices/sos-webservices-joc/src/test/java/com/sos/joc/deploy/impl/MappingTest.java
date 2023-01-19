@@ -5,8 +5,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.persistence.TemporalType;
@@ -542,5 +546,23 @@ public class MappingTest {
             validated = false;
         }
         assertTrue(validated);
+    }
+    
+    @Test
+    public void test36ParseWorkflowNames () {
+        // pattern: ^.*workflowNames\"\:\[(.*?)\].*$
+        String regex = "^.*workflowNames\\\"\\:\\[(.*?)\\].*$";
+        String json = "{\"version\":\"1.4.0\",\"workflowNames\":[\"scheduled\", \"scheduled2\"],\"title\":\"blah\",\"submitOrderToControllerWhenPlanned\":true,\"planOrderAutomatically\":true,\"calendars\":[{\"calendarName\":\"My_Working_days\",\"timeZone\":\"Europe/Berlin\",\"periods\":[{\"singleStart\":\"14:00:00\",\"whenHoliday\":\"SUPPRESS\"}]}],\"orderParameterisations\":[]}";
+        List<String> workflows = new ArrayList<String>();
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(json);
+        if(matcher.matches()) {
+            String workflowNamesArray = matcher.group(1);
+            String[] workflowNamesSplitted = workflowNamesArray.split(",");
+            for(int i=0; i < workflowNamesSplitted.length; i++) {
+                workflows.add(workflowNamesSplitted[i].trim().substring(1, workflowNamesSplitted[i].trim().length() -1));
+            }
+        }
+        assertTrue(workflows.size() == 2);
     }
 }

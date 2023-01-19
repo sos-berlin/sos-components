@@ -1311,6 +1311,38 @@ public class DBLayerDeploy {
         }
     }
 
+    public DBItemDeploymentHistory getLatestDepHistoryItemByNameAndType(String name, ConfigurationType objectType) {
+        try {
+            StringBuilder hql = new StringBuilder("select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where name = :name");
+            hql.append(" and type = :type");
+            Query<Long> maxIdQuery = session.createQuery(hql.toString());
+            maxIdQuery.setParameter("name", name);
+            maxIdQuery.setParameter("type", objectType.intValue());
+            Long maxId = session.getSingleResult(maxIdQuery);
+            DBItemDeploymentHistory item = null;
+            if (maxId != null) {
+                hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+                hql.append(" where id = :maxId");
+                Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+                query.setParameter("maxId", maxId);
+                item = session.getSingleResult(query);
+            }
+            return item;
+//            StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+//            hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+//            hql.append(" where history.name = :name");
+//            hql.append(" and history.type = :type").append(")");
+//            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+//            query.setParameter("name", name);
+//            query.setParameter("type", objectType.intValue());
+//            
+//            return session.getSingleResult(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
     public List<DBItemDeploymentHistory> getLatestDepHistoryItems(List<Config> depConfigsToDelete) {
         try {
             StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");

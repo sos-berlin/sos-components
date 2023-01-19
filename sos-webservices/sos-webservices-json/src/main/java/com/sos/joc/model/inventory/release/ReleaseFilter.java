@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "update",
     "delete",
+    "addOrdersDateFrom",
     "auditLog"
 })
 public class ReleaseFilter {
@@ -31,6 +32,14 @@ public class ReleaseFilter {
     private List<RequestFilter> update = new ArrayList<RequestFilter>();
     @JsonProperty("delete")
     private List<RequestFilter> delete = new ArrayList<RequestFilter>();
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("addOrdersDateFrom")
+    private String addOrdersDateFrom;
     /**
      * auditParams
      * <p>
@@ -61,6 +70,28 @@ public class ReleaseFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("addOrdersDateFrom")
+    public String getAddOrdersDateFrom() {
+        return addOrdersDateFrom;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("addOrdersDateFrom")
+    public void setAddOrdersDateFrom(String addOrdersDateFrom) {
+        this.addOrdersDateFrom = addOrdersDateFrom;
+    }
+
+    /**
      * auditParams
      * <p>
      * 
@@ -84,12 +115,12 @@ public class ReleaseFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("update", update).append("delete", delete).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("update", update).append("delete", delete).append("addOrdersDateFrom", addOrdersDateFrom).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(update).append(auditLog).append(delete).toHashCode();
+        return new HashCodeBuilder().append(update).append(auditLog).append(delete).append(addOrdersDateFrom).toHashCode();
     }
 
     @Override
@@ -101,7 +132,7 @@ public class ReleaseFilter {
             return false;
         }
         ReleaseFilter rhs = ((ReleaseFilter) other);
-        return new EqualsBuilder().append(update, rhs.update).append(auditLog, rhs.auditLog).append(delete, rhs.delete).isEquals();
+        return new EqualsBuilder().append(update, rhs.update).append(auditLog, rhs.auditLog).append(delete, rhs.delete).append(addOrdersDateFrom, rhs.addOrdersDateFrom).isEquals();
     }
 
 }

@@ -111,7 +111,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         return ordersPerControllerIds;
     }
     
-    public Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> m, String accessToken,
+    public Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController, String accessToken,
             AuditParams auditLog, boolean withAudit, boolean withEvent) throws SOSHibernateException, ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
@@ -124,7 +124,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
         }
         
-        for (Map.Entry<String, List<DBItemDailyPlanOrder>> entry : m.entrySet()) {
+        for (Map.Entry<String, List<DBItemDailyPlanOrder>> entry : ordersPerController.entrySet()) {
             String controllerId = entry.getKey();
             List<DBItemDailyPlanOrder> orders = entry.getValue();
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders(controllerId);
