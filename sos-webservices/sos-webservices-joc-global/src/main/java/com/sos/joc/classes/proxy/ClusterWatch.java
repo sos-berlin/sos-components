@@ -61,6 +61,7 @@ public class ClusterWatch {
     @Subscribe({ ActiveClusterChangedEvent.class })
     public void listenEvent(ActiveClusterChangedEvent evt) {
         LOGGER.info("[ClusterWatch] memberId = " + memberId);
+        LOGGER.info("[ClusterWatch] current Watches: " + startedWatches.toString());
         if (evt.getNewClusterMemberId() != null && evt.getOldClusterMemberId() != null) {
             if (memberId.equals(evt.getOldClusterMemberId())) {
                 //stop for all controllerIds
@@ -90,9 +91,14 @@ public class ClusterWatch {
     }
 
     protected void start(JControllerApi controllerApi, String controllerId, boolean checkWatchByJoc) {
+        LOGGER.info("[ClusterWatch] try to start for " + controllerId);
+        LOGGER.info("[ClusterWatch] current Watches: " + startedWatches.toString());
         boolean clusterWatchByJoc = !checkWatchByJoc;
         if (checkWatchByJoc) {
+            /* dry run
             clusterWatchByJoc = jocIsClusterWatch(controllerId).count() == 1L && jocInstanceIsActive();
+            */
+            clusterWatchByJoc = jocInstanceIsActive();
         }
         if (clusterWatchByJoc) {
             if (isAlive(controllerId)) {
@@ -113,6 +119,8 @@ public class ClusterWatch {
                     LOGGER.error("[ClusterWatch] starting for " + controllerId + " failed", e);
                 }
             }
+        } else {
+            LOGGER.info("[ClusterWatch] " + controllerId + " is watched by Agent");
         }
     }
 

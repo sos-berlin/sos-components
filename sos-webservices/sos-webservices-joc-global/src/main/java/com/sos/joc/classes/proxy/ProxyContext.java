@@ -135,6 +135,7 @@ public class ProxyContext {
     private void checkCluster() {
         if (credentials.getBackupUrl() != null) { // is Cluster
             LOGGER.info(toString() + ": check cluster appointment");
+            LOGGER.info(toString() + ": future is complete? " + proxyFuture.isDone());
             proxyFuture.thenApplyAsync(p -> {
                 Either<Problem, Void> either = null;
                 List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(credentials.getControllerId());
@@ -185,6 +186,7 @@ public class ProxyContext {
     }
     
     private void reDeployAgentsAndCalendar() {
+        LOGGER.info(toString() + ": Redeploy Agents and Calendar if necessary");
         proxyFuture.thenAcceptAsync(p -> {
             SOSHibernateSession sosHibernateSession = null;
             try {
