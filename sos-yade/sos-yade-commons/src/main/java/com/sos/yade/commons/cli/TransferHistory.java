@@ -1,4 +1,4 @@
-package com.sos.yade.commons.result;
+package com.sos.yade.commons.cli;
 
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -18,8 +18,12 @@ import com.sos.yade.commons.Yade;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.commons.Yade.TransferProtocol;
+import com.sos.yade.commons.result.YadeTransferResult;
+import com.sos.yade.commons.result.YadeTransferResultEntry;
+import com.sos.yade.commons.result.YadeTransferResultProtocol;
+import com.sos.yade.commons.result.YadeTransferResultSerializer;
 
-public class TransferResult {
+public class TransferHistory {
 
     private static final String OS_NAME = System.getProperty("os.name");
     private static final boolean IS_WINDOWS = OS_NAME.startsWith("Windows");
@@ -64,16 +68,17 @@ public class TransferResult {
         System.out.println(" Meta options:");
         System.out.println("  --operation=<value>                Optional, Case insensitive");
         System.out.println("                                       Default: copy");
-        System.out.println("                                       Valid values: copy, move, getlist, rename, remove");
-        System.out.println("  --start=<value>,--end=<value>      Optional, Transfer start/end time");
-        System.out.println("                                       Default: current time");
-        System.out.println("                                       Valid date time formats: yyyy-MM-dd HH:mm:ss, yyyy-MM-dd'T'HH:mm:ssZ");
-        System.out.println("                                       Value examples:");
+        System.out.println("                                       Valid values: copy, move, getlist, remove");
+        System.out.println("  --start-time=<value>               Optional, ISO datetime for start time of transfer");
+        System.out.println("  --end-time=<value>                 Optional, ISO datetime for end time of transfer");
+        System.out.println("                                       Default: current datetime");
+        System.out.println("                                       Datetime formats: yyyy-MM-dd HH:mm:ss, yyyy-MM-dd'T'HH:mm:ssZ");
+        System.out.println("                                       Examples:");
         System.out.println("                                         2023-01-01 12:00:00");
         System.out.println("                                         2023-01-01 12:00:00+0100");
         System.out.println("                                         2023-01-01T12:00:00+0100");
         System.out.println("  --error=<value>                    Optional, Transfer error");
-        System.out.println("                                       Saves the error message and sets the whole transfer as failed");
+        System.out.println("                                       Specifies the error message and sets the whole transfer as failed");
 
         // SOURCE/TARGET META
         System.out.println(" Source/Target options:");
@@ -82,34 +87,34 @@ public class TransferResult {
         System.out.println("                                       Valid values: local, ftp, ftps, sftp, ssh, http, https, webdav, webdavs, smb");
         System.out.println("                                       See the --[source/target]-host option.");
         System.out.println(
-                "  --[source/target]-account=<value>  Optional, Account for authentication at one of the systems involved in file transfer.");
+                "  --[source/target]-account=<value>  Optional, Account for authentication at one of the systems involved in file transfer");
         System.out.println("                                       Default: .");
         System.out.println("                                       See the --[source/target]-host option.");
-        System.out.println("  --[source/target]-port=<value>     Optional, Port on which the connection should be established.");
+        System.out.println("  --[source/target]-port=<value>     Optional, Port on which the connection should be established");
         System.out.println("                                       Default: 0");
         System.out.println("                                       See the --[source/target]-host option.");
         System.out.println(
-                "  --[source/target]-host=<value>     Optional, Specifies the hostname or IP address of the server to which a connection has to be made.");
-        System.out.println("                                       Default: Hostname of the machine that the TransferResult being run on.");
+                "  --[source/target]-host=<value>     Optional, Specifies the hostname or IP address of the server to which a connection has to be made");
+        System.out.println(
+                "                                       Default: Hostname of the machine that the File Transfer History script being run on");
         System.out.println("                                       Possible values:");
         System.out.println("                                          somehost:80");
         System.out.println(
-                "                                            Specifies the Hostname and the Port (when the corresponding Port option is not set).");
+                "                                            Specifies the Hostname and the Port (when the corresponding Port option is not set)");
         System.out.println("                                          ftp://test_user@somehost:21");
         System.out.println(
-                "                                            Specifies the Hostname, Protocol, Account and the Port when the corresponding options are not set.");
-        System.out.println("                                            Expects a valid Java URL value.");
+                "                                            Specifies the Hostname, Protocol, Account and the Port when the corresponding options are not set");
+        System.out.println("                                            Expects a valid Java URL value");
 
         // TRANSFER ENTRIES
         System.out.println(" Transfer files options:");
-        System.out.println(
-                "  --delimiter=<value>                Optional, A Transfer files delimiter option for specifying transfer file information.");
+        System.out.println("  --delimiter=<value>                Optional, Specifies the delimiter for entries in the transfer specification");
         System.out.println("                                       Default: ,");
-        System.out.println("  --transfer-file=<value>            Optional, Specifies a single file transfer.");
+        System.out.println("  --transfer-file=<value>            Optional, Specifies a single file transfer");
         System.out.println("                                       Multiple values option: values are separated by --delimiter");
         System.out.println(
-                "                                        <source file>[--delimiter<target-file>[--delimiter<file-size in bytes>][--delimiter<transfer file error>]]");
-        System.out.println("                                       Value examples:");
+                "                                        <source-file>[--delimiter<target-file>[--delimiter<file-size(in bytes)>][--delimiter<error-message>]]");
+        System.out.println("                                       Examples:");
         System.out.println("                                         /home/sos/source_file.txt");
         System.out.println("                                         /home/sos/source_file.txt,/home/sos/target_file.txt");
         System.out.println("                                         /home/sos/source_file.txt,/home/sos/target_file.txt,100");
@@ -136,10 +141,10 @@ public class TransferResult {
             case "--operation":
                 result.setOperation(getOperation(arg, pv));
                 break;
-            case "--start":
+            case "--start-time":
                 result.setStart(toInstant(arg, pv));
                 break;
-            case "--end":
+            case "--end-time":
                 result.setEnd(toInstant(arg, pv));
                 break;
             case "--error":
@@ -194,7 +199,7 @@ public class TransferResult {
         }
 
         if (PARSE_ERRORS.size() > 0) {
-            System.out.println(String.format("[%s][invalid values]%s", TransferResult.class.getSimpleName(), String.join(", ", PARSE_ERRORS)));
+            System.out.println(String.format("[%s][invalid values]%s", TransferHistory.class.getSimpleName(), String.join(", ", PARSE_ERRORS)));
         }
 
         try {
