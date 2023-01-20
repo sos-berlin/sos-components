@@ -61,16 +61,17 @@ public class ClusterWatch {
     @Subscribe({ ActiveClusterChangedEvent.class })
     public void listenEvent(ActiveClusterChangedEvent evt) {
         LOGGER.info("[ClusterWatch] memberId = " + memberId);
-        LOGGER.info("[ClusterWatch] current Watches: " + startedWatches.toString());
+        LOGGER.info("[ClusterWatch] current Watches: " + startedWatches.keySet().toString());
+        LOGGER.info("[ClusterWatch] receive Event: " + evt.toString());
         if (evt.getNewClusterMemberId() != null && evt.getOldClusterMemberId() != null) {
             if (memberId.equals(evt.getOldClusterMemberId())) {
                 //stop for all controllerIds
-                LOGGER.info("[ClusterWatch] try to stop Watches: " + startedWatches.toString());
+                LOGGER.info("[ClusterWatch] try to stop Watches: " + startedWatches.keySet().toString());
                 startedWatches.keySet().forEach(controllerId -> stop(controllerId));
             } else if (memberId.equals(evt.getNewClusterMemberId())) {
                 //start for all controllerIds
                 jocIsClusterWatch().forEach(controllerId -> start(controllerId));
-                LOGGER.info("[ClusterWatch] started Watches: " + startedWatches.toString());
+                LOGGER.info("[ClusterWatch] started Watches: " + startedWatches.keySet().toString());
             }
         }
     }
@@ -92,15 +93,16 @@ public class ClusterWatch {
 
     protected void start(JControllerApi controllerApi, String controllerId, boolean checkWatchByJoc) {
         LOGGER.info("[ClusterWatch] try to start for " + controllerId);
-        LOGGER.info("[ClusterWatch] current Watches: " + startedWatches.toString());
+        LOGGER.info("[ClusterWatch] current Watches: " + startedWatches.keySet().toString());
         boolean clusterWatchByJoc = !checkWatchByJoc;
+        boolean jocIsActive = true;
         if (checkWatchByJoc) {
-            /* dry run
-            clusterWatchByJoc = jocIsClusterWatch(controllerId).count() == 1L && jocInstanceIsActive();
-            */
-            clusterWatchByJoc = jocInstanceIsActive();
+            // dry run
+            // clusterWatchByJoc = jocIsClusterWatch(controllerId).count() == 1L && jocInstanceIsActive();
+            clusterWatchByJoc = true;
+            jocIsActive = jocInstanceIsActive();
         }
-        if (clusterWatchByJoc) {
+        if (clusterWatchByJoc && jocIsActive) {
             if (isAlive(controllerId)) {
                 LOGGER.info("[ClusterWatch] is still running for " + controllerId);
                 // throw new JocServiceException("[ClusterWatch] " + controllerId + " is still running.");
@@ -116,11 +118,13 @@ public class ClusterWatch {
                     });
                     startedWatches.put(controllerId, started);
                 } catch (Exception e) {
-                    LOGGER.error("[ClusterWatch] starting for " + controllerId + " failed", e);
+                    LOGGER.error("[ClusterWatch] start for " + controllerId + " failed", e);
                 }
             }
         } else {
-            LOGGER.info("[ClusterWatch] " + controllerId + " is watched by Agent");
+            if (clusterWatchByJoc) {
+                LOGGER.info("[ClusterWatch] " + controllerId + " is watched by Agent");
+            }
         }
     }
 

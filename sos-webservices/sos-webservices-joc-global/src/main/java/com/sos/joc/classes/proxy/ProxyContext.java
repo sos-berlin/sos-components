@@ -172,7 +172,7 @@ public class ProxyContext {
                         // only for dry run otherwise delete following line
                         ClusterWatch.getInstance().start(p.api(), credentials.getControllerId(), true);
                         //
-                        LOGGER.info("Cluster Nodes are appointed: " + clusterState);
+                        LOGGER.info("Cluster nodes are appointed: " + clusterState);
                         either = Either.right(null);
                     }
                 }
@@ -186,7 +186,7 @@ public class ProxyContext {
     }
     
     private void reDeployAgentsAndCalendar() {
-        LOGGER.info(toString() + ": Redeploy Agents and Calendar if necessary");
+        //LOGGER.info(toString() + ": Redeploy Agents and Calendar if necessary");
         proxyFuture.thenAcceptAsync(p -> {
             SOSHibernateSession sosHibernateSession = null;
             try {
