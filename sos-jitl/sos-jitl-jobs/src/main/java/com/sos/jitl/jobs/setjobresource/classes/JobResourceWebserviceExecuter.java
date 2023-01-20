@@ -1,7 +1,13 @@
 package com.sos.jitl.jobs.setjobresource.classes;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -118,6 +124,26 @@ public class JobResourceWebserviceExecuter {
 
 	}
 
+	private String getValue(String value, String argsTimeZone) {
+		if (value.trim().startsWith("[") && value.trim().endsWith("]")) {
+			Date now = new Date();
+			String timeZone = "UTC";
+			String pattern = value.substring(1, value.length() - 1);
+			if (argsTimeZone != null && !argsTimeZone.isEmpty()) {
+				timeZone = argsTimeZone;
+			}
+			try {
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+				Instant instant = now.toInstant();
+				LocalDateTime ldt = instant.atZone(ZoneId.of(timeZone)).toLocalDateTime();
+				value = ldt.format(formatter);
+			} catch (IllegalArgumentException e) {
+				return value;
+			}
+		}
+		return value;
+	}
+
 	public void handleJobResource(RequestFilter requestFilter, SetJobResourceJobArguments args, String accessToken)
 			throws JsonMappingException, JsonProcessingException, SOSConnectionRefusedException,
 			SOSBadRequestException {
@@ -129,10 +155,9 @@ public class JobResourceWebserviceExecuter {
 		if (jobResource.getEnv() == null) {
 			jobResource.setEnv(new Environment());
 		}
-		jobResource.getArguments().getAdditionalProperties().put(args.getKey(), "\"" + args.getValue() + "\"");
-		if (args.getEnvironmentVariable() == null || args.getEnvironmentVariable().isEmpty()) {
-			jobResource.getEnv().getAdditionalProperties().put(args.getKey(), "$" + args.getKey());
-		} else {
+		String value = getValue(args.getValue(), args.getTimeZone());
+		jobResource.getArguments().getAdditionalProperties().put(args.getKey(), "\"" + value + "\"");
+		if (args.getEnvironmentVariable() != null && !args.getEnvironmentVariable().isEmpty()) {
 			jobResource.getEnv().getAdditionalProperties().put(args.getKey(), "$" + args.getEnvironmentVariable());
 		}
 		configurationObject.setConfiguration(jobResource);
