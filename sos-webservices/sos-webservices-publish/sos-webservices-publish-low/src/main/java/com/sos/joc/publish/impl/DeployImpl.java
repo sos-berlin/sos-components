@@ -268,6 +268,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         .checkRenamingForUpdate(verifiedDeployables.keySet(), controllerId, dbLayer);
                 if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
                     if (deployFilter.getAddOrdersDateFrom() != null ) {
+                        
                         DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
                         DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
                         DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
@@ -306,7 +307,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                         if (je != null && je.printMetaInfo() != null) {
                                             LOGGER.info(je.printMetaInfo());
                                         }
-                                        LOGGER.warn("Order delete failed due to missing permission.");
+                                        LOGGER.warn("Order cancel failed due to missing permission.");
                                     }
                                 });
                         } catch (Exception e) {
@@ -368,14 +369,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // call updateRepo command via Proxy of given controllers
                     final List<DBItemDeploymentHistory> toDelete = filteredDepHistoryItemsToDelete;
                     UpdateItemUtils.updateItemsDelete(commitIdForDelete, toDelete, controllerId).thenAccept(either -> {
-                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
+                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError(), deployFilter.getAddOrdersDateFrom());
                     });
                 }
                 // process folder to Delete
                 if (filteredItemsFromFolderToDelete != null && !filteredItemsFromFolderToDelete.isEmpty()) {
                     UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId)
                         .thenAccept(either -> {
-                            DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
+                            DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError(), deployFilter.getAddOrdersDateFrom());
                         }); 
                 } 
             }

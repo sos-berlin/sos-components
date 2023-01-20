@@ -137,14 +137,14 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                     // call updateRepo command via Proxy of given controllers
                     final List<DBItemDeploymentHistory> toRevoke = filteredDepHistoryItemsToRevoke;
                     UpdateItemUtils.updateItemsDelete(commitIdForRevoke, toRevoke, controllerId).thenAccept(either -> {
-                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForRevoke, getAccessToken(), getJocError());
+                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForRevoke, getAccessToken(), getJocError(), revokeFilter.getCancelOrdersDateFrom());
                     });
                 }
                 // process folder to Delete
                 if (filteredItemsFromFolderToRevoke != null && !filteredItemsFromFolderToRevoke.isEmpty()) {
                     UpdateItemUtils.updateItemsDelete(commitIdForRevokeFromFolder, itemsPerControllerToRevokeFromFolder.get(controllerId), controllerId)
                         .thenAccept(either -> {
-                            DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForRevokeFromFolder, getAccessToken(), getJocError());
+                            DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForRevokeFromFolder, getAccessToken(), getJocError(), revokeFilter.getCancelOrdersDateFrom());
                         }); 
                 } 
             }

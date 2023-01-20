@@ -22,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerIds",
     "deployConfigurations",
+    "cancelOrdersDateFrom",
     "auditLog"
 })
 public class RevokeFilter {
@@ -40,6 +41,14 @@ public class RevokeFilter {
      */
     @JsonProperty("deployConfigurations")
     private List<Config> deployConfigurations = new ArrayList<Config>();
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("cancelOrdersDateFrom")
+    private String cancelOrdersDateFrom;
     /**
      * auditParams
      * <p>
@@ -90,6 +99,28 @@ public class RevokeFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("cancelOrdersDateFrom")
+    public String getCancelOrdersDateFrom() {
+        return cancelOrdersDateFrom;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("cancelOrdersDateFrom")
+    public void setCancelOrdersDateFrom(String cancelOrdersDateFrom) {
+        this.cancelOrdersDateFrom = cancelOrdersDateFrom;
+    }
+
+    /**
      * auditParams
      * <p>
      * 
@@ -113,12 +144,12 @@ public class RevokeFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerIds", controllerIds).append("deployConfigurations", deployConfigurations).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerIds", controllerIds).append("deployConfigurations", deployConfigurations).append("cancelOrdersDateFrom", cancelOrdersDateFrom).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(controllerIds).append(deployConfigurations).toHashCode();
+        return new HashCodeBuilder().append(cancelOrdersDateFrom).append(auditLog).append(controllerIds).append(deployConfigurations).toHashCode();
     }
 
     @Override
@@ -130,7 +161,7 @@ public class RevokeFilter {
             return false;
         }
         RevokeFilter rhs = ((RevokeFilter) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(controllerIds, rhs.controllerIds).append(deployConfigurations, rhs.deployConfigurations).isEquals();
+        return new EqualsBuilder().append(cancelOrdersDateFrom, rhs.cancelOrdersDateFrom).append(auditLog, rhs.auditLog).append(controllerIds, rhs.controllerIds).append(deployConfigurations, rhs.deployConfigurations).isEquals();
     }
 
 }
