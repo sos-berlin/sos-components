@@ -31,8 +31,8 @@ import com.sos.joc.inventory.resource.IDeleteConfigurationResource;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
-import com.sos.joc.model.inventory.common.RequestFilters;
-import com.sos.joc.model.inventory.common.RequestFolder;
+import com.sos.joc.model.inventory.delete.RequestFilters;
+import com.sos.joc.model.inventory.delete.RequestFolder;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.util.DeleteDeployments;
@@ -150,7 +150,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                     ReleaseResourceImpl.delete(config, dbLayer, dbAuditLog, false, false);
                     foldersForEvent.add(config.getFolder());
                     JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), dbLayer.getSession(), dbAuditLog);
-
+                    
                 } else if (JocInventory.isDeployable(type)) {
                     // TODO restrict to allowed Controllers
                     List<DBItemDeploymentHistory> allDeploymentsPerObject = deployDbLayer.getDeployedConfigurations(config.getId());
@@ -173,7 +173,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             if (allDeployments != null && !allDeployments.isEmpty()) {
                 String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
                         .getConfigurationGlobalsJoc()) : getAccount();
-                DeleteDeployments.delete(allDeployments, deployDbLayer, account, accessToken, getJocError(), dbAuditLog.getId(), true);
+                DeleteDeployments.delete(allDeployments, deployDbLayer, account, accessToken, getJocError(), dbAuditLog.getId(), true, in.getCancelOrdersDateFrom());
             }
             Globals.commit(session);
             // post events
@@ -211,7 +211,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                 String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
                         .getConfigurationGlobalsJoc()) : getAccount();
                 DeleteDeployments.deleteFolder(IMPL_PATH_FOLDER_DELETE, folder.getPath(), true, Proxies.getControllerDbInstances().keySet(),
-                        new DBLayerDeploy(session), account, accessToken, getJocError(), dbAuditLog.getId(), true, false);
+                        new DBLayerDeploy(session), account, accessToken, getJocError(), dbAuditLog.getId(), true, false, in.getCancelOrdersDateFrom());
             }
             
             JocInventory.deleteEmptyFolders(dbLayer, folder.getPath());

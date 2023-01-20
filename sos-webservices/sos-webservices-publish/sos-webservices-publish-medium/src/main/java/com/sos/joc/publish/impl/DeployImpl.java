@@ -368,14 +368,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // call updateRepo command via Proxy of given controllers
                     final List<DBItemDeploymentHistory> toDelete = filteredDepHistoryItemsToDelete;
                     UpdateItemUtils.updateItemsDelete(commitIdForDelete, toDelete, controllerId).thenAccept(either -> {
-                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
+                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError(), deployFilter.getAddOrdersDateFrom());
                     });
                 }
                 // process folder to Delete
                 if (filteredItemsFromFolderToDelete != null && !filteredItemsFromFolderToDelete.isEmpty()) {
                     UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId)
                         .thenAccept(either -> {
-                            DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
+                            DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError(), deployFilter.getAddOrdersDateFrom());
                         }); 
                 } 
             }

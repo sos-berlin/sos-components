@@ -26,6 +26,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
+import com.sos.joc.dailyplan.common.DailyPlanUtils;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
@@ -96,11 +97,13 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             DBConnectionRefusedException, ExecutionException {
 
         setSettings();
-        Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerIds = getSubmittedOrderIdsFromDailyplanDate(in, getSettings());
+        Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerIds = DailyPlanUtils.getOrderIdsFromDailyplanDate(in, getSettings(), true,
+                IMPL_PATH);
 
         if (!ordersPerControllerIds.isEmpty()) {
-            ordersPerControllerIds = ordersPerControllerIds.entrySet().stream().filter(availableController -> getControllerPermissions(
-                    availableController.getKey(), accessToken).getOrders().getCancel()).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+            ordersPerControllerIds = ordersPerControllerIds.entrySet().stream().filter(availableController -> 
+                    getControllerPermissions(availableController.getKey(), accessToken).getOrders().getCancel())
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
 
             if (ordersPerControllerIds.keySet().isEmpty()) {
                 throw new JocAccessDeniedException("No permissions to cancel dailyplan orders");
@@ -111,10 +114,11 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         return ordersPerControllerIds;
     }
     
-    public Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController, String accessToken,
-            AuditParams auditLog, boolean withAudit, boolean withEvent) throws SOSHibernateException, ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ExecutionException {
+    public Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,
+            String accessToken, AuditParams auditLog, boolean withAudit, boolean withEvent)
+                    throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException,
+                    DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+                    ExecutionException {
 
         Map<String, CompletableFuture<Either<Problem, Void>>> futures = new HashMap<>();
 
@@ -282,32 +286,4 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
     
-    public static Map<String, List<DBItemDailyPlanOrder>> getSubmittedOrderIdsFromDailyplanDate(DailyPlanOrderFilterDef in,
-            DailyPlanSettings settings) throws SOSHibernateException {
-        SOSHibernateSession session = null;
-        try {
-            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            filter.setControllerIds(in.getControllerIds());
-            filter.setOrderIds(in.getOrderIds());
-            if (in.getSchedulePaths() != null) {
-                filter.setScheduleNames(in.getSchedulePaths().stream().map(path -> JocInventory.pathToName(path)).distinct().collect(Collectors
-                        .toList()));
-            }
-            if (in.getWorkflowPaths() != null) {
-                filter.setWorkflowNames(in.getWorkflowPaths().stream().map(path -> JocInventory.pathToName(path)).distinct().collect(Collectors
-                        .toList()));
-            }
-            filter.setScheduleFolders(in.getScheduleFolders());
-            filter.setWorkflowFolders(in.getWorkflowFolders());
-            filter.setSubmitted(true);
-
-            filter.setDailyPlanInterval(in.getDailyPlanDateFrom(), in.getDailyPlanDateTo(), settings.getTimeZone(), settings.getPeriodBegin());
-
-            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-            DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-            return dbLayer.getDailyPlanList(filter, 0).stream().collect(Collectors.groupingBy(DBItemDailyPlanOrder::getControllerId));
-        } finally {
-            Globals.disconnect(session);
-        }
-    }
 }
