@@ -26,6 +26,7 @@ import com.sos.joc.exceptions.ControllerAuthorizationException;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerSSLCertificateException;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 
 import io.vavr.control.Either;
@@ -138,11 +139,13 @@ public class ProxyContext {
                 Either<Problem, Void> either = null;
                 List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(credentials.getControllerId());
                 if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
-                    either = Either.right(null);
+                    either = Either.left(Problem.pure(new JocConfigurationException("There is no cluster configured with the ID: " + credentials
+                            .getControllerId()).toString()));
                 } else {
-                    if (p.currentState().clusterState().toJson().replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
+                    String clusterState = p.currentState().clusterState().toJson();
+                    if (clusterState.replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
                         try {
-                            LOGGER.info("Cluster Nodes are not appointed");
+                            LOGGER.info(toString() + ": Cluster Nodes are not appointed");
                             List<Watch> agentWatches = ClusterWatch.getClusterWatchers(credentials.getControllerId(), null);
                             // dry run: if (agentWatches.isEmpty()) {
                                ClusterWatch.getInstance().start(p.api(), credentials.getControllerId(), true);
@@ -157,7 +160,7 @@ public class ProxyContext {
                                 if (e.isLeft()) {
                                     LOGGER.warn(ProblemHelper.getErrorMessage(e.getLeft()));
                                 } else {
-                                    LOGGER.info("Appointing Cluster Nodes was successful");
+                                    LOGGER.info(toString() + ": Appointing Cluster Nodes was successful");
                                 }
                             });
                             either = Either.right(null);
@@ -165,6 +168,10 @@ public class ProxyContext {
                             either = Either.left(Problem.pure(e.toString()));
                         }
                     } else {
+                        // only for dry run otherwise delete following line
+                        ClusterWatch.getInstance().start(p.api(), credentials.getControllerId(), true);
+                        //
+                        LOGGER.info("Cluster Nodes are appointed: " + clusterState);
                         either = Either.right(null);
                     }
                 }
