@@ -45,7 +45,8 @@ public class SetJobResourceJob extends ABlockingInternalJob<SetJobResourceJobArg
         arguments.setEnvironmentVariable("env");
         arguments.setJobResource("/tttt");
         arguments.setKey("x");
-        arguments.setValue("y");
+        arguments.setValue("[yyyy-MM-dd]");
+        arguments.setTimeZone("Europe/Berlin");
           
  
         SetJobResourceJob setJobResourceJob = new SetJobResourceJob(null);
