@@ -170,7 +170,10 @@ public class Proxies {
         proxiesOfControllerId(controllerId).forEach((key, proxy) -> {
             proxy.stop();
             controllerFutures.remove(key);
-            controllerApis.remove(key);
+            JControllerApi controllerApi = controllerApis.remove(key);
+            if (controllerApi != null) {
+                controllerApi.stop();
+            }
             EventBus.getInstance().post(new ProxyRemoved(key.getUser().name(), controllerId));
         });
         controllerDbInstances.remove(controllerId);
@@ -197,6 +200,7 @@ public class Proxies {
                 if (isNew) {
                     if (account == ProxyUser.JOC) {
                         start(newCredentials);
+                        //startWatch(newCredentials);
                     } else if (account == ProxyUser.HISTORY) {
                         loadApi(newCredentials);
                     }
@@ -326,9 +330,10 @@ public class Proxies {
                     LOGGER.error("", e);
                     return null;
                 }
-            }).filter(Objects::nonNull).filter(credential -> credential.getUrl() != null).forEach(credential -> {
+            }).filter(Objects::nonNull).filter(credentials -> credentials.getUrl() != null).forEach(credentials -> {
                 try {
-                    start(credential);
+                    start(credentials);
+                    //startWatch(credentials);
                 } catch (ControllerConnectionRefusedException e) {
                     LOGGER.error(e.toString());
                 }
@@ -408,8 +413,8 @@ public class Proxies {
     private void _closeAll() {
         LOGGER.info("closing all proxies ...");
         try {
-            CompletableFuture.allOf(controllerFutures.values().stream()
-                .map(proxy -> CompletableFuture.runAsync(() -> proxy.stop())).toArray(CompletableFuture[]::new))
+            CompletableFuture.allOf(controllerApis.values().stream()
+                .map(controllerApi -> CompletableFuture.runAsync(() -> controllerApi.stop())).toArray(CompletableFuture[]::new))
                 .thenRun(() -> {
                     controllerFutures.clear();
                     controllerApis.clear();
@@ -466,34 +471,9 @@ public class Proxies {
         }
     }
     
-    /**
-     * 
-     * @param controllerId
-     * @return Either&lt;Problem, List&lt;Watch&gt;&gt;
-     */
-    public static List<Watch> getClusterWatchers(String controllerId, InventoryAgentInstancesDBLayer dbLayer) throws JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            if (dbLayer == null) {
-                sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetClusterWatchers");
-                dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
-            }
-            List<String> w = dbLayer.getUrisOfClusterWatcherByControllerId(controllerId);
-            if (w.isEmpty()) {
-                throw new DBMissingDataException("No Cluster Watcher is configured for Controller '" + controllerId + "'");
-            } else {
-                LOGGER.info(String.format("Cluster Watchers of '%s': %s", controllerId, w.toString()));
-                return w.stream().map(item -> new Watch(Uri.of(item))).collect(Collectors.toList());
-            }
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-    }
-    
     public static Map<JAgentRef, List<JSubagentItem>> getUnknownAgents(String controllerId, InventoryAgentInstancesDBLayer dbLayer,
-            Map<AgentPath, JAgentRef> controllerKnownAgents, Map<SubagentId, JSubagentItem> controllerKnownSubagents, boolean onlyReDeployed) throws JocException,
-            DBConnectionRefusedException {
+            Map<AgentPath, JAgentRef> controllerKnownAgents, Map<SubagentId, JSubagentItem> controllerKnownSubagents, boolean onlyReDeployed)
+            throws JocException, DBConnectionRefusedException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             if (dbLayer == null) {
@@ -578,7 +558,10 @@ public class Proxies {
         if (controllerFutures.containsKey(credentials)) {
             return controllerFutures.get(credentials).stop().thenRun(() -> {
                 controllerFutures.remove(credentials);
-                controllerApis.remove(credentials);
+                JControllerApi controllerApi = controllerApis.remove(credentials);
+                if (controllerApi != null) {
+                    controllerApi.stop();
+                }
                 EventBus.getInstance().post(new ProxyClosed(credentials.getUser().name(), credentials.getControllerId()));
             });
         } else if (controllerApis.containsKey(credentials)) {
@@ -591,7 +574,7 @@ public class Proxies {
         }
     }
 
-    private ProxyContext start(ProxyCredentials credentials) throws ControllerConnectionRefusedException, ControllerConnectionRefusedException {
+    private ProxyContext start(ProxyCredentials credentials) throws ControllerConnectionRefusedException {
         if (!controllerFutures.containsKey(credentials)) {
             controllerFutures.put(credentials, new ProxyContext(loadApi(credentials), credentials));
         }
@@ -610,10 +593,17 @@ public class Proxies {
             }
             reloadApi(credentials);
             controllerFutures.get(credentials).restart(loadApi(credentials), credentials);
+            //startWatch(credentials);
             return true;
         }
         return false;
     }
+    
+//    private void startWatch(ProxyCredentials credentials) throws ControllerConnectionRefusedException {
+//        if (credentials.getBackupUrl() != null) { //is controller cluster
+//            ClusterWatch.getInstance().start(loadApi(credentials), credentials.getControllerId(), true);
+//        }
+//    }
     
     protected JControllerApi loadApi(ProxyCredentials credentials) throws ControllerConnectionRefusedException {
         if (!controllerApis.containsKey(credentials)) {
@@ -629,6 +619,7 @@ public class Proxies {
             if (controllerApis.keySet().stream().anyMatch(key -> key.identical(credentials))) {
                 return false;
             }
+            controllerApis.get(credentials).stop();
             controllerApis.put(credentials, ControllerApiContext.newControllerApi(proxyContext, credentials));
             return true;
         }
