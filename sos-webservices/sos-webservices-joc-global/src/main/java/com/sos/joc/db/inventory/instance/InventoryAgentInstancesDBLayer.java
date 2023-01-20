@@ -248,19 +248,27 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
     
-    public Stream<String> getControllerIdsWithoutAgentWatch() throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+    public Stream<String> getControllerIdsWithoutAgentWatch(String controllerId) throws DBInvalidDataException, DBMissingDataException,
+            DBConnectionRefusedException {
         try {
             StringBuilder hql = new StringBuilder();
-            hql.append("select a.controllerId, sum(a.isWatcher) from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" a, ");
+            hql.append("select a.controllerId, max(a.isWatcher) from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" a, ");
             hql.append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" b ");
-            hql.append("where a.controllerId=b.controllerId and b.isCluster=1 group by a.controllerId");
+            hql.append("where a.controllerId=b.controllerId ");
+            if (controllerId != null && !controllerId.isEmpty()) {
+                hql.append("and b.controllerId = :controllerId ");
+            }
+            hql.append("and b.isCluster=1 group by a.controllerId");
             
             Query<Object[]> query = getSession().createQuery(hql.toString());
+            if (controllerId != null && !controllerId.isEmpty()) {
+                query.setParameter("controllerId", controllerId);
+            }
             List<Object[]> result = getSession().getResultList(query);
-            if (result == null) {
+            if (result == null || result.isEmpty()) {
                 return Stream.empty();
             }
-            return result.stream().filter(o -> ((long) o[1]) > 0).map(o -> (String) o[0]);
+            return result.stream().filter(o -> ((long) o[1]) == 0).map(o -> (String) o[0]);
         } catch (DBMissingDataException ex) {
             throw ex;
         } catch (SOSHibernateInvalidSessionException ex) {

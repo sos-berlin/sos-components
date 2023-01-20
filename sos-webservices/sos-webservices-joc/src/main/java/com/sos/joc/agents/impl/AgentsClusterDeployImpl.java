@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.cluster.ClusterState;
 import com.sos.controller.model.cluster.ClusterWatcher;
@@ -22,8 +20,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.agent.AgentHelper;
+import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.controller.impl.ControllerResourceModifyClusterImpl;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -37,6 +35,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
@@ -122,7 +121,7 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
             }
 
             if (!clusterWatcherUrls.isEmpty()) {
-                ControllerResourceModifyClusterImpl.appointNodes(controllerId, dbLayer, accessToken, getJocError());
+                ClusterWatch.getInstance().appointNodes(controllerId, dbLayer, accessToken, getJocError());
             }
             
             if (!updateItems.isEmpty()) {

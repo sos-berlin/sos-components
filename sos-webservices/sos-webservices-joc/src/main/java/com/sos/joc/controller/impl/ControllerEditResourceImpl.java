@@ -25,6 +25,7 @@ import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.ControllerCallable;
 import com.sos.joc.classes.jobscheduler.States;
+import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.ProxiesEdit;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -279,9 +280,11 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             boolean controllerUpdateRequired = false;
             boolean updateAgentRequired = false;
             
+            List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Collections.singleton(controllerId));
+            
             if (clusterWatcher != null) {
                 final String agentId = clusterWatcher.getAgentId();
-                List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Collections.singleton(controllerId));
+                //List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Collections.singleton(controllerId));
                 boolean clusterWatcherIsNew = true;
                 
                 if (dbAgents != null && !dbAgents.isEmpty()) {
@@ -402,7 +405,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             }
             if (clusterUriChanged || controllerUpdateRequired) {
                 try {
-                    ControllerResourceModifyClusterImpl.appointNodes(controllerId, agentDBLayer, accessToken, getJocError());
+                    ClusterWatch.getInstance().appointNodes(controllerId, agentDBLayer, accessToken, getJocError());
                 } catch (JocBadRequestException e) {
                 }
             }
