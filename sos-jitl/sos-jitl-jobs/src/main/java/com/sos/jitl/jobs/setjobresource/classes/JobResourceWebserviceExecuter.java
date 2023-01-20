@@ -130,7 +130,11 @@ public class JobResourceWebserviceExecuter {
 			jobResource.setEnv(new Environment());
 		}
 		jobResource.getArguments().getAdditionalProperties().put(args.getKey(), "\"" + args.getValue() + "\"");
-		jobResource.getEnv().getAdditionalProperties().put(args.getKey(), "$" + args.getValue());
+		if (args.getEnvironmentVariable() == null || args.getEnvironmentVariable().isEmpty()) {
+			jobResource.getEnv().getAdditionalProperties().put(args.getKey(), "$" + args.getKey());
+		} else {
+			jobResource.getEnv().getAdditionalProperties().put(args.getKey(), "$" + args.getEnvironmentVariable());
+		}
 		configurationObject.setConfiguration(jobResource);
 		configurationObject = this.setInventoryItem(configurationObject, accessToken);
 		publishDeployableItem(configurationObject, args, accessToken);

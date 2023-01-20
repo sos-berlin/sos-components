@@ -1,12 +1,5 @@
 package com.sos.jitl.jobs.setjobresource;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.Globals;
 import com.sos.jitl.jobs.common.JitlJobReturn;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
