@@ -158,7 +158,7 @@ public class JobResourceWebserviceExecuter {
 		String value = getValue(args.getValue(), args.getTimeZone());
 		jobResource.getArguments().getAdditionalProperties().put(args.getKey(), "\"" + value + "\"");
 		if (args.getEnvironmentVariable() != null && !args.getEnvironmentVariable().isEmpty()) {
-			jobResource.getEnv().getAdditionalProperties().put(args.getKey(), "$" + args.getEnvironmentVariable());
+			jobResource.getEnv().getAdditionalProperties().put(args.getEnvironmentVariable(),"$" + args.getKey());
 		}
 		configurationObject.setConfiguration(jobResource);
 		configurationObject = this.setInventoryItem(configurationObject, accessToken);
