@@ -9,10 +9,10 @@
 	data_type="integer" 
     required="false">
 	<note>
-		<title>minimum size of one or multiple files </title>
+		<title>minimum size of one or more files </title>
 		<p>
-			Specifies the minimum size of one or multiple files in bytes:
-			should the size of one of the files fall below this value, then it is not included in the result list of the operation.
+            Specifies the minimum size of one or more files in bytes:
+            should the size of one of the files fall below this value, then it will not be added to the result set of the operation.
 		</p>
 	</note>
 	<xi:include href="./note_file_size_values.xml" parse="xml" />

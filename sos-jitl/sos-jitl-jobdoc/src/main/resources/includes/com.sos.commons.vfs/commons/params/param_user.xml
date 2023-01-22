@@ -5,7 +5,7 @@
        name="user" required="false" DataType="java.lang.String">
 	<note>
 		<p>
-		  The user account has to be specified to authenticate to a remote server, for example by SSH.
+		  The user account has to be specified to authenticate when establishing a connection to a remote server, for example by use of SSH.
 		</p>
 	</note>
 </param>

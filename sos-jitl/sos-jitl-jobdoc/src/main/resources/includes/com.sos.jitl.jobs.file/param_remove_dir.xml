@@ -9,19 +9,19 @@
     required="false">
 
 	<note>
-        <title>delete empty subfolder</title>
+        <title>remove empty sub-directories</title>
         <p>
-            If enabled empty subdirectories are removed.
-            All subdirectories of <paramref>file</paramref> are removed which are matched by
-            <paramref>file_spec</paramref>.
-            An affected subdirectory is only removed if it is empty.
+            If enabled then empty sub-directories will be removed.
+            All sub-directories specified by the <paramref>file</paramref> argument will be removed if they match the
+            <paramref>file_spec</paramref> argument.
+            Sub-directories will be removed only if they are empty.
         </p>
         <p>
-            The directory, which name is specified with the parameter
-            <paramref>file</paramref> is not removed.
+            The directory that is specified with the
+            <paramref>file</paramref> argument will not be removed.
         </p>
         <p>
-            Only effective if <paramref>file</paramref> is a directory.
+            Only effective if the <paramref>file</paramref> argument specifies a directory.
         </p>
 	</note>
 </param>

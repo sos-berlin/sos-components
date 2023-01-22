@@ -9,15 +9,15 @@
 	required="false">
 
 	<note>
-		<title>Regular Expression for filename filtering</title>
+		<title>Regular Expression for file filtering</title>
 		<p>
 			Regular Expression for file filtering.
 			The behaviour is CASE_INSENSITIVE.
 		</p>
 		<p>
-			Only effective if the parameter
+			Only effective if the
 			<paramref>source_file</paramref>
-			is a directory.
+			argument is a directory.
 		</p>
 	</note>
 	<xi:include href="../common/notes/note_regexp_remarks.xml" parse="xml" />

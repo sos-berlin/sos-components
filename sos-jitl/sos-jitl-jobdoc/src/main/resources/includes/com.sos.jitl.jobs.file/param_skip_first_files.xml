@@ -8,14 +8,14 @@
     exclude="skip_last_files">
 
     <note>
-        <title>number of files to remove from the top of the result-set</title>
+        <title>number of files to be removed from the top of the result set</title>
         <p>
-            The number of files are removed from the beginning of the set
-            resulting by<paramref>sort_criteria</paramref>,<paramref>sort_order</paramref>
-            These files are excluded from further operations.
+            A number of files will be removed from the top of the result set
+            that is created by applying the <paramref>sort_criteria</paramref> and <paramref>sort_order</paramref> arguments.
+            Files removed from the result set are excluded from further operation.
         </p>
         <p>
-            The result set is sorted according to the parameters:
+            The result set is sorted according to the arguments:
         </p>
         <p>
             <ul>

@@ -10,9 +10,9 @@
 	DataType="java.lang.Boolean">
 	
 	<note>
-		<title >Overwrite existing files</title>
+		<title >Overwrite files</title>
 		<p>
-			This parameter specifies wether existing files can be overwritten.
+			This argument specifies if existing files will be overwritten.
 		</p>
 	</note>
 </param>

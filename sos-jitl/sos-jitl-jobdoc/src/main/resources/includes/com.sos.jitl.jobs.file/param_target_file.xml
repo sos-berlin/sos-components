@@ -7,14 +7,14 @@
 	required="true">
 	
     <note>
-        <title>Target-file or -folder</title>
+        <title>Target file or directory</title>
 		<p>Target file or directory</p>
 		<p>
 			If the
 			<paramref>target_file</paramref>
-			is not specified, then the directory path of
+			argument is not specified then the directory specified with the
 			<paramref>source_file</paramref>
-			is used as target.
+			argument will be used as the target.
 		</p>
 	</note>
     <xi:include href="./note_param_mask_substitution.xml" parse="xml"/>

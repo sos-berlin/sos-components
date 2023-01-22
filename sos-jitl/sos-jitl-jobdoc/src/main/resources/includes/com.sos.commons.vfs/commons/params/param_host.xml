@@ -7,8 +7,8 @@
        required="true">
        	<note>
 			<p>
-		  		The argument specifies the hostname or IP address
-		  		of the remote server to which a connection should be established.
+		  		The argument specifies the hostname, IP address or URL
+		  		of the server to which a connection should be established.
 			</p>
         </note>
       </param>

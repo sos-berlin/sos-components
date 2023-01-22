@@ -4,6 +4,6 @@
 	xmlns:xi="http://www.w3.org/2001/XInclude" 
 	xmlns:xhtml="http://www.w3.org/1999/xhtml"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<p>Additional arguments are considered in the following order.</p>
+	<p>Additional arguments are considered in the following precedence:</p>
  	
 </note>

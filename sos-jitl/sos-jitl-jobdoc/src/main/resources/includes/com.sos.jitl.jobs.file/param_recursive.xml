@@ -8,16 +8,16 @@
     DataType="java.lang.Boolean">
 	
 	<note>
-        <title>Include subfolders in operation</title>
+        <title>Include sub-directories in operation</title>
         <p>
-            This parameter specifies wether files from subdirectories should be included recursively.
+            This argument specifies if files from sub-directories should be processed recursively.
         </p>
         <p>
-            Only effective if <paramref>file</paramref> is a directory.
+            Only effective if the <paramref>file</paramref> argument specifies a directory.
         </p>
         <p>
-            Regular expression matches apply to files from subdirectories
-            as specified by the parameter <paramref>file_spec</paramref>.
+            Regular expression matches apply to files from sub-directories
+            as specified by the <paramref>file_spec</paramref> argument.
         </p>
     </note>
 </param>

@@ -7,7 +7,7 @@
     required="false">
 
     <note>
-        <title>Sort criteria with which the result set will be sorted.</title>
+        <title>Sort criteria of the result set </title>
         <p>
           Default: name
           Possible values: name | age | size

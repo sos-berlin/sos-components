@@ -8,9 +8,9 @@
 	default_value="false"
 	required="false">
 	<note>
-		<title>Specify error message tolerance</title>
+		<title>Specify error tolerance</title>
 		<p>
-			Enables or disables error messages that are caused by an empty result-set, which is the result of an operation, executed by the job.
+			Enables or ignores errors that are caused by an empty result set as the result of an operation executed by a job.
     	</p>
 	</note>
 </param>

@@ -9,10 +9,10 @@
 	required="false">
 	
 	<note>
-		<title>Return the size of resultset</title>
+		<title>Return the size of result set</title>
 		<p>
-			If this parameter is set true "<code>true</code>" the number of matches
-			is returned in the order parameter "<paramref>fileoperations_result_set_size</paramref>".
+			If this argument is set to "<code>true</code>" then the number of matches
+			is returned with the "<paramref>fileoperations_result_set_size</paramref>" variable.
 		</p>
 	</note>
 </param>
