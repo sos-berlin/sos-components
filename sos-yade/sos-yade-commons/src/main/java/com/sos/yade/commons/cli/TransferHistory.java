@@ -36,14 +36,15 @@ public class TransferHistory {
 
     private static String DELIMITER = ",";
     private static String HOSTNAME;
+    private static List<String> UNKNOWN_OPTIONS;
     private static List<String> PARSE_ERRORS;
 
     public static void main(String[] args) {
         int exitStatus = EXIT_STATUS_SUCCESS;
         boolean process = true;
 
-        if (args.length == 0 || (args.length == 1 && (args[0].equals("") || args[0].equals("--help")))) {
-            showUsage();
+        if (args.length == 0 || (args.length == 1 && args[0].trim().matches("|-h|--help"))) {
+            displayUsage();
             process = false;
         }
 
@@ -61,66 +62,8 @@ public class TransferHistory {
         System.exit(exitStatus);
     }
 
-    private static void showUsage() {
-        String INDENT = "                                        ";
-
-        System.out.println("Usage: [Meta options...] [Source options...] [Target options...] [Transfer files options...] ");
-
-        // TRANSFER META
-        System.out.println(" Meta options:");
-        System.out.println("  --operation=<operation-spec>        Optional, Case insensitive");
-        System.out.println(INDENT + "Default: copy");
-        System.out.println(INDENT + "Valid values: copy, move, getlist, remove");
-        System.out.println("  --start-time=<date-time>            Optional, ISO datetime for start time of transfer");
-        System.out.println("  --end-time=<date-time>              Optional, ISO datetime for end time of transfer");
-        System.out.println(INDENT + "Default: current datetime");
-        System.out.println(INDENT + "Datetime formats: yyyy-MM-dd HH:mm:ss, yyyy-MM-dd'T'HH:mm:ssZ");
-        System.out.println(INDENT + "Examples:");
-        System.out.println(INDENT + "  2023-01-01 12:00:00");
-        System.out.println(INDENT + "  2023-01-01 12:00:00+0100");
-        System.out.println(INDENT + "  2023-01-01T12:00:00+0100");
-        System.out.println("  --error=<string>                    Optional, Transfer error");
-        System.out.println(INDENT + "Specifies the error message and sets the whole transfer as failed");
-
-        // SOURCE/TARGET META
-        System.out.println(" Source/Target options:");
-        System.out.println("  --[source/target]-protocol=<protocol-spec>    Optional, Case insensitive");
-        System.out.println(INDENT + "Default: local");
-        System.out.println(INDENT + "Valid values: local, ftp, ftps, sftp, ssh, http, https, webdav, webdavs, smb");
-        System.out.println(INDENT + "See the --[source/target]-host option.");
-        System.out.print("  --[source/target]-account=<account>");
-        System.out.println("  Optional, Account for authentication at one of the systems involved in file transfer");
-        System.out.println(INDENT + "Default: .");
-        System.out.println(INDENT + "See the --[source/target]-host option.");
-        System.out.println("  --[source/target]-port=<number>     Optional, Port on which the connection should be established");
-        System.out.println(INDENT + "Default: 0");
-        System.out.println(INDENT + "See the --[source/target]-host option.");
-        System.out.print("  --[source/target]-host=<hostname-spec>");
-        System.out.println("   Optional, Specifies the hostname or IP address of the server to which a connection has to be made");
-        System.out.println(INDENT + "Default: Hostname of the machine that the File Transfer History script being run on");
-        System.out.println(INDENT + "Possible values:");
-        System.out.println(INDENT + "  somehost:80");
-        System.out.println(INDENT + "    Specifies the Hostname and the Port (when the corresponding Port option is not set)");
-        System.out.println(INDENT + "  ftp://test_user@somehost:21");
-        System.out.println(INDENT + "    Specifies the Hostname, Protocol, Account and the Port when the corresponding options are not set");
-        System.out.println(INDENT + "    Expects a valid Java URL value");
-
-        // TRANSFER ENTRIES
-        System.out.println(" Transfer files options:");
-        System.out.println("  --delimiter=<character>             Optional, Specifies the delimiter for entries in the transfer specification");
-        System.out.println(INDENT + "Default: comma");
-        System.out.println("  --transfer-file=<transfer-spec>     Optional, Specifies a single file transfer");
-        System.out.println(INDENT + "Multiple values option: values are separated by --delimiter");
-        System.out.println(INDENT + "  <source-file>[--delimiter<target-file>[--delimiter<file-size(in bytes)>][--delimiter<error-message>]]");
-        System.out.println(INDENT + "Examples:");
-        System.out.println(INDENT + "  /home/sos/source_file.txt");
-        System.out.println(INDENT + "  /home/sos/source_file.txt,/home/sos/target_file.txt");
-        System.out.println(INDENT + "  /home/sos/source_file.txt,/home/sos/target_file.txt,100");
-        System.out.println(INDENT + "  /home/sos/source_file.txt,/home/sos/target_file.txt,100,Permission denied");
-        System.out.println(INDENT + "  /home/sos/source_file.txt,/home/sos/target_file.txt,Permission denied");
-    }
-
     private static int process(String returnValues, String[] args) {
+        UNKNOWN_OPTIONS = new ArrayList<>();
         PARSE_ERRORS = new ArrayList<>();
 
         YadeTransferResult result = new YadeTransferResult();
@@ -129,12 +72,25 @@ public class TransferHistory {
         List<String> entries = new ArrayList<>();
 
         boolean hasTarget = false;
+        boolean displayUsage = false;
+        boolean displayArgs = false;
+        boolean displayResult = false;
         for (String arg : args) {
             String[] arr = arg.split("=");
             String pn = arr[0];
-            String pv = arr.length > 1 ? arr[1].trim() : "";
+            String pv = arr.length > 1 ? getValue(arr[1].trim()) : "";
 
             switch (pn) {
+            case "-h":
+            case "--help":
+                displayUsage = true;
+                break;
+            case "-display-args":
+                displayArgs = true;// getBoolean(pv, true);
+                break;
+            case "-display-result":
+                displayResult = true;// getBoolean(pv, true);
+                break;
             // TRANSFER META
             case "--operation":
                 result.setOperation(getOperation(arg, pv));
@@ -193,20 +149,56 @@ public class TransferHistory {
                     entries.add(pv);
                 }
                 break;
+            default:
+                UNKNOWN_OPTIONS.add(arg);
+                break;
             }
         }
 
+        if (displayUsage) {
+            displayUsage();
+        }
+        if (displayArgs) {
+            displayArguments(args);
+        }
+        if (UNKNOWN_OPTIONS.size() > 0) {
+            System.out.println(String.format("[%s][unknown options]%s", TransferHistory.class.getSimpleName(), String.join(", ", UNKNOWN_OPTIONS)));
+        }
         if (PARSE_ERRORS.size() > 0) {
             System.out.println(String.format("[%s][invalid values]%s", TransferHistory.class.getSimpleName(), String.join(", ", PARSE_ERRORS)));
         }
 
         try {
-            serialize2File(Paths.get(returnValues), complete(result, source, hasTarget ? target : null, entries));
+            serialize2File(Paths.get(returnValues), complete(result, source, hasTarget ? target : null, entries), displayResult);
             return EXIT_STATUS_SUCCESS;
         } catch (Exception e) {
             e.printStackTrace();
             return EXIT_STATUS_ERROR;
         }
+    }
+
+    private static String getValue(String val) {
+        if (val.startsWith("\"")) {
+            int len = val.length();
+            int end = -1;
+            if (len > 1 && val.endsWith("\"")) {
+                end = len - 1;
+            }
+            return end > 0 ? val.substring(1, end) : val.substring(1);
+        }
+        return val;
+    }
+
+    @SuppressWarnings("unused")
+    private static boolean getBoolean(String val, boolean defaultValue) {
+        boolean result = defaultValue;
+        if (!isEmpty(val)) {
+            try {
+                result = Boolean.parseBoolean(val);
+            } catch (Throwable e) {
+            }
+        }
+        return result;
     }
 
     private static YadeTransferResult complete(YadeTransferResult result, YadeTransferResultProtocol source, YadeTransferResultProtocol target,
@@ -438,9 +430,123 @@ public class TransferHistory {
         return s == null || s.length() == 0;
     }
 
-    private static void serialize2File(Path file, YadeTransferResult result) throws Exception {
+    private static void serialize2File(Path file, YadeTransferResult result, boolean displayResult) throws Exception {
         YadeTransferResultSerializer<YadeTransferResult> serializer = new YadeTransferResultSerializer<>();
-        Files.write(file, new StringBuilder(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES).append("=").append(serializer.serialize(result)).toString()
-                .getBytes());
+        String serialized = serializer.serialize(result);
+        Files.write(file, new StringBuilder(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES).append("=").append(serialized).toString().getBytes());
+        if (displayResult) {
+            displayResult(serializer, serialized);
+        }
     }
+
+    private static void displayUsage() {
+        String INDENT = "                                        ";
+
+        System.out.println("Usage: file_transfer_history.sh|.cmd [Options] [Switches] ");
+
+        System.out.println("");
+        System.out.println("Options:");
+        System.out.print("  --transfer-file=<transfer-spec>    | ");
+        System.out.println("optional: the transfer specification can occur any number of times and is made up of the elements:");
+        System.out.println(INDENT + "<source-file>,<target-file>[,<file-size>[,<error-message>]]");
+
+        System.out.print("  --operation=<operation-spec>       | ");
+        System.out.println("optional: operation to copy, to move, to remove or to get a list of files:");
+        System.out.println(INDENT + "copy|move|remove|getlist, default: copy");
+
+        System.out.print("  --source-account=<account>         | ");
+        System.out.println("optional: account used for authentication with the system holding source files");
+        System.out.print("  --source-protocol=<protocol-spec>  | ");
+        System.out.println("optional: one of the protocols for access to source files:");
+        System.out.println(INDENT + "local|ftp|ftps|sftp|ssh|http|https|webdav|webdavs|smb, default: local");
+        System.out.print("  --source-host=<hostname>           | ");
+        System.out.println("optional: hostname, IP address or URL of the host holding source files, default: localhost");
+        System.out.print("  --source-port=<number>             | ");
+        System.out.println("optional: port used to connect to the system holding source files, default: 0");
+
+        System.out.print("  --target-account=<account>         | ");
+        System.out.println("optional: account used for authentication with the system holding target files");
+        System.out.print("  --target-protocol=<protocol-spec>  | ");
+        System.out.println("optional: one of the protocols for access to target files:");
+        System.out.println(INDENT + "local|ftp|ftps|sftp|ssh|http|https|webdav|webdavs|smb, default: local");
+        System.out.print("  --target-host=<hostname>           | ");
+        System.out.println("optional: hostname, IP address or URL of the host holding target files, default: localhost");
+        System.out.print("  --target-port=<number>             | ");
+        System.out.println("optional: port used to connect to the system holding target files, default: 0");
+
+        System.out.print("  --start-time=<date-time>           | ");
+        System.out.println("optional: ISO date and time for start time of transfer: yyyy-MM-dd hh:mm:ssZ");
+        System.out.print("  --end-time=<date-time>             | ");
+        System.out.println("optional: ISO date and time for end time of transfer: yyyy-MM-dd hh:mm:ssZ, default: current time");
+        System.out.print("  --error=<string>                   | ");
+        System.out.println("optional: error message indicating a failed file transfer");
+        System.out.print("  --delimiter=<character>            | ");
+        System.out.println("optional: delimiter character for entries in the transfer specification, default: comma");
+
+        System.out.println("");
+        System.out.println("Switches:");
+        System.out.println("  -h | --help                        | displays usage");
+        System.out.println("  -display-args                      | displays command line arguments");
+        System.out.println("  -display-result                    | displays execution result");
+    }
+
+    private static void displayArguments(String[] args) {
+        System.out.println(String.format("[%s]Arguments(count=%s): %s", TransferHistory.class.getSimpleName(), args.length, String.join(" ", args)));
+    }
+
+    private static void displayResult(YadeTransferResultSerializer<YadeTransferResult> serializer, String serialized) {
+        try {
+            YadeTransferResult r = serializer.deserialize(serialized);
+
+            displayMeta(r);
+            displayProtocol("Source:", r.getSource());
+            displayProtocol("Target:", r.getTarget());
+            displayEntries("Entries:", r.getEntries());
+
+        } catch (Exception e) {
+            System.err.println(String.format("[%s][can't deserialize result]%s", TransferHistory.class.getSimpleName(), e.toString()));
+        }
+    }
+
+    private static void displayMeta(YadeTransferResult r) {
+        List<String> l = new ArrayList<>();
+        l.add("Operation=" + r.getOperation());
+        l.add("Start Time=" + r.getStart());
+        l.add("End Time=" + r.getEnd());
+        if (r.getErrorMessage() != null) {
+            l.add("Error=" + r.getErrorMessage());
+        }
+
+        System.out.println(String.format("[%s]Result: %s", TransferHistory.class.getSimpleName(), String.join(", ", l)));
+    }
+
+    private static void displayProtocol(String header, YadeTransferResultProtocol p) {
+        if (p != null) {
+            System.out.println(String.format("  %s Protocol=%s, Host=%s, Port=%s, Account=%s", header, p.getProtocol(), p.getHost(), p.getPort(), p
+                    .getAccount()));
+        }
+    }
+
+    private static void displayEntries(String header, List<YadeTransferResultEntry> entries) {
+        if (entries != null && entries.size() > 0) {
+            System.out.println("  " + header);
+            int i = 0;
+            for (YadeTransferResultEntry entry : entries) {
+                i++;
+
+                List<String> l = new ArrayList<>();
+                l.add("Source=" + entry.getSource());
+                if (entry.getTarget() != null) {
+                    l.add("Target=" + entry.getTarget());
+                }
+                l.add("Size=" + entry.getSize());
+                l.add("Status=" + entry.getState());
+                if (!isEmpty(entry.getErrorMessage())) {
+                    l.add("Error=" + entry.getErrorMessage());
+                }
+                System.out.println(String.format("    %s)%s", i, String.join(", ", l)));
+            }
+        }
+    }
+
 }
