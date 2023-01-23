@@ -37,6 +37,7 @@ public class TransferHistory {
     private static String DELIMITER = ",";
     private static String HOSTNAME;
     private static List<String> UNKNOWN_OPTIONS;
+    private static List<String> EMPTY_OPTIONS;
     private static List<String> PARSE_ERRORS;
 
     public static void main(String[] args) {
@@ -64,6 +65,7 @@ public class TransferHistory {
 
     private static int process(String returnValues, String[] args) {
         UNKNOWN_OPTIONS = new ArrayList<>();
+        EMPTY_OPTIONS = new ArrayList<>();
         PARSE_ERRORS = new ArrayList<>();
 
         YadeTransferResult result = new YadeTransferResult();
@@ -93,59 +95,101 @@ public class TransferHistory {
                 break;
             // TRANSFER META
             case "--operation":
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                }
                 result.setOperation(getOperation(arg, pv));
                 break;
             case "--start-time":
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                }
                 result.setStart(toInstant(arg, pv));
                 break;
             case "--end-time":
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                }
                 result.setEnd(toInstant(arg, pv));
                 break;
             case "--error":
-                result.setErrorMessage(isEmpty(pv) ? null : pv);
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                    result.setErrorMessage(null);
+                } else {
+                    result.setErrorMessage(pv);
+                }
                 break;
 
             // SOURCE META
             case "--source-protocol":
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                }
                 source.setProtocol(getProtocol(arg, pv));
                 break;
             case "--source-account":
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                }
                 source.setAccount(getAccount(pv));
                 break;
             case "--source-host":
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                }
                 source.setHost(pv);
                 break;
             case "--source-port":
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                }
                 source.setPort(getPort(arg, pv));
                 break;
 
             // TARGET META
             case "--target-protocol":
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                }
                 target.setProtocol(getProtocol(arg, pv));
                 hasTarget = true;
                 break;
             case "--target-account":
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                }
                 target.setAccount(getAccount(pv));
                 hasTarget = true;
                 break;
             case "--target-host":
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                }
                 target.setHost(pv);
                 hasTarget = true;
                 break;
             case "--target-port":
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                }
                 target.setPort(getPort(arg, pv));
                 hasTarget = true;
                 break;
 
             // TRANSFER ENTRIES
             case "--delimiter":
-                if (!isEmpty(pv)) {
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                } else {
                     DELIMITER = pv;
                 }
                 break;
 
             case "--transfer-file": // multiple times
-                if (!isEmpty(pv)) {
+                if (isEmpty(pv)) {
+                    EMPTY_OPTIONS.add(pn);
+                } else {
                     entries.add(pv);
                 }
                 break;
@@ -163,6 +207,9 @@ public class TransferHistory {
         }
         if (UNKNOWN_OPTIONS.size() > 0) {
             System.out.println(String.format("[%s][unknown options]%s", TransferHistory.class.getSimpleName(), String.join(", ", UNKNOWN_OPTIONS)));
+        }
+        if (EMPTY_OPTIONS.size() > 0) {
+            System.out.println(String.format("[%s][empty options]%s", TransferHistory.class.getSimpleName(), String.join(", ", EMPTY_OPTIONS)));
         }
         if (PARSE_ERRORS.size() > 0) {
             System.out.println(String.format("[%s][invalid values]%s", TransferHistory.class.getSimpleName(), String.join(", ", PARSE_ERRORS)));
@@ -491,7 +538,12 @@ public class TransferHistory {
     }
 
     private static void displayArguments(String[] args) {
-        System.out.println(String.format("[%s]Arguments(count=%s): %s", TransferHistory.class.getSimpleName(), args.length, String.join(" ", args)));
+        System.out.println(String.format("[%s]Arguments(count=%s):", TransferHistory.class.getSimpleName(), args.length));
+        int i = 0;
+        for (String arg : args) {
+            i++;
+            System.out.println(String.format("  %s)%s", i, arg));
+        }
     }
 
     private static void displayResult(YadeTransferResultSerializer<YadeTransferResult> serializer, String serialized) {
