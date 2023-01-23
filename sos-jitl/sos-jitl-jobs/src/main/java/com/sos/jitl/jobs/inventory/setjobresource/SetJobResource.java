@@ -1,10 +1,9 @@
-package com.sos.jitl.jobs.setjobresource;
+package com.sos.jitl.jobs.inventory.setjobresource;
 
 import com.sos.jitl.jobs.common.Globals;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
-import com.sos.jitl.jobs.setjobresource.classes.JobResourceWebserviceExecuter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.read.RequestFilter;
 

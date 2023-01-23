@@ -1,8 +1,10 @@
-package com.sos.jitl.jobs.setjobresource;
+package com.sos.jitl.jobs.inventory;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JitlJobReturn;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.inventory.setjobresource.SetJobResource;
+import com.sos.jitl.jobs.inventory.setjobresource.SetJobResourceJobArguments;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -41,7 +43,7 @@ public class SetJobResourceJob extends ABlockingInternalJob<SetJobResourceJobArg
     public static void main(String[] args) {
 
     	SetJobResourceJobArguments arguments = new SetJobResourceJobArguments();
-        arguments.setControllerId("controller"); 
+        arguments.setControllerId(""); 
         arguments.setEnvironmentVariable("env");
         arguments.setJobResource("/tttt");
         arguments.setKey("x");
