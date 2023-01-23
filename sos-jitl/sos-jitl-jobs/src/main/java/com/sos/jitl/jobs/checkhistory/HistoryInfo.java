@@ -192,6 +192,8 @@ public class HistoryInfo {
 			isOr = false;
 			isAnd = true;
 		}
+		
+		query = args.getQuery();
 
 		String[] queries = query.split(";");
 		HistoryItem h = null;
