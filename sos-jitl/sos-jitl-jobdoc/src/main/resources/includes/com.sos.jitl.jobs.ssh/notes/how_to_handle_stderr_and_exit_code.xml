@@ -13,8 +13,8 @@
 				<li><p>exit_codes_to_ignore</p></li>
 				<li><p>raise_exception_on_error</p></li>
 			</ul>
-			As an example, we examine the command <pre class="example">ls _unknown_folder_; exit 5;</pre>
-			This commmand has a stderr = "<code>ls: _unknown_folder_: No such file or directory</code>" and the exit code 5.
+			As an example, consider the command <pre class="example">ls _unknown_folder_; exit 5;</pre>
+			This commmand raises an error and causes output to stderr to look like this: "<code>ls: _unknown_folder_: No such file or directory</code>" and the exit code 5.
 			<table class="description" cellspacing="1" cellpadding="0">
 			    <tr>
 			        <th style="text-align:center;">ignore_stdout</th>
@@ -89,13 +89,13 @@
 			        <td style="text-align:center;color:green;">next node</td>
 			    </tr>
 			</table> 
-			Further the job creates the parameters
+			Further the job creates the return variables:
 			<ul>
 				<li><p>std_out_output</p></li>
 				<li><p>std_err_output</p></li>
 				<li><p>exit_code</p></li>
 			</ul>
-			In a workflow you can use these parameters in a next job of the workflow to handle the result.
+			In a workflow users can use the return variables in next jobs of the workflow to handle the result.
         </p>
     </note>
 </documentation>

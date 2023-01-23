@@ -3,24 +3,23 @@
 	xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xhtml="http://www.w3.org/1999/xhtml"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-        <title>Recurse of subdirectories</title>
+        <title>Recursing sub-directories</title>
         <documentation>
             <p>
-                The parameter <paramref>recursive</paramref> can be used to specify that the structure of the subdirectories 
-                and all files contained in these directories should also be processed. and all files contained in these 
-                directories should also be processed.
+                The <paramref>recursive</paramref> argument can be used to specify that the structure of the sub-directories 
+                and all files contained in sub-directories should be processed too.
             </p>
             <p>
-                If the directories do not yet exist on the target platform, they are created in dependence on the parameter 
-                <paramref>make_dirs</paramref>.
+                If the directories do not exist on the target platform, they will be created depending on the 
+                <paramref>make_dirs</paramref> argument.
             </p>
             <p>
-                The selection of the objects (files) to be processed is also done in the subdirectories via the parameter 
-                <paramref>file_spec</paramref>.
+                The selection of objects (files) to be processed is applied to sub-directories via the 
+                <paramref>file_spec</paramref> argument.
             </p>
             <p>
-                If subdirectories are newly created, the structure is created below the directory specified with the parameter 
-                <paramref>target_dir</paramref> (or <paramref>remote_dir</paramref>) is created.
+                If sub-directories are newly created, the structure will be created inside the directory specified with the  
+                <paramref>target_dir</paramref> or <paramref>remote_dir</paramref> arguments.
             </p>
         </documentation>
     </feature>

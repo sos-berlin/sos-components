@@ -4,13 +4,13 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
     
-    <title>Parameter substitution</title>
+    <title>Argument substitution</title>
     
     <documentation>
 
         <p>
-            The JobScheduler supports substitution of parameter names with their value if
-            the parameter name is enclosed by
+            The JobScheduler supports substitution of argument names in argument values if
+            the argument name is enclosed by
             <em>%</em>
             and
             <em>%</em>
@@ -18,19 +18,19 @@
         </p>
         <p>
             <codeexample os="all" type="js-xml">
-                <title>An example for value substitution</title>
+                <title>Example for substitution</title>
                 <embeddedExample type="js-xml"><![CDATA[<param name="source_file" value="%scheduler_file_path%"/>]]></embeddedExample>
                 <explanation>
                     <p>
-                        In this example the value of the parameter "scheduler_file_path" is used as the value for the
-                        parameter "source_file".
+                        In this example the value of the "scheduler_file_path" argument is used as the value for the
+                        "source_file" argument.
                     </p>
                     <p>
                         Using
                         <a href="http://www.sos-berlin.com/doc/en/scheduler.doc/file_orders.xml">Directory Monitoring with File Orders</a>
-                        the job parameter
+                        the
                         <paramref>scheduler_file_path</paramref>
-                        contains the name and path of the file that triggered the
+                        job argument contains the name and path of the file that triggered the
                         order.
 
                     </p>

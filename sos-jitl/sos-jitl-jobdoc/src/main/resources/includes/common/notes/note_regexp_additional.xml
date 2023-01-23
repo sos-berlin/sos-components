@@ -5,8 +5,8 @@
 	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 		<p>
-	    	As an extension of regular expression the [date:] variable is supported. Using this feature it is possible to create a regexp, which is
-	    	depending on the date with is defined in the date-format.
+            As an extension to regular expressions the [date:] placeholder is supported. When Using this feature it is possible to create a regular expression which
+            depends on the date that is specified with the date format string.
 	    </p>
 	    
 </note>

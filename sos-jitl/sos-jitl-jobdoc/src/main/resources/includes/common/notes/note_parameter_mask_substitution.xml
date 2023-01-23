@@ -22,20 +22,20 @@
         <p>
         
             date format
-            must be a valid Java data format string,
-            e.g.
+            must be a valid Java date format string,
+            for example
             yyyyMMddHHmmss
             ,
             yyyy-MM-dd.HHmmss
             etc.
         </p>
         <p>
-            For further information on valid values for a dateformat string see
+            For further information on valid values for a date format string see
             <a href="http://docs.oracle.com/javase/1.4.2/docs/api/java/text/SimpleDateFormat.html">SimpleDateFormat</a>
         </p>
         
         <p>
-            An example:
+            Example:
         </p>
         <p>
             <code>
@@ -44,9 +44,9 @@
                 /&gt; </code>
         </p>
         <p>
-            On 2050-12-31 the parameter
+            On 2050-12-31 the
             <code>file</code>
-            contains the value
+            argument will contain the value
             <code>"sample/hello20501231.txt"</code>
             .
         </p>
