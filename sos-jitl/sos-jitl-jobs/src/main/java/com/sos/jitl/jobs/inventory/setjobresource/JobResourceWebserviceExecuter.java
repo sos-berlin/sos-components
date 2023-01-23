@@ -7,12 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.commons.httpclient.exception.SOSBadRequestException;
-import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.jitl.jobs.common.Globals;
@@ -38,8 +33,7 @@ public class JobResourceWebserviceExecuter {
 		this.logger = logger;
 	}
 
-	private ConfigurationObject getInventoryItem(RequestFilter requestFilter, String accessToken)
-			throws Exception {
+	private ConfigurationObject getInventoryItem(RequestFilter requestFilter, String accessToken) throws Exception {
 		Globals.debug(logger, ".. getInventoryItem: path: " + requestFilter.getPath() + " , object type: "
 				+ requestFilter.getObjectType());
 
@@ -49,7 +43,11 @@ public class JobResourceWebserviceExecuter {
 		if (apiResponse.getStatusCode() == 200) {
 			answer = apiResponse.getResponseBody();
 		} else {
-			throw apiResponse.getException();
+			if (apiResponse.getException() != null) {
+				throw apiResponse.getException();
+			} else {
+				throw new Exception(apiResponse.getResponseBody());
+			}
 		}
 		Globals.debug(logger, ".... request body: " + body);
 		Globals.debug(logger, "answer=" + answer);
@@ -76,7 +74,11 @@ public class JobResourceWebserviceExecuter {
 		if (apiResponse.getStatusCode() == 200) {
 			answer = apiResponse.getResponseBody();
 		} else {
-			throw apiResponse.getException();
+			if (apiResponse.getException() != null) {
+				throw apiResponse.getException();
+			} else {
+				throw new Exception(apiResponse.getResponseBody());
+			}
 		}
 		Globals.debug(logger, ".... request body: " + body);
 		Globals.debug(logger, "answer=" + answer);
@@ -87,8 +89,7 @@ public class JobResourceWebserviceExecuter {
 		return configurationObjectReturn;
 	}
 
-	private String getSelectedControllerId(String accessToken)
-			throws Exception {
+	private String getSelectedControllerId(String accessToken) throws Exception {
 
 		Globals.debug(logger, ".. getSelectedControllerId: path: ");
 
@@ -98,7 +99,11 @@ public class JobResourceWebserviceExecuter {
 		if (apiResponse.getStatusCode() == 200) {
 			answer = apiResponse.getResponseBody();
 		} else {
-			throw apiResponse.getException();
+			if (apiResponse.getException() != null) {
+				throw apiResponse.getException();
+			} else {
+				throw new Exception(apiResponse.getResponseBody());
+			}
 		}
 		ControllerIds controllerIds = new ControllerIds();
 		if (answer != null) {
@@ -141,7 +146,11 @@ public class JobResourceWebserviceExecuter {
 		if (apiResponse.getStatusCode() == 200) {
 			answer = apiResponse.getResponseBody();
 		} else {
-			throw apiResponse.getException();
+			if (apiResponse.getException() != null) {
+				throw apiResponse.getException();
+			} else {
+				throw new Exception(apiResponse.getResponseBody());
+			}
 		}
 		Globals.debug(logger, ".... request body: " + body);
 		Globals.debug(logger, "answer=" + answer);
