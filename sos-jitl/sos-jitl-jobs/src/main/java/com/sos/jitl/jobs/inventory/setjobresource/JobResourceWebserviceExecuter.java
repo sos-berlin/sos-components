@@ -1,4 +1,4 @@
-package com.sos.jitl.jobs.setjobresource.classes;
+package com.sos.jitl.jobs.inventory.setjobresource;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -19,7 +19,7 @@ import com.sos.jitl.jobs.common.Globals;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
-import com.sos.jitl.jobs.setjobresource.SetJobResourceJobArguments;
+import com.sos.joc.model.controller.ControllerIds;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.read.RequestFilter;
 import com.sos.joc.model.publish.Config;
@@ -39,7 +39,7 @@ public class JobResourceWebserviceExecuter {
 	}
 
 	private ConfigurationObject getInventoryItem(RequestFilter requestFilter, String accessToken)
-			throws JsonProcessingException, SOSConnectionRefusedException, SOSBadRequestException {
+			throws Exception {
 		Globals.debug(logger, ".. getInventoryItem: path: " + requestFilter.getPath() + " , object type: "
 				+ requestFilter.getObjectType());
 
@@ -49,7 +49,7 @@ public class JobResourceWebserviceExecuter {
 		if (apiResponse.getStatusCode() == 200) {
 			answer = apiResponse.getResponseBody();
 		} else {
-			// error handling here - apiResponse.getException();
+			throw apiResponse.getException();
 		}
 		Globals.debug(logger, ".... request body: " + body);
 		Globals.debug(logger, "answer=" + answer);
@@ -65,8 +65,7 @@ public class JobResourceWebserviceExecuter {
 	}
 
 	private ConfigurationObject setInventoryItem(ConfigurationObject configurationObject, String accessToken)
-			throws JsonMappingException, JsonProcessingException, SOSConnectionRefusedException,
-			SOSBadRequestException {
+			throws Exception {
 
 		Globals.debug(logger, ".. setInventoryItem: path: " + configurationObject.getPath() + " , object type: "
 				+ configurationObject.getObjectType());
@@ -77,7 +76,7 @@ public class JobResourceWebserviceExecuter {
 		if (apiResponse.getStatusCode() == 200) {
 			answer = apiResponse.getResponseBody();
 		} else {
-			// error handling here - apiResponse.getException();
+			throw apiResponse.getException();
 		}
 		Globals.debug(logger, ".... request body: " + body);
 		Globals.debug(logger, "answer=" + answer);
@@ -88,14 +87,39 @@ public class JobResourceWebserviceExecuter {
 		return configurationObjectReturn;
 	}
 
+	private String getSelectedControllerId(String accessToken)
+			throws Exception {
+
+		Globals.debug(logger, ".. getSelectedControllerId: path: ");
+
+		String body = Globals.objectMapper.writeValueAsString("{}");
+		ApiResponse apiResponse = apiExecutor.post(accessToken, "/controller/ids", body);
+		String answer = null;
+		if (apiResponse.getStatusCode() == 200) {
+			answer = apiResponse.getResponseBody();
+		} else {
+			throw apiResponse.getException();
+		}
+		ControllerIds controllerIds = new ControllerIds();
+		if (answer != null) {
+			controllerIds = Globals.objectMapper.readValue(answer, ControllerIds.class);
+		}
+		Globals.debug(logger, "answer=" + answer);
+		return controllerIds.getSelected();
+	}
+
 	private void publishDeployableItem(ConfigurationObject configurationObject, SetJobResourceJobArguments args,
-			String accessToken) throws JsonProcessingException, SOSConnectionRefusedException, SOSBadRequestException {
+			String accessToken) throws Exception {
 
 		Globals.debug(logger, ".. publishDeployableItem: path: " + configurationObject.getPath() + " , object type: "
 				+ configurationObject.getObjectType());
 		DeployFilter deployFilter = new DeployFilter();
 		deployFilter.setControllerIds(new ArrayList<String>());
-		deployFilter.getControllerIds().add(args.getControllerId());
+		String controllerId = args.getControllerId();
+		if (controllerId == null || controllerId.isEmpty()) {
+			controllerId = getSelectedControllerId(accessToken);
+		}
+		deployFilter.getControllerIds().add(controllerId);
 
 		DeployablesValidFilter deployablesValidFilter = new DeployablesValidFilter();
 		List<Config> draftConfigurations = new ArrayList<Config>();
@@ -117,7 +141,7 @@ public class JobResourceWebserviceExecuter {
 		if (apiResponse.getStatusCode() == 200) {
 			answer = apiResponse.getResponseBody();
 		} else {
-			// error handling here - apiResponse.getException();
+			throw apiResponse.getException();
 		}
 		Globals.debug(logger, ".... request body: " + body);
 		Globals.debug(logger, "answer=" + answer);
@@ -145,8 +169,7 @@ public class JobResourceWebserviceExecuter {
 	}
 
 	public void handleJobResource(RequestFilter requestFilter, SetJobResourceJobArguments args, String accessToken)
-			throws JsonMappingException, JsonProcessingException, SOSConnectionRefusedException,
-			SOSBadRequestException {
+			throws Exception {
 		ConfigurationObject configurationObject = this.getInventoryItem(requestFilter, accessToken);
 		JobResource jobResource = (JobResource) configurationObject.getConfiguration();
 		if (jobResource.getArguments() == null) {
@@ -158,7 +181,7 @@ public class JobResourceWebserviceExecuter {
 		String value = getValue(args.getValue(), args.getTimeZone());
 		jobResource.getArguments().getAdditionalProperties().put(args.getKey(), "\"" + value + "\"");
 		if (args.getEnvironmentVariable() != null && !args.getEnvironmentVariable().isEmpty()) {
-			jobResource.getEnv().getAdditionalProperties().put(args.getEnvironmentVariable(),"$" + args.getKey());
+			jobResource.getEnv().getAdditionalProperties().put(args.getEnvironmentVariable(), "$" + args.getKey());
 		}
 		configurationObject.setConfiguration(jobResource);
 		configurationObject = this.setInventoryItem(configurationObject, accessToken);

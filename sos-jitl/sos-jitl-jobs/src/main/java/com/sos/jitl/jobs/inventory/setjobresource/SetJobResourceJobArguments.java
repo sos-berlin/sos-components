@@ -1,4 +1,4 @@
-package com.sos.jitl.jobs.setjobresource;
+package com.sos.jitl.jobs.inventory.setjobresource;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.jitl.jobs.common.JobArgument;
