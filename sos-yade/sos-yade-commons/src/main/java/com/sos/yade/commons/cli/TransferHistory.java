@@ -63,7 +63,7 @@ public class TransferHistory {
         boolean displayUsage = false;
         boolean displayArgs = false;
         boolean displayResult = false;
-        boolean testMode = false;
+        boolean dryRun = false;
         for (String arg : args) {
             String[] arr = arg.split("=");
             String pn = arr[0];
@@ -74,16 +74,16 @@ public class TransferHistory {
             case "--help":
                 displayUsage = true;
                 break;
-            case "-display-args":
+            case "--display-args":
                 displayArgs = true;// getBoolean(pv, true);
                 break;
-            case "-display-result":
+            case "--display-result":
                 displayResult = true;// getBoolean(pv, true);
                 break;
-            case "-test-mode":
+            case "--dry-run":
                 displayArgs = true;
                 displayResult = true;
-                testMode = true;
+                dryRun = true;
                 break;
             // TRANSFER META
             case "--operation":
@@ -214,7 +214,7 @@ public class TransferHistory {
                 displayResult(serializer, serialized);
             }
 
-            if (!testMode) {
+            if (!dryRun) {
                 String returnValues = System.getenv(ENV_VAR_RETURN_VALUES);
                 if (returnValues == null) {
                     System.err.println("Missing environment variable: " + ENV_VAR_RETURN_VALUES);
@@ -531,12 +531,12 @@ public class TransferHistory {
         System.out.println("Switches:");
         System.out.print("  -h | --help                        | ");
         System.out.println("displays usage");
-        System.out.print("  -display-args                      | ");
+        System.out.print("  --display-args                     | ");
         System.out.println("displays command line arguments");
-        System.out.print("  -display-result                    | ");
+        System.out.print("  --display-result                   | ");
         System.out.println("displays execution result");
-        System.out.print("  -test-mode                         | ");
-        System.out.println("sets -display-args and -display-result and does not create entries for the File Transfer History");
+        System.out.print("  --dry-run                          | ");
+        System.out.println("sets --display-args and --display-result and does not create entries for the File Transfer History");
     }
 
     private static void displayArguments(String[] args) {
