@@ -177,6 +177,9 @@ public class HistoryInfo {
 
 	public HistoryItem queryHistory() throws Exception {
 		String query = args.getQuery().toLowerCase();
+		query = query.replaceAll("(?i)" + " or ", " or ");
+		query = query.replaceAll("(?i)" + " and ", " and ");
+
 		boolean isOr = true;
 		boolean isAnd = false;
 		if (query.contains(" or ") && query.contains(" and ")) {
@@ -193,8 +196,7 @@ public class HistoryInfo {
 			isAnd = true;
 		}
 		
-		query = args.getQuery();
-
+ 
 		String[] queries = query.split(";");
 		HistoryItem h = null;
 
