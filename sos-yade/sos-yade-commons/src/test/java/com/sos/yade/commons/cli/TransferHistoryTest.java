@@ -45,7 +45,7 @@ public class TransferHistoryTest {
 
         List<String> args = new ArrayList<>();
         args.add("--xxx");
-        args.add("-test-mode");
+        args.add("--dry-run");
         // args.add("--target-host=my_target_host --target-port=1 --target-account=ta --target-protocol=webdav");
         // args.add("--target-host=ftp://test@testhost:1234");
         // args.add("--transfer-file=1.txt --operation=remove");
