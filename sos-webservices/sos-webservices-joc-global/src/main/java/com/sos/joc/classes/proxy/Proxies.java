@@ -47,7 +47,6 @@ import com.sos.joc.model.agent.SubagentDirectorType;
 
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
-import js7.data.cluster.ClusterSetting.Watch;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.auth.JHttpsConfig;
@@ -167,6 +166,7 @@ public class Proxies {
      * @param controllerId
      */
     protected void removeProxies(final String controllerId) {
+        LOGGER.info("Remove ControllerApi (Proxy/Cluster Watch) for '" + controllerId + "'");
         proxiesOfControllerId(controllerId).forEach((key, proxy) -> {
             proxy.stop();
             controllerFutures.remove(key);
@@ -251,7 +251,7 @@ public class Proxies {
      * Starts all Proxies from db 'instances' table for specified user. Should be called in servlet 'init' method 
      * @param properties (from ./resources/joc/joc.properties to get keystore and truststore information)
      * @param delay 
-     *      A started Proxy future needs around 10 seconds until the connection is successfully.
+     *      A started Proxy future needs around 10 seconds until the connection is successful.
      *      The method sleeps according specified 'delay' (in seconds) 
      * @param account
      */
@@ -588,6 +588,7 @@ public class Proxies {
                 // "identical" checks equality inclusive the urls
                 // restart not necessary if a proxy with identically credentials already started
                 if (controllerFutures.keySet().stream().anyMatch(key -> key.identical(credentials))) {
+                    controllerFutures.get(credentials).checkCluster();
                     return false;
                 }
             }
@@ -598,12 +599,6 @@ public class Proxies {
         }
         return false;
     }
-    
-//    private void startWatch(ProxyCredentials credentials) throws ControllerConnectionRefusedException {
-//        if (credentials.getBackupUrl() != null) { //is controller cluster
-//            ClusterWatch.getInstance().start(loadApi(credentials), credentials.getControllerId(), true);
-//        }
-//    }
     
     protected JControllerApi loadApi(ProxyCredentials credentials) throws ControllerConnectionRefusedException {
         if (!controllerApis.containsKey(credentials)) {

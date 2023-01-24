@@ -1,7 +1,6 @@
 package com.sos.joc.classes.proxy;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,23 +18,18 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.exceptions.ControllerAuthorizationException;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerSSLCertificateException;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 
 import io.vavr.control.Either;
 import js7.base.auth.UserAndPassword;
 import js7.base.problem.Problem;
-import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
-import js7.data.cluster.ClusterSetting.Watch;
-import js7.data.node.NodeId;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerState;
@@ -132,50 +126,57 @@ public class ProxyContext {
         }
     }
     
-    private void checkCluster() {
+    protected void checkCluster() {
         if (credentials.getBackupUrl() != null) { // is Cluster
             LOGGER.info(toString() + ": check cluster appointment");
             LOGGER.info(toString() + ": future is complete? " + proxyFuture.isDone());
             proxyFuture.thenApplyAsync(p -> {
                 Either<Problem, Void> either = null;
-                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(credentials.getControllerId());
-                if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
-                    either = Either.left(Problem.pure(new JocConfigurationException("There is no cluster configured with the ID: " + credentials
-                            .getControllerId()).toString()));
-                } else {
-                    String clusterState = p.currentState().clusterState().toJson();
-                    if (clusterState.replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
+//                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(credentials.getControllerId());
+//                if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
+//                    either = Either.left(Problem.pure(new JocConfigurationException("There is no cluster configured with the ID: " + credentials
+//                            .getControllerId()).toString()));
+//                } else {
+//                    String clusterState = p.currentState().clusterState().toJson();
+//                    if (clusterState.replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
                         try {
-                            LOGGER.info(toString() + ": Cluster Nodes are not appointed");
-                            List<Watch> agentWatches = ClusterWatch.getClusterWatchers(credentials.getControllerId(), null);
-                            // dry run: if (agentWatches.isEmpty()) {
-                               ClusterWatch.getInstance().start(p.api(), credentials.getControllerId(), true);
-                            //}
-                            NodeId activeId = NodeId.of("Primary");
-                            Map<NodeId, Uri> idToUri = new HashMap<>();
-                            for (DBItemInventoryJSInstance inst : controllerInstances) {
-                                idToUri.put(inst.getIsPrimary() ? activeId : NodeId.of("Backup"), Uri.of(inst.getClusterUri()));
-                            }
-
-                            p.api().clusterAppointNodes(idToUri, activeId, agentWatches).thenAccept(e -> {
-                                if (e.isLeft()) {
-                                    LOGGER.warn(ProblemHelper.getErrorMessage(e.getLeft()));
-                                } else {
-                                    LOGGER.info(toString() + ": Appointing Cluster Nodes was successful");
-                                }
-                            });
+                            LOGGER.info(toString() + ": Cluster nodes are not appointed");
+                            ClusterWatch.getInstance().appointNodes(credentials.getControllerId(), p, null, null, null);
+                            
+                            
+//                            List<Watch> agentWatches = ClusterWatch.getClusterWatchers(credentials.getControllerId(), null);
+//                            // dry run: if (agentWatches.isEmpty()) {
+//                               ClusterWatch.getInstance().start(p.api(), credentials.getControllerId(), true);
+//                            //}
+//                            NodeId activeId = NodeId.of("Primary");
+//                            Map<NodeId, Uri> idToUri = new HashMap<>();
+//                            for (DBItemInventoryJSInstance inst : controllerInstances) {
+//                                idToUri.put(inst.getIsPrimary() ? activeId : NodeId.of("Backup"), Uri.of(inst.getClusterUri()));
+//                            }
+//
+//                            p.api().clusterAppointNodes(idToUri, activeId, agentWatches).thenAccept(e -> {
+//                                if (e.isLeft()) {
+//                                    LOGGER.warn(ProblemHelper.getErrorMessage(e.getLeft()));
+//                                } else {
+//                                    LOGGER.info(toString() + ": Appointing cluster nodes was successful");
+//                                }
+//                            });
                             either = Either.right(null);
                         } catch (Exception e) {
                             either = Either.left(Problem.pure(e.toString()));
                         }
-                    } else {
-                        // only for dry run otherwise delete following line
-                        ClusterWatch.getInstance().start(p.api(), credentials.getControllerId(), true);
-                        //
-                        LOGGER.info("Cluster nodes are appointed: " + clusterState);
-                        either = Either.right(null);
-                    }
-                }
+//                    } else {
+//                        try {
+//                            // only for dry run otherwise delete following line
+//                            ClusterWatch.getInstance().start(p.api(), credentials.getControllerId(), true);
+//                            //
+//                            LOGGER.info("Cluster nodes are appointed: " + clusterState);
+//                            either = Either.right(null);
+//                        } catch (Exception e) {
+//                            either = Either.left(Problem.pure(e.toString()));;
+//                        }
+//                    }
+//                }
                 return either;
             }).thenAccept(e -> {
                 if (e.isLeft()) {
