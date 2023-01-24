@@ -1,121 +1,110 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
 <description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
-    xmlns:xi="http://www.w3.org/2001/XInclude"
-    xmlns:xhtml="http://www.w3.org/1999/xhtml"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
-
-    <job name  = "SetJobResourceJob"
-         title = "Can be used to populate the JS7 inventory from JS7 - Job Resources"
-         category="History;JITL">
-        <script language   = "java"
-                java_class = "com.sos.jitl.jobs.inventory.SetJobResourceJob"
-                resource   = "1"/>
+             xmlns:xi="http://www.w3.org/2001/XInclude"
+             xmlns:xhtml="http://www.w3.org/1999/xhtml"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+    <job name="SetJobResourceJob"
+         title="Can be used to populate the JS7 inventory from Job Resources"
+         category="Inventory;JITL">
+        <script language="java"
+                java_class="com.sos.jitl.jobs.inventory.SetJobResourceJob"
+                resource="1"/>
     </job>
-
     <configuration>
-
         <params id="job_parameter">
-
-                <param name="job_resource" required="true">
+            <param name="job_resource"
+                   required="true">
                 <note>
                     <title>The path to the Job Resource that should be created or updated. Both specification of a path and specification of the name can be used.</title>
-                    <p>Example: /resources/my_vars</p>
+                    <p>
+                        Example: /resources/my_vars
+                    </p>
                 </note>
             </param>
-      
-             
-            <param name="key" required="true">
+            <param name="key"
+                   required="true">
                 <note>
-                	<title>The name of the variable in the Job Resource (case-sensitive).</title>
-                	<p>
-                	Example: var1
+                    <title>The name of the variable in the Job Resource (case-sensitive).</title>
+                    <p>
+                        Example: var1
                     </p>
-                  
                 </note>
-            </param>                     
-
-            <param name="value" required="true">
+            </param>
+            <param name="value"
+                   required="true">
                 <note>
                     <title>The value of the variable</title>
-                   <p>
-                   <ul>
-                	<li>The value allows any strings, numbers etc.</li>
-                	<li>A special syntax is supported for date values: [&lt;java-date-pattern&gt;]:</li>
-                	<ul>
-                	<li>for example [dd/MM/yyyy], [yyyy-MM-dd], [yyyy-MM-dd hh:mm:ss], [yyyy-MM-dd hh:mm:ssZ]</li>
-                	<li>The Java date pattern will by replaced by the job for the current date and time value.</li>
-                	</ul>> 
+                    <p>
+                        <ul>
+                            <li>The value allows any strings, numbers etc.</li>
+                            <li>A special syntax is supported for date values: [&lt;java-date-pattern&gt;]:</li>
+                            <ul>
+                                <li>for example [dd/MM/yyyy], [yyyy-MM-dd], [yyyy-MM-dd hh:mm:ss], [yyyy-MM-dd hh:mm:ssZ]</li>
+                                <li>The Java date pattern will by replaced by the job for the current date and time value.</li>
+                            </ul>> 
                 	</ul>>
                     </p>
                 </note>
             </param>
-            <param name="time_zone" required="false">
+            <param name="time_zone"
+                   required="false">
                 <note>
-                	<title>If a Java data pattern is specified for the value parameter then the date is calculated for the given time zone.</title>
-                	<p>
-                    The time zone is specified from a string, for example "GMT", "Europe/London". Valid time zone strings as explained with https://en.wikipedia.org/wiki/List_of_tz_database_time_zones can be specified.
-                    If this parameter is omitted then the time zone that the Agent is operated for will be used.                    
+                    <title>If a Java date pattern is specified then the date is calculated for the given time zone.</title>
+                    <p>
+                        The time zone is specified from a string, for example "GMT", "Europe/London". Valid time zone strings as explained with https://en.wikipedia.org/wiki/List_of_tz_database_time_zones can be specified.
+                        If this argument is omitted then the time zone that the Agent is operated for will be used.                    
                     </p>
                 </note>
             </param>
-            <param name="environment_variable" required="false">
+            <param name="environment_variable"
+                   required="false">
                 <note>
-                	<title>The name of an environment variable in the Job Resource that should automatically be populated with the value specified for the key</title>
-                	<p>
-                    Technically the environment variable will hold a reference to the key.
+                    <title>The name of an environment variable in the Job Resource that should automatically be populated with the value specified for the key</title>
+                    <p>
+                        Technically the environment variable will hold a reference to the key.
                     </p>
                 </note>
             </param>
-      
-            <param name="controller_id" required="false">
+            <param name="controller_id"
+                   required="false">
                 <note>
-                	<title>The Controller ID identifies the Controller to which the updated Job Resource will be deployed.</title>
-                <p>
-                If this parameter is omitted then the default Controller will be used that is available from the JOC Cockpit user profile that is in place for the account that connects to JOC Cockpit.
-                </p>
+                    <title>The Controller ID identifies the Controller to which the updated Job Resource will be deployed.</title>
+                    <p>
+                        If this argument is omitted then the default Controller will be used that is available from the JOC Cockpit user profile that is in place for the account that connects to JOC Cockpit.
+                    </p>
                 </note>
             </param>
-           
-               
         </params>
-        
         <params id="return_parameter">
  
             
 
         </params>
-
     </configuration>
-
     <documentation>
-    
         <note>
             <title>What is the purpose of this job?</title>
             <p>
-                The JITL SetJobResourceJob template can be used to populate the JS7 inventory from JS7 - Job Resources
+                The JITL SetJobResourceJob template can be used to populate the JS7 inventory from Job Resources
                 <ul>
-                <li>to add or update a variable in a Job Resource,</li>
-                <li>to deploy a Job Resource.</li>
+                    <li>to add or update a variable in a Job Resource,</li>
+                    <li>to deploy a Job Resource.</li>
                 </ul>
                
                 The JITL SetJobResourceJob template can be used for example to set a variable holding a business date:
                 
                 <ul>
-                <li>the variable in the Job Resource can be updated with the current date and time.</li>
-                <li>the updated Job Resource is automatically deployed and becomes available to related Agents.</li>
-                <li>any workflow that is assigned the Job Resource has access to the updated variable.</li>
+                    <li>the variable in the Job Resource can be updated with the current date and time.</li>
+                    <li>the updated Job Resource is automatically deployed and becomes available to related Agents.</li>
+                    <li>any workflow that is assigned the Job Resource has access to the updated variable.</li>
                 </ul>
             </p>
             <p>
-            The JITL job connects to JOC Cockpit using user/password authentication and/or certificate based authentication.
-The job makes use of authentication settings as explained with <a href="https://kb.sos-berlin.com/display/JS7/JS7+-+JITL+Common+Authentication">https://kb.sos-berlin.com/display/JS7/JS7+-+JITL+Common+Authentication</a>
+                The JITL job connects to JOC Cockpit using user/password authentication and/or certificate based authentication.
+                The job makes use of authentication settings as explained with <a href="https://kb.sos-berlin.com/display/JS7/JS7+-+JITL+Common+Authentication">https://kb.sos-berlin.com/display/JS7/JS7+-+JITL+Common+Authentication</a>
             </p>>
         </note>
-    
-        
-         
     </documentation>
-
 </description>

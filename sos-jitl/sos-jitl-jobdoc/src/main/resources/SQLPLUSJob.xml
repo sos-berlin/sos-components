@@ -1,19 +1,21 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
 <description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
-    xmlns:xi="http://www.w3.org/2001/XInclude"
-    xmlns:xhtml="http://www.w3.org/1999/xhtml"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
-	
-    <job name="SQLPLUSJob" title="Start SQL*Plus client and execute a sql*plus script">
-        <script language="java" java_class="com.sos.jitl.jobs.db.oracle.SQLPLUSJob" resource="1"/>
+             xmlns:xi="http://www.w3.org/2001/XInclude"
+             xmlns:xhtml="http://www.w3.org/1999/xhtml"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+    <job name="SQLPLUSJob"
+         title="Start SQL*Plus client and execute a sql*plus script">
+        <script language="java"
+                java_class="com.sos.jitl.jobs.db.oracle.SQLPLUSJob"
+                resource="1"/>
     </job>
-
-    <configuration> 
+    <configuration>
         <params id="job_parameter">
-
-            <param name="shell_command" required="true" default_value="sqlplus">
+            <param name="shell_command"
+                   required="true"
+                   default_value="sqlplus">
                 <note>
                     <title>Path to the SQL*Plus Client</title>
                     <p>
@@ -22,8 +24,9 @@
 					</p>
                 </note>
             </param>
-
-            <param name="command_line_options" required="false" default_value="">
+            <param name="command_line_options"
+                   required="false"
+                   default_value="">
                 <note>
                     <title>SQL*Plus Client Options</title>
                     <p>
@@ -33,10 +36,10 @@
                     </p>
                 </note>
             </param>
-
-            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_sqlplus_db_url.xml" parse="xml"/>
-
-            <param name="db_user" required="false">
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_sqlplus_db_url.xml"
+                        parse="xml"/>
+            <param name="db_user"
+                   required="false">
                 <note>
                     <title>The user accocunt for access to the database</title>
                     <p>
@@ -44,8 +47,8 @@
                     </p>
                 </note>
             </param>
-
-            <param name="db_password" required="false">
+            <param name="db_password"
+                   required="false">
                 <note>
                     <title>The password for access to the database</title>
                     <p>
@@ -53,12 +56,11 @@
                     </p>
                 </note>
             </param>
-
-            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_sqlplus_script_file.xml" parse="xml"/>
-
-            
-
-            <param name="include_files" required="false" default_value="">
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_sqlplus_script_file.xml"
+                        parse="xml"/>
+            <param name="include_files"
+                   required="false"
+                   default_value="">
                 <note>
                     <title>SQL Statements to include from files</title>
                     <p>
@@ -68,8 +70,9 @@
                     </p>
                 </note>
             </param>
-
-           <param name="command" required="false" default_value="">
+            <param name="command"
+                   required="false"
+                   default_value="">
                 <note>
                     <title>Command to be executed by the SQL*Plus Client</title>
                     <p>
@@ -79,8 +82,9 @@
 					</p>
                 </note>
             </param>
-
-           <param name="timeout" required="false" data_type="integer">
+            <param name="timeout"
+                   required="false"
+                   data_type="integer">
                 <note>
                     <title>Timeout for the command to be executed by the SQL*Plus Client</title>
                     <p>
@@ -88,10 +92,13 @@
 					</p>
                 </note>
             </param>
-
-            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_variable_parser_reg_expr.xml" parse="xml"/>
-
-            <param name="ignore_ora_messages" required="false" default_value="" DataType="SOSOptionStringValueList" Category="sql,pl/sql,sql*plus">
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_variable_parser_reg_expr.xml"
+                        parse="xml"/>
+            <param name="ignore_ora_messages"
+                   required="false"
+                   default_value=""
+                   DataType="SOSOptionStringValueList"
+                   Category="sql,pl/sql,sql*plus">
                 <note>
                     <title>Ignore "ORA-" Errors</title>
                     <p>
@@ -101,8 +108,9 @@
                     </p>
                 </note>
             </param>
-
-            <param name="ignore_sp2_messages" required="false" default_value="">
+            <param name="ignore_sp2_messages"
+                   required="false"
+                   default_value="">
                 <note>
                     <title>Ignore SQL*Plus Errors</title>
                     <p>
@@ -112,46 +120,43 @@
                     </p>
                 </note>
             </param>
-
-            <xi:include href="./includes/common/params/params_credential_store.xml" parse="xml" />
-
+            <xi:include href="./includes/common/params/params_credential_store.xml"
+                        parse="xml"/>
         </params>
-
         <params id="return_parameter">
-            <param name="sql_error" required="false" default_value="">
+            <param name="sql_error"
+                   required="false"
+                   default_value="">
                 <note>
                     <title>Error Messages of the SQL*Plus Client or the database server</title>
                     <p>
                         If errors occur during execution of SQL statements then the error messages will be stored with the
-                        "sql_error" result order variable in the order of occurrence.
-                        If no errors occur then the value of the variable is empty.
+                        "sql_error" result variable in the order of occurrence.
+                        If no errors occur then the value of the return variable is empty.
                     </p>
                 </note>
             </param>
-
-            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_std_out_output.xml" parse="xml"/>
-            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_exit_code.xml" parse="xml"/>
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_std_out_output.xml"
+                        parse="xml"/>
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_exit_code.xml"
+                        parse="xml"/>
         </params>
-
     </configuration>
-
     <documentation>
-            
-	    <note>
-	        <title>What is the purpose of this job?</title>
-	        <p>
+        <note>
+            <title>What is the purpose of this job?</title>
+            <p>
 	        	The job executes a SQL*Plus script.
 	            The job runs the SQL*Plus Client in a separate process.
 	            It keeps the job in control of the program flow.
 	        </p>
-	    </note>
-	    
-	    <note>
-	        <title>How is the SQL script defined?</title>
-	        <p>
+        </note>
+        <note>
+            <title>How is the SQL script defined?</title>
+            <p>
                 SQL statements are stored to a separate file that is specified by the <paramref>command_script_file</paramref> argument.
 	        </p>
-	        <p>
+            <p>
 				Before the SQL*Plus Client is launched for execution of the SQL script, the following steps are applied
 				First, for each parameter a "DEFINE" directive is generated.
 				These directives are written to a temporary file.
@@ -161,11 +166,10 @@
 				Subsequently, all variables specified directly with SQL statements are substituted by arguments values.
 				Finally the temporary file is used for execution with the SQL*Plus Client.
 			</p>
-	    </note>	
-	   
-	    <note>
-	        <title>How is it possible to use parameters in SQL scripts?</title>
-			<p>
+        </note>
+        <note>
+            <title>How is it possible to use parameters in SQL scripts?</title>
+            <p>
 	     		Order variables can be used in the SQL script in two ways:
             </p>
             <p>
@@ -173,24 +177,22 @@
 	     		The arguments are defined as SQL*Plus variables by the job.
 	     		The job creates a "DEFINE" directive for each argument.
 	     	</p>
-	     	<p>
+            <p>
 	     		Second, the names of arguments can be used directly in the SQL script.
 	     		The names are replaced by value of the respective argument.
 	     	</p>
-	   	</note>
-	    
-	    <note>
-	        <title>How do I access stdout and stderr channels?</title>
-	        <p>
-	        	The contents of the stdout and stderr channels are available from values of the corresponding result order variables.
-	     		Any subsequent jobs and instructions in a workflow can access the result order variables.
-			</p>
-	    </note>
-	    
-	    <note>
-	        <title>How can results be reused in subsequent jobs?</title>
+        </note>
+        <note>
+            <title>How do I access stdout and stderr channels?</title>
             <p>
-                To report return values the job adds result order variables.
+	        	The contents of the stdout and stderr channels are available from values of the corresponding result variables.
+	     		Any subsequent jobs and instructions in a workflow can access the result variables.
+			</p>
+        </note>
+        <note>
+            <title>How can results be reused in subsequent jobs?</title>
+            <p>
+                To report return values the job adds result variables.
                 The first set of variables is static in the sense that variables are always provided, such as the
                 variables explained with section "return variables".
                 In addition, order variables can be added dynamically.
@@ -198,43 +200,40 @@
                 The regular expression is defined with the <paramref>variable_parser_reg_exp</paramref> argument.
             </p>
             <p>
-                Result order variables are available to jobs and instructions in subsequent nodes of a workflow.
-                The values of resul order variables can be modified by subsequent jobs and instructions.
-            </p>            
-	    </note>
-	    
-	    <note>
-	        <title>How are errors detected and handled?</title>
-	        <p>
+                Result variables are available to jobs and instructions in subsequent nodes of a workflow.
+                The values of resul variables can be modified by subsequent jobs and instructions.
+            </p>
+        </note>
+        <note>
+            <title>How are errors detected and handled?</title>
+            <p>
 	        	The job detects errors reported by the SQL*Plus Client.
 	     		Such errors use an identifier starting with the string "SP2-" followed by a number.
 	     	</p>
-	     	<p>
+            <p>
 	     		In addition, the job detects errors reported by the database server on execution of the SQL script.
 	     		Such errors use an identifier starting with the string "ORA-" followed by a number.
 	     	</p>
-	     	<p>
+            <p>
 	     		If SP2-* or ORA-* errors occur then the job is terminated abnormally.
 	     		A return code 98 is set.
 	     	</p>
-	     	<p>
-	     		In addition, the error message is reported as the value of the <paramref>sql_error</paramref> result order variable.
+            <p>
+	     		In addition, the error message is reported as the value of the <paramref>sql_error</paramref> result variable.
 	     	</p>
-	    </note>
-	   
-	    <note>
-	        <title>Can errors be ignored?</title>
-	        <p>
+        </note>
+        <note>
+            <title>Can errors be ignored?</title>
+            <p>
 				It is possible to ignore errors.
 	  			The <paramref>ignore_sp2_messages</paramref> and <paramref>ignore_ora_messages</paramref> arguments can be used to this purpose.
 				The identifiers of the respective errors to be ignored are specified as the values of the arguments.
 	    		Error messages are available with the stdout channel, even if they are ignored.
 	    	</p>
-	    </note>
-	
-		<p>
-			<codeexample type="sql*plus">
-				<embeddedExample type="sql*plus">WHENEVER SQLERROR EXIT SQL.SQLCODE
+        </note>
+        <p>
+            <codeexample type="sql*plus">
+                <embeddedExample type="sql*plus">WHENEVER SQLERROR EXIT SQL.SQLCODE
 WHENEVER OSERROR EXIT FAILURE
 
 column end_date new_value BCY_DATE
@@ -253,29 +252,28 @@ prompt SET period_prev IS &amp;PN_YEAR_PERIOD_PREV;
 prompt SET end_date IS 1;
 exit;
 </embeddedExample>
-	
-				<explanation>
-					<title>Example: SQL*Plus Script</title>
-	            	<p>
-	            		The following order variables are returned,
+                <explanation>
+                    <title>Example: SQL*Plus Script</title>
+                    <p>
+	            		The following variables are returned,
 	              		see the <paramref>variable_parser_reg_expr</paramref> agument.
 	              		To this purpose, the output of the script is parsed with the regular expression "^SET\s+([^\s]+)\s*IS\s+(.*)$".
 	            	</p>
-	            	<p>
-	             		In the above example the following result order variables are returned:
+                    <p>
+	             		In the above example the following result variables are returned:
 	            	</p>
-	            	<p>
-	            		<ul>
-	                		<li>end_date=1</li>
-	                		<li>period=0</li>
-	                		<li>period_prev=0</li>
-	           			</ul>
-	            	</p>
-	            	<p>
-                        If a resulting order variables is set a number of times then the last assignment.
+                    <p>
+                        <ul>
+                            <li>end_date=1</li>
+                            <li>period=0</li>
+                            <li>period_prev=0</li>
+                        </ul>
                     </p>
-				</explanation>
-			</codeexample>
-		</p>
+                    <p>
+                        If a result variable is set a number of times then the last assignment is used.
+                    </p>
+                </explanation>
+            </codeexample>
+        </p>
     </documentation>
 </description>

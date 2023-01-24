@@ -45,7 +45,7 @@
         <div xmlns="http://www.w3.org/1999/xhtml">
             <p>
                 This job copies one or more files.
-                The job belongs to the category "FileOperations".
+                The job belongs to the category "File Operations".
             </p>
             <xi:include href="./includes/com.sos.jitl.jobs.file/note_file_operations.xml" parse="xml" />
             <p>

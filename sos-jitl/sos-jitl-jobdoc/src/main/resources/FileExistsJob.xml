@@ -35,8 +35,8 @@
     <documentation>
         <div xmlns="http://www.w3.org/1999/xhtml" xmlns:xi="http://www.w3.org/2001/XInclude">
             <p>
-                Checks for the existence of a file, a directory or for specific files inside of a directory.
-                The job belongs to the category "FileOperations".
+                Checks for the existence of a file, of a directory or of files inside of a directory.
+                The job belongs to the category "File Operations".
             </p>
             <xi:include href="./includes/com.sos.jitl.jobs.file/note_file_operations.xml" parse="xml" />
             <p>

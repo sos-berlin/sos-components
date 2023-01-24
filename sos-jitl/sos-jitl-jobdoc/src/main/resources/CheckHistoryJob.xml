@@ -1,24 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
 <description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
-    xmlns:xi="http://www.w3.org/2001/XInclude"
-    xmlns:xhtml="http://www.w3.org/1999/xhtml"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
-
-    <job name  = "CheckHistoryJob"
-         title = "Checks the execution status in the history of workflows and jobs"
+             xmlns:xi="http://www.w3.org/2001/XInclude"
+             xmlns:xhtml="http://www.w3.org/1999/xhtml"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+    <job name="CheckHistoryJob"
+         title="Checks the execution status in the history of workflows and jobs"
          category="History;JITL">
-        <script language   = "java"
-                java_class = "com.sos.jitl.jobs.checkhistory.CheckHistoryJob"
-                resource   = "1"/>
+        <script language="java"
+                java_class="com.sos.jitl.jobs.checkhistory.CheckHistoryJob"
+                resource="1"/>
     </job>
-
     <configuration>
-
         <params id="job_parameter">
-
-                <param name="query" required="true">
+            <param name="query"
+                   required="true">
                 <note>
                     <title>The query to be executed</title>
                     <p>
@@ -31,17 +28,20 @@
                             <li>lastCompletedFailed: specifies that the last run of the job failed.</li>
                             <li>lastCompletedSuccessful( startedFrom=-1d, startedTo=-1d ): specifies that the last run of the job started and completed successfully in the given period.</li>
                         </ul>
-					</p>
+                    </p>
                     <p>
-                        Queries can use the following parameters to select individual periods and/or to add additional filters:
-                        <p>                        	
-                            <b>query: isStarted</b><br/>
-                            If both 'completedFrom' and 'completedTo' parameters are not specified then no completion date will be considered.
+                        Queries can use the following argument values to select individual periods and/or to add additional filters:
+                        <p>
+                            <b>query: isStarted</b>
+                            <br/>
+                            If both 'completedFrom' and 'completedTo' values are not specified then no completion date will be considered.
                         </p>
-                        <p>                        	
-                            <b>query: isCompleted*</b><br/>
-                            <b>query: lastCompleted*</b><br/>
-                            If both 'startedFrom' and 'startedTo' parameters are not specified then no start date will be considered.
+                        <p>
+                            <b>query: isCompleted*</b>
+                            <br/>
+                            <b>query: lastCompleted*</b>
+                            <br/>
+                            If both 'startedFrom' and 'startedTo' values are not specified then no start date will be considered.
                         </p>
                         <ul>
                             <li>startedFrom, default=0d</li>
@@ -50,21 +50,21 @@
                             <li>completedTo, default=0d</li>
                             <li>count, default=1</li>
                         </ul>
-					</p>
-                    <p>
-                        The 'startedFrom' and 'startedTo' parameters specify the period of the start date that should be considered.
-                        <ul>
-                            <li>Example: isCompleted( startedFrom=-1d, startedTo=-1d ) specifies that the workflow or job started and completed yesterday.</li> 
-                        </ul> 
                     </p>
                     <p>
-                        The 'completedFrom' and 'completedTo' parameters specify the period in which the workflow or job completed.
+                        The 'startedFrom' and 'startedTo' values specify the period of the start date that should be considered.
+                        <ul>
+                            <li>Example: isCompleted( startedFrom=-1d, startedTo=-1d ) specifies that the workflow or job started and completed yesterday.</li>
+                        </ul>
+                    </p>
+                    <p>
+                        The 'completedFrom' and 'completedTo' values specify the period in which the workflow or job completed.
                         <ul>
                             <li>Example: isCompleted( completedFrom=-1d, completedTo=-1d ) specifies that the workflow or job completed yesterday.</li>
-                        </ul> 
+                        </ul>
                     </p>
                     <p>
-                        The 'count' parameter specifies the number of expected history items.
+                        The 'count' value specifies the number of expected history items.
                         <ul>
                             <li>Example: isCompleted( completedFrom=-1d, completedTo=-1d, count=2 ) specifies that the workflow or job completed twice yesterday.</li>
                         </ul>
@@ -98,49 +98,45 @@
                     </p>
                 </note>
             </param>
-      
-             
-            <param name="workflow" required="one of workflow or job">
+            <param name="workflow"
+                   required="one of workflow or job">
                 <note>
-                	<title>The workflow which is looked up in the history</title>
-                	<p>
-                	Limits results to a specific workflow indicated by its name. This includes use of '*' and '?' wildcards:
-                	<ul>
-					<li>* : matches zero or more characters</li>
-					<li>? : matches any single character</li>
-					</ul>
-                    </p>
-                  
-                </note>
-            </param>                     
-
-            <param name="job" required="one of workflow or job">
-                <note>
-                    <title>The job which is looked up in the history</title>
-                   <p>
-                	Limits results to a specific job indicated by its name. This includes use of '*' and '?' wildcards:
-                	<ul>
-					<li>* : match zero or more characters</li>
-					<li>? : match any single character</li>
-					</ul>
+                    <title>The workflow which is looked up in the history</title>
+                    <p>
+                        Limits results to a specific workflow indicated by its name. This includes use of '*' and '?' wildcards:
+                        <ul>
+                            <li>* : matches zero or more characters</li>
+                            <li>? : matches any single character</li>
+                        </ul>
                     </p>
                 </note>
             </param>
-      
-            <param name="controller_id" required="false">
+            <param name="job"
+                   required="one of workflow or job">
                 <note>
-                	<title>The Controller ID indicates the Controller for which jobs or workflows have been executed.</title>
-                	<p>
+                    <title>The job which is looked up in the history</title>
+                    <p>
+                        Limits results to a specific job indicated by its name. This includes use of '*' and '?' wildcards:
+                        <ul>
+                            <li>* : match zero or more characters</li>
+                            <li>? : match any single character</li>
+                        </ul>
+                    </p>
+                </note>
+            </param>
+            <param name="controller_id"
+                   required="false">
+                <note>
+                    <title>The Controller ID indicates the Controller for which jobs or workflows have been executed.</title>
+                    <p>
                         The argument holds the Controller ID for the query. Without this argument the Controller ID is not considered.
                      </p>
                 </note>
             </param>
-               
         </params>
-        
         <params id="return_parameter">
-            
-            <param name="js7CheckHistoryResult" required="false">
+            <param name="js7CheckHistoryResult"
+                   required="false">
                 <note>
                     <title>The Boolean result of the query.</title>
                     <p>
@@ -149,7 +145,8 @@
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistoryResultControllerId" required="false">
+            <param name="js7CheckHistoryResultControllerId"
+                   required="false">
                 <note>
                     <title>The Controller ID of the resulting history entry</title>
                     <p>
@@ -158,7 +155,8 @@
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistoryResultWorkflow" required="false">
+            <param name="js7CheckHistoryResultWorkflow"
+                   required="false">
                 <note>
                     <title>The workflow name of the resulting history entry</title>
                     <p>
@@ -167,7 +165,8 @@
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistoryResultJob" required="false">
+            <param name="js7CheckHistoryResultJob"
+                   required="false">
                 <note>
                     <title>The job name of the resulting history entry</title>
                     <p>
@@ -175,8 +174,9 @@
                         If the query returns a result then the return variable holds the job name of the youngest resulting history entry.
                     </p>
                 </note>
-            </param>             
-            <param name="js7CheckHistoryResultStarted" required="false">
+            </param>
+            <param name="js7CheckHistoryResultStarted"
+                   required="false">
                 <note>
                     <title>The start date and time of the resulting history entry</title>
                     <p>
@@ -185,7 +185,8 @@
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistoryResultCompleted" required="false">
+            <param name="js7CheckHistoryResultCompleted"
+                   required="false">
                 <note>
                     <title>The completion date and time of the resulting history entry</title>
                     <p>
@@ -194,73 +195,68 @@
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistoryQuery" required="false">
+            <param name="js7CheckHistoryQuery"
+                   required="false">
                 <note>
-                    <title>The value of the 'query' parameter</title>
+                    <title>The value of the 'query' argument</title>
                     <p>
-                        Returns a copy of the value of the 'query' parameter that was used with the query.
+                        Returns a copy of the value of the 'query' argument that was used with the query.
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistorQueryWorkflow" required="false">
+            <param name="js7CheckHistorQueryWorkflow"
+                   required="false">
                 <note>
-                    <title>The value of the 'workflow' parameter</title>
+                    <title>The value of the 'workflow' argument</title>
                     <p>
-                        Returns a copy of the value of the 'workflow' parameter that was used with the query.
+                        Returns a copy of the value of the 'workflow' argument that was used with the query.
                     </p>
                 </note>
             </param>
-            <param name="js7CheckHistoryQueryJob" required="false">
+            <param name="js7CheckHistoryQueryJob"
+                   required="false">
                 <note>
-                    <title>The value of the 'job' parameter</title>
+                    <title>The value of the 'job' argument</title>
                     <p>
-                        Returns a copy of the value of the 'job' parameter that was used with the query.
+                        Returns a copy of the value of the 'job' argument that was used with the query.
                     </p>
                 </note>
             </param>
-            
-
         </params>
-
     </configuration>
-
     <documentation>
-    
         <note>
             <title>What is the purpose of this job?</title>
             <p>
-                The job checks the orders history and task history for execution results of workflows or jobs.
+                The job checks the order history and task history for execution results of workflows or jobs.
             </p>
         </note>
-    
         <note>
             <title>How can results be reused in subsequent jobs?</title>
             <p>
-	            <b>Use with IF Instructions</b>
-	            <p>
+                <b>Use with IF Instruction</b>
+                <p>
 	                The outcome of the job can be used in subsequent IF Instructions in a workflow.
 	                <ul>
-		                <li>$returnCode > 0</li>
-		                <li>variable( "js7CheckHistoryResult", label=jobCheckHistory )</li>
-	                </ul>  
-	            </p> 
-  				<b>Use with PROMPT Instructions</b>
-	            <p>
+                        <li>$returnCode > 0</li>
+                        <li>variable( "js7CheckHistoryResult", label=jobCheckHistory )</li>
+                    </ul>
+                </p>
+                <b>Use with PROMPT Instruction</b>
+                <p>
 	                The outcome of the job can be used in subsequent PROMPT Instructions in a workflow.
 	                <ul>
-		                <li>Example:  $js7CheckHistoryQuery ++ '(' ++ $js7CheckHistoryQueryWorkflow ++ ') ==> ' ++ $returnCode</li>
-	                </ul>  
-	            </p>	            
-  				<b>Use with RETRY Instructions</b>
-	            <p>
+                        <li>Example:  $js7CheckHistoryQuery ++ '(' ++ $js7CheckHistoryQueryWorkflow ++ ') ==> ' ++ $returnCode</li>
+                    </ul>
+                </p>
+                <b>Use with RETRY Instruction</b>
+                <p>
 	                The outcome of the job can be used in subsequent RETRY Instructions in a workflow.
 	                <ul>
-		                <li>In combination with the IF Instructions that contains a FAIL Instruction the workflow can be caused to wait until a query returns true.</li>
-	                </ul>  
-	            </p>	            
+                        <li>In combination with the IF Instruction that contains a FAIL Instruction the workflow can be caused to wait until a query returns true.</li>
+                    </ul>
+                </p>
             </p>
         </note>
-         
     </documentation>
-
 </description>
