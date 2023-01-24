@@ -2,9 +2,7 @@ package com.sos.yade.commons.cli;
 
 import java.net.InetAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -42,28 +40,16 @@ public class TransferHistory {
 
     public static void main(String[] args) {
         int exitStatus = EXIT_STATUS_SUCCESS;
-        boolean process = true;
 
         if (args.length == 0 || (args.length == 1 && args[0].trim().matches("|-h|--help"))) {
             displayUsage();
-            process = false;
+        } else {
+            exitStatus = process(args);
         }
-
-        String returnValues = System.getenv(ENV_VAR_RETURN_VALUES);
-        if (returnValues == null) {
-            System.err.println("Missing environment variable: " + ENV_VAR_RETURN_VALUES);
-            exitStatus = EXIT_STATUS_ERROR;
-            process = false;
-        }
-
-        if (process) {
-            exitStatus = process(returnValues, args);
-        }
-
         System.exit(exitStatus);
     }
 
-    private static int process(String returnValues, String[] args) {
+    private static int process(String[] args) {
         UNKNOWN_OPTIONS = new ArrayList<>();
         EMPTY_OPTIONS = new ArrayList<>();
         PARSE_ERRORS = new ArrayList<>();
@@ -77,6 +63,7 @@ public class TransferHistory {
         boolean displayUsage = false;
         boolean displayArgs = false;
         boolean displayResult = false;
+        boolean testMode = false;
         for (String arg : args) {
             String[] arr = arg.split("=");
             String pn = arr[0];
@@ -92,6 +79,11 @@ public class TransferHistory {
                 break;
             case "-display-result":
                 displayResult = true;// getBoolean(pv, true);
+                break;
+            case "-test-mode":
+                displayArgs = true;
+                displayResult = true;
+                testMode = true;
                 break;
             // TRANSFER META
             case "--operation":
@@ -216,9 +208,23 @@ public class TransferHistory {
         }
 
         try {
-            serialize2File(Paths.get(returnValues), complete(result, source, hasTarget ? target : null, entries), displayResult);
+            YadeTransferResultSerializer<YadeTransferResult> serializer = new YadeTransferResultSerializer<>();
+            String serialized = serializer.serialize(complete(result, source, hasTarget ? target : null, entries));
+            if (displayResult) {
+                displayResult(serializer, serialized);
+            }
+
+            if (!testMode) {
+                String returnValues = System.getenv(ENV_VAR_RETURN_VALUES);
+                if (returnValues == null) {
+                    System.err.println("Missing environment variable: " + ENV_VAR_RETURN_VALUES);
+                    return EXIT_STATUS_ERROR;
+                }
+                Files.write(Paths.get(returnValues), new StringBuilder(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES).append("=").append(serialized).toString()
+                        .getBytes());
+            }
             return EXIT_STATUS_SUCCESS;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             return EXIT_STATUS_ERROR;
         }
@@ -466,7 +472,7 @@ public class TransferHistory {
             String env = System.getenv(IS_WINDOWS ? "COMPUTERNAME" : "HOSTNAME");
             try {
                 HOSTNAME = isEmpty(env) ? InetAddress.getLocalHost().getHostName() : env;
-            } catch (UnknownHostException e) {
+            } catch (Throwable e) {
                 HOSTNAME = DEFAULT_HOSTNAME;
             }
         }
@@ -475,15 +481,6 @@ public class TransferHistory {
 
     private static boolean isEmpty(String s) {
         return s == null || s.length() == 0;
-    }
-
-    private static void serialize2File(Path file, YadeTransferResult result, boolean displayResult) throws Exception {
-        YadeTransferResultSerializer<YadeTransferResult> serializer = new YadeTransferResultSerializer<>();
-        String serialized = serializer.serialize(result);
-        Files.write(file, new StringBuilder(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES).append("=").append(serialized).toString().getBytes());
-        if (displayResult) {
-            displayResult(serializer, serialized);
-        }
     }
 
     private static void displayUsage() {
@@ -532,9 +529,14 @@ public class TransferHistory {
 
         System.out.println("");
         System.out.println("Switches:");
-        System.out.println("  -h | --help                        | displays usage");
-        System.out.println("  -display-args                      | displays command line arguments");
-        System.out.println("  -display-result                    | displays execution result");
+        System.out.print("  -h | --help                        | ");
+        System.out.println("displays usage");
+        System.out.print("  -display-args                      | ");
+        System.out.println("displays command line arguments");
+        System.out.print("  -display-result                    | ");
+        System.out.println("displays execution result");
+        System.out.print("  -test-mode                         | ");
+        System.out.println("sets -display-args and -display-result and does not create entries for the File Transfer History");
     }
 
     private static void displayArguments(String[] args) {
@@ -555,7 +557,7 @@ public class TransferHistory {
             displayProtocol("Target:", r.getTarget());
             displayEntries("Entries:", r.getEntries());
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             System.err.println(String.format("[%s][can't deserialize result]%s", TransferHistory.class.getSimpleName(), e.toString()));
         }
     }
@@ -563,12 +565,11 @@ public class TransferHistory {
     private static void displayMeta(YadeTransferResult r) {
         List<String> l = new ArrayList<>();
         l.add("Operation=" + r.getOperation());
-        l.add("Start Time=" + r.getStart());
-        l.add("End Time=" + r.getEnd());
+        l.add("Start Time(UTC)=" + r.getStart());
+        l.add("End Time(UTC)=" + r.getEnd());
         if (r.getErrorMessage() != null) {
             l.add("Error=" + r.getErrorMessage());
         }
-
         System.out.println(String.format("[%s]Result: %s", TransferHistory.class.getSimpleName(), String.join(", ", l)));
     }
 

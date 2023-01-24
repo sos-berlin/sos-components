@@ -44,14 +44,18 @@ public class TransferHistoryTest {
         env.put("JS7_RETURN_VALUES", returnValues.toAbsolutePath().toString());
 
         List<String> args = new ArrayList<>();
-        // args.add("--xxx");
+        args.add("--xxx");
+        args.add("-test-mode");
         // args.add("--target-host=my_target_host --target-port=1 --target-account=ta --target-protocol=webdav");
         // args.add("--target-host=ftp://test@testhost:1234");
         // args.add("--transfer-file=1.txt --operation=remove");
         // args.add("--transfer-file=1.txt --target-host --start-time=\"2023-01-23 12:00:00+0200\" -h --xxx -display-args -display-result --operation=getlist");
 
-        args.add(
-                "-display-args -display-result --source-account=jobscheduler --target-account=jobscheduler --target-host=agent-2-0-standalone  --target-protocol=local --transfer-file=\"/tmp/files_345/source/a/a1.txt,/tmp/files_345/target/a/a1.txt,0\" --transfer-file=\"/tmp/files_345/source/a/a2.txt,/tmp/files_345/target/a/a2.txt,0,cp: can't stat 'file_does_not_exist': No such file or directory\" --transfer-file=\"/tmp/files_345/source/a/a3.txt,/tmp/files_345/target/a/a3.txt,0\" --error=\"transfer failed with errors: 1\"");
+        // args.add(
+        // "-display-args -display-result --source-account=jobscheduler --target-account=jobscheduler --target-host=agent-2-0-standalone --target-protocol=local
+        // --transfer-file=\"/tmp/files_345/source/a/a1.txt,/tmp/files_345/target/a/a1.txt,0\"
+        // --transfer-file=\"/tmp/files_345/source/a/a2.txt,/tmp/files_345/target/a/a2.txt,0,cp: can't stat 'file_does_not_exist': No such file or directory\"
+        // --transfer-file=\"/tmp/files_345/source/a/a3.txt,/tmp/files_345/target/a/a3.txt,0\" --error=\"transfer failed with errors: 1\"");
 
         // args.add("--transfer-file=1.txt,2.txt");
         // args.add("--transfer-file=1.txt,2.txt,10");
