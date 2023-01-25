@@ -268,8 +268,6 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             if (result == null || result.isEmpty()) {
                 return Stream.empty();
             }
-            // dry run
-            // return result.stream().map(o -> (String) o[0]).distinct();
             return result.stream().filter(o -> !((Boolean) o[1])).map(o -> (String) o[0]).distinct();
         } catch (DBMissingDataException ex) {
             throw ex;
