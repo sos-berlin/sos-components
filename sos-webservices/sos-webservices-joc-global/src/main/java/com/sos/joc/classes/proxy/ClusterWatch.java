@@ -55,6 +55,7 @@ public class ClusterWatch {
     private String clusterId = null;
     private String memberId = null;
     private volatile ConcurrentMap<String, CompletableFuture<Void>> startedWatches = new ConcurrentHashMap<>();
+    protected static boolean onStart = true;
     
     private ClusterWatch() {
         EventBus.getInstance().register(this);
@@ -74,7 +75,8 @@ public class ClusterWatch {
         LOGGER.info("[ClusterWatch] memberId = " + memberId);
         LOGGER.info("[ClusterWatch] current watches: " + startedWatches.keySet().toString());
         LOGGER.info("[ClusterWatch] receive event: " + evt.toString());
-        if (evt.getNewClusterMemberId() != null && evt.getOldClusterMemberId() != null) {
+        onStart = false;
+        if (evt.getNewClusterMemberId() != null) {
             if (memberId.equals(evt.getOldClusterMemberId())) {
                 //stop for all controllerIds
                 LOGGER.info("[ClusterWatch] try to stop watches");
@@ -105,6 +107,9 @@ public class ClusterWatch {
     public void appointNodes(String controllerId, JControllerProxy proxy, InventoryAgentInstancesDBLayer dbLayer, String accessToken, JocError jocError)
             throws DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             ControllerConnectionRefusedException, JsonProcessingException, JocBadRequestException, ControllerConnectionResetException, ExecutionException {
+        if (onStart) {
+            throw new JocBadRequestException(toStringWithId() + " cluster service is not started: " + controllerId);
+        }
         // ask for cluster
         List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
         if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
@@ -112,9 +117,10 @@ public class ClusterWatch {
         }
         
         List<String> agentWatches = getClusterWatchers(controllerId, dbLayer);
+        String watchId = null;
         // dry run: if (agentWatches.isEmpty()) {
         if (agentWatches.isEmpty()) {
-            start(proxy.api(), controllerId, true, dbLayer);
+            watchId = start(proxy.api(), controllerId, true, dbLayer);
         } else {
             stop(controllerId);
         }
@@ -154,11 +160,11 @@ public class ClusterWatch {
         NodeId activeId = cState.getSetting().getActiveId() != null ? NodeId.of(cState.getSetting().getActiveId()) : primeId;
         if (changed) {
             try {
-                LOGGER.info("[ClusterWatch] Appoint nodes for '" + controllerId + "': " + Globals.objectMapper.writeValueAsString(new ClusterSetting(
+                LOGGER.info("[ClusterWatch] Appoint cluster nodes for '" + controllerId + "': " + Globals.objectMapper.writeValueAsString(new ClusterSetting(
                         itu, activeId.string(), agentWatches.stream().map(s -> new ClusterWatcher(URI.create(s))).collect(Collectors.toList()),
-                        null)));
+                        watchId, null)));
             } catch (Exception e) {
-                LOGGER.info("[ClusterWatch] Appoint nodes for '" + controllerId + "'");
+                LOGGER.info("[ClusterWatch] Appoint cluster nodes for '" + controllerId + "'");
             }
             
             proxy.api().clusterAppointNodes(idToUri, activeId, agentWatches.stream().map(item -> new Watch(Uri.of(item))).collect(Collectors
@@ -192,10 +198,14 @@ public class ClusterWatch {
             Globals.disconnect(sosHibernateSession);
         }
     }
+    
+    private String toStringWithId() {
+        return "JOC (" + clusterId + ")";
+    }
 
-    private void start(JControllerApi controllerApi, String controllerId, boolean checkWatchByJoc, InventoryAgentInstancesDBLayer dbLayer) {
-        LOGGER.info("[ClusterWatch] try to start for '" + controllerId + "'");
-        LOGGER.info("[ClusterWatch] current Watches: " + startedWatches.keySet().toString());
+    private String start(JControllerApi controllerApi, String controllerId, boolean checkWatchByJoc, InventoryAgentInstancesDBLayer dbLayer) {
+        LOGGER.info("[ClusterWatch] try to start " + toStringWithId() + " as watcher for '" + controllerId + "'");
+        LOGGER.info("[ClusterWatch] current watched Controller cluster by " + toStringWithId() + ": " + startedWatches.keySet().toString());
         boolean clusterWatchByJoc = !checkWatchByJoc;
         boolean jocIsActive = true;
         if (checkWatchByJoc) {
@@ -206,11 +216,12 @@ public class ClusterWatch {
         }
         if (clusterWatchByJoc && jocIsActive) {
             if (isAlive(controllerId)) {
-                LOGGER.info("[ClusterWatch] cluster watch by JOC is still running for '" + controllerId + "'");
+                LOGGER.info("[ClusterWatch] Watcher by " + toStringWithId() + " is still running for '" + controllerId + "'");
                 // throw new JocServiceException("[ClusterWatch] " + controllerId + " is still running.");
+                return clusterId;
             } else {
                 try {
-                    LOGGER.info("[ClusterWatch] start cluster watch by JOC for '" + controllerId + "'");
+                    LOGGER.info("[ClusterWatch] start " + toStringWithId() + " as watcher for '" + controllerId + "'");
                     if (controllerApi == null) {
                         controllerApi = ControllerApi.of(controllerId);
                     }
@@ -220,15 +231,17 @@ public class ClusterWatch {
 //                        LOGGER.info("[ClusterWatch] starting for " + controllerId);
 //                    });
                     startedWatches.put(controllerId, started);
+                    return clusterId;
                 } catch (Exception e) {
-                    LOGGER.error("[ClusterWatch] start cluster watch by JOC for '" + controllerId + "' failed", e);
+                    LOGGER.error("[ClusterWatch] starting " + toStringWithId() + " as watcher for '" + controllerId + "' failed", e);
                 }
             }
         } else {
             if (clusterWatchByJoc) {
-                LOGGER.info("[ClusterWatch] '" + controllerId + "' is watched by Agent");
+                LOGGER.info("[ClusterWatch] '" + controllerId + "' is watched by Agent or a different JOC instance");
             }
         }
+        return null;
     }
     
     private CompletableFuture<Void> stop(String controllerId) {
@@ -237,9 +250,9 @@ public class ClusterWatch {
                 return ControllerApi.of(controllerId).stopClusterWatch().thenAccept(v -> {
                     if (startedWatches.get(controllerId).isDone()) {
                         startedWatches.remove(controllerId);
-                        LOGGER.info("[ClusterWatch] cluster watch by JOC is stopped for '" + controllerId + "'");
+                        LOGGER.info("[ClusterWatch] Watcher by " + toStringWithId() + " is stopped for '" + controllerId + "'");
                     } else {
-                        LOGGER.error("[ClusterWatch] stop cluster watch by JOC for '" + controllerId + "' is called but cluster watch is still running.");
+                        LOGGER.error("[ClusterWatch] stop " + toStringWithId() + " as watcher for '" + controllerId + "' is called but cluster watch is still running.");
                         //throw new JocServiceException("[ClusterWatch] stop for " + controllerId + " is called but Cluster Watch is still running.");
                     }
                 });
@@ -257,10 +270,10 @@ public class ClusterWatch {
                 });
                 */
             } catch (Exception e) {
-                LOGGER.error("[ClusterWatch] stopping cluster watch by JOC for '" + controllerId + "' failed", e);
+                LOGGER.error("[ClusterWatch] stopping watcher by " + toStringWithId() + " for '" + controllerId + "' failed", e);
             }
         } else {
-            LOGGER.info("[ClusterWatch] cluster watch by JOC for '" + controllerId + "' is already stopped");
+            //LOGGER.info("[ClusterWatch] Watcher by " + toStringWithId() + " for '" + controllerId + "' is already stopped");
         }
         return new CompletableFuture<Void>();
     }
@@ -293,10 +306,15 @@ public class ClusterWatch {
                 activeInstance =  new JocInstancesDBLayer(dbLayer.getSession()).getActiveInstance();
             }
             if (activeInstance != null && memberId.equals(activeInstance.getMemberId())) {
-                LOGGER.info("[ClusterWatch] JOC instance is active");
-                return true;
+//                if (activeInstance.getHeartBeat() != null) {
+//                    Instant oneMinuteAgo = Instant.now().minusSeconds(TimeUnit.MINUTES.toSeconds(1));
+//                    if (activeInstance.getHeartBeat().toInstant().isAfter(oneMinuteAgo)) {
+                        LOGGER.info("[ClusterWatch] " + toStringWithId() + " instance is active");
+                        return true;
+//                    }
+//                }
             }
-            LOGGER.info("[ClusterWatch] JOC instance is inactive");
+            LOGGER.info("[ClusterWatch] " + toStringWithId() + " instance is inactive");
             return false;
         } finally {
             Globals.disconnect(sosHibernateSession);

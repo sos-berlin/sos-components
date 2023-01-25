@@ -114,20 +114,21 @@ public class CheckInstance {
                         dbInstanceOpt = instances.stream().filter(i -> ordering == i.getOrdering()).findFirst();
                         if (dbInstanceOpt.isPresent()) {
                             DBItemJocInstance dbInstance = dbInstanceOpt.get();
-                            if (instanceIsAlive(dbInstance)) {
-                                String msg = "There is already a running JOC instance with ID '" + clusterId + "#" + ordering
-                                        + "'. You can modify the 'ordering' in the joc.properties file.";
-                                LOGGER.error(msg);
-                                throw new JocConfigurationException(msg);
-                            } else {
-                                if (!memberId.equals(dbInstance.getMemberId())) {
+                            if (!memberId.equals(dbInstance.getMemberId())) {
+                                if (instanceIsAlive(dbInstance)) {
+                                    String msg = "There is already a running JOC instance with ID '" + clusterId + "#" + ordering
+                                            + "'. You can modify the 'ordering' in the joc.properties file.";
+                                    LOGGER.error(msg);
+                                    throw new JocConfigurationException(msg);
+                                } else {
                                     // update memberId, osId, setDataDirectory and delete row with memberId to avoid constraint violation
                                     dbInstanceOpt = instances.stream().filter(i -> memberId.equals(i.getMemberId())).findFirst();
                                     if (dbInstanceOpt.isPresent()) {
                                         session.delete(dbInstanceOpt.get());
                                     }
                                     try {
-                                        DBItemInventoryOperatingSystem osItem = JocInstance.getOS(new DBLayerJocCluster(session), Globals.getHostname());
+                                        DBItemInventoryOperatingSystem osItem = JocInstance.getOS(new DBLayerJocCluster(session), Globals
+                                                .getHostname());
                                         dbInstance.setOsId(osItem.getId());
                                     } catch (Exception e) {
                                         LOGGER.error("", e);
