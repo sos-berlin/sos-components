@@ -73,7 +73,7 @@ public class ClusterWatch {
     @Subscribe({ ActiveClusterChangedEvent.class })
     public void listenEvent(ActiveClusterChangedEvent evt) {
         LOGGER.info("[ClusterWatch] memberId = " + memberId);
-        LOGGER.info("[ClusterWatch] current watches: " + startedWatches.keySet().toString());
+        LOGGER.info("[ClusterWatch] current watched Controller clusters by " + toStringWithId() + ": " + startedWatches.keySet().toString());
         LOGGER.info("[ClusterWatch] receive event: " + evt.toString());
         onStart = false;
         if (evt.getNewClusterMemberId() != null) {
@@ -99,7 +99,7 @@ public class ClusterWatch {
                 } finally {
                     Globals.disconnect(sosHibernateSession);
                 }
-                LOGGER.info("[ClusterWatch] started watches: " + startedWatches.keySet().toString());
+                //LOGGER.info("[ClusterWatch] started watches: " + startedWatches.keySet().toString());
             }
         }
     }
@@ -205,7 +205,7 @@ public class ClusterWatch {
 
     private String start(JControllerApi controllerApi, String controllerId, boolean checkWatchByJoc, InventoryAgentInstancesDBLayer dbLayer) {
         LOGGER.info("[ClusterWatch] try to start " + toStringWithId() + " as watcher for '" + controllerId + "'");
-        LOGGER.info("[ClusterWatch] current watched Controller cluster by " + toStringWithId() + ": " + startedWatches.keySet().toString());
+        //LOGGER.info("[ClusterWatch] current watched Controller cluster by " + toStringWithId() + ": " + startedWatches.keySet().toString());
         boolean clusterWatchByJoc = !checkWatchByJoc;
         boolean jocIsActive = true;
         if (checkWatchByJoc) {
@@ -244,18 +244,20 @@ public class ClusterWatch {
         return null;
     }
     
-    private CompletableFuture<Void> stop(String controllerId) {
+    private void stop(String controllerId) {
         if (isAlive(controllerId)) {
             try {
-                return ControllerApi.of(controllerId).stopClusterWatch().thenAccept(v -> {
+                ControllerApi.of(controllerId).stopClusterWatch().get();
+                //ControllerApi.of(controllerId).stopClusterWatch().thenAccept(v -> {
                     if (startedWatches.get(controllerId).isDone()) {
-                        startedWatches.remove(controllerId);
+                        //startedWatches.remove(controllerId);
                         LOGGER.info("[ClusterWatch] Watcher by " + toStringWithId() + " is stopped for '" + controllerId + "'");
                     } else {
                         LOGGER.error("[ClusterWatch] stop " + toStringWithId() + " as watcher for '" + controllerId + "' is called but cluster watch is still running.");
                         //throw new JocServiceException("[ClusterWatch] stop for " + controllerId + " is called but Cluster Watch is still running.");
                     }
-                });
+                    startedWatches.remove(controllerId);
+                //});
                 /* dry run
                 return CompletableFuture.runAsync(() -> {
                     LOGGER.info("[ClusterWatch] stopping for " + controllerId);
@@ -275,7 +277,7 @@ public class ClusterWatch {
         } else {
             //LOGGER.info("[ClusterWatch] Watcher by " + toStringWithId() + " for '" + controllerId + "' is already stopped");
         }
-        return new CompletableFuture<Void>();
+        //return new CompletableFuture<Void>();
     }
     
     private boolean isAlive(String controllerId) {
@@ -352,9 +354,9 @@ public class ClusterWatch {
             }
             List<String> w = dbLayer.getUrisOfClusterWatcherByControllerId(controllerId);
             if (w.isEmpty()) {
-                LOGGER.info(String.format("No Agent Cluster Watcher is configured for '" + controllerId + "'"));
+                LOGGER.info(String.format("[ClusterWatch] No Agent Cluster Watcher is configured for '" + controllerId + "'"));
             } else {
-                LOGGER.info(String.format("Agent Cluster Watchers of '%s': %s", controllerId, w.toString()));
+                LOGGER.info(String.format("[ClusterWatch] Agent Cluster Watchers of '%s': %s", controllerId, w.toString()));
             }
             return w;
         } finally {
