@@ -83,7 +83,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             initLogging(API_CALL_APPOINT_NODES, filterBytes, accessToken);
             
             if (!StateImpl.isActive(API_CALL_APPOINT_NODES, null)) {
-                throw new JocServiceException("The API " + API_CALL_APPOINT_NODES + "may only be called in the active JOC cluster node.");
+                throw new JocServiceException("Appointing the Controller nodes is possible only in the active JOC node.");
             }
             
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
