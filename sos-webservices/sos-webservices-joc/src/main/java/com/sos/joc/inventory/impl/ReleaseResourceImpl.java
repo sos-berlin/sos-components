@@ -461,7 +461,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     }
                 } else if (ConfigurationType.WORKINGDAYSCALENDAR.equals(conf.getTypeAsEnum()) 
                         || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(conf.getTypeAsEnum())) {
-                    List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByCalendarPath(conf.getPath());
+                    List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByCalendarName(conf.getName());
                     if(schedules != null) {
                         schedules.stream().forEach(schedule -> {
                                 List<String> workflowNames = JocInventory.getWorkflowNamesFromScheduleJson(schedule.getContent());

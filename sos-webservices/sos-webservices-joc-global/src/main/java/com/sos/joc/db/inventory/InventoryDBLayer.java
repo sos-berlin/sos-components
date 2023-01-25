@@ -1599,19 +1599,19 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<DBItemInventoryConfiguration> getUsedSchedulesByCalendarPath(String calendarPath) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
-        hql.append("where type=:type ");
-        hql.append("and ");
-        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars");
-        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarPath"));
-
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
-        query.setParameter("calendarPath", getRegexpParameter(calendarPath, "\""));
-        return getSession().getResultList(query);
-    }
-
+//    public List<DBItemInventoryConfiguration> getUsedSchedulesByCalendarPath(String calendarPath) throws SOSHibernateException {
+//        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+//        hql.append("where type=:type ");
+//        hql.append("and ");
+//        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars");
+//        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarPath"));
+//
+//        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+//        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+//        query.setParameter("calendarPath", getRegexpParameter(calendarPath, "\""));
+//        return getSession().getResultList(query);
+//    }
+//
     public List<DBItemInventoryConfiguration> getUsedSchedulesByCalendarName(String calendarName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
