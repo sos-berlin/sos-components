@@ -90,17 +90,20 @@ public class JocCluster {
         return getInstance(mode);
     }
 
-    public void doProcessing(StartupMode mode, ConfigurationGlobals configurations) {
+    public void doProcessing(StartupMode mode, ConfigurationGlobals configurations, boolean onJocStart) {
         JocClusterServiceLogger.setLogger();
         LOGGER.info(String.format("[inactive][current memberId]%s", currentMemberId));
 
+        boolean isFirstRun = onJocStart;
         while (!closed) {
             try {
-                process(mode, configurations);
+                process(mode, configurations, isFirstRun);
                 waitFor(config.getPollingInterval());
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);
                 waitFor(config.getPollingWaitIntervalOnError());
+            } finally {
+                isFirstRun = false;
             }
         }
     }
@@ -287,7 +290,7 @@ public class JocCluster {
         return configurations;
     }
 
-    private synchronized void process(StartupMode mode, ConfigurationGlobals configurations) throws Exception {
+    private synchronized void process(StartupMode mode, ConfigurationGlobals configurations, boolean isFirstRun) throws Exception {
         DBLayerJocCluster dbLayer = null;
         DBItemJocCluster item = null;
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -313,7 +316,7 @@ public class JocCluster {
                             lastActiveMemberId, SOSHibernate.toString(item)));
                 }
 
-                item = handleCurrentMemberOnProcess(mode, dbLayer, item, configurations);
+                item = handleCurrentMemberOnProcess(mode, dbLayer, item, configurations, isFirstRun);
                 if (item != null) {
                     activeMemberId = item.getMemberId();
                     if (isDebugEnabled) {
@@ -401,10 +404,9 @@ public class JocCluster {
     }
 
     private DBItemJocCluster handleCurrentMemberOnProcess(StartupMode mode, DBLayerJocCluster dbLayer, DBItemJocCluster item,
-            ConfigurationGlobals configurations) throws Exception {
+            ConfigurationGlobals configurations, boolean isFirstRun) throws Exception {
         if (item == null) {
-            boolean fs = isFirstRun();
-            if (!config.getClusterModeResult().getUse() && !fs) {
+            if (!config.getClusterModeResult().getUse() && !isFirstRun) {
                 inactiveMemberTryStopServices(configurations);
                 return null;
             }
@@ -417,17 +419,17 @@ public class JocCluster {
             dbLayer.getSession().save(item);
             dbLayer.commit();
 
-            if (!fs) {
+            if (!isFirstRun) {
                 mode = StartupMode.automatic_switchover;
                 item.setStartupMode(mode.name());
             }
         } else {
             if (item.getMemberId().equals(currentMemberId)) {
-                item = trySwitchActiveMemberOnProcess(mode, dbLayer, item, configurations);
+                item = trySwitchActiveMemberOnProcess(mode, dbLayer, item, configurations, isFirstRun);
             } else {
                 if (isHeartBeatExceeded(item.getHeartBeat())) {
                     if (!config.getClusterModeResult().getUse()) {
-                        if (!isFirstRun()) {// extra check when active JOC was killed/not removed from database
+                        if (!isFirstRun) {// extra check when active JOC was killed/not removed from database
                             return null;
                         }
                     }
@@ -642,7 +644,7 @@ public class JocCluster {
     }
 
     private DBItemJocCluster trySwitchActiveMemberOnProcess(StartupMode mode, DBLayerJocCluster dbLayer, DBItemJocCluster item,
-            ConfigurationGlobals configurations) throws Exception {
+            ConfigurationGlobals configurations, boolean isFirstRun) throws Exception {
         skipPerform = false;
         item.setMemberId(currentMemberId);
 
@@ -699,7 +701,7 @@ public class JocCluster {
             }
         } else {
             if (!config.getClusterModeResult().getUse()) {
-                if (!activeMemberHandler.isActive() && !isFirstRun()) { // changed in the database directly
+                if (!activeMemberHandler.isActive() && !isFirstRun) { // changed in the database directly
                     return null;
                 }
             }
@@ -764,14 +766,6 @@ public class JocCluster {
     private boolean isHeartBeatExceeded(Date heartBeat) {
         Date now = new Date();
         if (((now.getTime() / 1_000) - (heartBeat.getTime() / 1_000)) >= config.getHeartBeatExceededInterval()) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean isFirstRun() {
-        Date now = new Date();
-        if (((now.getTime() / 1_000) - (jocStartTime.getTime() / 1_000)) < config.getPollingInterval()) {
             return true;
         }
         return false;

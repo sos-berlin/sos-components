@@ -122,7 +122,7 @@ public class JocClusterService {
                             if (onJocStart) {
                                 cluster.tryDeleteActiveCurrentMember();
                             }
-                            cluster.doProcessing(mode, Globals.configurationGlobals);
+                            cluster.doProcessing(mode, Globals.configurationGlobals, onJocStart);
                         }
                         LOGGER.info(String.format("[%s][start][end]", mode));
                     } catch (Throwable e) {
