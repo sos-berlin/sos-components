@@ -49,7 +49,7 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
     private static final String IMPL_PATH_TRANSFERS = "./yade/transfers";
     private static final String IMPL_PATH_TRANSFER = "./yade/transfer";
     private Map<Long, ProtocolFragment> protocolFragments = new HashMap<>();
-    
+
     @Override
     public JOCDefaultResponse postYadeTransfer(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
@@ -216,8 +216,9 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
     }
 
     private ProtocolFragment getProtocolFragment(JocDBLayerYade dbLayer, Long id) throws SOSHibernateException {
+        ProtocolFragment pf = null;
         if (id != null) {
-            ProtocolFragment pf = protocolFragments.get(id);
+            pf = protocolFragments.get(id);
             if (pf == null) {
                 DBItemYadeProtocol protocol = dbLayer.getProtocolById(id);
                 if (protocol != null) {
@@ -227,11 +228,10 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
                     pf.setPort(protocol.getPort());
                     pf.setProtocol(Protocol.fromValue(Yade.TransferProtocol.fromValue(protocol.getProtocol()).name()));
                     protocolFragments.put(id, pf);
-                    return pf;
                 }
             }
         }
-        return null;
+        return pf;
     }
 
     private TransferState getState(Yade.TransferState value) {
