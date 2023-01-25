@@ -284,34 +284,36 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                     .filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
                                     .map(workflow -> workflow.getName()).collect(Collectors.toList())
                             );
-                        try {
-                            CompletableFuture<Either<Problem, Void>> cancelOrderResponse =
-                                    cancelOrderImpl.cancelOrders(orderFilter, xAccessToken, false, false)
-                                    .getOrDefault(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null)));
-                                cancelOrderResponse.thenAccept(either -> {
-                                    if(either.isRight()) {
-                                        try {
-                                            boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, xAccessToken, false, false);
-                                            if (!successful) {
-                                                JocError je = getJocError();
-                                                if (je != null && je.printMetaInfo() != null) {
-                                                    LOGGER.info(je.printMetaInfo());
+                        if(orderFilter.getWorkflowPaths() != null && !orderFilter.getWorkflowPaths().isEmpty()) {
+                            try {
+                                CompletableFuture<Either<Problem, Void>> cancelOrderResponse =
+                                        cancelOrderImpl.cancelOrders(orderFilter, xAccessToken, false, false)
+                                        .getOrDefault(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null)));
+                                    cancelOrderResponse.thenAccept(either -> {
+                                        if(either.isRight()) {
+                                            try {
+                                                boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, xAccessToken, false, false);
+                                                if (!successful) {
+                                                    JocError je = getJocError();
+                                                    if (je != null && je.printMetaInfo() != null) {
+                                                        LOGGER.info(je.printMetaInfo());
+                                                    }
+                                                    LOGGER.warn("Order delete failed due to missing permission.");
                                                 }
-                                                LOGGER.warn("Order delete failed due to missing permission.");
+                                            } catch (SOSHibernateException e) {
+                                                LOGGER.warn("delete of planned orders in db failed.", e.getMessage());
                                             }
-                                        } catch (SOSHibernateException e) {
-                                            LOGGER.warn("delete of planned orders in db failed.", e.getMessage());
+                                        } else {
+                                            JocError je = getJocError();
+                                            if (je != null && je.printMetaInfo() != null) {
+                                                LOGGER.info(je.printMetaInfo());
+                                            }
+                                            LOGGER.warn("Order cancel failed due to missing permission.");
                                         }
-                                    } else {
-                                        JocError je = getJocError();
-                                        if (je != null && je.printMetaInfo() != null) {
-                                            LOGGER.info(je.printMetaInfo());
-                                        }
-                                        LOGGER.warn("Order cancel failed due to missing permission.");
-                                    }
-                                });
-                        } catch (Exception e) {
-                            LOGGER.warn(e.getMessage());
+                                    });
+                            } catch (Exception e) {
+                                LOGGER.warn(e.getMessage());
+                            }
                         }
                     }
                     SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
