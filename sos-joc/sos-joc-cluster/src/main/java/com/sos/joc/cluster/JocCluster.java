@@ -836,7 +836,7 @@ public class JocCluster {
         return answer;
     }
 
-    private int tryDeleteActiveCurrentMember() {
+    public int tryDeleteActiveCurrentMember() {
         if (!instanceProcessed) {
             return 0;
         }

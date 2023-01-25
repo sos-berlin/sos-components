@@ -60,7 +60,7 @@ public class JocServletContainer extends ServletContainer {
         } catch (Exception e) {
             throw new ServletException(e);
         }
-        
+
         try {
             CheckInstance.check();
         } catch (JocConfigurationException | SOSHibernateException e) {
@@ -71,8 +71,7 @@ public class JocServletContainer extends ServletContainer {
             CheckInstance.stopJOC();
             throw new ServletException(e);
         }
-        
-        
+
         DailyPlanCalendar.getInstance();
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         CompletableFuture.runAsync(() -> JitlDocumentation.saveOrUpdate());
@@ -88,7 +87,7 @@ public class JocServletContainer extends ServletContainer {
             SOSShell.printJVMInfos();
         });
         ClusterWatch.getInstance();
-        JocClusterService.getInstance().start(StartupMode.automatic);
+        JocClusterService.getInstance().start(StartupMode.automatic, true);
 
         try {
             cleanupOldDeployedFolders(false);
