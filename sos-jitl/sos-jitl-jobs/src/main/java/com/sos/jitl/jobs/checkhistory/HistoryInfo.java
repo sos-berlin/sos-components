@@ -176,7 +176,7 @@ public class HistoryInfo {
 	}
 
 	public HistoryItem queryHistory() throws Exception {
-		String query = args.getQuery().toLowerCase();
+		String query = args.getQuery();
 		query = query.replaceAll("(?i)" + " or ", " or ");
 		query = query.replaceAll("(?i)" + " and ", " and ");
 
