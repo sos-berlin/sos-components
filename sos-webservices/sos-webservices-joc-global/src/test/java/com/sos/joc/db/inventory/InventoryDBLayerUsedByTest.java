@@ -60,7 +60,7 @@ public class InventoryDBLayerUsedByTest {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         String workflowName = "workflow1";
-        String calendarPath = "/calendar1";
+        String calendarName = "calendar1";
         try {
             factory = createFactory();
             session = factory.openStatelessSession();
@@ -73,8 +73,8 @@ public class InventoryDBLayerUsedByTest {
                 LOGGER.info("---" + SOSHibernate.toString(item));
             }
 
-            items = dbLayer.getUsedSchedulesByCalendarPath(calendarPath);
-            LOGGER.info(String.format("[getUsedSchedulesByCalendarPath][path=%s]found=%s", calendarPath, items.size()));
+            items = dbLayer.getUsedSchedulesByCalendarName(calendarName);
+            LOGGER.info(String.format("[getUsedSchedulesByCalendarName][path=%s]found=%s", calendarName, items.size()));
             for (DBItemInventoryConfiguration item : items) {
                 LOGGER.info("---" + SOSHibernate.toString(item));
             }
