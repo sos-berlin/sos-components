@@ -1,18 +1,25 @@
 package com.sos.joc.inventory.impl;
 
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -21,14 +28,21 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
+import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.inventory.resource.IDeleteConfigurationResource;
 import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.delete.RequestFilters;
@@ -38,9 +52,15 @@ import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.schema.JsonValidator;
 
+import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
+import js7.base.problem.Problem;
+
 @Path(JocInventory.APPLICATION_PATH)
 public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements IDeleteConfigurationResource {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeleteConfigurationResourceImpl.class);
+    
     @Override
     public JOCDefaultResponse remove(final String accessToken, final byte[] inBytes) {
         try {
@@ -147,6 +167,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                 final ConfigurationType type = config.getTypeAsEnum();
 
                 if (JocInventory.isReleasable(type)) {
+                    cancelOrders(accessToken, config, in.getCancelOrdersDateFrom(), dbLayer);
                     ReleaseResourceImpl.delete(config, dbLayer, dbAuditLog, false, false);
                     foldersForEvent.add(config.getFolder());
                     JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), dbLayer.getSession(), dbAuditLog);
@@ -203,6 +224,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 
             DBItemInventoryConfiguration folder = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
                     folderPermissions);
+            cancelOrders(accessToken, folder, in.getCancelOrdersDateFrom(),dbLayer);
             ReleaseResourceImpl.delete(folder, dbLayer, dbAuditLog, false, false);
 
             // TODO restrict to allowed Controllers
@@ -292,6 +314,119 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             throw e;
         } finally {
             Globals.disconnect(session);
+        }
+    }
+
+    private void cancelOrders(String xAccessToken, DBItemInventoryConfiguration config, String cancelOrdersDate, InventoryDBLayer dbLayer)
+            throws SOSHibernateException {
+        if(cancelOrdersDate != null) {
+            Set<String> allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
+                    .filter(availableController -> getControllerPermissions(availableController, xAccessToken).getOrders().getCancel())
+                    .collect(Collectors.toSet());
+            if(ConfigurationType.FOLDER.equals(config.getTypeAsEnum())) {
+                Set<Integer> confTypes = new HashSet<Integer>();
+                confTypes.add(ConfigurationType.SCHEDULE.intValue());
+                confTypes.add(ConfigurationType.WORKINGDAYSCALENDAR.intValue());
+                confTypes.add(ConfigurationType.NONWORKINGDAYSCALENDAR.intValue());
+                List<DBItemInventoryConfiguration> folderContent = 
+                        dbLayer.getFolderContent(config.getPath(), true, confTypes);
+                if(!folderContent.isEmpty()) {
+                    folderContent.stream().forEach(configuration -> 
+                        cancelOrders(xAccessToken, configuration, cancelOrdersDate, allowedControllerIds, dbLayer));
+                }
+            } else if (ConfigurationType.SCHEDULE.equals(config.getTypeAsEnum())
+                    || ConfigurationType.WORKINGDAYSCALENDAR.equals(config.getTypeAsEnum()) 
+                    || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(config.getTypeAsEnum())) {
+                cancelOrders(xAccessToken, config, cancelOrdersDate, allowedControllerIds, dbLayer);
+            }
+        }
+    }
+
+    private void cancelOrders(String xAccessToken, DBItemInventoryConfiguration config, String cancelOrdersDate, Set<String> controllerIds,
+            InventoryDBLayer dbLayer) {
+        Set<String> schedulePaths = new HashSet<String>();
+        if(ConfigurationType.SCHEDULE.equals(config.getTypeAsEnum())) {
+            schedulePaths.add(config.getPath());
+        } else if (ConfigurationType.WORKINGDAYSCALENDAR.equals(config.getTypeAsEnum()) 
+                || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(config.getTypeAsEnum())) {
+            try {
+                List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByCalendarName(config.getName());
+                if(schedules != null) {
+                    schedulePaths = schedules.stream().map(DBItemInventoryConfiguration::getPath).collect(Collectors.toSet());
+                    for (DBItemInventoryConfiguration schedule : schedules) {
+                        schedule.setReleased(false);
+                        schedule.setValid(false);
+                        try {
+                            dbLayer.getSession().update(schedule);
+                        } catch (SOSHibernateException e) {
+                            throw new JocSosHibernateException(e);
+                        }
+                        DBItemInventoryReleasedConfiguration releasedSchedule = dbLayer.getReleasedItemByConfigurationId(schedule.getId());
+                        try {
+                            Schedule scheduleObject = Globals.objectMapper.readValue(releasedSchedule.getContent(), Schedule.class);
+                            scheduleObject.setPlanOrderAutomatically(false);
+                            scheduleObject.setSubmitOrderToControllerWhenPlanned(false);
+                            releasedSchedule.setContent(Globals.objectMapper.writeValueAsString(scheduleObject));
+                            dbLayer.getSession().update(releasedSchedule);
+                        } catch (Exception e) {
+                            LOGGER.warn(e.getMessage());
+                        } 
+                    }
+                }
+            } catch (SOSHibernateException e) {
+                LOGGER.warn(e.getMessage());
+            }
+        }
+        if(!schedulePaths.isEmpty()) {
+            DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
+            DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
+            DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
+            if("now".equals(cancelOrdersDate.toLowerCase())) {
+                SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+                orderFilter.setDailyPlanDateFrom(sdf.format(Date.from(Instant.now())));
+            } else {
+                orderFilter.setDailyPlanDateFrom(cancelOrdersDate);
+            }
+            orderFilter.setSchedulePaths(new ArrayList<String>(schedulePaths));
+            orderFilter.setControllerIds(new ArrayList<String>(controllerIds));
+            try {
+                Map<String, List<DBItemDailyPlanOrder>> ordersPerController = 
+                        cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter, xAccessToken, false, false);
+                Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrderResponsePerController = 
+                        cancelOrderImpl.cancelOrders(ordersPerController, xAccessToken, null, false, false);
+                if(cancelOrderResponsePerController.isEmpty()) {
+                    // No orders to cancel on the controller side
+                    // Add CompletableFuture per controller to go on processing to delete planned orders
+                    controllerIds.stream().forEach(controllerId -> 
+                        cancelOrderResponsePerController.put(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null))));
+                }
+                for (String controllerId : cancelOrderResponsePerController.keySet()) {
+                    cancelOrderResponsePerController.get(controllerId).thenAccept(either -> {
+                        if(either.isRight()) {
+                            try {
+                                boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, xAccessToken, false, false);
+                                if (!successful) {
+                                    JocError je = getJocError();
+                                    if (je != null && je.printMetaInfo() != null) {
+                                        LOGGER.info(je.printMetaInfo());
+                                    }
+                                    LOGGER.warn("Order delete failed due to missing permission.");
+                                }
+                            } catch (SOSHibernateException e) {
+                                LOGGER.warn("Order delete failed due to: ", e.getMessage());
+                            }
+                        } else {
+                            JocError je = getJocError();
+                            if (je != null && je.printMetaInfo() != null) {
+                                LOGGER.info(je.printMetaInfo());
+                            }
+                            LOGGER.warn("Order cancel failed due to missing permission.");
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                LOGGER.warn(e.getMessage());
+            }
         }
     }
 

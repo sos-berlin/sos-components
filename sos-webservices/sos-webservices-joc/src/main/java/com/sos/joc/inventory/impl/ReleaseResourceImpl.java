@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -128,7 +126,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 errors.addAll(update(in.getUpdate(), dbLayer, folderPermissions, getJocError(), dbAuditLog, withDeletionOfEmptyFolders));
             }
 
-            recreateOrders(in.getAddOrdersDateFrom(), schedulePathsWithWorkflowNames, dbLayer,  accessToken);
+            cancelAndRecreateOrders(in.getAddOrdersDateFrom(), schedulePathsWithWorkflowNames, dbLayer,  accessToken);
             if (errors != null && !errors.isEmpty()) {
                 Globals.rollback(session);
                 return errors;
@@ -454,7 +452,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 if(ConfigurationType.SCHEDULE.equals(conf.getTypeAsEnum())) {
                     // workflow
                     if(conf.getContent().contains("workflowNames")) {
-                        List<String> workflowNames = getWorkflowNamesFromScheduleJson(conf.getContent());
+                        List<String> workflowNames = JocInventory.getWorkflowNamesFromScheduleJson(conf.getContent());
                         if(schedulePathsWithWorkflowNames.containsKey(conf.getPath())) {
                             schedulePathsWithWorkflowNames.get(conf.getPath()).addAll(workflowNames);
                         } else {
@@ -466,7 +464,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByCalendarPath(conf.getPath());
                     if(schedules != null) {
                         schedules.stream().forEach(schedule -> {
-                                List<String> workflowNames = getWorkflowNamesFromScheduleJson(schedule.getContent());
+                                List<String> workflowNames = JocInventory.getWorkflowNamesFromScheduleJson(schedule.getContent());
                                 if(schedulePathsWithWorkflowNames.containsKey(schedule.getPath())) {
                                     schedulePathsWithWorkflowNames.get(schedule.getPath()).addAll(workflowNames);
                                 } else {
@@ -483,23 +481,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         return schedulePathsWithWorkflowNames;
     }
     
-    private List<String> getWorkflowNamesFromScheduleJson (String json) {
-        // pattern: ^.*workflowNames\"\:\[(.*?)\].*$
-        String regex = "^.*workflowNames\\\"\\:\\[(.*?)\\].*$";
-        List<String> workflows = new ArrayList<String>();
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(json);
-        if(matcher.matches()) {
-            String workflowNamesArray = matcher.group(1);
-            String[] workflowNamesSplitted = workflowNamesArray.split(",");
-            for(int i=0; i < workflowNamesSplitted.length; i++) {
-                workflows.add(workflowNamesSplitted[i].trim().substring(1, workflowNamesSplitted[i].trim().length() -1));
-            }
-        }
-        return workflows;
-    }
-    
-    private void recreateOrders (String addOrdersDateFrom, Map<String, List<String>> schedulePathsWithWorkflowNames,
+    private void cancelAndRecreateOrders (String addOrdersDateFrom, Map<String, List<String>> schedulePathsWithWorkflowNames,
             InventoryDBLayer dbLayer, String xAccessToken) {
         if(addOrdersDateFrom != null && !addOrdersDateFrom.isEmpty()) {
             DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
