@@ -1334,4 +1334,21 @@ public class JocInventory {
         }
         return schedule;
     }
+
+    public static List<String> getWorkflowNamesFromScheduleJson (String json) {
+        // pattern: ^.*workflowNames\"\:\[(.*?)\].*$
+        String regex = "^.*workflowNames\\\"\\:\\[(.*?)\\].*$";
+        List<String> workflows = new ArrayList<String>();
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(json);
+        if(matcher.matches()) {
+            String workflowNamesArray = matcher.group(1);
+            String[] workflowNamesSplitted = workflowNamesArray.split(",");
+            for(int i=0; i < workflowNamesSplitted.length; i++) {
+                workflows.add(workflowNamesSplitted[i].trim().substring(1, workflowNamesSplitted[i].trim().length() -1));
+            }
+        }
+        return workflows;
+    }
+    
 }

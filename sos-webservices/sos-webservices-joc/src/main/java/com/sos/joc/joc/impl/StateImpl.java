@@ -1,13 +1,9 @@
 package com.sos.joc.joc.impl;
 
-import java.net.UnknownHostException;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.util.SOSShell;
-import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -24,7 +20,6 @@ public class StateImpl extends JOCResourceImpl implements IStateResource {
     
     @Override
     public JOCDefaultResponse postIsActive(String accessToken) {
-        SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, null, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
@@ -32,16 +27,13 @@ public class StateImpl extends JOCResourceImpl implements IStateResource {
                 return jocDefaultResponse;
             }
             
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(connection);
-            DBItemJocInstance activeInstance = dbLayer.getActiveInstance();
-            //String currentTitle = Globals.sosCockpitProperties.getProperty("title", "");
             Ok entity = new Ok();
+            DBItemJocInstance activeInstance = getActiveInstance(API_CALL, null);
             if (activeInstance == null) {
                 entity.setOk(false);
             } else {
                 entity.setSurveyDate(activeInstance.getHeartBeat());
-                entity.setOk(activeIsCurrent(activeInstance.getMemberId()));
+                entity.setOk(Globals.getMemberId().equals(activeInstance.getMemberId()));
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(entity);
@@ -50,8 +42,6 @@ public class StateImpl extends JOCResourceImpl implements IStateResource {
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(connection);
         }
     }
 
@@ -60,20 +50,25 @@ public class StateImpl extends JOCResourceImpl implements IStateResource {
         return postIsActive(getAccessToken(xAccessToken, accessToken));
     }
     
-    private static Boolean activeIsCurrent(String activeMemberId) throws UnknownHostException {
-        // see com.sos.joc.cluster.configuration.JocConfiguration constructor
-        String curMemberId = getHostname() + ":" + SOSString.hash256(Paths.get(System.getProperty("user.dir")).toString());
-        return curMemberId.equals(activeMemberId);
+    public static Boolean isActive(String apiCall, JocInstancesDBLayer dbLayer) {
+        DBItemJocInstance activeInstance = getActiveInstance(apiCall, dbLayer);
+        if (activeInstance == null) {
+            return false;
+        }
+        return Globals.getMemberId().equals(activeInstance.getMemberId());
     }
     
-    private static String getHostname() {
-        String hostname = "unknown";
+    private static DBItemJocInstance getActiveInstance(String apiCall, JocInstancesDBLayer dbLayer) {
+        SOSHibernateSession connection = null;
         try {
-            hostname = SOSShell.getHostname();
-        } catch (UnknownHostException e) {
-            //
+            if (dbLayer == null) {
+                connection = Globals.createSosHibernateStatelessConnection(apiCall);
+                dbLayer = new JocInstancesDBLayer(connection);
+            }
+            return dbLayer.getActiveInstance();
+        } finally {
+            Globals.disconnect(connection);
         }
-        return hostname;
     }
 
 }

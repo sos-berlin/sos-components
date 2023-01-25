@@ -21,6 +21,8 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocServiceException;
+import com.sos.joc.joc.impl.StateImpl;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
@@ -79,6 +81,11 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL_APPOINT_NODES, filterBytes, accessToken);
+            
+            if (!StateImpl.isActive(API_CALL_APPOINT_NODES, null)) {
+                throw new JocServiceException("The API " + API_CALL_APPOINT_NODES + "may only be called in the active JOC cluster node.");
+            }
+            
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             String controllerId = urlParameter.getControllerId();
@@ -91,8 +98,9 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             storeAuditLog(urlParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_APPOINT_NODES);
-            ClusterWatch.getInstance().appointNodes(controllerId, new InventoryAgentInstancesDBLayer(connection), accessToken, getJocError());
-            
+            ClusterWatch.getInstance().appointNodes(controllerId, Proxy.of(controllerId), new InventoryAgentInstancesDBLayer(connection), accessToken,
+                    getJocError());
+
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

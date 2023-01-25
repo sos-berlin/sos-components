@@ -47,6 +47,8 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
+import com.sos.joc.exceptions.JocServiceException;
+import com.sos.joc.joc.impl.StateImpl;
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.RegisterClusterWatchAgent;
@@ -90,6 +92,11 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL_REGISTER, filterBytes, accessToken);
+            
+            if (!StateImpl.isActive(API_CALL_REGISTER, null)) {
+                throw new JocServiceException("The API " + API_CALL_REGISTER + "may only be called in the active JOC cluster node.");
+            }
+            
             JsonValidator.validateFailFast(filterBytes, RegisterParameters.class);
             RegisterParameters body = Globals.objectMapper.readValue(filterBytes, RegisterParameters.class);
             
@@ -330,6 +337,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     }
                     for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                         if (dbAgent.getIsWatcher()) {
+                            controllerUpdateRequired = true;
                             dbAgent.setIsWatcher(false);
                             agentDBLayer.updateAgent(dbAgent);
                         }
@@ -391,6 +399,17 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 if (updateAgentRequired) {
                     agentWatchers.add(cWatcher);
                 }
+                
+            } else {
+                if (dbAgents != null) {
+                    for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
+                        if (dbAgent.getIsWatcher()) {
+                            controllerUpdateRequired = true;
+                            dbAgent.setIsWatcher(false);
+                            agentDBLayer.updateAgent(dbAgent);
+                        }
+                    }
+                }
             }
             
             
@@ -403,9 +422,12 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 ProxiesEdit.update(instances);
 //                proxyIsUpdated = true;
             }
+            
+            JControllerProxy proxy = Proxy.of(controllerId);
+            
             if (clusterUriChanged || controllerUpdateRequired) {
                 try {
-                    ClusterWatch.getInstance().appointNodes(controllerId, agentDBLayer, accessToken, getJocError());
+                    ClusterWatch.getInstance().appointNodes(controllerId, proxy, agentDBLayer, accessToken, getJocError());
                 } catch (JocBadRequestException e) {
                 }
             }
@@ -414,7 +436,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 final String cId = controllerId;
 
                 // TODO consider old Agent cannot convert to new Agents
-                JControllerProxy proxy = Proxy.of(controllerId);
                 JControllerState currentState = proxy.currentState();
                 
                 Map<AgentPath, JAgentRef> knownAgents = currentState.pathToAgentRef();
@@ -497,6 +518,11 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL_DELETE, filterBytes, accessToken);
+            
+            if (!StateImpl.isActive(API_CALL_DELETE, null)) {
+                throw new JocServiceException("The API " + API_CALL_DELETE + "may only be called in the active JOC cluster node.");
+            }
+            
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter controllerObj = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
