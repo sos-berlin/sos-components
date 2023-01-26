@@ -304,25 +304,19 @@ public class DeleteDeployments {
                 Map<Integer, Set<DBItemInventoryConfigurationTrash>> itemsFromTrashByType = 
                         new HashMap<Integer, Set<DBItemInventoryConfigurationTrash>>();
                 InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-                LOGGER.info("!!! Update DepHistory for failed deletions!!!");
-                LOGGER.info("!!! entries count: " + optimisticEntries.size() + " !!!");
                 for(DBItemDeploymentHistory optimistic : optimisticEntries) {
                     optimistic.setErrorMessage(either.getLeft().message());
                     optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
                     optimistic.setDeleteDate(null);
                     dbLayer.getSession().update(optimistic);
-                    LOGGER.info("!!! Item " + optimistic.getName() + " type: " + optimistic.getTypeAsEnum().toString() + " updated !!!");
                     // TODO: restore related inventory configuration - Recover and remove from trash
-                    LOGGER.info("!!! Read items from trash to restore!!!");
                     if(itemsFromTrashByType.containsKey(optimistic.getType())) {
                         itemsFromTrashByType.get(optimistic.getType())
                             .add(invDbLayer.getTrashConfiguration(optimistic.getPath(), optimistic.getType()));
-                        LOGGER.info("!!! Item found in trash!!!");
                     } else {
                         itemsFromTrashByType.put(optimistic.getType(), new HashSet());
                         itemsFromTrashByType.get(optimistic.getType())
                             .add(invDbLayer.getTrashConfiguration(optimistic.getPath(), optimistic.getType()));
-                        LOGGER.info("!!! Item found in trash!!!");
                     }
                 }
                 if(!itemsFromTrashByType.isEmpty()) {
@@ -331,12 +325,9 @@ public class DeleteDeployments {
                         if(itemsFromTrash != null) {
                             for (DBItemInventoryConfigurationTrash trashItem : itemsFromTrash) {
                                 JocInventory.insertConfiguration(invDbLayer, recreateItem(trashItem, null, invDbLayer));
-                                LOGGER.info("!!! Item restored from trash!!!");
                             }
                         }
                     }
-                } else {
-                    LOGGER.info("!!! no items found in trash!!!");
                 }
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
