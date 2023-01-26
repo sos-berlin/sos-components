@@ -119,20 +119,38 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemDeploymentHistory> getDeployedConfigurations(Long inventoryConfigurationId) throws DBConnectionRefusedException,
-            DBInvalidDataException {
-        try {
-            StringBuilder sql = new StringBuilder();
-            sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            sql.append(" where inventoryConfigurationId = :inventoryConfigurationId");
-            Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
-            query.setParameter("inventoryConfigurationId", inventoryConfigurationId);
-            return session.getResultList(query);
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
+    DBInvalidDataException {
+try {
+    StringBuilder sql = new StringBuilder();
+    sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
+    sql.append(" where inventoryConfigurationId = :inventoryConfigurationId");
+    Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
+    query.setParameter("inventoryConfigurationId", inventoryConfigurationId);
+    return session.getResultList(query);
+} catch (SOSHibernateInvalidSessionException ex) {
+    throw new DBConnectionRefusedException(ex);
+} catch (Exception ex) {
+    throw new DBInvalidDataException(ex);
+}
+}
+
+    public List<DBItemDeploymentHistory> getDeployedConfigurations(String name, Integer type) throws DBConnectionRefusedException,
+    DBInvalidDataException {
+try {
+    StringBuilder sql = new StringBuilder();
+    sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
+    sql.append(" where name = :name");
+    sql.append(" and type = :type");
+    Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
+    query.setParameter("name", name);
+    query.setParameter("type", type);
+    return session.getResultList(query);
+} catch (SOSHibernateInvalidSessionException ex) {
+    throw new DBConnectionRefusedException(ex);
+} catch (Exception ex) {
+    throw new DBInvalidDataException(ex);
+}
+}
 
     public List<DBItemDeploymentHistory> getDepHistory(String commitId) throws DBConnectionRefusedException, DBInvalidDataException {
         return getDepHistory(commitId, (ConfigurationType) null);

@@ -174,7 +174,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                     
                 } else if (JocInventory.isDeployable(type)) {
                     // TODO restrict to allowed Controllers
-                    List<DBItemDeploymentHistory> allDeploymentsPerObject = deployDbLayer.getDeployedConfigurations(config.getId());
+                    List<DBItemDeploymentHistory> allDeploymentsPerObject = deployDbLayer.getDeployedConfigurations(config.getName(), config.getType());
                     Set<DBItemDeploymentHistory> deployments = null;
                     if (allDeploymentsPerObject != null) {
                         deployments = allDeploymentsPerObject.stream().filter(d -> OperationType.UPDATE.value() == d.getOperation()).collect(
