@@ -10,7 +10,7 @@ public class SetJobResourceJobArguments extends JobArguments {
 	private JobArgument<String> jobResource = new JobArgument<String>("job_resource", true);
 	private JobArgument<String> key = new JobArgument<String>("key", true);
 	private JobArgument<String> value = new JobArgument<String>("value", true);
-	private JobArgument<String> timeZone = new JobArgument<String>("tine_zone", false);
+	private JobArgument<String> timeZone = new JobArgument<String>("time_zone", false);
 	private JobArgument<String> environmentVariable = new JobArgument<String>("environment_variable", false);
 
 	public SetJobResourceJobArguments() {
