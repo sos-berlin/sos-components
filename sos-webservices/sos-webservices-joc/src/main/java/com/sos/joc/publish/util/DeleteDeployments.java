@@ -1,5 +1,6 @@
 package com.sos.joc.publish.util;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -28,10 +29,12 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocSosHibernateException;
@@ -54,6 +57,18 @@ public class DeleteDeployments {
             DeployType.JOBRESOURCE, 
             DeployType.NOTICEBOARD, 
             DeployType.LOCK);
+    private static final List<ConfigurationType> RESTORE_ORDER = Arrays.asList(
+            ConfigurationType.FOLDER, 
+            ConfigurationType.LOCK,
+            ConfigurationType.INCLUDESCRIPT, 
+            ConfigurationType.NOTICEBOARD, 
+            ConfigurationType.JOBRESOURCE,
+            ConfigurationType.NONWORKINGDAYSCALENDAR, 
+            ConfigurationType.WORKINGDAYSCALENDAR, 
+            ConfigurationType.JOBTEMPLATE,
+            ConfigurationType.WORKFLOW, 
+            ConfigurationType.FILEORDERSOURCE, 
+            ConfigurationType.SCHEDULE);
 
 
     public static boolean delete(Collection<DBItemDeploymentHistory> dbItems, DBLayerDeploy dbLayer, String account, String accessToken,
@@ -79,7 +94,10 @@ public class DeleteDeployments {
                     sortedItems.addAll(entry.getValue().getOrDefault(type, Collections.emptyList()));
                 }
                 invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, sortedItems, commitId))); 
-                
+
+                // delete configurations optimistically
+                deleteConfigurations(dbLayer, null, invConfigurationsToDelete, commitId, accessToken, jocError, auditlogId, withoutFolderDeletion);
+
                 // send commands to controllers
                 UpdateItemUtils.updateItemsDelete(commitId, sortedItems, entry.getKey())
                     .thenAccept(either -> processAfterDelete(either, entry.getKey(), account, commitId, accessToken, jocError, cancelOrderDate));
@@ -93,6 +111,11 @@ public class DeleteDeployments {
                 fileOrderSourcesToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, fileOrderSourceItems,
                         commitIdforFileOrderSource)));
                 invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, sortedItems, commitId)));
+
+                // delete configurations optimistically
+                deleteConfigurations(dbLayer, null, fileOrderSourcesToDelete, commitIdforFileOrderSource, accessToken, jocError, auditlogId,
+                        withoutFolderDeletion);
+                deleteConfigurations(dbLayer, null, invConfigurationsToDelete, commitId, accessToken, jocError, auditlogId, withoutFolderDeletion);
 
                 // send commands to controllers
                 UpdateItemUtils.updateItemsDelete(commitIdforFileOrderSource, fileOrderSourceItems, entry.getKey())
@@ -111,10 +134,6 @@ public class DeleteDeployments {
             }
         }
         
-        // delete configurations optimistically
-        deleteConfigurations(dbLayer, null, fileOrderSourcesToDelete, commitIdforFileOrderSource, accessToken, jocError, auditlogId,
-                withoutFolderDeletion);
-        deleteConfigurations(dbLayer, null, invConfigurationsToDelete, commitId, accessToken, jocError, auditlogId, withoutFolderDeletion);
 
         return true;
     }
@@ -268,12 +287,6 @@ public class DeleteDeployments {
         return true;
     }
 
-//    public static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
-//            String accessToken, JocError jocError) {
-//        processAfterDelete(either, controllerId, account, commitId, accessToken, jocError, null);
-//    }
-//
-    
     public static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
             String accessToken, JocError jocError, String cancelOrderDate) {
         SOSHibernateSession newHibernateSession = null;
@@ -288,14 +301,33 @@ public class DeleteDeployments {
                 // get all already optimistically stored entries for the commit
                 List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
                 // update all previously optimistically stored entries with the error message and change the state
+                Map<Integer, Set<DBItemInventoryConfigurationTrash>> itemsFromTrashByType = 
+                        new HashMap<Integer, Set<DBItemInventoryConfigurationTrash>>();
+                InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
                 for(DBItemDeploymentHistory optimistic : optimisticEntries) {
                     optimistic.setErrorMessage(either.getLeft().message());
                     optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
                     optimistic.setDeleteDate(null);
                     dbLayer.getSession().update(optimistic);
                     // TODO: restore related inventory configuration - Recover and remove from trash
-                    
-
+                    if(itemsFromTrashByType.containsKey(optimistic.getType())) {
+                        itemsFromTrashByType.get(optimistic.getType())
+                            .add(invDbLayer.getTrashConfiguration(optimistic.getPath(), optimistic.getType()));
+                    } else {
+                        itemsFromTrashByType.put(optimistic.getType(), new HashSet());
+                        itemsFromTrashByType.get(optimistic.getType())
+                            .add(invDbLayer.getTrashConfiguration(optimistic.getPath(), optimistic.getType()));
+                    }
+                }
+                if(!itemsFromTrashByType.isEmpty()) {
+                    for (ConfigurationType objType : RESTORE_ORDER) {
+                        Set<DBItemInventoryConfigurationTrash> itemsFromTrash = itemsFromTrashByType.get(objType.intValue());
+                        if(itemsFromTrash != null) {
+                            for (DBItemInventoryConfigurationTrash trashItem : itemsFromTrash) {
+                                JocInventory.insertConfiguration(invDbLayer, recreateItem(trashItem, null, invDbLayer));
+                            }
+                        }
+                    }
                 }
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
@@ -390,9 +422,15 @@ public class DeleteDeployments {
         return deletedObjects;
     }
 
+//    public static List<DBItemInventoryConfiguration> getInvConfigurationsForTrash (DBLayerDeploy dbLayer, Set<DBItemDeploymentHistory> deletedDeployItems ) {
+//        return dbLayer.getInventoryConfigurationsByIds(
+//                deletedDeployItems.stream().map(item -> item.getInventoryConfigurationId()).distinct().collect(Collectors.toList()));
+//    }
+    
     public static List<DBItemInventoryConfiguration> getInvConfigurationsForTrash (DBLayerDeploy dbLayer, Set<DBItemDeploymentHistory> deletedDeployItems ) {
-        return dbLayer.getInventoryConfigurationsByIds(
-                deletedDeployItems.stream().map(item -> item.getInventoryConfigurationId()).distinct().collect(Collectors.toList()));
+        List<DBItemInventoryConfiguration> invConfigurations = new ArrayList<DBItemInventoryConfiguration>();
+        deletedDeployItems.stream().forEach(item -> invConfigurations.add(dbLayer.getConfigurationByName(item.getName(), item.getType())));
+        return invConfigurations;
     }
     
     public static void deleteConfigurations(DBLayerDeploy dbLayer, List<Configuration> folders, List<DBItemInventoryConfiguration> itemsToDelete, 
@@ -444,5 +482,28 @@ public class DeleteDeployments {
             JocInventory.postTrashEvent(folder);
         }
     }
-        
+    
+    private static DBItemInventoryConfiguration recreateItem(DBItemInventoryConfigurationTrash oldItem, Long auditLogId, InventoryDBLayer dbLayer) {
+        DBItemInventoryConfiguration item = new DBItemInventoryConfiguration();
+        item.setId(null);
+        item.setPath(oldItem.getPath());
+        item.setFolder(oldItem.getFolder());
+        item.setName(oldItem.getName());
+        item.setDeployed(true);
+        item.setReleased(false);
+        item.setModified(Date.from(Instant.now()));
+        item.setCreated(item.getModified());
+        item.setDeleted(false);
+        item.setAuditLogId(auditLogId);
+        item.setTitle(oldItem.getTitle());
+        item.setType(oldItem.getType());
+        item.setContent(oldItem.getContent());
+        try {
+            Validator.validate(item.getTypeAsEnum(), item.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, null);
+            item.setValid(true);
+        } catch (Throwable e) {
+            item.setValid(false);
+        }
+        return item;
+    }
 }

@@ -143,7 +143,7 @@ public class DailyPlanCalendar {
                         }
                     });
                 } else {
-                    LOGGER.info("DailyPlanCalendar already submitted to " + controllerId);
+                    LOGGER.debug("DailyPlanCalendar already submitted to " + controllerId);
                 }
             } catch (Exception e) {
                 ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, curControllerId);

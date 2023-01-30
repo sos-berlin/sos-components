@@ -157,13 +157,14 @@ public class StoreDeployments {
                 if(dailyPlanDate != null) {
                     DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
                     List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
-                    List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(dailyPlanDate, 
-                            optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
-                            .map(workflow -> workflow.getPath()).collect(Collectors.toList()),
-                            null, controllerId);
-                    boolean successful = ordersGenerate.generateOrders(requests, accessToken, false);
-                    if (!successful) {
-                        LOGGER.warn("generate orders failed due to missing permission.");
+                    List<String> workflowPaths = optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
+                            .map(workflow -> workflow.getPath()).collect(Collectors.toList());
+                    if(workflowPaths != null && !workflowPaths.isEmpty()) {
+                        List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(dailyPlanDate, workflowPaths, null, controllerId);
+                        boolean successful = ordersGenerate.generateOrders(requests, accessToken, false);
+                        if (!successful) {
+                            LOGGER.warn("generate orders failed due to missing permission.");
+                        }
                     }
                 }
             } else  if (either.isLeft()) {

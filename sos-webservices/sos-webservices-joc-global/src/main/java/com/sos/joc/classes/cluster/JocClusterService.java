@@ -99,7 +99,7 @@ public class JocClusterService {
         return cluster;
     }
 
-    public JocClusterAnswer start(StartupMode mode) {
+    public JocClusterAnswer start(StartupMode mode, boolean onJocStart) {
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         if (cluster == null) {
             JocClusterConfiguration clusterConfig = new JocClusterConfiguration(Globals.sosCockpitProperties.getProperties());
@@ -119,7 +119,10 @@ public class JocClusterService {
 
                         Globals.configurationGlobals = cluster.getConfigurationGlobals(mode);
                         if (cluster != null) {// null when closed during cluster.getConfigurationGlobals (empty database or db errors)
-                            cluster.doProcessing(mode, Globals.configurationGlobals);
+                            if (onJocStart) {
+                                cluster.tryDeleteActiveCurrentMember();
+                            }
+                            cluster.doProcessing(mode, Globals.configurationGlobals, onJocStart);
                         }
                         LOGGER.info(String.format("[%s][start][end]", mode));
                     } catch (Throwable e) {
@@ -160,7 +163,7 @@ public class JocClusterService {
 
     public JocClusterAnswer restart(StartupMode mode) {
         stop(mode, false);
-        JocClusterAnswer answer = start(mode);
+        JocClusterAnswer answer = start(mode, false);
         if (answer.getState().equals(JocClusterAnswerState.STARTED)) {
             answer.setState(JocClusterAnswerState.RESTARTED);
         }

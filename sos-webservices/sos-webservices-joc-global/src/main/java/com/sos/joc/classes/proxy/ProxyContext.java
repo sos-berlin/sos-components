@@ -127,9 +127,9 @@ public class ProxyContext {
     }
     
     protected void checkCluster() {
-        if (credentials.getBackupUrl() != null) { // is Cluster
+        if (credentials.getBackupUrl() != null && !ClusterWatch.getInstance().onStart) { // is Cluster
             LOGGER.info(toString() + ": check cluster appointment");
-            LOGGER.info(toString() + ": future is complete? " + proxyFuture.isDone());
+//            LOGGER.info(toString() + ": future is complete? " + proxyFuture.isDone());
             proxyFuture.thenApplyAsync(p -> {
                 Either<Problem, Void> either = null;
 //                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(credentials.getControllerId());
@@ -140,7 +140,7 @@ public class ProxyContext {
 //                    String clusterState = p.currentState().clusterState().toJson();
 //                    if (clusterState.replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
                         try {
-                            LOGGER.info(toString() + ": Cluster nodes are not appointed");
+                            //LOGGER.info(toString() + ": Cluster nodes are not appointed");
                             ClusterWatch.getInstance().appointNodes(credentials.getControllerId(), p, null, null, null);
                             
                             

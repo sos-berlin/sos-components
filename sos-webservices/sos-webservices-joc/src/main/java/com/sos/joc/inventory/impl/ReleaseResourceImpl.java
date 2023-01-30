@@ -495,77 +495,79 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 orderFilter.setDailyPlanDateFrom(addOrdersDateFrom);
             }
             orderFilter.setSchedulePaths(new ArrayList<String>(schedulePathsWithWorkflowNames.keySet()));
-            try {
-                Map<String, List<String>> controllerIdsWithWorkflowPaths = new HashMap<String, List<String>>();
-                Map<String, List<DBItemDailyPlanOrder>> ordersPerController = 
-                        cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter, xAccessToken, false, false);
-                Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrderResponsePerController = 
-                        cancelOrderImpl.cancelOrders(ordersPerController, xAccessToken, null, false, false);
-                if(cancelOrderResponsePerController.isEmpty()) {
-                    DBLayerDeploy dbLayerDeploy = new DBLayerDeploy(dbLayer.getSession());
-                    for(String schedulePath : schedulePathsWithWorkflowNames.keySet()) {
-                        List<String> workflowNames = schedulePathsWithWorkflowNames.get(schedulePath);
-                        for(String workflow : workflowNames) {
-                            DBItemDeploymentHistory dbWf = 
-                                    dbLayerDeploy.getLatestDepHistoryItemByNameAndType(workflow, ConfigurationType.WORKFLOW);
-                            if(dbWf != null && dbWf.getOperation() == 0) {
-                                if(!controllerIdsWithWorkflowPaths.keySet().contains(dbWf.getControllerId())) {
-                                    controllerIdsWithWorkflowPaths.put(dbWf.getControllerId(), new ArrayList<String>());
+            if(orderFilter.getSchedulePaths() != null && !orderFilter.getSchedulePaths().isEmpty()) {
+                try {
+                    Map<String, List<String>> controllerIdsWithWorkflowPaths = new HashMap<String, List<String>>();
+                    Map<String, List<DBItemDailyPlanOrder>> ordersPerController = 
+                            cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter, xAccessToken, false, false);
+                    Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrderResponsePerController = 
+                            cancelOrderImpl.cancelOrders(ordersPerController, xAccessToken, null, false, false);
+                    if(cancelOrderResponsePerController.isEmpty()) {
+                        DBLayerDeploy dbLayerDeploy = new DBLayerDeploy(dbLayer.getSession());
+                        for(String schedulePath : schedulePathsWithWorkflowNames.keySet()) {
+                            List<String> workflowNames = schedulePathsWithWorkflowNames.get(schedulePath);
+                            for(String workflow : workflowNames) {
+                                DBItemDeploymentHistory dbWf = 
+                                        dbLayerDeploy.getLatestDepHistoryItemByNameAndType(workflow, ConfigurationType.WORKFLOW);
+                                if(dbWf != null && dbWf.getOperation() == 0) {
+                                    if(!controllerIdsWithWorkflowPaths.keySet().contains(dbWf.getControllerId())) {
+                                        controllerIdsWithWorkflowPaths.put(dbWf.getControllerId(), new ArrayList<String>());
+                                    }
+                                    controllerIdsWithWorkflowPaths.get(dbWf.getControllerId()).add(dbWf.getPath());
                                 }
-                                controllerIdsWithWorkflowPaths.get(dbWf.getControllerId()).add(dbWf.getPath());
                             }
                         }
-                    }
-                    for(String controllerId : controllerIdsWithWorkflowPaths.keySet()) {
-                        cancelOrderResponsePerController.put(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null)));
-                    }
-                }
-                for (String controllerId : cancelOrderResponsePerController.keySet()) {
-                    cancelOrderResponsePerController.get(controllerId).thenAccept(either -> {
-                        if(either.isRight()) {
-                            try {
-                                boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, xAccessToken, false, false);
-                                if (!successful) {
-                                    JocError je = getJocError();
-                                    if (je != null && je.printMetaInfo() != null) {
-                                        LOGGER.info(je.printMetaInfo());
-                                    }
-                                    LOGGER.warn("Order delete failed due to missing permission.");
-                                }
-                                if(ordersPerController.isEmpty()) {
-                                    List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(addOrdersDateFrom, 
-                                            controllerIdsWithWorkflowPaths.get(controllerId), null, controllerId);
-                                    successful = ordersGenerate.generateOrders(requests, xAccessToken, false);
-                                    if (!successful) {
-                                        LOGGER.warn("generate orders failed due to missing permission.");
-                                    }
-                                } else {
-                                    List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
-                                            ordersPerController.get(controllerId).stream()
-                                                .map(order -> order.getSchedulePath()).collect(Collectors.toList()), controllerId);
-                                    successful = ordersGenerate.generateOrders(requests, xAccessToken, false);
-                                    if (!successful) {
-                                        LOGGER.warn("generate orders failed due to missing permission.");
-                                    }
-                                }
-                            } catch (SOSHibernateException | ParseException | DBMissingDataException | DBConnectionRefusedException 
-                                    | DBInvalidDataException | JocConfigurationException | DBOpenSessionException 
-                                    | ControllerConnectionResetException | ControllerConnectionRefusedException | SOSInvalidDataException 
-                                    | SOSMissingDataException | IOException | ExecutionException e) {
-                                LOGGER.warn("generation of new  orders failed.", e.getMessage());
-                            }
-                        } else {
-                            JocError je = getJocError();
-                            if (je != null && je.printMetaInfo() != null) {
-                                LOGGER.info(je.printMetaInfo());
-                            }
-                            LOGGER.warn("Order cancel failed due to missing permission.");
+                        for(String controllerId : controllerIdsWithWorkflowPaths.keySet()) {
+                            cancelOrderResponsePerController.put(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null)));
                         }
-                    });
+                    }
+                    for (String controllerId : cancelOrderResponsePerController.keySet()) {
+                        cancelOrderResponsePerController.get(controllerId).thenAccept(either -> {
+                            if(either.isRight()) {
+                                try {
+                                    boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, xAccessToken, false, false);
+                                    if (!successful) {
+                                        JocError je = getJocError();
+                                        if (je != null && je.printMetaInfo() != null) {
+                                            LOGGER.info(je.printMetaInfo());
+                                        }
+                                        LOGGER.warn("Order delete failed due to missing permission.");
+                                    }
+                                    if(ordersPerController.isEmpty()) {
+                                        List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(addOrdersDateFrom, 
+                                                controllerIdsWithWorkflowPaths.get(controllerId), null, controllerId);
+                                        successful = ordersGenerate.generateOrders(requests, xAccessToken, false);
+                                        if (!successful) {
+                                            LOGGER.warn("generate orders failed due to missing permission.");
+                                        }
+                                    } else {
+                                        List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
+                                                ordersPerController.get(controllerId).stream()
+                                                    .map(order -> order.getSchedulePath()).collect(Collectors.toList()), controllerId);
+                                        successful = ordersGenerate.generateOrders(requests, xAccessToken, false);
+                                        if (!successful) {
+                                            LOGGER.warn("generate orders failed due to missing permission.");
+                                        }
+                                    }
+                                } catch (SOSHibernateException | ParseException | DBMissingDataException | DBConnectionRefusedException 
+                                        | DBInvalidDataException | JocConfigurationException | DBOpenSessionException 
+                                        | ControllerConnectionResetException | ControllerConnectionRefusedException | SOSInvalidDataException 
+                                        | SOSMissingDataException | IOException | ExecutionException e) {
+                                    LOGGER.warn("generation of new  orders failed.", e.getMessage());
+                                }
+                            } else {
+                                JocError je = getJocError();
+                                if (je != null && je.printMetaInfo() != null) {
+                                    LOGGER.info(je.printMetaInfo());
+                                }
+                                LOGGER.warn("Order cancel failed due to missing permission.");
+                            }
+                        });
+                    }
+                    
+                } catch (Exception e) {
+                    LOGGER.warn(e.getMessage());
                 }
-                
-            } catch (Exception e) {
-                LOGGER.warn(e.getMessage());
             }
         }
     }

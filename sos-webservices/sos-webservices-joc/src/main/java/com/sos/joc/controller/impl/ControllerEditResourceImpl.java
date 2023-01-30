@@ -94,7 +94,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             initLogging(API_CALL_REGISTER, filterBytes, accessToken);
             
             if (!StateImpl.isActive(API_CALL_REGISTER, null)) {
-                throw new JocServiceException("The API " + API_CALL_REGISTER + "may only be called in the active JOC cluster node.");
+                throw new JocServiceException("Registering the Controllers is possible only in the active JOC node.");
             }
             
             JsonValidator.validateFailFast(filterBytes, RegisterParameters.class);
@@ -520,7 +520,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             initLogging(API_CALL_DELETE, filterBytes, accessToken);
             
             if (!StateImpl.isActive(API_CALL_DELETE, null)) {
-                throw new JocServiceException("The API " + API_CALL_DELETE + "may only be called in the active JOC cluster node.");
+                throw new JocServiceException("Deregistering the Controllers is possible only in the active JOC node.");
             }
             
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);

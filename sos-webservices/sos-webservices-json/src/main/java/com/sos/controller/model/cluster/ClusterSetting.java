@@ -14,6 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "idToUri",
     "activeId",
     "clusterWatches",
+    "clusterWatchId",
     "timing"
 })
 public class ClusterSetting {
@@ -30,6 +31,8 @@ public class ClusterSetting {
     private String activeId;
     @JsonProperty("clusterWatches")
     private List<ClusterWatcher> clusterWatches = null;
+    @JsonProperty("clusterWatchId")
+    private String clusterWatchId;
     @JsonProperty("timing")
     private ClusterTiming timing;
 
@@ -46,12 +49,14 @@ public class ClusterSetting {
      * @param timing
      * @param clusterWatches
      * @param activeId
+     * @param clusterWatchId
      */
-    public ClusterSetting(IdToUri idToUri, String activeId, List<ClusterWatcher> clusterWatches, ClusterTiming timing) {
+    public ClusterSetting(IdToUri idToUri, String activeId, List<ClusterWatcher> clusterWatches, String clusterWatchId, ClusterTiming timing) {
         super();
         this.idToUri = idToUri;
         this.activeId = activeId;
         this.clusterWatches = clusterWatches;
+        this.clusterWatchId = clusterWatchId;
         this.timing = timing;
     }
 
@@ -97,6 +102,16 @@ public class ClusterSetting {
         this.clusterWatches = clusterWatches;
     }
 
+    @JsonProperty("clusterWatchId")
+    public String getClusterWatchId() {
+        return clusterWatchId;
+    }
+
+    @JsonProperty("clusterWatchId")
+    public void setClusterWatchId(String clusterWatchId) {
+        this.clusterWatchId = clusterWatchId;
+    }
+
     @JsonProperty("timing")
     public ClusterTiming getTiming() {
         return timing;
@@ -109,12 +124,12 @@ public class ClusterSetting {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("idToUri", idToUri).append("activeId", activeId).append("clusterWatches", clusterWatches).append("timing", timing).toString();
+        return new ToStringBuilder(this).append("idToUri", idToUri).append("activeId", activeId).append("clusterWatches", clusterWatches).append("clusterWatchId", clusterWatchId).append("timing", timing).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(idToUri).append(clusterWatches).append(activeId).append(timing).toHashCode();
+        return new HashCodeBuilder().append(idToUri).append(clusterWatches).append(activeId).append(clusterWatchId).append(timing).toHashCode();
     }
 
     @Override
@@ -126,7 +141,7 @@ public class ClusterSetting {
             return false;
         }
         ClusterSetting rhs = ((ClusterSetting) other);
-        return new EqualsBuilder().append(idToUri, rhs.idToUri).append(clusterWatches, rhs.clusterWatches).append(activeId, rhs.activeId).append(timing, rhs.timing).isEquals();
+        return new EqualsBuilder().append(idToUri, rhs.idToUri).append(clusterWatches, rhs.clusterWatches).append(activeId, rhs.activeId).append(clusterWatchId, rhs.clusterWatchId).append(timing, rhs.timing).isEquals();
     }
 
 }
