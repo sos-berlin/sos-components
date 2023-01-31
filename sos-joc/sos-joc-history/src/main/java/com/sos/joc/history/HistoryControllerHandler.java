@@ -197,13 +197,13 @@ public class HistoryControllerHandler {
                 } else {
                     if (isProblemException(ex)) {
                         if (isTornException((ProblemException) ex)) {
-                            LOGGER.warn(String.format("%s[TORN]%s", method, ex.toString()));
+                            LOGGER.info(String.format("%s[TORN]%s", method, ex.toString()));
                             tornAfterEventId = new AtomicLong(getTornEventId());
                         } else {
                             LOGGER.error(String.format("%s[errorCounter=%s]%s", method, errorCounter, ex.toString()), ex);
                         }
                     } else if (isReactorException(ex)) {
-                        LOGGER.warn(String.format("%s[errorCounter=%s]%s", method, errorCounter, ex.toString()), ex);
+                        LOGGER.info(String.format("%s[errorCounter=%s]%s", method, errorCounter, ex.toString()), ex);
                     } else if (isHistoryProcessingException(ex)) {
                         if (ex instanceof HistoryProcessingDatabaseConnectException) {
                             waitForDatabaseConnection = true;
@@ -293,7 +293,7 @@ public class HistoryControllerHandler {
                     LOGGER.info(String.format("%s[tornEventId]%s", method, id));
                     return id;
                 } catch (Throwable e) {
-                    LOGGER.error(String.format("%s[end]%s", method, e.toString()), e);
+                    LOGGER.info(String.format("%s[end]%s", method, e.toString()), e);
                     waitFor(config.getWaitIntervalOnError());
                 }
             }
@@ -434,9 +434,9 @@ public class HistoryControllerHandler {
                 } catch (Throwable e) {
                     try {
                         order = entry.getCheckedOrder();
-                        LOGGER.warn(String.format("[OrderMoved][%s]%s", order.getOrderId(), e.toString()), e);
+                        LOGGER.info(String.format("[OrderMoved][%s]%s", order.getOrderId(), e.toString()), e);
                     } catch (Throwable ee) {
-                        LOGGER.warn(String.format("[OrderMoved]%s", e.toString()), e);
+                        LOGGER.info(String.format("[OrderMoved]%s", e.toString()), e);
                     }
                     event = new FatEventEmpty();
                 }
@@ -717,7 +717,7 @@ public class HistoryControllerHandler {
 
     private Throwable fluxDoOnError(Throwable t) {
         JocClusterServiceLogger.setLogger(serviceIdentifier);
-        LOGGER.warn(String.format("[%s][fluxDoOnError]%s", controllerId, t.toString()));
+        LOGGER.info(String.format("[%s][fluxDoOnError]%s", controllerId, t.toString()));
         return t;
     }
 
@@ -778,7 +778,7 @@ public class HistoryControllerHandler {
                         LOGGER.debug(String.format("%ssleep interrupted due to handler close", method));
                     }
                 } else {
-                    LOGGER.warn(String.format("%s%s", method, e.toString()), e);
+                    LOGGER.info(String.format("%s%s", method, e.toString()), e);
                 }
             }
         }
