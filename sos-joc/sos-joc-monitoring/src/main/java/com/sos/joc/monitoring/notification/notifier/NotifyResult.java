@@ -8,6 +8,11 @@ public class NotifyResult {
 
     private NotifyResultError error;
 
+    public NotifyResult(String message, Throwable exception) {
+        this(message, null, null);
+        error = new NotifyResultError(exception.getMessage(), exception);
+    }
+
     protected NotifyResult(String message, StringBuilder sendInfo) {
         this(message, sendInfo, null);
     }

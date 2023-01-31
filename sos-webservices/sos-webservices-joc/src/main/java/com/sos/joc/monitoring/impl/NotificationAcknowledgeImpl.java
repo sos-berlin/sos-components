@@ -5,8 +5,6 @@ import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -15,6 +13,7 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgement;
+import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgementId;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -22,8 +21,11 @@ import com.sos.joc.model.monitoring.NotificationAcknowledgeAnswer;
 import com.sos.joc.model.monitoring.NotificationAcknowledgeFilter;
 import com.sos.joc.model.monitoring.NotificationItemAcknowledgementItem;
 import com.sos.joc.monitoring.resource.INotificationAcknowledge;
+import com.sos.monitoring.notification.NotificationApplication;
 import com.sos.monitoring.notification.NotificationType;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.MONITORING)
 public class NotificationAcknowledgeImpl extends JOCResourceImpl implements INotificationAcknowledge {
@@ -58,7 +60,8 @@ public class NotificationAcknowledgeImpl extends JOCResourceImpl implements INot
                         DBItemNotificationAcknowledgement result = dbLayer.getNotificationAcknowledgement(notificationId);
                         if (result == null) {
                             result = new DBItemNotificationAcknowledgement();
-                            result.setNotificationId(notificationId);
+                            result.setId(new DBItemNotificationAcknowledgementId(notificationId, NotificationApplication.ORDER_NOTIFICATION
+                                    .intValue()));
                             result.setAccount(account);
                             result.setComment(in.getComment());
                             result.setCreated(created);

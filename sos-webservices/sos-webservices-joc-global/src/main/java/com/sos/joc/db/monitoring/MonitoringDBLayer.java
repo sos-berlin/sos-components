@@ -15,6 +15,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
+import com.sos.monitoring.notification.NotificationApplication;
 
 public class MonitoringDBLayer extends DBLayer {
 
@@ -109,20 +110,23 @@ public class MonitoringDBLayer extends DBLayer {
 
     public List<DBItemNotificationMonitor> getNotificationMonitors(Long notificationId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_NOT_MONITORS).append(" ");
-        hql.append("where notificationId=:notificationId");
+        hql.append("where notificationId=:notificationId ");
+        hql.append("and application=:application");
 
         Query<DBItemNotificationMonitor> query = getSession().createQuery(hql.toString());
         query.setParameter("notificationId", notificationId);
-
+        query.setParameter("application", NotificationApplication.ORDER_NOTIFICATION.intValue());
         return getSession().getResultList(query);
     }
 
     public DBItemNotificationAcknowledgement getNotificationAcknowledgement(Long notificationId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_NOT_ACKNOWLEDGEMENTS).append(" ");
-        hql.append("where notificationId=:notificationId");
+        hql.append("where id.notificationId=:notificationId ");
+        hql.append("and id.application=:application");
 
         Query<DBItemNotificationAcknowledgement> query = getSession().createQuery(hql.toString());
         query.setParameter("notificationId", notificationId);
+        query.setParameter("application", NotificationApplication.ORDER_NOTIFICATION.intValue());
 
         return getSession().getSingleResult(query);
     }
@@ -171,7 +175,8 @@ public class MonitoringDBLayer extends DBLayer {
         hql.append(",").append(DBITEM_MON_NOT_WORKFLOWS).append(" w ");
         hql.append("left join ").append(DBITEM_MON_ORDERS).append(" o on w.orderHistoryId=o.historyId ");
         hql.append("left join ").append(DBITEM_MON_ORDER_STEPS).append(" os on w.orderStepHistoryId=os.historyId ");
-        hql.append("left join ").append(DBITEM_MON_NOT_ACKNOWLEDGEMENTS).append(" a on n.id=a.notificationId ");
+        hql.append("left join ").append(DBITEM_MON_NOT_ACKNOWLEDGEMENTS).append(" a on n.id=a.id.notificationId ");
+        hql.append("and a.id.application=").append(NotificationApplication.ORDER_NOTIFICATION.intValue()).append(" ");
         hql.append("where n.id=w.notificationId ");
         return hql;
     }

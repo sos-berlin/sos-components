@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.exception.SOSInvalidDataException;
-import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
@@ -62,7 +61,7 @@ public abstract class ANotifier {
     public abstract NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
             DBItemNotification mn);
 
-    public abstract NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event);
+    public abstract NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event, Date dateTime, String exception);
 
     public abstract void close();
 
@@ -83,26 +82,26 @@ public abstract class ANotifier {
     }
 
     // SystemNotification
-    protected void set(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event) {
+    protected void set(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event, Date dateTime, String exception) {
         this.timeZone = timeZone;
         setStatus(type);
         setCommonVars();
-        setSystemVars(type, timeZone, event);
+        setSystemVars(type, timeZone, event, dateTime, exception);
 
         this.jocHref = new JocHref(event);
     }
 
-    private void setSystemVars(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event) {
+    private void setSystemVars(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event, Date dateTime, String exception) {
         systemVars = new HashMap<>();
         systemVars.put("MON_SN_TYPE", getVarValue(type.name()));
         systemVars.put("MON_SN_CATEGORY", event.getCategory().name());
         systemVars.put("MON_SN_SECTION", getVarValue(event.getSection()));
 
         systemVars.put("MON_SN_NOTIFIER", getVarValue(event.getLoggerName()));
-        systemVars.put("MON_SN_TIME", epochMillis2String(timeZone, event.getEpochMillis()));
+        systemVars.put("MON_SN_TIME", dateTime2String(timeZone, dateTime));
 
         systemVars.put("MON_SN_MESSAGE", event.getMessage());
-        systemVars.put("MON_SN_EXCEPTION", getVarValue(SOSClassUtil.getStackTrace(event.getThrown())));
+        systemVars.put("MON_SN_EXCEPTION", getVarValue(exception));
     }
 
     public static String getVarValue(String val) {
@@ -112,14 +111,14 @@ public abstract class ANotifier {
         return val;
     }
 
-    private String epochMillis2String(TimeZone timeZone, long epochMillis) {
-        if (epochMillis <= 0) {
-            return String.valueOf(epochMillis);
+    private String dateTime2String(TimeZone timeZone, Date dateTime) {
+        if (dateTime == null) {
+            dateTime = new Date();
         }
         try {
-            return SOSDate.getDateTimeWithZoneOffsetAsString(new Date(epochMillis), timeZone);
+            return SOSDate.getDateTimeWithZoneOffsetAsString(dateTime, timeZone);
         } catch (SOSInvalidDataException e) {
-            return String.valueOf(epochMillis);
+            return "";
         }
     }
 

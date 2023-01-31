@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 import javax.persistence.Parameter;
 
@@ -95,7 +96,12 @@ public class SOSHibernate {
     public static Object getId(Object item) throws SOSHibernateException {
         if (item != null) {
             Optional<Field> of = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Id.class)).findFirst();
-            if (of.isPresent()) {
+            boolean present = of.isPresent();
+            if (!present) {
+                of = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(EmbeddedId.class)).findFirst();
+                present = of.isPresent();
+            }
+            if (present) {
                 Field field = of.get();
                 field.setAccessible(true);
                 try {
@@ -111,7 +117,12 @@ public class SOSHibernate {
     public static void setId(Object item, Object value) throws SOSHibernateException {
         if (item != null) {
             Optional<Field> of = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Id.class)).findFirst();
-            if (of.isPresent()) {
+            boolean present = of.isPresent();
+            if (!present) {
+                of = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(EmbeddedId.class)).findFirst();
+                present = of.isPresent();
+            }
+            if (present) {
                 Field field = of.get();
                 field.setAccessible(true);
                 try {

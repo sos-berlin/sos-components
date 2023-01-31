@@ -23,7 +23,7 @@ public class SystemNotification extends AElement {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SystemNotification.class);
 
-    private static final String NOTIFICATION_ID = "joc_system_notification";
+    public static final String NOTIFICATION_ID = "joc_system_notification";
 
     private static final String ELEMENT_NAME_NOTIFICATION_MONITORS = "NotificationMonitors";
 

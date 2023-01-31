@@ -62,6 +62,7 @@ import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgement;
 import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.db.monitoring.DBItemNotificationWorkflow;
+import com.sos.joc.db.monitoring.DBItemSystemNotification;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.db.search.DBItemSearchWorkflow2DeploymentHistory;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
@@ -133,6 +134,10 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_MON_NOTIFICATIONS = DBItemNotification.class.getSimpleName();
     public static final String TABLE_MON_NOTIFICATIONS = "MON_NOTIFICATIONS";
     public static final String TABLE_MON_NOTIFICATIONS_SEQUENCE = "SEQ_MON_N";
+
+    public static final String DBITEM_MON_SYSNOTIFICATIONS = DBItemSystemNotification.class.getSimpleName();
+    public static final String TABLE_MON_SYSNOTIFICATIONS = "MON_SYSNOTIFICATIONS";
+    public static final String TABLE_MON_SYSNOTIFICATIONS_SEQUENCE = "SEQ_MON_SN";
 
     public static final String DBITEM_MON_NOT_MONITORS = DBItemNotificationMonitor.class.getSimpleName();
     public static final String TABLE_MON_NOT_MONITORS = "MON_NOT_MONITORS";
@@ -403,6 +408,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemMonitoringOrder.class);
         cl.add(DBItemMonitoringOrderStep.class);
         cl.add(DBItemNotification.class);
+        cl.add(DBItemSystemNotification.class);
         cl.add(DBItemNotificationMonitor.class);
         cl.add(DBItemNotificationWorkflow.class);
         cl.add(DBItemNotificationAcknowledgement.class);

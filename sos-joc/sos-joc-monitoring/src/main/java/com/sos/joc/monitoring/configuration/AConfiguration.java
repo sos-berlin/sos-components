@@ -76,7 +76,7 @@ public abstract class AConfiguration {
         boolean run = true;
         int errorCount = 0;
         while (run) {
-            DBLayerMonitoring dbLayer = new DBLayerMonitoring(MonitorService.getIdentifier(caller));
+            DBLayerMonitoring dbLayer = new DBLayerMonitoring(caller);
             try {
                 MonitorService.setLogger();
 
@@ -91,18 +91,18 @@ public abstract class AConfiguration {
                 }
                 setJocReverseProxyUri(Globals.getConfigurationGlobalsJoc().getJocReverseProxyUrl().getValue());
                 process(configXml);
+                NotificationAppender.doNotify = systemNotification != null;
 
                 if (hasNotifications || systemNotification != null) {
                     List<String> names = handleMailResources(dbLayer);
                     LOGGER.info(String.format("[%s][configuration][SystemNotification=%s][Notifications type %s=%s,%s=%s,%s=%s][JobResources=%s]",
                             caller, getSystemNotificationInfo(), NotificationType.ERROR.name(), onError.size(), NotificationType.WARNING.name(),
-                            onWarning.size(), NotificationType.SUCCESS.name(), onSuccess.size(), String.join(",", names)));
+                            onWarning.size(), NotificationType.SUCCESS.name(), onSuccess.size(), String.join(",", getJobResources4Log(names))));
                 } else {
                     LOGGER.info(String.format("[%s][configuration]exists=false", caller));
                 }
                 run = false;
                 errorCount = 0;
-                NotificationAppender.doNotify = systemNotification != null;
             } catch (Exception e) {
                 errorCount++;
                 LOGGER.error(String.format("[%s][errorCount=%s]%s", caller, errorCount, e.toString()), e);
@@ -123,6 +123,17 @@ public abstract class AConfiguration {
                 }
             }
         }
+    }
+
+    private List<String> getJobResources4Log(List<String> names) {
+        return names.stream().map(name -> {
+            String n = name;
+            MailResource mr = mailResources.get(name);
+            if (mr != null && !mr.isAvailable()) {
+                n = name + "(not available)";
+            }
+            return n;
+        }).collect(Collectors.toList());
     }
 
     private String getSystemNotificationInfo() {
@@ -146,24 +157,78 @@ public abstract class AConfiguration {
 
                 MailResource mr = mailResources.get(name);
                 mr.parse(name, r[1].toString());
+                mr.isAvailable(true);
                 mailResources.put(name, mr);
             }
             if (resources.size() != mailResources.size()) {// some configured resources were not found in the database
-                List<String> toRemove = mailResources.entrySet().stream().filter(e -> {
+                List<String> notAvailable = mailResources.entrySet().stream().filter(e -> {
                     return e.getValue().getMailProperties() == null;
                 }).map(Map.Entry::getKey).collect(Collectors.toList());
 
-                if (toRemove.size() > 0) {
-                    LOGGER.warn(String.format("[Job Resource=%s]configured Job Resource not found in the deployment history", String.join(",",
-                            toRemove)));
+                if (notAvailable.size() > 0) {
+                    // LOGGER.warn(String.format("[Job Resource=%s]configured Job Resource not found in the deployment history", String.join(",",
+                    // notAvailable)));
+                    LOGGER.warn(getJobResourcesNotDeployedMessage(notAvailable));
 
-                    for (String name : toRemove) {
-                        mailResources.remove(name);
+                    for (String name : notAvailable) {
+                        MailResource mr = mailResources.get(name);
+                        mr.isAvailable(false);
+                        // mailResources.remove(name);
+                        mailResources.put(name, mr);
                     }
                 }
             }
         }
         return names;
+    }
+
+    private String getJobResourcesNotDeployedMessage(List<String> notAvailable) {
+        boolean s = notAvailable.size() == 1;
+        StringBuilder sb = new StringBuilder();
+        sb.append("Configured Job Resource").append(s ? "" : "s").append(" not found in the deployment history: ");
+        if (s) {
+            String n = notAvailable.get(0);
+            sb.append(n).append("(").append(getJobResourceUsedBy(n)).append(")");
+        } else {
+            int i = 0;
+            int size = notAvailable.size();
+            for (String n : notAvailable) {
+                i++;
+                sb.append(n).append("(").append(getJobResourceUsedBy(n)).append(")");
+                if (i != size) {
+                    sb.append(", ");
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    private StringBuilder getJobResourceUsedBy(String name) {
+        StringBuilder sb = new StringBuilder();
+        if (systemNotification != null && systemNotification.getJobResources() != null && systemNotification.getJobResources().contains(name)) {
+            sb.append("SystemNotification");
+        }
+
+        if (hasNotifications) {
+            List<String> s = onSuccess.stream().filter(n -> n.getJobResources() != null && n.getJobResources().contains(name)).map(n -> n
+                    .getNotificationId()).collect(Collectors.toList());
+            List<String> w = onWarning.stream().filter(n -> n.getJobResources() != null && n.getJobResources().contains(name)).map(n -> n
+                    .getNotificationId()).collect(Collectors.toList());
+            List<String> e = onWarning.stream().filter(n -> n.getJobResources() != null && n.getJobResources().contains(name)).map(n -> n
+                    .getNotificationId()).collect(Collectors.toList());
+            s.addAll(w);
+            s.addAll(e);
+            s = s.stream().distinct().sorted().collect(Collectors.toList());
+            int size = s.size();
+            if (size > 0) {
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+                sb.append("Notification").append(size == 1 ? "" : "s").append(" ").append(String.join(",", s));
+            }
+        }
+
+        return sb;
     }
 
     public String getJocTitle() {

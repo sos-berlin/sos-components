@@ -13,6 +13,7 @@ import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
 import com.sos.joc.db.DBLayer;
+import com.sos.monitoring.notification.NotificationApplication;
 
 public class CleanupTaskMonitoring extends CleanupTaskModel {
 
@@ -215,9 +216,11 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
 
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_MON_NOT_MONITORS).append(" ");
-        hql.append("where notificationId in (:notificationIds)");
+        hql.append("where notificationId in (:notificationIds) ");
+        hql.append("and application=:application");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("notificationIds", notificationIds);
+        query.setParameter("application", NotificationApplication.ORDER_NOTIFICATION.intValue());
         int r = getDbLayer().getSession().executeUpdate(query);
         totalNotificationMonitors += r;
         log.append(getDeleted(DBLayer.TABLE_MON_NOT_MONITORS, r, totalNotificationMonitors));
@@ -233,9 +236,11 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
 
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_MON_NOT_ACKNOWLEDGEMENTS).append(" ");
-        hql.append("where notificationId in (:notificationIds)");
+        hql.append("where id.notificationId in (:notificationIds) ");
+        hql.append("and id.application=:application");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("notificationIds", notificationIds);
+        query.setParameter("application", NotificationApplication.ORDER_NOTIFICATION.intValue());
         r = getDbLayer().getSession().executeUpdate(query);
         totalNotificationAcknowledgements += r;
         log.append(getDeleted(DBLayer.TABLE_MON_NOT_ACKNOWLEDGEMENTS, r, totalNotificationAcknowledgements));

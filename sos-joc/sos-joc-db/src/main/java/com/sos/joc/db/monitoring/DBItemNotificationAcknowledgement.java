@@ -3,8 +3,8 @@ package com.sos.joc.db.monitoring;
 import java.util.Date;
 
 import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.Table;
 
 import com.sos.joc.db.DBItem;
@@ -17,9 +17,8 @@ public class DBItemNotificationAcknowledgement extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @Column(name = "[NOT_ID]", nullable = false)
-    private Long notificationId;
+    @EmbeddedId
+    private DBItemNotificationAcknowledgementId id;
 
     @Column(name = "[ACCOUNT]", nullable = false)
     private String account;
@@ -33,12 +32,15 @@ public class DBItemNotificationAcknowledgement extends DBItem {
     public DBItemNotificationAcknowledgement() {
     }
 
-    public Long getNotificationId() {
-        return notificationId;
+    public DBItemNotificationAcknowledgementId getId() {
+        return id;
     }
 
-    public void setNotificationId(Long val) {
-        notificationId = val;
+    public void setId(DBItemNotificationAcknowledgementId val) {
+        if (val == null) {
+            val = new DBItemNotificationAcknowledgementId(0L, MonitoringConstants.NOTIFICATION_DEFAULT_APPLICATION.intValue());
+        }
+        id = val;
     }
 
     public String getAccount() {

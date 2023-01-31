@@ -34,6 +34,10 @@ public class DBItemNotificationMonitor extends DBItem {
     @Column(name = "[NOT_ID]", nullable = false)
     private Long notificationId;
 
+    /** 0 - MON_NOTIFICATIONS, 1 - MON_SYSNOTIFICATIONS */
+    @Column(name = "[APPLICATION]", nullable = false)
+    private Integer application;
+
     @Column(name = "[TYPE]", nullable = false)
     private Integer type;
 
@@ -73,6 +77,17 @@ public class DBItemNotificationMonitor extends DBItem {
 
     public void setNotificationId(Long val) {
         notificationId = val;
+    }
+
+    public Integer getApplication() {
+        return application;
+    }
+
+    public void setApplication(Integer val) {
+        if (val == null) {
+            val = MonitoringConstants.NOTIFICATION_DEFAULT_APPLICATION.intValue();
+        }
+        application = val;
     }
 
     public Integer getType() {

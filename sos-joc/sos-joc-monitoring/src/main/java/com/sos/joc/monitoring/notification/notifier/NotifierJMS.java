@@ -2,6 +2,7 @@ package com.sos.joc.monitoring.notification.notifier;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -59,13 +60,13 @@ public class NotifierJMS extends ANotifier {
     }
 
     @Override
-    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event) {
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event, Date dateTime, String exception) {
 
         MessageProducer producer = null;
         String message = null;
         try {
             producer = createProducer();
-            set(type, timeZone, event);
+            set(type, timeZone, event, dateTime, exception);
 
             message = resolveSystemVars(monitor.getMessage(), true);
 
