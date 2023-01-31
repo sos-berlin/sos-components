@@ -11,16 +11,16 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.proxy.Proxies;
-import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgement;
 import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgementId;
+import com.sos.joc.db.monitoring.DBItemSystemNotification;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.monitoring.NotificationAcknowledgeAnswer;
 import com.sos.joc.model.monitoring.NotificationAcknowledgeFilter;
 import com.sos.joc.model.monitoring.NotificationItemAcknowledgementItem;
-import com.sos.joc.monitoring.resource.INotificationAcknowledge;
+import com.sos.joc.monitoring.resource.ISystemNotificationAcknowledge;
 import com.sos.monitoring.notification.NotificationApplication;
 import com.sos.monitoring.notification.NotificationType;
 import com.sos.schema.JsonValidator;
@@ -28,7 +28,7 @@ import com.sos.schema.JsonValidator;
 import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.MONITORING)
-public class NotificationAcknowledgeImpl extends JOCResourceImpl implements INotificationAcknowledge {
+public class SystemNotificationAcknowledgeImpl extends JOCResourceImpl implements ISystemNotificationAcknowledge {
 
     @Override
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
@@ -55,13 +55,13 @@ public class NotificationAcknowledgeImpl extends JOCResourceImpl implements INot
                 Date created = new Date();
                 String account = getAccount();
                 for (Long notificationId : in.getNotificationIds()) {
-                    DBItemNotification notification = dbLayer.getNotification(notificationId);
+                    DBItemSystemNotification notification = dbLayer.getSystemNotification(notificationId);
                     if (notification != null) {
-                        DBItemNotificationAcknowledgement result = dbLayer.getNotificationAcknowledgement(NotificationApplication.ORDER_NOTIFICATION,
+                        DBItemNotificationAcknowledgement result = dbLayer.getNotificationAcknowledgement(NotificationApplication.SYSTEM_NOTIFICATION,
                                 notificationId);
                         if (result == null) {
                             result = new DBItemNotificationAcknowledgement();
-                            result.setId(new DBItemNotificationAcknowledgementId(notificationId, NotificationApplication.ORDER_NOTIFICATION
+                            result.setId(new DBItemNotificationAcknowledgementId(notificationId, NotificationApplication.SYSTEM_NOTIFICATION
                                     .intValue()));
                             result.setAccount(account);
                             result.setComment(in.getComment());

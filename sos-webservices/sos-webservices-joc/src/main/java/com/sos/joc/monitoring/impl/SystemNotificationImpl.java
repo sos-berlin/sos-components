@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -22,13 +20,15 @@ import com.sos.joc.model.common.MonitoringMonitorTypeText;
 import com.sos.joc.model.monitoring.MonitorItem;
 import com.sos.joc.model.monitoring.NotificationAnswer;
 import com.sos.joc.model.monitoring.NotificationFilter;
-import com.sos.joc.monitoring.resource.INotification;
+import com.sos.joc.monitoring.resource.ISystemNotification;
 import com.sos.monitoring.MonitorType;
 import com.sos.monitoring.notification.NotificationApplication;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path(WebservicePaths.MONITORING)
-public class NotificationImpl extends JOCResourceImpl implements INotification {
+public class SystemNotificationImpl extends JOCResourceImpl implements ISystemNotification {
 
     @Override
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
@@ -47,7 +47,7 @@ public class NotificationImpl extends JOCResourceImpl implements INotification {
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
 
             List<MonitorItem> monitors = new ArrayList<MonitorItem>();
-            List<DBItemNotificationMonitor> result = dbLayer.getNotificationMonitors(NotificationApplication.ORDER_NOTIFICATION, in
+            List<DBItemNotificationMonitor> result = dbLayer.getNotificationMonitors(NotificationApplication.SYSTEM_NOTIFICATION, in
                     .getNotificationId());
             if (result != null) {
                 for (DBItemNotificationMonitor monitor : result) {
