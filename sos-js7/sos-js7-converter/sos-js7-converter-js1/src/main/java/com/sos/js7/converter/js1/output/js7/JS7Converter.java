@@ -666,6 +666,16 @@ public class JS7Converter {
                     LOGGER.info("[convertStandalone][duplicate][" + entry.getKey() + "][js7Name=" + js7Name + "][path]" + jn.getPath());
                     workflowName = convertStandaloneWorkflow(result, js7Name, jn, null, null, null, null);
                     if (workflowName != null) {
+
+                        String fo = "";
+                        try {
+                            fo = " (first occurrence=" + o.getUnique().get(entry.getKey()).getPath().toString() + ")";
+                        } catch (Throwable e) {
+
+                        }
+                        ConverterReport.INSTANCE.addAnalyzerRecord(jn.getPath(), "[DUPLICATE JS1]StandaloneJob=" + entry.getKey(), "js7Name="
+                                + js7Name + fo);
+
                         counter++;
                     }
                 }
@@ -2094,6 +2104,13 @@ public class JS7Converter {
                 for (JobChain jn : entry.getValue()) {
                     String js7Name = entry.getKey() + DUPLICATE_PREFIX + counter;
                     LOGGER.info("[convertJobChains][duplicate][" + entry.getKey() + "][js7Name=" + js7Name + "][path]" + jn.getPath());
+                    String fo = "";
+                    try {
+                        fo = " (first occurrence=" + o.getUnique().get(entry.getKey()).getPath().toString() + ")";
+                    } catch (Throwable e) {
+
+                    }
+                    ConverterReport.INSTANCE.addAnalyzerRecord(jn.getPath(), "[DUPLICATE JS1]JobChain=" + entry.getKey(), "js7Name=" + js7Name + fo);
                     convertJobChainWorkflow(result, js7Name, jn);
                     counter++;
                 }
